@@ -221,10 +221,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   useEffect(() => {
     const fetchSchool = async () => {
       try {
+        console.log("[v0] Fetching school for schoolId:", params.schoolId)
         const response = await fetch(`/api/schools/${params.schoolId}/branding`)
         if (response.ok) {
           const data = await response.json()
+          console.log("[v0] School fetched:", data.school?.name)
           setSchool(data.school)
+        } else {
+          console.error("[v0] Failed to fetch school, status:", response.status)
         }
       } catch (error) {
         console.error("[v0] Error fetching school:", error)
@@ -275,8 +279,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   // Fetch NC recruits when school name is available
   useEffect(() => {
+    console.log("[v0] NC Recruits useEffect - school:", school, "school?.name:", school?.name)
     if (school?.name) {
+      console.log("[v0] School name available, calling fetchNcRecruits")
       fetchNcRecruits()
+    } else {
+      console.log("[v0] School name not available yet, skipping fetchNcRecruits")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [school?.name])
