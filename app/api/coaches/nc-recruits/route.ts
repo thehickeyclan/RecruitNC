@@ -50,10 +50,22 @@ export async function GET(request: Request) {
 
     const coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
 
-    // If no coaches exist but user is admin, check for admin-added prospects (similar to prospects API)
-    let committedStars = null
-    if (coachUserIds.length === 0 && profile?.is_admin) {
-      // Get all admin user IDs
+    // Get all committed/signed athletes from coaches at this school
+    let coachCommittedStars: any[] = []
+    if (coachUserIds.length > 0) {
+      const { data: coachStars } = await supabase
+        .from("college_coach_stars")
+        .select("athlete_id, pipeline_stage")
+        .in("coach_user_id", coachUserIds)
+        .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
+
+      coachCommittedStars = coachStars || []
+    }
+
+    // Also check for admin-added prospects (where notes mention this school)
+    // This allows admins to add recruits even if no coaches are assigned yet
+    let adminCommittedStars: any[] = []
+    if (profile?.is_admin) {
       const { data: adminUsers } = await supabase
         .from("user_profiles")
         .select("user_id")
@@ -62,26 +74,37 @@ export async function GET(request: Request) {
       const adminUserIds = adminUsers?.map((u) => u.user_id) || []
 
       if (adminUserIds.length > 0) {
-        // Get athletes where notes mention this school name and pipeline_stage is Committed/Signed
-        const { data: adminCommittedStars } = await supabase
+        // Match against both full school name and shortened name (e.g., "Lynchburg College" and "Lynchburg")
+        const schoolNameVariations = [
+          schoolData.name,
+          schoolData.name.replace(/College|University|Institute/i, "").trim(),
+          schoolData.name.split(" ")[0], // First word
+        ].filter(Boolean)
+
+        // Get all admin-committed stars with notes mentioning school
+        const { data: adminStars } = await supabase
           .from("college_coach_stars")
-          .select("athlete_id, pipeline_stage")
+          .select("athlete_id, pipeline_stage, notes")
           .in("coach_user_id", adminUserIds)
           .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
-          .ilike("notes", `%${schoolData.name}%`)
 
-        committedStars = adminCommittedStars
+        // Filter in memory to match any variation of school name
+        if (adminStars) {
+          adminCommittedStars = adminStars.filter((star) => {
+            const notesLower = (star.notes || "").toLowerCase()
+            return schoolNameVariations.some((variation) =>
+              notesLower.includes(variation.toLowerCase())
+            )
+          })
+        }
       }
-    } else if (coachUserIds.length > 0) {
-      // Get all committed/signed athletes from coaches at this school
-      const { data: coachCommittedStars } = await supabase
-        .from("college_coach_stars")
-        .select("athlete_id, pipeline_stage")
-        .in("coach_user_id", coachUserIds)
-        .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
-
-      committedStars = coachCommittedStars
     }
+
+    // Combine both sources and deduplicate
+    const allCommittedStars = [...coachCommittedStars, ...adminCommittedStars]
+    const committedStars = Array.from(
+      new Map(allCommittedStars.map((s) => [s.athlete_id, s])).values(),
+    )
 
     if (!committedStars || committedStars.length === 0) {
       return NextResponse.json({ success: true, recruits: [] })
