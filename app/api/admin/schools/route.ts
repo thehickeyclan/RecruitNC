@@ -61,8 +61,13 @@ export async function GET() {
       console.log(`[v0] ${s.name}: ${s.coach_count} coaches`)
     })
 
+    // Filter out test schools - only production schools should be available for coach assignment
+    const customSchools = schoolsWithCoaches.filter((school) => !school.is_test)
+
+    console.log("[v0] Filtered schools (excluding test schools):", customSchools.length)
+
     return NextResponse.json(
-      { success: true, schools: schoolsWithCoaches },
+      { success: true, schools: customSchools },
       {
         headers: {
           "Cache-Control": "no-store, no-cache, must-revalidate",

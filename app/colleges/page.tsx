@@ -33,31 +33,14 @@ function NewCollegesPage() {
     return gender !== "all" || year !== "all" || searchTerm !== "" || division !== "all" || metric !== "total_commits"
   }
 
-  useEffect(() => {
-    async function fetchCollegeStats() {
-      try {
-        const params = new URLSearchParams()
-        params.append("gender", gender)
-        params.append("year", year)
-        params.append("division", division)
-
-        const response = await fetch(`/api/colleges/stats?${params}`)
-        if (response.ok) {
-          const data = await response.json()
-          setTotalCommits(data.totalCommits || 0)
-          setMaleCommits(data.maleCommits || 0)
-          setFemaleCommits(data.femaleCommits || 0)
-          setUniqueColleges(data.uniqueColleges || 0)
-        }
-      } catch (error) {
-        console.error("Error fetching college stats:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCollegeStats()
-  }, [gender, year, division])
+  // Handle stats update from the leaderboard component
+  const handleStatsUpdate = (stats: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueColleges: number }) => {
+    setTotalCommits(stats.totalCommits)
+    setMaleCommits(stats.maleCommits)
+    setFemaleCommits(stats.femaleCommits)
+    setUniqueColleges(stats.uniqueColleges)
+    setLoading(false)
+  }
 
   const hasActiveFilters = checkActiveFilters()
 
@@ -234,7 +217,14 @@ function NewCollegesPage() {
         </div>
 
         <div className="container mx-auto px-4 py-8">
-          <CollegeLeaderboard metric={metric} gender={gender} year={year} division={division} searchTerm={searchTerm} />
+          <CollegeLeaderboard 
+            metric={metric} 
+            gender={gender} 
+            year={year} 
+            division={division} 
+            searchTerm={searchTerm}
+            onStatsUpdate={handleStatsUpdate}
+          />
         </div>
       </div>
     </AuthGuard>

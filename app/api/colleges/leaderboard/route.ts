@@ -6,15 +6,52 @@ const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SE
 function normalizeDivision(division: string | null): string {
   if (!division) return "Unknown"
 
-  const div = division.trim()
+  const div = division.trim().toLowerCase()
 
-  if (div === "DI" || div === "D1") return "NCAA Division I"
+  // Normalize to "NCAA Division I"
+  if (
+    div === "di" ||
+    div === "d1" ||
+    div === "division i" ||
+    div === "division 1" ||
+    div === "ncaa division i" ||
+    div === "ncaa division 1" ||
+    div === "ncaa di" ||
+    div === "ncaa d1"
+  ) {
+    return "NCAA Division I"
+  }
 
-  if (div === "DII" || div === "D2") return "NCAA Division II"
+  // Normalize to "NCAA Division II"
+  if (
+    div === "dii" ||
+    div === "d2" ||
+    div === "division ii" ||
+    div === "division 2" ||
+    div === "ncaa division ii" ||
+    div === "ncaa division 2" ||
+    div === "ncaa dii" ||
+    div === "ncaa d2"
+  ) {
+    return "NCAA Division II"
+  }
 
-  if (div === "DIII" || div === "D3") return "NCAA Division III"
+  // Normalize to "NCAA Division III"
+  if (
+    div === "diii" ||
+    div === "d3" ||
+    div === "division iii" ||
+    div === "division 3" ||
+    div === "ncaa division iii" ||
+    div === "ncaa division 3" ||
+    div === "ncaa diii" ||
+    div === "ncaa d3"
+  ) {
+    return "NCAA Division III"
+  }
 
-  return div
+  // Return original if it's already in a proper format, or preserve case for other values
+  return division.trim()
 }
 
 export async function GET(request: NextRequest) {
@@ -31,7 +68,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("athletes")
-      .select("college, highschool, gender, graduationyear, commitmentdate, rankings, division")
+      .select("college, highschool, gender, graduationyear, commitmentdate, rankings, division, prospect_ranking")
       .not("college", "is", null)
       .not("highschool", "is", null)
 
@@ -89,6 +126,7 @@ export async function GET(request: NextRequest) {
         division: string
         nc_commits: number
         out_of_state_commits: number
+        divisionCounts: Map<string, number> // Track division frequency for determining most common
       }
     >()
 
@@ -228,18 +266,31 @@ export async function GET(request: NextRequest) {
           division: "Unknown",
           nc_commits: 0,
           out_of_state_commits: 0,
+          divisionCounts: new Map<string, number>(),
         })
       }
 
       const stats = collegeStats.get(canonicalName)!
       stats.total_commits++
 
-      if (athlete.division) {
-        // If this is the first athlete or division is still Unknown, set it
-        if (stats.division === "Unknown") {
-          stats.division = normalizeDivision(athlete.division)
+      // Normalize athlete's division from their College tab Division field
+      const normalizedAthleteDivision = normalizeDivision(athlete.division)
+
+      // Track division frequency to determine most common division for the college
+      if (normalizedAthleteDivision !== "Unknown") {
+        const currentCount = stats.divisionCounts.get(normalizedAthleteDivision) || 0
+        stats.divisionCounts.set(normalizedAthleteDivision, currentCount + 1)
+
+        // Update college division to the most common division among athletes
+        let maxCount = 0
+        let mostCommonDivision = stats.division
+        for (const [div, count] of stats.divisionCounts.entries()) {
+          if (count > maxCount) {
+            maxCount = count
+            mostCommonDivision = div
+          }
         }
-        // Otherwise, keep the most common division (simple approach: first one wins for now)
+        stats.division = mostCommonDivision
       }
 
       // Track gender-specific commits
@@ -250,12 +301,13 @@ export async function GET(request: NextRequest) {
         stats.female_commits++
       }
 
-      const athleteDivision = athlete.division
-      if (athleteDivision === "NCAA Division I" || athleteDivision === "DI") {
+      // Count commits by division using normalized division
+      const athleteDivision = normalizedAthleteDivision
+      if (athleteDivision === "NCAA Division I") {
         stats.d1_commits++
-      } else if (athleteDivision === "NCAA Division II" || athleteDivision === "DII") {
+      } else if (athleteDivision === "NCAA Division II") {
         stats.d2_commits++
-      } else if (athleteDivision === "NCAA Division III" || athleteDivision === "DIII") {
+      } else if (athleteDivision === "NCAA Division III") {
         stats.d3_commits++
       } else if (athleteDivision === "NAIA") {
         stats.naia_commits++
@@ -280,18 +332,14 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (athlete.rankings && typeof athlete.rankings === "object") {
-        const rankings = athlete.rankings as Record<string, any>
-        // Check if any ranking value is <= 30
-        const hasTop30Ranking = Object.values(rankings).some((rank) => {
-          if (typeof rank === "number") return rank <= 30
-          if (typeof rank === "string") {
-            const numRank = Number.parseInt(rank)
-            return !isNaN(numRank) && numRank <= 30
-          }
-          return false
-        })
-        if (hasTop30Ranking) {
+      // Track ranked commits - only for classes 2026 and 2027 with prospect_ranking <= 30
+      const graduationYear = athlete.graduationyear
+      if ((graduationYear === 2026 || graduationYear === 2027) && athlete.prospect_ranking) {
+        const prospectRank = typeof athlete.prospect_ranking === "number" 
+          ? athlete.prospect_ranking 
+          : Number.parseInt(String(athlete.prospect_ranking))
+        
+        if (!isNaN(prospectRank) && prospectRank <= 30) {
           stats.ranked_commits++
         }
       }
@@ -299,9 +347,11 @@ export async function GET(request: NextRequest) {
 
     const collegesWithLogos = Array.from(collegeStats.values()).map((college) => {
       const logoMapping = findLogoMapping(college.college_name)
+      // Remove divisionCounts from the final output (internal tracking only)
+      const { divisionCounts, ...collegeData } = college
 
       return {
-        ...college,
+        ...collegeData,
         logo_url: logoMapping?.logo_url || null,
       }
     })
@@ -311,16 +361,18 @@ export async function GET(request: NextRequest) {
 
     if (division !== "all") {
       sortedColleges = sortedColleges.filter((college) => {
-        // Normalize division for comparison
+        // Compare using normalized division values
         const collegeDivision = college.division
-        if (division === "DI") {
-          return collegeDivision === "NCAA Division I" || collegeDivision === "DI"
-        } else if (division === "DII") {
-          return collegeDivision === "NCAA Division II" || collegeDivision === "DII"
-        } else if (division === "DIII") {
-          return collegeDivision === "NCAA Division III" || collegeDivision === "DIII"
+        const normalizedFilterDivision = normalizeDivision(division)
+        
+        if (division === "DI" || normalizedFilterDivision === "NCAA Division I") {
+          return collegeDivision === "NCAA Division I"
+        } else if (division === "DII" || normalizedFilterDivision === "NCAA Division II") {
+          return collegeDivision === "NCAA Division II"
+        } else if (division === "DIII" || normalizedFilterDivision === "NCAA Division III") {
+          return collegeDivision === "NCAA Division III"
         } else {
-          return collegeDivision === division
+          return collegeDivision === normalizedFilterDivision || collegeDivision === division
         }
       })
       console.log(`Filtered to ${sortedColleges.length} colleges for division: ${division}`)

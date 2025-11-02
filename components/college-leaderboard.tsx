@@ -47,6 +47,7 @@ interface CollegeLeaderboardProps {
   division?: "all" | "Division I" | "Division II" | "Division III" | "NAIA" | "NJCAA" | "Independent" | "DI"
   limit?: number
   searchTerm?: string
+  onStatsUpdate?: (stats: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueColleges: number }) => void
 }
 
 export function CollegeLeaderboard({
@@ -56,6 +57,7 @@ export function CollegeLeaderboard({
   division = "all",
   limit = 10,
   searchTerm = "",
+  onStatsUpdate,
 }: CollegeLeaderboardProps) {
   const [colleges, setColleges] = useState<CollegeStats[]>([])
   const [loading, setLoading] = useState(true)
@@ -144,6 +146,30 @@ export function CollegeLeaderboard({
 
     fetchLeaderboard()
   }, [metric, gender, year, division])
+
+  // Calculate and update stats when colleges or searchTerm changes
+  useEffect(() => {
+    if (onStatsUpdate) {
+      // Apply searchTerm filter to get the final filtered list
+      const searchFilteredColleges = colleges.filter((college) => {
+        if (!searchTerm) return true
+        return college.college_name.toLowerCase().includes(searchTerm.toLowerCase())
+      })
+      
+      // Calculate stats from the filtered colleges (after searchTerm is applied)
+      const totalCommits = searchFilteredColleges.reduce((sum, college) => sum + college.total_commits, 0)
+      const maleCommits = searchFilteredColleges.reduce((sum, college) => sum + college.male_commits, 0)
+      const femaleCommits = searchFilteredColleges.reduce((sum, college) => sum + college.female_commits, 0)
+      const uniqueColleges = searchFilteredColleges.length
+      
+      onStatsUpdate({
+        totalCommits,
+        maleCommits,
+        femaleCommits,
+        uniqueColleges,
+      })
+    }
+  }, [colleges, searchTerm, onStatsUpdate])
 
   useEffect(() => {
     const fetchCollegeLogos = async () => {
@@ -349,14 +375,20 @@ export function CollegeLeaderboard({
 
   const getDivisionBadgeColor = (division: string) => {
     switch (division) {
+      case "NCAA Division I":
       case "Division I":
       case "D1":
+      case "DI":
         return "bg-red-100 text-red-800"
+      case "NCAA Division II":
       case "Division II":
       case "D2":
+      case "DII":
         return "bg-blue-100 text-blue-800"
+      case "NCAA Division III":
       case "Division III":
       case "D3":
+      case "DIII":
         return "bg-green-100 text-green-800"
       case "NAIA":
         return "bg-purple-100 text-purple-800"
@@ -364,23 +396,11 @@ export function CollegeLeaderboard({
         return "bg-orange-100 text-orange-800"
       case "Independent":
         return "bg-gray-100 text-gray-800"
-      case "DI":
-        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const getDisplayDivision = (collegeName: string, division: string) => {
-    if (
-      collegeName.toLowerCase().includes("nc state") ||
-      collegeName.toLowerCase().includes("north carolina state") ||
-      collegeName.toLowerCase().includes("ncsu")
-    ) {
-      return "DI"
-    }
-    return division
-  }
 
   if (loading) {
     return (
@@ -456,9 +476,9 @@ export function CollegeLeaderboard({
                     <div className="flex items-center gap-2 mt-1">
                       <Badge
                         variant="secondary"
-                        className={getDivisionBadgeColor(getDisplayDivision(college.college_name, college.division))}
+                        className={getDivisionBadgeColor(college.division)}
                       >
-                        {getDisplayDivision(college.college_name, college.division)}
+                        {college.division}
                       </Badge>
                     </div>
                   </div>

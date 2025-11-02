@@ -242,10 +242,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }, [authLoading, profile, params.schoolId, router])
 
   const fetchNcRecruits = async () => {
-    if (!school?.name) return // Don't fetch if school name not loaded yet
+    // Ensure school name exists and is a non-empty string before fetching
+    if (!school?.name || typeof school.name !== "string" || school.name.trim().length === 0) {
+      console.log("[v0] Skipping NC recruits fetch - school name not available:", school?.name)
+      return
+    }
     
     try {
       setLoadingNcRecruits(true)
+      console.log("[v0] Fetching NC recruits for school:", school.name)
       const response = await fetch(`/api/coaches/nc-recruits?schoolName=${encodeURIComponent(school.name)}`)
       if (response.ok) {
         const data = await response.json()

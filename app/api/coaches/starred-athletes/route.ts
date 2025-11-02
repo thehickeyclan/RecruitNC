@@ -143,6 +143,15 @@ export async function GET() {
           evaluation_notes: athlete.evaluation_notes,
           socialMedia: athlete.socialMedia,
           ranking: athlete.prospect_ranking,
+          financial_efc: star.financial_efc,
+          financial_aid_needs: star.financial_aid_needs,
+          scholarship_requirements: star.scholarship_requirements,
+          ability_to_pay: star.ability_to_pay,
+          financial_notes: star.financial_notes,
+          merit_scholarship_eligible: star.merit_scholarship_eligible,
+          need_based_aid_eligible: star.need_based_aid_eligible,
+          aid_application_status: star.aid_application_status,
+          financial_concerns: star.financial_concerns,
         }
       })
       .filter(Boolean)

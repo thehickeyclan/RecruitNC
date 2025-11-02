@@ -76,14 +76,55 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Prospects API - Coaches found at school:", coachUserIds.length)
     console.log("[v0] Prospects API - Coach user IDs:", coachUserIds)
 
-    if (coachUserIds.length === 0) {
+    // If admin is viewing a school portal (schoolId param provided) but no coaches exist,
+    // allow them to see prospects associated with admins for this school
+    let starredData = null
+    if (coachUserIds.length === 0 && profile?.is_admin && schoolId) {
+      console.log("[v0] Prospects API - No coaches found, but admin is viewing school portal. Checking for admin-added prospects...")
+      
+      // For admin preview: look for athletes associated with admins where notes mention this school
+      // OR create a mechanism to tag athletes with schools
+      // For now, we'll check notes for school name pattern
+      const { data: schoolInfo } = await supabase
+        .from("schools")
+        .select("name")
+        .eq("id", targetSchoolId)
+        .single()
+
+      if (schoolInfo) {
+        // Get all admin user IDs
+        const { data: adminUsers } = await supabase
+          .from("user_profiles")
+          .select("user_id")
+          .or("is_admin.eq.true,role.eq.admin")
+
+        const adminUserIds = adminUsers?.map((u) => u.user_id) || []
+
+        if (adminUserIds.length > 0) {
+          // Get athletes where notes mention this school name
+          const { data: adminStarredData } = await supabase
+            .from("college_coach_stars")
+            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, notes")
+            .in("coach_user_id", adminUserIds)
+            .ilike("notes", `%${schoolInfo.name}%`)
+
+          starredData = adminStarredData
+          console.log("[v0] Prospects API - Found % admin-added prospects for %", adminStarredData?.length || 0, schoolInfo.name)
+        }
+      }
+    } else if (coachUserIds.length === 0) {
       return NextResponse.json({ success: true, prospects: [] })
     }
 
-    const { data: starredData } = await supabase
-      .from("college_coach_stars")
-      .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id")
-      .in("coach_user_id", coachUserIds)
+    // If we have coaches, get their starred athletes (normal flow)
+    if (!starredData && coachUserIds.length > 0) {
+      const { data: coachStarredData } = await supabase
+        .from("college_coach_stars")
+        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns")
+        .in("coach_user_id", coachUserIds)
+
+      starredData = coachStarredData
+    }
 
     console.log("[v0] Prospects API - Starred athletes found:", starredData?.length || 0)
     console.log("[v0] Prospects API - Starred data:", starredData)
@@ -171,6 +212,15 @@ export async function GET(request: NextRequest) {
         pipeline_stage: starInfo?.pipeline_stage || "prospect",
         interest_level: starInfo?.interest_level,
         starred_at: starInfo?.starred_at,
+        financial_efc: starInfo?.financial_efc,
+        financial_aid_needs: starInfo?.financial_aid_needs,
+        scholarship_requirements: starInfo?.scholarship_requirements,
+        ability_to_pay: starInfo?.ability_to_pay,
+        financial_notes: starInfo?.financial_notes,
+        merit_scholarship_eligible: starInfo?.merit_scholarship_eligible || false,
+        need_based_aid_eligible: starInfo?.need_based_aid_eligible || false,
+        aid_application_status: starInfo?.aid_application_status,
+        financial_concerns: starInfo?.financial_concerns,
       }
     })
 

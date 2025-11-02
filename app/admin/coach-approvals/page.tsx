@@ -58,7 +58,9 @@ export default function CoachApprovalsPage() {
       const response = await fetch("/api/admin/schools")
       if (response.ok) {
         const data = await response.json()
-        setSchools(data.schools || [])
+        // Filter out test schools - only production schools should be available
+        const customSchools = (data.schools || []).filter((school: any) => !school.is_test)
+        setSchools(customSchools)
       }
     } catch (err) {
       console.error("Error fetching schools:", err)

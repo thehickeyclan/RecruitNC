@@ -26,6 +26,7 @@ interface School {
   created_at: string
   coach_count: number
   coaches: Coach[]
+  is_test?: boolean
 }
 
 export default function SchoolsManagementPage() {
@@ -81,7 +82,9 @@ export default function SchoolsManagementPage() {
             coaches: s.coaches?.length || 0,
           })),
         )
-        setSchools(data.schools || [])
+        // Filter out test schools - only show production schools
+        const customSchools = (data.schools || []).filter((s: School) => !s.is_test)
+        setSchools(customSchools)
       } else {
         console.error("[v0] Failed to fetch schools:", response.status, response.statusText)
       }

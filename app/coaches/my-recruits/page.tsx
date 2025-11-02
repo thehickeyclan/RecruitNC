@@ -24,9 +24,12 @@ import {
   Calendar,
   GripVertical,
   Plus,
+  Edit,
 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 interface StarredAthlete {
   id: string
@@ -84,6 +87,15 @@ interface StarredAthlete {
   actions?: any[]
   isPriority?: boolean
   isStarred?: boolean
+  financial_efc?: number
+  financial_aid_needs?: string
+  scholarship_requirements?: string
+  ability_to_pay?: string
+  financial_notes?: string
+  merit_scholarship_eligible?: boolean
+  need_based_aid_eligible?: boolean
+  aid_application_status?: string
+  financial_concerns?: string
 }
 
 interface Note {
@@ -153,6 +165,32 @@ export default function MyRecruitsPage() {
   const [activityNotes, setActivityNotes] = useState("")
   const [activityOutcome, setActivityOutcome] = useState("")
   const [followUpDate, setFollowUpDate] = useState("")
+
+  // State for editing activity
+  const [editingActivity, setEditingActivity] = useState<any | null>(null)
+  const [editActivityForm, setEditActivityForm] = useState({
+    actionType: "",
+    actionDate: "",
+    followUpDate: "",
+    description: "",
+    outcome: "",
+  })
+
+  // State for financial information
+  const [financialData, setFinancialData] = useState({
+    efc: "",
+    aidNeeds: "",
+    scholarshipRequirements: "",
+    abilityToPay: "",
+    financialNotes: "",
+    meritScholarshipEligible: false,
+    needBasedAidEligible: false,
+    aidApplicationStatus: "",
+    financialConcerns: "",
+  })
+  const [isSavingFinancials, setIsSavingFinancials] = useState(false)
+  const [ncRecruits, setNcRecruits] = useState<any[]>([])
+  const [loadingNcRecruits, setLoadingNcRecruits] = useState(true)
 
   const [schoolBranding, setSchoolBranding] = useState<SchoolBranding | null>(null)
 
@@ -242,10 +280,26 @@ export default function MyRecruitsPage() {
     if (isVerifiedCoach || isAdmin) {
       fetchAthletes()
       fetchSchoolBranding()
+      fetchNcRecruits()
     } else {
       setIsLoadingData(false)
     }
   }, [isVerifiedCoach, isAdmin, isLoading])
+
+  const fetchNcRecruits = async () => {
+    try {
+      setLoadingNcRecruits(true)
+      const response = await fetch("/api/coaches/nc-recruits")
+      if (response.ok) {
+        const data = await response.json()
+        setNcRecruits(data.recruits || [])
+      }
+    } catch (error) {
+      console.error("Error fetching NC recruits:", error)
+    } finally {
+      setLoadingNcRecruits(false)
+    }
+  }
 
   useEffect(() => {
     let filtered = athletes
@@ -536,13 +590,7 @@ export default function MyRecruitsPage() {
 
       if (response.ok) {
         // Refresh athlete data to show updated activities
-        await fetchAthletes()
-        // Re-fetch activities for the currently selected athlete
-        const res = await fetch(`/api/coaches/starred-athletes/${selectedAthlete.id}`) // Assuming an endpoint to get a single athlete with actions
-        if (res.ok) {
-          const data = await res.json()
-          setSelectedAthlete(data.athlete)
-        }
+        await refreshSelectedAthlete()
         // Reset form
         setActivityType("")
         setActivityDate("")
@@ -552,6 +600,157 @@ export default function MyRecruitsPage() {
       }
     } catch (error) {
       console.error("Error logging activity:", error)
+    }
+  }
+
+  // Refresh selected athlete data (to sync with dashboard changes)
+  const refreshSelectedAthlete = async () => {
+    if (!selectedAthlete) return
+    try {
+      const res = await fetch(`/api/coaches/starred-athletes/${selectedAthlete.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedAthlete(data.athlete)
+      }
+      await fetchAthletes()
+    } catch (error) {
+      console.error("Error refreshing athlete:", error)
+    }
+  }
+
+  // Handler for completing an activity
+  const handleCompleteActivity = async (actionId: string, action: any) => {
+    try {
+      const response = await fetch("/api/coach-portal/activities", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activityId: actionId,
+          actionType: action.action_type,
+          actionDate: action.action_date,
+          followUpDate: action.follow_up_date || null,
+          description: action.description,
+          outcome: "Completed",
+        }),
+      })
+
+      if (response.ok) {
+        await refreshSelectedAthlete()
+      }
+    } catch (error) {
+      console.error("Error completing activity:", error)
+    }
+  }
+
+  // Handler for deleting an activity
+  const handleDeleteActivity = async (actionId: string) => {
+    if (!confirm("Are you sure you want to delete this activity?")) return
+
+    try {
+      const response = await fetch(`/api/coach-portal/activities?activityId=${actionId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        await refreshSelectedAthlete()
+      }
+    } catch (error) {
+      console.error("Error deleting activity:", error)
+    }
+  }
+
+  // Handler for editing an activity
+  const handleEditActivity = (action: any) => {
+    setEditingActivity(action)
+    setEditActivityForm({
+      actionType: action.action_type,
+      actionDate: action.action_date.split("T")[0],
+      followUpDate: action.follow_up_date ? action.follow_up_date.split("T")[0] : "",
+      description: action.description || "",
+      outcome: action.outcome || "",
+    })
+  }
+
+  const handleSaveEditActivity = async () => {
+    if (!editingActivity) return
+
+    try {
+      const response = await fetch("/api/coach-portal/activities", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activityId: editingActivity.id,
+          actionType: editActivityForm.actionType,
+          actionDate: editActivityForm.actionDate,
+          followUpDate: editActivityForm.followUpDate || null,
+          description: editActivityForm.description,
+          outcome: editActivityForm.outcome || null,
+        }),
+      })
+
+      if (response.ok) {
+        setEditingActivity(null)
+        await refreshSelectedAthlete()
+      }
+    } catch (error) {
+      console.error("Error updating activity:", error)
+    }
+  }
+
+  const isActivityCompleted = (action: any) => {
+    return action.outcome?.toLowerCase() === "completed"
+  }
+
+  // Load financial data when athlete is selected
+  useEffect(() => {
+    if (selectedAthlete) {
+      setFinancialData({
+        efc: selectedAthlete.financial_efc?.toString() || "",
+        aidNeeds: selectedAthlete.financial_aid_needs || "",
+        scholarshipRequirements: selectedAthlete.scholarship_requirements || "",
+        abilityToPay: selectedAthlete.ability_to_pay || "",
+        financialNotes: selectedAthlete.financial_notes || "",
+        meritScholarshipEligible: selectedAthlete.merit_scholarship_eligible || false,
+        needBasedAidEligible: selectedAthlete.need_based_aid_eligible || false,
+        aidApplicationStatus: selectedAthlete.aid_application_status || "",
+        financialConcerns: selectedAthlete.financial_concerns || "",
+      })
+    }
+  }, [selectedAthlete])
+
+  // Handler for saving financial information
+  const handleSaveFinancials = async () => {
+    if (!selectedAthlete) return
+
+    setIsSavingFinancials(true)
+    try {
+      const response = await fetch(`/api/coaches/starred-athletes/${selectedAthlete.id}/financials`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          efc: financialData.efc ? parseFloat(financialData.efc) : null,
+          aidNeeds: financialData.aidNeeds,
+          scholarshipRequirements: financialData.scholarshipRequirements,
+          abilityToPay: financialData.abilityToPay,
+          financialNotes: financialData.financialNotes,
+          meritScholarshipEligible: financialData.meritScholarshipEligible,
+          needBasedAidEligible: financialData.needBasedAidEligible,
+          aidApplicationStatus: financialData.aidApplicationStatus,
+          financialConcerns: financialData.financialConcerns,
+        }),
+      })
+
+      if (response.ok) {
+        await refreshSelectedAthlete()
+        alert("Financial information saved successfully!")
+      } else {
+        alert("Failed to save financial information")
+      }
+    } catch (error) {
+      console.error("Error saving financial information:", error)
+      alert("Error saving financial information")
+    } finally {
+      setIsSavingFinancials(false)
     }
   }
 
@@ -803,6 +1002,71 @@ export default function MyRecruitsPage() {
             </div>
           </div>
 
+          {/* North Carolina Recruits Section */}
+          <Card className="mt-8 border-2 border-gray-200">
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold text-[#0D1A4D] mb-4">North Carolina Recruits</h2>
+              {loadingNcRecruits ? (
+                <div className="text-center py-8">
+                  <div className="animate-pulse text-gray-400">Loading recruits...</div>
+                </div>
+              ) : ncRecruits.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">No committed/signed recruits found</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full caption-bottom text-sm">
+                    <thead className="[&_tr]:border-b bg-gray-50">
+                      <tr className="border-b transition-colors">
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">Year</th>
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">Name</th>
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">Weight</th>
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">High School</th>
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">College</th>
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">Division</th>
+                        <th className="h-12 px-4 text-left align-middle font-semibold text-[#0D1A4D]">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="[&_tr:last-child]:border-0">
+                      {ncRecruits.map((recruit) => (
+                        <tr
+                          key={recruit.id}
+                          className="border-b transition-colors hover:bg-gray-50 data-[state=selected]:bg-muted"
+                        >
+                          <td className="p-4 align-middle font-medium">{recruit.year || "-"}</td>
+                          <td className="p-4 align-middle font-medium">{recruit.name || "-"}</td>
+                          <td className="p-4 align-middle">{recruit.weight ? `${recruit.weight}lbs` : "-"}</td>
+                          <td className="p-4 align-middle">{recruit.highschool || "-"}</td>
+                          <td className="p-4 align-middle">{recruit.college || "-"}</td>
+                          <td className="p-4 align-middle">
+                            {recruit.division ? (
+                              <Badge variant="outline" className="text-xs">
+                                {recruit.division}
+                              </Badge>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td className="p-4 align-middle">
+                            <Badge
+                              variant="outline"
+                              className={
+                                recruit.status?.toLowerCase() === "signed"
+                                  ? "bg-green-50 text-green-700 border-green-200"
+                                  : "bg-blue-50 text-blue-700 border-blue-200"
+                              }
+                            >
+                              {recruit.status || "Committed"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Total Prospects Card */}
             <Card className="border-2 border-gray-200 hover:border-[#D3B574] hover:shadow-lg transition-all duration-200">
@@ -871,7 +1135,7 @@ export default function MyRecruitsPage() {
 
           <RecruitingFunnelChart stageCounts={stageCounts} />
 
-          <RecruitingActionsDashboard />
+          <RecruitingActionsDashboard schoolId={schoolBranding?.school_id} />
 
           <Card className="border-2 border-gray-200 shadow-md">
             <CardContent className="p-6">
@@ -1098,7 +1362,7 @@ export default function MyRecruitsPage() {
               <div className="flex-1 overflow-y-auto px-6 pb-6">
                 {selectedAthlete && (
                   <Tabs defaultValue="overview" className="mt-6">
-                    <TabsList className="w-full flex overflow-x-auto md:grid md:grid-cols-5 gap-1 scrollbar-hide">
+                    <TabsList className="w-full flex overflow-x-auto md:grid md:grid-cols-6 gap-1 scrollbar-hide">
                       <TabsTrigger value="overview" className="flex-shrink-0 px-4 whitespace-nowrap">
                         Overview
                       </TabsTrigger>
@@ -1110,6 +1374,9 @@ export default function MyRecruitsPage() {
                       </TabsTrigger>
                       <TabsTrigger value="activity" className="flex-shrink-0 px-4 whitespace-nowrap">
                         Activity
+                      </TabsTrigger>
+                      <TabsTrigger value="financials" className="flex-shrink-0 px-4 whitespace-nowrap">
+                        Financials
                       </TabsTrigger>
                       <TabsTrigger value="recruiting" className="flex-shrink-0 px-4 whitespace-nowrap">
                         Recruiting
@@ -1667,9 +1934,13 @@ export default function MyRecruitsPage() {
                         <div className="space-y-4">
                           {selectedAthlete?.actions && selectedAthlete.actions.length > 0 ? (
                             selectedAthlete.actions.map((action: any) => (
-                              <div key={action.id} className="bg-background rounded-lg p-4 border-l-4 border-[#BC0B03]">
+                              <div key={action.id} className={`bg-background rounded-lg p-4 border-l-4 border-[#BC0B03] ${isActivityCompleted(action) ? 'opacity-60' : ''}`}>
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex items-center gap-2">
+                                    <Checkbox
+                                      checked={isActivityCompleted(action)}
+                                      onCheckedChange={() => handleCompleteActivity(action.id, action)}
+                                    />
                                     <Badge className="bg-[#03154C] text-white">{action.action_type}</Badge>
                                     {action.coach && (
                                       <span className="text-xs text-muted-foreground">
@@ -1677,11 +1948,29 @@ export default function MyRecruitsPage() {
                                       </span>
                                     )}
                                   </div>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(action.action_date).toLocaleDateString()}
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs ${isActivityCompleted(action) ? 'text-gray-400 line-through' : 'text-muted-foreground'}`}>
+                                      {new Date(action.action_date).toLocaleDateString()}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => handleEditActivity(action)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                      onClick={() => handleDeleteActivity(action.id)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                {action.description && <p className="text-sm mt-2">{action.description}</p>}
+                                {action.description && <p className={`text-sm mt-2 ${isActivityCompleted(action) ? 'text-gray-400 line-through' : ''}`}>{action.description}</p>}
                                 {action.outcome && (
                                   <Badge variant="outline" className="mt-2">
                                     {action.outcome}
@@ -1790,14 +2079,38 @@ export default function MyRecruitsPage() {
                           <h3 className="font-bold text-xl mb-4">Communication History</h3>
                           <div className="space-y-3">
                             {selectedAthlete.actions.map((action: any) => (
-                              <div key={action.id} className="bg-background rounded-lg p-4 border-l-4 border-primary">
+                              <div key={action.id} className={`bg-background rounded-lg p-4 border-l-4 border-primary ${isActivityCompleted(action) ? 'opacity-60' : ''}`}>
                                 <div className="flex items-start justify-between mb-2">
-                                  <Badge variant="outline">{action.action_type}</Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    {new Date(action.action_date).toLocaleDateString()}
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <Checkbox
+                                      checked={isActivityCompleted(action)}
+                                      onCheckedChange={() => handleCompleteActivity(action.id, action)}
+                                    />
+                                    <Badge variant="outline">{action.action_type}</Badge>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs ${isActivityCompleted(action) ? 'text-gray-400 line-through' : 'text-muted-foreground'}`}>
+                                      {new Date(action.action_date).toLocaleDateString()}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => handleEditActivity(action)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                      onClick={() => handleDeleteActivity(action.id)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                {action.description && <p className="text-sm mt-2">{action.description}</p>}
+                                {action.description && <p className={`text-sm mt-2 ${isActivityCompleted(action) ? 'text-gray-400 line-through' : ''}`}>{action.description}</p>}
                                 {action.outcome && (
                                   <p className="text-xs text-muted-foreground mt-1">Outcome: {action.outcome}</p>
                                 )}
@@ -1863,6 +2176,195 @@ export default function MyRecruitsPage() {
                           </div>
                         </div>
                       )}
+                    </TabsContent>
+
+                    <TabsContent value="financials" className="space-y-6 mt-6">
+                      <div className="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-lg p-6">
+                        <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
+                          <span className="text-yellow-300">💰</span> Financial Information
+                        </h3>
+                        <p className="text-sm text-green-100">
+                          Track financial aid needs, scholarship requirements, and financial considerations for this recruit.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* EFC (Expected Family Contribution) */}
+                        <div className="bg-muted rounded-lg p-6">
+                          <Label htmlFor="efc" className="text-base font-semibold mb-2 block">
+                            Expected Family Contribution (EFC)
+                          </Label>
+                          <Input
+                            id="efc"
+                            type="number"
+                            placeholder="Enter EFC amount"
+                            value={financialData.efc}
+                            onChange={(e) => setFinancialData({ ...financialData, efc: e.target.value })}
+                            className="mb-2"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            The amount the family is expected to contribute toward college costs
+                          </p>
+                        </div>
+
+                        {/* Ability to Pay */}
+                        <div className="bg-muted rounded-lg p-6">
+                          <Label htmlFor="abilityToPay" className="text-base font-semibold mb-2 block">
+                            Ability to Pay
+                          </Label>
+                          <Select
+                            value={financialData.abilityToPay}
+                            onValueChange={(value) => setFinancialData({ ...financialData, abilityToPay: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select ability to pay" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="full">Full Pay</SelectItem>
+                              <SelectItem value="partial">Partial Need</SelectItem>
+                              <SelectItem value="significant">Significant Need</SelectItem>
+                              <SelectItem value="full_need">Full Need</SelectItem>
+                              <SelectItem value="unknown">Unknown</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Aid Application Status */}
+                        <div className="bg-muted rounded-lg p-6">
+                          <Label htmlFor="aidApplicationStatus" className="text-base font-semibold mb-2 block">
+                            Aid Application Status
+                          </Label>
+                          <Select
+                            value={financialData.aidApplicationStatus}
+                            onValueChange={(value) => setFinancialData({ ...financialData, aidApplicationStatus: value })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="not_started">Not Started</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="fafsa_submitted">FAFSA Submitted</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="not_applying">Not Applying</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Merit Scholarship Eligible */}
+                        <div className="bg-muted rounded-lg p-6">
+                          <Label className="text-base font-semibold mb-2 block">Eligibility</Label>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="meritEligible"
+                                checked={financialData.meritScholarshipEligible}
+                                onCheckedChange={(checked) =>
+                                  setFinancialData({ ...financialData, meritScholarshipEligible: checked as boolean })
+                                }
+                              />
+                              <Label htmlFor="meritEligible" className="text-sm font-normal cursor-pointer">
+                                Merit Scholarship Eligible
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id="needBasedEligible"
+                                checked={financialData.needBasedAidEligible}
+                                onCheckedChange={(checked) =>
+                                  setFinancialData({ ...financialData, needBasedAidEligible: checked as boolean })
+                                }
+                              />
+                              <Label htmlFor="needBasedEligible" className="text-sm font-normal cursor-pointer">
+                                Need-Based Aid Eligible
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Financial Aid Needs */}
+                      <div className="bg-muted rounded-lg p-6">
+                        <Label htmlFor="aidNeeds" className="text-base font-semibold mb-2 block">
+                          Financial Aid Needs
+                        </Label>
+                        <Textarea
+                          id="aidNeeds"
+                          placeholder="Describe the athlete's/family's financial aid needs and requirements..."
+                          value={financialData.aidNeeds}
+                          onChange={(e) => setFinancialData({ ...financialData, aidNeeds: e.target.value })}
+                          rows={4}
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Specific financial aid needs, amounts required, or special circumstances
+                        </p>
+                      </div>
+
+                      {/* Scholarship Requirements */}
+                      <div className="bg-muted rounded-lg p-6">
+                        <Label htmlFor="scholarshipRequirements" className="text-base font-semibold mb-2 block">
+                          Scholarship Requirements / Needs
+                        </Label>
+                        <Textarea
+                          id="scholarshipRequirements"
+                          placeholder="Note any specific scholarship requirements or amounts needed..."
+                          value={financialData.scholarshipRequirements}
+                          onChange={(e) => setFinancialData({ ...financialData, scholarshipRequirements: e.target.value })}
+                          rows={4}
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Required scholarship amounts, athletic scholarship needs, or merit scholarship requirements
+                        </p>
+                      </div>
+
+                      {/* Financial Concerns */}
+                      <div className="bg-muted rounded-lg p-6">
+                        <Label htmlFor="financialConcerns" className="text-base font-semibold mb-2 block">
+                          Financial Concerns
+                        </Label>
+                        <Textarea
+                          id="financialConcerns"
+                          placeholder="Any financial concerns, constraints, or considerations..."
+                          value={financialData.financialConcerns}
+                          onChange={(e) => setFinancialData({ ...financialData, financialConcerns: e.target.value })}
+                          rows={3}
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Any financial concerns that may affect enrollment decisions
+                        </p>
+                      </div>
+
+                      {/* Financial Notes */}
+                      <div className="bg-muted rounded-lg p-6">
+                        <Label htmlFor="financialNotes" className="text-base font-semibold mb-2 block">
+                          Additional Financial Notes
+                        </Label>
+                        <Textarea
+                          id="financialNotes"
+                          placeholder="Any additional financial information or notes..."
+                          value={financialData.financialNotes}
+                          onChange={(e) => setFinancialData({ ...financialData, financialNotes: e.target.value })}
+                          rows={4}
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          General notes about financial situation, discussions with family, or important details
+                        </p>
+                      </div>
+
+                      {/* Save Button */}
+                      <div className="flex justify-end">
+                        <Button
+                          onClick={handleSaveFinancials}
+                          disabled={isSavingFinancials}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {isSavingFinancials ? "Saving..." : "Save Financial Information"}
+                        </Button>
+                      </div>
                     </TabsContent>
                   </Tabs>
                 )}
@@ -1985,6 +2487,79 @@ export default function MyRecruitsPage() {
           </Dialog>
         </div>
       </div>
+
+      {/* Edit Activity Dialog */}
+      <Dialog open={!!editingActivity} onOpenChange={(open) => !open && setEditingActivity(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Activity</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="editActionType">Activity Type</Label>
+              <Select value={editActivityForm.actionType} onValueChange={(value) => setEditActivityForm({ ...editActivityForm, actionType: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select activity type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="phone_call">Phone Call</SelectItem>
+                  <SelectItem value="text_message">Text Message</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="campus_visit">Campus Visit</SelectItem>
+                  <SelectItem value="tournament_visit">Tournament Visit</SelectItem>
+                  <SelectItem value="home_visit">Home Visit</SelectItem>
+                  <SelectItem value="offer_extended">Offer Extended</SelectItem>
+                  <SelectItem value="scholarship_discussion">Scholarship Discussion</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="editActionDate">Action Date</Label>
+              <Input
+                id="editActionDate"
+                type="date"
+                value={editActivityForm.actionDate}
+                onChange={(e) => setEditActivityForm({ ...editActivityForm, actionDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="editFollowUpDate">Follow-up Date (Optional)</Label>
+              <Input
+                id="editFollowUpDate"
+                type="date"
+                value={editActivityForm.followUpDate}
+                onChange={(e) => setEditActivityForm({ ...editActivityForm, followUpDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="editDescription">Description</Label>
+              <Textarea
+                id="editDescription"
+                value={editActivityForm.description}
+                onChange={(e) => setEditActivityForm({ ...editActivityForm, description: e.target.value })}
+                rows={3}
+                placeholder="Enter description..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="editOutcome">Outcome (Optional)</Label>
+              <Input
+                id="editOutcome"
+                value={editActivityForm.outcome}
+                onChange={(e) => setEditActivityForm({ ...editActivityForm, outcome: e.target.value })}
+                placeholder="e.g., Completed, No response, etc."
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setEditingActivity(null)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEditActivity}>Save Changes</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
