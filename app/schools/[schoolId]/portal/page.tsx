@@ -1066,7 +1066,19 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     )
   }
 
-  if (!school) {
+  // Show loading state while school branding is being fetched
+  if (brandingLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error if school branding couldn't be loaded
+  if (!schoolBranding) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
