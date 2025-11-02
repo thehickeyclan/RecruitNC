@@ -110,17 +110,51 @@ export async function GET(request: Request) {
       }
     }
 
-    // Combine both sources and deduplicate
-    const allCommittedStars = [...coachCommittedStars, ...adminCommittedStars]
+    // ALSO check athletes table directly for athletes whose college field matches the school
+    // This catches athletes committed via the admin athlete profile "college" tab
+    const { data: directCommittedAthletes } = await supabase
+      .from("athletes")
+      .select("id, recruiting_status, college")
+      .or(`college.ilike.%${schoolData.name}%,college.ilike.%${schoolName}%`)
+      .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
+
+    const directCommittedIds = directCommittedAthletes?.map((a) => ({
+      athlete_id: a.id,
+      pipeline_stage: a.recruiting_status || "Committed",
+    })) || []
+
+    // Debug: Check if Cameron Gue is in the results
+    const cameronGue = directCommittedAthletes?.find(a => 
+      a.college?.toLowerCase().includes("lynchburg") || 
+      a.college?.toLowerCase().includes(schoolData.name.toLowerCase())
+    )
+    if (cameronGue) {
+      console.log(`[NC Recruits API] ✅ Found Cameron Gue (or similar) in direct athletes query:`, {
+        id: cameronGue.id,
+        college: cameronGue.college,
+        recruiting_status: cameronGue.recruiting_status
+      })
+    }
+
+    console.log(`[NC Recruits API] Found ${directCommittedIds.length} committed athletes from athletes.college field matching "${schoolData.name}" or "${schoolName}"`)
+    if (directCommittedAthletes && directCommittedAthletes.length > 0) {
+      console.log(`[NC Recruits API] Direct committed athletes colleges:`, directCommittedAthletes.map(a => ({ id: a.id, college: a.college, status: a.recruiting_status })))
+    }
+
+    // Combine all sources: coach stars, admin stars, and direct athlete college field
+    const allCommittedStars = [...coachCommittedStars, ...adminCommittedStars, ...directCommittedIds]
     const committedStars = Array.from(
       new Map(allCommittedStars.map((s) => [s.athlete_id, s])).values(),
     )
 
     if (!committedStars || committedStars.length === 0) {
+      console.log(`[NC Recruits API] No committed athletes found from any source for ${schoolName}`)
       return NextResponse.json({ success: true, recruits: [] })
     }
 
-    // Get the athlete IDs from the committed stars
+    console.log(`[NC Recruits API] Total unique committed athletes (after deduplication): ${committedStars.length}`)
+
+    // Get the athlete IDs from all committed sources
     const committedAthleteIds = [...new Set(committedStars.map((s) => s.athlete_id))]
 
     // Fetch athlete details
