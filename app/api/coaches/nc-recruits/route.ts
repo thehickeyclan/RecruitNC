@@ -30,37 +30,77 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "School name is required" }, { status: 400 })
     }
 
-    // Fetch all athletes who are committed or signed
-    // Check both recruiting_status and pipeline_stage from college_coach_stars
-    const { data: athletesByStatus, error: statusError } = await supabase
+    // Get the school by name to find its ID
+    const { data: schoolData } = await supabase
+      .from("schools")
+      .select("id, name")
+      .ilike("name", `%${schoolName}%`)
+      .limit(1)
+      .single()
+
+    if (!schoolData) {
+      return NextResponse.json({ error: "School not found" }, { status: 404 })
+    }
+
+    // Get all coaches associated with this school
+    const { data: schoolCoaches } = await supabase
+      .from("user_profiles")
+      .select("user_id")
+      .eq("school_id", schoolData.id)
+
+    const coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
+
+    // If no coaches exist but user is admin, check for admin-added prospects (similar to prospects API)
+    let committedStars = null
+    if (coachUserIds.length === 0 && profile?.is_admin) {
+      // Get all admin user IDs
+      const { data: adminUsers } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .or("is_admin.eq.true,role.eq.admin")
+
+      const adminUserIds = adminUsers?.map((u) => u.user_id) || []
+
+      if (adminUserIds.length > 0) {
+        // Get athletes where notes mention this school name and pipeline_stage is Committed/Signed
+        const { data: adminCommittedStars } = await supabase
+          .from("college_coach_stars")
+          .select("athlete_id, pipeline_stage")
+          .in("coach_user_id", adminUserIds)
+          .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
+          .ilike("notes", `%${schoolData.name}%`)
+
+        committedStars = adminCommittedStars
+      }
+    } else if (coachUserIds.length > 0) {
+      // Get all committed/signed athletes from coaches at this school
+      const { data: coachCommittedStars } = await supabase
+        .from("college_coach_stars")
+        .select("athlete_id, pipeline_stage")
+        .in("coach_user_id", coachUserIds)
+        .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
+
+      committedStars = coachCommittedStars
+    }
+
+    if (!committedStars || committedStars.length === 0) {
+      return NextResponse.json({ success: true, recruits: [] })
+    }
+
+    // Get the athlete IDs from the committed stars
+    const committedAthleteIds = [...new Set(committedStars.map((s) => s.athlete_id))]
+
+    // Fetch athlete details
+    const { data: athletes, error: athletesError } = await supabase
       .from("athletes")
       .select("id, name, graduationyear, weightclass, highschool, college, division, location, recruiting_status")
-      .or("recruiting_status.ilike.%committed%,recruiting_status.ilike.%signed%")
-      .not("college", "is", null)
-      .neq("college", "")
+      .in("id", committedAthleteIds.length > 0 ? committedAthleteIds : ["00000000-0000-0000-0000-000000000000"])
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
 
-    // Also get athletes from college_coach_stars with Committed or Signed pipeline_stage
-    const { data: allStars } = await supabase
-      .from("college_coach_stars")
-      .select("athlete_id, pipeline_stage")
-      .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
-
-    const starredAthleteIds = [...new Set((allStars || []).map((s) => s.athlete_id))]
-
-    const { data: athletesByPipeline, error: pipelineError } = await supabase
-      .from("athletes")
-      .select("id, name, graduationyear, weightclass, highschool, college, division, location, recruiting_status")
-      .in("id", starredAthleteIds.length > 0 ? starredAthleteIds : ["00000000-0000-0000-0000-000000000000"])
-      .order("graduationyear", { ascending: false })
-      .order("name", { ascending: true })
-
-    // Combine and deduplicate athletes
-    const allAthletes = [...(athletesByStatus || []), ...(athletesByPipeline || [])]
-    const uniqueAthletes = Array.from(
-      new Map(allAthletes.map((athlete) => [athlete.id, athlete])).values(),
-    )
+    if (athletesError || !athletes) {
+      return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 })
+    }
 
     // Filter for North Carolina athletes (location or highschool contains NC/NC cities)
     const ncKeywords = [
@@ -86,8 +126,8 @@ export async function GET(request: Request) {
       "Mooresville",
     ]
 
-    // First filter for North Carolina athletes
-    const ncAthletes = uniqueAthletes.filter((athlete) => {
+    // Filter for North Carolina athletes
+    const ncAthletes = (athletes || []).filter((athlete) => {
       const location = (athlete.location || "").toLowerCase()
       const highschool = (athlete.highschool || "").toLowerCase()
 
@@ -100,20 +140,9 @@ export async function GET(request: Request) {
       )
     })
 
-    // Then filter by school name - match against the athlete's college field
-    const ncRecruits = ncAthletes.filter((athlete) => {
-      const athleteCollege = (athlete.college || "").toLowerCase()
-      const targetSchoolName = schoolName.toLowerCase()
-      
-      // Exact match or contains check
-      return athleteCollege === targetSchoolName || 
-             athleteCollege.includes(targetSchoolName) ||
-             targetSchoolName.includes(athleteCollege)
-    })
-
     // Get pipeline_stage from college_coach_stars for each athlete
-    const athletesWithStage = ncRecruits.map((athlete) => {
-      const star = allStars?.find((s) => s.athlete_id === athlete.id)
+    const athletesWithStage = ncAthletes.map((athlete) => {
+      const star = committedStars?.find((s) => s.athlete_id === athlete.id)
       const pipelineStage = star?.pipeline_stage || athlete.recruiting_status || "Committed"
 
       return {
