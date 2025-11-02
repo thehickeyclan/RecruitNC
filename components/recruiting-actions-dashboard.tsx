@@ -29,9 +29,10 @@ interface RecruitingAction {
 
 interface RecruitingActionsDashboardProps {
   schoolId?: string
+  athletes?: { id: string; name: string }[] // Optional: pass athletes from parent (e.g., prospects from portal)
 }
 
-export function RecruitingActionsDashboard({ schoolId }: RecruitingActionsDashboardProps) {
+export function RecruitingActionsDashboard({ schoolId, athletes: providedAthletes }: RecruitingActionsDashboardProps) {
   const [actions, setActions] = useState<RecruitingAction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -58,11 +59,25 @@ export function RecruitingActionsDashboard({ schoolId }: RecruitingActionsDashbo
   useEffect(() => {
     console.log("[v0] RecruitingActionsDashboard mounted with schoolId:", schoolId)
     fetchActions()
-    fetchAthletes()
+    
+    // If athletes are provided as prop, use those; otherwise fetch
+    if (providedAthletes && providedAthletes.length > 0) {
+      console.log("[v0] Using provided athletes:", providedAthletes.length)
+      setAvailableAthletes(providedAthletes)
+    } else {
+      fetchAthletes()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId])
+  }, [schoolId, providedAthletes])
 
   const fetchAthletes = async () => {
+    // Skip if we're using schoolId - athletes for school portals come from prospects API
+    // The starred-athletes API requires a school_id on the profile, which admins don't have
+    if (schoolId && typeof schoolId === "string" && schoolId.trim().length > 0) {
+      console.log("[v0] Skipping starred-athletes fetch - using schoolId, athletes will come from prospects")
+      return
+    }
+    
     try {
       const response = await fetch("/api/coaches/starred-athletes")
       if (response.ok) {
@@ -72,9 +87,13 @@ export function RecruitingActionsDashboard({ schoolId }: RecruitingActionsDashbo
           name: a.name,
         }))
         setAvailableAthletes(athletes)
+      } else {
+        // Silently fail - this is OK for admins or when schoolId is used
+        console.log("[v0] starred-athletes fetch failed (this is OK for admins or school portals):", response.status)
       }
     } catch (error) {
-      console.error("Error fetching athletes:", error)
+      // Silently fail - this is OK for admins or when schoolId is used
+      console.log("[v0] Error fetching athletes (this is OK for admins or school portals):", error)
     }
   }
 

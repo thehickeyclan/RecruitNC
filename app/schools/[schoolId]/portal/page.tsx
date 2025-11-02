@@ -363,7 +363,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const fetchActivities = async (athleteId?: string) => {
     try {
       // If athleteId is provided, fetch for that specific athlete
-      const url = athleteId ? `/api/coach-portal/activities?athleteId=${athleteId}` : `/api/coach-portal/activities`
+      // Otherwise, fetch by schoolId (required by API)
+      const url = athleteId 
+        ? `/api/coach-portal/activities?athleteId=${athleteId}` 
+        : `/api/coach-portal/activities?schoolId=${params.schoolId}`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -1236,7 +1239,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        <RecruitingActionsDashboard schoolId={params.schoolId} />
+        <RecruitingActionsDashboard 
+          schoolId={params.schoolId} 
+          athletes={prospects.map(p => ({ id: p.id, name: p.name }))} 
+        />
       </div>
 
       <div className="container mx-auto px-4 py-6">
