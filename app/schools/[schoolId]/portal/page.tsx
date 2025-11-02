@@ -246,16 +246,19 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }, [authLoading, profile, params.schoolId, router])
 
   const fetchNcRecruits = async () => {
+    // Use schoolBranding from hook (already fetched) as primary source, fallback to school state
+    const schoolName = schoolBranding?.name || school?.name
+    
     // Ensure school name exists and is a non-empty string before fetching
-    if (!school?.name || typeof school.name !== "string" || school.name.trim().length === 0) {
-      console.log("[v0] Skipping NC recruits fetch - school name not available:", school?.name)
+    if (!schoolName || typeof schoolName !== "string" || schoolName.trim().length === 0) {
+      console.log("[v0] Skipping NC recruits fetch - school name not available:", { schoolBrandingName: schoolBranding?.name, schoolName: school?.name })
       return
     }
     
     try {
       setLoadingNcRecruits(true)
-      console.log("[v0] Fetching NC recruits for school:", school.name)
-      const response = await fetch(`/api/coaches/nc-recruits?schoolName=${encodeURIComponent(school.name)}`)
+      console.log("[v0] Fetching NC recruits for school:", schoolName)
+      const response = await fetch(`/api/coaches/nc-recruits?schoolName=${encodeURIComponent(schoolName)}`)
       if (response.ok) {
         const data = await response.json()
         setNcRecruits(data.recruits || [])
@@ -277,17 +280,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }, [params.schoolId, profile, authLoading])
 
-  // Fetch NC recruits when school name is available
+  // Fetch NC recruits when school name is available (from schoolBranding hook or school state)
   useEffect(() => {
-    console.log("[v0] NC Recruits useEffect - school:", school, "school?.name:", school?.name)
-    if (school?.name) {
+    const schoolName = schoolBranding?.name || school?.name
+    console.log("[v0] NC Recruits useEffect - schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "school?.name:", school?.name, "final schoolName:", schoolName)
+    if (schoolName && typeof schoolName === "string" && schoolName.trim().length > 0) {
       console.log("[v0] School name available, calling fetchNcRecruits")
       fetchNcRecruits()
     } else {
       console.log("[v0] School name not available yet, skipping fetchNcRecruits")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [school?.name])
+  }, [schoolBranding?.name, school?.name])
 
   const fetchProspects = async () => {
     try {
@@ -1094,7 +1098,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     <div className="min-h-screen bg-gray-50">
       <SchoolBrandedHeader
         schoolId={params.schoolId}
-        schoolName={school.name}
+        schoolName={schoolBranding?.name || school?.name || ""}
         subtitle={`${filteredProspects.length} Active Prospects`}
       />
 
