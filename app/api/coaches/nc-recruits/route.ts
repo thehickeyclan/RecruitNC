@@ -112,11 +112,49 @@ export async function GET(request: Request) {
 
     // ALSO check athletes table directly for athletes whose college field matches the school
     // This catches athletes committed via the admin athlete profile "college" tab
-    const { data: directCommittedAthletes } = await supabase
+    // Try exact match first, then partial match
+    let directCommittedAthletes: any[] = []
+    
+    // First try with schoolData.name
+    const { data: exactMatch } = await supabase
       .from("athletes")
       .select("id, recruiting_status, college")
-      .or(`college.ilike.%${schoolData.name}%,college.ilike.%${schoolName}%`)
+      .ilike("college", `%${schoolData.name}%`)
       .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
+    
+    if (exactMatch) {
+      directCommittedAthletes.push(...exactMatch)
+    }
+    
+    // Also try with schoolName parameter if different
+    if (schoolName && schoolName !== schoolData.name) {
+      const { data: paramMatch } = await supabase
+        .from("athletes")
+        .select("id, recruiting_status, college")
+        .ilike("college", `%${schoolName}%`)
+        .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
+      
+      if (paramMatch) {
+        // Deduplicate by id
+        const existingIds = new Set(directCommittedAthletes.map(a => a.id))
+        directCommittedAthletes.push(...paramMatch.filter(a => !existingIds.has(a.id)))
+      }
+    }
+    
+    // Try shortened name variations (e.g., "Lynchburg" from "Lynchburg College")
+    const shortName = schoolData.name.replace(/College|University|Institute|School/i, "").trim()
+    if (shortName && shortName.length > 2 && shortName !== schoolData.name) {
+      const { data: shortMatch } = await supabase
+        .from("athletes")
+        .select("id, recruiting_status, college")
+        .ilike("college", `%${shortName}%`)
+        .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
+      
+      if (shortMatch) {
+        const existingIds = new Set(directCommittedAthletes.map(a => a.id))
+        directCommittedAthletes.push(...shortMatch.filter(a => !existingIds.has(a.id)))
+      }
+    }
 
     const directCommittedIds = directCommittedAthletes?.map((a) => ({
       athlete_id: a.id,
