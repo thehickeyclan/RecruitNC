@@ -264,8 +264,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   // Fetch NC recruits when school name is available (from schoolBranding hook)
   useEffect(() => {
+    // Wait for branding to finish loading before attempting to fetch
+    if (brandingLoading) {
+      console.log("[v0] NC Recruits useEffect - branding still loading, waiting...")
+      return
+    }
+
     const schoolName = schoolBranding?.name
-    console.log("[v0] NC Recruits useEffect - schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "final schoolName:", schoolName)
+    console.log("[v0] NC Recruits useEffect - brandingLoading:", brandingLoading, "schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "final schoolName:", schoolName)
     if (schoolName && typeof schoolName === "string" && schoolName.trim().length > 0) {
       console.log("[v0] School name available, calling fetchNcRecruits")
       fetchNcRecruits()
@@ -273,7 +279,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       console.log("[v0] School name not available yet, skipping fetchNcRecruits")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolBranding?.name])
+  }, [schoolBranding?.name, brandingLoading])
 
   const fetchProspects = async () => {
     try {
