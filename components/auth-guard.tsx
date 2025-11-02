@@ -1,0 +1,108 @@
+"use client"
+
+import type React from "react"
+
+import { useAuth } from "@/contexts/auth-context"
+import { useRouter, usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+
+interface AuthGuardProps {
+  children: React.ReactNode
+  requireAdmin?: boolean
+}
+
+export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
+  const { user, isLoading, isAdmin, profile } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [mounted, setMounted] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
+
+  useEffect(() => {
+    console.log("[v0] AuthGuard state:", {
+      pathname,
+      requireAdmin,
+      hasUser: !!user,
+      isLoading,
+      isAdmin,
+      hasProfile: !!profile,
+    })
+  }, [user, isLoading, isAdmin, profile, pathname, requireAdmin])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || isLoading) return
+
+    if (!user && !redirecting) {
+      console.log("[v0] No user, redirecting to signin")
+      setRedirecting(true)
+      router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
+    } else if (requireAdmin && !isAdmin && user) {
+      console.log("[v0] Admin access check:", {
+        userEmail: user.email,
+        isAdmin,
+        profileIsAdmin: profile?.is_admin,
+      })
+    }
+  }, [mounted, isLoading, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
+
+  if (!mounted || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-lg">Redirecting...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    // Will redirect via useEffect
+    return null
+  }
+
+  if (requireAdmin && !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-start md:items-center justify-center pt-8 md:pt-0 px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>You don't have admin privileges</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-2">Signed in as: {user.email}</p>
+            <p className="text-sm text-gray-600 mb-2">User ID: {user.id}</p>
+            <p className="text-sm text-gray-600 mb-2">Profile is_admin: {profile?.is_admin ? "true" : "false"}</p>
+            <p className="text-xs text-gray-500 mb-4">
+              If you should have admin access, please check your user profile in the database (user_profiles.is_admin
+              should be true)
+            </p>
+            <Button onClick={() => router.push("/")} variant="outline" className="w-full">
+              Return to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // User is authenticated and has required permissions
+  return <>{children}</>
+}

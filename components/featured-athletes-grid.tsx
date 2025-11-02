@@ -1,0 +1,188 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
+import { normalizeAthlete } from "@/lib/professional-athlete"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import Link from "next/link"
+import { FlipVerticalIcon as Flip } from "lucide-react"
+import type { Athlete } from "@/types/athlete"
+
+// Hardcoded featured athlete data as a fallback
+const fallbackAthletes: Athlete[] = [
+  {
+    id: "liam-hickey",
+    name: "Liam Hickey",
+    highSchool: "Cardinal Gibbons",
+    graduationYear: 2025,
+    college: "NC State",
+    division: "D1",
+    photoUrl: "/wrestler-liam-hickey.png",
+    achievements: ["State Champion", "All-American"],
+    weightClass: "157",
+  },
+  {
+    id: "colt-campbell",
+    name: "Colt Campbell",
+    highSchool: "Cary High School",
+    graduationYear: 2025,
+    college: "Appalachian State",
+    division: "D1",
+    photoUrl: "/wrestler-Colt-Campbell.png",
+    achievements: ["State Runner-Up", "Regional Champion"],
+    weightClass: "165",
+  },
+  {
+    id: "bentley-sly",
+    name: "Bentley Sly",
+    highSchool: "Hough High School",
+    graduationYear: 2026,
+    college: "Appalachian State",
+    division: "D1",
+    photoUrl: "/placeholder.svg?key=kjvvc",
+    achievements: ["State Qualifier", "Conference Champion"],
+    weightClass: "174",
+  },
+  {
+    id: "lorenzo-alston",
+    name: "Lorenzo Alston",
+    highSchool: "Jack Britt High School",
+    graduationYear: 2025,
+    college: "Campbell University",
+    division: "D1",
+    photoUrl: "/wrestler-lorenzo-alston.png",
+    achievements: ["State Placer", "Regional Champion"],
+    weightClass: "184",
+  },
+]
+
+export function FeaturedAthletesGrid() {
+  const [athletes, setAthletes] = useState<Athlete[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchFeaturedAthletes() {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Fetch featured athletes from API
+        const response = await fetch("/api/featured-athletes")
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch featured athletes: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (data && Array.isArray(data) && data.length > 0) {
+          setAthletes(data)
+        } else {
+          console.log("No athletes returned from API, using fallback data")
+          setAthletes(fallbackAthletes)
+        }
+      } catch (err) {
+        console.error("Error fetching featured athletes:", err)
+        setError("Failed to load featured athletes")
+        // Use fallback data on error
+        setAthletes(fallbackAthletes)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedAthletes()
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="mb-12">
+        <h2 className="mb-6 text-2xl font-bold">Featured Commitments</h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="h-[500px] animate-pulse bg-gray-100">
+              <CardContent className="flex h-full items-center justify-center p-0">
+                <div className="text-gray-400">Loading...</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  if (error && athletes.length === 0) {
+    return (
+      <section className="mb-12">
+        <h2 className="mb-6 text-2xl font-bold">Featured Commitments</h2>
+        <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <h3 className="mb-2 text-xl font-semibold">Error Loading Athletes</h3>
+            <p className="mb-4 text-gray-600">{error}</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </CardContent>
+        </Card>
+      </section>
+    )
+  }
+
+  return (
+    <section className="mb-12">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Featured Commitments</h2>
+        <Link href="/auth/signin">
+          <Button variant="outline" size="sm">
+            Sign In to View All
+          </Button>
+        </Link>
+      </div>
+
+      {athletes.length > 0 ? (
+        <>
+          {/* Interactive Cards Message */}
+          <div className="mb-4 flex items-center gap-3 rounded-lg border border-[#c8102e] bg-[#c8102e] p-4 shadow-sm">
+            <Flip className="h-5 w-5 flex-shrink-0 text-white" />
+            <p className="text-sm text-white">
+              <span className="font-semibold">Pro Tip:</span> Cards are interactive! Click the flip icon
+              <span className="mx-1 inline-block rounded-full bg-white p-1 text-[#c8102e]">
+                <Flip className="h-3 w-3" />
+              </span>
+              in the bottom right corner to see more details about each athlete.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {athletes.map((athlete) => (
+              <ProfessionalCommitmentCard key={athlete.id} athlete={normalizeAthlete(athlete)} />
+            ))}
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <Link href="/auth/signin">
+              <Button>Sign In to View All Commitments</Button>
+            </Link>
+          </div>
+        </>
+      ) : (
+        <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
+          <CardContent className="flex flex-col items-center justify-center p-8 text-center">
+            <h3 className="mb-2 text-xl font-semibold">Authentication Required</h3>
+            <p className="mb-4 text-gray-600">
+              Sign in or create an account to view detailed information about NC wrestling commitments.
+            </p>
+            <div className="flex gap-4">
+              <Link href="/auth/signin">
+                <Button>Sign In</Button>
+              </Link>
+              <Link href="/auth/signup">
+                <Button variant="outline">Sign Up</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </section>
+  )
+}

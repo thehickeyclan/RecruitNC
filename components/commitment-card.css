@@ -1,0 +1,124 @@
+.commitment-card {
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm;
+  transition: all 0.3s ease;
+  perspective: 1000px;
+  height: 400px;
+}
+
+.commitment-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.commitment-card:hover .commitment-card-inner {
+  transform: rotateY(180deg);
+}
+
+.commitment-card-front,
+.commitment-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.commitment-card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.commitment-card-back .text-gray-600 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.commitment-card-back .border-t {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.commitment-card .card-content {
+  @apply p-4;
+}
+
+.commitment-card .athlete-image {
+  @apply relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100;
+}
+
+.commitment-card .athlete-info {
+  @apply space-y-2;
+}
+
+.commitment-card .athlete-name {
+  @apply font-semibold text-lg leading-tight text-gray-900;
+}
+
+.commitment-card .athlete-details {
+  @apply flex items-center justify-between text-sm text-gray-600;
+}
+
+.commitment-card .entity-row {
+  @apply flex items-center space-x-2;
+}
+
+.commitment-card .college-name {
+  @apply text-sm font-medium text-blue-600;
+}
+
+.commitment-card .high-school-name {
+  @apply text-xs text-gray-500;
+}
+
+.commitment-card .wrestling-club-name {
+  @apply text-xs text-gray-500;
+}
+
+.commitment-card .gender-badge {
+  @apply flex justify-end;
+}
+
+.commitment-card .committed-badge {
+  @apply absolute top-2 right-2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .commitment-card {
+    height: 350px;
+  }
+}
+
+@media (max-width: 640px) {
+  .commitment-card {
+    height: 320px;
+  }
+
+  .commitment-card .athlete-name {
+    @apply text-base;
+  }
+
+  .commitment-card .athlete-details {
+    @apply text-xs;
+  }
+}
+
+/* Loading state */
+.commitment-card.loading {
+  @apply animate-pulse;
+}
+
+.commitment-card.loading .commitment-card-front {
+  @apply bg-gray-300;
+}
+
+.commitment-card.loading .space-y-2 > * {
+  @apply bg-gray-200 rounded h-4;
+}

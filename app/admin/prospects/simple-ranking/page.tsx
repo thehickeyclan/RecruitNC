@@ -1,0 +1,572 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Link from "next/link"
+
+interface Athlete {
+  id: string
+  name: string
+  graduationyear: number
+  gender: string
+  highschool: string
+  weight: number | null
+  college: string | null
+  prospect_ranking: number | null
+  previous_ranking: number | null
+  academic_gpa: number | null
+  nationally_ranked_wins: string | null
+  college_opens_experience: string | null
+  nhsca_2023_record: string | null
+  nhsca_2023_placement: string | null
+  nhsca_2024_record: string | null
+  nhsca_2024_placement: string | null
+  nhsca_2025_record: string | null
+  nhsca_2025_placement: string | null
+  super_32_2024_record: string | null
+  super_32_2024_placement: string | null
+  super_32_2025_record: string | null
+  super_32_2025_placement: string | null
+  recruitnc_score?: number
+  calculated_rank?: number
+  score_breakdown?: {
+    ranked_wins: number
+    college_opens: number
+    super_32: number
+    nhsca: number
+    state: number
+    gpa: number
+  }
+  nchsaa_results?: Array<{
+    year: number
+    place: number
+    classification: string
+    weight_class: string
+    school: string
+  }>
+  nhsca_results?: Array<{
+    year: number
+    placement: string
+  }>
+}
+
+export default function SimpleRankingPage() {
+  const [athletes, setAthletes] = useState<Athlete[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedYear, setSelectedYear] = useState("2025")
+  const [selectedGender, setSelectedGender] = useState("Male")
+  const [selectedDivision, setSelectedDivision] = useState("all")
+  const [saving, setSaving] = useState(false)
+  const [calculatingScores, setCalculatingScores] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+
+  const loadAthletes = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(
+        `/api/admin/prospects/simple-ranking?year=${selectedYear}&gender=${selectedGender}&division=${selectedDivision}`,
+      )
+      const data = await response.json()
+      setAthletes(data.athletes || [])
+    } catch (error) {
+      console.error("Failed to load athletes:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadAthletes()
+  }, [selectedYear, selectedGender, selectedDivision])
+
+  const updateRanking = (athleteId: string, newRanking: number) => {
+    setAthletes((prev) =>
+      prev.map((athlete) => (athlete.id === athleteId ? { ...athlete, prospect_ranking: newRanking } : athlete)),
+    )
+  }
+
+  const saveRankings = async () => {
+    setSaving(true)
+    try {
+      const rankings = athletes.map((athlete, index) => ({
+        id: athlete.id,
+        ranking: index + 1,
+        current_ranking: athlete.prospect_ranking,
+      }))
+
+      console.log("[v0] Frontend - About to save rankings:", rankings.length)
+      console.log("[v0] Frontend - Sample rankings:", rankings.slice(0, 3))
+
+      const response = await fetch("/api/admin/prospects/simple-ranking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rankings }),
+      })
+
+      console.log("[v0] Frontend - API response status:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[v0] Frontend - API error response:", errorText)
+        throw new Error(`API returned ${response.status}: ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log("[v0] Frontend - API success response:", result)
+
+      alert("Rankings saved successfully!")
+    } catch (error) {
+      console.error("[v0] Frontend - Failed to save rankings:", error)
+      alert(`Failed to save rankings: ${error.message}`)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const moveAthlete = (fromIndex: number, toIndex: number) => {
+    const newAthletes = [...athletes]
+    const [movedAthlete] = newAthletes.splice(fromIndex, 1)
+    newAthletes.splice(toIndex, 0, movedAthlete)
+    setAthletes(newAthletes)
+  }
+
+  const calculateRecruitNCScores = async () => {
+    try {
+      setCalculatingScores(true)
+
+      const response = await fetch("/api/admin/prospects/calculate-scores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year: Number.parseInt(selectedYear),
+          gender: selectedGender,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+
+        const updatedAthletes = athletes.map((athlete) => {
+          const scoredAthlete = data.athletes.find((a: any) => a.id === athlete.id)
+          if (scoredAthlete) {
+            return {
+              ...athlete,
+              recruitnc_score: scoredAthlete.recruitnc_score,
+              calculated_rank: scoredAthlete.calculated_rank,
+              score_breakdown: scoredAthlete.score_breakdown,
+            }
+          }
+          return athlete
+        })
+
+        const sortedAthletes = updatedAthletes.sort((a, b) => {
+          const aScore = a.recruitnc_score || 0
+          const bScore = b.recruitnc_score || 0
+          return bScore - aScore
+        })
+
+        setAthletes(sortedAthletes)
+        alert(`RecruitNC scores calculated for ${data.athletes.length} athletes`)
+      } else {
+        throw new Error("Failed to calculate RecruitNC scores")
+      }
+    } catch (error) {
+      console.error("Error calculating RecruitNC scores:", error)
+      alert("Failed to calculate RecruitNC scores")
+    } finally {
+      setCalculatingScores(false)
+    }
+  }
+
+  const publishRankings = async () => {
+    setPublishing(true)
+    try {
+      const response = await fetch("/api/admin/prospects/publish-rankings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year: selectedYear,
+          gender: selectedGender.toLowerCase(),
+          rankings: athletes.map((athlete, index) => ({
+            id: athlete.id,
+            ranking: index + 1,
+            name: athlete.name,
+            high_school: athlete.highschool,
+            weight_class: athlete.weight ? `${athlete.weight} lbs` : "TBD",
+            academic_gpa: athlete.academic_gpa,
+            nhsca_record: athlete.nhsca_2025_record || athlete.nhsca_2024_record || athlete.nhsca_2023_record || "N/A",
+            super32_record: athlete.super_32_2025_record || athlete.super_32_2024_record || "N/A",
+            ranked_win: athlete.nationally_ranked_wins ? "Yes" : "No",
+            state_result: athlete.nchsaa_results?.[0]
+              ? `${athlete.nchsaa_results[0].classification} ${athlete.nchsaa_results[0].place === 1 ? "Champion" : `${athlete.nchsaa_results[0].place}${athlete.nchsaa_results[0].place === 2 ? "nd" : athlete.nchsaa_results[0].place === 3 ? "rd" : "th"}`} '${athlete.nchsaa_results[0].year.toString().slice(-2)}`
+              : "N/A",
+          })),
+        }),
+      })
+
+      if (response.ok) {
+        alert(`Rankings published successfully for Class of ${selectedYear} ${selectedGender}!`)
+      } else {
+        throw new Error("Failed to publish rankings")
+      }
+    } catch (error) {
+      console.error("Failed to publish rankings:", error)
+      alert("Failed to publish rankings")
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>
+  }
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Wrestling Rankings</h1>
+        <div className="flex gap-4">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2027">2027</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedGender} onValueChange={setSelectedGender}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Male">Male</SelectItem>
+              <SelectItem value="Female">Female</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Divisions</SelectItem>
+              <SelectItem value="8A">8A</SelectItem>
+              <SelectItem value="7A">7A</SelectItem>
+              <SelectItem value="6A">6A</SelectItem>
+              <SelectItem value="5A">5A</SelectItem>
+              <SelectItem value="4A">4A</SelectItem>
+              <SelectItem value="3A">3A</SelectItem>
+              <SelectItem value="2A">2A</SelectItem>
+              <SelectItem value="1A">1A</SelectItem>
+              <SelectItem value="Independent">Independent</SelectItem>
+              <SelectItem value="NCISAA">NCISAA</SelectItem>
+              <SelectItem value="NoDivision">No Division</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            onClick={calculateRecruitNCScores}
+            disabled={calculatingScores || athletes.length === 0}
+            className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100"
+            variant="outline"
+          >
+            📊 {calculatingScores ? "Calculating..." : "RecruitNC Scores"}
+          </Button>
+
+          <Button onClick={saveRankings} disabled={saving}>
+            {saving ? "Saving..." : "Save Rankings"}
+          </Button>
+
+          <Button
+            onClick={publishRankings}
+            disabled={publishing || athletes.length === 0}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+          >
+            {publishing ? "Publishing..." : "🚀 Publish Rankings"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {athletes.map((athlete, index) => (
+          <Card key={athlete.id} className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => moveAthlete(index, Math.max(0, index - 1))}
+                    disabled={index === 0}
+                  >
+                    ↑
+                  </Button>
+                  <div className="flex flex-col items-center">
+                    <span className="font-bold text-xl min-w-[3rem] text-center bg-blue-100 px-3 py-1 rounded">
+                      #{index + 1}
+                    </span>
+                    {athlete.previous_ranking && athlete.previous_ranking !== index + 1 && (
+                      <span className="text-xs text-gray-500 mt-1">
+                        {athlete.previous_ranking > index + 1 ? (
+                          <span className="text-green-600 font-semibold">↑ from #{athlete.previous_ranking}</span>
+                        ) : (
+                          <span className="text-red-600 font-semibold">↓ from #{athlete.previous_ranking}</span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
+                    disabled={index === athletes.length - 1}
+                  >
+                    ↓
+                  </Button>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:underline">
+                      <h3 className="font-bold text-xl text-blue-900">{athlete.name}</h3>
+                    </Link>
+                    {athlete.recruitnc_score && (
+                      <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300 font-bold">
+                        📊 RecruitNC: {athlete.recruitnc_score}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-gray-600 font-medium">
+                    {athlete.highschool} • {athlete.weight ? `${athlete.weight} lbs` : "Weight TBD"}
+                  </p>
+                  {athlete.score_breakdown && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {athlete.score_breakdown.ranked_wins > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          Ranked Wins: {athlete.score_breakdown.ranked_wins}
+                        </Badge>
+                      )}
+                      {athlete.score_breakdown.college_opens > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          College Opens: {athlete.score_breakdown.college_opens}
+                        </Badge>
+                      )}
+                      {athlete.score_breakdown.super_32 > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          Super 32: {athlete.score_breakdown.super_32}
+                        </Badge>
+                      )}
+                      {athlete.score_breakdown.nhsca > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          NHSCA: {athlete.score_breakdown.nhsca}
+                        </Badge>
+                      )}
+                      {athlete.score_breakdown.state > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          State: {athlete.score_breakdown.state}
+                        </Badge>
+                      )}
+                      {athlete.score_breakdown.gpa > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          GPA: {athlete.score_breakdown.gpa}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {(athlete.graduationyear === 2026 || athlete.graduationyear === 2027) && athlete.college && (
+                  <Badge className="bg-green-100 text-green-800 font-semibold">Committed: {athlete.college}</Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+              <div className="bg-yellow-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-sm text-yellow-800 mb-2">NCHSAA STATE</h4>
+                {athlete.nchsaa_results && athlete.nchsaa_results.length > 0 ? (
+                  <div className="space-y-1">
+                    {athlete.nchsaa_results.slice(0, 3).map((result, idx) => (
+                      <Badge
+                        key={idx}
+                        className={`text-xs block w-full ${
+                          result.place === 1
+                            ? "bg-yellow-500 text-black"
+                            : result.place === 2
+                              ? "bg-gray-300 text-black"
+                              : result.place === 3
+                                ? "bg-amber-600 text-white"
+                                : "bg-blue-500 text-white"
+                        }`}
+                      >
+                        {result.classification}{" "}
+                        {result.place === 1
+                          ? "Champ"
+                          : `${result.place}${result.place === 2 ? "nd" : result.place === 3 ? "rd" : "th"}`}{" "}
+                        '{result.year.toString().slice(-2)}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No state results</p>
+                )}
+              </div>
+
+              <div className="bg-red-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-sm text-red-800 mb-2">NHSCA NATIONALS</h4>
+                {athlete.nhsca_2025_placement ||
+                athlete.nhsca_2025_record ||
+                athlete.nhsca_2024_placement ||
+                athlete.nhsca_2024_record ||
+                athlete.nhsca_2023_placement ||
+                athlete.nhsca_2023_record ? (
+                  <div className="space-y-1">
+                    {athlete.nhsca_2025_placement && (
+                      <Badge className="bg-red-500 text-white text-xs block w-full">
+                        2025: {athlete.nhsca_2025_placement}
+                      </Badge>
+                    )}
+                    {athlete.nhsca_2025_record && (
+                      <Badge className="bg-red-400 text-white text-xs block w-full">
+                        2025 Record: {athlete.nhsca_2025_record}
+                      </Badge>
+                    )}
+                    {athlete.nhsca_2024_placement && (
+                      <Badge className="bg-red-500 text-white text-xs block w-full">
+                        2024: {athlete.nhsca_2024_placement}
+                      </Badge>
+                    )}
+                    {athlete.nhsca_2024_record && (
+                      <Badge className="bg-red-400 text-white text-xs block w-full">
+                        2024 Record: {athlete.nhsca_2024_record}
+                      </Badge>
+                    )}
+                    {athlete.nhsca_2023_placement && (
+                      <Badge className="bg-red-500 text-white text-xs block w-full">
+                        2023: {athlete.nhsca_2023_placement}
+                      </Badge>
+                    )}
+                    {athlete.nhsca_2023_record && (
+                      <Badge className="bg-red-400 text-white text-xs block w-full">
+                        2023 Record: {athlete.nhsca_2023_record}
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No NHSCA results</p>
+                )}
+              </div>
+
+              <div className="bg-purple-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-sm text-purple-800 mb-2">SUPER 32</h4>
+                {athlete.super_32_2025_placement ||
+                athlete.super_32_2025_record ||
+                athlete.super_32_2024_placement ||
+                athlete.super_32_2024_record ? (
+                  <div className="space-y-1">
+                    {athlete.super_32_2025_placement && (
+                      <Badge className="bg-purple-500 text-white text-xs block w-full">
+                        2025: {athlete.super_32_2025_placement}
+                      </Badge>
+                    )}
+                    {athlete.super_32_2025_record && (
+                      <Badge className="bg-purple-400 text-white text-xs block w-full">
+                        2025 Record: {athlete.super_32_2025_record}
+                      </Badge>
+                    )}
+                    {athlete.super_32_2024_placement && (
+                      <Badge className="bg-purple-500 text-white text-xs block w-full">
+                        2024: {athlete.super_32_2024_placement}
+                      </Badge>
+                    )}
+                    {athlete.super_32_2024_record && (
+                      <Badge className="bg-purple-400 text-white text-xs block w-full">
+                        2024 Record: {athlete.super_32_2024_record}
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No Super 32 results</p>
+                )}
+              </div>
+
+              <div className="bg-orange-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-sm text-orange-800 mb-2">RANKED WINS</h4>
+                {athlete.nationally_ranked_wins ? (
+                  <div className="space-y-1">
+                    {athlete.nationally_ranked_wins
+                      .split("\n")
+                      .filter((win) => win.trim())
+                      .slice(0, 3)
+                      .map((win, idx) => (
+                        <div key={idx} className="text-xs text-orange-700 leading-tight">
+                          {win.trim().length > 40 ? `${win.trim().substring(0, 40)}...` : win.trim()}
+                        </div>
+                      ))}
+                    {athlete.nationally_ranked_wins.split("\n").filter((win) => win.trim()).length > 3 && (
+                      <div className="text-xs text-orange-600 font-medium">
+                        +{athlete.nationally_ranked_wins.split("\n").filter((win) => win.trim()).length - 3} more
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No ranked wins</p>
+                )}
+              </div>
+
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-sm text-blue-800 mb-2">COLLEGE OPENS</h4>
+                {athlete.college_opens_experience ? (
+                  <div className="space-y-1">
+                    {athlete.college_opens_experience
+                      .split("\n")
+                      .filter((line) => line.trim())
+                      .slice(0, 4)
+                      .map((line, idx) => (
+                        <div key={idx} className="text-xs text-blue-700 leading-tight">
+                          {line.trim().length > 35 ? `${line.trim().substring(0, 35)}...` : line.trim()}
+                        </div>
+                      ))}
+                    {athlete.college_opens_experience.split("\n").filter((line) => line.trim()).length > 4 && (
+                      <div className="text-xs text-blue-600 font-medium">
+                        +{athlete.college_opens_experience.split("\n").filter((line) => line.trim()).length - 4} more
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No college opens</p>
+                )}
+              </div>
+
+              <div className="bg-green-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-sm text-green-800 mb-2">ACADEMICS</h4>
+                {athlete.academic_gpa ? (
+                  <Badge className="bg-green-500 text-white text-xs">
+                    GPA: {Number(athlete.academic_gpa).toFixed(1)}
+                  </Badge>
+                ) : (
+                  <p className="text-xs text-gray-500">No GPA data</p>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {athletes.length === 0 && (
+        <div className="text-center py-12 text-gray-500">
+          No athletes found for {selectedYear} {selectedGender}{" "}
+          {selectedDivision !== "all" ? `in ${selectedDivision}` : ""}
+        </div>
+      )}
+    </div>
+  )
+}

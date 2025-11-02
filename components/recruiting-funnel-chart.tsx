@@ -1,0 +1,219 @@
+"use client"
+
+import type React from "react"
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Search, Target, Gift, CheckCircle } from "lucide-react"
+
+interface FunnelStage {
+  name: string
+  count: number
+  icon: React.ReactNode
+}
+
+interface SchoolBranding {
+  primary_color: string
+  secondary_color: string
+}
+
+interface RecruitingFunnelChartProps {
+  stageCounts: Record<string, number>
+  schoolBranding?: SchoolBranding | null
+}
+
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!result) return "128, 0, 0" // fallback to maroon RGB
+  return `${Number.parseInt(result[1], 16)}, ${Number.parseInt(result[2], 16)}, ${Number.parseInt(result[3], 16)}`
+}
+
+export function RecruitingFunnelChart({ stageCounts, schoolBranding }: RecruitingFunnelChartProps) {
+  const [isMobile, setIsMobile] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+
+    if (typeof window !== "undefined") {
+      const checkMobile = () => {
+        setIsMobile(window.innerWidth < 768)
+      }
+      checkMobile()
+      window.addEventListener("resize", checkMobile)
+      return () => window.removeEventListener("resize", checkMobile)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof document !== "undefined" && isMounted) {
+      if (schoolBranding?.primary_color) {
+        const primaryRgb = hexToRgb(schoolBranding.primary_color)
+        document.documentElement.style.setProperty("--school-primary", schoolBranding.primary_color)
+        document.documentElement.style.setProperty("--school-primary-rgb", primaryRgb)
+      }
+      if (schoolBranding?.secondary_color) {
+        document.documentElement.style.setProperty("--school-secondary", schoolBranding.secondary_color)
+      }
+    }
+  }, [schoolBranding, isMounted])
+
+  if (!isMounted) {
+    return (
+      <Card className="border-2 bg-white/95 backdrop-blur-sm">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">Recruiting Pipeline Funnel</CardTitle>
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center h-[400px]">
+            <div className="animate-pulse text-muted-foreground">Loading funnel...</div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const stages: FunnelStage[] = [
+    {
+      name: "Prospect",
+      count: stageCounts["Prospect"] || 0,
+      icon: <Users className="h-5 w-5" />,
+    },
+    {
+      name: "Evaluating",
+      count: stageCounts["Evaluating"] || 0,
+      icon: <Search className="h-5 w-5" />,
+    },
+    {
+      name: "Recruiting",
+      count: stageCounts["Recruiting"] || 0,
+      icon: <Target className="h-5 w-5" />,
+    },
+    {
+      name: "Offered",
+      count: stageCounts["Offered"] || 0,
+      icon: <Gift className="h-5 w-5" />,
+    },
+    {
+      name: "Committed",
+      count: stageCounts["Committed"] || 0,
+      icon: <CheckCircle className="h-5 w-5" />,
+    },
+    {
+      name: "Signed",
+      count: stageCounts["Signed"] || 0,
+      icon: <CheckCircle className="h-5 w-5" />,
+    },
+  ]
+
+  const totalAthletes = stages.reduce((sum, stage) => sum + stage.count, 0)
+
+  const funnelHeight = isMobile ? 500 : 400
+  const funnelWidth = isMobile ? 320 : 600
+  const stageHeight = funnelHeight / stages.length
+  const topWidth = funnelWidth * 0.95
+  const bottomWidth = funnelWidth * 0.4
+
+  const getStageColor = (index: number, isCommitted: boolean): string => {
+    if (isCommitted && schoolBranding?.secondary_color) {
+      return schoolBranding.secondary_color
+    }
+    if (schoolBranding?.primary_color) {
+      const primaryRgb = hexToRgb(schoolBranding.primary_color)
+      const opacity = 0.3 + index * 0.12 // Start light (0.3) and get darker
+      return `rgba(${primaryRgb}, ${opacity})`
+    }
+    const fallbackColors = [
+      "#c76e7f", // Light pink (Prospect)
+      "#a95463", // Lighter maroon (Evaluating)
+      "#9a4755", // Light maroon (Recruiting)
+      "#8b3a47", // Medium maroon (Offered)
+      "#7c2d3a", // Dark maroon (Committed)
+      "#6d2628", // Darker maroon (Signed)
+    ]
+    return fallbackColors[index]
+  }
+
+  return (
+    <Card className="border-2 bg-white/95 backdrop-blur-sm">
+      <CardHeader>
+        <CardTitle className="text-xl font-bold">Recruiting Pipeline Funnel</CardTitle>
+        <p className="text-muted-foreground text-sm">{totalAthletes} total athletes in pipeline</p>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-center overflow-x-auto">
+          <svg
+            width={funnelWidth}
+            height={funnelHeight}
+            className="mx-auto"
+            viewBox={`0 0 ${funnelWidth} ${funnelHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {stages.map((stage, index) => {
+              const y = index * stageHeight
+              const topWidthAtStage = topWidth - (index * (topWidth - bottomWidth)) / stages.length
+              const bottomWidthAtStage = topWidth - ((index + 1) * (topWidth - bottomWidth)) / stages.length
+              const leftX = (funnelWidth - topWidthAtStage) / 2
+              const rightX = (funnelWidth + topWidthAtStage) / 2
+              const nextLeftX = (funnelWidth - bottomWidthAtStage) / 2
+              const nextRightX = (funnelWidth + bottomWidthAtStage) / 2
+
+              const conversionRate = totalAthletes > 0 ? ((stage.count / totalAthletes) * 100).toFixed(1) : "0"
+              const isCommitted = stage.name === "Committed"
+              const isSigned = stage.name === "Signed"
+              const stageColor =
+                isSigned && schoolBranding?.secondary_color
+                  ? schoolBranding.secondary_color
+                  : getStageColor(index, isCommitted)
+
+              return (
+                <g key={stage.name}>
+                  <path
+                    d={`M ${leftX} ${y} L ${rightX} ${y} L ${nextRightX} ${y + stageHeight} L ${nextLeftX} ${y + stageHeight} Z`}
+                    fill={stageColor}
+                    stroke="white"
+                    strokeWidth="2"
+                    className="transition-all hover:opacity-90 cursor-pointer"
+                    style={{
+                      filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                    }}
+                  />
+                  <text
+                    x={funnelWidth / 2}
+                    y={y + stageHeight / 2 - 15}
+                    textAnchor="middle"
+                    fill="white"
+                    className={`font-semibold uppercase tracking-wide ${isMobile ? "text-xs" : "text-sm"}`}
+                    style={{ textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)" }}
+                  >
+                    {stage.name}
+                  </text>
+                  <text
+                    x={funnelWidth / 2}
+                    y={y + stageHeight / 2 + 5}
+                    textAnchor="middle"
+                    fill="white"
+                    className={`font-bold ${isMobile ? "text-xl" : "text-lg"}`}
+                    style={{ textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)" }}
+                  >
+                    {stage.count}
+                  </text>
+                  <text
+                    x={funnelWidth / 2}
+                    y={y + stageHeight / 2 + 25}
+                    textAnchor="middle"
+                    fill="white"
+                    className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}
+                    style={{ textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)", opacity: 0.9 }}
+                  >
+                    ({conversionRate}%)
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
