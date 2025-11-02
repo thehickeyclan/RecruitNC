@@ -112,32 +112,33 @@ export async function GET(request: Request) {
 
     // ALSO check athletes table directly for athletes whose college field matches the school
     // This catches athletes committed via the admin athlete profile "college" tab
-    // Try exact match first, then partial match
+    // Check both recruiting_status AND college_coach_stars pipeline_stage
     let directCommittedAthletes: any[] = []
     
-    // First try with schoolData.name
+    // Get all athletes whose college field matches (regardless of recruiting_status)
+    // We'll check pipeline_stage separately since that's where admin commitments might be stored
+    let matchingCollegeAthletes: any[] = []
+    
+    // Try with schoolData.name
     const { data: exactMatch } = await supabase
       .from("athletes")
       .select("id, recruiting_status, college")
       .ilike("college", `%${schoolData.name}%`)
-      .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
     
     if (exactMatch) {
-      directCommittedAthletes.push(...exactMatch)
+      matchingCollegeAthletes.push(...exactMatch)
     }
     
-    // Also try with schoolName parameter if different
+    // Try with schoolName parameter if different
     if (schoolName && schoolName !== schoolData.name) {
       const { data: paramMatch } = await supabase
         .from("athletes")
         .select("id, recruiting_status, college")
         .ilike("college", `%${schoolName}%`)
-        .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
       
       if (paramMatch) {
-        // Deduplicate by id
-        const existingIds = new Set(directCommittedAthletes.map(a => a.id))
-        directCommittedAthletes.push(...paramMatch.filter(a => !existingIds.has(a.id)))
+        const existingIds = new Set(matchingCollegeAthletes.map(a => a.id))
+        matchingCollegeAthletes.push(...paramMatch.filter(a => !existingIds.has(a.id)))
       }
     }
     
@@ -148,13 +149,40 @@ export async function GET(request: Request) {
         .from("athletes")
         .select("id, recruiting_status, college")
         .ilike("college", `%${shortName}%`)
-        .in("recruiting_status", ["Committed", "Signed", "committed", "signed"])
       
       if (shortMatch) {
-        const existingIds = new Set(directCommittedAthletes.map(a => a.id))
-        directCommittedAthletes.push(...shortMatch.filter(a => !existingIds.has(a.id)))
+        const existingIds = new Set(matchingCollegeAthletes.map(a => a.id))
+        matchingCollegeAthletes.push(...shortMatch.filter(a => !existingIds.has(a.id)))
       }
     }
+    
+    // Now filter: include if recruiting_status is Committed/Signed OR if pipeline_stage in college_coach_stars is Committed/Signed
+    if (matchingCollegeAthletes.length > 0) {
+      const matchingAthleteIds = matchingCollegeAthletes.map(a => a.id)
+      
+      // Check which ones have Committed/Signed in recruiting_status
+      const statusCommitted = matchingCollegeAthletes.filter(a => 
+        a.recruiting_status && ["Committed", "Signed", "committed", "signed"].includes(a.recruiting_status)
+      )
+      directCommittedAthletes.push(...statusCommitted)
+      
+      // Also check college_coach_stars for those athletes - if pipeline_stage is Committed/Signed, include them
+      const { data: starsForAthletes } = await supabase
+        .from("college_coach_stars")
+        .select("athlete_id, pipeline_stage")
+        .in("athlete_id", matchingAthleteIds)
+        .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
+      
+      if (starsForAthletes && starsForAthletes.length > 0) {
+        const starCommittedIds = new Set(starsForAthletes.map(s => s.athlete_id))
+        const starCommittedAthletes = matchingCollegeAthletes.filter(a => 
+          starCommittedIds.has(a.id) && !statusCommitted.some(sc => sc.id === a.id)
+        )
+        directCommittedAthletes.push(...starCommittedAthletes)
+      }
+    }
+    
+    console.log(`[NC Recruits API] Found ${matchingCollegeAthletes.length} athletes with matching college field, ${directCommittedAthletes.length} of which are committed/signed`)
 
     const directCommittedIds = directCommittedAthletes?.map((a) => ({
       athlete_id: a.id,
