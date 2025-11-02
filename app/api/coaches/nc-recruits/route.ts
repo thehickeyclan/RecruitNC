@@ -3,9 +3,11 @@ import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
   try {
+    console.log(`[NC Recruits API] 🚀 API called at ${new Date().toISOString()}`)
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
     const schoolName = searchParams.get("schoolName")
+    console.log(`[NC Recruits API] Request for school: ${schoolName}`)
 
     const {
       data: { user },
@@ -60,6 +62,9 @@ export async function GET(request: Request) {
         .in("pipeline_stage", ["Committed", "Signed", "committed", "signed"])
 
       coachCommittedStars = coachStars || []
+      console.log(`[NC Recruits API] Found ${coachCommittedStars.length} committed athletes from ${coachUserIds.length} coaches at ${schoolName}`)
+    } else {
+      console.log(`[NC Recruits API] No coaches found for ${schoolName}, checking admin-added prospects...`)
     }
 
     // Also check for admin-added prospects (where notes mention this school)
@@ -92,10 +97,15 @@ export async function GET(request: Request) {
         if (adminStars) {
           adminCommittedStars = adminStars.filter((star) => {
             const notesLower = (star.notes || "").toLowerCase()
-            return schoolNameVariations.some((variation) =>
+            const matches = schoolNameVariations.some((variation) =>
               notesLower.includes(variation.toLowerCase())
             )
+            if (matches) {
+              console.log(`[NC Recruits API] ✅ Admin-added recruit matches: notes="${star.notes?.substring(0, 50)}" matches variations:`, schoolNameVariations)
+            }
+            return matches
           })
+          console.log(`[NC Recruits API] Found ${adminCommittedStars.length} admin-added committed athletes for ${schoolName} (from ${adminStars.length} total admin commits)`)
         }
       }
     }
@@ -170,14 +180,36 @@ export async function GET(request: Request) {
       const location = (athlete.location || "").toLowerCase()
       const highschool = (athlete.highschool || "").toLowerCase()
 
-      return ncKeywords.some(
+      const isNC = ncKeywords.some(
         (keyword) =>
           location.includes(keyword.toLowerCase()) ||
           highschool.includes(keyword.toLowerCase()) ||
           (location && location.includes("north carolina")) ||
           (highschool && highschool.includes("north carolina")),
       )
+
+      // Debug logging for Cameron Gue specifically
+      if (athlete.name?.toLowerCase().includes("cameron") && athlete.name?.toLowerCase().includes("gue")) {
+        const matchingKeywords = ncKeywords.filter(k => 
+          highschool.includes(k.toLowerCase()) || location.includes(k.toLowerCase())
+        )
+        console.log(`[NC Recruits API] 🔍 Cameron Gue DEBUG:`, {
+          name: athlete.name,
+          highschool,
+          location,
+          isNC,
+          matchingKeywords,
+          allKeywords: ncKeywords,
+          highschoolLower: highschool,
+          locationLower: location,
+        })
+      }
+
+      return isNC
     })
+
+    console.log(`[NC Recruits API] ✅ Final results: ${ncAthletes.length} NC athletes from ${athletes?.length || 0} total committed athletes for school: ${schoolName}`)
+    console.log(`[NC Recruits API] Athlete names:`, ncAthletes.map(a => a.name))
 
     // Get pipeline_stage from college_coach_stars for each athlete
     const athletesWithStage = ncAthletes.map((athlete) => {
