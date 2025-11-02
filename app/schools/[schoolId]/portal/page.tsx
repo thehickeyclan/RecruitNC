@@ -33,6 +33,8 @@ import {
   Clock,
   FileText,
   AlertCircle,
+  LayoutGrid,
+  Table,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -163,6 +165,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedGender, setSelectedGender] = useState<string>("all")
+  const [viewMode, setViewMode] = useState<"board" | "table">("board")
   const [selectedAthlete, setSelectedAthlete] = useState<Prospect | null>(null)
   const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState("")
@@ -1353,6 +1356,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   <SelectItem value="female">Women's</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* View Mode Toggle */}
+              <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1 bg-white">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("board")}
+                  className={`h-9 px-3 ${viewMode === "board" ? "bg-gray-100" : ""}`}
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Board
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className={`h-9 px-3 ${viewMode === "table" ? "bg-gray-100" : ""}`}
+                >
+                  <Table className="h-4 w-4 mr-2" />
+                  Table
+                </Button>
+              </div>
             </div>
 
             <Button
@@ -1373,8 +1398,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       </div>
 
       <div className="container mx-auto px-4 pb-8">
-        <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
-          {PIPELINE_STAGES.map((stage) => {
+        {viewMode === "board" ? (
+          <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
+            {PIPELINE_STAGES.map((stage) => {
             const stageProspects = getProspectsByStage(stage.id)
             return (
               <div
@@ -1470,7 +1496,81 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </div>
             )
           })}
-        </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full caption-bottom text-sm">
+                <thead className="[&_tr]:border-b bg-gray-50">
+                  <tr className="border-b transition-colors">
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Name</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Year</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Weight</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">High School</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Stage</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">GPA</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Ranking</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Last Contact</th>
+                  </tr>
+                </thead>
+                <tbody className="[&_tr:last-child]:border-0">
+                  {filteredProspects.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-gray-500">
+                        No prospects found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProspects.map((prospect) => {
+                      const stage = PIPELINE_STAGES.find(s => s.id === prospect.pipeline_stage) || PIPELINE_STAGES[0]
+                      return (
+                        <tr
+                          key={prospect.id}
+                          onClick={() => openAthleteModal(prospect)}
+                          className="border-b transition-colors hover:bg-gray-50 cursor-pointer"
+                        >
+                          <td className="p-4 align-middle">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={prospect.photourl || "/placeholder.svg?height=40&width=40&query=wrestler"}
+                                alt={prospect.name}
+                                className="w-10 h-10 rounded-lg object-cover border-2 border-gray-200"
+                              />
+                              <span className="font-medium text-gray-900">{prospect.name}</span>
+                            </div>
+                          </td>
+                          <td className="p-4 align-middle text-gray-600">{prospect.graduationyear}</td>
+                          <td className="p-4 align-middle text-gray-600">{prospect.weightclass}lbs</td>
+                          <td className="p-4 align-middle text-gray-600">{prospect.highschool || "-"}</td>
+                          <td className="p-4 align-middle">
+                            <Badge
+                              className="text-xs"
+                              style={{
+                                backgroundColor: stage.color || "#6B7280",
+                                color: "white",
+                              }}
+                            >
+                              {stage.label}
+                            </Badge>
+                          </td>
+                          <td className="p-4 align-middle text-gray-600">
+                            {prospect.academic_gpa ? prospect.academic_gpa.toFixed(1) : "-"}
+                          </td>
+                          <td className="p-4 align-middle text-gray-600">
+                            {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
+                          </td>
+                          <td className="p-4 align-middle text-gray-600 text-sm">
+                            {formatLastContactDate(getLastContactedDate(prospect.id))}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={!!selectedAthlete} onOpenChange={() => setSelectedAthlete(null)}>
