@@ -154,8 +154,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const { profile, loading: authLoading } = useAuth() // Changed isLoading to loading
   const router = useRouter()
   const { toast } = useToast()
-  const { schoolBranding, loading: brandingLoading } = useSchoolBranding(params.schoolId) // Changed branding to schoolBranding and isLoading to loading
-  const [school, setSchool] = useState<School | null>(null)
+  const { branding: schoolBranding, isLoading: brandingLoading } = useSchoolBranding(params.schoolId)
+  // Removed redundant school state - using schoolBranding from hook instead
 
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -218,25 +218,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [loadingNcRecruits, setLoadingNcRecruits] = useState(true)
 
 
-  useEffect(() => {
-    const fetchSchool = async () => {
-      try {
-        console.log("[v0] Fetching school for schoolId:", params.schoolId)
-        const response = await fetch(`/api/schools/${params.schoolId}/branding`)
-        if (response.ok) {
-          const data = await response.json()
-          console.log("[v0] School fetched:", data.school?.name)
-          setSchool(data.school)
-        } else {
-          console.error("[v0] Failed to fetch school, status:", response.status)
-        }
-      } catch (error) {
-        console.error("[v0] Error fetching school:", error)
-      }
-    }
-
-    fetchSchool()
-  }, [params.schoolId])
+  // Removed redundant fetchSchool - using useSchoolBranding hook instead
 
   useEffect(() => {
     const isAuthorized = profile?.is_admin || profile?.school_id === params.schoolId
@@ -246,12 +228,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }, [authLoading, profile, params.schoolId, router])
 
   const fetchNcRecruits = async () => {
-    // Use schoolBranding from hook (already fetched) as primary source, fallback to school state
-    const schoolName = schoolBranding?.name || school?.name
+    // Use schoolBranding from hook (already fetched)
+    const schoolName = schoolBranding?.name
     
     // Ensure school name exists and is a non-empty string before fetching
     if (!schoolName || typeof schoolName !== "string" || schoolName.trim().length === 0) {
-      console.log("[v0] Skipping NC recruits fetch - school name not available:", { schoolBrandingName: schoolBranding?.name, schoolName: school?.name })
+      console.log("[v0] Skipping NC recruits fetch - school name not available:", { schoolBrandingName: schoolBranding?.name })
       return
     }
     
@@ -280,10 +262,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }, [params.schoolId, profile, authLoading])
 
-  // Fetch NC recruits when school name is available (from schoolBranding hook or school state)
+  // Fetch NC recruits when school name is available (from schoolBranding hook)
   useEffect(() => {
-    const schoolName = schoolBranding?.name || school?.name
-    console.log("[v0] NC Recruits useEffect - schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "school?.name:", school?.name, "final schoolName:", schoolName)
+    const schoolName = schoolBranding?.name
+    console.log("[v0] NC Recruits useEffect - schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "final schoolName:", schoolName)
     if (schoolName && typeof schoolName === "string" && schoolName.trim().length > 0) {
       console.log("[v0] School name available, calling fetchNcRecruits")
       fetchNcRecruits()
@@ -291,7 +273,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       console.log("[v0] School name not available yet, skipping fetchNcRecruits")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolBranding?.name, school?.name])
+  }, [schoolBranding?.name])
 
   const fetchProspects = async () => {
     try {
@@ -1098,7 +1080,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     <div className="min-h-screen bg-gray-50">
       <SchoolBrandedHeader
         schoolId={params.schoolId}
-        schoolName={schoolBranding?.name || school?.name || ""}
+        schoolName={schoolBranding?.name || ""}
         subtitle={`${filteredProspects.length} Active Prospects`}
       />
 
@@ -1184,7 +1166,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           <CardHeader className="pb-4">
             <CardTitle className="text-2xl font-bold text-gray-900">Committed Recruits</CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              North Carolina athletes committed or signed to {school?.name || "this school"}
+              North Carolina athletes committed or signed to {schoolBranding?.name || "this school"}
             </p>
           </CardHeader>
           <CardContent className="p-6">
