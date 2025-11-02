@@ -241,12 +241,21 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       setLoadingNcRecruits(true)
       console.log("[v0] Fetching NC recruits for school:", schoolName)
       const response = await fetch(`/api/coaches/nc-recruits?schoolName=${encodeURIComponent(schoolName)}`)
+      console.log("[v0] NC Recruits API response status:", response.status, response.statusText)
       if (response.ok) {
         const data = await response.json()
+        console.log("[v0] NC Recruits API response data:", data)
+        console.log("[v0] Number of recruits received:", data.recruits?.length || 0)
+        if (data.recruits && data.recruits.length > 0) {
+          console.log("[v0] Recruit names:", data.recruits.map((r: any) => r.name))
+        }
         setNcRecruits(data.recruits || [])
+      } else {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+        console.error("[v0] NC Recruits API error:", response.status, errorData)
       }
     } catch (error) {
-      console.error("Error fetching NC recruits:", error)
+      console.error("[v0] Error fetching NC recruits:", error)
     } finally {
       setLoadingNcRecruits(false)
     }
