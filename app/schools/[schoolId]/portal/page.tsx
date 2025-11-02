@@ -217,8 +217,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [ncRecruits, setNcRecruits] = useState<any[]>([])
   const [loadingNcRecruits, setLoadingNcRecruits] = useState(true)
 
-  // UNCONDITIONAL LOG TO VERIFY COMPONENT IS LOADING NEW CODE
-  console.log("[NC Recruits] Component rendering, state initialized, ncRecruits count:", ncRecruits.length)
 
   useEffect(() => {
     const fetchSchool = async () => {
@@ -244,50 +242,39 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }, [authLoading, profile, params.schoolId, router])
 
   const fetchNcRecruits = async () => {
+    if (!school?.name) return // Don't fetch if school name not loaded yet
+    
     try {
-      console.log("[NC Recruits] Starting fetch...")
       setLoadingNcRecruits(true)
-      const response = await fetch("/api/coaches/nc-recruits")
-      console.log("[NC Recruits] Response status:", response.status, response.ok)
+      const response = await fetch(`/api/coaches/nc-recruits?schoolName=${encodeURIComponent(school.name)}`)
       if (response.ok) {
         const data = await response.json()
-        console.log("[NC Recruits] Data received:", data)
         setNcRecruits(data.recruits || [])
-        console.log("[NC Recruits] Recruits set:", data.recruits?.length || 0)
-      } else {
-        const errorData = await response.json()
-        console.error("[NC Recruits] API error:", errorData)
       }
     } catch (error) {
-      console.error("[NC Recruits] Fetch error:", error)
+      console.error("Error fetching NC recruits:", error)
     } finally {
       setLoadingNcRecruits(false)
-      console.log("[NC Recruits] Loading complete")
     }
   }
 
-  // ALWAYS call fetchNcRecruits, regardless of condition - for testing
   useEffect(() => {
-    console.log("[NC Recruits] MAIN useEffect triggered")
     console.log("[v0] Branded portal page loaded for schoolId:", params.schoolId)
     console.log("[v0] Auth state:", { authLoading, hasProfile: !!profile, profileId: profile?.id })
-    console.log("[NC Recruits] useEffect triggered, checking condition...")
-    console.log("[NC Recruits] profile exists:", !!profile, "authLoading:", authLoading)
-    console.log("[NC Recruits] fetchNcRecruits function exists:", typeof fetchNcRecruits === 'function')
-    
-    // Always call it for now to test
-    console.log("[NC Recruits] FORCING fetchNcRecruits call...")
-    fetchNcRecruits()
-    
     if (profile || !authLoading) {
-      console.log("[NC Recruits] Condition passed, calling other fetches...")
       // Fetch prospects only if profile is loaded or auth is not loading
       fetchProspects()
       fetchActivities() // Fetch all activities initially to populate overdue list
-    } else {
-      console.log("[NC Recruits] Condition NOT passed, skipping other fetches")
     }
-  }, [params.schoolId, profile, authLoading]) // Added dependencies
+  }, [params.schoolId, profile, authLoading])
+
+  // Fetch NC recruits when school name is available
+  useEffect(() => {
+    if (school?.name) {
+      fetchNcRecruits()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [school?.name])
 
   const fetchProspects = async () => {
     try {
@@ -1171,17 +1158,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
       )}
 
-      {/* North Carolina Recruits Section - Always visible at top - FORCE RENDER TEST */}
-      <div className="container mx-auto px-4 pt-6 pb-4" style={{ minHeight: "200px", backgroundColor: "#f9fafb", border: "5px solid red" }}>
-        {console.log("[NC Recruits RENDER] Rendering section, loading:", loadingNcRecruits, "count:", ncRecruits.length)}
-        <Card className="border-4 border-blue-500 shadow-lg bg-white">
+      {/* North Carolina Recruits Section */}
+      <div className="container mx-auto px-4 pt-6 pb-4">
+        <Card className="border border-gray-200 shadow-sm bg-white">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl font-bold text-gray-900">Committed Recruits</CardTitle>
+            <p className="text-sm text-gray-600 mt-1">
+              North Carolina athletes committed or signed to {school?.name || "this school"}
+            </p>
+          </CardHeader>
           <CardContent className="p-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4 bg-yellow-200 p-2 rounded">
-              ⚠️ North Carolina Recruits - TEST SECTION - MUST BE VISIBLE
-            </h2>
-            <div className="text-sm text-red-600 mb-4 p-2 bg-red-100 rounded font-bold">
-              DEBUG: loading={String(loadingNcRecruits)}, count={ncRecruits.length}, section rendered at {new Date().toLocaleTimeString()}
-            </div>
             {loadingNcRecruits ? (
               <div className="text-center py-8">
                 <div className="animate-pulse text-gray-400">Loading recruits...</div>
