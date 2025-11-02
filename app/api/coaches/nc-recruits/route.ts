@@ -147,6 +147,22 @@ export async function GET(request: Request) {
       "Burlington",
       "Kannapolis",
       "Mooresville",
+      "Mount Pleasant", // Mount Pleasant, NC
+      "Cabarrus", // Cabarrus County, NC
+      "Cabarrus County",
+      "Stanly",
+      "Stanly County",
+      "Matthews",
+      "Davidson",
+      "Cornelius",
+      "Huntersville",
+      "Mint Hill",
+      "Harrisburg",
+      "Midland",
+      "Oakboro",
+      "Albemarle",
+      "Pineville",
+      "Indian Trail",
     ]
 
     // Filter for North Carolina athletes
