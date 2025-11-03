@@ -170,8 +170,18 @@ export async function GET(request: NextRequest) {
       
       console.log("[v0] Prospects API - Found athletes with matching college field:", directCollegeAthletes.length)
       
+      // Debug: Check if Cameron Gue is in the direct matches
+      const cameronMatch = directCollegeAthletes.find(a => a.id === "969fb4a7-fe96-4b95-bf3e-4adf2a3d16f8")
+      if (cameronMatch) {
+        console.log("[v0] Prospects API - ✅ Cameron Gue FOUND in direct college matches:", cameronMatch)
+      } else {
+        console.log("[v0] Prospects API - ❌ Cameron Gue NOT in direct college matches")
+      }
+      
       // Create star-like entries for these athletes (if not already starred)
       const existingStarredIds = new Set((starredData || []).map(s => s.athlete_id))
+      console.log("[v0] Prospects API - Existing starred IDs count:", existingStarredIds.size)
+      
       const newDirectStars = directCollegeAthletes
         .filter(a => !existingStarredIds.has(a.id))
         .map(a => ({
