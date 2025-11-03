@@ -1331,51 +1331,53 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               />
             </div>
 
-            <div className="flex gap-3">
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium">
-                  <SelectValue placeholder="All Years" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
-                  <SelectItem value="all">All Years</SelectItem>
-                  {graduationYears.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      Class of {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex gap-3">
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                    <SelectValue placeholder="All Years" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="all">All Years</SelectItem>
+                    {graduationYears.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        Class of {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="male">Men's</SelectItem>
-                  <SelectItem value="female">Women's</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                    <SelectValue placeholder="All" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-200">
+                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="male">Men's</SelectItem>
+                    <SelectItem value="female">Women's</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* View Mode Toggle */}
-              <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1 bg-white">
+              <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1 bg-white w-full md:w-auto">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setViewMode("board")}
-                  className={`h-9 px-3 ${viewMode === "board" ? "bg-gray-100" : ""}`}
+                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation ${viewMode === "board" ? "bg-gray-100" : ""}`}
                 >
                   <LayoutGrid className="h-4 w-4 mr-2" />
-                  Board
+                  <span className="text-sm">Board</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setViewMode("table")}
-                  className={`h-9 px-3 ${viewMode === "table" ? "bg-gray-100" : ""}`}
+                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation ${viewMode === "table" ? "bg-gray-100" : ""}`}
                 >
                   <Table className="h-4 w-4 mr-2" />
-                  Table
+                  <span className="text-sm">Table</span>
                 </Button>
               </div>
             </div>
@@ -1385,7 +1387,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 console.log("[v0] Add Prospect button clicked - redirecting to public rankings")
                 window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
               }}
-              className="h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all w-full md:w-auto"
+              className="h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all w-full md:w-auto touch-manipulation"
               style={{
                 backgroundColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
               }}
@@ -1438,7 +1440,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           draggable
                           onDragStart={() => handleDragStart(prospect)}
                           onClick={() => openAthleteModal(prospect)}
-                          className="bg-gray-50 border-2 border-gray-200 hover:border-gray-900 hover:shadow-lg hover:-translate-y-0.5 cursor-grab active:cursor-grabbing active:opacity-75 transition-all rounded-lg"
+                          className="bg-gray-50 border-2 border-gray-200 hover:border-gray-900 active:border-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-grab active:cursor-grabbing transition-all rounded-lg touch-manipulation"
                         >
                           <CardContent className="p-3 md:p-4">
                             <div className="flex gap-3 mb-3 relative">
@@ -1478,9 +1480,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             )}
 
                             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                              <button className="p-1 md:p-1.5 hover:scale-110 transition-transform">
+                              <button 
+                                className="p-2 md:p-1.5 hover:scale-110 active:scale-95 transition-transform touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  // Handle star toggle if needed
+                                }}
+                              >
                                 <Star
-                                  className={`h-4 w-4 md:h-5 md:w-5 ${prospect.is_starred ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                                  className={`h-5 w-5 md:h-5 md:w-5 ${prospect.is_starred ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
                                 />
                               </button>
                               <span className="text-[10px] md:text-xs text-gray-500 font-medium">
@@ -1499,8 +1507,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </div>
         ) : (
           <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full caption-bottom text-sm">
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="md:hidden text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b">
+                ← Swipe to see more columns →
+              </div>
+              <table className="w-full caption-bottom text-sm min-w-[800px]">
                 <thead className="[&_tr]:border-b bg-gray-50">
                   <tr className="border-b transition-colors">
                     <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Name</th>
@@ -1527,7 +1538,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         <tr
                           key={prospect.id}
                           onClick={() => openAthleteModal(prospect)}
-                          className="border-b transition-colors hover:bg-gray-50 cursor-pointer"
+                          className="border-b transition-colors hover:bg-gray-50 active:bg-gray-100 cursor-pointer touch-manipulation"
                         >
                           <td className="p-4 align-middle">
                             <div className="flex items-center gap-3">
@@ -1574,11 +1585,21 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       </div>
 
       <Dialog open={!!selectedAthlete} onOpenChange={() => setSelectedAthlete(null)}>
-        <DialogContent className="max-w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] p-0 bg-white border-0 md:border md:border-gray-200 text-gray-900 md:rounded-lg flex flex-col">
+        <DialogContent className="max-w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] p-0 bg-white border-0 md:border md:border-gray-200 text-gray-900 md:rounded-lg flex flex-col [&>button]:hidden">
           {selectedAthlete && (
             <>
-              <DialogHeader className="pb-4 p-4 md:p-6 sticky top-0 bg-white z-10 border-b border-gray-200">
-                <div className="flex items-start gap-4">
+              <DialogHeader className="pb-4 p-4 md:p-6 sticky top-0 bg-white z-10 border-b border-gray-200 relative">
+                {/* Close button - prominent on mobile */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-2 z-20 h-10 w-10 md:h-8 md:w-8 rounded-full bg-white shadow-lg border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all md:right-4 md:top-4 touch-manipulation"
+                  onClick={() => setSelectedAthlete(null)}
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5 md:h-4 md:w-4 text-gray-700" />
+                </Button>
+                <div className="flex items-start gap-4 pr-12 md:pr-0">
                   <img
                     src={selectedAthlete.photourl || "/placeholder.svg?height=80&width=80&query=wrestler"}
                     alt={selectedAthlete.name}
@@ -1604,55 +1625,58 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 </div>
               </DialogHeader>
 
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <Tabs defaultValue="overview" className="mt-0">
-                  <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                  <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <div className="md:hidden text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b -mx-4 mb-2">
+                      ← Swipe to see more tabs →
+                    </div>
                     <TabsList className="bg-white border border-gray-200 inline-flex md:grid md:grid-cols-8 gap-1 w-max md:w-full">
                       <TabsTrigger
                         value="overview"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Overview
                       </TabsTrigger>
                       <TabsTrigger
                         value="performance"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Performance
                       </TabsTrigger>
                       <TabsTrigger
                         value="academics"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Academics
                       </TabsTrigger>
                       <TabsTrigger
                         value="documents"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Documents
                       </TabsTrigger>
                       <TabsTrigger
                         value="family"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Family
                       </TabsTrigger>
                       <TabsTrigger
                         value="notes"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Notes ({notes.length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="financials"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Financials
                       </TabsTrigger>
                       <TabsTrigger
                         value="activity"
-                        className="flex-shrink-0 text-xs md:text-sm px-3 md:px-4 whitespace-nowrap data-[state=active]:bg-gray-100"
+                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Activity
                       </TabsTrigger>
