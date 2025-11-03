@@ -64,29 +64,29 @@ function NewCollegesPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+        <div className="bg-gradient-to-r from-[#1e3a8a] to-[#1e40af] text-white">
           <div className="container mx-auto px-4 py-8">
             <div className="text-center mb-6">
               <h2 className="text-3xl font-bold mb-2">COLLEGES RECRUITING NC ATHLETES</h2>
-              <p className="text-red-200 text-sm mt-2">{getBannerText()}</p>
+              <p className="text-blue-200 text-sm mt-2">{getBannerText()}</p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold">{loading ? "..." : totalCommits}</div>
-                <div className="text-red-100 text-sm">Total Commits</div>
+                <div className="text-blue-100 text-sm">Total Commits</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold">{loading ? "..." : maleCommits}</div>
-                <div className="text-red-100 text-sm">Men's Wrestling</div>
+                <div className="text-blue-100 text-sm">Men's Wrestling</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold">{loading ? "..." : femaleCommits}</div>
-                <div className="text-red-100 text-sm">Women's Wrestling</div>
+                <div className="text-blue-100 text-sm">Women's Wrestling</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold">{loading ? "..." : uniqueColleges}</div>
-                <div className="text-red-100 text-sm">Colleges</div>
+                <div className="text-blue-100 text-sm">Colleges</div>
               </div>
             </div>
           </div>

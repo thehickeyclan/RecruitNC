@@ -231,6 +231,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     roster_notes: "",
   })
   const [isRosterHistoryOpen, setIsRosterHistoryOpen] = useState(false)
+  const [academicNotes, setAcademicNotes] = useState("")
+  const [isSavingAcademicNotes, setIsSavingAcademicNotes] = useState(false)
 
 
   // Removed redundant fetchSchool - using useSchoolBranding hook instead
@@ -568,7 +570,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }
 
-  // Load financial data when athlete is selected
+  // Load financial data and academic notes when athlete is selected
   useEffect(() => {
     if (selectedAthlete) {
       setFinancialData({
@@ -582,8 +584,54 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         aidApplicationStatus: selectedAthlete.aid_application_status || "",
         financialConcerns: selectedAthlete.financial_concerns || "",
       })
+      // Load academic notes from star data
+      setAcademicNotes((selectedAthlete as any).academic_notes || "")
     }
   }, [selectedAthlete])
+
+  // Handler for saving academic notes
+  const handleSaveAcademicNotes = async () => {
+    if (!selectedAthlete) return
+
+    try {
+      setIsSavingAcademicNotes(true)
+
+      const response = await fetch(`/api/coaches/starred-athletes/${selectedAthlete.id}/academic-notes`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ academic_notes: academicNotes }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Academic notes saved",
+          description: "Your academic notes have been saved successfully.",
+        })
+        // Refresh the selected athlete data
+        const updatedResponse = await fetch(`/api/coaches/starred-athletes/${selectedAthlete.id}`)
+        if (updatedResponse.ok) {
+          const data = await updatedResponse.json()
+          setSelectedAthlete(data.athlete)
+        }
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to save academic notes",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error saving academic notes:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save academic notes",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingAcademicNotes(false)
+    }
+  }
 
   // Handler for saving financial information
   const handleSaveFinancials = async () => {
@@ -2290,6 +2338,34 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           <p className="text-sm text-gray-700">{selectedAthlete.academic_summary}</p>
                         </div>
                       )}
+                    </div>
+
+                    {/* Coach's Academic Notes Section */}
+                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
+                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Your Academic Notes
+                      </h3>
+                      <p className="text-xs text-gray-600 mb-3">
+                        Add your own academic information or notes that aren't in the public profile (e.g., GPA obtained during conversation, test scores, academic interests, etc.)
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <Textarea
+                          placeholder="Example: Spoke with athlete - current GPA is 3.8, planning to retake SAT in spring, interested in Engineering program..."
+                          value={academicNotes}
+                          onChange={(e) => setAcademicNotes(e.target.value)}
+                          rows={4}
+                          className="w-full"
+                        />
+                        <Button
+                          onClick={handleSaveAcademicNotes}
+                          disabled={isSavingAcademicNotes}
+                          className="w-full"
+                        >
+                          {isSavingAcademicNotes ? "Saving..." : "Save Academic Notes"}
+                        </Button>
+                      </div>
                     </div>
                   </TabsContent>
 
