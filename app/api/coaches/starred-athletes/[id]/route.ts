@@ -129,6 +129,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       evaluation_notes: athlete.evaluation_notes,
       socialMedia: athlete.socialMedia,
       ranking: athlete.prospect_ranking,
+      academic_notes: star.academic_notes,
       financial_efc: star.financial_efc,
       financial_aid_needs: star.financial_aid_needs,
       scholarship_requirements: star.scholarship_requirements,
