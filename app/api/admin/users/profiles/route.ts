@@ -41,18 +41,45 @@ export async function GET() {
       },
     )
 
-    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers()
+    // Fetch ALL users by paginating through results
+    let allAuthUsers: any[] = []
+    let page = 1
+    let hasMore = true
+    const perPage = 1000 // Supabase max per page
 
-    if (authError) {
-      console.error("[v0] Error fetching auth users:", authError)
-      return NextResponse.json(
-        {
-          error: "Failed to fetch users",
-          details: authError.message,
-        },
-        { status: 500 },
-      )
+    while (hasMore) {
+      const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+        page,
+        perPage
+      })
+
+      if (authError) {
+        console.error("[v0] Error fetching auth users:", authError)
+        return NextResponse.json(
+          {
+            error: "Failed to fetch users",
+            details: authError.message,
+          },
+          { status: 500 },
+        )
+      }
+
+      if (authUsers.users && authUsers.users.length > 0) {
+        allAuthUsers.push(...authUsers.users)
+        console.log(`[v0] Fetched page ${page}: ${authUsers.users.length} users`)
+        
+        // Check if there are more pages
+        if (authUsers.users.length < perPage) {
+          hasMore = false
+        } else {
+          page++
+        }
+      } else {
+        hasMore = false
+      }
     }
+
+    console.log(`[v0] Total auth users fetched: ${allAuthUsers.length}`)
 
     const { data: userProfiles, error: profileError } = await supabaseAdmin
       .from("user_profiles")
@@ -79,7 +106,7 @@ export async function GET() {
     const profileMap = new Map(userProfiles?.map((p) => [p.user_id, p]) || [])
 
     // Combine auth users with profile data
-    const combinedProfiles = authUsers.users.map((user) => {
+    const combinedProfiles = allAuthUsers.map((user) => {
       const profile = profileMap.get(user.id)
       return {
         user_id: user.id,
