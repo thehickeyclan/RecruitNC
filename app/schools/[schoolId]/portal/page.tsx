@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -43,7 +43,7 @@ import { RecruitingFunnelChart } from "@/components/recruiting-funnel-chart"
 import { SchoolBrandedHeader } from "@/components/school-branded-header"
 import { useSchoolBranding } from "@/hooks/use-school-branding"
 import { createClient } from "@/lib/supabase/client"
-import { RecruitingActionsDashboard } from "@/components/recruiting-actions-dashboard"
+import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/components/recruiting-actions-dashboard"
 
 interface Prospect {
   id: string
@@ -167,6 +167,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedGender, setSelectedGender] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"board" | "table">("board")
+  const dashboardRef = useRef<RecruitingActionsDashboardRef>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<Prospect | null>(null)
   const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState("")
@@ -1131,11 +1132,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           <div className="flex gap-2">
             <Button
               onClick={() => {
-                // Scroll to RecruitingActionsDashboard
-                const dashboardElement = document.querySelector('[data-recruiting-dashboard]')
-                if (dashboardElement) {
-                  dashboardElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }
+                dashboardRef.current?.openCreateActivity()
               }}
               className="flex-1 h-12 px-4 rounded-lg font-semibold bg-gray-900 text-white shadow-sm hover:shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all touch-manipulation"
             >
@@ -1299,6 +1296,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
       <div className="container mx-auto px-4 py-6" data-recruiting-dashboard>
         <RecruitingActionsDashboard 
+          ref={dashboardRef}
           schoolId={params.schoolId} 
           athletes={prospects.map(p => ({ id: p.id, name: p.name }))} 
         />

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -32,7 +32,12 @@ interface RecruitingActionsDashboardProps {
   athletes?: { id: string; name: string }[] // Optional: pass athletes from parent (e.g., prospects from portal)
 }
 
-export function RecruitingActionsDashboard({ schoolId, athletes: providedAthletes }: RecruitingActionsDashboardProps) {
+export interface RecruitingActionsDashboardRef {
+  openCreateActivity: () => void
+}
+
+export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardRef, RecruitingActionsDashboardProps>(
+  ({ schoolId, athletes: providedAthletes }, ref) => {
   const [actions, setActions] = useState<RecruitingAction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -55,6 +60,13 @@ export function RecruitingActionsDashboard({ schoolId, athletes: providedAthlete
     outcome: "",
   })
   const [availableAthletes, setAvailableAthletes] = useState<{ id: string; name: string }[]>([])
+
+  // Expose method to parent component to open the create activity modal
+  useImperativeHandle(ref, () => ({
+    openCreateActivity: () => {
+      setCreatingActivity(true)
+    }
+  }))
 
   useEffect(() => {
     console.log("[v0] RecruitingActionsDashboard mounted with schoolId:", schoolId)
@@ -432,14 +444,10 @@ export function RecruitingActionsDashboard({ schoolId, athletes: providedAthlete
               <TabsTrigger value="table" className="gap-2">
                 <TableIcon className="h-4 w-4" />
                 Table
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <Button onClick={handleCreateActivity} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Activity
-          </Button>
+            </TabsTrigger>
+          </TabsList>
         </div>
+      </div>
 
         {/* Dashboard Tab - Today's Follow-ups, Upcoming, Overdue */}
         <TabsContent value="dashboard">
@@ -1025,4 +1033,6 @@ export function RecruitingActionsDashboard({ schoolId, athletes: providedAthlete
       </Dialog>
     </>
   )
-}
+})
+
+RecruitingActionsDashboard.displayName = "RecruitingActionsDashboard"
