@@ -9,22 +9,22 @@ export default function ProspectsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+      <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">NC Wrestling Prospects</h1>
-            <p className="text-xl text-blue-100 mb-8">
+            <p className="text-xl text-gray-200 mb-8">
               Connecting North Carolina's top wrestling talent with college programs
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/submit-profile">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 w-full sm:w-auto">
+                <Button size="lg" className="bg-[#B31B1B] text-white hover:bg-[#8B1515] w-full sm:w-auto shadow-lg">
                   <FileText className="h-5 w-5 mr-2" />
                   Submit Your Profile
                 </Button>
               </Link>
               <Link href="/public-rankings">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                <Button size="lg" className="bg-white text-[#002147] hover:bg-gray-100 w-full sm:w-auto shadow-lg">
                   <Search className="h-5 w-5 mr-2" />
                   Browse Rankings
                 </Button>
@@ -42,8 +42,8 @@ export default function ProspectsPage() {
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <Card>
               <CardHeader>
-                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="h-12 w-12 bg-[#002147]/10 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-[#002147]" />
                 </div>
                 <CardTitle>College Exposure</CardTitle>
                 <CardDescription>
@@ -54,8 +54,8 @@ export default function ProspectsPage() {
 
             <Card>
               <CardHeader>
-                <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
+                <div className="h-12 w-12 bg-[#B31B1B]/10 rounded-lg flex items-center justify-center mb-4">
+                  <TrendingUp className="h-6 w-6 text-[#B31B1B]" />
                 </div>
                 <CardTitle>Track Your Progress</CardTitle>
                 <CardDescription>
@@ -66,8 +66,8 @@ export default function ProspectsPage() {
 
             <Card>
               <CardHeader>
-                <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <Award className="h-6 w-6 text-purple-600" />
+                <div className="h-12 w-12 bg-[#CBAF5D]/20 rounded-lg flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-[#CBAF5D]" />
                 </div>
                 <CardTitle>State Recognition</CardTitle>
                 <CardDescription>
@@ -78,7 +78,7 @@ export default function ProspectsPage() {
           </div>
 
           {/* How It Works */}
-          <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
+          <Card className="bg-gradient-to-br from-[#002147]/5 to-white border-[#002147]/20">
             <CardHeader>
               <CardTitle className="text-2xl">How It Works</CardTitle>
               <CardDescription>Simple 3-step process to get your profile live</CardDescription>
@@ -86,7 +86,7 @@ export default function ProspectsPage() {
             <CardContent>
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 h-10 w-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  <div className="flex-shrink-0 h-10 w-10 bg-[#002147] text-white rounded-full flex items-center justify-center font-bold">
                     1
                   </div>
                   <div>
@@ -99,7 +99,7 @@ export default function ProspectsPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 h-10 w-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  <div className="flex-shrink-0 h-10 w-10 bg-[#B31B1B] text-white rounded-full flex items-center justify-center font-bold">
                     2
                   </div>
                   <div>
@@ -112,7 +112,7 @@ export default function ProspectsPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 h-10 w-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                  <div className="flex-shrink-0 h-10 w-10 bg-[#CBAF5D] text-white rounded-full flex items-center justify-center font-bold">
                     3
                   </div>
                   <div>
@@ -173,18 +173,26 @@ export default function ProspectsPage() {
 
           {/* Call to Action */}
           <div className="mt-16 text-center">
-            <div className="bg-blue-600 rounded-lg p-8 text-white">
+            <div className="bg-[#B31B1B] rounded-lg p-8 text-white">
               <h3 className="text-2xl font-bold mb-4">Ready to Get Recruited?</h3>
-              <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+              <p className="text-red-100 mb-6 max-w-2xl mx-auto">
                 Join hundreds of North Carolina wrestlers who have submitted their profiles and connected with college
                 programs. It takes about 10 minutes to complete your profile.
               </p>
-              <Link href="/submit-profile">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                  <FileText className="h-5 w-5 mr-2" />
-                  Submit Your Profile Now
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/submit-profile">
+                  <Button size="lg" className="bg-white text-[#B31B1B] hover:bg-gray-100 w-full sm:w-auto">
+                    <FileText className="h-5 w-5 mr-2" />
+                    Submit Your Profile Now
+                  </Button>
+                </Link>
+                <Link href="/public-rankings">
+                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                    <Search className="h-5 w-5 mr-2" />
+                    Browse Rankings
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
