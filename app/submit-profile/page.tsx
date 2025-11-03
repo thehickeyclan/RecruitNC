@@ -26,6 +26,9 @@ export default function SubmitProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
+  const [selectedTournaments, setSelectedTournaments] = useState<string[]>([])
+  const [selectedYears, setSelectedYears] = useState<string[]>([])
+
   const [formData, setFormData] = useState({
     // Basic Info
     firstName: "",
@@ -63,7 +66,7 @@ export default function SubmitProfilePage() {
     academicSummary: "",
     academicInterest: "",
     
-    // Tournament Records
+    // Tournament Records (dynamic based on selection)
     super32_2023_record: "",
     super32_2023_placement: "",
     super32_2024_record: "",
@@ -83,6 +86,18 @@ export default function SubmitProfilePage() {
     highlightVideoUrl: "",
     headshotUrl: "",
   })
+
+  const toggleTournament = (tournament: string) => {
+    setSelectedTournaments(prev =>
+      prev.includes(tournament) ? prev.filter(t => t !== tournament) : [...prev, tournament]
+    )
+  }
+
+  const toggleYear = (year: string) => {
+    setSelectedYears(prev =>
+      prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
+    )
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -577,137 +592,283 @@ export default function SubmitProfilePage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">National Tournament Results (Optional)</h3>
               
+              {/* Tournament Selection */}
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700">Super 32</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="super32_2023_record">2023 Record</Label>
-                    <Input
-                      id="super32_2023_record"
-                      name="super32_2023_record"
-                      value={formData.super32_2023_record}
-                      onChange={handleChange}
-                      placeholder="5-2"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="super32_2023_placement">2023 Placement</Label>
-                    <Input
-                      id="super32_2023_placement"
-                      name="super32_2023_placement"
-                      value={formData.super32_2023_placement}
-                      onChange={handleChange}
-                      placeholder="5th"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="super32_2024_record">2024 Record</Label>
-                    <Input
-                      id="super32_2024_record"
-                      name="super32_2024_record"
-                      value={formData.super32_2024_record}
-                      onChange={handleChange}
-                      placeholder="6-1"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="super32_2024_placement">2024 Placement</Label>
-                    <Input
-                      id="super32_2024_placement"
-                      name="super32_2024_placement"
-                      value={formData.super32_2024_placement}
-                      onChange={handleChange}
-                      placeholder="3rd"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="super32_2025_record">2025 Record</Label>
-                    <Input
-                      id="super32_2025_record"
-                      name="super32_2025_record"
-                      value={formData.super32_2025_record}
-                      onChange={handleChange}
-                      placeholder="7-0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="super32_2025_placement">2025 Placement</Label>
-                    <Input
-                      id="super32_2025_placement"
-                      name="super32_2025_placement"
-                      value={formData.super32_2025_placement}
-                      onChange={handleChange}
-                      placeholder="1st"
-                    />
-                  </div>
+                <Label>Which national tournaments have you competed in?</Label>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    variant={selectedTournaments.includes("super32") ? "default" : "outline"}
+                    onClick={() => toggleTournament("super32")}
+                    className="min-w-[120px]"
+                  >
+                    Super 32
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedTournaments.includes("nhsca") ? "default" : "outline"}
+                    onClick={() => toggleTournament("nhsca")}
+                    className="min-w-[120px]"
+                  >
+                    NHSCA
+                  </Button>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700">NHSCA</h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2023_record">2023 Record</Label>
-                    <Input
-                      id="nhsca_2023_record"
-                      name="nhsca_2023_record"
-                      value={formData.nhsca_2023_record}
-                      onChange={handleChange}
-                      placeholder="4-1"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2023_placement">2023 Placement</Label>
-                    <Input
-                      id="nhsca_2023_placement"
-                      name="nhsca_2023_placement"
-                      value={formData.nhsca_2023_placement}
-                      onChange={handleChange}
-                      placeholder="AA"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2024_record">2024 Record</Label>
-                    <Input
-                      id="nhsca_2024_record"
-                      name="nhsca_2024_record"
-                      value={formData.nhsca_2024_record}
-                      onChange={handleChange}
-                      placeholder="5-0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2024_placement">2024 Placement</Label>
-                    <Input
-                      id="nhsca_2024_placement"
-                      name="nhsca_2024_placement"
-                      value={formData.nhsca_2024_placement}
-                      onChange={handleChange}
-                      placeholder="2nd"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2025_record">2025 Record</Label>
-                    <Input
-                      id="nhsca_2025_record"
-                      name="nhsca_2025_record"
-                      value={formData.nhsca_2025_record}
-                      onChange={handleChange}
-                      placeholder="6-0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nhsca_2025_placement">2025 Placement</Label>
-                    <Input
-                      id="nhsca_2025_placement"
-                      name="nhsca_2025_placement"
-                      value={formData.nhsca_2025_placement}
-                      onChange={handleChange}
-                      placeholder="1st"
-                    />
+              {/* Year Selection (only show if at least one tournament selected) */}
+              {selectedTournaments.length > 0 && (
+                <div className="space-y-3">
+                  <Label>Which years did you compete?</Label>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      variant={selectedYears.includes("2023") ? "default" : "outline"}
+                      onClick={() => toggleYear("2023")}
+                      className="min-w-[100px]"
+                    >
+                      2023
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={selectedYears.includes("2024") ? "default" : "outline"}
+                      onClick={() => toggleYear("2024")}
+                      className="min-w-[100px]"
+                    >
+                      2024
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={selectedYears.includes("2025") ? "default" : "outline"}
+                      onClick={() => toggleYear("2025")}
+                      className="min-w-[100px]"
+                    >
+                      2025
+                    </Button>
                   </div>
                 </div>
+              )}
+
+            {/* Tournament Records */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">National Tournament Results (Optional)</h3>
+              
+              {/* Tournament Selection */}
+              <div className="space-y-3">
+                <Label>Which national tournaments have you competed in?</Label>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    variant={selectedTournaments.includes("super32") ? "default" : "outline"}
+                    onClick={() => toggleTournament("super32")}
+                    className="min-w-[120px]"
+                  >
+                    Super 32
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedTournaments.includes("nhsca") ? "default" : "outline"}
+                    onClick={() => toggleTournament("nhsca")}
+                    className="min-w-[120px]"
+                  >
+                    NHSCA
+                  </Button>
+                </div>
               </div>
+
+              {/* Year Selection (only show if at least one tournament selected) */}
+              {selectedTournaments.length > 0 && (
+                <div className="space-y-3">
+                  <Label>Which years did you compete?</Label>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      variant={selectedYears.includes("2023") ? "default" : "outline"}
+                      onClick={() => toggleYear("2023")}
+                      className="min-w-[100px]"
+                    >
+                      2023
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={selectedYears.includes("2024") ? "default" : "outline"}
+                      onClick={() => toggleYear("2024")}
+                      className="min-w-[100px]"
+                    >
+                      2024
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={selectedYears.includes("2025") ? "default" : "outline"}
+                      onClick={() => toggleYear("2025")}
+                      className="min-w-[100px]"
+                    >
+                      2025
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Super 32 Results - Dynamic based on selected years */}
+              {selectedTournaments.includes("super32") && selectedYears.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">Super 32 Results</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedYears.includes("2023") && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="super32_2023_record">2023 Record</Label>
+                          <Input
+                            id="super32_2023_record"
+                            name="super32_2023_record"
+                            value={formData.super32_2023_record}
+                            onChange={handleChange}
+                            placeholder="5-2"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="super32_2023_placement">2023 Placement</Label>
+                          <Input
+                            id="super32_2023_placement"
+                            name="super32_2023_placement"
+                            value={formData.super32_2023_placement}
+                            onChange={handleChange}
+                            placeholder="5th"
+                          />
+                        </div>
+                      </>
+                    )}
+                    {selectedYears.includes("2024") && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="super32_2024_record">2024 Record</Label>
+                          <Input
+                            id="super32_2024_record"
+                            name="super32_2024_record"
+                            value={formData.super32_2024_record}
+                            onChange={handleChange}
+                            placeholder="6-1"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="super32_2024_placement">2024 Placement</Label>
+                          <Input
+                            id="super32_2024_placement"
+                            name="super32_2024_placement"
+                            value={formData.super32_2024_placement}
+                            onChange={handleChange}
+                            placeholder="3rd"
+                          />
+                        </div>
+                      </>
+                    )}
+                    {selectedYears.includes("2025") && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="super32_2025_record">2025 Record</Label>
+                          <Input
+                            id="super32_2025_record"
+                            name="super32_2025_record"
+                            value={formData.super32_2025_record}
+                            onChange={handleChange}
+                            placeholder="7-0"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="super32_2025_placement">2025 Placement</Label>
+                          <Input
+                            id="super32_2025_placement"
+                            name="super32_2025_placement"
+                            value={formData.super32_2025_placement}
+                            onChange={handleChange}
+                            placeholder="1st"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* NHSCA Results - Dynamic based on selected years */}
+              {selectedTournaments.includes("nhsca") && selectedYears.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700">NHSCA Results</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedYears.includes("2023") && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="nhsca_2023_record">2023 Record</Label>
+                          <Input
+                            id="nhsca_2023_record"
+                            name="nhsca_2023_record"
+                            value={formData.nhsca_2023_record}
+                            onChange={handleChange}
+                            placeholder="4-1"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="nhsca_2023_placement">2023 Placement</Label>
+                          <Input
+                            id="nhsca_2023_placement"
+                            name="nhsca_2023_placement"
+                            value={formData.nhsca_2023_placement}
+                            onChange={handleChange}
+                            placeholder="AA"
+                          />
+                        </div>
+                      </>
+                    )}
+                    {selectedYears.includes("2024") && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="nhsca_2024_record">2024 Record</Label>
+                          <Input
+                            id="nhsca_2024_record"
+                            name="nhsca_2024_record"
+                            value={formData.nhsca_2024_record}
+                            onChange={handleChange}
+                            placeholder="5-0"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="nhsca_2024_placement">2024 Placement</Label>
+                          <Input
+                            id="nhsca_2024_placement"
+                            name="nhsca_2024_placement"
+                            value={formData.nhsca_2024_placement}
+                            onChange={handleChange}
+                            placeholder="2nd"
+                          />
+                        </div>
+                      </>
+                    )}
+                    {selectedYears.includes("2025") && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="nhsca_2025_record">2025 Record</Label>
+                          <Input
+                            id="nhsca_2025_record"
+                            name="nhsca_2025_record"
+                            value={formData.nhsca_2025_record}
+                            onChange={handleChange}
+                            placeholder="6-0"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="nhsca_2025_placement">2025 Placement</Label>
+                          <Input
+                            id="nhsca_2025_placement"
+                            name="nhsca_2025_placement"
+                            value={formData.nhsca_2025_placement}
+                            onChange={handleChange}
+                            placeholder="1st"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
