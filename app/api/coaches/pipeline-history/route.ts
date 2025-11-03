@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     // Try exact match first
     let { data: athletes } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, weightclass, highschool, location, photourl, recruiting_status, college")
+      .select("id, name, graduationyear, weightclass, college_weight_class, highschool, location, photourl, recruiting_status, college")
       .eq("recruiting_status", "College Athlete")
       .ilike("college", `%${schoolData.name}%`)
 
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     if (shortName && shortName.length > 2 && shortName !== schoolData.name) {
       const { data: shortMatch } = await supabase
         .from("athletes")
-        .select("id, name, graduationyear, weightclass, highschool, location, photourl, recruiting_status, college")
+        .select("id, name, graduationyear, weightclass, college_weight_class, highschool, location, photourl, recruiting_status, college")
         .eq("recruiting_status", "College Athlete")
         .ilike("college", `%${shortName}%`)
       
@@ -102,10 +102,22 @@ export async function GET(request: Request) {
 
     console.log(`[Pipeline History API] Filtered to ${ncAthletes.length} NC athletes`)
 
+    // Get roster status from college_coach_stars if exists
+    const athleteIds = ncAthletes.map(a => a.id)
+    const { data: rosterData } = await supabase
+      .from("college_coach_stars")
+      .select("athlete_id, roster_status, roster_notes")
+      .in("athlete_id", athleteIds)
+      .in("coach_user_id", allUserIds)
+
+    const rosterMap = new Map(rosterData?.map(r => [r.athlete_id, r]) || [])
+
     // Format the results
     const history = ncAthletes.map((athlete) => {
       const currentYear = new Date().getFullYear()
       const yearsOnTeam = athlete.graduationyear ? currentYear - athlete.graduationyear + 1 : null
+      
+      const rosterInfo = rosterMap.get(athlete.id)
       
       // Determine current status based on years
       let status = "Enrolled"
@@ -121,10 +133,12 @@ export async function GET(request: Request) {
         id: athlete.id,
         name: athlete.name,
         year: athlete.graduationyear,
-        weight: athlete.weightclass,
+        weight: athlete.college_weight_class || athlete.weightclass, // Use college weight if available, fallback to HS weight
         highschool: athlete.highschool,
         status,
-        years_on_team: yearsOnTeam ? `${yearsOnTeam} year${yearsOnTeam > 1 ? 's' : ''}` : "Current"
+        years_on_team: yearsOnTeam ? `${yearsOnTeam} year${yearsOnTeam > 1 ? 's' : ''}` : "Current",
+        roster_status: rosterInfo?.roster_status || "Active",
+        roster_notes: rosterInfo?.roster_notes || null
       }
     })
 

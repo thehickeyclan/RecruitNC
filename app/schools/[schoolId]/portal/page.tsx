@@ -1299,7 +1299,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Weight</th>
                       <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">High School</th>
                       <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Current Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Roster Status</th>
                       <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Years on Team</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="[&_tr:last-child]:border-0">
@@ -1317,8 +1319,46 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             {athlete.status || "Enrolled"}
                           </Badge>
                         </td>
+                        <td className="p-4 align-middle">
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              athlete.roster_status === "Active" 
+                                ? "bg-green-50 text-green-700 border-green-200" 
+                                : "bg-gray-50 text-gray-700 border-gray-200"
+                            }
+                          >
+                            {athlete.roster_status || "Active"}
+                          </Badge>
+                        </td>
                         <td className="p-4 align-middle text-gray-600">
                           {athlete.years_on_team || "Current"}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                // TODO: Open edit dialog
+                                console.log("Edit roster athlete:", athlete.id)
+                              }}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm(`Remove ${athlete.name} from roster history?`)) {
+                                  // TODO: Handle delete
+                                  console.log("Delete roster athlete:", athlete.id)
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
