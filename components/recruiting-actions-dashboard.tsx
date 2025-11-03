@@ -450,7 +450,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
               </TabsTrigger>
-              <TabsTrigger value="calendar" className="gap-2">
+              <TabsTrigger value="calendar" className="gap-2 hidden md:flex">
                 <CalendarIcon className="h-4 w-4" />
                 Calendar
               </TabsTrigger>
