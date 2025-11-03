@@ -1043,16 +1043,31 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   const graduationYears = [...new Set(prospects.map((p) => p.graduationyear).filter(Boolean))].sort((a, b) => a - b)
 
+  const normalizeStage = (stage: string | null | undefined): string => {
+    const normalized = (stage || "Prospect").trim()
+    
+    // Map legacy/invalid stages to valid ones
+    const stageLower = normalized.toLowerCase()
+    if (stageLower === "college athlete" || stageLower === "current college athlete") {
+      return "Signed"
+    }
+    if (stageLower === "contacted" || stageLower === "reached out") {
+      return "Prospect"
+    }
+    
+    return normalized
+  }
+
   const getProspectsByStage = (stageId: string) => {
     const stageProspects = filteredProspects.filter((p) => {
-      const prospectStage = (p.pipeline_stage || "Prospect").trim()
+      const prospectStage = normalizeStage(p.pipeline_stage)
       const targetStage = stageId.trim()
       // Case-insensitive comparison to handle "prospect" vs "Prospect"
       return prospectStage.toLowerCase() === targetStage.toLowerCase()
     })
     console.log(`[v0] Stage "${stageId}" prospects:`, {
       count: stageProspects.length,
-      prospects: stageProspects.map((p) => ({ name: p.name, stage: p.pipeline_stage })),
+      prospects: stageProspects.map((p) => ({ name: p.name, stage: p.pipeline_stage, normalized: normalizeStage(p.pipeline_stage) })),
     })
     return stageProspects
   }
