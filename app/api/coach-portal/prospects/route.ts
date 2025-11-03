@@ -129,11 +129,68 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Prospects API - Starred athletes found:", starredData?.length || 0)
     console.log("[v0] Prospects API - Starred data:", starredData)
 
+    // ALSO check athletes table directly for athletes whose college field matches this school
+    // This catches athletes committed via the admin athlete profile "college" tab
+    const { data: schoolInfo } = await supabase
+      .from("schools")
+      .select("name")
+      .eq("id", targetSchoolId)
+      .single()
+
+    let directCollegeAthletes: any[] = []
+    if (schoolInfo?.name) {
+      console.log("[v0] Prospects API - Checking athletes.college field for school:", schoolInfo.name)
+      
+      // Try exact match with school name
+      const { data: exactMatch } = await supabase
+        .from("athletes")
+        .select("id, recruiting_status")
+        .ilike("college", `%${schoolInfo.name}%`)
+      
+      if (exactMatch) {
+        directCollegeAthletes.push(...exactMatch)
+      }
+      
+      // Try shortened name (e.g., "Lynchburg" from "Lynchburg College")
+      const shortName = schoolInfo.name.replace(/College|University|Institute|School/i, "").trim()
+      if (shortName && shortName.length > 2 && shortName !== schoolInfo.name) {
+        const { data: shortMatch } = await supabase
+          .from("athletes")
+          .select("id, recruiting_status")
+          .ilike("college", `%${shortName}%`)
+        
+        if (shortMatch) {
+          const existingIds = new Set(directCollegeAthletes.map(a => a.id))
+          directCollegeAthletes.push(...shortMatch.filter(a => !existingIds.has(a.id)))
+        }
+      }
+      
+      console.log("[v0] Prospects API - Found athletes with matching college field:", directCollegeAthletes.length)
+      
+      // Create star-like entries for these athletes (if not already starred)
+      const existingStarredIds = new Set((starredData || []).map(s => s.athlete_id))
+      const newDirectStars = directCollegeAthletes
+        .filter(a => !existingStarredIds.has(a.id))
+        .map(a => ({
+          athlete_id: a.id,
+          pipeline_stage: a.recruiting_status || "Committed",
+          interest_level: "high",
+          starred_at: new Date().toISOString(),
+          coach_user_id: user.id, // Use current user as placeholder
+        }))
+      
+      if (newDirectStars.length > 0) {
+        console.log("[v0] Prospects API - Adding", newDirectStars.length, "direct college matches to prospects")
+        starredData = [...(starredData || []), ...newDirectStars]
+      }
+    }
+
     if (!starredData || starredData.length === 0) {
       return NextResponse.json({ success: true, prospects: [] })
     }
 
     const starredAthleteIds = [...new Set(starredData.map((s) => s.athlete_id))]
+    console.log("[v0] Prospects API - Total unique athlete IDs (stars + direct):", starredAthleteIds.length)
 
     let query = supabase
       .from("athletes")
