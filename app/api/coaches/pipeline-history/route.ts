@@ -108,7 +108,6 @@ export async function GET(request: Request) {
       .from("college_coach_stars")
       .select("athlete_id, roster_status, roster_notes")
       .in("athlete_id", athleteIds)
-      .in("coach_user_id", allUserIds)
 
     const rosterMap = new Map(rosterData?.map(r => [r.athlete_id, r]) || [])
 
