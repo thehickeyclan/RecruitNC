@@ -87,7 +87,8 @@ export async function GET(request: Request) {
       "Mount Pleasant", "Cabarrus", "Stanly", "Matthews", "Davidson", "Cornelius",
       "Mint Hill", "Harrisburg", "Midland", "Oakboro", "Albemarle", "Pineville",
       "Hoke County", "Hoke", "Wake County", "Mecklenburg", "Guilford", "Forsyth",
-      "Cumberland", "New Hanover", "Union County", "Rowan", "Onslow", "Iredell"
+      "Cumberland", "New Hanover", "Union County", "Rowan", "Onslow", "Iredell",
+      "Lexington", "Chase", "Pisgah", "Haywood", "Haywood County", "Canton"
     ]
 
     const ncAthletes = athletes.filter((athlete) => {
