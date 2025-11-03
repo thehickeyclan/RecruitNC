@@ -41,57 +41,34 @@ export async function GET(request: Request) {
       })
     }
 
-    // Get coaches for this school
-    const { data: schoolCoaches } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("school_id", schoolData.id)
-
-    const coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
-
-    // Also get admin users
-    const { data: adminUsers } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .or("is_admin.eq.true,role.eq.admin")
-
-    const adminUserIds = adminUsers?.map((u) => u.user_id) || []
-
-    // Combine coach and admin IDs
-    const allUserIds = [...coachUserIds, ...adminUserIds]
-
-    if (allUserIds.length === 0) {
-      return NextResponse.json({ 
-        success: true, 
-        history: [],
-        message: "No users found for this school"
-      })
-    }
-
-    // Find athletes with "College Athlete" status or similar
-    const { data: collegeAthletes } = await supabase
-      .from("college_coach_stars")
-      .select("athlete_id, pipeline_stage, notes, created_at")
-      .in("coach_user_id", allUserIds)
-      .ilike("pipeline_stage", "%college%athlete%")
-
-    console.log(`[Pipeline History API] Found ${collegeAthletes?.length || 0} college athletes`)
-
-    if (!collegeAthletes || collegeAthletes.length === 0) {
-      return NextResponse.json({ 
-        success: true, 
-        history: [],
-        message: "No college athletes found"
-      })
-    }
-
-    // Get athlete details
-    const athleteIds = collegeAthletes.map((ca) => ca.athlete_id)
+    // Query athletes table directly for:
+    // 1. recruiting_status = "College Athlete" (from main profile tab)
+    // 2. college field matches school name (from college tab)
     
-    const { data: athletes } = await supabase
+    // Try exact match first
+    let { data: athletes } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, weightclass, highschool, location, photourl")
-      .in("id", athleteIds)
+      .select("id, name, graduationyear, weightclass, highschool, location, photourl, recruiting_status, college")
+      .eq("recruiting_status", "College Athlete")
+      .ilike("college", `%${schoolData.name}%`)
+
+    // Also try shortened name (e.g., "Randolph" from "Randolph College")
+    const shortName = schoolData.name.replace(/College|University|Institute|School/i, "").trim()
+    if (shortName && shortName.length > 2 && shortName !== schoolData.name) {
+      const { data: shortMatch } = await supabase
+        .from("athletes")
+        .select("id, name, graduationyear, weightclass, highschool, location, photourl, recruiting_status, college")
+        .eq("recruiting_status", "College Athlete")
+        .ilike("college", `%${shortName}%`)
+      
+      if (shortMatch) {
+        const existingIds = new Set(athletes?.map(a => a.id) || [])
+        const newMatches = shortMatch.filter(a => !existingIds.has(a.id))
+        athletes = [...(athletes || []), ...newMatches]
+      }
+    }
+
+    console.log(`[Pipeline History API] Found ${athletes?.length || 0} college athletes with matching status and college`)
 
     if (!athletes) {
       return NextResponse.json({ 
