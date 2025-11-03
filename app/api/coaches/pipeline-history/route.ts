@@ -26,14 +26,17 @@ export async function GET(request: Request) {
     console.log(`[Pipeline History API] Fetching history for school: ${schoolName}`)
 
     // Get school data
-    const { data: schoolData } = await supabase
+    const { data: schoolData, error: schoolError } = await supabase
       .from("schools")
       .select("id, name")
       .ilike("name", `%${schoolName}%`)
       .limit(1)
       .single()
 
+    console.log(`[Pipeline History API] School lookup result:`, { schoolData, schoolError })
+
     if (!schoolData) {
+      console.error(`[Pipeline History API] School not found for name: ${schoolName}`)
       return NextResponse.json({ 
         success: true, 
         history: [],
@@ -41,19 +44,29 @@ export async function GET(request: Request) {
       })
     }
 
+    console.log(`[Pipeline History API] Found school:`, schoolData.name, `(ID: ${schoolData.id})`)
+
     // Query athletes table directly for:
     // 1. recruiting_status = "College Athlete" (from main profile tab)
     // 2. college field matches school name (from college tab)
     
     // Try exact match first
+    console.log(`[Pipeline History API] Searching for athletes with college ILIKE '%${schoolData.name}%'`)
     let { data: athletes } = await supabase
       .from("athletes")
       .select("id, name, graduationyear, weightclass, college_weight_class, highschool, location, photourl, recruiting_status, college")
       .eq("recruiting_status", "College Athlete")
       .ilike("college", `%${schoolData.name}%`)
 
+    console.log(`[Pipeline History API] Exact match found ${athletes?.length || 0} athletes`)
+    if (athletes && athletes.length > 0) {
+      console.log(`[Pipeline History API] Sample athlete college values:`, athletes.slice(0, 3).map(a => a.college))
+    }
+
     // Also try shortened name (e.g., "Randolph" from "Randolph College")
     const shortName = schoolData.name.replace(/College|University|Institute|School/i, "").trim()
+    console.log(`[Pipeline History API] Trying shortened name: "${shortName}"`)
+    
     if (shortName && shortName.length > 2 && shortName !== schoolData.name) {
       const { data: shortMatch } = await supabase
         .from("athletes")
@@ -61,14 +74,17 @@ export async function GET(request: Request) {
         .eq("recruiting_status", "College Athlete")
         .ilike("college", `%${shortName}%`)
       
+      console.log(`[Pipeline History API] Shortened name match found ${shortMatch?.length || 0} athletes`)
+      
       if (shortMatch) {
         const existingIds = new Set(athletes?.map(a => a.id) || [])
         const newMatches = shortMatch.filter(a => !existingIds.has(a.id))
+        console.log(`[Pipeline History API] Adding ${newMatches.length} new athletes from shortened name search`)
         athletes = [...(athletes || []), ...newMatches]
       }
     }
 
-    console.log(`[Pipeline History API] Found ${athletes?.length || 0} college athletes with matching status and college`)
+    console.log(`[Pipeline History API] Total found: ${athletes?.length || 0} college athletes with matching status and college`)
 
     if (!athletes) {
       return NextResponse.json({ 
