@@ -149,10 +149,19 @@ export default function UsersDashboardPage() {
     if (!editingUser) return
 
     try {
+      // Prepare the update payload
+      const payload = {
+        name: editForm.name,
+        cell_phone: editForm.cell_phone,
+        role: editForm.role,
+        verified_coach: editForm.verified_coach,
+        school_id: editForm.school_id === "unassigned" ? null : editForm.school_id
+      }
+
       const res = await fetch(`/api/admin/users/${editingUser.user_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm)
+        body: JSON.stringify(payload)
       })
 
       if (!res.ok) throw new Error("Failed to update user")
@@ -167,8 +176,12 @@ export default function UsersDashboardPage() {
         p.user_id === editingUser.user_id 
           ? { 
               ...p, 
-              ...editForm,
-              school_name: schools.find(s => s.id === editForm.school_id)?.name || null
+              name: editForm.name,
+              cell_phone: editForm.cell_phone,
+              role: editForm.role,
+              verified_coach: editForm.verified_coach,
+              school_id: payload.school_id,
+              school_name: payload.school_id ? schools.find(s => s.id === payload.school_id)?.name || null : null
             } 
           : p
       ))
@@ -863,8 +876,8 @@ export default function UsersDashboardPage() {
                         <SelectValue placeholder="Select a school..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {schools.filter(s => !s.is_test).map(school => (
+                        <SelectItem value="unassigned">None</SelectItem>
+                        {schools.map(school => (
                           <SelectItem key={school.id} value={school.id}>
                             {school.name}
                           </SelectItem>
