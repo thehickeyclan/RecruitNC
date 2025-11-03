@@ -254,17 +254,22 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       setLoadingHistory(true)
       console.log("[v0] Fetching pipeline history for school:", schoolName)
       
-      const response = await fetch(`/api/coaches/pipeline-history?schoolName=${encodeURIComponent(schoolName)}`)
+      // Add cache-busting timestamp to force fresh data
+      const timestamp = new Date().getTime()
+      const response = await fetch(
+        `/api/coaches/pipeline-history?schoolName=${encodeURIComponent(schoolName)}&_t=${timestamp}`,
+        { cache: 'no-store' }
+      )
       
-        if (response.ok) {
-          const data = await response.json()
+      if (response.ok) {
+        const data = await response.json()
         console.log("[v0] Pipeline history response:", data)
         setPipelineHistory(data.history || [])
       } else {
         console.error("[v0] Pipeline history fetch failed:", response.status)
         setPipelineHistory([])
-        }
-      } catch (error) {
+      }
+    } catch (error) {
       console.error("[v0] Error fetching pipeline history:", error)
       setPipelineHistory([])
     } finally {
