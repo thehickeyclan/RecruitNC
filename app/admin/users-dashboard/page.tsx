@@ -34,7 +34,8 @@ type UserProfile = {
   created_at: string
   is_admin: boolean
   last_sign_in_at: string | null
-  coach_approved: boolean | null
+  verified_coach: boolean | null
+  verification_status: string | null
   school_id: string | null
   school_name: string | null
 }
@@ -81,7 +82,7 @@ export default function UsersDashboardPage() {
     name: "",
     cell_phone: "",
     role: "",
-    coach_approved: false,
+    verified_coach: false,
     school_id: ""
   })
   const { toast } = useToast()
@@ -120,7 +121,7 @@ export default function UsersDashboardPage() {
       name: user.name || "",
       cell_phone: user.cell_phone || "",
       role: user.role || "other",
-      coach_approved: user.coach_approved || false,
+      verified_coach: user.verified_coach || false,
       school_id: user.school_id || ""
     })
   }
@@ -167,7 +168,7 @@ export default function UsersDashboardPage() {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coach_approved: approved })
+        body: JSON.stringify({ verified_coach: approved })
       })
 
       if (!res.ok) throw new Error("Failed to update approval status")
@@ -178,7 +179,7 @@ export default function UsersDashboardPage() {
       })
 
       setProfiles(prev => prev.map(p => 
-        p.user_id === userId ? { ...p, coach_approved: approved } : p
+        p.user_id === userId ? { ...p, verified_coach: approved } : p
       ))
     } catch (e: any) {
       toast({
@@ -211,14 +212,14 @@ export default function UsersDashboardPage() {
 
   const pendingCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
-      p.role === "college_coach" && !p.coach_approved
+      p.role === "college_coach" && !p.verified_coach && p.verification_status !== "rejected"
     ),
     [filteredProfiles]
   )
 
   const approvedCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
-      p.role === "college_coach" && p.coach_approved
+      p.role === "college_coach" && p.verified_coach
     ),
     [filteredProfiles]
   )
@@ -226,8 +227,8 @@ export default function UsersDashboardPage() {
   const stats = useMemo(() => ({
     total: profiles.length,
     coaches: profiles.filter(p => p.role === "college_coach").length,
-    pendingCoaches: profiles.filter(p => p.role === "college_coach" && !p.coach_approved).length,
-    approvedCoaches: profiles.filter(p => p.role === "college_coach" && p.coach_approved).length,
+    pendingCoaches: profiles.filter(p => p.role === "college_coach" && !p.verified_coach && p.verification_status !== "rejected").length,
+    approvedCoaches: profiles.filter(p => p.role === "college_coach" && p.verified_coach).length,
     athletes: profiles.filter(p => p.role === "athlete").length,
     activeToday: profiles.filter(p => {
       if (!p.last_sign_in_at) return false
@@ -266,10 +267,15 @@ export default function UsersDashboardPage() {
         {isCoach && (
           <>
             <td className="px-4 py-3">
-              {user.coach_approved ? (
+              {user.verified_coach ? (
                 <Badge variant="default" className="bg-green-600">
                   <UserCheck className="h-3 w-3 mr-1" />
                   Approved
+                </Badge>
+              ) : user.verification_status === "rejected" ? (
+                <Badge variant="outline" className="border-red-600 text-red-600">
+                  <XCircle className="h-3 w-3 mr-1" />
+                  Rejected
                 </Badge>
               ) : (
                 <Badge variant="destructive">
@@ -302,12 +308,12 @@ export default function UsersDashboardPage() {
             </Button>
             {isCoach && (
               <Button
-                variant={user.coach_approved ? "outline" : "default"}
+                variant={user.verified_coach ? "outline" : "default"}
                 size="sm"
-                onClick={() => handleApproveCoach(user.user_id, !user.coach_approved)}
-                className={user.coach_approved ? "" : "bg-green-600 hover:bg-green-700"}
+                onClick={() => handleApproveCoach(user.user_id, !user.verified_coach)}
+                className={user.verified_coach ? "" : "bg-green-600 hover:bg-green-700"}
               >
-                {user.coach_approved ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                {user.verified_coach ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
               </Button>
             )}
           </div>
@@ -628,12 +634,12 @@ export default function UsersDashboardPage() {
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      id="coach_approved"
-                      checked={editForm.coach_approved}
-                      onChange={(e) => setEditForm({ ...editForm, coach_approved: e.target.checked })}
+                      id="verified_coach"
+                      checked={editForm.verified_coach}
+                      onChange={(e) => setEditForm({ ...editForm, verified_coach: e.target.checked })}
                       className="rounded"
                     />
-                    <Label htmlFor="coach_approved">Coach Approved (can access athlete contact info)</Label>
+                    <Label htmlFor="verified_coach">Coach Approved (can access athlete contact info)</Label>
                   </div>
                   <div>
                     <Label>Assign to School</Label>

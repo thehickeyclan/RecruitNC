@@ -63,7 +63,8 @@ export async function GET() {
         profile_type, 
         cell_phone, 
         is_admin,
-        coach_approved,
+        verified_coach,
+        verification_status,
         school_id,
         schools:school_id (
           name
@@ -88,7 +89,8 @@ export async function GET() {
         role: profile?.role || profile?.profile_type || "fan",
         cell_phone: profile?.cell_phone || null,
         is_admin: profile?.is_admin || false,
-        coach_approved: profile?.coach_approved || false,
+        verified_coach: profile?.verified_coach || false,
+        verification_status: profile?.verification_status || null,
         school_id: profile?.school_id || null,
         school_name: profile?.schools?.name || null,
         created_at: user.created_at,

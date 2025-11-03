@@ -30,7 +30,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, cell_phone, role, coach_approved, school_id } = body
+    const { name, cell_phone, role, verified_coach, school_id } = body
 
     const supabaseAdmin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -59,7 +59,7 @@ export async function PATCH(
     if (name !== undefined) updateData.full_name = name
     if (formattedPhone !== undefined) updateData.cell_phone = formattedPhone
     if (role !== undefined) updateData.role = role
-    if (coach_approved !== undefined) updateData.coach_approved = coach_approved
+    if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
 
     const { data, error } = await supabaseAdmin
