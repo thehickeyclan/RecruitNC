@@ -6,13 +6,23 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const body = await request.json()
 
+    console.log("[Profile Submission] Received body:", JSON.stringify(body, null, 2))
+
+    // Validate required fields
+    if (!body.firstName || !body.lastName || !body.gender || !body.graduationYear || !body.email) {
+      return NextResponse.json({ 
+        error: "Missing required fields",
+        details: "firstName, lastName, gender, graduationYear, and email are required"
+      }, { status: 400 })
+    }
+
     // Build insert object - only include fields that have values
     const insertData: any = {
         // Basic info
         firstname: body.firstName,
         lastname: body.lastName,
         gender: body.gender,
-        graduationyear: Number.parseInt(body.graduationYear),
+        graduationyear: Number.parseInt(body.graduationYear, 10),
         weightclass: body.weightClass,
         college_weight_class: body.collegeWeightClass || null,
         highschool: body.highSchool,
@@ -36,8 +46,8 @@ export async function POST(request: NextRequest) {
         
         // Academic
         gpa: body.gpa ? Number.parseFloat(body.gpa) : null,
-        sat: body.sat ? Number.parseInt(body.sat) : null,
-        act: body.act ? Number.parseInt(body.act) : null,
+        sat: body.sat ? Number.parseInt(body.sat, 10) : null,
+        act: body.act ? Number.parseInt(body.act, 10) : null,
         academic_summary: body.academicSummary || null,
         academic_interest: body.academicInterest || null,
         
@@ -65,6 +75,14 @@ export async function POST(request: NextRequest) {
         submitted_at: new Date().toISOString(),
     }
 
+    // Validate graduationyear is a valid number
+    if (Number.isNaN(insertData.graduationyear)) {
+      return NextResponse.json({ 
+        error: "Invalid graduation year",
+        details: `"${body.graduationYear}" is not a valid number`
+      }, { status: 400 })
+    }
+
     // Remove null/undefined values to avoid inserting into non-existent columns
     Object.keys(insertData).forEach(key => {
       if (insertData[key] === null || insertData[key] === undefined) {
@@ -72,7 +90,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log("[v0] Submitting profile with fields:", Object.keys(insertData))
+    console.log("[Profile Submission] Prepared insert data:", JSON.stringify(insertData, null, 2))
 
     const { data, error } = await supabase
       .from("athlete_profile_submissions")
@@ -81,18 +99,32 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error("Error inserting profile submission:", error)
+      console.error("[Profile Submission] Database error:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
       return NextResponse.json({ 
         error: "Failed to submit profile", 
         details: error.message,
-        hint: error.hint 
+        hint: error.hint,
+        code: error.code
       }, { status: 500 })
     }
 
+    console.log("[Profile Submission] Success! Submission ID:", data?.id)
     return NextResponse.json({ success: true, submission: data }, { status: 201 })
-  } catch (error) {
-    console.error("Error in profile submission:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  } catch (error: any) {
+    console.error("[Profile Submission] Unexpected error:", {
+      message: error?.message,
+      stack: error?.stack,
+      error: error
+    })
+    return NextResponse.json({ 
+      error: "Internal server error",
+      details: error?.message || "Unknown error occurred"
+    }, { status: 500 })
   }
 }
 

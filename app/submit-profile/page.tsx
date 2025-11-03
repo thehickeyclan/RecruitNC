@@ -121,7 +121,13 @@ export default function SubmitProfilePage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to submit profile")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("Error submitting profile:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        })
+        throw new Error(errorData.details || errorData.error || "Failed to submit profile")
       }
 
       setSubmitted(true)
@@ -129,11 +135,11 @@ export default function SubmitProfilePage() {
         title: "Profile submitted!",
         description: "Your athlete profile has been submitted for review. We'll review it within 2-3 business days.",
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting profile:", error)
       toast({
         title: "Submission failed",
-        description: "There was an error submitting your profile. Please try again.",
+        description: error.message || "There was an error submitting your profile. Please try again.",
         variant: "destructive",
       })
     } finally {
