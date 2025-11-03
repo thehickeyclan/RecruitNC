@@ -85,7 +85,9 @@ export async function GET(request: Request) {
       "Wilson", "Huntersville", "Kannapolis", "Apex", "Wake Forest", "Mooresville",
       "Hickory", "Goldsboro", "Kernersville", "Leland", "Monroe", "Indian Trail",
       "Mount Pleasant", "Cabarrus", "Stanly", "Matthews", "Davidson", "Cornelius",
-      "Mint Hill", "Harrisburg", "Midland", "Oakboro", "Albemarle", "Pineville"
+      "Mint Hill", "Harrisburg", "Midland", "Oakboro", "Albemarle", "Pineville",
+      "Hoke County", "Hoke", "Wake County", "Mecklenburg", "Guilford", "Forsyth",
+      "Cumberland", "New Hanover", "Union County", "Rowan", "Onslow", "Iredell"
     ]
 
     const ncAthletes = athletes.filter((athlete) => {
