@@ -1667,49 +1667,57 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     <TabsList className="bg-white border border-gray-200 inline-flex md:grid md:grid-cols-8 gap-1 w-max md:w-full">
                       <TabsTrigger
                         value="overview"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Overview
                       </TabsTrigger>
                       <TabsTrigger
                         value="performance"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Performance
                       </TabsTrigger>
                       <TabsTrigger
                         value="academics"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Academics
                       </TabsTrigger>
                       <TabsTrigger
                         value="documents"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Documents
                       </TabsTrigger>
                       <TabsTrigger
                         value="family"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Family
                       </TabsTrigger>
                       <TabsTrigger
                         value="notes"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Notes ({notes.length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="financials"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Financials
                       </TabsTrigger>
                       <TabsTrigger
                         value="activity"
-                        className="flex-shrink-0 !text-xs md:!text-sm !px-2 md:!px-4 !py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Activity
                       </TabsTrigger>
