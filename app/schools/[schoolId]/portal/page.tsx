@@ -310,45 +310,60 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     if (!editingRosterEntry) return
 
     try {
+      console.log("[Roster Edit] Starting save for athlete:", editingRosterEntry.id)
       const supabase = createClient()
       const {
         data: { session },
       } = await supabase.auth.getSession()
 
+      console.log("[Roster Edit] Session:", session?.user?.id)
+      console.log("[Roster Edit] Form data:", rosterEditForm)
+
       // First, find ANY college_coach_stars record for this athlete at this school
-      const { data: existingStars } = await supabase
+      const { data: existingStars, error: selectError } = await supabase
         .from("college_coach_stars")
         .select("id, coach_user_id")
         .eq("athlete_id", editingRosterEntry.id)
 
+      console.log("[Roster Edit] Existing stars:", existingStars, "Error:", selectError)
+
       if (existingStars && existingStars.length > 0) {
         // Update all existing records for this athlete (in case multiple coaches starred)
-        const { error } = await supabase
+        console.log("[Roster Edit] Updating existing records")
+        const { error, data: updateData } = await supabase
           .from("college_coach_stars")
           .update({
             roster_status: rosterEditForm.roster_status,
             roster_notes: rosterEditForm.roster_notes || null,
           })
           .eq("athlete_id", editingRosterEntry.id)
+          .select()
 
+        console.log("[Roster Edit] Update result:", updateData, "Error:", error)
         if (error) throw error
       } else {
         // Create new record if doesn't exist
+        console.log("[Roster Edit] No existing records, creating new")
         if (!session?.user.id) {
           throw new Error("No user session found")
         }
 
-        const { error } = await supabase
-          .from("college_coach_stars")
-          .insert({
-            athlete_id: editingRosterEntry.id,
-            coach_user_id: session.user.id,
-            pipeline_stage: "Signed",
-            roster_status: rosterEditForm.roster_status,
-            roster_notes: rosterEditForm.roster_notes || null,
-            starred_at: new Date().toISOString(),
-          })
+        const insertData = {
+          athlete_id: editingRosterEntry.id,
+          coach_user_id: session.user.id,
+          pipeline_stage: "Signed",
+          roster_status: rosterEditForm.roster_status,
+          roster_notes: rosterEditForm.roster_notes || null,
+          starred_at: new Date().toISOString(),
+        }
+        console.log("[Roster Edit] Inserting:", insertData)
 
+        const { error, data: insertResult } = await supabase
+          .from("college_coach_stars")
+          .insert(insertData)
+          .select()
+
+        console.log("[Roster Edit] Insert result:", insertResult, "Error:", error)
         if (error) throw error
       }
 
@@ -371,45 +386,57 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   const handleDeleteRosterEntry = async (athleteId: string) => {
     try {
+      console.log("[Roster Delete] Starting delete for athlete:", athleteId)
       const supabase = createClient()
       
       // Check if there's a college_coach_stars entry
-      const { data: existingStars } = await supabase
+      const { data: existingStars, error: selectError } = await supabase
         .from("college_coach_stars")
         .select("id")
         .eq("athlete_id", athleteId)
 
+      console.log("[Roster Delete] Existing stars:", existingStars, "Error:", selectError)
+
       if (existingStars && existingStars.length > 0) {
         // Remove the record(s) from college_coach_stars
+        console.log("[Roster Delete] Deleting existing records")
         const { error } = await supabase
           .from("college_coach_stars")
           .delete()
           .eq("athlete_id", athleteId)
 
+        console.log("[Roster Delete] Delete result, Error:", error)
         if (error) throw error
       } else {
         // No entry in college_coach_stars - athlete is showing from athletes table only
-        // We'll just remove them visually by setting roster_status to "Inactive"
-        // First create an entry, then mark as removed
+        // We'll mark them as "Left Program" so they get filtered out
+        console.log("[Roster Delete] No existing records, creating with 'Left Program' status")
         const {
           data: { session },
         } = await supabase.auth.getSession()
+
+        console.log("[Roster Delete] Session:", session?.user?.id)
 
         if (!session?.user.id) {
           throw new Error("No user session found")
         }
 
-        const { error } = await supabase
-          .from("college_coach_stars")
-          .insert({
-            athlete_id: athleteId,
-            coach_user_id: session.user.id,
-            pipeline_stage: "Signed",
-            roster_status: "Left Program",
-            roster_notes: "Removed from roster history",
-            starred_at: new Date().toISOString(),
-          })
+        const insertData = {
+          athlete_id: athleteId,
+          coach_user_id: session.user.id,
+          pipeline_stage: "Signed",
+          roster_status: "Left Program",
+          roster_notes: "Removed from roster history",
+          starred_at: new Date().toISOString(),
+        }
+        console.log("[Roster Delete] Inserting:", insertData)
 
+        const { error, data: insertResult } = await supabase
+          .from("college_coach_stars")
+          .insert(insertData)
+          .select()
+
+        console.log("[Roster Delete] Insert result:", insertResult, "Error:", error)
         if (error) throw error
       }
 
