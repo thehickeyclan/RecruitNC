@@ -1045,9 +1045,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   const getProspectsByStage = (stageId: string) => {
     const stageProspects = filteredProspects.filter((p) => {
-      const prospectStage = (p.pipeline_stage || "Prospect").trim() // Use "Prospect" as default if null/undefined
+      const prospectStage = (p.pipeline_stage || "Prospect").trim()
       const targetStage = stageId.trim()
-      return prospectStage === targetStage
+      // Case-insensitive comparison to handle "prospect" vs "Prospect"
+      return prospectStage.toLowerCase() === targetStage.toLowerCase()
     })
     console.log(`[v0] Stage "${stageId}" prospects:`, {
       count: stageProspects.length,
