@@ -77,34 +77,12 @@ export async function GET(request: Request) {
       })
     }
 
-    // Filter for NC athletes
-    const ncKeywords = [
-      "NC", "N.C.", "North Carolina", "Charlotte", "Raleigh", "Durham", "Greensboro",
-      "Winston-Salem", "Fayetteville", "Cary", "Wilmington", "High Point", "Concord",
-      "Asheville", "Gastonia", "Jacksonville", "Chapel Hill", "Rocky Mount", "Burlington",
-      "Wilson", "Huntersville", "Kannapolis", "Apex", "Wake Forest", "Mooresville",
-      "Hickory", "Goldsboro", "Kernersville", "Leland", "Monroe", "Indian Trail",
-      "Mount Pleasant", "Cabarrus", "Stanly", "Matthews", "Davidson", "Cornelius",
-      "Mint Hill", "Harrisburg", "Midland", "Oakboro", "Albemarle", "Pineville",
-      "Hoke County", "Hoke", "Wake County", "Mecklenburg", "Guilford", "Forsyth",
-      "Cumberland", "New Hanover", "Union County", "Rowan", "Onslow", "Iredell",
-      "Lexington", "Chase", "Pisgah", "Haywood", "Haywood County", "Canton"
-    ]
-
-    const ncAthletes = athletes.filter((athlete) => {
-      const location = (athlete.location || "").toLowerCase()
-      const highschool = (athlete.highschool || "").toLowerCase()
-
-      return ncKeywords.some(
-        (keyword) =>
-          location.includes(keyword.toLowerCase()) || highschool.includes(keyword.toLowerCase())
-      )
-    })
-
-    console.log(`[Pipeline History API] Filtered to ${ncAthletes.length} NC athletes`)
+    // No filtering needed - if they're "College Athlete" at this school, they should show
+    // The section name can be changed on the frontend if desired
+    console.log(`[Pipeline History API] Returning ${athletes.length} enrolled athletes`)
 
     // Get roster status from college_coach_stars if exists
-    const athleteIds = ncAthletes.map(a => a.id)
+    const athleteIds = athletes.map(a => a.id)
     const { data: rosterData } = await supabase
       .from("college_coach_stars")
       .select("athlete_id, roster_status, roster_notes")
@@ -113,7 +91,7 @@ export async function GET(request: Request) {
     const rosterMap = new Map(rosterData?.map(r => [r.athlete_id, r]) || [])
 
     // Format the results
-    const history = ncAthletes.map((athlete) => {
+    const history = athletes.map((athlete) => {
       const currentYear = new Date().getFullYear()
       const yearsOnTeam = athlete.graduationyear ? currentYear - athlete.graduationyear + 1 : null
       
