@@ -221,6 +221,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [showActivityDialog, setShowActivityDialog] = useState(false)
   const [ncRecruits, setNcRecruits] = useState<any[]>([])
   const [loadingNcRecruits, setLoadingNcRecruits] = useState(true)
+  const [pipelineHistory, setPipelineHistory] = useState<any[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(true)
 
 
   // Removed redundant fetchSchool - using useSchoolBranding hook instead
@@ -231,6 +233,36 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       router.push("/")
     }
   }, [authLoading, profile, params.schoolId, router])
+
+  const fetchPipelineHistory = async () => {
+    const schoolName = schoolBranding?.name
+    
+    if (!schoolName || typeof schoolName !== "string" || schoolName.trim().length === 0) {
+      console.log("[v0] Skipping pipeline history fetch - school name not available")
+      return
+    }
+
+    try {
+      setLoadingHistory(true)
+      console.log("[v0] Fetching pipeline history for school:", schoolName)
+      
+      const response = await fetch(`/api/coaches/pipeline-history?schoolName=${encodeURIComponent(schoolName)}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log("[v0] Pipeline history response:", data)
+        setPipelineHistory(data.history || [])
+      } else {
+        console.error("[v0] Pipeline history fetch failed:", response.status)
+        setPipelineHistory([])
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching pipeline history:", error)
+      setPipelineHistory([])
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
 
   const fetchNcRecruits = async () => {
     // Use schoolBranding from hook (already fetched)
@@ -284,16 +316,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       return
     }
 
-    const schoolName = schoolBranding?.name
-    console.log("[v0] NC Recruits useEffect - brandingLoading:", brandingLoading, "schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "final schoolName:", schoolName)
-    if (schoolName && typeof schoolName === "string" && schoolName.trim().length > 0) {
-      console.log("[v0] School name available, calling fetchNcRecruits")
-      fetchNcRecruits()
-    } else {
-      console.log("[v0] School name not available yet, skipping fetchNcRecruits")
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolBranding?.name, brandingLoading])
+      const schoolName = schoolBranding?.name
+      console.log("[v0] NC Recruits useEffect - brandingLoading:", brandingLoading, "schoolBranding:", schoolBranding, "schoolBranding?.name:", schoolBranding?.name, "final schoolName:", schoolName)
+      if (schoolName && typeof schoolName === "string" && schoolName.trim().length > 0) {
+        console.log("[v0] School name available, calling fetchNcRecruits and fetchPipelineHistory")
+        fetchNcRecruits()
+        fetchPipelineHistory()
+      } else {
+        console.log("[v0] School name not available yet, skipping fetchNcRecruits and fetchPipelineHistory")
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [schoolBranding?.name, brandingLoading])
 
   const fetchProspects = async () => {
     try {
@@ -1237,6 +1270,65 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </Card>
         </div>
       )}
+
+      {/* NC Pipeline History Section */}
+      <div className="container mx-auto px-4 pt-6 pb-4">
+        <Card className="border border-gray-200 shadow-sm bg-white">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl font-bold text-gray-900">NC Pipeline History</CardTitle>
+            <p className="text-sm text-gray-600 mt-1">
+              North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            {loadingHistory ? (
+              <div className="text-center py-8">
+                <div className="animate-pulse text-gray-400">Loading roster history...</div>
+              </div>
+            ) : pipelineHistory.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No historical NC athletes found. Athletes with "College Athlete" status will appear here.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full caption-bottom text-sm">
+                  <thead className="[&_tr]:border-b bg-gray-50">
+                    <tr className="border-b transition-colors">
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Class Year</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Weight</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">High School</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Current Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Years on Team</th>
+                    </tr>
+                  </thead>
+                  <tbody className="[&_tr:last-child]:border-0">
+                    {pipelineHistory.map((athlete) => (
+                      <tr
+                        key={athlete.id}
+                        className="border-b transition-colors hover:bg-gray-50 data-[state=selected]:bg-muted"
+                      >
+                        <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
+                        <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
+                        <td className="p-4 align-middle">{athlete.weight ? `${athlete.weight}lbs` : "-"}</td>
+                        <td className="p-4 align-middle">{athlete.highschool || "-"}</td>
+                        <td className="p-4 align-middle">
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {athlete.status || "Enrolled"}
+                          </Badge>
+                        </td>
+                        <td className="p-4 align-middle text-gray-600">
+                          {athlete.years_on_team || "Current"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* North Carolina Recruits Section */}
       <div className="container mx-auto px-4 pt-6 pb-4">
