@@ -77,16 +77,16 @@ function NewCollegesPage() {
                 <div className="text-blue-100 text-sm">Total Commits</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold">{loading ? "..." : uniqueColleges}</div>
+                <div className="text-blue-100 text-sm">Colleges</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold">{loading ? "..." : maleCommits}</div>
                 <div className="text-blue-100 text-sm">Men's Wrestling</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                 <div className="text-3xl font-bold">{loading ? "..." : femaleCommits}</div>
                 <div className="text-blue-100 text-sm">Women's Wrestling</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold">{loading ? "..." : uniqueColleges}</div>
-                <div className="text-blue-100 text-sm">Colleges</div>
               </div>
             </div>
           </div>
