@@ -1366,12 +1366,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       {/* NC Pipeline History Section */}
       <div className="container mx-auto px-4 pt-6 pb-4">
         <Card className="border border-gray-200 shadow-sm bg-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl font-bold text-gray-900">NC Pipeline History</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
-              North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
-            </p>
-          </CardHeader>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-2xl font-bold text-gray-900">NC Roster History</CardTitle>
+          <p className="text-sm text-gray-600 mt-1">
+            North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
+          </p>
+        </CardHeader>
           <CardContent className="p-6">
             {loadingHistory ? (
               <div className="text-center py-8">
