@@ -1909,11 +1909,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
               <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <Tabs defaultValue="overview" className="mt-0">
-                  <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-                    <div className="md:hidden text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b -mx-4 mb-2">
-                      ← Swipe to see more tabs →
-                    </div>
-                    <TabsList className="bg-white border border-gray-200 inline-flex md:grid md:grid-cols-8 gap-1 w-max md:w-full">
+                  <div className="-mx-4 px-4 md:mx-0 md:px-0">
+                    <TabsList className="bg-white border border-gray-200 grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto">
                       <TabsTrigger
                         value="overview"
                         className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
