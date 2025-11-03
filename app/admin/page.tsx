@@ -137,9 +137,9 @@ export default function AdminDashboard() {
                 🏫 Schools Management
               </Button>
             </Link>
-            <Link href="/admin/coach-approvals">
+            <Link href="/admin/users-dashboard">
               <Button variant="outline" className="w-full justify-start bg-transparent">
-                ✅ Approve Coaches
+                ✅ User Management & Approvals
               </Button>
             </Link>
             <Link href="/admin/coach-verification">
