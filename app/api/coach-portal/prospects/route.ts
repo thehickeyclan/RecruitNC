@@ -142,10 +142,12 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Prospects API - Checking athletes.college field for school:", schoolInfo.name)
       
       // Try exact match with school name
+      // EXCLUDE College Athletes - they should only appear in Pipeline History
       const { data: exactMatch } = await supabase
         .from("athletes")
         .select("id, recruiting_status")
         .ilike("college", `%${schoolInfo.name}%`)
+        .not("recruiting_status", "eq", "College Athlete")
       
       if (exactMatch) {
         directCollegeAthletes.push(...exactMatch)
@@ -158,6 +160,7 @@ export async function GET(request: NextRequest) {
           .from("athletes")
           .select("id, recruiting_status")
           .ilike("college", `%${shortName}%`)
+          .not("recruiting_status", "eq", "College Athlete")
         
         if (shortMatch) {
           const existingIds = new Set(directCollegeAthletes.map(a => a.id))
@@ -231,6 +234,7 @@ export async function GET(request: NextRequest) {
         highlight_video_url
       `)
       .in("id", starredAthleteIds)
+      .not("recruiting_status", "eq", "College Athlete")
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
 

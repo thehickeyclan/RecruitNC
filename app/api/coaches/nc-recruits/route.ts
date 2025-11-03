@@ -120,10 +120,12 @@ export async function GET(request: Request) {
     let matchingCollegeAthletes: any[] = []
     
     // Try with schoolData.name
+    // EXCLUDE College Athletes - they're in Pipeline History, not Committed Recruits
     const { data: exactMatch } = await supabase
       .from("athletes")
       .select("id, recruiting_status, college")
       .ilike("college", `%${schoolData.name}%`)
+      .not("recruiting_status", "eq", "College Athlete")
     
     if (exactMatch) {
       matchingCollegeAthletes.push(...exactMatch)
@@ -135,6 +137,7 @@ export async function GET(request: Request) {
         .from("athletes")
         .select("id, recruiting_status, college")
         .ilike("college", `%${schoolName}%`)
+        .not("recruiting_status", "eq", "College Athlete")
       
       if (paramMatch) {
         const existingIds = new Set(matchingCollegeAthletes.map(a => a.id))
@@ -149,6 +152,7 @@ export async function GET(request: Request) {
         .from("athletes")
         .select("id, recruiting_status, college")
         .ilike("college", `%${shortName}%`)
+        .not("recruiting_status", "eq", "College Athlete")
       
       if (shortMatch) {
         const existingIds = new Set(matchingCollegeAthletes.map(a => a.id))
