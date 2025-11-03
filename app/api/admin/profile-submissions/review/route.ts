@@ -62,28 +62,68 @@ export async function POST(request: NextRequest) {
     // If approved, create athlete profile
     if (action === "approve") {
       const { error: createError } = await supabase.from("athletes").insert({
-        firstName: submission.firstName,
-        lastName: submission.lastName,
+        // Basic info
+        firstName: submission.firstname,
+        lastName: submission.lastname,
+        name: `${submission.firstname} ${submission.lastname}`,
         gender: submission.gender,
-        graduationYear: submission.graduationYear,
-        weightClass: submission.weightClass,
-        highSchool: submission.highSchool,
+        graduationyear: submission.graduationyear,
+        weightclass: submission.weightclass,
+        college_weight_class: submission.college_weight_class,
+        highschool: submission.highschool,
+        highSchoolDivision: submission.high_school_division,
+        wrestlingClub: submission.wrestling_club,
         location: submission.location,
-        bio: submission.bio,
-        achievements: submission.achievements ? [submission.achievements] : null,
-        photoUrl: submission.photoUrl,
         contactEmail: submission.email,
+        phone: submission.phone,
+        
+        // Bio & achievements
+        bio_headline: submission.bio_headline,
+        bio: submission.bio,
+        achievements: submission.achievements ? [submission.achievements] : [],
+        additional_achievements: submission.additional_achievements,
+        careerRecord: submission.career_record,
+        
+        // Social media
+        socialMedia: {
+          instagram: submission.instagram || null,
+          twitter: submission.twitter || null,
+          facebook: submission.facebook || null,
+        },
+        
+        // Academic
+        academic_gpa: submission.gpa,
+        academic_sat: submission.sat,
+        academic_act: submission.act,
+        academic_summary: submission.academic_summary,
+        academic_interest: submission.academic_interest,
+        
+        // Tournament records
+        super_32_2023_record: submission.super_32_2023_record,
+        super_32_2023_placement: submission.super_32_2023_placement,
+        super_32_2024_record: submission.super_32_2024_record,
+        super_32_2024_placement: submission.super_32_2024_placement,
+        super_32_2025_record: submission.super_32_2025_record,
+        super_32_2025_placement: submission.super_32_2025_placement,
+        nhsca_2023_record: submission.nhsca_2023_record,
+        nhsca_2023_placement: submission.nhsca_2023_placement,
+        nhsca_2024_record: submission.nhsca_2024_record,
+        nhsca_2024_placement: submission.nhsca_2024_placement,
+        nhsca_2025_record: submission.nhsca_2025_record,
+        nhsca_2025_placement: submission.nhsca_2025_placement,
+        nationally_ranked_wins: submission.nationally_ranked_wins,
+        college_opens_experience: submission.college_opens_experience,
+        
+        // Media
+        highlight_video_url: submission.highlight_video_url,
+        headshot_url: submission.headshot_url,
+        photourl: submission.headshot_url, // Use headshot as main photo
+        
+        // Status
         is_prospect: true,
         recruiting_status: "Uncommitted",
-        socialMedia: {
-          twitter: null,
-          instagram: null,
-          facebook: null,
-        },
-        rankings: {
-          state: null,
-          national: null,
-        },
+        prospect_status: "uncommitted",
+        
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })

@@ -27,21 +27,61 @@ export default function SubmitProfilePage() {
   const [submitted, setSubmitted] = useState(false)
 
   const [formData, setFormData] = useState({
+    // Basic Info
     firstName: "",
     lastName: "",
     gender: "",
     graduationYear: "",
     weightClass: "",
+    collegeWeightClass: "",
     highSchool: "",
+    highSchoolDivision: "",
     wrestlingClub: "",
     location: "",
     email: "",
     phone: "",
+    
+    // Bio & Achievements
+    bioHeadline: "",
     bio: "",
     achievements: "",
+    additionalAchievements: "",
     stateQualifier: "",
     regionalPlacer: "",
     conferencePlacer: "",
+    careerRecord: "",
+    
+    // Social Media
+    instagram: "",
+    twitter: "",
+    facebook: "",
+    
+    // Academic Info
+    gpa: "",
+    sat: "",
+    act: "",
+    academicSummary: "",
+    academicInterest: "",
+    
+    // Tournament Records
+    super32_2023_record: "",
+    super32_2023_placement: "",
+    super32_2024_record: "",
+    super32_2024_placement: "",
+    super32_2025_record: "",
+    super32_2025_placement: "",
+    nhsca_2023_record: "",
+    nhsca_2023_placement: "",
+    nhsca_2024_record: "",
+    nhsca_2024_placement: "",
+    nhsca_2025_record: "",
+    nhsca_2025_placement: "",
+    nationallyRankedWins: "",
+    collegeOpensExperience: "",
+    
+    // Media
+    highlightVideoUrl: "",
+    headshotUrl: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -425,6 +465,302 @@ export default function SubmitProfilePage() {
                   rows={3}
                 />
                 <p className="text-xs text-muted-foreground">Conference placer, runner-up, or champion achievements</p>
+              </div>
+            </div>
+
+            {/* Social Media */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">Social Media (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram">Instagram Handle</Label>
+                  <Input
+                    id="instagram"
+                    name="instagram"
+                    value={formData.instagram}
+                    onChange={handleChange}
+                    placeholder="@yourhandle"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="twitter">Twitter/X Handle</Label>
+                  <Input
+                    id="twitter"
+                    name="twitter"
+                    value={formData.twitter}
+                    onChange={handleChange}
+                    placeholder="@yourhandle"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facebook">Facebook Profile</Label>
+                  <Input
+                    id="facebook"
+                    name="facebook"
+                    value={formData.facebook}
+                    onChange={handleChange}
+                    placeholder="facebook.com/yourprofile"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Academic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">Academic Information (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gpa">GPA (4.0 scale)</Label>
+                  <Input
+                    id="gpa"
+                    name="gpa"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="4.0"
+                    value={formData.gpa}
+                    onChange={handleChange}
+                    placeholder="3.75"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sat">SAT Score</Label>
+                  <Input
+                    id="sat"
+                    name="sat"
+                    type="number"
+                    min="400"
+                    max="1600"
+                    value={formData.sat}
+                    onChange={handleChange}
+                    placeholder="1200"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="act">ACT Score</Label>
+                  <Input
+                    id="act"
+                    name="act"
+                    type="number"
+                    min="1"
+                    max="36"
+                    value={formData.act}
+                    onChange={handleChange}
+                    placeholder="28"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="academicInterest">Intended Major/Academic Interest</Label>
+                <Input
+                  id="academicInterest"
+                  name="academicInterest"
+                  value={formData.academicInterest}
+                  onChange={handleChange}
+                  placeholder="e.g., Business, Engineering, Pre-Med"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="academicSummary">Academic Summary</Label>
+                <Textarea
+                  id="academicSummary"
+                  name="academicSummary"
+                  value={formData.academicSummary}
+                  onChange={handleChange}
+                  placeholder="Honors courses, AP classes, academic awards, etc."
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            {/* Tournament Records */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">National Tournament Results (Optional)</h3>
+              
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700">Super 32</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="super32_2023_record">2023 Record</Label>
+                    <Input
+                      id="super32_2023_record"
+                      name="super32_2023_record"
+                      value={formData.super32_2023_record}
+                      onChange={handleChange}
+                      placeholder="5-2"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="super32_2023_placement">2023 Placement</Label>
+                    <Input
+                      id="super32_2023_placement"
+                      name="super32_2023_placement"
+                      value={formData.super32_2023_placement}
+                      onChange={handleChange}
+                      placeholder="5th"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="super32_2024_record">2024 Record</Label>
+                    <Input
+                      id="super32_2024_record"
+                      name="super32_2024_record"
+                      value={formData.super32_2024_record}
+                      onChange={handleChange}
+                      placeholder="6-1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="super32_2024_placement">2024 Placement</Label>
+                    <Input
+                      id="super32_2024_placement"
+                      name="super32_2024_placement"
+                      value={formData.super32_2024_placement}
+                      onChange={handleChange}
+                      placeholder="3rd"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="super32_2025_record">2025 Record</Label>
+                    <Input
+                      id="super32_2025_record"
+                      name="super32_2025_record"
+                      value={formData.super32_2025_record}
+                      onChange={handleChange}
+                      placeholder="7-0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="super32_2025_placement">2025 Placement</Label>
+                    <Input
+                      id="super32_2025_placement"
+                      name="super32_2025_placement"
+                      value={formData.super32_2025_placement}
+                      onChange={handleChange}
+                      placeholder="1st"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700">NHSCA</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nhsca_2023_record">2023 Record</Label>
+                    <Input
+                      id="nhsca_2023_record"
+                      name="nhsca_2023_record"
+                      value={formData.nhsca_2023_record}
+                      onChange={handleChange}
+                      placeholder="4-1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nhsca_2023_placement">2023 Placement</Label>
+                    <Input
+                      id="nhsca_2023_placement"
+                      name="nhsca_2023_placement"
+                      value={formData.nhsca_2023_placement}
+                      onChange={handleChange}
+                      placeholder="AA"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nhsca_2024_record">2024 Record</Label>
+                    <Input
+                      id="nhsca_2024_record"
+                      name="nhsca_2024_record"
+                      value={formData.nhsca_2024_record}
+                      onChange={handleChange}
+                      placeholder="5-0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nhsca_2024_placement">2024 Placement</Label>
+                    <Input
+                      id="nhsca_2024_placement"
+                      name="nhsca_2024_placement"
+                      value={formData.nhsca_2024_placement}
+                      onChange={handleChange}
+                      placeholder="2nd"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nhsca_2025_record">2025 Record</Label>
+                    <Input
+                      id="nhsca_2025_record"
+                      name="nhsca_2025_record"
+                      value={formData.nhsca_2025_record}
+                      onChange={handleChange}
+                      placeholder="6-0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="nhsca_2025_placement">2025 Placement</Label>
+                    <Input
+                      id="nhsca_2025_placement"
+                      name="nhsca_2025_placement"
+                      value={formData.nhsca_2025_placement}
+                      onChange={handleChange}
+                      placeholder="1st"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nationallyRankedWins">Nationally Ranked Wins</Label>
+                  <Textarea
+                    id="nationallyRankedWins"
+                    name="nationallyRankedWins"
+                    value={formData.nationallyRankedWins}
+                    onChange={handleChange}
+                    placeholder="List wins over nationally ranked opponents"
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="collegeOpensExperience">College Opens Experience</Label>
+                  <Textarea
+                    id="collegeOpensExperience"
+                    name="collegeOpensExperience"
+                    value={formData.collegeOpensExperience}
+                    onChange={handleChange}
+                    placeholder="College open tournaments attended and results"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Media */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2">Media (Optional)</h3>
+              <div className="space-y-2">
+                <Label htmlFor="highlightVideoUrl">Highlight Video URL</Label>
+                <Input
+                  id="highlightVideoUrl"
+                  name="highlightVideoUrl"
+                  type="url"
+                  value={formData.highlightVideoUrl}
+                  onChange={handleChange}
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+                <p className="text-xs text-muted-foreground">YouTube, Hudl, or other video platform link</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="headshotUrl">Headshot Photo URL</Label>
+                <Input
+                  id="headshotUrl"
+                  name="headshotUrl"
+                  type="url"
+                  value={formData.headshotUrl}
+                  onChange={handleChange}
+                  placeholder="https://..."
+                />
+                <p className="text-xs text-muted-foreground">Link to your headshot or profile photo</p>
               </div>
             </div>
           </CardContent>
