@@ -1635,49 +1635,49 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     <TabsList className="bg-white border border-gray-200 inline-flex md:grid md:grid-cols-8 gap-1 w-max md:w-full">
                       <TabsTrigger
                         value="overview"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Overview
                       </TabsTrigger>
                       <TabsTrigger
                         value="performance"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Performance
                       </TabsTrigger>
                       <TabsTrigger
                         value="academics"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Academics
                       </TabsTrigger>
                       <TabsTrigger
                         value="documents"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Documents
                       </TabsTrigger>
                       <TabsTrigger
                         value="family"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Family
                       </TabsTrigger>
                       <TabsTrigger
                         value="notes"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Notes ({notes.length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="financials"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Financials
                       </TabsTrigger>
                       <TabsTrigger
                         value="activity"
-                        className="flex-shrink-0 text-xs md:text-sm px-4 md:px-4 py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 text-[11px] md:text-sm px-3 md:px-4 py-2 md:py-2 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
                       >
                         Activity
                       </TabsTrigger>
