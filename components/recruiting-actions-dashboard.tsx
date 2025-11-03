@@ -953,7 +953,7 @@ export function RecruitingActionsDashboard({ schoolId, athletes: providedAthlete
                     </SelectItem>
                   ))}
                   {availableAthletes.length === 0 && (
-                    <SelectItem value="" disabled>No athletes available</SelectItem>
+                    <SelectItem value="no-athletes" disabled>No athletes available</SelectItem>
                   )}
                 </SelectContent>
               </Select>
