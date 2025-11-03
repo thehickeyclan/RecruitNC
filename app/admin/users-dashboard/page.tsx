@@ -3,42 +3,27 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Pie,
-  PieChart,
-  Cell,
-  Legend,
-} from "recharts"
-import UserStats from "@/components/admin/user-stats"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-
-type DailyPoint = { date: string; signups: number; logins: number }
-type WeeklyPoint = { week: string; signups: number; logins: number }
-type MonthlyPoint = { month: string; signups: number; logins: number }
-
-type AnalyticsPayload = {
-  success: boolean
-  summary: {
-    totalUsers: number
-    signupsToday: number
-    loginsToday: number
-    activeLast30Days: number
-  }
-  usersLoggedInToday: Array<{ id: string; email: string; last_sign_in_at: string }>
-  daily: DailyPoint[]
-  weekly: WeeklyPoint[]
-  monthly: MonthlyPoint[]
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/components/ui/use-toast"
+import { 
+  Users, 
+  UserCheck, 
+  UserX, 
+  School, 
+  Phone, 
+  Mail, 
+  Calendar, 
+  Clock,
+  Edit,
+  Check,
+  X,
+  AlertCircle
+} from "lucide-react"
 
 type UserProfile = {
   user_id: string
@@ -49,67 +34,158 @@ type UserProfile = {
   created_at: string
   is_admin: boolean
   last_sign_in_at: string | null
+  coach_approved: boolean | null
+  school_id: string | null
+  school_name: string | null
+}
+
+// Format phone to (XXX) XXX-XXXX
+function formatPhone(phone: string | null): string {
+  if (!phone) return "N/A"
+  const cleaned = phone.replace(/\D/g, "")
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+  }
+  if (cleaned.length === 11 && cleaned[0] === "1") {
+    return `(${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
+  }
+  return phone
+}
+
+// Relative time formatting
+function getRelativeTime(date: string | null): string {
+  if (!date) return "Never"
+  const now = new Date()
+  const past = new Date(date)
+  const diffMs = now.getTime() - past.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return "Just now"
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 7) return `${diffDays}d ago`
+  return new Date(date).toLocaleDateString()
 }
 
 export default function UsersDashboardPage() {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsPayload | null>(null)
   const [profiles, setProfiles] = useState<UserProfile[]>([])
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showSignedUpToday, setShowSignedUpToday] = useState(false)
-  const [showLoggedInToday, setShowLoggedInToday] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [editingRole, setEditingRole] = useState<string | null>(null)
+  const [roleFilter, setRoleFilter] = useState<string>("all")
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
+  const [editForm, setEditForm] = useState({
+    name: "",
+    cell_phone: "",
+    role: "",
+    coach_approved: false,
+    school_id: ""
+  })
+  const { toast } = useToast()
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true)
-        console.log("[v0] Fetching user profiles from /api/admin/users/profiles")
-
-        const [analyticsRes, profilesRes] = await Promise.all([
-          fetch("/api/admin/analytics/user-activity", { cache: "no-store" }),
-          fetch("/api/admin/users/profiles", { cache: "no-store" }),
-        ])
-
-        console.log("[v0] Analytics response status:", analyticsRes.status)
-        console.log("[v0] Profiles response status:", profilesRes.status)
-
-        if (!analyticsRes.ok) throw new Error(`Failed to load analytics (${analyticsRes.status})`)
-        if (!profilesRes.ok) throw new Error(`Failed to load profiles (${profilesRes.status})`)
-
-        const analytics = await analyticsRes.json()
-        const profilesData = await profilesRes.json()
-
-        console.log("[v0] Profiles data:", profilesData)
-        console.log("[v0] Number of profiles:", profilesData.profiles?.length || 0)
-
-        setAnalyticsData(analytics)
-        setProfiles(profilesData.profiles || [])
-      } catch (e: any) {
-        console.error("[v0] Error loading dashboard:", e)
-        setError(e?.message || "Failed to load dashboard data")
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
+    loadData()
   }, [])
 
-  const handleRoleUpdate = async (userId: string, newRole: string) => {
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [profilesRes, schoolsRes] = await Promise.all([
+        fetch("/api/admin/users/profiles", { cache: "no-store" }),
+        fetch("/api/admin/schools", { cache: "no-store" })
+      ])
+
+      if (!profilesRes.ok) throw new Error("Failed to load profiles")
+      if (!schoolsRes.ok) throw new Error("Failed to load schools")
+
+      const profilesData = await profilesRes.json()
+      const schoolsData = await schoolsRes.json()
+
+      setProfiles(profilesData.profiles || [])
+      setSchools(schoolsData.schools || [])
+    } catch (e: any) {
+      console.error("Error loading dashboard:", e)
+      setError(e?.message || "Failed to load dashboard data")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const openEditDialog = (user: UserProfile) => {
+    setEditingUser(user)
+    setEditForm({
+      name: user.name || "",
+      cell_phone: user.cell_phone || "",
+      role: user.role || "other",
+      coach_approved: user.coach_approved || false,
+      school_id: user.school_id || ""
+    })
+  }
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return
+
+    try {
+      const res = await fetch(`/api/admin/users/${editingUser.user_id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm)
+      })
+
+      if (!res.ok) throw new Error("Failed to update user")
+
+      toast({
+        title: "Success",
+        description: "User profile updated successfully"
+      })
+
+      // Update local state
+      setProfiles(prev => prev.map(p => 
+        p.user_id === editingUser.user_id 
+          ? { 
+              ...p, 
+              ...editForm,
+              school_name: schools.find(s => s.id === editForm.school_id)?.name || null
+            } 
+          : p
+      ))
+      setEditingUser(null)
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to update user",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleApproveCoach = async (userId: string, approved: boolean) => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ coach_approved: approved })
       })
 
-      if (!res.ok) throw new Error("Failed to update role")
+      if (!res.ok) throw new Error("Failed to update approval status")
 
-      setProfiles((prev) => prev.map((p) => (p.user_id === userId ? { ...p, role: newRole } : p)))
-      setEditingRole(null)
+      toast({
+        title: "Success",
+        description: approved ? "Coach approved" : "Coach approval revoked"
+      })
+
+      setProfiles(prev => prev.map(p => 
+        p.user_id === userId ? { ...p, coach_approved: approved } : p
+      ))
     } catch (e: any) {
-      alert(e?.message || "Failed to update role")
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to update approval",
+        variant: "destructive"
+      })
     }
   }
 
@@ -118,471 +194,480 @@ export default function UsersDashboardPage() {
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(query) ||
-          p.email.toLowerCase().includes(query) ||
-          p.role?.toLowerCase().includes(query),
+      filtered = filtered.filter(p =>
+        p.name?.toLowerCase().includes(query) ||
+        p.email.toLowerCase().includes(query) ||
+        p.cell_phone?.includes(query) ||
+        p.school_name?.toLowerCase().includes(query)
       )
     }
 
-    if (showSignedUpToday) {
-      const today = new Date().toDateString()
-      filtered = filtered.filter((p) => new Date(p.created_at).toDateString() === today)
-    }
-
-    if (showLoggedInToday && analyticsData?.usersLoggedInToday) {
-      const loggedInTodayIds = new Set(analyticsData.usersLoggedInToday.map((u) => u.id))
-      filtered = filtered.filter((p) => loggedInTodayIds.has(p.user_id))
+    if (roleFilter !== "all") {
+      filtered = filtered.filter(p => p.role === roleFilter)
     }
 
     return filtered
-  }, [profiles, searchQuery, showSignedUpToday, showLoggedInToday, analyticsData])
+  }, [profiles, searchQuery, roleFilter])
 
-  const groupedByRole = useMemo(() => {
-    const groups: Record<string, UserProfile[]> = {}
-    filteredProfiles.forEach((profile) => {
-      const role = profile.role || "other"
-      if (!groups[role]) groups[role] = []
-      groups[role].push(profile)
-    })
-    return groups
-  }, [filteredProfiles])
+  const pendingCoaches = useMemo(() => 
+    filteredProfiles.filter(p => 
+      p.role === "college_coach" && !p.coach_approved
+    ),
+    [filteredProfiles]
+  )
 
-  const roleDistribution = useMemo(() => {
-    return Object.entries(groupedByRole).map(([role, users]) => ({
-      name: role.charAt(0).toUpperCase() + role.slice(1),
-      value: users.length,
-      role: role,
-    }))
-  }, [groupedByRole])
+  const approvedCoaches = useMemo(() => 
+    filteredProfiles.filter(p => 
+      p.role === "college_coach" && p.coach_approved
+    ),
+    [filteredProfiles]
+  )
 
-  const ROLE_COLORS: Record<string, string> = {
-    admin: "hsl(var(--chart-1))",
-    athlete: "hsl(var(--chart-2))",
-    parent: "hsl(var(--chart-3))",
-    college_coach: "hsl(var(--chart-4))",
-    coach: "hsl(var(--chart-5))",
-    referee: "hsl(220, 70%, 50%)",
-    fan: "hsl(280, 70%, 50%)",
-    other: "hsl(0, 0%, 60%)",
+  const stats = useMemo(() => ({
+    total: profiles.length,
+    coaches: profiles.filter(p => p.role === "college_coach").length,
+    pendingCoaches: profiles.filter(p => p.role === "college_coach" && !p.coach_approved).length,
+    approvedCoaches: profiles.filter(p => p.role === "college_coach" && p.coach_approved).length,
+    athletes: profiles.filter(p => p.role === "athlete").length,
+    activeToday: profiles.filter(p => {
+      if (!p.last_sign_in_at) return false
+      const today = new Date().toDateString()
+      return new Date(p.last_sign_in_at).toDateString() === today
+    }).length
+  }), [profiles])
+
+  const UserRow = ({ user }: { user: UserProfile }) => {
+    const isCoach = user.role === "college_coach"
+    
+    return (
+      <tr key={user.user_id} className="hover:bg-gray-50">
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div>
+              <div className="font-medium text-gray-900">{user.name || "N/A"}</div>
+              <div className="text-sm text-gray-500">{user.email}</div>
+            </div>
+          </div>
+        </td>
+        <td className="px-4 py-3">
+          <Badge 
+            variant={
+              user.role === "college_coach" ? "default" :
+              user.role === "athlete" ? "secondary" :
+              "outline"
+            }
+          >
+            {user.role || "other"}
+          </Badge>
+        </td>
+        <td className="px-4 py-3 text-sm">
+          {formatPhone(user.cell_phone)}
+        </td>
+        {isCoach && (
+          <>
+            <td className="px-4 py-3">
+              {user.coach_approved ? (
+                <Badge variant="default" className="bg-green-600">
+                  <UserCheck className="h-3 w-3 mr-1" />
+                  Approved
+                </Badge>
+              ) : (
+                <Badge variant="destructive">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Pending
+                </Badge>
+              )}
+            </td>
+            <td className="px-4 py-3 text-sm">
+              {user.school_name || (
+                <span className="text-gray-400 italic">Not assigned</span>
+              )}
+            </td>
+          </>
+        )}
+        <td className="px-4 py-3 text-sm text-gray-500">
+          {getRelativeTime(user.last_sign_in_at)}
+        </td>
+        <td className="px-4 py-3 text-sm text-gray-500">
+          {new Date(user.created_at).toLocaleDateString()}
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => openEditDialog(user)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            {isCoach && (
+              <Button
+                variant={user.coach_approved ? "outline" : "default"}
+                size="sm"
+                onClick={() => handleApproveCoach(user.user_id, !user.coach_approved)}
+                className={user.coach_approved ? "" : "bg-green-600 hover:bg-green-700"}
+              >
+                {user.coach_approved ? <X className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+              </Button>
+            )}
+          </div>
+        </td>
+      </tr>
+    )
   }
 
-  const daily = analyticsData?.daily ?? []
-  const weekly = analyticsData?.weekly ?? []
-  const monthly = analyticsData?.monthly ?? []
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-gray-600">Loading...</div>
+        </div>
+      </div>
+    )
+  }
 
-  const chartConfig = useMemo(
-    () => ({
-      signups: {
-        label: "Signups",
-        color: "hsl(var(--chart-1))",
-      },
-      logins: {
-        label: "Logins",
-        color: "hsl(var(--chart-2))",
-      },
-    }),
-    [],
-  )
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-red-600">Error: {error}</div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">User Dashboard</h1>
-        <p className="text-gray-600">User analytics, signups, logins, and user management</p>
+        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+        <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign schools</p>
       </div>
 
-      <div className="mb-8">
-        <UserStats />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+              <Users className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Coaches</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.pendingCoaches}</p>
+              </div>
+              <AlertCircle className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Approved Coaches</p>
+                <p className="text-2xl font-bold text-green-600">{stats.approvedCoaches}</p>
+              </div>
+              <UserCheck className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Today</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.activeToday}</p>
+              </div>
+              <Clock className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {loading ? (
-        <div className="text-gray-600">Loading dashboard…</div>
-      ) : error ? (
-        <div className="text-red-600">Error: {error}</div>
-      ) : (
-        <>
-          <Card className="border mb-6">
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search by name, email, phone, or school..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="college_coach">College Coaches</SelectItem>
+                <SelectItem value="athlete">Athletes</SelectItem>
+                <SelectItem value="parent">Parents</SelectItem>
+                <SelectItem value="coach">HS/Club Coaches</SelectItem>
+                <SelectItem value="admin">Admins</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs for different views */}
+      <Tabs defaultValue="pending" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="pending">
+            Pending Coaches
+            {stats.pendingCoaches > 0 && (
+              <Badge variant="destructive" className="ml-2">{stats.pendingCoaches}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="approved">Approved Coaches</TabsTrigger>
+          <TabsTrigger value="all">All Users</TabsTrigger>
+        </TabsList>
+
+        {/* Pending Coaches */}
+        <TabsContent value="pending">
+          <Card>
             <CardHeader>
-              <CardTitle>User Distribution by Role</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+                Pending Coach Approvals ({pendingCoaches.length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                config={
-                  Object.fromEntries(
-                    Object.entries(ROLE_COLORS).map(([role, color]) => [
-                      role,
-                      { label: role.charAt(0).toUpperCase() + role.slice(1), color },
-                    ]),
-                  ) as any
-                }
-                className="h-[400px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={roleDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {roleDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={ROLE_COLORS[entry.role] || "hsl(0, 0%, 60%)"} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6 mb-8">
-            {/* Signups Chart */}
-            <Card className="border">
-              <CardHeader>
-                <CardTitle>Signups</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="daily" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="daily">Daily (30d)</TabsTrigger>
-                    <TabsTrigger value="weekly">Weekly (12w)</TabsTrigger>
-                    <TabsTrigger value="monthly">Monthly (12m)</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="daily">
-                    <ChartContainer config={chartConfig as any} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={daily}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            type="monotone"
-                            dataKey="signups"
-                            name="Signups"
-                            stroke="var(--color-signups)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </TabsContent>
-
-                  <TabsContent value="weekly">
-                    <ChartContainer config={chartConfig as any} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={weekly}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            type="monotone"
-                            dataKey="signups"
-                            name="Signups"
-                            stroke="var(--color-signups)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </TabsContent>
-
-                  <TabsContent value="monthly">
-                    <ChartContainer config={chartConfig as any} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={monthly}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            type="monotone"
-                            dataKey="signups"
-                            name="Signups"
-                            stroke="var(--color-signups)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-
-            {/* Logins Chart */}
-            <Card className="border">
-              <CardHeader>
-                <CardTitle>Logins</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="daily" className="w-full">
-                  <TabsList>
-                    <TabsTrigger value="daily">Daily (30d)</TabsTrigger>
-                    <TabsTrigger value="weekly">Weekly (12w)</TabsTrigger>
-                    <TabsTrigger value="monthly">Monthly (12m)</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="daily">
-                    <ChartContainer config={chartConfig as any} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={daily}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            type="monotone"
-                            dataKey="logins"
-                            name="Logins"
-                            stroke="var(--color-logins)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </TabsContent>
-
-                  <TabsContent value="weekly">
-                    <ChartContainer config={chartConfig as any} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={weekly}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            type="monotone"
-                            dataKey="logins"
-                            name="Logins"
-                            stroke="var(--color-logins)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </TabsContent>
-
-                  <TabsContent value="monthly">
-                    <ChartContainer config={chartConfig as any} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={monthly}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line
-                            type="monotone"
-                            dataKey="logins"
-                            name="Logins"
-                            stroke="var(--color-logins)"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Who Logged In Today section */}
-          {analyticsData?.usersLoggedInToday && analyticsData.usersLoggedInToday.length > 0 && (
-            <Card className="border mb-6">
-              <CardHeader>
-                <CardTitle>Users Logged In Today ({analyticsData.usersLoggedInToday.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
+              {pendingCoaches.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No pending coach approvals
+                </div>
+              ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Last Login Time
-                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {analyticsData.usersLoggedInToday.map((user) => (
-                        <tr key={user.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.email}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.last_sign_in_at).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
+                    <tbody className="divide-y divide-gray-200">
+                      {pendingCoaches.map(user => <UserRow key={user.user_id} user={user} />)}
                     </tbody>
                   </table>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <Card className="border mb-6">
+        {/* Approved Coaches */}
+        <TabsContent value="approved">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCheck className="h-5 w-5 text-green-600" />
+                Approved Coaches ({approvedCoaches.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {approvedCoaches.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No approved coaches yet
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {approvedCoaches.map(user => <UserRow key={user.user_id} user={user} />)}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* All Users */}
+        <TabsContent value="all">
+          <Card>
             <CardHeader>
               <CardTitle>All Users ({filteredProfiles.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <Input
-                  placeholder="Search by name, email, or role..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    variant={showSignedUpToday ? "default" : "outline"}
-                    onClick={() => setShowSignedUpToday(!showSignedUpToday)}
-                    size="sm"
-                  >
-                    Signed Up Today
-                  </Button>
-                  <Button
-                    variant={showLoggedInToday ? "default" : "outline"}
-                    onClick={() => setShowLoggedInToday(!showLoggedInToday)}
-                    size="sm"
-                  >
-                    Logged In Today ({analyticsData?.summary.loginsToday || 0})
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                {Object.entries(groupedByRole)
-                  .sort(([a], [b]) => {
-                    const order = ["admin", "college_coach", "coach", "athlete", "parent", "referee", "fan", "other"]
-                    return order.indexOf(a) - order.indexOf(b)
-                  })
-                  .map(([role, users]) => (
-                    <div key={role}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3 className="text-lg font-semibold capitalize">{role}</h3>
-                        <Badge variant="secondary">{users.length}</Badge>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Name
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Email
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Role
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Admin
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Phone
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Joined
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Last Login
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {users.map((profile) => (
-                              <tr key={profile.user_id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  {profile.name || "N/A"}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{profile.email}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {editingRole === profile.user_id ? (
-                                    <Select
-                                      value={profile.role || "other"}
-                                      onValueChange={(value) => handleRoleUpdate(profile.user_id, value)}
-                                    >
-                                      <SelectTrigger className="w-[180px]">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="athlete">Athlete</SelectItem>
-                                        <SelectItem value="parent">Parent</SelectItem>
-                                        <SelectItem value="college_coach">College Coach</SelectItem>
-                                        <SelectItem value="coach">High School/Club Coach</SelectItem>
-                                        <SelectItem value="referee">Referee</SelectItem>
-                                        <SelectItem value="fan">Fan</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  ) : (
-                                    <button
-                                      onClick={() => setEditingRole(profile.user_id)}
-                                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full hover:opacity-80 ${
-                                        profile.role === "admin"
-                                          ? "bg-red-100 text-red-800"
-                                          : profile.role === "coach" || profile.role === "college_coach"
-                                            ? "bg-blue-100 text-blue-800"
-                                            : profile.role === "parent"
-                                              ? "bg-green-100 text-green-800"
-                                              : "bg-gray-100 text-gray-800"
-                                      }`}
-                                    >
-                                      {profile.role || "other"}
-                                    </button>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {profile.is_admin ? (
-                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                      Yes
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400">No</span>
-                                  )}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {profile.cell_phone || "N/A"}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {new Date(profile.created_at).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {profile.last_sign_in_at
-                                    ? new Date(profile.last_sign_in_at).toLocaleDateString()
-                                    : "Never"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ))}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredProfiles.map(user => (
+                      <tr key={user.user_id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <div>
+                            <div className="font-medium text-gray-900">{user.name || "N/A"}</div>
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={user.role === "college_coach" ? "default" : "outline"}>
+                            {user.role || "other"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {formatPhone(user.cell_phone)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {getRelativeTime(user.last_sign_in_at)}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(user)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
-        </>
-      )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit User Profile</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4">
+              <div>
+                <Label>Email (read-only)</Label>
+                <Input value={editingUser.email} disabled />
+              </div>
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  placeholder="Full name"
+                />
+              </div>
+              <div>
+                <Label>Cell Phone</Label>
+                <Input
+                  value={editForm.cell_phone}
+                  onChange={(e) => setEditForm({ ...editForm, cell_phone: e.target.value })}
+                  placeholder="(XXX) XXX-XXXX"
+                />
+                <p className="text-xs text-gray-500 mt-1">Will be formatted automatically</p>
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Select
+                  value={editForm.role}
+                  onValueChange={(value) => setEditForm({ ...editForm, role: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="athlete">Athlete</SelectItem>
+                    <SelectItem value="parent">Parent</SelectItem>
+                    <SelectItem value="college_coach">College Coach</SelectItem>
+                    <SelectItem value="coach">High School/Club Coach</SelectItem>
+                    <SelectItem value="referee">Referee</SelectItem>
+                    <SelectItem value="fan">Fan</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editForm.role === "college_coach" && (
+                <>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="coach_approved"
+                      checked={editForm.coach_approved}
+                      onChange={(e) => setEditForm({ ...editForm, coach_approved: e.target.checked })}
+                      className="rounded"
+                    />
+                    <Label htmlFor="coach_approved">Coach Approved (can access athlete contact info)</Label>
+                  </div>
+                  <div>
+                    <Label>Assign to School</Label>
+                    <Select
+                      value={editForm.school_id}
+                      onValueChange={(value) => setEditForm({ ...editForm, school_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a school..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {schools.filter(s => !s.is_test).map(school => (
+                          <SelectItem key={school.id} value={school.id}>
+                            {school.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveUser}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

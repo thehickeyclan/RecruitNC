@@ -56,7 +56,19 @@ export async function GET() {
 
     const { data: userProfiles, error: profileError } = await supabaseAdmin
       .from("user_profiles")
-      .select("user_id, full_name, role, profile_type, cell_phone, is_admin")
+      .select(`
+        user_id, 
+        full_name, 
+        role, 
+        profile_type, 
+        cell_phone, 
+        is_admin,
+        coach_approved,
+        school_id,
+        schools:school_id (
+          name
+        )
+      `)
 
     if (profileError) {
       console.error("[v0] Error fetching user profiles:", profileError)
@@ -76,6 +88,9 @@ export async function GET() {
         role: profile?.role || profile?.profile_type || "fan",
         cell_phone: profile?.cell_phone || null,
         is_admin: profile?.is_admin || false,
+        coach_approved: profile?.coach_approved || false,
+        school_id: profile?.school_id || null,
+        school_name: profile?.schools?.name || null,
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at || null,
       }
