@@ -289,9 +289,22 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     const clickedDate = new Date(year, month, day)
     const dayActivities = getActivitiesForDate(day)
 
-    if (dayActivities.length > 0) {
-      setSelectedDay({ date: clickedDate, activities: dayActivities })
+    // Always open day detail modal, even if no activities
+    setSelectedDay({ date: clickedDate, activities: dayActivities })
+  }
+
+  const getActivityColor = (actionType: string) => {
+    const colors: Record<string, { bg: string; text: string; border: string }> = {
+      phone_call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" },
+      text_message: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200" },
+      email: { bg: "bg-green-100", text: "text-green-800", border: "border-green-200" },
+      in_person_visit: { bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200" },
+      campus_tour: { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-200" },
+      game_attendance: { bg: "bg-pink-100", text: "text-pink-800", border: "border-pink-200" },
+      offer_extended: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" },
+      evaluation: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200" },
     }
+    return colors[actionType] || { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" }
   }
 
   const handleComplete = async (actionId: string) => {
@@ -678,28 +691,50 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                     <div
                       key={index}
                       onClick={() => day && handleDayClick(day)}
-                      className={`min-h-[80px] p-2 border rounded-lg ${
-                        day ? "bg-white hover:bg-gray-50" : "bg-gray-50"
+                      className={`min-h-[80px] p-2 border rounded-lg relative ${
+                        day ? "bg-white hover:bg-gray-50 cursor-pointer" : "bg-gray-50"
                       } ${isToday ? "border-blue-500 border-2" : "border-gray-200"} ${
-                        dayActivities.length > 0 ? "cursor-pointer hover:shadow-md transition-shadow" : ""
+                        dayActivities.length > 0 ? "hover:shadow-md transition-shadow" : ""
                       }`}
                     >
                       {day && (
                         <>
-                          <div className={`text-sm font-medium mb-1 ${isToday ? "text-blue-600" : "text-gray-900"}`}>
-                            {day}
+                          <div className="flex items-center justify-between mb-1">
+                            <div className={`text-sm font-medium ${isToday ? "text-blue-600" : "text-gray-900"}`}>
+                              {day}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const year = currentDate.getFullYear()
+                                const month = currentDate.getMonth()
+                                const clickedDate = new Date(year, month, day)
+                                setNewActivity({
+                                  ...newActivity,
+                                  actionDate: clickedDate.toISOString().split('T')[0],
+                                })
+                                setShowCreateDialog(true)
+                              }}
+                              className="h-5 w-5 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+                              title="Add activity"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
                           </div>
                           {dayActivities.length > 0 && (
                             <div className="space-y-1">
-                              {dayActivities.slice(0, 2).map((activity) => (
-                                <div
-                                  key={activity.id}
-                                  className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded truncate"
-                                  title={`${activity.athlete_name} - ${formatActionType(activity.action_type)}`}
-                                >
-                                  {activity.athlete_name}
-                                </div>
-                              ))}
+                              {dayActivities.slice(0, 2).map((activity) => {
+                                const colors = getActivityColor(activity.action_type)
+                                return (
+                                  <div
+                                    key={activity.id}
+                                    className={`text-xs ${colors.bg} ${colors.text} px-2 py-1 rounded truncate border ${colors.border}`}
+                                    title={`${activity.athlete_name} - ${formatActionType(activity.action_type)}`}
+                                  >
+                                    {activity.athlete_name}
+                                  </div>
+                                )
+                              })}
                               {dayActivities.length > 2 && (
                                 <div className="text-xs text-gray-500 px-2">+{dayActivities.length - 2} more</div>
                               )}
@@ -800,70 +835,117 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              {selectedDay &&
-                selectedDay.date.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl">
+                {selectedDay &&
+                  selectedDay.date.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+              </DialogTitle>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (selectedDay) {
+                    setNewActivity({
+                      ...newActivity,
+                      actionDate: selectedDay.date.toISOString().split('T')[0],
+                    })
+                    setShowCreateDialog(true)
+                    setSelectedDay(null)
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Activity
+              </Button>
+            </div>
           </DialogHeader>
           <div className="space-y-4 mt-4">
-            {selectedDay?.activities.map((activity) => (
-              <Card key={activity.id} className={`border-gray-200 ${isCompleted(activity) ? 'opacity-60' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <Checkbox
-                      checked={isCompleted(activity)}
-                      onCheckedChange={() => handleComplete(activity.id)}
-                      className="mt-1"
-                    />
-                    <img
-                      src={activity.athlete_photo || "/placeholder.svg?height=48&width=48"}
-                      alt={activity.athlete_name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className={`font-semibold ${isCompleted(activity) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{activity.athlete_name}</h4>
-                          <p className="text-sm text-gray-600">{activity.coach_name}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">{formatActionType(activity.action_type)}</Badge>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0"
-                            onClick={() => handleEdit(activity)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                            onClick={() => handleDelete(activity.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+            {selectedDay?.activities.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="mb-2">No activities scheduled for this day</p>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (selectedDay) {
+                      setNewActivity({
+                        ...newActivity,
+                        actionDate: selectedDay.date.toISOString().split('T')[0],
+                      })
+                      setShowCreateDialog(true)
+                      setSelectedDay(null)
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Schedule Activity
+                </Button>
+              </div>
+            ) : (
+              selectedDay?.activities.map((activity) => {
+                const colors = getActivityColor(activity.action_type)
+                return (
+                  <Card key={activity.id} className={`border-gray-200 ${isCompleted(activity) ? 'opacity-60' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <Checkbox
+                          checked={isCompleted(activity)}
+                          onCheckedChange={() => handleComplete(activity.id)}
+                          className="mt-1"
+                        />
+                        <img
+                          src={activity.athlete_photo || "/placeholder.svg?height=48&width=48"}
+                          alt={activity.athlete_name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className={`font-semibold ${isCompleted(activity) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{activity.athlete_name}</h4>
+                              <p className="text-sm text-gray-600">{activity.coach_name}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={`${colors.bg} ${colors.text} border-0`}>
+                                {formatActionType(activity.action_type)}
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={() => handleEdit(activity)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                onClick={() => handleDelete(activity.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          {activity.description && <p className="text-sm text-gray-700 mb-2">{activity.description}</p>}
+                          {activity.outcome && (
+                            <div className="text-sm">
+                              <span className="font-medium text-gray-700">Outcome: </span>
+                              <span className="text-gray-600">{activity.outcome}</span>
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500 mt-2">Logged: {formatDate(activity.action_date)}</div>
                         </div>
                       </div>
-                      {activity.description && <p className="text-sm text-gray-700 mb-2">{activity.description}</p>}
-                      {activity.outcome && (
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-700">Outcome: </span>
-                          <span className="text-gray-600">{activity.outcome}</span>
-                        </div>
-                      )}
-                      <div className="text-xs text-gray-500 mt-2">Logged: {formatDate(activity.action_date)}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CardContent>
+                  </Card>
+                )
+              })
+            )}
           </div>
         </DialogContent>
       </Dialog>
