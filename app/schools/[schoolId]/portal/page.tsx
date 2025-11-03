@@ -256,15 +256,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       
       const response = await fetch(`/api/coaches/pipeline-history?schoolName=${encodeURIComponent(schoolName)}`)
       
-      if (response.ok) {
-        const data = await response.json()
+        if (response.ok) {
+          const data = await response.json()
         console.log("[v0] Pipeline history response:", data)
         setPipelineHistory(data.history || [])
       } else {
         console.error("[v0] Pipeline history fetch failed:", response.status)
         setPipelineHistory([])
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error("[v0] Error fetching pipeline history:", error)
       setPipelineHistory([])
     } finally {
@@ -311,60 +311,23 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
     try {
       console.log("[Roster Edit] Starting save for athlete:", editingRosterEntry.id)
-      const supabase = createClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      console.log("[Roster Edit] Session:", session?.user?.id)
-      console.log("[Roster Edit] Form data:", rosterEditForm)
-
-      // First, find ANY college_coach_stars record for this athlete at this school
-      const { data: existingStars, error: selectError } = await supabase
-        .from("college_coach_stars")
-        .select("id, coach_user_id")
-        .eq("athlete_id", editingRosterEntry.id)
-
-      console.log("[Roster Edit] Existing stars:", existingStars, "Error:", selectError)
-
-      if (existingStars && existingStars.length > 0) {
-        // Update all existing records for this athlete (in case multiple coaches starred)
-        console.log("[Roster Edit] Updating existing records")
-        const { error, data: updateData } = await supabase
-          .from("college_coach_stars")
-          .update({
-            roster_status: rosterEditForm.roster_status,
-            roster_notes: rosterEditForm.roster_notes || null,
-          })
-          .eq("athlete_id", editingRosterEntry.id)
-          .select()
-
-        console.log("[Roster Edit] Update result:", updateData, "Error:", error)
-        if (error) throw error
-      } else {
-        // Create new record if doesn't exist
-        console.log("[Roster Edit] No existing records, creating new")
-        if (!session?.user.id) {
-          throw new Error("No user session found")
-        }
-
-        const insertData = {
-          athlete_id: editingRosterEntry.id,
-          coach_user_id: session.user.id,
-          pipeline_stage: "Committed",
+      
+      // Use API endpoint with service role to bypass RLS
+      const response = await fetch("/api/coaches/roster-status", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: editingRosterEntry.id,
           roster_status: rosterEditForm.roster_status,
           roster_notes: rosterEditForm.roster_notes || null,
-          starred_at: new Date().toISOString(),
-        }
-        console.log("[Roster Edit] Inserting:", insertData)
+        }),
+      })
 
-        const { error, data: insertResult } = await supabase
-          .from("college_coach_stars")
-          .insert(insertData)
-          .select()
+      const data = await response.json()
+      console.log("[Roster Edit] API response:", data)
 
-        console.log("[Roster Edit] Insert result:", insertResult, "Error:", error)
-        if (error) throw error
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update roster status")
       }
 
       // Refresh the list
@@ -387,57 +350,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const handleDeleteRosterEntry = async (athleteId: string) => {
     try {
       console.log("[Roster Delete] Starting delete for athlete:", athleteId)
-      const supabase = createClient()
       
-      // Check if there's a college_coach_stars entry
-      const { data: existingStars, error: selectError } = await supabase
-        .from("college_coach_stars")
-        .select("id")
-        .eq("athlete_id", athleteId)
+      // Use API endpoint with service role to bypass RLS
+      const response = await fetch(`/api/coaches/roster-status?athleteId=${athleteId}`, {
+        method: "DELETE",
+      })
 
-      console.log("[Roster Delete] Existing stars:", existingStars, "Error:", selectError)
+      const data = await response.json()
+      console.log("[Roster Delete] API response:", data)
 
-      if (existingStars && existingStars.length > 0) {
-        // Remove the record(s) from college_coach_stars
-        console.log("[Roster Delete] Deleting existing records")
-        const { error } = await supabase
-          .from("college_coach_stars")
-          .delete()
-          .eq("athlete_id", athleteId)
-
-        console.log("[Roster Delete] Delete result, Error:", error)
-        if (error) throw error
-      } else {
-        // No entry in college_coach_stars - athlete is showing from athletes table only
-        // We'll mark them as "Left Program" so they get filtered out
-        console.log("[Roster Delete] No existing records, creating with 'Left Program' status")
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        console.log("[Roster Delete] Session:", session?.user?.id)
-
-        if (!session?.user.id) {
-          throw new Error("No user session found")
-        }
-
-        const insertData = {
-          athlete_id: athleteId,
-          coach_user_id: session.user.id,
-          pipeline_stage: "Committed",
-          roster_status: "Left Program",
-          roster_notes: "Removed from roster history",
-          starred_at: new Date().toISOString(),
-        }
-        console.log("[Roster Delete] Inserting:", insertData)
-
-        const { error, data: insertResult } = await supabase
-          .from("college_coach_stars")
-          .insert(insertData)
-          .select()
-
-        console.log("[Roster Delete] Insert result:", insertResult, "Error:", error)
-        if (error) throw error
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to remove athlete")
       }
 
       // Refresh the list
@@ -1686,31 +1609,31 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             </div>
 
             <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex gap-3">
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <div className="flex gap-3">
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
                   <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
-                    <SelectValue placeholder="All Years" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="all">All Years</SelectItem>
-                    {graduationYears.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        Class of {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  <SelectItem value="all">All Years</SelectItem>
+                  {graduationYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      Class of {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                <Select value={selectedGender} onValueChange={setSelectedGender}>
+              <Select value={selectedGender} onValueChange={setSelectedGender}>
                   <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    <SelectItem value="all">All Genders</SelectItem>
-                    <SelectItem value="male">Men's</SelectItem>
-                    <SelectItem value="female">Women's</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="male">Men's</SelectItem>
+                  <SelectItem value="female">Women's</SelectItem>
+                </SelectContent>
+              </Select>
               </div>
 
               {/* View Mode Toggle */}
@@ -1755,8 +1678,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
       <div className="container mx-auto px-4 pb-8">
         {viewMode === "board" ? (
-          <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
-            {PIPELINE_STAGES.map((stage) => {
+        <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
+          {PIPELINE_STAGES.map((stage) => {
             const stageProspects = getProspectsByStage(stage.id)
             return (
               <div
@@ -1858,7 +1781,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </div>
             )
           })}
-          </div>
+        </div>
         ) : (
           <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
