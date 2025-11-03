@@ -96,16 +96,16 @@ export default function HighSchoolsPage() {
                   <div className="text-red-100 text-sm">Total Commits</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold">{stats.uniqueSchools}</div>
+                  <div className="text-red-100 text-sm">High Schools</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                   <div className="text-3xl font-bold">{stats.maleCommits}</div>
                   <div className="text-red-100 text-sm">Men's Wrestling</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
                   <div className="text-3xl font-bold">{stats.femaleCommits}</div>
                   <div className="text-red-100 text-sm">Women's Wrestling</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold">{stats.uniqueSchools}</div>
-                  <div className="text-red-100 text-sm">High Schools</div>
                 </div>
               </div>
             </div>
