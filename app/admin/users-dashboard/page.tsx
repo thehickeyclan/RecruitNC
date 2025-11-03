@@ -22,8 +22,25 @@ import {
   Edit,
   Check,
   X,
-  AlertCircle
+  AlertCircle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  TrendingUp,
+  Activity
 } from "lucide-react"
+import { 
+  LineChart, 
+  Line, 
+  BarChart,
+  Bar,
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Legend 
+} from "recharts"
 
 type UserProfile = {
   user_id: string
@@ -77,6 +94,8 @@ export default function UsersDashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
+  const [sortField, setSortField] = useState<string>("created_at")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
   const [editForm, setEditForm] = useState({
     name: "",
@@ -190,6 +209,22 @@ export default function UsersDashboardPage() {
     }
   }
 
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
+    }
+  }
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 inline opacity-30" />
+    return sortDirection === "asc" ? 
+      <ArrowUp className="h-3 w-3 ml-1 inline" /> : 
+      <ArrowDown className="h-3 w-3 ml-1 inline" />
+  }
+
   const filteredProfiles = useMemo(() => {
     let filtered = profiles
 
@@ -207,8 +242,31 @@ export default function UsersDashboardPage() {
       filtered = filtered.filter(p => p.role === roleFilter)
     }
 
+    // Sort
+    filtered.sort((a, b) => {
+      let aVal: any = a[sortField as keyof UserProfile]
+      let bVal: any = b[sortField as keyof UserProfile]
+
+      // Handle null values
+      if (aVal === null) aVal = ""
+      if (bVal === null) bVal = ""
+
+      // Convert to comparable types
+      if (sortField === "created_at" || sortField === "last_sign_in_at") {
+        aVal = new Date(aVal || 0).getTime()
+        bVal = new Date(bVal || 0).getTime()
+      } else if (typeof aVal === "string") {
+        aVal = aVal.toLowerCase()
+        bVal = bVal?.toLowerCase() || ""
+      }
+
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1
+      return 0
+    })
+
     return filtered
-  }, [profiles, searchQuery, roleFilter])
+  }, [profiles, searchQuery, roleFilter, sortField, sortDirection])
 
   const pendingCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
@@ -236,6 +294,72 @@ export default function UsersDashboardPage() {
       return new Date(p.last_sign_in_at).toDateString() === today
     }).length
   }), [profiles])
+
+  // Activity charts data
+  const activityData = useMemo(() => {
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    
+    // Group signups by day
+    const signupsByDay: { [key: string]: number } = {}
+    const loginsByDay: { [key: string]: number } = {}
+    
+    profiles.forEach(p => {
+      const signupDate = new Date(p.created_at)
+      if (signupDate >= thirtyDaysAgo) {
+        const dateKey = signupDate.toISOString().split('T')[0]
+        signupsByDay[dateKey] = (signupsByDay[dateKey] || 0) + 1
+      }
+      
+      if (p.last_sign_in_at) {
+        const loginDate = new Date(p.last_sign_in_at)
+        if (loginDate >= thirtyDaysAgo) {
+          const dateKey = loginDate.toISOString().split('T')[0]
+          loginsByDay[dateKey] = (loginsByDay[dateKey] || 0) + 1
+        }
+      }
+    })
+    
+    // Create array of last 30 days
+    const chartData = []
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
+      const dateKey = date.toISOString().split('T')[0]
+      chartData.push({
+        date: new Date(dateKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        signups: signupsByDay[dateKey] || 0,
+        logins: loginsByDay[dateKey] || 0
+      })
+    }
+    
+    return chartData
+  }, [profiles])
+
+  const activityDistribution = useMemo(() => {
+    const now = new Date()
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    
+    return [
+      { 
+        period: "Last 24 hours", 
+        users: profiles.filter(p => p.last_sign_in_at && new Date(p.last_sign_in_at) >= oneDayAgo).length 
+      },
+      { 
+        period: "Last 7 days", 
+        users: profiles.filter(p => p.last_sign_in_at && new Date(p.last_sign_in_at) >= oneWeekAgo).length 
+      },
+      { 
+        period: "Last 30 days", 
+        users: profiles.filter(p => p.last_sign_in_at && new Date(p.last_sign_in_at) >= oneMonthAgo).length 
+      },
+      { 
+        period: "Never", 
+        users: profiles.filter(p => !p.last_sign_in_at).length 
+      }
+    ]
+  }, [profiles])
 
   const UserRow = ({ user }: { user: UserProfile }) => {
     const isCoach = user.role === "college_coach"
@@ -398,6 +522,69 @@ export default function UsersDashboardPage() {
         </Card>
       </div>
 
+      {/* Activity Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-600" />
+              Signups & Logins (Last 30 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={activityData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 11 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="signups" 
+                  stroke="#3B82F6" 
+                  strokeWidth={2}
+                  name="Signups"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="logins" 
+                  stroke="#10B981" 
+                  strokeWidth={2}
+                  name="Logins"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-purple-600" />
+              User Activity Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={activityDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="users" fill="#8B5CF6" name="Active Users" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Filters */}
       <Card className="mb-6">
         <CardContent className="pt-6">
@@ -529,11 +716,36 @@ export default function UsersDashboardPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort("name")}
+                      >
+                        User <SortIcon field="name" />
+                      </th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort("role")}
+                      >
+                        Role <SortIcon field="role" />
+                      </th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort("cell_phone")}
+                      >
+                        Phone <SortIcon field="cell_phone" />
+                      </th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort("last_sign_in_at")}
+                      >
+                        Last Active <SortIcon field="last_sign_in_at" />
+                      </th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort("created_at")}
+                      >
+                        Joined <SortIcon field="created_at" />
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                   </thead>
