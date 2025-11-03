@@ -659,13 +659,43 @@ export default function UsersDashboardPage() {
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("name")}
+                        >
+                          User <SortIcon field="name" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("role")}
+                        >
+                          Role <SortIcon field="role" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("cell_phone")}
+                        >
+                          Phone <SortIcon field="cell_phone" />
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("school_name")}
+                        >
+                          School <SortIcon field="school_name" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("last_sign_in_at")}
+                        >
+                          Last Active <SortIcon field="last_sign_in_at" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("created_at")}
+                        >
+                          Joined <SortIcon field="created_at" />
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
@@ -698,13 +728,43 @@ export default function UsersDashboardPage() {
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("name")}
+                        >
+                          User <SortIcon field="name" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("role")}
+                        >
+                          Role <SortIcon field="role" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("cell_phone")}
+                        >
+                          Phone <SortIcon field="cell_phone" />
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">School</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Active</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("school_name")}
+                        >
+                          School <SortIcon field="school_name" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("last_sign_in_at")}
+                        >
+                          Last Active <SortIcon field="last_sign_in_at" />
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSort("created_at")}
+                        >
+                          Joined <SortIcon field="created_at" />
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
