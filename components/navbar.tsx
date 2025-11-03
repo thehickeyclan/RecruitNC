@@ -57,7 +57,7 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/commits", label: "Commits" },
-    { href: "/public-rankings", label: "Rankings" },
+    { href: "/prospects", label: "Prospects" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ]
