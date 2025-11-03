@@ -351,7 +351,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         const insertData = {
           athlete_id: editingRosterEntry.id,
           coach_user_id: session.user.id,
-          pipeline_stage: "Signed",
+          pipeline_stage: "Committed",
           roster_status: rosterEditForm.roster_status,
           roster_notes: rosterEditForm.roster_notes || null,
           starred_at: new Date().toISOString(),
@@ -424,7 +424,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         const insertData = {
           athlete_id: athleteId,
           coach_user_id: session.user.id,
-          pipeline_stage: "Signed",
+          pipeline_stage: "Committed",
           roster_status: "Left Program",
           roster_notes: "Removed from roster history",
           starred_at: new Date().toISOString(),
