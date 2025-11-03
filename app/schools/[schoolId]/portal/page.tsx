@@ -36,9 +36,11 @@ import {
   LayoutGrid,
   Table,
   X,
+  ChevronDown,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { RecruitingFunnelChart } from "@/components/recruiting-funnel-chart"
 import { SchoolBrandedHeader } from "@/components/school-branded-header"
 import { useSchoolBranding } from "@/hooks/use-school-branding"
@@ -228,6 +230,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     roster_status: "Active",
     roster_notes: "",
   })
+  const [isRosterHistoryOpen, setIsRosterHistoryOpen] = useState(false)
 
 
   // Removed redundant fetchSchool - using useSchoolBranding hook instead
@@ -1363,16 +1366,27 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
       )}
 
-      {/* NC Pipeline History Section */}
+      {/* NC Roster History Section */}
       <div className="container mx-auto px-4 pt-6 pb-4">
-        <Card className="border border-gray-200 shadow-sm bg-white">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-2xl font-bold text-gray-900">NC Roster History</CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
-            North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
-          </p>
-        </CardHeader>
-          <CardContent className="p-6">
+        <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
+          <Card className="border border-gray-200 shadow-sm bg-white">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-gray-900">NC Roster History</CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
+                    </p>
+                  </div>
+                  <ChevronDown 
+                    className={`h-6 w-6 text-gray-500 transition-transform ${isRosterHistoryOpen ? 'rotate-180' : ''}`}
+                  />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6">
             {loadingHistory ? (
               <div className="text-center py-8">
                 <div className="animate-pulse text-gray-400">Loading roster history...</div>
@@ -1460,8 +1474,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 </table>
               </div>
             )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
 
       {/* North Carolina Recruits Section */}
