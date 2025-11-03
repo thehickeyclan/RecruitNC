@@ -1125,6 +1125,40 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
       )}
 
+      {/* Mobile-only Quick Actions Bar */}
+      <div className="md:hidden sticky top-0 z-30 bg-white border-b-2 border-gray-200 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                // Scroll to RecruitingActionsDashboard
+                const dashboardElement = document.querySelector('[data-recruiting-dashboard]')
+                if (dashboardElement) {
+                  dashboardElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
+              }}
+              className="flex-1 h-12 px-4 rounded-lg font-semibold bg-gray-900 text-white shadow-sm hover:shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all touch-manipulation"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Create Activity
+            </Button>
+            <Button
+              onClick={() => {
+                console.log("[v0] Add Prospect button clicked - redirecting to public rankings")
+                window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
+              }}
+              className="flex-1 h-12 px-4 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              style={{
+                backgroundColor: schoolBranding?.primary_color || "#3B82F6",
+              }}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Add Prospect
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {activities.filter((a) => {
         if (!a.follow_up_date) return false
         const followUpDate = new Date(a.follow_up_date)
@@ -1263,7 +1297,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </Card>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6" data-recruiting-dashboard>
         <RecruitingActionsDashboard 
           schoolId={params.schoolId} 
           athletes={prospects.map(p => ({ id: p.id, name: p.name }))} 
@@ -1388,7 +1422,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 console.log("[v0] Add Prospect button clicked - redirecting to public rankings")
                 window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
               }}
-              className="h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all w-full md:w-auto touch-manipulation"
+              className="hidden md:flex h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all md:w-auto touch-manipulation"
               style={{
                 backgroundColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
               }}
