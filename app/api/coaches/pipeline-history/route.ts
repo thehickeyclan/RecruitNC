@@ -105,6 +105,12 @@ export async function GET(request: Request) {
       .in("athlete_id", athleteIds)
 
     const rosterMap = new Map(rosterData?.map(r => [r.athlete_id, r]) || [])
+    
+    // Filter out athletes marked as "Left Program" in college_coach_stars
+    athletes = athletes.filter(athlete => {
+      const rosterInfo = rosterMap.get(athlete.id)
+      return !rosterInfo || rosterInfo.roster_status !== "Left Program"
+    })
 
     // Format the results
     const history = athletes.map((athlete) => {
