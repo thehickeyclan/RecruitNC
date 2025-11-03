@@ -6,9 +6,8 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const body = await request.json()
 
-    const { data, error } = await supabase
-      .from("athlete_profile_submissions")
-      .insert({
+    // Build insert object - only include fields that have values
+    const insertData: any = {
         // Basic info
         firstname: body.firstName,
         lastname: body.lastName,
@@ -64,13 +63,30 @@ export async function POST(request: NextRequest) {
         
         status: "pending",
         submitted_at: new Date().toISOString(),
-      })
+    }
+
+    // Remove null/undefined values to avoid inserting into non-existent columns
+    Object.keys(insertData).forEach(key => {
+      if (insertData[key] === null || insertData[key] === undefined) {
+        delete insertData[key]
+      }
+    })
+
+    console.log("[v0] Submitting profile with fields:", Object.keys(insertData))
+
+    const { data, error } = await supabase
+      .from("athlete_profile_submissions")
+      .insert(insertData)
       .select()
       .single()
 
     if (error) {
       console.error("Error inserting profile submission:", error)
-      return NextResponse.json({ error: "Failed to submit profile" }, { status: 500 })
+      return NextResponse.json({ 
+        error: "Failed to submit profile", 
+        details: error.message,
+        hint: error.hint 
+      }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, submission: data }, { status: 201 })

@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle, Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { BlobImageUpload } from "@/components/blob-image-upload"
 
 const HS_WEIGHT_CLASSES = {
   Male: ["106", "113", "120", "126", "132", "138", "144", "150", "157", "165", "175", "190", "215", "285"],
@@ -839,6 +840,20 @@ export default function SubmitProfilePage() {
             {/* Media */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">Media (Optional)</h3>
+              
+              <div className="space-y-2">
+                <Label>Headshot Photo</Label>
+                <BlobImageUpload
+                  onUploadComplete={(url) => setFormData((prev) => ({ ...prev, headshotUrl: url }))}
+                  currentImageUrl={formData.headshotUrl}
+                  category="profile"
+                  entityName={`${formData.firstName}-${formData.lastName}`}
+                  aspectRatio="square"
+                  maxSizeMB={5}
+                />
+                <p className="text-xs text-muted-foreground">Upload a clear headshot photo (max 5MB)</p>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="highlightVideoUrl">Highlight Video URL</Label>
                 <Input
@@ -850,18 +865,6 @@ export default function SubmitProfilePage() {
                   placeholder="https://youtube.com/watch?v=..."
                 />
                 <p className="text-xs text-muted-foreground">YouTube, Hudl, or other video platform link</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="headshotUrl">Headshot Photo URL</Label>
-                <Input
-                  id="headshotUrl"
-                  name="headshotUrl"
-                  type="url"
-                  value={formData.headshotUrl}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                />
-                <p className="text-xs text-muted-foreground">Link to your headshot or profile photo</p>
               </div>
             </div>
           </CardContent>
