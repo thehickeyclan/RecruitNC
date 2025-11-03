@@ -223,6 +223,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [loadingNcRecruits, setLoadingNcRecruits] = useState(true)
   const [pipelineHistory, setPipelineHistory] = useState<any[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
+  const [editingRosterEntry, setEditingRosterEntry] = useState<any | null>(null)
+  const [rosterEditForm, setRosterEditForm] = useState({
+    roster_status: "Active",
+    roster_notes: "",
+  })
 
 
   // Removed redundant fetchSchool - using useSchoolBranding hook instead
@@ -295,6 +300,93 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       console.error("[v0] Error fetching NC recruits:", error)
     } finally {
       setLoadingNcRecruits(false)
+    }
+  }
+
+  const handleSaveRosterEdit = async () => {
+    if (!editingRosterEntry) return
+
+    try {
+      const supabase = createClient()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      // First, find the college_coach_stars record for this athlete
+      const { data: existingStar } = await supabase
+        .from("college_coach_stars")
+        .select("id")
+        .eq("athlete_id", editingRosterEntry.id)
+        .single()
+
+      if (existingStar) {
+        // Update existing record
+        const { error } = await supabase
+          .from("college_coach_stars")
+          .update({
+            roster_status: rosterEditForm.roster_status,
+            roster_notes: rosterEditForm.roster_notes || null,
+          })
+          .eq("id", existingStar.id)
+
+        if (error) throw error
+      } else {
+        // Create new record if doesn't exist
+        const { error } = await supabase
+          .from("college_coach_stars")
+          .insert({
+            athlete_id: editingRosterEntry.id,
+            coach_user_id: session?.user.id,
+            pipeline_stage: editingRosterEntry.status || "Signed",
+            roster_status: rosterEditForm.roster_status,
+            roster_notes: rosterEditForm.roster_notes || null,
+          })
+
+        if (error) throw error
+      }
+
+      // Refresh the list
+      fetchPipelineHistory()
+      setEditingRosterEntry(null)
+      toast({
+        title: "Roster status updated",
+        description: `${editingRosterEntry.name}'s roster status has been updated.`,
+      })
+    } catch (error: any) {
+      console.error("Error updating roster status:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update roster status",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteRosterEntry = async (athleteId: string) => {
+    try {
+      const supabase = createClient()
+      
+      // Remove the record from college_coach_stars
+      const { error } = await supabase
+        .from("college_coach_stars")
+        .delete()
+        .eq("athlete_id", athleteId)
+
+      if (error) throw error
+
+      // Refresh the list
+      fetchPipelineHistory()
+      toast({
+        title: "Removed from history",
+        description: "Athlete has been removed from roster history.",
+      })
+    } catch (error: any) {
+      console.error("Error removing roster entry:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove athlete",
+        variant: "destructive",
+      })
     }
   }
 
@@ -1340,8 +1432,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                // TODO: Open edit dialog
-                                console.log("Edit roster athlete:", athlete.id)
+                                setEditingRosterEntry(athlete)
+                                setRosterEditForm({
+                                  roster_status: athlete.roster_status || "Active",
+                                  roster_notes: athlete.roster_notes || "",
+                                })
                               }}
                             >
                               <Edit2 className="h-4 w-4" />
@@ -1351,8 +1446,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               size="sm"
                               onClick={() => {
                                 if (confirm(`Remove ${athlete.name} from roster history?`)) {
-                                  // TODO: Handle delete
-                                  console.log("Delete roster athlete:", athlete.id)
+                                  handleDeleteRosterEntry(athlete.id)
                                 }
                               }}
                             >
@@ -2816,6 +2910,67 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Roster Entry Dialog */}
+      <Dialog open={!!editingRosterEntry} onOpenChange={(open) => !open && setEditingRosterEntry(null)}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle>Edit Roster Entry</DialogTitle>
+            <DialogDescription>
+              Update roster status for {editingRosterEntry?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="roster_status">Roster Status</Label>
+              <Select
+                value={rosterEditForm.roster_status}
+                onValueChange={(value) =>
+                  setRosterEditForm({ ...rosterEditForm, roster_status: value })
+                }
+              >
+                <SelectTrigger id="roster_status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Transferred">Transferred</SelectItem>
+                  <SelectItem value="Graduated">Graduated</SelectItem>
+                  <SelectItem value="Medical Redshirt">Medical Redshirt</SelectItem>
+                  <SelectItem value="Left Program">Left Program</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="roster_notes">Notes</Label>
+              <Textarea
+                id="roster_notes"
+                value={rosterEditForm.roster_notes}
+                onChange={(e) =>
+                  setRosterEditForm({ ...rosterEditForm, roster_notes: e.target.value })
+                }
+                placeholder="Optional notes about roster status..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setEditingRosterEntry(null)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveRosterEdit}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
