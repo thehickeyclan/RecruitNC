@@ -648,66 +648,6 @@ export default function SubmitProfilePage() {
                 </div>
               )}
 
-            {/* Tournament Records */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold border-b pb-2">National Tournament Results (Optional)</h3>
-              
-              {/* Tournament Selection */}
-              <div className="space-y-3">
-                <Label>Which national tournaments have you competed in?</Label>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    type="button"
-                    variant={selectedTournaments.includes("super32") ? "default" : "outline"}
-                    onClick={() => toggleTournament("super32")}
-                    className="min-w-[120px]"
-                  >
-                    Super 32
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={selectedTournaments.includes("nhsca") ? "default" : "outline"}
-                    onClick={() => toggleTournament("nhsca")}
-                    className="min-w-[120px]"
-                  >
-                    NHSCA
-                  </Button>
-                </div>
-              </div>
-
-              {/* Year Selection (only show if at least one tournament selected) */}
-              {selectedTournaments.length > 0 && (
-                <div className="space-y-3">
-                  <Label>Which years did you compete?</Label>
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      variant={selectedYears.includes("2023") ? "default" : "outline"}
-                      onClick={() => toggleYear("2023")}
-                      className="min-w-[100px]"
-                    >
-                      2023
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={selectedYears.includes("2024") ? "default" : "outline"}
-                      onClick={() => toggleYear("2024")}
-                      className="min-w-[100px]"
-                    >
-                      2024
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={selectedYears.includes("2025") ? "default" : "outline"}
-                      onClick={() => toggleYear("2025")}
-                      className="min-w-[100px]"
-                    >
-                      2025
-                    </Button>
-                  </div>
-                </div>
-              )}
-
               {/* Super 32 Results - Dynamic based on selected years */}
               {selectedTournaments.includes("super32") && selectedYears.length > 0 && (
                 <div className="space-y-3">
