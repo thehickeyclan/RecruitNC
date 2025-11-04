@@ -996,6 +996,7 @@ export default function SubmissionsManagerPage() {
                               src={submission.headshot_url}
                               alt={`${submission.firstName} ${submission.lastName}`}
                               fill
+                              sizes="128px"
                               className="object-cover"
                             />
                           </div>
