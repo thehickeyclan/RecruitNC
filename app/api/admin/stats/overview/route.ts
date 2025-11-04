@@ -29,7 +29,7 @@ export async function GET() {
     const { count: totalCoaches } = await supabase
       .from("user_profiles")
       .select("*", { count: "exact", head: true })
-      .not("school_id", "is", null")
+      .not("school_id", "is", null)
 
     // Get pending submissions across all types
     let pendingSubmissions = 0
