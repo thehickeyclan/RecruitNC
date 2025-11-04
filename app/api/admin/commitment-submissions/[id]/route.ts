@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { status } = await request.json()
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("commitment_submissions")

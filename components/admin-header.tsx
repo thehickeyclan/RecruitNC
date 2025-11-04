@@ -11,14 +11,9 @@ const adminNavItems = [
     icon: "🏠",
   },
   {
-    title: "Profile Submissions",
-    href: "/admin/profile-submissions",
+    title: "Submissions",
+    href: "/admin/submissions-manager",
     icon: "📝",
-  },
-  {
-    title: "Profile Confirmations",
-    href: "/admin/profile-confirmations",
-    icon: "✅",
   },
   {
     title: "Athletes",
@@ -26,14 +21,19 @@ const adminNavItems = [
     icon: "👥",
   },
   {
-    title: "Stats",
-    href: "/admin/stats",
+    title: "Schools",
+    href: "/admin/schools",
+    icon: "🏫",
+  },
+  {
+    title: "Statistics",
+    href: "/admin/commitment-stats",
     icon: "📊",
   },
   {
-    title: "Media Manager",
-    href: "/admin/unified-media-manager",
-    icon: "🖼️",
+    title: "Logo Manager",
+    href: "/admin/enhanced-logo-manager",
+    icon: "🎨",
   },
 ]
 
