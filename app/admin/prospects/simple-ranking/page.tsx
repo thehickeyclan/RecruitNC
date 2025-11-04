@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AdminHeader } from "@/components/admin-header"
-import { ArrowUp, ArrowDown, Save, Rocket, Calculator } from "lucide-react"
+import { ArrowUp, ArrowDown, Save, Rocket, Calculator, GripVertical } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 interface Athlete {
   id: string
@@ -331,272 +333,178 @@ export default function SimpleRankingPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-3">
-          {athletes.map((athlete, index) => (
-          <Card key={athlete.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => moveAthlete(index, Math.max(0, index - 1))}
-                    disabled={index === 0}
-                  >
-                    ↑
-                  </Button>
-                  <div className="flex flex-col items-center">
-                    <span className="font-bold text-xl min-w-[3rem] text-center bg-blue-100 px-3 py-1 rounded">
-                      #{index + 1}
-                    </span>
-                    {athlete.previous_ranking && athlete.previous_ranking !== index + 1 && (
-                      <span className="text-xs text-gray-500 mt-1">
-                        {athlete.previous_ranking > index + 1 ? (
-                          <span className="text-green-600 font-semibold">↑ from #{athlete.previous_ranking}</span>
-                        ) : (
-                          <span className="text-red-600 font-semibold">↓ from #{athlete.previous_ranking}</span>
-                        )}
-                      </span>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
-                    disabled={index === athletes.length - 1}
-                  >
-                    ↓
-                  </Button>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:underline">
-                      <h3 className="font-bold text-xl text-blue-900">{athlete.name}</h3>
-                    </Link>
-                    {athlete.recruitnc_score && (
-                      <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300 font-bold">
-                        📊 RecruitNC: {athlete.recruitnc_score}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-gray-600 font-medium">
-                    {athlete.highschool} • {athlete.weight ? `${athlete.weight} lbs` : "Weight TBD"}
-                  </p>
-                  {athlete.score_breakdown && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {athlete.score_breakdown.ranked_wins > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          Ranked Wins: {athlete.score_breakdown.ranked_wins}
-                        </Badge>
-                      )}
-                      {athlete.score_breakdown.college_opens > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          College Opens: {athlete.score_breakdown.college_opens}
-                        </Badge>
-                      )}
-                      {athlete.score_breakdown.super_32 > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          Super 32: {athlete.score_breakdown.super_32}
-                        </Badge>
-                      )}
-                      {athlete.score_breakdown.nhsca > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          NHSCA: {athlete.score_breakdown.nhsca}
-                        </Badge>
-                      )}
-                      {athlete.score_breakdown.state > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          State: {athlete.score_breakdown.state}
-                        </Badge>
-                      )}
-                      {athlete.score_breakdown.gpa > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          GPA: {athlete.score_breakdown.gpa}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {(athlete.graduationyear === 2026 || athlete.graduationyear === 2027) && athlete.college && (
-                  <Badge className="bg-green-100 text-green-800 font-semibold">Committed: {athlete.college}</Badge>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow style={{ backgroundColor: "#0D1A4D" }} className="text-white hover:bg-[#0D1A4D]">
+                <TableHead className="w-20 text-white font-semibold text-center">Actions</TableHead>
+                <TableHead className="w-16 text-white font-semibold">Rank</TableHead>
+                <TableHead className="min-w-[200px] text-white font-semibold">Name</TableHead>
+                <TableHead className="text-white font-semibold">School</TableHead>
+                <TableHead className="w-24 text-white font-semibold">Weight</TableHead>
+                <TableHead className="w-32 text-white font-semibold">Status</TableHead>
+                <TableHead className="text-white font-semibold">State</TableHead>
+                <TableHead className="text-white font-semibold">NHSCA</TableHead>
+                <TableHead className="text-white font-semibold">Super 32</TableHead>
+                <TableHead className="w-20 text-white font-semibold">GPA</TableHead>
+                {athletes.some(a => a.recruitnc_score) && (
+                  <TableHead className="w-24 text-white font-semibold">Score</TableHead>
                 )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              <div className="bg-yellow-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-yellow-800 mb-2">NCHSAA STATE</h4>
-                {athlete.nchsaa_results && athlete.nchsaa_results.length > 0 ? (
-                  <div className="space-y-1">
-                    {athlete.nchsaa_results.slice(0, 3).map((result, idx) => (
-                      <Badge
-                        key={idx}
-                        className={`text-xs block w-full ${
-                          result.place === 1
-                            ? "bg-yellow-500 text-black"
-                            : result.place === 2
-                              ? "bg-gray-300 text-black"
-                              : result.place === 3
-                                ? "bg-amber-600 text-white"
-                                : "bg-blue-500 text-white"
-                        }`}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {athletes.map((athlete, index) => (
+                <TableRow key={athlete.id} className="hover:bg-gray-50">
+                  {/* Actions */}
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => moveAthlete(index, Math.max(0, index - 1))}
+                        disabled={index === 0}
+                        className="h-7 w-7 p-0 hover:bg-blue-50"
                       >
-                        {result.classification}{" "}
-                        {result.place === 1
-                          ? "Champ"
-                          : `${result.place}${result.place === 2 ? "nd" : result.place === 3 ? "rd" : "th"}`}{" "}
-                        '{result.year.toString().slice(-2)}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500">No state results</p>
-                )}
-              </div>
+                        <ArrowUp className="h-3 w-3 text-[#13294B]" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
+                        disabled={index === athletes.length - 1}
+                        className="h-7 w-7 p-0 hover:bg-blue-50"
+                      >
+                        <ArrowDown className="h-3 w-3 text-[#13294B]" />
+                      </Button>
+                    </div>
+                  </TableCell>
 
-              <div className="bg-red-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-red-800 mb-2">NHSCA NATIONALS</h4>
-                {athlete.nhsca_2025_placement ||
-                athlete.nhsca_2025_record ||
-                athlete.nhsca_2024_placement ||
-                athlete.nhsca_2024_record ||
-                athlete.nhsca_2023_placement ||
-                athlete.nhsca_2023_record ? (
-                  <div className="space-y-1">
-                    {athlete.nhsca_2025_placement && (
-                      <Badge className="bg-red-500 text-white text-xs block w-full">
-                        2025: {athlete.nhsca_2025_placement}
-                      </Badge>
-                    )}
-                    {athlete.nhsca_2025_record && (
-                      <Badge className="bg-red-400 text-white text-xs block w-full">
-                        2025 Record: {athlete.nhsca_2025_record}
-                      </Badge>
-                    )}
-                    {athlete.nhsca_2024_placement && (
-                      <Badge className="bg-red-500 text-white text-xs block w-full">
-                        2024: {athlete.nhsca_2024_placement}
-                      </Badge>
-                    )}
-                    {athlete.nhsca_2024_record && (
-                      <Badge className="bg-red-400 text-white text-xs block w-full">
-                        2024 Record: {athlete.nhsca_2024_record}
-                      </Badge>
-                    )}
-                    {athlete.nhsca_2023_placement && (
-                      <Badge className="bg-red-500 text-white text-xs block w-full">
-                        2023: {athlete.nhsca_2023_placement}
-                      </Badge>
-                    )}
-                    {athlete.nhsca_2023_record && (
-                      <Badge className="bg-red-400 text-white text-xs block w-full">
-                        2023 Record: {athlete.nhsca_2023_record}
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500">No NHSCA results</p>
-                )}
-              </div>
-
-              <div className="bg-purple-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-purple-800 mb-2">SUPER 32</h4>
-                {athlete.super_32_2025_placement ||
-                athlete.super_32_2025_record ||
-                athlete.super_32_2024_placement ||
-                athlete.super_32_2024_record ? (
-                  <div className="space-y-1">
-                    {athlete.super_32_2025_placement && (
-                      <Badge className="bg-purple-500 text-white text-xs block w-full">
-                        2025: {athlete.super_32_2025_placement}
-                      </Badge>
-                    )}
-                    {athlete.super_32_2025_record && (
-                      <Badge className="bg-purple-400 text-white text-xs block w-full">
-                        2025 Record: {athlete.super_32_2025_record}
-                      </Badge>
-                    )}
-                    {athlete.super_32_2024_placement && (
-                      <Badge className="bg-purple-500 text-white text-xs block w-full">
-                        2024: {athlete.super_32_2024_placement}
-                      </Badge>
-                    )}
-                    {athlete.super_32_2024_record && (
-                      <Badge className="bg-purple-400 text-white text-xs block w-full">
-                        2024 Record: {athlete.super_32_2024_record}
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500">No Super 32 results</p>
-                )}
-              </div>
-
-              <div className="bg-orange-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-orange-800 mb-2">RANKED WINS</h4>
-                {athlete.nationally_ranked_wins ? (
-                  <div className="space-y-1">
-                    {athlete.nationally_ranked_wins
-                      .split("\n")
-                      .filter((win) => win.trim())
-                      .slice(0, 3)
-                      .map((win, idx) => (
-                        <div key={idx} className="text-xs text-orange-700 leading-tight">
-                          {win.trim().length > 40 ? `${win.trim().substring(0, 40)}...` : win.trim()}
-                        </div>
-                      ))}
-                    {athlete.nationally_ranked_wins.split("\n").filter((win) => win.trim()).length > 3 && (
-                      <div className="text-xs text-orange-600 font-medium">
-                        +{athlete.nationally_ranked_wins.split("\n").filter((win) => win.trim()).length - 3} more
+                  {/* Rank */}
+                  <TableCell className="font-bold text-center">
+                    <div className="text-lg text-[#13294B]">#{index + 1}</div>
+                    {athlete.previous_ranking && athlete.previous_ranking !== index + 1 && (
+                      <div className="text-xs mt-0.5">
+                        {athlete.previous_ranking > index + 1 ? (
+                          <span className="text-green-600 font-semibold">↑{athlete.previous_ranking - (index + 1)}</span>
+                        ) : (
+                          <span className="text-red-600 font-semibold">↓{(index + 1) - athlete.previous_ranking}</span>
+                        )}
                       </div>
                     )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500">No ranked wins</p>
-                )}
-              </div>
+                  </TableCell>
 
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-blue-800 mb-2">COLLEGE OPENS</h4>
-                {athlete.college_opens_experience ? (
-                  <div className="space-y-1">
-                    {athlete.college_opens_experience
-                      .split("\n")
-                      .filter((line) => line.trim())
-                      .slice(0, 4)
-                      .map((line, idx) => (
-                        <div key={idx} className="text-xs text-blue-700 leading-tight">
-                          {line.trim().length > 35 ? `${line.trim().substring(0, 35)}...` : line.trim()}
-                        </div>
-                      ))}
-                    {athlete.college_opens_experience.split("\n").filter((line) => line.trim()).length > 4 && (
-                      <div className="text-xs text-blue-600 font-medium">
-                        +{athlete.college_opens_experience.split("\n").filter((line) => line.trim()).length - 4} more
-                      </div>
+                  {/* Name */}
+                  <TableCell>
+                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:text-[#CC0000] transition-colors">
+                      <div className="font-semibold text-[#13294B]">{athlete.name}</div>
+                    </Link>
+                  </TableCell>
+
+                  {/* School */}
+                  <TableCell className="text-sm text-gray-600">{athlete.highschool}</TableCell>
+
+                  {/* Weight */}
+                  <TableCell className="text-sm">{athlete.weight ? `${athlete.weight} lbs` : "TBD"}</TableCell>
+
+                  {/* Status */}
+                  <TableCell>
+                    {athlete.college ? (
+                      <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">
+                        ✓ {athlete.college}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-xs">Uncommitted</Badge>
                     )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500">No college opens</p>
-                )}
-              </div>
+                  </TableCell>
 
-              <div className="bg-green-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-green-800 mb-2">ACADEMICS</h4>
-                {athlete.academic_gpa ? (
-                  <Badge className="bg-green-500 text-white text-xs">
-                    GPA: {Number(athlete.academic_gpa).toFixed(1)}
-                  </Badge>
-                ) : (
-                  <p className="text-xs text-gray-500">No GPA data</p>
-                )}
-              </div>
-            </div>
-          </Card>
-          ))}
+                  {/* State */}
+                  <TableCell className="text-xs">
+                    {athlete.nchsaa_results && athlete.nchsaa_results.length > 0 ? (
+                      <div className="space-y-1">
+                        {athlete.nchsaa_results.slice(0, 2).map((result, idx) => {
+                          const emoji = result.place === 1 ? "🥇" : result.place === 2 ? "🥈" : result.place === 3 ? "🥉" : "🏅"
+                          return (
+                            <div key={idx} className="text-xs text-gray-700">
+                              {emoji} {result.classification} '{result.year.toString().slice(-2)}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* NHSCA */}
+                  <TableCell className="text-xs">
+                    {athlete.nhsca_2025_placement || athlete.nhsca_2024_placement || athlete.nhsca_2023_placement ? (
+                      <div className="space-y-1">
+                        {athlete.nhsca_2025_placement && (
+                          <div className="text-xs text-gray-700">
+                            🥇 {athlete.nhsca_2025_placement} '25
+                          </div>
+                        )}
+                        {athlete.nhsca_2024_placement && (
+                          <div className="text-xs text-gray-700">
+                            🥇 {athlete.nhsca_2024_placement} '24
+                          </div>
+                        )}
+                        {athlete.nhsca_2023_placement && (
+                          <div className="text-xs text-gray-700">
+                            🥇 {athlete.nhsca_2023_placement} '23
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* Super 32 */}
+                  <TableCell className="text-xs">
+                    {athlete.super_32_2025_placement || athlete.super_32_2024_placement ? (
+                      <div className="space-y-1">
+                        {athlete.super_32_2025_placement && (
+                          <div className="text-xs text-gray-700">
+                            🥇 {athlete.super_32_2025_placement} '25
+                          </div>
+                        )}
+                        {athlete.super_32_2024_placement && (
+                          <div className="text-xs text-gray-700">
+                            🥇 {athlete.super_32_2024_placement} '24
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* GPA */}
+                  <TableCell className="text-center text-sm">
+                    {athlete.academic_gpa ? (
+                      <span className="font-medium text-gray-700">{Number(athlete.academic_gpa).toFixed(1)}</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* RecruitNC Score */}
+                  {athletes.some(a => a.recruitnc_score) && (
+                    <TableCell className="text-center">
+                      {athlete.recruitnc_score ? (
+                        <Badge className="bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200">
+                          {athlete.recruitnc_score}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
 
         {athletes.length === 0 && (
