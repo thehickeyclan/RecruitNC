@@ -331,8 +331,9 @@ export default function SimpleRankingPage() {
           </CardContent>
         </Card>
 
-      <div className="space-y-3">
-        {athletes.map((athlete, index) => (
+        {/* Rankings List */}
+        <div className="space-y-3">
+          {athletes.map((athlete, index) => (
           <Card key={athlete.id} className="hover:shadow-md transition-shadow border-l-4 border-l-[#13294B]">
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
@@ -608,8 +609,8 @@ export default function SimpleRankingPage() {
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+          ))}
+        </div>
 
         {/* Empty State */}
         {athletes.length === 0 && (
