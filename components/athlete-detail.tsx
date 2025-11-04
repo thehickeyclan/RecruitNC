@@ -485,6 +485,11 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           {/* Mobile view */}
           <div className="block lg:hidden">
             <div className="relative h-80 w-full">
+              {/* Star Button - Top Right */}
+              <div className="absolute top-4 right-4 z-20">
+                <WatchListButton athleteId={athlete.id} />
+              </div>
+
               <Image
                 src={athletePhoto || "/placeholder.svg"}
                 alt={athleteName}
@@ -497,129 +502,95 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 priority
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-            </div>
 
-            <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white p-6">
-              <h1 className="text-3xl font-bold mb-4">{athleteName}</h1>
-
-              {prospectRanking && (
-                <div className="mb-4">
-                  <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
-                    #{prospectRanking} Ranked Prospect - Class of {graduationYear}
-                  </Badge>
-                </div>
-              )}
-
-              {(statusBadge.isCollegeAthlete || recruitingStatus.toLowerCase() === "committed") &&
-                college &&
-                college !== "Not specified" && (
-                  <div className="flex items-center gap-3 mb-4 p-3 bg-white/10 rounded-lg">
-                    <div className="w-12 h-12 rounded-full bg-white p-2 flex items-center justify-center">
-                      <Image
-                        src={collegeLogo || "/generic-college-logo.png"}
-                        alt={`${college} logo`}
-                        width={32}
-                        height={32}
-                        className="object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = "/generic-college-logo.png"
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-bold text-white text-lg">{college}</p>
-                      <p className="text-sm text-gray-300">
-                        {statusBadge.isCollegeAthlete ? "College Wrestling" : "Commitment"}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                <Badge className={`${statusBadge.color} text-white px-3 py-1.5 text-sm font-bold`}>
-                  {statusBadge.text}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Graduation Year</p>
-                  <p className="text-xl font-bold">{graduationYear || "N/A"}</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Weight Class</p>
-                  <p className="text-xl font-bold">{weightClass}</p>
-                </div>
-              </div>
-
-              {achievementBadges.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {achievementBadges.map((badge, index) => (
-                    <Badge key={index} className={`${badge.color} px-2.5 py-1 text-xs font-semibold flex items-center gap-1.5`}>
-                      {badge.icon && (
-                        <Image
-                          src={badge.icon || "/placeholder.svg"}
-                          alt=""
-                          width={14}
-                          height={14}
-                          className="object-contain"
-                        />
-                      )}
-                      {badge.text}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
+              {/* Instagram Icon - Bottom Left of Photo */}
               {instagramUrl && (
                 <a
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-[#002147] hover:bg-[#001a3a] px-4 py-2 rounded-lg transition-colors mb-3"
+                  className="absolute bottom-4 left-4 z-20 bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919-.058 1.265-.069 1.645-.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.281-.058-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                  </svg>
-                  <span className="text-sm font-medium">Follow on Instagram</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
+                  <svg className="w-5 h-5 text-[#13294B]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.646.069-4.85.069-3.204 0-3.584-.012-4.849-.069-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                   </svg>
                 </a>
               )}
 
+              {/* Edit Button - Bottom Right of Photo */}
               {currentUserId && (
                 <Button
-                  variant="outline"
-                  className="w-full bg-white/10 hover:bg-white/20 text-white border-white/30 mb-3"
-                  onClick={() => {
-                    console.log("[v0] Request Profile Edit button clicked (mobile)")
-                    setShowEditModal(true)
-                  }}
+                  size="sm"
+                  className="absolute bottom-4 right-4 z-20 bg-white/90 hover:bg-white text-[#13294B] shadow-lg p-2 h-auto"
+                  onClick={() => setShowEditModal(true)}
                 >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Request Profile Edit
+                  <Edit className="w-4 h-4" />
                 </Button>
               )}
+            </div>
 
-              <WatchListButton athleteId={athlete.id} className="w-full" />
+            <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white p-6">
+              <h1 className="text-3xl font-bold mb-3">{athleteName}</h1>
+
+              {prospectRanking && (
+                <div className="mb-4">
+                  <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
+                    #{prospectRanking} - Class of {graduationYear}
+                  </Badge>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Year</p>
+                  <p className="text-xl font-bold">{graduationYear || "N/A"}</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Weight</p>
+                  <p className="text-xl font-bold">{weightClass}</p>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Desktop view */}
           <div className="hidden lg:block">
-            <div className="relative min-h-[380px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
+            <div className="relative min-h-[360px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
               <div className="absolute inset-0 bg-black/10" />
+
+              {/* Star Button - Top Right */}
+              <div className="absolute top-6 right-6 z-20">
+                <WatchListButton athleteId={athlete.id} />
+              </div>
 
               <div className="relative z-10 flex items-start gap-8 p-8">
                 <div className="flex-shrink-0 w-80">
                   <div className="relative h-96 w-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl">
+                    {/* Instagram Icon - Bottom Left */}
+                    {instagramUrl && (
+                      <a
+                        href={instagramUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute bottom-4 left-4 z-20 bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
+                      >
+                        <svg className="w-5 h-5 text-[#13294B]" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.646.069-4.85.069-3.204 0-3.584-.012-4.849-.069-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                        </svg>
+                      </a>
+                    )}
+
+                    {/* Edit Button - Bottom Right */}
+                    {currentUserId && (
+                      <Button
+                        size="sm"
+                        className="absolute bottom-4 right-4 z-20 bg-white/90 hover:bg-white text-[#13294B] shadow-lg p-2 h-auto"
+                        onClick={() => setShowEditModal(true)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+
                     <Image
                       src={athletePhoto || "/placeholder.svg"}
                       alt={athleteName}
@@ -635,118 +606,23 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 </div>
 
                 <div className="flex-1 text-white pt-4">
+                  <h1 className="text-5xl font-bold mb-4 text-white drop-shadow-lg">{athleteName}</h1>
+
                   {prospectRanking && (
-                    <div className="mb-4">
-                      <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg">
-                        #{prospectRanking} Ranked Prospect - Class of {graduationYear}
-                      </Badge>
-                    </div>
+                    <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
+                      #{prospectRanking} - Class of {graduationYear}
+                    </Badge>
                   )}
 
-                  {(statusBadge.isCollegeAthlete || recruitingStatus.toLowerCase() === "committed") &&
-                    college &&
-                    college !== "Not specified" && (
-                      <div className="flex items-center gap-4 mb-6 p-4 bg-white/15 backdrop-blur-sm rounded-xl border border-white/20 max-w-md">
-                        <div className="w-16 h-16 rounded-full bg-white p-3 flex items-center justify-center shadow-lg flex-shrink-0">
-                          <Image
-                            src={collegeLogo || "/generic-college-logo.png"}
-                            alt={`${college} logo`}
-                            width={40}
-                            height={40}
-                            className="object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.src = "/generic-college-logo.png"
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <p className="font-bold text-white text-xl">{college}</p>
-                          <p className="text-sm text-gray-200">
-                            {statusBadge.isCollegeAthlete ? "College Wrestling" : "Commitment"}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                  <h1 className="text-5xl font-bold mb-6 text-white drop-shadow-lg">{athleteName}</h1>
-
-                  <div className="flex flex-wrap items-center gap-3 mb-6">
-                    <Badge className={`${statusBadge.color} text-white px-4 py-2 text-base font-bold shadow-lg`}>
-                      {statusBadge.text}
-                    </Badge>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 mb-4 max-w-2xl">
+                  <div className="grid grid-cols-2 gap-4 max-w-md">
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                      <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">
-                        Graduation Year
-                      </p>
+                      <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Year</p>
                       <p className="text-2xl font-bold text-white">{graduationYear || "N/A"}</p>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                      <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Weight Class</p>
+                      <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Weight</p>
                       <p className="text-2xl font-bold text-white">{weightClass}</p>
                     </div>
-                  </div>
-
-                  {achievementBadges.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {achievementBadges.map((badge, index) => (
-                        <Badge key={index} className={`${badge.color} px-3 py-1.5 text-sm font-semibold flex items-center gap-2`}>
-                          {badge.icon && (
-                            <Image
-                              src={badge.icon || "/placeholder.svg"}
-                              alt=""
-                              width={16}
-                              height={16}
-                              className="object-contain"
-                            />
-                          )}
-                          {badge.text}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex gap-3 items-center flex-wrap">
-                    {instagramUrl && (
-                      <a
-                        href={instagramUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2.5 rounded-lg transition-all border border-white/30 shadow-lg text-sm font-medium"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-.59.058-1.689.073-4.849.073-.885 0-1.38-.497-1.38-1.38s.495-1.38 1.38-1.38c.885 0 1.38.497 1.38 1.38s-.495 1.38-1.38 1.38zm0-2.163c-3.259 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.259-2.759-6.162-6.162-6.162zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-2.759zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                        </svg>
-                        <span className="text-sm font-medium">Follow on Instagram</span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                          />
-                        </svg>
-                      </a>
-                    )}
-
-                    {currentUserId && (
-                      <Button
-                        variant="outline"
-                        className="bg-yellow-600 hover:bg-yellow-700 text-white border-0 shadow-lg font-semibold"
-                        onClick={() => {
-                          console.log("[v0] Request Profile Edit button clicked (desktop)")
-                          setShowEditModal(true)
-                        }}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Request Profile Edit
-                      </Button>
-                    )}
-
-                    <WatchListButton athleteId={athlete.id} />
                   </div>
                 </div>
               </div>
