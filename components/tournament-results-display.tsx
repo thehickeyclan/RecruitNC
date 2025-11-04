@@ -14,18 +14,27 @@ interface TournamentResult {
   notes?: string
 }
 
+interface NCHSAAResult {
+  year: number
+  place: number
+  classification: string
+  weight_class: string
+}
+
 interface TournamentResultsDisplayProps {
   nhscaResults?: TournamentResult[]
   super32Results?: TournamentResult[]
+  nchsaaResults?: NCHSAAResult[] // State championship data
   compact?: boolean // For smaller displays like cards
 }
 
 export function TournamentResultsDisplay({
   nhscaResults = [],
   super32Results = [],
+  nchsaaResults = [],
   compact = false,
 }: TournamentResultsDisplayProps) {
-  const hasAnyResults = nhscaResults.length > 0 || super32Results.length > 0
+  const hasAnyResults = nhscaResults.length > 0 || super32Results.length > 0 || nchsaaResults.length > 0
 
   if (!hasAnyResults) {
     return null // Don't show section if no tournament data
@@ -108,6 +117,51 @@ export function TournamentResultsDisplay({
   // Full table version for profiles
   return (
     <div className="space-y-6">
+      {nchsaaResults.length > 0 && (
+        <Card className="border-t-4 border-t-yellow-500 shadow-md">
+          <CardHeader className="bg-gradient-to-r from-yellow-500 to-amber-500 py-4">
+            <CardTitle className="text-white flex items-center gap-2 text-lg">
+              <Trophy className="h-5 w-5" />
+              NCHSAA State Championships
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="font-semibold">Year</TableHead>
+                    <TableHead className="font-semibold">Placement</TableHead>
+                    <TableHead className="font-semibold">Classification</TableHead>
+                    <TableHead className="font-semibold">Weight</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {nchsaaResults.map((result, index) => {
+                    const placementText = result.place === 1 
+                      ? "Champion" 
+                      : result.place === 2 
+                        ? "2nd Place"
+                        : result.place === 3
+                          ? "3rd Place"
+                          : `${result.place}th Place`
+                    
+                    return (
+                      <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                        <TableCell className="font-semibold text-yellow-600">{result.year}</TableCell>
+                        <TableCell>{getPlacementBadge(placementText)}</TableCell>
+                        <TableCell>{result.classification}</TableCell>
+                        <TableCell>{result.weight_class}</TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {nhscaResults.length > 0 && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] py-4">

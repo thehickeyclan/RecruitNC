@@ -71,6 +71,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
         tournamentResultsComponent={
           <div className="container mx-auto px-4 py-8">
             <TournamentResultsDisplay
+              nchsaaResults={nchsaaResults}
               nhscaResults={athlete.nhsca_results || []}
               super32Results={athlete.super32_results || []}
             />
