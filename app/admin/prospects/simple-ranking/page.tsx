@@ -328,99 +328,106 @@ export default function SimpleRankingPage() {
 
         <div className="space-y-3">
           {athletes.map((athlete, index) => (
-          <Card key={athlete.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col items-center gap-2">
+          <Card key={athlete.id} className="hover:shadow-md transition-shadow border-l-4 border-l-[#13294B]">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-4">
+                <div className="flex flex-col items-center gap-2 flex-shrink-0">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => moveAthlete(index, Math.max(0, index - 1))}
                     disabled={index === 0}
+                    className="h-7 w-7 p-0 hover:bg-blue-50"
                   >
-                    ↑
+                    <ArrowUp className="h-4 w-4 text-[#13294B]" />
                   </Button>
                   <div className="flex flex-col items-center">
-                    <span className="font-bold text-xl min-w-[3rem] text-center bg-blue-100 px-3 py-1 rounded">
+                    <div className="bg-gradient-to-br from-[#13294B] to-[#1e3a5f] text-white font-bold text-lg min-w-[3rem] text-center px-3 py-2 rounded-lg shadow">
                       #{index + 1}
-                    </span>
+                    </div>
                     {athlete.previous_ranking && athlete.previous_ranking !== index + 1 && (
-                      <span className="text-xs text-gray-500 mt-1">
+                      <span className="text-xs mt-1">
                         {athlete.previous_ranking > index + 1 ? (
-                          <span className="text-green-600 font-semibold">↑ from #{athlete.previous_ranking}</span>
+                          <span className="text-green-600 font-semibold">↑ +{athlete.previous_ranking - (index + 1)}</span>
                         ) : (
-                          <span className="text-red-600 font-semibold">↓ from #{athlete.previous_ranking}</span>
+                          <span className="text-red-600 font-semibold">↓ -{(index + 1) - athlete.previous_ranking}</span>
                         )}
                       </span>
                     )}
                   </div>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
                     disabled={index === athletes.length - 1}
+                    className="h-7 w-7 p-0 hover:bg-blue-50"
                   >
-                    ↓
+                    <ArrowDown className="h-4 w-4 text-[#13294B]" />
                   </Button>
                 </div>
 
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:underline">
-                      <h3 className="font-bold text-xl text-blue-900">{athlete.name}</h3>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:text-[#CC0000] transition-colors">
+                      <h3 className="font-bold text-lg text-[#13294B]">{athlete.name}</h3>
                     </Link>
                     {athlete.recruitnc_score && (
-                      <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300 font-bold">
-                        📊 RecruitNC: {athlete.recruitnc_score}
+                      <Badge className="bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200">
+                        Score: {athlete.recruitnc_score}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-gray-600 font-medium">
-                    {athlete.highschool} • {athlete.weight ? `${athlete.weight} lbs` : "Weight TBD"}
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                    <span className="font-medium">{athlete.highschool}</span>
+                    <span>•</span>
+                    <Badge variant="outline" className="font-normal">
+                      {athlete.weight ? `${athlete.weight} lbs` : "Weight TBD"}
+                    </Badge>
+                    {(athlete.graduationyear === 2026 || athlete.graduationyear === 2027) && athlete.college && (
+                      <>
+                        <span>•</span>
+                        <Badge className="bg-green-50 text-green-700 border-green-200">
+                          ✓ Committed: {athlete.college}
+                        </Badge>
+                      </>
+                    )}
+                  </div>
                   {athlete.score_breakdown && (
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {athlete.score_breakdown.ranked_wins > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          Ranked Wins: {athlete.score_breakdown.ranked_wins}
+                        <Badge variant="secondary" className="text-xs">
+                          RW: {athlete.score_breakdown.ranked_wins}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.college_opens > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          College Opens: {athlete.score_breakdown.college_opens}
+                        <Badge variant="secondary" className="text-xs">
+                          CO: {athlete.score_breakdown.college_opens}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.super_32 > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          Super 32: {athlete.score_breakdown.super_32}
+                        <Badge variant="secondary" className="text-xs">
+                          S32: {athlete.score_breakdown.super_32}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.nhsca > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          NHSCA: {athlete.score_breakdown.nhsca}
+                        <Badge variant="secondary" className="text-xs">
+                          NHSCA: {athlete.score_breakdown.nhsca}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.state > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          State: {athlete.score_breakdown.state}
+                        <Badge variant="secondary" className="text-xs">
+                          State: {athlete.score_breakdown.state}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.gpa > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          GPA: {athlete.score_breakdown.gpa}
+                        <Badge variant="secondary" className="text-xs">
+                          GPA: {athlete.score_breakdown.gpa}pts
                         </Badge>
                       )}
                     </div>
                   )}
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                {(athlete.graduationyear === 2026 || athlete.graduationyear === 2027) && athlete.college && (
-                  <Badge className="bg-green-100 text-green-800 font-semibold">Committed: {athlete.college}</Badge>
-                )}
-              </div>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="bg-yellow-50 p-3 rounded-lg">
@@ -614,3 +621,4 @@ export default function SimpleRankingPage() {
     </div>
   )
 }
+
