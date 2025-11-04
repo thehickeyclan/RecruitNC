@@ -120,9 +120,9 @@ export default function SimpleRankingPage() {
       console.log("[v0] Frontend - API success response:", result)
 
       alert("Rankings saved successfully!")
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Frontend - Failed to save rankings:", error)
-      alert(`Failed to save rankings: ${error.message}`)
+      alert(`Failed to save rankings: ${error?.message || "Unknown error"}`)
     } finally {
       setSaving(false)
     }
@@ -175,7 +175,7 @@ export default function SimpleRankingPage() {
       } else {
         throw new Error("Failed to calculate RecruitNC scores")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error calculating RecruitNC scores:", error)
       alert("Failed to calculate RecruitNC scores")
     } finally {
@@ -214,7 +214,7 @@ export default function SimpleRankingPage() {
       } else {
         throw new Error("Failed to publish rankings")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to publish rankings:", error)
       alert("Failed to publish rankings")
     } finally {
