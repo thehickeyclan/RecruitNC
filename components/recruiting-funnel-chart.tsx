@@ -27,6 +27,49 @@ function hexToRgb(hex: string): string {
   return `${Number.parseInt(result[1], 16)}, ${Number.parseInt(result[2], 16)}, ${Number.parseInt(result[3], 16)}`
 }
 
+function isLightColor(color: string): boolean {
+  // Handle rgba colors
+  if (color.startsWith("rgba(")) {
+    const match = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/)
+    if (match) {
+      const r = Number.parseInt(match[1])
+      const g = Number.parseInt(match[2])
+      const b = Number.parseInt(match[3])
+      const alpha = Number.parseFloat(match[4])
+      // Calculate perceived brightness and account for opacity
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000
+      const effectiveBrightness = brightness * alpha + (255 * (1 - alpha))
+      return effectiveBrightness > 180 // Threshold for "light" color
+    }
+  }
+  
+  // Handle hex colors
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color)
+  if (result) {
+    const r = Number.parseInt(result[1], 16)
+    const g = Number.parseInt(result[2], 16)
+    const b = Number.parseInt(result[3], 16)
+    // Calculate perceived brightness
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000
+    return brightness > 180 // Threshold for "light" color (white is 255)
+  }
+  
+  // Handle rgb colors
+  if (color.startsWith("rgb(")) {
+    const match = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+    if (match) {
+      const r = Number.parseInt(match[1])
+      const g = Number.parseInt(match[2])
+      const b = Number.parseInt(match[3])
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000
+      return brightness > 180
+    }
+  }
+  
+  // Default to false if we can't parse the color
+  return false
+}
+
 export function RecruitingFunnelChart({ stageCounts, schoolBranding }: RecruitingFunnelChartProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
@@ -166,12 +209,21 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                   ? schoolBranding.secondary_color
                   : getStageColor(index, isCommitted)
 
+              // Determine text color based on background brightness
+              const isLightBg = isLightColor(stageColor)
+              const textColor = isLightBg 
+                ? (schoolBranding?.primary_color || "#006341") // Use dark green primary color, or fallback to dark green
+                : "white"
+              
+              // Adjust stroke color for light backgrounds
+              const strokeColor = isLightBg ? "#666666" : "white"
+
               return (
                 <g key={stage.name}>
                   <path
                     d={`M ${leftX} ${y} L ${rightX} ${y} L ${nextRightX} ${y + stageHeight} L ${nextLeftX} ${y + stageHeight} Z`}
                     fill={stageColor}
-                    stroke="white"
+                    stroke={strokeColor}
                     strokeWidth="2"
                     className="transition-all hover:opacity-90 cursor-pointer"
                     style={{
@@ -182,9 +234,9 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                     x={funnelWidth / 2}
                     y={y + stageHeight / 2 - 15}
                     textAnchor="middle"
-                    fill="white"
+                    fill={textColor}
                     className={`font-semibold uppercase tracking-wide ${isMobile ? "text-xs" : "text-sm"}`}
-                    style={{ textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)" }}
+                    style={{ textShadow: isLightBg ? "0 1px 2px rgba(255, 255, 255, 0.5)" : "0 1px 2px rgba(0, 0, 0, 0.3)" }}
                   >
                     {stage.name}
                   </text>
@@ -192,9 +244,9 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                     x={funnelWidth / 2}
                     y={y + stageHeight / 2 + 5}
                     textAnchor="middle"
-                    fill="white"
+                    fill={textColor}
                     className={`font-bold ${isMobile ? "text-xl" : "text-lg"}`}
-                    style={{ textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)" }}
+                    style={{ textShadow: isLightBg ? "0 1px 2px rgba(255, 255, 255, 0.5)" : "0 1px 2px rgba(0, 0, 0, 0.3)" }}
                   >
                     {stage.count}
                   </text>
@@ -202,9 +254,12 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                     x={funnelWidth / 2}
                     y={y + stageHeight / 2 + 25}
                     textAnchor="middle"
-                    fill="white"
+                    fill={textColor}
                     className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}
-                    style={{ textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)", opacity: 0.9 }}
+                    style={{ 
+                      textShadow: isLightBg ? "0 1px 2px rgba(255, 255, 255, 0.5)" : "0 1px 2px rgba(0, 0, 0, 0.3)", 
+                      opacity: 0.9 
+                    }}
                   >
                     ({conversionRate}%)
                   </text>
