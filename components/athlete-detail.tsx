@@ -499,8 +499,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             </div>
 
-            <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white p-6">
+            <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white p-6">
               <h1 className="text-3xl font-bold mb-4">{athleteName}</h1>
+
+              {prospectRanking && (
+                <div className="mb-4">
+                  <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
+                    #{prospectRanking} Ranked Prospect - Class of {graduationYear}
+                  </Badge>
+                </div>
+              )}
 
               {(statusBadge.isCollegeAthlete || recruitingStatus.toLowerCase() === "committed") &&
                 college &&
@@ -548,14 +556,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-gray-300 text-sm font-medium uppercase tracking-wide">Graduation Year</p>
-                  <p className="text-2xl font-bold">{graduationYear || "N/A"}</p>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Graduation Year</p>
+                  <p className="text-xl font-bold">{graduationYear || "N/A"}</p>
                 </div>
-                <div>
-                  <p className="text-gray-300 text-sm font-medium uppercase tracking-wide">Weight Class</p>
-                  <p className="text-2xl font-bold">{weightClass}</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Weight Class</p>
+                  <p className="text-xl font-bold">{weightClass}</p>
                 </div>
               </div>
 
@@ -601,8 +609,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
           {/* Desktop view */}
           <div className="hidden lg:block">
-            <div className="relative min-h-[400px] bg-gradient-to-r from-[#002147] to-[#003366]">
-              <div className="absolute inset-0 bg-black/20" />
+            <div className="relative min-h-[380px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
+              <div className="absolute inset-0 bg-black/10" />
 
               <div className="relative z-10 flex items-start gap-8 p-8">
                 <div className="flex-shrink-0 w-80">
@@ -622,6 +630,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 </div>
 
                 <div className="flex-1 text-white pt-4">
+                  {prospectRanking && (
+                    <div className="mb-4">
+                      <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg">
+                        #{prospectRanking} Ranked Prospect - Class of {graduationYear}
+                      </Badge>
+                    </div>
+                  )}
+
                   {(statusBadge.isCollegeAthlete || recruitingStatus.toLowerCase() === "committed") &&
                     college &&
                     college !== "Not specified" && (
@@ -674,15 +690,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 mb-6 max-w-2xl">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                       <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">
                         Graduation Year
                       </p>
-                      <p className="text-3xl font-bold text-white">{graduationYear || "N/A"}</p>
+                      <p className="text-2xl font-bold text-white">{graduationYear || "N/A"}</p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                       <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Weight Class</p>
-                      <p className="text-3xl font-bold text-white">{weightClass}</p>
+                      <p className="text-2xl font-bold text-white">{weightClass}</p>
                     </div>
                   </div>
 
