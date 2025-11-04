@@ -537,23 +537,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 )}
 
               <div className="flex flex-wrap items-center gap-2 mb-4">
-                <Badge className={`${statusBadge.color} text-white px-3 py-1 text-sm font-bold`}>
+                <Badge className={`${statusBadge.color} text-white px-3 py-1.5 text-sm font-bold`}>
                   {statusBadge.text}
                 </Badge>
-                {achievementBadges.map((badge, index) => (
-                  <Badge key={index} className={`${badge.color} px-3 py-1 text-sm font-bold flex items-center gap-1`}>
-                    {badge.icon && (
-                      <Image
-                        src={badge.icon || "/placeholder.svg"}
-                        alt=""
-                        width={16}
-                        height={16}
-                        className="object-contain"
-                      />
-                    )}
-                    {badge.text}
-                  </Badge>
-                ))}
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
@@ -566,6 +552,25 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <p className="text-xl font-bold">{weightClass}</p>
                 </div>
               </div>
+
+              {achievementBadges.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {achievementBadges.map((badge, index) => (
+                    <Badge key={index} className={`${badge.color} px-2.5 py-1 text-xs font-semibold flex items-center gap-1.5`}>
+                      {badge.icon && (
+                        <Image
+                          src={badge.icon || "/placeholder.svg"}
+                          alt=""
+                          width={14}
+                          height={14}
+                          className="object-contain"
+                        />
+                      )}
+                      {badge.text}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {instagramUrl && (
                 <a
@@ -670,26 +675,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     <Badge className={`${statusBadge.color} text-white px-4 py-2 text-base font-bold shadow-lg`}>
                       {statusBadge.text}
                     </Badge>
-                    {achievementBadges.map((badge, index) => (
-                      <Badge
-                        key={index}
-                        className={`${badge.color} px-4 py-2 text-base font-bold flex items-center gap-2 shadow-lg`}
-                      >
-                        {badge.icon && (
-                          <Image
-                            src={badge.icon || "/placeholder.svg"}
-                            alt=""
-                            width={20}
-                            height={20}
-                            className="object-contain"
-                          />
-                        )}
-                        {badge.text}
-                      </Badge>
-                    ))}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 mb-6 max-w-2xl">
+                  <div className="grid grid-cols-3 gap-4 mb-4 max-w-2xl">
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                       <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">
                         Graduation Year
@@ -701,6 +689,25 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       <p className="text-2xl font-bold text-white">{weightClass}</p>
                     </div>
                   </div>
+
+                  {achievementBadges.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {achievementBadges.map((badge, index) => (
+                        <Badge key={index} className={`${badge.color} px-3 py-1.5 text-sm font-semibold flex items-center gap-2`}>
+                          {badge.icon && (
+                            <Image
+                              src={badge.icon || "/placeholder.svg"}
+                              alt=""
+                              width={16}
+                              height={16}
+                              className="object-contain"
+                            />
+                          )}
+                          {badge.text}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="flex gap-3 items-center flex-wrap">
                     {instagramUrl && (
