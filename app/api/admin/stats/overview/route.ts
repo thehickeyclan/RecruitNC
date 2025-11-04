@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = createClient()
 
     // Get total athletes/prospects
     const { count: totalAthletes } = await supabase.from("athletes").select("*", { count: "exact", head: true })
