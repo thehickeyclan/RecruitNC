@@ -4,19 +4,35 @@ import { createClient } from "@/lib/supabase/server"
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient()
+    
+    // Get filter params from URL
+    const { searchParams } = new URL(request.url)
+    const yearFilter = searchParams.get("year")
+    const genderFilter = searchParams.get("gender")
     
     // Get athletes with commitments based on recruiting_status
     // "Committed" or "Signed" = current commitments
     // "College Athlete" = already in college (past graduation years)
-    const { data: athletes, error: athletesError } = await supabase
+    let query = supabase
       .from("athletes")
-      .select("id, name, college, division, graduationyear, recruiting_status")
+      .select("id, name, college, division, graduationyear, recruiting_status, gender")
       .not("college", "is", null)
       .neq("college", "")
       .in("recruiting_status", ["Committed", "Signed", "College Athlete", "committed", "signed"])
+    
+    // Apply filters if provided
+    if (yearFilter && yearFilter !== "all") {
+      query = query.eq("graduationyear", parseInt(yearFilter))
+    }
+    
+    if (genderFilter && genderFilter !== "all") {
+      query = query.eq("gender", genderFilter)
+    }
+    
+    const { data: athletes, error: athletesError } = await query
 
     if (athletesError) {
       console.error("Error fetching athletes:", athletesError)
