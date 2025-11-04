@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AdminHeader } from "@/components/admin-header"
+import { ArrowUp, ArrowDown, Save, Rocket, Calculator } from "lucide-react"
 import Link from "next/link"
 
 interface Athlete {
@@ -221,160 +223,211 @@ export default function SimpleRankingPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Loading...</div>
+    return (
+      <>
+        <AdminHeader />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg text-gray-600">Loading rankings...</div>
+          </div>
+        </div>
+      </>
+    )
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Wrestling Rankings</h1>
-        <div className="flex gap-4">
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
-              <SelectItem value="2027">2027</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedGender} onValueChange={setSelectedGender}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Male">Male</SelectItem>
-              <SelectItem value="Female">Female</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedDivision} onValueChange={setSelectedDivision}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Divisions</SelectItem>
-              <SelectItem value="8A">8A</SelectItem>
-              <SelectItem value="7A">7A</SelectItem>
-              <SelectItem value="6A">6A</SelectItem>
-              <SelectItem value="5A">5A</SelectItem>
-              <SelectItem value="4A">4A</SelectItem>
-              <SelectItem value="3A">3A</SelectItem>
-              <SelectItem value="2A">2A</SelectItem>
-              <SelectItem value="1A">1A</SelectItem>
-              <SelectItem value="Independent">Independent</SelectItem>
-              <SelectItem value="NCISAA">NCISAA</SelectItem>
-              <SelectItem value="NoDivision">No Division</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            onClick={calculateRecruitNCScores}
-            disabled={calculatingScores || athletes.length === 0}
-            className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100"
-            variant="outline"
-          >
-            📊 {calculatingScores ? "Calculating..." : "RecruitNC Scores"}
-          </Button>
-
-          <Button onClick={saveRankings} disabled={saving}>
-            {saving ? "Saving..." : "Save Rankings"}
-          </Button>
-
-          <Button
-            onClick={publishRankings}
-            disabled={publishing || athletes.length === 0}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
-          >
-            {publishing ? "Publishing..." : "🚀 Publish Rankings"}
-          </Button>
+    <>
+      <AdminHeader />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white rounded-lg p-6 shadow-lg">
+            <h1 className="text-3xl font-bold mb-2">Prospect Rankings Manager</h1>
+            <p className="text-blue-100">Drag and drop athletes to reorder rankings, then save and publish</p>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
+        {/* Controls Bar */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Filters */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Filters:</span>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2025">Class of 2025</SelectItem>
+                    <SelectItem value="2026">Class of 2026</SelectItem>
+                    <SelectItem value="2027">Class of 2027</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Divisions</SelectItem>
+                    <SelectItem value="8A">8A</SelectItem>
+                    <SelectItem value="7A">7A</SelectItem>
+                    <SelectItem value="6A">6A</SelectItem>
+                    <SelectItem value="5A">5A</SelectItem>
+                    <SelectItem value="4A">4A</SelectItem>
+                    <SelectItem value="3A">3A</SelectItem>
+                    <SelectItem value="2A">2A</SelectItem>
+                    <SelectItem value="1A">1A</SelectItem>
+                    <SelectItem value="Independent">Independent</SelectItem>
+                    <SelectItem value="NCISAA">NCISAA</SelectItem>
+                    <SelectItem value="NoDivision">No Division</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  onClick={calculateRecruitNCScores}
+                  disabled={calculatingScores || athletes.length === 0}
+                  variant="outline"
+                  className="border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  <Calculator className="h-4 w-4 mr-2" />
+                  {calculatingScores ? "Calculating..." : "Calculate Scores"}
+                </Button>
+
+                <Button
+                  onClick={saveRankings}
+                  disabled={saving}
+                  className="bg-[#13294B] hover:bg-[#1e3a5f] text-white"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? "Saving..." : "Save Rankings"}
+                </Button>
+
+                <Button
+                  onClick={publishRankings}
+                  disabled={publishing || athletes.length === 0}
+                  className="bg-[#CC0000] hover:bg-[#990000] text-white"
+                >
+                  <Rocket className="h-4 w-4 mr-2" />
+                  {publishing ? "Publishing..." : "Publish Live"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+      <div className="space-y-3">
         {athletes.map((athlete, index) => (
-          <Card key={athlete.id} className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col items-center gap-2">
+          <Card key={athlete.id} className="hover:shadow-md transition-shadow border-l-4 border-l-[#13294B]">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-4">
+                {/* Rank Controls */}
+                <div className="flex flex-col items-center gap-2 flex-shrink-0">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => moveAthlete(index, Math.max(0, index - 1))}
                     disabled={index === 0}
+                    className="h-7 w-7 p-0 hover:bg-blue-50"
                   >
-                    ↑
+                    <ArrowUp className="h-4 w-4 text-[#13294B]" />
                   </Button>
                   <div className="flex flex-col items-center">
-                    <span className="font-bold text-xl min-w-[3rem] text-center bg-blue-100 px-3 py-1 rounded">
+                    <div className="bg-gradient-to-br from-[#13294B] to-[#1e3a5f] text-white font-bold text-lg min-w-[3rem] text-center px-3 py-2 rounded-lg shadow">
                       #{index + 1}
-                    </span>
+                    </div>
                     {athlete.previous_ranking && athlete.previous_ranking !== index + 1 && (
-                      <span className="text-xs text-gray-500 mt-1">
+                      <span className="text-xs mt-1">
                         {athlete.previous_ranking > index + 1 ? (
-                          <span className="text-green-600 font-semibold">↑ from #{athlete.previous_ranking}</span>
+                          <span className="text-green-600 font-semibold">↑ +{athlete.previous_ranking - (index + 1)}</span>
                         ) : (
-                          <span className="text-red-600 font-semibold">↓ from #{athlete.previous_ranking}</span>
+                          <span className="text-red-600 font-semibold">↓ -{(index + 1) - athlete.previous_ranking}</span>
                         )}
                       </span>
                     )}
                   </div>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
                     disabled={index === athletes.length - 1}
+                    className="h-7 w-7 p-0 hover:bg-blue-50"
                   >
-                    ↓
+                    <ArrowDown className="h-4 w-4 text-[#13294B]" />
                   </Button>
                 </div>
 
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:underline">
-                      <h3 className="font-bold text-xl text-blue-900">{athlete.name}</h3>
+                {/* Athlete Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:text-[#CC0000] transition-colors">
+                      <h3 className="font-bold text-lg text-[#13294B]">{athlete.name}</h3>
                     </Link>
                     {athlete.recruitnc_score && (
-                      <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300 font-bold">
-                        📊 RecruitNC: {athlete.recruitnc_score}
+                      <Badge className="bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200">
+                        Score: {athlete.recruitnc_score}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-gray-600 font-medium">
-                    {athlete.highschool} • {athlete.weight ? `${athlete.weight} lbs` : "Weight TBD"}
-                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                    <span className="font-medium">{athlete.highschool}</span>
+                    <span>•</span>
+                    <Badge variant="outline" className="font-normal">
+                      {athlete.weight ? `${athlete.weight} lbs` : "Weight TBD"}
+                    </Badge>
+                    {(athlete.graduationyear === 2026 || athlete.graduationyear === 2027) && athlete.college && (
+                      <>
+                        <span>•</span>
+                        <Badge className="bg-green-50 text-green-700 border-green-200">
+                          ✓ Committed: {athlete.college}
+                        </Badge>
+                      </>
+                    )}
+                  </div>
                   {athlete.score_breakdown && (
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {athlete.score_breakdown.ranked_wins > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          Ranked Wins: {athlete.score_breakdown.ranked_wins}
+                        <Badge variant="secondary" className="text-xs">
+                          RW: {athlete.score_breakdown.ranked_wins}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.college_opens > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          College Opens: {athlete.score_breakdown.college_opens}
+                        <Badge variant="secondary" className="text-xs">
+                          CO: {athlete.score_breakdown.college_opens}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.super_32 > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          Super 32: {athlete.score_breakdown.super_32}
+                        <Badge variant="secondary" className="text-xs">
+                          S32: {athlete.score_breakdown.super_32}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.nhsca > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          NHSCA: {athlete.score_breakdown.nhsca}
+                        <Badge variant="secondary" className="text-xs">
+                          NHSCA: {athlete.score_breakdown.nhsca}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.state > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          State: {athlete.score_breakdown.state}
+                        <Badge variant="secondary" className="text-xs">
+                          State: {athlete.score_breakdown.state}pts
                         </Badge>
                       )}
                       {athlete.score_breakdown.gpa > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          GPA: {athlete.score_breakdown.gpa}
+                        <Badge variant="secondary" className="text-xs">
+                          GPA: {athlete.score_breakdown.gpa}pts
                         </Badge>
                       )}
                     </div>
@@ -382,16 +435,10 @@ export default function SimpleRankingPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {(athlete.graduationyear === 2026 || athlete.graduationyear === 2027) && athlete.college && (
-                  <Badge className="bg-green-100 text-green-800 font-semibold">Committed: {athlete.college}</Badge>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              <div className="bg-yellow-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-yellow-800 mb-2">NCHSAA STATE</h4>
+              {/* Achievement Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-3">
+                <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-3 rounded-lg border border-yellow-200">
+                  <h4 className="font-semibold text-xs text-yellow-800 mb-2">STATE</h4>
                 {athlete.nchsaa_results && athlete.nchsaa_results.length > 0 ? (
                   <div className="space-y-1">
                     {athlete.nchsaa_results.slice(0, 3).map((result, idx) => (
@@ -420,8 +467,8 @@ export default function SimpleRankingPage() {
                 )}
               </div>
 
-              <div className="bg-red-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-red-800 mb-2">NHSCA NATIONALS</h4>
+                <div className="bg-gradient-to-br from-red-50 to-rose-50 p-3 rounded-lg border border-red-200">
+                  <h4 className="font-semibold text-xs text-red-800 mb-2">NHSCA</h4>
                 {athlete.nhsca_2025_placement ||
                 athlete.nhsca_2025_record ||
                 athlete.nhsca_2024_placement ||
@@ -465,8 +512,8 @@ export default function SimpleRankingPage() {
                 )}
               </div>
 
-              <div className="bg-purple-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-purple-800 mb-2">SUPER 32</h4>
+                <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-3 rounded-lg border border-purple-200">
+                  <h4 className="font-semibold text-xs text-purple-800 mb-2">SUPER 32</h4>
                 {athlete.super_32_2025_placement ||
                 athlete.super_32_2025_record ||
                 athlete.super_32_2024_placement ||
@@ -498,8 +545,8 @@ export default function SimpleRankingPage() {
                 )}
               </div>
 
-              <div className="bg-orange-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-orange-800 mb-2">RANKED WINS</h4>
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-lg border border-orange-200">
+                  <h4 className="font-semibold text-xs text-orange-800 mb-2">RANKED WINS</h4>
                 {athlete.nationally_ranked_wins ? (
                   <div className="space-y-1">
                     {athlete.nationally_ranked_wins
@@ -522,8 +569,8 @@ export default function SimpleRankingPage() {
                 )}
               </div>
 
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-blue-800 mb-2">COLLEGE OPENS</h4>
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-xs text-blue-800 mb-2">COLLEGE OPENS</h4>
                 {athlete.college_opens_experience ? (
                   <div className="space-y-1">
                     {athlete.college_opens_experience
@@ -546,8 +593,8 @@ export default function SimpleRankingPage() {
                 )}
               </div>
 
-              <div className="bg-green-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-sm text-green-800 mb-2">ACADEMICS</h4>
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
+                  <h4 className="font-semibold text-xs text-green-800 mb-2">GPA</h4>
                 {athlete.academic_gpa ? (
                   <Badge className="bg-green-500 text-white text-xs">
                     GPA: {Number(athlete.academic_gpa).toFixed(1)}
@@ -556,17 +603,32 @@ export default function SimpleRankingPage() {
                   <p className="text-xs text-gray-500">No GPA data</p>
                 )}
               </div>
-            </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         ))}
       </div>
 
-      {athletes.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No athletes found for {selectedYear} {selectedGender}{" "}
-          {selectedDivision !== "all" ? `in ${selectedDivision}` : ""}
-        </div>
-      )}
-    </div>
+        {/* Empty State */}
+        {athletes.length === 0 && (
+          <Card className="border-dashed">
+            <CardContent className="p-12 text-center">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Athletes Found</h3>
+              <p className="text-gray-500">
+                No athletes found for {selectedYear} {selectedGender}
+                {selectedDivision !== "all" ? ` in ${selectedDivision}` : ""}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </>
   )
 }
+
