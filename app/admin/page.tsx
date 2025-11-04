@@ -41,79 +41,93 @@ export default function AdminDashboard() {
   }, [])
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <AdminHeader />
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage your wrestling portal content and settings</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* NC United Branded Header */}
+      <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+        <div className="container mx-auto px-4 py-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-blue-200">NC Wrestling United - Portal Management</p>
+          </div>
+        </div>
       </div>
 
-      {/* Quick Links */}
-      <Card className="mb-8 border-orange-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">🚀 Quick Links</CardTitle>
-          <CardDescription>Frequently used tools</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
-          <Link href="/admin/match-linker">
-            <Button className="bg-orange-600 hover:bg-orange-700 text-white">🔗 Match Linker</Button>
-          </Link>
-          <Link href="/admin/college-coaches">
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">🎓 College Coaches</Button>
-          </Link>
-          <Link href="/admin/users">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">👥 Manage Users</Button>
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="container mx-auto px-4 py-8">
+        <AdminHeader />
+
+        {/* Quick Links */}
+        <Card className="mb-8 border-t-4 border-t-[#B31B1B] shadow-md">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-2xl">🚀</span> Quick Links
+            </CardTitle>
+            <CardDescription>Frequently used management tools</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3 pt-6">
+            <Link href="/admin/athletes">
+              <Button className="bg-[#002147] hover:bg-[#003366] text-white">👥 Manage Athletes</Button>
+            </Link>
+            <Link href="/admin/match-manager">
+              <Button className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">🔗 Match Manager</Button>
+            </Link>
+            <Link href="/admin/schools">
+              <Button className="bg-[#002147] hover:bg-[#003366] text-white">🏫 Schools</Button>
+            </Link>
+            <Link href="/admin/profile-submissions">
+              <Button className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">📝 Profile Submissions</Button>
+            </Link>
+            <Link href="/admin/users-dashboard">
+              <Button className="bg-[#002147] hover:bg-[#003366] text-white">🔐 Manage Users</Button>
+            </Link>
+          </CardContent>
+        </Card>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="border-l-4 border-l-[#002147] shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">👥</div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Athletes</p>
-                <p className="text-2xl font-bold text-gray-900">{loading ? "..." : stats.totalAthletes}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Total Athletes</p>
+                <p className="text-3xl font-bold text-[#002147]">{loading ? "..." : stats.totalAthletes}</p>
               </div>
+              <div className="text-4xl">👥</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-[#B31B1B] shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">🔐</div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{loading ? "..." : stats.totalUsers}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Total Users</p>
+                <p className="text-3xl font-bold text-[#B31B1B]">{loading ? "..." : stats.totalUsers}</p>
               </div>
+              <div className="text-4xl">🔐</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-[#D4AF37] shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">⏳</div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{loading ? "..." : stats.pendingSubmissions}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Pending Submissions</p>
+                <p className="text-3xl font-bold text-[#D4AF37]">{loading ? "..." : stats.pendingSubmissions}</p>
               </div>
+              <div className="text-4xl">⏳</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-[#002147] shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">📊</div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Recent Activity</p>
-                <p className="text-2xl font-bold text-gray-900">{loading ? "..." : stats.recentActivity}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Recent Activity</p>
+                <p className="text-3xl font-bold text-[#002147]">{loading ? "..." : stats.recentActivity}</p>
               </div>
+              <div className="text-4xl">📊</div>
             </div>
           </CardContent>
         </Card>
@@ -121,30 +135,17 @@ export default function AdminDashboard() {
 
       {/* Main Admin Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        <Card className="border-indigo-200 bg-indigo-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🎓 College Coaches</CardTitle>
-            <CardDescription>Manage college coach accounts and permissions</CardDescription>
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">🎓</span> College Coaches
+            </CardTitle>
+            <CardDescription>Manage schools, coaches, and analytics</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/college-coaches">
-              <Button className="w-full justify-start bg-indigo-600 hover:bg-indigo-700 text-white">
-                🏠 Coach Dashboard
-              </Button>
-            </Link>
+          <CardContent className="space-y-2 pt-6">
             <Link href="/admin/schools">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🏫 Schools Management
-              </Button>
-            </Link>
-            <Link href="/admin/users-dashboard">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ✅ User Management & Approvals
-              </Button>
-            </Link>
-            <Link href="/admin/coach-verification">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🔍 Verify Credentials
+              <Button className="w-full justify-start bg-[#002147] hover:bg-[#003366] text-white">
+                🏫 Schools & Coaches
               </Button>
             </Link>
             <Link href="/admin/coach-analytics">
@@ -155,34 +156,32 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-
-        {/* Profile Management */}
-        <Card className="border-green-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">👤 Profile Management</CardTitle>
-            <CardDescription>Handle profile confirmations and claims</CardDescription>
+        {/* Logo Management */}
+        <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">🎨</span> Logo Management
+            </CardTitle>
+            <CardDescription>Manage logos for clubs, high schools, colleges, and divisions</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/profile-confirmations">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ✅ Profile Confirmations
-              </Button>
-            </Link>
-            <Link href="/admin/athlete-claims-manager">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🔐 Athlete Claims Manager
+          <CardContent className="space-y-2 pt-6">
+            <Link href="/admin/enhanced-logo-manager">
+              <Button className="w-full justify-start bg-[#B31B1B] hover:bg-[#8B1515] text-white">
+                🎨 Enhanced Logo Manager
               </Button>
             </Link>
           </CardContent>
         </Card>
 
         {/* Athletes Management */}
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🤼 Athletes Management</CardTitle>
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">🤼</span> Athletes Management
+            </CardTitle>
             <CardDescription>Manage athlete profiles and data</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-6">
             <Link href="/admin/athletes">
               <Button variant="outline" className="w-full justify-start bg-transparent">
                 👥 View All Athletes
@@ -212,29 +211,16 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Match Management */}
-        <Card className="border-orange-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🥇 Match Management</CardTitle>
-            <CardDescription>Manage wrestling match records</CardDescription>
+        <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">🥇</span> Match Management
+            </CardTitle>
+            <CardDescription>Manage wrestling match data and results</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/match-records">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📋 Match Records
-              </Button>
-            </Link>
-            <Link href="/admin/bulk-match-upload">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📊 Bulk Match Upload
-              </Button>
-            </Link>
-            <Link href="/admin/match-linker">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🔗 Match Linker
-              </Button>
-            </Link>
+          <CardContent className="space-y-2 pt-6">
             <Link href="/admin/match-manager">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
+              <Button className="w-full justify-start bg-[#B31B1B] hover:bg-[#8B1515] text-white">
                 ⚙️ Match Manager
               </Button>
             </Link>
@@ -242,30 +228,17 @@ export default function AdminDashboard() {
         </Card>
 
         {/* User Management */}
-        <Card className="border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">👥 User Management</CardTitle>
-            <CardDescription>Manage user accounts and permissions</CardDescription>
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">👥</span> User Management
+            </CardTitle>
+            <CardDescription>Manage user accounts, coaches, and permissions</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/users">
-              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
-                👤 All Users & Profiles
-              </Button>
-            </Link>
+          <CardContent className="space-y-2 pt-6">
             <Link href="/admin/users-dashboard">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📊 Users Dashboard
-              </Button>
-            </Link>
-            <Link href="/admin/user-analytics">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📈 User Analytics
-              </Button>
-            </Link>
-            <Link href="/admin/card-analytics">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📊 Card Analytics
+              <Button className="w-full justify-start bg-[#002147] hover:bg-[#003366] text-white">
+                👥 Users Dashboard
               </Button>
             </Link>
           </CardContent>
@@ -288,40 +261,17 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Data Management */}
-        <Card className="border-pink-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🗄️ Data Management</CardTitle>
-            <CardDescription>Manage divisions, colleges, and mappings</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/college-division-mapping">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🏫 College Division Mapping
-              </Button>
-            </Link>
-            <Link href="/admin/college-master">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🎓 College Master
-              </Button>
-            </Link>
-            <Link href="/admin/standardize-divisions">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📊 Standardize Divisions
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
         {/* Rankings */}
-        <Card className="border-yellow-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🏆 Rankings</CardTitle>
+        <Card className="border-t-4 border-t-[#D4AF37] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">🏆</span> Rankings
+            </CardTitle>
             <CardDescription>Manage prospect and athlete rankings</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2 pt-6">
             <Link href="/admin/prospects/simple-ranking">
-              <Button className="w-full justify-start bg-yellow-600 hover:bg-yellow-700 text-white">
+              <Button className="w-full justify-start bg-[#D4AF37] hover:bg-[#C4A137] text-white">
                 📊 Simple Rankings (RecruitNC Scores)
               </Button>
             </Link>
@@ -348,45 +298,23 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Database Tools */}
-        <Card className="border-gray-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🛠️ Database Tools</CardTitle>
-            <CardDescription>Database maintenance and scripts</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/debug">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🐛 Debug Tools
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
         {/* Analytics & Reports */}
-        <Card className="border-cyan-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">📊 Analytics & Reports</CardTitle>
-            <CardDescription>View statistics and generate reports</CardDescription>
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">📊</span> Analytics & Reports
+            </CardTitle>
+            <CardDescription>View commitment statistics and analytics</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/stats">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📈 Statistics Dashboard
-              </Button>
-            </Link>
+          <CardContent className="space-y-2 pt-6">
             <Link href="/admin/commitment-stats">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
+              <Button className="w-full justify-start bg-[#002147] hover:bg-[#003366] text-white">
                 📊 Commitment Statistics
               </Button>
             </Link>
-            <Link href="/admin/division-distribution">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📊 Division Distribution
-              </Button>
-            </Link>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   )
