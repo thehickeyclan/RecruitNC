@@ -5,11 +5,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const entityType = searchParams.get("entityType")
-    const limit = Number.parseInt(searchParams.get("limit") || "100")
+    const limit = Number.parseInt(searchParams.get("limit") || "1000") // Increased default limit
 
     const supabase = await createClient()
 
-    let query = supabase.from("logo_mappings").select("*").order("created_at", { ascending: false })
+    let query = supabase.from("logo_mappings").select("*").order("entity_name", { ascending: true }) // Order by name for easier browsing
 
     if (entityType && entityType !== "all") {
       query = query.eq("entity_type", entityType)
