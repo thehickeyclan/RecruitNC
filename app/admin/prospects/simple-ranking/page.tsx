@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AdminHeader } from "@/components/admin-header"
+import { ArrowUp, ArrowDown, Save, Rocket, Calculator } from "lucide-react"
 import Link from "next/link"
 
 interface Athlete {
@@ -226,80 +228,111 @@ export default function SimpleRankingPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Loading...</div>
+    return (
+      <div>
+        <AdminHeader />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-lg text-gray-600">Loading rankings...</div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Wrestling Rankings</h1>
-        <div className="flex gap-4">
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
-              <SelectItem value="2027">2027</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedGender} onValueChange={setSelectedGender}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Male">Male</SelectItem>
-              <SelectItem value="Female">Female</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedDivision} onValueChange={setSelectedDivision}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Divisions</SelectItem>
-              <SelectItem value="8A">8A</SelectItem>
-              <SelectItem value="7A">7A</SelectItem>
-              <SelectItem value="6A">6A</SelectItem>
-              <SelectItem value="5A">5A</SelectItem>
-              <SelectItem value="4A">4A</SelectItem>
-              <SelectItem value="3A">3A</SelectItem>
-              <SelectItem value="2A">2A</SelectItem>
-              <SelectItem value="1A">1A</SelectItem>
-              <SelectItem value="Independent">Independent</SelectItem>
-              <SelectItem value="NCISAA">NCISAA</SelectItem>
-              <SelectItem value="NoDivision">No Division</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Button
-            onClick={calculateRecruitNCScores}
-            disabled={calculatingScores || athletes.length === 0}
-            className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100"
-            variant="outline"
-          >
-            📊 {calculatingScores ? "Calculating..." : "RecruitNC Scores"}
-          </Button>
-
-          <Button onClick={saveRankings} disabled={saving}>
-            {saving ? "Saving..." : "Save Rankings"}
-          </Button>
-
-          <Button
-            onClick={publishRankings}
-            disabled={publishing || athletes.length === 0}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
-          >
-            {publishing ? "Publishing..." : "🚀 Publish Rankings"}
-          </Button>
+    <div>
+      <AdminHeader />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white rounded-lg p-6 shadow-lg">
+            <h1 className="text-3xl font-bold mb-2">Prospect Rankings Manager</h1>
+            <p className="text-blue-100">Drag and drop athletes to reorder rankings, then save and publish</p>
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-4">
-        {athletes.map((athlete, index) => (
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Filters:</span>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2025">Class of 2025</SelectItem>
+                    <SelectItem value="2026">Class of 2026</SelectItem>
+                    <SelectItem value="2027">Class of 2027</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Divisions</SelectItem>
+                    <SelectItem value="8A">8A</SelectItem>
+                    <SelectItem value="7A">7A</SelectItem>
+                    <SelectItem value="6A">6A</SelectItem>
+                    <SelectItem value="5A">5A</SelectItem>
+                    <SelectItem value="4A">4A</SelectItem>
+                    <SelectItem value="3A">3A</SelectItem>
+                    <SelectItem value="2A">2A</SelectItem>
+                    <SelectItem value="1A">1A</SelectItem>
+                    <SelectItem value="Independent">Independent</SelectItem>
+                    <SelectItem value="NCISAA">NCISAA</SelectItem>
+                    <SelectItem value="NoDivision">No Division</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  onClick={calculateRecruitNCScores}
+                  disabled={calculatingScores || athletes.length === 0}
+                  variant="outline"
+                  className="border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  <Calculator className="h-4 w-4 mr-2" />
+                  {calculatingScores ? "Calculating..." : "Calculate Scores"}
+                </Button>
+
+                <Button
+                  onClick={saveRankings}
+                  disabled={saving}
+                  className="bg-[#13294B] hover:bg-[#1e3a5f] text-white"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? "Saving..." : "Save Rankings"}
+                </Button>
+
+                <Button
+                  onClick={publishRankings}
+                  disabled={publishing || athletes.length === 0}
+                  className="bg-[#CC0000] hover:bg-[#990000] text-white"
+                >
+                  <Rocket className="h-4 w-4 mr-2" />
+                  {publishing ? "Publishing..." : "Publish Live"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-3">
+          {athletes.map((athlete, index) => (
           <Card key={athlete.id} className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-4">
@@ -563,15 +596,21 @@ export default function SimpleRankingPage() {
               </div>
             </div>
           </Card>
-        ))}
-      </div>
-
-      {athletes.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No athletes found for {selectedYear} {selectedGender}{" "}
-          {selectedDivision !== "all" ? `in ${selectedDivision}` : ""}
+          ))}
         </div>
-      )}
+
+        {athletes.length === 0 && (
+          <Card className="border-dashed">
+            <CardContent className="p-12 text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Athletes Found</h3>
+              <p className="text-gray-500">
+                No athletes found for {selectedYear} {selectedGender}
+                {selectedDivision !== "all" ? ` in ${selectedDivision}` : ""}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }
