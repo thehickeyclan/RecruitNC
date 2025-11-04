@@ -897,23 +897,26 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {tournamentResultsComponent}
 
       {/* College Opens Experience */}
-      {athlete.college_opens_experience && (
-        <div className="container mx-auto px-4 py-8">
-          <Card className="shadow-lg border-l-4 border-l-blue-600">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-              <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                <Trophy className="h-6 w-6 text-blue-600" />
-                College Opens Experience
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                {athlete.college_opens_experience}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {(() => {
+        console.log("[v0] College Opens data:", athlete.college_opens_experience)
+        return athlete.college_opens_experience ? (
+          <div className="container mx-auto px-4 py-8">
+            <Card className="shadow-lg border-l-4 border-l-blue-600">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+                <CardTitle className="flex items-center gap-2 text-[#13294B]">
+                  <Trophy className="h-6 w-6 text-blue-600" />
+                  College Opens Experience
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                  {athlete.college_opens_experience}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null
+      })()}
 
       {/* Match Data Section */}
       <MatchDataSectionImproved athleteId={athlete.id} athleteName={athleteName} graduationYear={graduationYear} />
