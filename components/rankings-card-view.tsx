@@ -158,9 +158,11 @@ export function RankingsCardView({ athletes, loading }: RankingsCardViewProps) {
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
-                  <Badge className="bg-blue-600 text-white font-bold text-base px-2.5 py-1">
-                    #{athlete.prospect_ranking}
-                  </Badge>
+                  {athlete.prospect_ranking <= 30 && (
+                    <Badge className="bg-blue-600 text-white font-bold text-base px-2.5 py-1">
+                      #{athlete.prospect_ranking}
+                    </Badge>
+                  )}
                   <div className="flex items-center gap-2">
                     {canSeeWatchList && (
                       <Button

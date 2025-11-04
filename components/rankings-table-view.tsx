@@ -376,12 +376,14 @@ export function RankingsTableView({ athletes, loading }: RankingsTableViewProps)
                 )}
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
-                    <div
-                      className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
-                      style={{ backgroundColor: "#B31B1B" }}
-                    >
-                      #{athlete.prospect_ranking}
-                    </div>
+                    {athlete.prospect_ranking <= 30 && (
+                      <div
+                        className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
+                        style={{ backgroundColor: "#B31B1B" }}
+                      >
+                        #{athlete.prospect_ranking}
+                      </div>
+                    )}
                     {athlete.photourl && (
                       <img
                         src={athlete.photourl || "/placeholder.svg"}
