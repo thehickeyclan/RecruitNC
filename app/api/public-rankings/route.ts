@@ -75,7 +75,6 @@ export async function GET(request: Request) {
       .eq("gender", gender)
       .not("prospect_ranking", "is", null)
       .order("prospect_ranking", { ascending: true })
-      .limit(30)
 
     if (error) {
       console.error("[v0] Error fetching athletes:", error)

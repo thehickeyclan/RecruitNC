@@ -136,9 +136,22 @@ export function RankingsCardView({ athletes, loading }: RankingsCardViewProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {athletes.map((athlete) => (
-        <Card
-          key={athlete.id}
+      {athletes.map((athlete, index) => (
+        <>
+          {/* Add divider after rank #30 */}
+          {athlete.prospect_ranking === 30 && athletes.some(a => a.prospect_ranking > 30) && (
+            <div key={`divider-${athlete.id}`} className="col-span-full my-6">
+              <div className="flex items-center justify-center gap-3 py-4 rounded-lg bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
+                <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
+                <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-4">
+                  Additional Ranked Prospects
+                </span>
+                <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
+              </div>
+            </div>
+          )}
+          <Card
+            key={athlete.id}
           className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
         >
           <Link href={`/unified-profile/${athlete.id}`}>
@@ -214,6 +227,7 @@ export function RankingsCardView({ athletes, loading }: RankingsCardViewProps) {
             </CardContent>
           </Link>
         </Card>
+        </>
       ))}
 
       {athletes.length === 0 && (

@@ -338,10 +338,25 @@ export function RankingsTableView({ athletes, loading }: RankingsTableViewProps)
           </TableHeader>
           <TableBody className="bg-white">
             {sortedAthletes.map((athlete, index) => (
-              <TableRow
-                key={athlete.id}
-                className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
-              >
+              <>
+                {/* Add divider after rank #30 */}
+                {athlete.prospect_ranking === 30 && sortedAthletes.some(a => a.prospect_ranking > 30) && (
+                  <TableRow key={`divider-${athlete.id}`} className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
+                    <TableCell colSpan={canSeeWatchList ? 10 : 9} className="py-2 text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                          Additional Ranked Prospects
+                        </span>
+                        <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+                <TableRow
+                  key={athlete.id}
+                  className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
+                >
                 {canSeeWatchList && (
                   <TableCell className="text-center">
                     <Button
@@ -509,6 +524,7 @@ export function RankingsTableView({ athletes, loading }: RankingsTableViewProps)
                   </Link>
                 </TableCell>
               </TableRow>
+              </>
             ))}
           </TableBody>
         </Table>
