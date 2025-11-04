@@ -277,19 +277,14 @@ export default function AdminDashboard() {
               <CardHeader className="bg-gradient-to-r from-yellow-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-[#13294B]">
                   <Trophy className="h-5 w-5" />
-                  Rankings
+                  Rankings Manager
                 </CardTitle>
-                <CardDescription>Manage prospect and athlete rankings</CardDescription>
+                <CardDescription>Manage and publish prospect rankings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/rankings">
+                <Link href="/admin/prospects/simple-ranking">
                   <Button variant="outline" className="w-full justify-start hover:bg-yellow-50">
-                    🏆 Simple Rankings (RecruitNC Scores)
-                  </Button>
-                </Link>
-                <Link href="/admin/prospects/ranking">
-                  <Button variant="outline" className="w-full justify-start hover:bg-yellow-50">
-                    🥇 Prospect Rankings (Drag & Drop)
+                    🏆 Prospect Rankings
                   </Button>
                 </Link>
               </CardContent>
