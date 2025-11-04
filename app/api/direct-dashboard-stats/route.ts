@@ -1,20 +1,41 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export async function GET() {
   try {
-    // Get all athletes with college commitments
+    const supabase = await createClient()
+    
+    // Get athletes with commitments based on recruiting_status
+    // "Committed" or "Signed" = current commitments
+    // "College Athlete" = already in college (past graduation years)
     const { data: athletes, error: athletesError } = await supabase
       .from("athletes")
-      .select("id, name, college, division, graduationyear")
+      .select("id, name, college, division, graduationyear, recruiting_status")
       .not("college", "is", null)
-      .or("is_prospect.is.null,is_prospect.eq.false")
+      .neq("college", "")
+      .in("recruiting_status", ["Committed", "Signed", "College Athlete", "committed", "signed"])
 
     if (athletesError) {
+      console.error("Error fetching athletes:", athletesError)
       return NextResponse.json({ error: "Failed to get athletes" }, { status: 500 })
+    }
+
+    if (!athletes) {
+      return NextResponse.json({
+        totalCommitments: 0,
+        classOf2025: 0,
+        classOf2026: 0,
+        divisionBreakdown: {
+          D1: 0,
+          D2: 0,
+          D3: 0,
+          NAIA: 0,
+          NJCAA: 0,
+        },
+      })
     }
 
     // Get the total count of athletes with commitments
@@ -34,35 +55,69 @@ export async function GET() {
       },
     }
 
-    // Count athletes by graduation year
+    // Count athletes by graduation year (handle both string and number)
     athletes.forEach((athlete) => {
-      if (athlete.graduationyear === 2025) {
+      const gradYear = athlete.graduationyear
+      // Convert to number for comparison
+      const yearNum = typeof gradYear === 'string' ? parseInt(gradYear) : gradYear
+      
+      if (yearNum === 2025) {
         stats.classOf2025++
-      } else if (athlete.graduationyear === 2026) {
+      } else if (yearNum === 2026) {
         stats.classOf2026++
       }
     })
 
-    // Count athletes by division - EXACT MATCH with debug page
+    // Count athletes by division - flexible matching
     athletes.forEach((athlete) => {
-      const division = athlete.division || ""
+      const division = (athlete.division || "").trim().toLowerCase()
 
-      // Use exact matching to match the debug page
-      if (division === "NCAA Division I") {
+      // Match various division formats
+      if (
+        division === "ncaa division i" ||
+        division === "division i" ||
+        division === "division 1" ||
+        division === "d1" ||
+        division === "di" ||
+        division === "div i" ||
+        division === "div 1"
+      ) {
         stats.divisionBreakdown.D1++
-      } else if (division === "NCAA Division II") {
+      } else if (
+        division === "ncaa division ii" ||
+        division === "division ii" ||
+        division === "division 2" ||
+        division === "d2" ||
+        division === "dii" ||
+        division === "div ii" ||
+        division === "div 2"
+      ) {
         stats.divisionBreakdown.D2++
-      } else if (division === "NCAA Division III") {
+      } else if (
+        division === "ncaa division iii" ||
+        division === "division iii" ||
+        division === "division 3" ||
+        division === "d3" ||
+        division === "diii" ||
+        division === "div iii" ||
+        division === "div 3"
+      ) {
         stats.divisionBreakdown.D3++
-      } else if (division === "NAIA") {
+      } else if (division === "naia") {
         stats.divisionBreakdown.NAIA++
-      } else if (division === "NJCAA") {
+      } else if (
+        division === "njcaa" ||
+        division === "juco" ||
+        division === "junior college" ||
+        division === "community college"
+      ) {
         stats.divisionBreakdown.NJCAA++
       }
     })
 
     return NextResponse.json(stats)
   } catch (error) {
+    console.error("Error in direct-dashboard-stats:", error)
     return NextResponse.json(
       {
         error: "Internal server error",
