@@ -82,6 +82,7 @@ export default function SimpleRankingPage() {
 
   useEffect(() => {
     loadAthletes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear, selectedGender, selectedDivision])
 
   const updateRanking = (athleteId: string, newRanking: number) => {
