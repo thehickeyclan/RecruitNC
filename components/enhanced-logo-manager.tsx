@@ -27,16 +27,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 
-interface MediaItem {
-  id: string
-  entity_name: string
-  entity_type: string
-  logo_url: string
-  created_at: string
-  updated_at: string
-  source: string
-}
-
 interface LogoMapping {
   id: string
   entity_name: string
@@ -49,7 +39,6 @@ interface LogoMapping {
 }
 
 export default function EnhancedLogoManager() {
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
   const [logoMappings, setLogoMappings] = useState<LogoMapping[]>([])
   const [loading, setLoading] = useState(true)
   const [editingItem, setEditingItem] = useState<LogoMapping | null>(null)
@@ -102,25 +91,12 @@ export default function EnhancedLogoManager() {
   const loadData = async () => {
     setLoading(true)
     try {
-      console.log("[v0] Loading logo manager data...")
-
-      // Load media items
-      const mediaResponse = await fetch("/api/media-manager/items")
-      const mediaData = await mediaResponse.json()
-      console.log("[v0] Media response:", mediaData)
+      console.log("[v0] Loading logo mappings...")
 
       // Load logo mappings
       const mappingsResponse = await fetch("/api/logo-mappings")
       const mappingsData = await mappingsResponse.json()
       console.log("[v0] Mappings response:", mappingsData)
-
-      if (mediaData.success && mediaData.data) {
-        setMediaItems(mediaData.data)
-        console.log("[v0] Set media items:", mediaData.data.length)
-      } else {
-        console.error("[v0] Failed to load media items:", mediaData.error)
-        setMediaItems([])
-      }
 
       if (mappingsData.success && mappingsData.mappings) {
         setLogoMappings(mappingsData.mappings)
@@ -131,7 +107,6 @@ export default function EnhancedLogoManager() {
       }
     } catch (error) {
       console.error("[v0] Failed to load data:", error)
-      setMediaItems([])
       setLogoMappings([])
     } finally {
       setLoading(false)
@@ -373,10 +348,10 @@ export default function EnhancedLogoManager() {
   }
 
   console.log("[v0] Logo Manager Counts:", {
-    mediaItems: mediaItems.length,
     logoMappings: logoMappings.length,
     clubLogos: logoMappings.filter((m) => m.entity_type === "club").length,
     schoolLogos: logoMappings.filter((m) => m.entity_type === "highschool").length,
+    collegeLogos: logoMappings.filter((m) => m.entity_type === "college").length,
   })
 
   return (
@@ -396,12 +371,8 @@ export default function EnhancedLogoManager() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{mediaItems?.length || 0}</div>
-              <div className="text-sm text-blue-600">Total Media</div>
-            </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{logoMappings?.length || 0}</div>
-              <div className="text-sm text-green-600">Logo Mappings</div>
+              <div className="text-2xl font-bold text-blue-600">{logoMappings?.length || 0}</div>
+              <div className="text-sm text-blue-600">Total Logos</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
@@ -438,9 +409,8 @@ export default function EnhancedLogoManager() {
       </Card>
 
       <Tabs defaultValue="mappings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="mappings">Logo Mappings</TabsTrigger>
-          <TabsTrigger value="media">Media Items</TabsTrigger>
         </TabsList>
 
         <TabsContent value="mappings" className="space-y-4">
@@ -694,58 +664,6 @@ export default function EnhancedLogoManager() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="media" className="space-y-4">
-          {/* Media Items Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mediaItems.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <div className="aspect-square bg-gray-50 flex items-center justify-center p-4">
-                  <Image
-                    src={item.logo_url || "/placeholder.svg"}
-                    alt={item.entity_name || "Media item"}
-                    width={200}
-                    height={200}
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.src = "/placeholder.svg"
-                    }}
-                  />
-                </div>
-
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium truncate">{item.entity_name || "Unnamed"}</h3>
-                      {item.entity_type && <Badge variant="secondary">{item.entity_type}</Badge>}
-                    </div>
-
-                    <div className="text-sm text-muted-foreground">
-                      <div>Source: {item.source}</div>
-                      <div className="truncate">URL: {item.logo_url}</div>
-                    </div>
-
-                    <div className="flex gap-2 pt-2">
-                      <Button onClick={() => copyToClipboard(item.logo_url)} variant="outline" size="sm">
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button onClick={() => window.open(item.logo_url, "_blank")} variant="outline" size="sm">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {copiedUrl === item.logo_url && (
-                      <Alert>
-                        <AlertDescription className="text-sm">✅ URL copied to clipboard!</AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </TabsContent>
       </Tabs>
 
