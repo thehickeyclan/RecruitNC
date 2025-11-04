@@ -192,21 +192,6 @@ export default function AdminDashboard() {
                 ➕ Add New Athlete
               </Button>
             </Link>
-            <Link href="/admin/athletes/bulk-import">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📊 Bulk Import Athletes
-              </Button>
-            </Link>
-            <Link href="/admin/bulk-athlete-processor">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ⚡ Bulk Athlete Processor
-              </Button>
-            </Link>
-            <Link href="/admin/athlete-image-manager">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🖼️ Athlete Image Manager
-              </Button>
-            </Link>
           </CardContent>
         </Card>
 
@@ -278,21 +263,6 @@ export default function AdminDashboard() {
             <Link href="/admin/prospects/ranking">
               <Button variant="outline" className="w-full justify-start bg-transparent">
                 🥇 Prospect Rankings (Drag & Drop)
-              </Button>
-            </Link>
-            <Link href="/admin/rankings/publish">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📢 Publish Rankings
-              </Button>
-            </Link>
-            <Link href="/admin/rankings/suggestions">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🤖 AI Ranking Suggestions
-              </Button>
-            </Link>
-            <Link href="/admin/init-rankings">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🚀 Initialize Rankings
               </Button>
             </Link>
           </CardContent>
