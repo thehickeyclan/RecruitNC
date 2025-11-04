@@ -485,11 +485,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           {/* Mobile view */}
           <div className="block lg:hidden">
             <div className="relative h-80 w-full">
-              {/* Star Button - Top Right */}
-              <div className="absolute top-4 right-4 z-20">
-                <WatchListButton athleteId={athlete.id} />
-              </div>
-
               <Image
                 src={athletePhoto || "/placeholder.svg"}
                 alt={athleteName}
@@ -529,7 +524,12 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               )}
             </div>
 
-            <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white p-6">
+            <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white p-6 relative">
+              {/* Star Button - Top Right of Banner */}
+              <div className="absolute top-4 right-4">
+                <WatchListButton athleteId={athlete.id} />
+              </div>
+
               <h1 className="text-3xl font-bold mb-3">{athleteName}</h1>
 
               {prospectRanking && (
