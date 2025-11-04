@@ -201,7 +201,12 @@ export default function SimpleRankingPage() {
             super32_record: athlete.super_32_2025_record || athlete.super_32_2024_record || "N/A",
             ranked_win: athlete.nationally_ranked_wins ? "Yes" : "No",
             state_result: athlete.nchsaa_results?.[0]
-              ? `${athlete.nchsaa_results[0].classification} ${athlete.nchsaa_results[0].place === 1 ? "Champion" : `${athlete.nchsaa_results[0].place}${athlete.nchsaa_results[0].place === 2 ? "nd" : athlete.nchsaa_results[0].place === 3 ? "rd" : "th"}`} '${athlete.nchsaa_results[0].year.toString().slice(-2)}`
+              ? (() => {
+                  const result = athlete.nchsaa_results[0]
+                  const suffix = result.place === 2 ? "nd" : result.place === 3 ? "rd" : "th"
+                  const placement = result.place === 1 ? "Champion" : result.place + suffix
+                  return `${result.classification} ${placement} '${result.year.toString().slice(-2)}`
+                })()
               : "N/A",
           })),
         }),
