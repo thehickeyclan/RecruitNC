@@ -108,6 +108,9 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     nhsca_2024_placement: data.nhsca_2024_placement || null,
     nhsca_2025_record: data.nhsca_2025_record || null,
     nhsca_2025_placement: data.nhsca_2025_placement || null,
+    // New JSON tournament results
+    nhsca_results: data.nhsca_results || [],
+    super32_results: data.super32_results || [],
     nationally_ranked_wins: data.nationally_ranked_wins || null,
     college_opens_experience: data.college_opens_experience || null,
   }

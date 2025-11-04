@@ -143,42 +143,74 @@ export function WrestlingAchievementsSection({
       }))
       .filter((item) => item.placement)
   } else {
-    nhscaData = [
+    // Try new JSON format first
+    if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
+      nhscaData = athlete.nhsca_results.map((result: any) => ({
+        year: result.year,
+        placement: typeof result.placement === 'string' ? parseInt(result.placement) || null : result.placement,
+        record: result.record,
+        weight: result.weight,
+        division: result.division,
+      })).filter((item: any) => item.placement || item.record)
+    } else {
+      // Fallback to old columns
+      nhscaData = [
+        {
+          year: 2025,
+          placement: athlete.nhsca_2025_placement ? Number.parseInt(athlete.nhsca_2025_placement) : null,
+          record: athlete.nhsca_2025_record,
+        },
+        {
+          year: 2024,
+          placement: athlete.nhsca_2024_placement ? Number.parseInt(athlete.nhsca_2024_placement) : null,
+          record: athlete.nhsca_2024_record,
+        },
+        {
+          year: 2023,
+          placement: athlete.nhsca_2023_placement ? Number.parseInt(athlete.nhsca_2023_placement) : null,
+          record: athlete.nhsca_2023_record,
+        },
+      ].filter((item) => item.placement || item.record)
+    }
+  }
+
+  // Try new JSON format first for Super 32
+  let super32Data: Array<{
+    year: number
+    placement: number | null
+    record?: string
+    weight?: string
+    division?: string
+  }> = []
+  
+  if (athlete.super32_results && Array.isArray(athlete.super32_results) && athlete.super32_results.length > 0) {
+    super32Data = athlete.super32_results.map((result: any) => ({
+      year: result.year,
+      placement: typeof result.placement === 'string' ? parseInt(result.placement) || null : result.placement,
+      record: result.record,
+      weight: result.weight,
+      division: result.division,
+    })).filter((item: any) => item.placement || item.record)
+  } else {
+    // Fallback to old columns
+    super32Data = [
       {
         year: 2025,
-        placement: athlete.nhsca_2025_placement ? Number.parseInt(athlete.nhsca_2025_placement) : null,
-        record: athlete.nhsca_2025_record,
+        placement: athlete.super_32_2025_placement ? Number.parseInt(athlete.super_32_2025_placement) : null,
+        record: athlete.super_32_2025_record,
       },
       {
         year: 2024,
-        placement: athlete.nhsca_2024_placement ? Number.parseInt(athlete.nhsca_2024_placement) : null,
-        record: athlete.nhsca_2024_record,
+        placement: athlete.super_32_2024_placement ? Number.parseInt(athlete.super_32_2024_placement) : null,
+        record: athlete.super_32_2024_record,
       },
       {
         year: 2023,
-        placement: athlete.nhsca_2023_placement ? Number.parseInt(athlete.nhsca_2023_placement) : null,
-        record: athlete.nhsca_2023_record,
+        placement: athlete.super_32_2023_placement ? Number.parseInt(athlete.super_32_2023_placement) : null,
+        record: athlete.super_32_2023_record,
       },
     ].filter((item) => item.placement || item.record)
   }
-
-  const super32Data = [
-    {
-      year: 2025,
-      placement: athlete.super_32_2025_placement ? Number.parseInt(athlete.super_32_2025_placement) : null,
-      record: athlete.super_32_2025_record,
-    },
-    {
-      year: 2024,
-      placement: athlete.super_32_2024_placement ? Number.parseInt(athlete.super_32_2024_placement) : null,
-      record: athlete.super_32_2024_record,
-    },
-    {
-      year: 2023,
-      placement: athlete.super_32_2023_placement ? Number.parseInt(athlete.super_32_2023_placement) : null,
-      record: athlete.super_32_2023_record,
-    },
-  ].filter((item) => item.placement || item.record)
 
   const hasAnyAchievements =
     achievements.state_championships.length > 0 ||

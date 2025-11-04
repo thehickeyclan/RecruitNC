@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { AthleteForm } from "@/components/athlete-form"
+import { TournamentResultsEditor } from "@/components/tournament-results-editor"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { getAthleteByIdAction, updateAthleteAction } from "@/lib/athlete-actions"
@@ -240,30 +241,49 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
 
   if (loading) {
     return (
-      <div className="container mx-auto py-10">
-        <h1 className="mb-6 text-3xl font-bold">Edit Athlete</h1>
-        <div className="text-center py-10">Loading athlete data...</div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
+            <p className="text-blue-200">Loading athlete data...</p>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B31B1B] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading athlete data...</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="container mx-auto py-10">
-        <h1 className="mb-6 text-3xl font-bold">Edit Athlete</h1>
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <div className="flex gap-4">
-          <Button onClick={() => router.refresh()}>Try Again</Button>
-          <Button variant="outline" asChild>
-            <a href={`/debug/athlete-form/${id}`}>Debug Athlete Data</a>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href="/admin/athletes">Back to Athletes</a>
-          </Button>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
+            <p className="text-blue-200">Error loading athlete</p>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <div className="flex gap-4">
+            <Button onClick={() => router.refresh()} className="bg-[#B31B1B] hover:bg-[#8B1515]">
+              Try Again
+            </Button>
+            <Button variant="outline" asChild className="hover:bg-[#002147] hover:text-white">
+              <a href={`/debug/athlete-form/${id}`}>Debug Athlete Data</a>
+            </Button>
+            <Button variant="outline" asChild className="hover:bg-[#002147] hover:text-white">
+              <a href="/admin/athletes">Back to Athletes</a>
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -271,75 +291,134 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
 
   if (!athlete) {
     return (
-      <div className="container mx-auto py-10">
-        <h1 className="mb-6 text-3xl font-bold">Edit Athlete</h1>
-        <div className="text-center py-10">Athlete not found</div>
-        <Button variant="outline" asChild>
-          <a href="/admin/athletes">Back to Athletes</a>
-        </Button>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
+            <p className="text-blue-200">Athlete not found</p>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <p className="text-gray-600 mb-4">Athlete not found</p>
+            <Button variant="outline" asChild className="hover:bg-[#002147] hover:text-white">
+              <a href="/admin/athletes">Back to Athletes</a>
+            </Button>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="sm" onClick={() => router.push("/admin/athletes")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Athletes
-        </Button>
-        <h1 className="text-3xl font-bold">Edit Athlete: {athlete.name}</h1>
-      </div>
-
-      <div className="mb-4 flex justify-between">
-        <Button variant="outline" size="sm" asChild>
-          <a href={`/debug/athlete-form/${id}`} target="_blank" rel="noopener noreferrer">
-            View Debug Data
-          </a>
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/admin/athletes/images/${id}`}>Upload Images</a>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/${athlete.college ? "athletes" : "prospects"}/${id}`} target="_blank" rel="noopener noreferrer">
-              View {athlete.college ? "Athlete" : "Prospect"} Profile
-            </a>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/unified-profile/${id}`} target="_blank" rel="noopener noreferrer">
-              Unified Profile
-            </a>
-          </Button>
+    <div className="min-h-screen bg-gray-50">
+      {/* NC United Branded Header */}
+      <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white shadow-lg">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => router.push("/admin/athletes")}
+                className="border-white text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Athletes
+              </Button>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">Edit Athlete</h1>
+                <p className="text-blue-200 text-lg">{athlete.name}</p>
+              </div>
+            </div>
+             <div className="flex flex-wrap gap-2">
+               <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
+                 <a href={`/admin/athletes/images/${id}`}>Upload Images</a>
+               </Button>
+               <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
+                 <a href={`/${athlete.college ? "athletes" : "prospects"}/${id}`} target="_blank" rel="noopener noreferrer">
+                   View {athlete.college ? "Athlete" : "Prospect"} Profile
+                 </a>
+               </Button>
+               <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
+                 <a href={`/unified-profile/${id}`} target="_blank" rel="noopener noreferrer">
+                   Unified Profile
+                 </a>
+               </Button>
+             </div>
+          </div>
+          
+          {/* Quick Info Badges */}
+          <div className="flex flex-wrap gap-3 mt-6">
+            {athlete.highschool && (
+              <Badge className="bg-white/20 text-white border-white/30">
+                {athlete.highschool}
+              </Badge>
+            )}
+            {athlete.graduationyear && (
+              <Badge className="bg-white/20 text-white border-white/30">
+                Class of {athlete.graduationyear}
+              </Badge>
+            )}
+            {athlete.weightclass && (
+              <Badge className="bg-white/20 text-white border-white/30">
+                {athlete.weightclass} lbs
+              </Badge>
+            )}
+            {athlete.recruiting_status && (
+              <Badge className={`${
+                athlete.recruiting_status?.toLowerCase() === "committed" || 
+                athlete.recruiting_status?.toLowerCase() === "college athlete"
+                  ? "bg-green-500"
+                  : athlete.recruiting_status?.toLowerCase() === "uncommitted"
+                  ? "bg-yellow-500"
+                  : "bg-white/20"
+              } text-white border-0`}>
+                {athlete.recruiting_status}
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
-      <Card className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-purple-800">
-            <Sparkles className="h-5 w-5" />
-            AI Bio Generation
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-gray-700 mb-2">
-                Generate a compelling bio and headline based on this athlete's achievements and data
-              </p>
-              <p className="text-sm text-gray-600">
-                AI will analyze tournament results, academics, and achievements to create a professional summary
-              </p>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Debug Button - Optional */}
+        <div className="mb-4">
+          <Button variant="outline" size="sm" asChild className="hover:bg-gray-100">
+            <a href={`/debug/athlete-form/${id}`} target="_blank" rel="noopener noreferrer">
+              View Debug Data
+            </a>
+          </Button>
+        </div>
+
+        {/* AI Bio Generation Card */}
+        <Card className="mb-6 shadow-lg border-t-4 border-t-[#B31B1B]">
+          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              AI Bio Generation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+              <div>
+                <p className="text-gray-700 mb-2 font-medium">
+                  Generate a compelling bio and headline based on this athlete's achievements and data
+                </p>
+                <p className="text-sm text-gray-600">
+                  AI will analyze tournament results, academics, and achievements to create a professional summary
+                </p>
+              </div>
+              <Button
+                onClick={handleGenerateBio}
+                disabled={generatingBio}
+                className="bg-[#B31B1B] hover:bg-[#8B1515] text-white whitespace-nowrap"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {generatingBio ? "Generating..." : "Generate AI Bio"}
+              </Button>
             </div>
-            <Button
-              onClick={handleGenerateBio}
-              disabled={generatingBio}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              {generatingBio ? "Generating..." : "Generate AI Bio"}
-            </Button>
-          </div>
 
           <div className="space-y-4">
             <div>
@@ -370,24 +449,27 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleSaveBio} variant="outline">
+              <Button 
+                onClick={handleSaveBio} 
+                className="bg-[#B31B1B] hover:bg-[#8B1515] text-white"
+              >
                 Save Bio & Headline
               </Button>
             </div>
           </div>
 
           {(athlete.bio || athlete.bio_headline) && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-800 mb-2">Current Profile:</h4>
+            <div className="mt-4 p-4 bg-gradient-to-r from-[#002147]/5 to-[#003366]/5 rounded-lg border border-[#002147]/20">
+              <h4 className="font-semibold text-[#002147] mb-2">Current Profile:</h4>
               {athlete.bio_headline && (
                 <div className="mb-2">
-                  <span className="text-sm text-blue-600 font-medium">Headline:</span>
+                  <span className="text-sm text-[#002147] font-medium">Headline:</span>
                   <p className="text-gray-700 font-semibold">{athlete.bio_headline}</p>
                 </div>
               )}
               {athlete.bio && (
                 <div>
-                  <span className="text-sm text-blue-600 font-medium">Bio:</span>
+                  <span className="text-sm text-[#002147] font-medium">Bio:</span>
                   <p className="text-gray-700 leading-relaxed">{athlete.bio}</p>
                 </div>
               )}
@@ -396,55 +478,70 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
         </CardContent>
       </Card>
 
-      {saveSuccess && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Save Successful</AlertTitle>
-          <AlertDescription className="text-green-700">
-            {saveTimestamp && <p className="text-sm mb-2">Last saved: {saveTimestamp}</p>}
-            {updatedFields.length > 0 ? (
-              <>
-                <p>The following fields were updated:</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {updatedFields.map((field) => (
-                    <Badge key={field} variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                      {field}
-                    </Badge>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p>All athlete information was saved successfully.</p>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
+        {saveSuccess && (
+          <Alert className="mb-6 bg-blue-50 border-[#002147] border-2 shadow-sm">
+            <CheckCircle2 className="h-4 w-4 text-[#002147]" />
+            <AlertTitle className="text-[#002147] font-semibold">Save Successful</AlertTitle>
+            <AlertDescription className="text-gray-700">
+              {saveTimestamp && <p className="text-sm mb-2 font-medium">Last saved: {saveTimestamp}</p>}
+              {updatedFields.length > 0 ? (
+                <>
+                  <p className="mb-2">The following fields were updated:</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {updatedFields.map((field) => (
+                      <Badge key={field} className="bg-[#002147] text-white border-0">
+                        {field}
+                      </Badge>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p>All athlete information was saved successfully.</p>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+      {/* Tournament Results Section */}
+      <div className="container mx-auto px-4 py-6">
+        <TournamentResultsEditor
+          athleteId={id}
+          nhscaResults={athlete.nhsca_results || []}
+          super32Results={athlete.super32_results || []}
+          onSave={() => {
+            toast({
+              title: "Success",
+              description: "Tournament results saved successfully!",
+            })
+          }}
+        />
+      </div>
 
       <AthleteForm onSubmit={handleSubmit} initialData={athlete} />
 
-      {saveSuccess && (
-        <Card className="mt-6 bg-green-50 border-green-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-green-800 text-lg">Validation Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-green-700">All required fields are valid and data was saved successfully.</p>
+        {saveSuccess && (
+          <Card className="mt-6 shadow-lg border-t-4 border-t-[#002147]">
+            <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
+              <CardTitle className="text-lg font-semibold">Validation Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="text-gray-700 font-medium">All required fields are valid and data was saved successfully.</p>
 
-            {Object.keys(fieldChanges).length > 0 && (
-              <div className="mt-4">
-                <h3 className="font-medium text-green-800 mb-2">Changed Fields:</h3>
-                <div className="bg-white rounded-md p-3 border border-green-200">
+              {Object.keys(fieldChanges).length > 0 && (
+                <div className="mt-4">
+                  <h3 className="font-semibold text-[#002147] mb-2">Changed Fields:</h3>
+                  <div className="bg-white rounded-md p-3 border-2 border-gray-200 shadow-sm">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-green-200">
-                        <th className="text-left py-2 px-2">Field</th>
-                        <th className="text-left py-2 px-2">Before</th>
-                        <th className="text-left py-2 px-2">After</th>
+                      <tr className="border-b border-gray-300">
+                        <th className="text-left py-2 px-2 text-[#002147] font-semibold">Field</th>
+                        <th className="text-left py-2 px-2 text-[#002147] font-semibold">Before</th>
+                        <th className="text-left py-2 px-2 text-[#002147] font-semibold">After</th>
                       </tr>
                     </thead>
                     <tbody>
                       {Object.entries(fieldChanges).map(([field, values]: [string, any]) => (
-                        <tr key={field} className="border-b border-green-100">
+                        <tr key={field} className="border-b border-gray-100">
                           <td className="py-2 px-2 font-medium">{field}</td>
                           <td className="py-2 px-2">
                             {typeof values.before === "object" ? JSON.stringify(values.before) : values.before}
@@ -460,39 +557,51 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
               </div>
             )}
 
-            <div className="mt-4 flex justify-end">
-              <Button variant="outline" size="sm" asChild>
-                <a href={`/${athlete.college ? "athletes" : "prospects"}/${id}`}>
-                  View {athlete.college ? "Athlete" : "Prospect"} Profile
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" asChild className="ml-2 bg-transparent">
-                <a href={`/unified-profile/${id}`}>Unified Profile</a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              <div className="mt-4 flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                  className="hover:bg-[#002147] hover:text-white"
+                >
+                  <a href={`/${athlete.college ? "athletes" : "prospects"}/${id}`}>
+                    View {athlete.college ? "Athlete" : "Prospect"} Profile
+                  </a>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                  className="hover:bg-[#002147] hover:text-white"
+                >
+                  <a href={`/unified-profile/${id}`}>Unified Profile</a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      {debugInfo && (
-        <Card className="mt-6 border-blue-200">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-blue-800 text-lg">Debug Information</CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2))}
-            >
-              Copy to Clipboard
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs overflow-auto max-h-96 p-2 bg-gray-100 rounded">
-              {JSON.stringify(debugInfo, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
+        {debugInfo && (
+          <Card className="mt-6 shadow-sm border-t-4 border-t-gray-400">
+            <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-200 flex flex-row items-center justify-between">
+              <CardTitle className="text-gray-800 text-lg font-semibold">Debug Information</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2))}
+                className="hover:bg-gray-300"
+              >
+                Copy to Clipboard
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-xs overflow-auto max-h-96 p-2 bg-gray-100 rounded border">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

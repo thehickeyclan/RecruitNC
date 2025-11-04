@@ -155,65 +155,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Media Management */}
-        <Card className="border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🖼️ Media Management</CardTitle>
-            <CardDescription>Manage images, logos, and media assets</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/unified-media-manager">
-              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
-                🚀 Unified Media Manager
-              </Button>
-            </Link>
-            <Link href="/admin/media-manager-v2">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📁 Media Manager v2
-              </Button>
-            </Link>
-            <Link href="/admin/enhanced-media-manager">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ⚡ Enhanced Media Manager
-              </Button>
-            </Link>
-            <Link href="/admin/logo-manager-pro">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🎨 Logo Manager Pro
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Logo Management */}
-        <Card className="border-purple-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">🎨 Logo Management</CardTitle>
-            <CardDescription>Manage school and organization logos</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/logo-management-system">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🏢 Logo Management System
-              </Button>
-            </Link>
-            <Link href="/admin/logo-consistency-checker">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ✅ Logo Consistency Checker
-              </Button>
-            </Link>
-            <Link href="/admin/deduplicate-logos">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                🔄 Deduplicate Logos
-              </Button>
-            </Link>
-            <Link href="/admin/enhanced-logo-manager">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ⚙️ Enhanced Logo Manager
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
 
         {/* Profile Management */}
         <Card className="border-green-200">
@@ -330,26 +271,18 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Content Management */}
-        <Card className="border-teal-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">📝 Content Management</CardTitle>
-            <CardDescription>Handle submissions and edit requests</CardDescription>
+        {/* Submissions Management */}
+        <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
+          <CardHeader className="bg-gray-50">
+            <CardTitle className="flex items-center gap-2 text-[#002147]">
+              <span className="text-xl">📝</span> Submissions
+            </CardTitle>
+            <CardDescription>Review commitments, profile edits, and new submissions</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/admin/commitment-submissions">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📋 Commitment Submissions
-              </Button>
-            </Link>
-            <Link href="/admin/edit-requests">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                ✏️ Edit Requests
-              </Button>
-            </Link>
-            <Link href="/admin/submissions">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                📄 All Submissions
+          <CardContent className="space-y-2 pt-6">
+            <Link href="/admin/submissions-manager">
+              <Button className="w-full justify-start bg-[#B31B1B] hover:bg-[#8B1515] text-white">
+                📋 Submissions Manager
               </Button>
             </Link>
           </CardContent>

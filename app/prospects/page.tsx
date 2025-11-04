@@ -187,7 +187,7 @@ export default function ProspectsPage() {
                   </Button>
                 </Link>
                 <Link href="/public-rankings">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="border-white bg-white text-[#002147] hover:bg-gray-100 w-full sm:w-auto">
                     <Search className="h-5 w-5 mr-2" />
                     Browse Rankings
                   </Button>

@@ -17,17 +17,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Build insert object - only include fields that have values
+    // Note: Postgres converts unquoted identifiers to lowercase, so use lowercase column names
     const insertData: any = {
-        // Basic info
+        // Basic info (lowercase because Postgres stores them that way)
         firstname: body.firstName,
         lastname: body.lastName,
         gender: body.gender,
         graduationyear: Number.parseInt(body.graduationYear, 10),
-        weightclass: body.weightClass,
+        weightclass: body.weightClass || null,
         college_weight_class: body.collegeWeightClass || null,
-        highschool: body.highSchool,
+        highschool: body.highSchool || null,
         high_school_division: body.highSchoolDivision || null,
-        wrestling_club: body.wrestlingClub || null,
         location: body.location || null,
         email: body.email,
         phone: body.phone || null,
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         // Media
         highlight_video_url: body.highlightVideoUrl || null,
         headshot_url: body.headshotUrl || null,
+        photourl: body.headshotUrl || null, // Postgres stores as lowercase photourl
         
         status: "pending",
         submitted_at: new Date().toISOString(),

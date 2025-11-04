@@ -171,8 +171,15 @@ export function ProspectCard({ athlete }: ProspectCardProps) {
     return stateAchievement || null
   }
 
-  // Get NHSCA placement
+  // Get NHSCA placement - uses new utility for backwards compatibility
   const getNHSCAInfo = () => {
+    // Try new JSON format first
+    if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
+      const latest = athlete.nhsca_results.sort((a: any, b: any) => b.year - a.year)[0]
+      return { placement: latest.placement, record: latest.record || '' }
+    }
+    
+    // Fallback to old columns
     const placement = athlete.nhsca_2025_placement || athlete.nhsca_2024_placement
     const record = athlete.nhsca_2025_record || athlete.nhsca_2024_record
     if (placement || record) {
@@ -181,8 +188,15 @@ export function ProspectCard({ athlete }: ProspectCardProps) {
     return null
   }
 
-  // Get Super 32 info
+  // Get Super 32 info - uses new utility for backwards compatibility
   const getSuper32Info = () => {
+    // Try new JSON format first
+    if (athlete.super32_results && Array.isArray(athlete.super32_results) && athlete.super32_results.length > 0) {
+      const latest = athlete.super32_results.sort((a: any, b: any) => b.year - a.year)[0]
+      return { placement: latest.placement, record: latest.record || '' }
+    }
+    
+    // Fallback to old columns
     const placement = athlete.super_32_2025_placement || athlete.super_32_2024_placement
     const record = athlete.super_32_2025_record || athlete.super_32_2024_record
     if (placement || record) {

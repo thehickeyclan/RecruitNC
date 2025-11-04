@@ -11,7 +11,6 @@ import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { ContactInfoSection } from "./contact-info-section"
-import { WrestlingAchievementsSection } from "./wrestling-achievements-section"
 
 interface AthleteDetailProps {
   athlete: {
@@ -73,9 +72,10 @@ interface AthleteDetailProps {
     weight_class: string
   }>
   currentUserId?: string | null
+  tournamentResultsComponent?: React.ReactNode
 }
 
-export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = null }: AthleteDetailProps) {
+export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = null, tournamentResultsComponent }: AthleteDetailProps) {
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
   const [collegeLogo, setCollegeLogo] = useState<string | null>(null)
@@ -115,7 +115,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   console.log("[v0] 3. Academics Section")
   console.log("[v0] 4. Clubs & Programs Section")
   console.log("[v0] 5. AI Bio Section")
-  console.log("[v0] 6. WrestlingAchievementsSection (NCHSAA, NHSCA, Super 32, College Opens, Ranked Wins)")
+  console.log("[v0] 6. Tournament Results (NHSCA & Super 32 Tables)")
   console.log("[v0] 7. MatchDataSectionImproved (Career Stats Banner, Season Summary Table, Individual Matches)")
 
   const getAthletePhoto = () => {
@@ -314,41 +314,69 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       })
     }
 
-    const nhscaYears = [
-      { year: 2025, record: athlete?.nhsca_2025_record, placement: athlete?.nhsca_2025_placement },
-      { year: 2024, record: athlete?.nhsca_2024_record, placement: athlete?.nhsca_2024_placement },
-      { year: 2023, record: athlete?.nhsca_2023_record, placement: athlete?.nhsca_2023_placement },
-    ]
-
-    nhscaYears.forEach(({ year, record, placement }) => {
-      if (record || placement) {
+    // Try new JSON format first for NHSCA
+    if (athlete?.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
+      athlete.nhsca_results.forEach((result: any) => {
         tournaments.push({
           tournament: "NHSCA",
-          year,
-          placement: placement ? Number.parseInt(placement) || placement : null,
-          record,
+          year: result.year,
+          placement: result.placement,
+          record: result.record,
           type: "national",
         })
-      }
-    })
+      })
+    } else {
+      // Fallback to old columns
+      const nhscaYears = [
+        { year: 2025, record: athlete?.nhsca_2025_record, placement: athlete?.nhsca_2025_placement },
+        { year: 2024, record: athlete?.nhsca_2024_record, placement: athlete?.nhsca_2024_placement },
+        { year: 2023, record: athlete?.nhsca_2023_record, placement: athlete?.nhsca_2023_placement },
+      ]
 
-    const super32Years = [
-      { year: 2025, record: athlete?.super_32_2025_record, placement: athlete?.super_32_2025_placement },
-      { year: 2024, record: athlete?.super_32_2024_record, placement: athlete?.super_32_2024_placement },
-      { year: 2023, record: athlete?.super_32_2023_record, placement: athlete?.super_32_2023_placement },
-    ]
+      nhscaYears.forEach(({ year, record, placement }) => {
+        if (record || placement) {
+          tournaments.push({
+            tournament: "NHSCA",
+            year,
+            placement: placement ? Number.parseInt(placement) || placement : null,
+            record,
+            type: "national",
+          })
+        }
+      })
+    }
 
-    super32Years.forEach(({ year, record, placement }) => {
-      if (record || placement) {
+    // Try new JSON format first for Super 32
+    if (athlete?.super32_results && Array.isArray(athlete.super32_results) && athlete.super32_results.length > 0) {
+      athlete.super32_results.forEach((result: any) => {
         tournaments.push({
           tournament: "Super 32",
-          year,
-          placement: placement ? Number.parseInt(placement) || placement : null,
-          record,
-          type: "elite",
+          year: result.year,
+          placement: result.placement,
+          record: result.record,
+          type: "national",
         })
-      }
-    })
+      })
+    } else {
+      // Fallback to old columns
+      const super32Years = [
+        { year: 2025, record: athlete?.super_32_2025_record, placement: athlete?.super_32_2025_placement },
+        { year: 2024, record: athlete?.super_32_2024_record, placement: athlete?.super_32_2024_placement },
+        { year: 2023, record: athlete?.super_32_2023_record, placement: athlete?.super_32_2023_placement },
+      ]
+
+      super32Years.forEach(({ year, record, placement }) => {
+        if (record || placement) {
+          tournaments.push({
+            tournament: "Super 32",
+            year,
+            placement: placement ? Number.parseInt(placement) || placement : null,
+            record,
+            type: "elite",
+          })
+        }
+      })
+    }
 
     try {
       return tournaments.sort((a, b) => {
@@ -471,7 +499,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             </div>
 
-            <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-6">
+            <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white p-6">
               <h1 className="text-3xl font-bold mb-4">{athleteName}</h1>
 
               {(statusBadge.isCollegeAthlete || recruitingStatus.toLowerCase() === "committed") &&
@@ -536,7 +564,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-blue-800 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors mb-3"
+                  className="flex items-center gap-2 bg-[#002147] hover:bg-[#001a3a] px-4 py-2 rounded-lg transition-colors mb-3"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919-.058 1.265-.069 1.645-.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.281-.058-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -573,7 +601,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
           {/* Desktop view */}
           <div className="hidden lg:block">
-            <div className="relative min-h-[400px] bg-gradient-to-r from-blue-900 to-blue-800">
+            <div className="relative min-h-[400px] bg-gradient-to-r from-[#002147] to-[#003366]">
               <div className="absolute inset-0 bg-black/20" />
 
               <div className="relative z-10 flex items-start gap-8 p-8">
@@ -709,16 +737,18 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
       {/* AI Bio Section - Athlete Profile */}
       {(athlete?.bio_headline || athlete?.bio) && (
-        <Card className="overflow-hidden border-0 shadow-lg">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Athlete Profile</h2>
+            </div>
+          </div>
+          <div className="p-8">
+            <div className="mb-4">
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Athlete Profile</h2>
                 {athlete?.bio_headline && (
-                  <h3 className="text-xl font-semibold text-blue-900 mb-4 leading-relaxed">{athlete.bio_headline}</h3>
+                  <h3 className="text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athlete.bio_headline}</h3>
                 )}
               </div>
             </div>
@@ -733,14 +763,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
       {/* Academics Section */}
       {(highSchool !== "Not specified" || athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
-        <Card className="overflow-hidden border-0 shadow-lg">
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center shadow-md">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Academics</h2>
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+            <div className="flex items-center gap-3">
+              <GraduationCap className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Academics</h2>
             </div>
+          </div>
+          <div className="p-8">
 
             {/* High School */}
             {highSchool !== "Not specified" && (
@@ -771,27 +801,27 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             {(athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {athlete.academic_gpa && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                     <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">GPA</p>
-                    <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    <p className="text-4xl font-bold text-[#002147]">
                       {athlete.academic_gpa.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500 mt-2">Grade Point Average</p>
                   </div>
                 )}
                 {athlete.academic_sat && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                     <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">SAT</p>
-                    <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    <p className="text-4xl font-bold text-[#002147]">
                       {athlete.academic_sat}
                     </p>
                     <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
                   </div>
                 )}
                 {athlete.academic_act && (
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                     <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">ACT</p>
-                    <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    <p className="text-4xl font-bold text-[#002147]">
                       {athlete.academic_act}
                     </p>
                     <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
@@ -805,14 +835,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
       {/* Clubs & Programs Section */}
       {(wrestlingClub !== "Not specified" || ncUnitedTeam) && (
-        <Card className="overflow-hidden border-0 shadow-lg">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-600 to-orange-600 flex items-center justify-center shadow-md">
-                <Award className="w-6 h-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Clubs & Programs</h2>
+        <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
+          <div className="bg-gradient-to-r from-[#B31B1B] to-[#8B1515] p-6">
+            <div className="flex items-center gap-3">
+              <Award className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Clubs & Programs</h2>
             </div>
+          </div>
+          <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {wrestlingClub !== "Not specified" && (
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -863,12 +893,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* Wrestling Achievements Section */}
-      <WrestlingAchievementsSection
-        athlete={athlete}
-        nchsaaResults={nchsaaResults.length > 0 ? nchsaaResults : fetchedNchsaaResults}
-        graduationYear={graduationYear}
-      />
+      {/* Tournament Results - New Format */}
+      {tournamentResultsComponent}
 
       {/* Match Data Section */}
       <MatchDataSectionImproved athleteId={athlete.id} athleteName={athleteName} graduationYear={graduationYear} />

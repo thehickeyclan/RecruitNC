@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { MatchDataSection } from "@/components/match-data-section-improved"
+import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 
 interface UnifiedProfilePageProps {
   params: {
@@ -63,10 +64,19 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AthleteDetail athlete={athlete} nchsaaResults={nchsaaResults} currentUserId={user?.id || null} />
-      <div className="container mx-auto px-4 py-8">
-        <MatchDataSection athleteId={athlete.id} athleteName={athlete.name} graduationYear={athlete.graduationyear} />
-      </div>
+      <AthleteDetail 
+        athlete={athlete} 
+        nchsaaResults={nchsaaResults} 
+        currentUserId={user?.id || null}
+        tournamentResultsComponent={
+          <div className="container mx-auto px-4 py-8">
+            <TournamentResultsDisplay
+              nhscaResults={athlete.nhsca_results || []}
+              super32Results={athlete.super32_results || []}
+            />
+          </div>
+        }
+      />
     </div>
   )
 }

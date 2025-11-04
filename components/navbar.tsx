@@ -40,10 +40,16 @@ export function Navbar() {
   }, [isOpen])
 
   const getRecruitingPortalUrl = () => {
+    // Admins go to schools admin page to choose which portal to preview
+    if (profile?.is_admin) {
+      return "/admin/schools"
+    }
+    // Coaches with school assignment go to their branded portal
     if (profile?.school_id) {
       return `/schools/${profile.school_id}/portal`
     }
-    return "/coach-portal"
+    // No generic coach portal - coaches need to be assigned to a school
+    return "/contact"
   }
 
   const handleSignOut = async () => {

@@ -509,20 +509,20 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
     HS_WEIGHT_CLASSES[formData.gender as keyof typeof HS_WEIGHT_CLASSES] || HS_WEIGHT_CLASSES.Male
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{initialData?.id ? "Edit" : "Add"} Athlete</CardTitle>
+    <Card className="border-t-4 border-t-[#002147] shadow-md">
+      <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
+        <CardTitle className="text-xl">{initialData?.id ? "Edit" : "Add"} Athlete Details</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="school">School & Club</TabsTrigger>
-              <TabsTrigger value="college">College</TabsTrigger>
-              <TabsTrigger value="achievements">Achievements</TabsTrigger>
-              <TabsTrigger value="academics">Academics</TabsTrigger>
-              <TabsTrigger value="additional">Additional</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-6 bg-gray-100">
+              <TabsTrigger value="basic" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Basic Info</TabsTrigger>
+              <TabsTrigger value="school" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">School & Club</TabsTrigger>
+              <TabsTrigger value="college" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">College</TabsTrigger>
+              <TabsTrigger value="achievements" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Achievements</TabsTrigger>
+              <TabsTrigger value="academics" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Academics</TabsTrigger>
+              <TabsTrigger value="additional" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">Additional</TabsTrigger>
             </TabsList>
 
             {/* Basic Info Tab */}
@@ -1382,12 +1382,13 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
           )}
         </CardContent>
 
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" type="button">
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : initialData?.id ? "Update Athlete" : "Add Athlete"}
+        <CardFooter className="flex justify-end gap-3 bg-gray-50 border-t">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="bg-[#B31B1B] hover:bg-[#8B1515] text-white px-8"
+          >
+            {isSubmitting ? "Saving..." : initialData?.id ? "Save Changes" : "Add Athlete"}
           </Button>
         </CardFooter>
       </form>
