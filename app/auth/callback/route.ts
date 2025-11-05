@@ -108,15 +108,15 @@ export async function GET(req: NextRequest) {
       if (profileType === "college" || profileType === "coach" || profileType === "college-coach") {
         role = "coach"
         
-        // Auto-verify if email ends in .edu (college coach with verified institutional email)
+        // Auto-verify if: profile type is college coach AND email ends in .edu
+        const isCollegeCoach = profileType === "college-coach" || profileType === "college" || profileType === "coach"
         const hasEduEmail = email.toLowerCase().endsWith(".edu")
         
-        if (hasEduEmail) {
+        if (isCollegeCoach && hasEduEmail) {
           verifiedCoach = true // Auto-verified for .edu emails
           console.log("[v0] Auto-verified college coach with .edu email:", email)
         } else {
-          verifiedCoach = false // Requires admin approval for non-.edu emails
-          console.log("[v0] College coach with non-.edu email - requires manual verification:", email)
+          verifiedCoach = false // Requires admin approval
         }
       }
 
