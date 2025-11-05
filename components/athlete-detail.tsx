@@ -77,6 +77,7 @@ interface AthleteDetailProps {
 }
 
 export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = null, tournamentResultsComponent }: AthleteDetailProps) {
+  const { isAdmin, isVerifiedCoach } = useAuth()
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
   const [collegeLogo, setCollegeLogo] = useState<string | null>(null)
