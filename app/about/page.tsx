@@ -78,6 +78,56 @@ export default function AboutPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="mt-8 border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Privacy & Data</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-gray-700">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Public Information</h3>
+                <p>
+                  We display publicly available wrestling data including tournament results, rankings, and commitment information. 
+                  All athlete photos are sourced from publicly available Instagram accounts.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Protected Information</h3>
+                <p>
+                  Academic information (GPA, SAT, ACT) and contact details (phone, email) are only visible to 
+                  verified college coaches and administrators. This information is never shared publicly.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Your Rights</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Request profile edits or corrections anytime</li>
+                  <li>Request profile removal by contacting us</li>
+                  <li>Control whether coaches can see your contact info</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Data Sources</h3>
+                <p>
+                  Information comes from tournament results (NHSCA, Super 32, State Championships), 
+                  user submissions, and publicly available sources. We do not sell or share your data with third parties.
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-blue-200">
+                <p className="text-xs text-gray-600">
+                  <strong>Questions or concerns?</strong> Contact us at{" "}
+                  <a href="mailto:privacy@ncunitedwrestling.com" className="text-blue-600 hover:underline">
+                    privacy@ncunitedwrestling.com
+                  </a>
+                  {" "}or request profile removal anytime.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
