@@ -79,12 +79,16 @@ export default function SignUpPage() {
           </CardHeader>
           <CardContent>
             {profileType === "college-coach" && (
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Welcome! After verifying your email, you&apos;ll be automatically signed in and have full access to
-                  browse athletes, view rankings, and explore the platform. Your coach verification will be processed by
-                  our admin team - we&apos;ll notify you once approved.
+              <Alert className="mb-4 bg-blue-50 border-blue-200">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-900">
+                  <strong>Welcome, Coach!</strong> After verifying your email, you&apos;ll have immediate access to browse 
+                  prospect rankings and profiles. Within 1 hour of admin approval, you&apos;ll gain access to:
+                  <ul className="list-disc list-inside mt-2 ml-2 space-y-1">
+                    <li>Athlete GPA, SAT, ACT scores</li>
+                    <li>Phone numbers and email addresses</li>
+                    <li>Watch list and recruiting tools</li>
+                  </ul>
                 </AlertDescription>
               </Alert>
             )}
