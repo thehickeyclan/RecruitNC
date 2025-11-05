@@ -80,11 +80,10 @@ export async function GET(request: Request) {
       .eq("graduationyear", year)
       .eq("gender", gender)
 
-    // For 'rankings' mode: only show prospects with rankings (top 30)
+    // For 'rankings' mode: show all ranked prospects (including 31+)
     if (mode === "rankings") {
       query = query
         .not("prospect_ranking", "is", null)
-        .lte("prospect_ranking", 30)
         .order("prospect_ranking", { ascending: true })
     } 
     // For 'all' mode: show all prospects (ranked and unranked)
