@@ -260,7 +260,7 @@ export default function HomePage() {
 
           <Card
             className="overflow-hidden border-t-4 transition-all hover:shadow-md"
-            style={{ borderTopColor: "#012ECD" }}
+            style={{ borderTopColor: "#13294B" }}
           >
             <CardContent className="p-6">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
@@ -273,7 +273,7 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold" style={{ color: "#012ECD" }}>
+              <h3 className="mb-2 text-xl font-semibold" style={{ color: "#13294B" }}>
                 College Insights
               </h3>
               <p className="text-gray-600">
@@ -325,9 +325,9 @@ export default function HomePage() {
                 size="sm"
                 onClick={() => setYearFilter(year)}
                 style={{
-                  backgroundColor: yearFilter === year ? "#002147" : "transparent",
-                  borderColor: "#002147",
-                  color: yearFilter === year ? "white" : "#002147",
+                  backgroundColor: yearFilter === year ? "#13294B" : "transparent",
+                  borderColor: "#13294B",
+                  color: yearFilter === year ? "white" : "#13294B",
                 }}
               >
                 {year === "All" ? "All Years" : `Class of ${year}`}
@@ -345,22 +345,22 @@ export default function HomePage() {
             {/* Total Commitments Card */}
             <Card
               className="border-blue-200 overflow-hidden lg:col-span-2"
-              style={{ borderColor: "#012ECD", borderOpacity: 0.3 }}
+              style={{ borderColor: "#13294B", borderOpacity: 0.3 }}
             >
-              <div className="h-2" style={{ backgroundColor: "#012ECD" }}></div>
+              <div className="h-2" style={{ backgroundColor: "#13294B" }}></div>
               <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-1" style={{ color: "#012ECD" }}>
+                <h3 className="text-lg font-medium mb-1" style={{ color: "#13294B" }}>
                   Total Commitments
                 </h3>
-                <p className="text-xs mb-2" style={{ color: "#012ECD", opacity: 0.7 }}>
+                <p className="text-xs mb-2" style={{ color: "#13294B", opacity: 0.7 }}>
                   Tracking Class of 2025 and beyond
                 </p>
                 <div className="flex justify-between items-center py-2">
                   <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#012ECD" }}>
+                    <span className="text-xl font-semibold" style={{ color: "#13294B" }}>
                       {stats.male}
                     </span>
-                    <span className="text-xs" style={{ color: "#012ECD", opacity: 0.7 }}>
+                    <span className="text-xs" style={{ color: "#13294B", opacity: 0.7 }}>
                       Male
                     </span>
                   </div>
@@ -439,18 +439,18 @@ export default function HomePage() {
                       <div
                         className="w-full transition-all duration-300"
                         style={{
-                          backgroundColor: "#4A90E2",
+                          backgroundColor: "#13294B",
                           height: `${stats.total ? Math.max((stats.divisions.D3 / stats.total) * 100, 8) : 0}%`,
                         }}
                       ></div>
                     </div>
                     <div
                       className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#4A90E2" }}
+                      style={{ backgroundColor: "#13294B" }}
                     >
                       {stats.divisions.D3}
                     </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#4A90E2" }}>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#13294B" }}>
                       D3
                     </span>
                   </div>
@@ -552,7 +552,7 @@ export default function HomePage() {
       </section>
 
       {/* Information Banner */}
-      <div className="mb-12 rounded-lg p-4 text-white" style={{ backgroundColor: "#012ECD" }}>
+      <div className="mb-12 rounded-lg p-4 text-white" style={{ backgroundColor: "#13294B" }}>
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="text-xl font-bold">Submit or Update Wrestling Information</h2>
