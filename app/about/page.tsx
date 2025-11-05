@@ -47,13 +47,32 @@ export default function AboutPage() {
               <div className="space-y-2">
                 <div>
                   <span className="block font-medium">Email</span>
-                  <span className="text-sm">info@ncunitedwrestling.com</span>
+                  <a href="mailto:info@ncwrestlingunited.com" className="text-sm text-blue-600 hover:underline">
+                    info@ncwrestlingunited.com
+                  </a>
                 </div>
                 <div>
                   <span className="block font-medium">Social Media</span>
                   <span className="text-sm">@NCUnitedWrestling</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-8 bg-gradient-to-br from-[#13294B] to-[#1e3a5f] text-white">
+            <CardHeader>
+              <CardTitle className="text-white">501(c)(3) Nonprofit Organization</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-gray-100">
+                NC Wrestling United is a registered 501(c)(3) nonprofit organization dedicated to supporting and promoting 
+                wrestling in North Carolina. Our mission is to provide transparency in recruiting, celebrate athlete achievements, 
+                and connect the wrestling community.
+              </p>
+              <p className="text-sm text-gray-200">
+                All donations are tax-deductible to the extent allowed by law. We are committed to using resources 
+                to serve athletes, families, and coaches across North Carolina.
+              </p>
             </CardContent>
           </Card>
 
@@ -120,8 +139,8 @@ export default function AboutPage() {
               <div className="pt-4 border-t border-blue-200">
                 <p className="text-xs text-gray-600">
                   <strong>Questions or concerns?</strong> Contact us at{" "}
-                  <a href="mailto:privacy@ncunitedwrestling.com" className="text-blue-600 hover:underline">
-                    privacy@ncunitedwrestling.com
+                  <a href="mailto:info@ncwrestlingunited.com" className="text-blue-600 hover:underline">
+                    info@ncwrestlingunited.com
                   </a>
                   {" "}or request profile removal anytime.
                 </p>

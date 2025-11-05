@@ -913,7 +913,7 @@ export default function SubmitProfilePage() {
 
                 <p className="text-xs text-gray-600 mt-4">
                   <strong>Photos:</strong> All athlete photos are sourced from publicly available Instagram accounts. 
-                  You may request profile removal anytime by contacting privacy@ncunitedwrestling.com
+                  You may request profile removal anytime by contacting info@ncwrestlingunited.com
                 </p>
               </div>
             </div>
