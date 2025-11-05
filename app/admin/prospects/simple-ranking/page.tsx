@@ -437,21 +437,35 @@ export default function SimpleRankingPage() {
 
                   {/* NHSCA */}
                   <TableCell className="text-xs">
-                    {athlete.nhsca_2025_placement || athlete.nhsca_2024_placement || athlete.nhsca_2023_placement ? (
+                    {(athlete.nhsca_2025_placement || athlete.nhsca_2025_record || 
+                      athlete.nhsca_2024_placement || athlete.nhsca_2024_record || 
+                      athlete.nhsca_2023_placement || athlete.nhsca_2023_record) ? (
                       <div className="space-y-1">
-                        {athlete.nhsca_2025_placement && (
+                        {(athlete.nhsca_2025_placement || athlete.nhsca_2025_record) && (
                           <div className="text-xs text-gray-700">
-                            🥇 {athlete.nhsca_2025_placement} '25
+                            {athlete.nhsca_2025_placement ? (
+                              <>🥇 {athlete.nhsca_2025_placement} '25</>
+                            ) : (
+                              <>{athlete.nhsca_2025_record} '25</>
+                            )}
                           </div>
                         )}
-                        {athlete.nhsca_2024_placement && (
+                        {(athlete.nhsca_2024_placement || athlete.nhsca_2024_record) && (
                           <div className="text-xs text-gray-700">
-                            🥇 {athlete.nhsca_2024_placement} '24
+                            {athlete.nhsca_2024_placement ? (
+                              <>🥇 {athlete.nhsca_2024_placement} '24</>
+                            ) : (
+                              <>{athlete.nhsca_2024_record} '24</>
+                            )}
                           </div>
                         )}
-                        {athlete.nhsca_2023_placement && (
+                        {(athlete.nhsca_2023_placement || athlete.nhsca_2023_record) && (
                           <div className="text-xs text-gray-700">
-                            🥇 {athlete.nhsca_2023_placement} '23
+                            {athlete.nhsca_2023_placement ? (
+                              <>🥇 {athlete.nhsca_2023_placement} '23</>
+                            ) : (
+                              <>{athlete.nhsca_2023_record} '23</>
+                            )}
                           </div>
                         )}
                       </div>
@@ -462,16 +476,25 @@ export default function SimpleRankingPage() {
 
                   {/* Super 32 */}
                   <TableCell className="text-xs">
-                    {athlete.super_32_2025_placement || athlete.super_32_2024_placement ? (
+                    {(athlete.super_32_2025_placement || athlete.super_32_2025_record || 
+                      athlete.super_32_2024_placement || athlete.super_32_2024_record) ? (
                       <div className="space-y-1">
-                        {athlete.super_32_2025_placement && (
+                        {(athlete.super_32_2025_placement || athlete.super_32_2025_record) && (
                           <div className="text-xs text-gray-700">
-                            🥇 {athlete.super_32_2025_placement} '25
+                            {athlete.super_32_2025_placement ? (
+                              <>🥇 {athlete.super_32_2025_placement} '25</>
+                            ) : (
+                              <>{athlete.super_32_2025_record} '25</>
+                            )}
                           </div>
                         )}
-                        {athlete.super_32_2024_placement && (
+                        {(athlete.super_32_2024_placement || athlete.super_32_2024_record) && (
                           <div className="text-xs text-gray-700">
-                            🥇 {athlete.super_32_2024_placement} '24
+                            {athlete.super_32_2024_placement ? (
+                              <>🥇 {athlete.super_32_2024_placement} '24</>
+                            ) : (
+                              <>{athlete.super_32_2024_record} '24</>
+                            )}
                           </div>
                         )}
                       </div>
