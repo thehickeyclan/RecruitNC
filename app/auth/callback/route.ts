@@ -101,12 +101,23 @@ export async function GET(req: NextRequest) {
       console.log("[v0] Creating user profile...")
 
       const profileType = session.user.user_metadata?.profile_type || session.user.user_metadata?.profileType || ""
+      const email = session.user.email || ""
       let role: "user" | "coach" | "admin" = "user"
       let verifiedCoach = false
 
       if (profileType === "college" || profileType === "coach" || profileType === "college-coach") {
         role = "coach"
-        verifiedCoach = false // Requires admin approval
+        
+        // Auto-verify if: profile type is college coach AND email ends in .edu
+        const isCollegeCoach = profileType === "college-coach" || profileType === "college" || profileType === "coach"
+        const hasEduEmail = email.toLowerCase().endsWith(".edu")
+        
+        if (isCollegeCoach && hasEduEmail) {
+          verifiedCoach = true // Auto-verified for .edu emails
+          console.log("[v0] Auto-verified college coach with .edu email:", email)
+        } else {
+          verifiedCoach = false // Requires admin approval
+        }
       }
 
       const { error: insertError } = await supabase.from("user_profiles").insert({
