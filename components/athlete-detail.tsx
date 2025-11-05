@@ -11,6 +11,7 @@ import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { ContactInfoSection } from "./contact-info-section"
+import { useAuth } from "@/contexts/auth-context"
 
 interface AthleteDetailProps {
   athlete: {
@@ -696,8 +697,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               </div>
             )}
 
-            {/* Academic Stats */}
-            {(athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
+            {/* Academic Stats - Only visible to coaches and admins */}
+            {(isAdmin || isVerifiedCoach) && (athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {athlete.academic_gpa && (
                   <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
@@ -726,6 +727,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
                   </div>
                 )}
+              </div>
+            )}
+            
+            {/* Message for non-coaches */}
+            {!(isAdmin || isVerifiedCoach) && (athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <p className="text-sm text-blue-700 text-center">
+                  📊 Academic information is only visible to verified college coaches.
+                </p>
               </div>
             )}
           </div>
