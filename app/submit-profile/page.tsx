@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle, Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
@@ -26,6 +27,8 @@ export default function SubmitProfilePage() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
+  const [confirmedAge, setConfirmedAge] = useState(false)
 
   const [selectedTournaments, setSelectedTournaments] = useState<string[]>([])
   const [selectedYears, setSelectedYears] = useState<string[]>([])
@@ -875,13 +878,54 @@ export default function SubmitProfilePage() {
             </div>
           </CardContent>
 
+          {/* Privacy & Consent */}
+          <CardContent className="border-t pt-6">
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-3">Privacy & Consent</h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Checkbox 
+                      id="age-consent" 
+                      checked={confirmedAge}
+                      onCheckedChange={(checked) => setConfirmedAge(checked as boolean)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="age-consent" className="text-sm text-gray-700 cursor-pointer">
+                      I certify the athlete is <strong>13+ years old</strong>. If under 18, a parent/guardian has reviewed and approved this profile.
+                    </label>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Checkbox 
+                      id="privacy-consent" 
+                      checked={agreedToPrivacy}
+                      onCheckedChange={(checked) => setAgreedToPrivacy(checked as boolean)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="privacy-consent" className="text-sm text-gray-700 cursor-pointer">
+                      I have read and agree to the <Link href="/about" className="text-blue-600 hover:underline font-medium">Privacy & Data policy</Link>. 
+                      I understand that public wrestling data will be displayed, and private information (GPA/contact) will only be shared with verified college coaches.
+                    </label>
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-600 mt-4">
+                  <strong>Photos:</strong> All athlete photos are sourced from publicly available Instagram accounts. 
+                  You may request profile removal anytime by contacting privacy@ncunitedwrestling.com
+                </p>
+              </div>
+            </div>
+          </CardContent>
+
           <CardFooter className="flex justify-between">
             <Link href="/">
               <Button variant="outline" type="button">
                 Cancel
               </Button>
             </Link>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !agreedToPrivacy || !confirmedAge}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
