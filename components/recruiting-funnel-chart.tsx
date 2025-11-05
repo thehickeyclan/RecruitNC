@@ -157,15 +157,28 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
   const topWidth = funnelWidth * 0.95
   const bottomWidth = funnelWidth * 0.4
 
-  const getStageColor = (index: number, isCommitted: boolean): string => {
-    if (isCommitted && schoolBranding?.secondary_color) {
-      return schoolBranding.secondary_color
+  const getStageColor = (index: number, isCommitted: boolean, isSigned: boolean): string => {
+    // For Committed and Signed, use dark colors for better contrast
+    if (isSigned && schoolBranding?.primary_color) {
+      // Use primary color at high opacity for "Signed"
+      const primaryRgb = hexToRgb(schoolBranding.primary_color)
+      return `rgba(${primaryRgb}, 0.95)`
     }
+    
+    if (isCommitted && schoolBranding?.primary_color) {
+      // Use primary color at high opacity for "Committed"
+      const primaryRgb = hexToRgb(schoolBranding.primary_color)
+      return `rgba(${primaryRgb}, 0.85)`
+    }
+    
+    // For other stages, use gradient from light to medium
     if (schoolBranding?.primary_color) {
       const primaryRgb = hexToRgb(schoolBranding.primary_color)
       const opacity = 0.3 + index * 0.12 // Start light (0.3) and get darker
       return `rgba(${primaryRgb}, ${opacity})`
     }
+    
+    // Fallback colors if no branding
     const fallbackColors = [
       "#c76e7f", // Light pink (Prospect)
       "#a95463", // Lighter maroon (Evaluating)
@@ -204,10 +217,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
               const conversionRate = totalAthletes > 0 ? ((stage.count / totalAthletes) * 100).toFixed(1) : "0"
               const isCommitted = stage.name === "Committed"
               const isSigned = stage.name === "Signed"
-              const stageColor =
-                isSigned && schoolBranding?.secondary_color
-                  ? schoolBranding.secondary_color
-                  : getStageColor(index, isCommitted)
+              const stageColor = getStageColor(index, isCommitted, isSigned)
 
               // Determine text color based on background brightness
               const isLightBg = isLightColor(stageColor)
