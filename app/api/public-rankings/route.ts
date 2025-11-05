@@ -39,14 +39,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2026"
     const gender = searchParams.get("gender") || "Male"
-    const mode = searchParams.get("mode") || "rankings" // 'rankings' (top 30) or 'all' (full list)
 
     const supabase = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-    console.log("[v0] Fetching public rankings for:", { year, gender, mode })
+    console.log("[v0] Fetching public rankings for:", { year, gender })
 
-    // Build base query
-    let query = supabase
+    const { data: athletes, error } = await supabase
       .from("athletes")
       .select(`
         id,
@@ -71,29 +69,12 @@ export async function GET(request: Request) {
         super_32_2025_placement,
         nationally_ranked_wins,
         recruiting_status,
-        college,
-        nhsca_results,
-        super32_results,
-        nchsaa_2024_placement,
-        nchsaa_2025_placement
+        college
       `)
       .eq("graduationyear", year)
       .eq("gender", gender)
-
-    // For 'rankings' mode: show all ranked prospects (including 31+)
-    if (mode === "rankings") {
-      query = query
-        .not("prospect_ranking", "is", null)
-        .order("prospect_ranking", { ascending: true })
-    } 
-    // For 'all' mode: show all prospects (ranked and unranked)
-    else if (mode === "all") {
-      query = query
-        .eq("recruiting_status", "Prospect")
-        .order("prospect_ranking", { ascending: true, nullsFirst: false })
-    }
-
-    const { data: athletes, error } = await query
+      .not("prospect_ranking", "is", null)
+      .order("prospect_ranking", { ascending: true })
 
     if (error) {
       console.error("[v0] Error fetching athletes:", error)
