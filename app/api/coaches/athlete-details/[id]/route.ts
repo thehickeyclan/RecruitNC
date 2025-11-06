@@ -62,7 +62,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
-        nhsca_2025_placement
+        nhsca_2025_placement,
+        nhsca_results,
+        super32_results,
+        nationally_ranked_wins,
+        fargo_experience
       `)
       .eq("id", athleteId)
       .single()

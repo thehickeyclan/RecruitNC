@@ -30,6 +30,23 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
+import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
+interface TournamentResult {
+  year: number
+  placement: string
+  record?: string
+  weight?: string
+  division?: string
+}
+
+interface NCHSAAResult {
+  year: number
+  place: number
+  classification: string
+  weight_class: string
+}
 
 interface Athlete {
   id: string
@@ -63,6 +80,10 @@ interface Athlete {
   nhsca_2024_placement?: string
   nhsca_2025_record?: string
   nhsca_2025_placement?: string
+  nhsca_results?: TournamentResult[]
+  super32_results?: TournamentResult[]
+  nationally_ranked_wins?: string
+  fargo_experience?: string
   
   // Recruiting tracking data
   is_starred: boolean
@@ -110,6 +131,7 @@ export default function AthleteRecruitingDetailPage() {
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [nchsaaResults, setNchsaaResults] = useState<NCHSAAResult[]>([])
   
   // Inline editing state
   const [editingField, setEditingField] = useState<string | null>(null)
@@ -145,6 +167,27 @@ export default function AthleteRecruitingDetailPage() {
   useEffect(() => {
     fetchAthleteDetails()
   }, [athleteId])
+
+  useEffect(() => {
+    // Fetch NCHSAA results for NC athletes
+    if (athlete && athlete.location === "NC") {
+      fetchNCHSAAResults()
+    }
+  }, [athlete])
+
+  const fetchNCHSAAResults = async () => {
+    if (!athlete) return
+    
+    try {
+      const response = await fetch(`/api/nchsaa-results?athleteName=${encodeURIComponent(athlete.name)}&graduationYear=${athlete.graduationyear}`)
+      if (response.ok) {
+        const data = await response.json()
+        setNchsaaResults(data.results || [])
+      }
+    } catch (error) {
+      console.error("Error fetching NCHSAA results:", error)
+    }
+  }
 
   const handleFieldUpdate = async (field: string, value: string) => {
     if (!athlete) return
@@ -824,157 +867,84 @@ export default function AthleteRecruitingDetailPage() {
 
           {/* PERFORMANCE TAB */}
           <TabsContent value="performance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Award className="h-5 w-5 text-[#002147]" />
-                  Tournament Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Career Record */}
-                {athlete.careerRecord && (
-                  <div className="bg-gradient-to-r from-[#002147] to-[#13294B] rounded-lg p-6 text-white">
-                    <div className="text-sm font-semibold mb-2">Career Record</div>
-                    <div className="text-4xl font-bold">{athlete.careerRecord}</div>
-                  </div>
-                )}
+            {/* Career Record */}
+            {athlete.careerRecord && (
+              <Card className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white">
+                <CardContent className="p-6">
+                  <div className="text-sm font-semibold mb-2">Career Record</div>
+                  <div className="text-4xl font-bold">{athlete.careerRecord}</div>
+                </CardContent>
+              </Card>
+            )}
 
-                {/* Super 32 Results */}
-                {(athlete.super_32_2023_record || athlete.super_32_2023_placement ||
-                  athlete.super_32_2024_record || athlete.super_32_2024_placement ||
-                  athlete.super_32_2025_record || athlete.super_32_2025_placement) && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-[#BC0B03]" />
-                      Super 32 Championships
-                    </h3>
-                    <div className="space-y-3">
-                      {(athlete.super_32_2023_record || athlete.super_32_2023_placement) && (
-                        <Card className="bg-gray-50">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-semibold text-gray-900">Super 32 2023</div>
-                                {athlete.super_32_2023_record && (
-                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.super_32_2023_record}</div>
-                                )}
-                                {athlete.super_32_2023_placement && (
-                                  <div className="text-sm text-gray-600 mt-1">{athlete.super_32_2023_placement}</div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                      {(athlete.super_32_2024_record || athlete.super_32_2024_placement) && (
-                        <Card className="bg-gray-50">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-semibold text-gray-900">Super 32 2024</div>
-                                {athlete.super_32_2024_record && (
-                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.super_32_2024_record}</div>
-                                )}
-                                {athlete.super_32_2024_placement && (
-                                  <div className="text-sm text-gray-600 mt-1">{athlete.super_32_2024_placement}</div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                      {(athlete.super_32_2025_record || athlete.super_32_2025_placement) && (
-                        <Card className="bg-gray-50">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-semibold text-gray-900">Super 32 2025</div>
-                                {athlete.super_32_2025_record && (
-                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.super_32_2025_record}</div>
-                                )}
-                                {athlete.super_32_2025_placement && (
-                                  <div className="text-sm text-gray-600 mt-1">{athlete.super_32_2025_placement}</div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
-                )}
+            {/* Tournament Results Display (same as unified profile) */}
+            <TournamentResultsDisplay
+              nchsaaResults={nchsaaResults}
+              nhscaResults={athlete.nhsca_results || []}
+              super32Results={athlete.super32_results || []}
+            />
 
-                {/* NHSCA Results */}
-                {(athlete.nhsca_2024_record || athlete.nhsca_2024_placement ||
-                  athlete.nhsca_2025_record || athlete.nhsca_2025_placement) && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-[#BC0B03]" />
-                      NHSCA Nationals
-                    </h3>
-                    <div className="space-y-3">
-                      {(athlete.nhsca_2024_record || athlete.nhsca_2024_placement) && (
-                        <Card className="bg-gray-50">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-semibold text-gray-900">NHSCA 2024</div>
-                                {athlete.nhsca_2024_record && (
-                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.nhsca_2024_record}</div>
-                                )}
-                                {athlete.nhsca_2024_placement && (
-                                  <div className="text-sm text-gray-600 mt-1">{athlete.nhsca_2024_placement}</div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                      {(athlete.nhsca_2025_record || athlete.nhsca_2025_placement) && (
-                        <Card className="bg-gray-50">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-semibold text-gray-900">NHSCA 2025</div>
-                                {athlete.nhsca_2025_record && (
-                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.nhsca_2025_record}</div>
-                                )}
-                                {athlete.nhsca_2025_placement && (
-                                  <div className="text-sm text-gray-600 mt-1">{athlete.nhsca_2025_placement}</div>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
-                )}
+            {/* Additional Sections for Non-NC Athletes or All Athletes */}
+            <div className="space-y-6">
+              {/* College Opens */}
+              {athlete.college_opens_experience && (
+                <Card className="border-t-4 border-t-green-600 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 py-4">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <Trophy className="h-5 w-5" />
+                      College Opens
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <p className="text-gray-700">{athlete.college_opens_experience}</p>
+                  </CardContent>
+                </Card>
+              )}
 
-                {/* College Opens Experience */}
-                {athlete.college_opens_experience && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">College Opens Experience</h3>
-                    <Card className="bg-blue-50 border-blue-200">
-                      <CardContent className="p-4">
-                        <p className="text-sm text-gray-700">{athlete.college_opens_experience}</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
+              {/* Fargo */}
+              {athlete.fargo_experience && (
+                <Card className="border-t-4 border-t-purple-600 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-700 py-4">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <Trophy className="h-5 w-5" />
+                      Fargo Nationals
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <p className="text-gray-700">{athlete.fargo_experience}</p>
+                  </CardContent>
+                </Card>
+              )}
 
-                {!athlete.careerRecord && 
-                 !athlete.super_32_2023_record && !athlete.super_32_2024_record && !athlete.super_32_2025_record &&
-                 !athlete.nhsca_2024_record && !athlete.nhsca_2025_record &&
-                 !athlete.college_opens_experience && (
-                  <div className="text-center py-12 text-gray-500">
-                    <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    <p className="italic">No performance data available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              {/* Nationally Ranked Wins */}
+              {athlete.nationally_ranked_wins && (
+                <Card className="border-t-4 border-t-orange-600 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-orange-600 to-orange-700 py-4">
+                    <CardTitle className="text-white flex items-center gap-2 text-lg">
+                      <Trophy className="h-5 w-5" />
+                      Nationally Ranked Wins
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <p className="text-gray-700">{athlete.nationally_ranked_wins}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Empty State */}
+            {!athlete.careerRecord && 
+             nchsaaResults.length === 0 &&
+             (!athlete.nhsca_results || athlete.nhsca_results.length === 0) &&
+             (!athlete.super32_results || athlete.super32_results.length === 0) &&
+             !athlete.college_opens_experience &&
+             !athlete.fargo_experience &&
+             !athlete.nationally_ranked_wins && (
+              <div className="text-center py-12 text-gray-500">
+                <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                <p className="italic">No performance data available</p>
+              </div>
+            )}
           </TabsContent>
 
           {/* RECRUITING STATUS TAB */}
