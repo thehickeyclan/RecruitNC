@@ -15,6 +15,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     const athleteId = params.id
+    const { searchParams } = new URL(request.url)
+    const viewAsCoachId = searchParams.get("viewAsCoachId")
+
+    // Determine which coach's data to fetch
+    const targetCoachId = viewAsCoachId || user.id
+
+    console.log("[v0] Athlete details - User:", user.email)
+    console.log("[v0] Athlete details - Target coach ID:", targetCoachId)
+    console.log("[v0] Athlete details - View as coach ID:", viewAsCoachId)
 
     // Get athlete data
     const { data: athlete, error: athleteError } = await supabase
@@ -69,13 +78,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         *
       `)
       .eq("athlete_id", athleteId)
-      .eq("coach_user_id", user.id)
+      .eq("coach_user_id", targetCoachId)
       .single()
 
     if (starError) {
       console.error("Error fetching star data:", starError)
+      console.error("Star error details:", { athleteId, targetCoachId, error: starError })
       // If no star data exists, athlete might not be starred by this coach
-      return NextResponse.json({ error: "Athlete not in your recruits list" }, { status: 404 })
+      return NextResponse.json({ 
+        error: "Athlete not in recruits list", 
+        details: starError.message 
+      }, { status: 404 })
     }
 
     // Merge athlete data with recruiting tracking data

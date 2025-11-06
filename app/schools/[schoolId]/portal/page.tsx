@@ -1800,7 +1800,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           key={prospect.id}
                           draggable
                           onDragStart={() => handleDragStart(prospect)}
-                          onClick={() => router.push(`/schools/${params.schoolId}/athlete/${prospect.id}`)}
+                          onClick={() => {
+                            const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                            router.push(url)
+                          }}
                           className="bg-gray-50 border-2 border-gray-200 hover:border-gray-900 active:border-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer hover:cursor-pointer transition-all rounded-lg touch-manipulation"
                         >
                           <CardContent className="p-3 md:p-4">
@@ -1898,7 +1901,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       return (
                         <tr
                           key={prospect.id}
-                          onClick={() => openAthleteModal(prospect)}
+                          onClick={() => {
+                            const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                            router.push(url)
+                          }}
                           className="border-b transition-colors hover:bg-gray-50 active:bg-gray-100 cursor-pointer touch-manipulation"
                         >
                           <td className="p-4 align-middle">

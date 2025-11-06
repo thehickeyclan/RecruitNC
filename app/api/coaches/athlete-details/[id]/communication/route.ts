@@ -16,8 +16,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const athleteId = params.id
     const communication = await request.json()
+    const { searchParams } = new URL(request.url)
+    const viewAsCoachId = searchParams.get("viewAsCoachId")
+    
+    const targetCoachId = viewAsCoachId || user.id
 
     console.log("[v0] Adding communication for athlete:", athleteId)
+    console.log("[v0] Target coach ID:", targetCoachId)
     console.log("[v0] Communication data:", communication)
 
     // Get current communication log
@@ -25,7 +30,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .from("college_coach_stars")
       .select("communication_log")
       .eq("athlete_id", athleteId)
-      .eq("coach_user_id", user.id)
+      .eq("coach_user_id", targetCoachId)
       .single()
 
     if (fetchError) {
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         communication_log: newLog,
       })
       .eq("athlete_id", athleteId)
-      .eq("coach_user_id", user.id)
+      .eq("coach_user_id", targetCoachId)
       .select()
 
     if (error) {

@@ -127,7 +127,13 @@ export default function AthleteRecruitingDetailPage() {
   const fetchAthleteDetails = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/coaches/athlete-details/${athleteId}`)
+      
+      // Get viewAsCoachId from URL if present (for admin viewing)
+      const searchParams = new URLSearchParams(window.location.search)
+      const viewAsCoachId = searchParams.get("viewAsCoachId")
+      const apiUrl = `/api/coaches/athlete-details/${athleteId}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+      
+      const response = await fetch(apiUrl)
       
       if (response.ok) {
         const data = await response.json()
@@ -165,7 +171,11 @@ export default function AthleteRecruitingDetailPage() {
     try {
       setSaving(true)
       
-      const response = await fetch(`/api/coaches/athlete-details/${athleteId}/milestones`, {
+      const searchParams = new URLSearchParams(window.location.search)
+      const viewAsCoachId = searchParams.get("viewAsCoachId")
+      const apiUrl = `/api/coaches/athlete-details/${athleteId}/milestones${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+      
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(milestones),
@@ -192,7 +202,11 @@ export default function AthleteRecruitingDetailPage() {
     }
 
     try {
-      const response = await fetch(`/api/coaches/athlete-details/${athleteId}/communication`, {
+      const searchParams = new URLSearchParams(window.location.search)
+      const viewAsCoachId = searchParams.get("viewAsCoachId")
+      const apiUrl = `/api/coaches/athlete-details/${athleteId}/communication${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+      
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCommunication),

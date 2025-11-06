@@ -16,8 +16,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const athleteId = params.id
     const milestones = await request.json()
+    const { searchParams } = new URL(request.url)
+    const viewAsCoachId = searchParams.get("viewAsCoachId")
+    
+    const targetCoachId = viewAsCoachId || user.id
 
     console.log("[v0] Updating milestones for athlete:", athleteId)
+    console.log("[v0] Target coach ID:", targetCoachId)
     console.log("[v0] Milestone data:", milestones)
 
     // Update the college_coach_stars record
@@ -42,7 +47,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         recruiting_notes: milestones.recruiting_notes || null,
       })
       .eq("athlete_id", athleteId)
-      .eq("coach_user_id", user.id)
+      .eq("coach_user_id", targetCoachId)
       .select()
 
     if (error) {
