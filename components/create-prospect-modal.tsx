@@ -251,10 +251,10 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated }: Crea
                   <Label htmlFor="weightclass">Weight Class</Label>
                   <Select value={formData.weightclass} onValueChange={(val) => handleChange("weightclass", val)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select weight" />
+                      <SelectValue placeholder="Select weight (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">TBD</SelectItem>
+                      <SelectItem value="TBD">TBD</SelectItem>
                       {WEIGHT_CLASSES.map((weight) => (
                         <SelectItem key={weight} value={weight}>
                           {weight} lbs
