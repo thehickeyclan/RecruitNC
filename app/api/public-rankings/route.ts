@@ -74,7 +74,6 @@ export async function GET(request: Request) {
       `)
       .eq("graduationyear", year)
       .eq("gender", gender)
-      .eq("is_nc_athlete", true)
       .not("prospect_ranking", "is", null)
       .order("prospect_ranking", { ascending: true })
 
