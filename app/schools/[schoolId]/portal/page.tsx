@@ -77,6 +77,7 @@ interface Prospect {
   star_count?: number
   star_rating?: number | null
   careerRecord?: string
+  birthdate?: string
   nhsca_results?: any[]
   super32_results?: any[]
   super_32_2024_record?: string
@@ -2748,6 +2749,61 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 <span className="flex-1">{selectedAthlete.location}</span>
                               ) : (
                                 <span className="text-gray-400 italic">Click to add location</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Birthdate */}
+                        <div className="flex items-center gap-2 text-gray-700 group">
+                          <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          {editingField === "birthdate" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="date"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("birthdate", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("birthdate", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => {
+                                if (selectedAthlete.birthdate) {
+                                  const dateStr = selectedAthlete.birthdate.includes('T') 
+                                    ? selectedAthlete.birthdate.split('T')[0] 
+                                    : selectedAthlete.birthdate
+                                  startEditing("birthdate", dateStr)
+                                } else {
+                                  startEditing("birthdate", "")
+                                }
+                              }}
+                            >
+                              {selectedAthlete.birthdate ? (
+                                <span className="flex-1">
+                                  {(() => {
+                                    const dateStr = selectedAthlete.birthdate.includes('T') 
+                                      ? selectedAthlete.birthdate.split('T')[0] 
+                                      : selectedAthlete.birthdate
+                                    const [year, month, day] = dateStr.split('-').map(Number)
+                                    const date = new Date(year, month - 1, day)
+                                    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                                  })()}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 italic">Click to add birthdate</span>
                               )}
                               <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>

@@ -142,6 +142,7 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
     lastName: initialData?.lastName || initialData?.name?.split(" ").slice(1).join(" ") || "",
     gender: initialData?.gender || "",
     graduationYear: initialData?.graduationYear?.toString() || "",
+    birthdate: initialData?.birthdate ? (initialData.birthdate.includes('T') ? initialData.birthdate.split('T')[0] : initialData.birthdate) : "",
     weightClass: initialData?.weightclass || "",
     collegeWeightClass: initialData?.college_weight_class || "",
     highSchool: initialData?.highschool || "",
@@ -587,6 +588,17 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                   </SelectContent>
                 </Select>
                 {validationErrors.gender && <p className="text-sm text-red-500 mt-1">{validationErrors.gender}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="birthdate">Birthdate</Label>
+                <Input
+                  id="birthdate"
+                  name="birthdate"
+                  type="date"
+                  value={formData.birthdate}
+                  onChange={handleChange}
+                />
               </div>
 
               <div className="space-y-2">
@@ -1402,6 +1414,7 @@ interface AthleteFormData {
   firstName: string
   lastName: string
   gender: string
+  birthdate: string
   graduationYear: string
   weightClass: string
   collegeWeightClass: string
