@@ -226,6 +226,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedGender, setSelectedGender] = useState<string>("all")
   const [selectedState, setSelectedState] = useState<string>("all")
+  const [selectedRating, setSelectedRating] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"board" | "table">("table")
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
@@ -1302,7 +1303,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       selectedState === "all" || 
       (prospect.location || "NC") === selectedState
 
-    return matchesSearch && matchesYear && matchesGender && matchesState
+    const matchesRating = 
+      selectedRating === "all" || 
+      (selectedRating === "unrated" && !prospect.star_rating) ||
+      (prospect.star_rating?.toString() === selectedRating)
+
+    return matchesSearch && matchesYear && matchesGender && matchesState && matchesRating
   })
 
   console.log("[v0] Filtered prospects:", {
@@ -1312,6 +1318,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     selectedYear,
     selectedGender,
     selectedState,
+    selectedRating,
   })
 
   // Sorting logic for table view
@@ -1905,26 +1912,85 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </Select>
 
               <Select value={selectedState} onValueChange={setSelectedState}>
-                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation transition-all">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500" />
-                    <SelectValue placeholder="All States" />
-                  </div>
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All States" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-200">
-                  <SelectItem value="all">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span>All States</span>
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="all">All States</SelectItem>
                   {states.map((state) => (
                     <SelectItem key={state} value={state}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-700">{state}</span>
-                      </div>
+                      {state}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedRating} onValueChange={setSelectedRating}>
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All Ratings" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  <SelectItem value="all">All Ratings</SelectItem>
+                  <SelectItem value="5">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <span className="ml-1 text-xs text-gray-600">Dream Recruit</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="4">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <span className="ml-1 text-xs text-gray-600">Excellent Fit</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="3">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <span className="ml-1 text-xs text-gray-600">Solid Prospect</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="2">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <span className="ml-1 text-xs text-gray-600">Backup Option</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="1">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <span className="ml-1 text-xs text-gray-600">Low Priority</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="unrated">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <Star className="h-4 w-4 fill-none text-gray-300" />
+                      <span className="ml-1 text-xs text-gray-600">Not Rated</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
               </div>
@@ -2267,18 +2333,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               value={prospect.pipeline_stage || "Prospect"}
                               onValueChange={(value) => handleStageChange(prospect.id, value)}
                             >
-                              <SelectTrigger className="h-7 w-[140px] text-xs border-gray-300 bg-white hover:bg-gray-50">
-                                <SelectValue>
-                                  <Badge
-                                    className="text-xs"
-                                    style={{
-                                      backgroundColor: stageColor,
-                                      color: "white",
-                                    }}
-                                  >
-                                    {stage.label}
-                                  </Badge>
-                                </SelectValue>
+                              <SelectTrigger className="h-auto w-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:ring-offset-0">
+                                <Badge
+                                  className="text-xs cursor-pointer hover:opacity-90 transition-opacity"
+                                  style={{
+                                    backgroundColor: stageColor,
+                                    color: "white",
+                                  }}
+                                >
+                                  {stage.label}
+                                  <ChevronDown className="ml-1 h-3 w-3 inline" />
+                                </Badge>
                               </SelectTrigger>
                               <SelectContent>
                                 {PIPELINE_STAGES_BASE.map((s) => (

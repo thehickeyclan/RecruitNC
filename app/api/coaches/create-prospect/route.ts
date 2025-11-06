@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
       .from("athletes")
       .insert({
         name: name.trim(),
-        state: state,
+        location: state,
         highschool: highschool || null,
         graduationyear: graduationyear,
         weightclass: weightclass || null,
         gender: gender || "Male",
-        contactemail: email || null,
+        contactEmail: email || null,
         phone: phone || null,
         instagram: instagram || null,
         recruiting_status: "Prospect",
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         coach_user_id: session.user.id,
         athlete_id: athlete.id,
         pipeline_stage: "Prospect",
-        recruiting_notes: notes || null,
+        notes: notes || null,
         starred_at: new Date().toISOString(),
       })
 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Custom prospect created:", {
       athleteId: athlete.id,
       name: athlete.name,
-      state: athlete.state,
+      location: athlete.location,
       isNCathlete,
       coachId: session.user.id,
     })
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       athlete: {
         id: athlete.id,
         name: athlete.name,
-        state: athlete.state,
+        location: athlete.location,
         isNCathlete,
       },
     })
