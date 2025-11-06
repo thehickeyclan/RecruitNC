@@ -394,12 +394,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   useEffect(() => {
     console.log("[v0] Branded portal page loaded for schoolId:", params.schoolId)
     console.log("[v0] Auth state:", { authLoading, hasProfile: !!profile, profileId: profile?.id })
+    console.log("[v0] View as coach ID:", viewAsCoachId)
     if (profile || !authLoading) {
       // Fetch prospects only if profile is loaded or auth is not loading
       fetchProspects()
       fetchActivities() // Fetch all activities initially to populate overdue list
     }
-  }, [params.schoolId, profile, authLoading])
+  }, [params.schoolId, profile, authLoading, viewAsCoachId])
 
   // Fetch NC recruits when school name is available (from schoolBranding hook)
   useEffect(() => {
