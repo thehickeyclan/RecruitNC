@@ -264,10 +264,16 @@ export default function MyRecruitsPage() {
       const res = await fetch("/api/coaches/starred-athletes")
       if (res.ok) {
         const data = await res.json()
+        console.log("[v0] STARRED ATHLETES API RESPONSE:", {
+          totalAthletes: data.athletes?.length || 0,
+          athletes: data.athletes?.map((a: any) => a.name) || []
+        })
         setAthletes(data.athletes || [])
         setFilteredAthletes(data.athletes || [])
       } else {
         console.error("Error fetching starred athletes:", res.status, res.statusText)
+        const errorText = await res.text()
+        console.error("Error details:", errorText)
       }
     } catch (error) {
       console.error("Error fetching starred athletes:", error)
