@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    const validStages = ["Prospect", "Contacted", "Evaluating", "Recruiting", "Offered", "Committed"]
+    const validStages = ["Prospect", "Contacted", "Recruiting", "Offered", "Committed", "Signed", "Lost"]
     if (!validStages.includes(pipelineStage)) {
       console.log("[v0] Invalid pipeline stage:", pipelineStage)
       return NextResponse.json({ error: "Invalid pipeline stage" }, { status: 400 })

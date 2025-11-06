@@ -123,8 +123,8 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
       icon: <Users className="h-5 w-5" />,
     },
     {
-      name: "Evaluating",
-      count: stageCounts["Evaluating"] || 0,
+      name: "Contacted",
+      count: stageCounts["Contacted"] || 0,
       icon: <Search className="h-5 w-5" />,
     },
     {
@@ -181,7 +181,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
     // Fallback colors if no branding
     const fallbackColors = [
       "#c76e7f", // Light pink (Prospect)
-      "#a95463", // Lighter maroon (Evaluating)
+      "#a95463", // Lighter maroon (Contacted)
       "#9a4755", // Light maroon (Recruiting)
       "#8b3a47", // Medium maroon (Offered)
       "#7c2d3a", // Dark maroon (Committed)

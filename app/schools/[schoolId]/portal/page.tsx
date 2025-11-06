@@ -140,15 +140,63 @@ interface FamilyMember {
   email?: string
 }
 
-const PIPELINE_STAGES = [
-  { id: "Prospect", label: "Prospect", color: "#6B7280" },
-  { id: "Evaluating", label: "Evaluating", color: "#A855F7" },
-  { id: "Recruiting", label: "Recruiting", color: "#F97316" },
-  { id: "Offered", label: "Offered", color: "#22C55E" },
-  { id: "Committed", label: "Committed", color: "#059669" },
-  { id: "Signed", label: "Signed", color: "#2563EB" },
-  { id: "Lost", label: "Lost", color: "#EF4444" },
+const PIPELINE_STAGES_BASE = [
+  { id: "Prospect", label: "Prospect" },
+  { id: "Contacted", label: "Contacted" },
+  { id: "Recruiting", label: "Recruiting" },
+  { id: "Offered", label: "Offered" },
+  { id: "Committed", label: "Committed" },
+  { id: "Signed", label: "Signed" },
+  { id: "Lost", label: "Lost" },
 ]
+
+// Helper function to convert hex to RGB
+const hexToRgb = (hex: string): string => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  if (!result) return "107, 114, 128" // Default gray
+  return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
+}
+
+// Function to get stage color based on school branding (matches funnel chart)
+const getStageColor = (stageId: string, schoolPrimaryColor?: string | null): string => {
+  const stageIndex = PIPELINE_STAGES_BASE.findIndex(s => s.id === stageId)
+  
+  // Committed uses high opacity of primary color
+  if (stageId === "Committed" && schoolPrimaryColor) {
+    const rgb = hexToRgb(schoolPrimaryColor)
+    return `rgba(${rgb}, 0.85)`
+  }
+  
+  // Signed uses even higher opacity
+  if (stageId === "Signed" && schoolPrimaryColor) {
+    const rgb = hexToRgb(schoolPrimaryColor)
+    return `rgba(${rgb}, 0.95)`
+  }
+  
+  // Lost uses red
+  if (stageId === "Lost") {
+    return "#EF4444"
+  }
+  
+  // Other stages use gradient from light to medium based on primary color
+  if (schoolPrimaryColor) {
+    const rgb = hexToRgb(schoolPrimaryColor)
+    const opacity = 0.3 + stageIndex * 0.12 // Matches funnel chart logic
+    return `rgba(${rgb}, ${opacity})`
+  }
+  
+  // Fallback colors if no branding (matches funnel chart)
+  const fallbackColors = [
+    "#c76e7f", // Light pink (Prospect)
+    "#a95463", // Lighter maroon (Contacted)
+    "#9a4755", // Light maroon (Recruiting)
+    "#8b3a47", // Medium maroon (Offered)
+    "#7c2d3a", // Dark maroon (Committed)
+    "#6d2628", // Darker maroon (Signed)
+    "#EF4444", // Red (Lost)
+  ]
+  return fallbackColors[stageIndex] || "#6B7280"
+}
 
 interface School {
   id: string
@@ -1337,8 +1385,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     if (stageLower === "college athlete" || stageLower === "current college athlete") {
       return "Signed"
     }
-    if (stageLower === "contacted" || stageLower === "reached out") {
-      return "Prospect"
+    if (stageLower === "evaluating" || stageLower === "reached out") {
+      return "Contacted"
     }
     
     return normalized
@@ -1374,7 +1422,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     return isCommitted && athleteCollege !== thisSchool && !thisSchool.includes(athleteCollege) && !athleteCollege.includes(thisSchool)
   }
 
-  const stageCounts = PIPELINE_STAGES.reduce(
+  const stageCounts = PIPELINE_STAGES_BASE.reduce(
     (acc, stage) => {
       acc[stage.label] = getProspectsByStage(stage.id).length
       return acc
@@ -1923,7 +1971,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       <div className="container mx-auto px-4 pb-8">
         {viewMode === "board" ? (
         <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
-          {PIPELINE_STAGES.map((stage) => {
+          {PIPELINE_STAGES_BASE.map((stage) => {
             const stageProspects = getProspectsByStage(stage.id)
             return (
               <div
@@ -2151,7 +2199,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     </tr>
                   ) : (
                     sortedProspects.map((prospect) => {
-                      const stage = PIPELINE_STAGES.find(s => s.id === prospect.pipeline_stage) || PIPELINE_STAGES[0]
+                      const stage = PIPELINE_STAGES_BASE.find(s => s.id === prospect.pipeline_stage) || PIPELINE_STAGES_BASE[0]
+                      const stageColor = getStageColor(stage.id, schoolBranding?.primary_color)
                       return (
                         <tr
                           key={prospect.id}
@@ -2213,7 +2262,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   <Badge
                                     className="text-xs"
                                     style={{
-                                      backgroundColor: stage.color || "#6B7280",
+                                      backgroundColor: stageColor,
                                       color: "white",
                                     }}
                                   >
@@ -2222,12 +2271,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 </SelectValue>
                               </SelectTrigger>
                               <SelectContent>
-                                {PIPELINE_STAGES.map((s) => (
+                                {PIPELINE_STAGES_BASE.map((s) => (
                                   <SelectItem key={s.id} value={s.id}>
                                     <div className="flex items-center gap-2">
                                       <div
                                         className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: s.color }}
+                                        style={{ backgroundColor: getStageColor(s.id, schoolBranding?.primary_color) }}
                                       />
                                       <span>{s.label}</span>
                                     </div>
@@ -2448,14 +2497,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           </SelectItem>
                           <SelectItem value="contacted" className="text-gray-900 hover:bg-gray-100">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-500" />
-                              Contacted
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="evaluating" className="text-gray-900 hover:bg-gray-100">
-                            <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-purple-500" />
-                              Evaluating
+                              Contacted
                             </div>
                           </SelectItem>
                           <SelectItem value="recruiting" className="text-gray-900 hover:bg-gray-100">
