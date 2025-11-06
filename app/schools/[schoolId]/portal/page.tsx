@@ -47,6 +47,7 @@ import { useSchoolBranding } from "@/hooks/use-school-branding"
 import { createClient } from "@/lib/supabase/client"
 import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/components/recruiting-actions-dashboard"
 import { CreateProspectModal } from "@/components/create-prospect-modal"
+import { StarRating } from "@/components/star-rating"
 
 interface Prospect {
   id: string
@@ -72,6 +73,7 @@ interface Prospect {
   pipeline_stage?: string
   is_starred?: boolean
   star_count?: number
+  star_rating?: number | null
   careerRecord?: string
   super_32_2024_record?: string
   super_32_2024_placement?: string
@@ -284,6 +286,43 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       setPipelineHistory([])
     } finally {
       setLoadingHistory(false)
+    }
+  }
+
+  const handleStarRatingChange = async (athleteId: string, newRating: number) => {
+    try {
+      const response = await fetch("/api/coaches/star-rating", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId,
+          rating: newRating,
+          viewAsCoachId,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update star rating")
+      }
+
+      // Update local state optimistically
+      setProspects((prev) =>
+        prev.map((p) =>
+          p.id === athleteId ? { ...p, star_rating: newRating === 0 ? null : newRating } : p
+        )
+      )
+
+      toast({
+        title: "Rating Updated",
+        description: newRating === 0 ? "Rating removed" : `Rated ${newRating} star${newRating > 1 ? 's' : ''}`,
+      })
+    } catch (error) {
+      console.error("Error updating star rating:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update rating. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -1897,17 +1936,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             )}
 
                             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                              <button 
-                                className="p-2 md:p-1.5 hover:scale-110 active:scale-95 transition-transform touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  // Handle star toggle if needed
-                                }}
-                              >
-                                <Star
-                                  className={`h-5 w-5 md:h-5 md:w-5 ${prospect.is_starred ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <StarRating
+                                  rating={prospect.star_rating ?? null}
+                                  onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
+                                  size="sm"
                                 />
-                              </button>
+                              </div>
                               <span className="text-[10px] md:text-xs text-gray-500 font-medium">
                                 {formatLastContactDate(getLastContactedDate(prospect.id))}
                               </span>
