@@ -87,6 +87,7 @@ export default function AthleteRecruitingDetailPage() {
   const params = useParams()
   const router = useRouter()
   const athleteId = params.id as string
+  const schoolId = params.schoolId as string
 
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [loading, setLoading] = useState(true)
@@ -289,11 +290,11 @@ export default function AthleteRecruitingDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/coaches/my-recruits")}
+            onClick={() => router.push(`/schools/${schoolId}/portal`)}
             className="mb-3"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to My Recruits
+            Back to Portal
           </Button>
 
           <div className="flex items-start gap-6">

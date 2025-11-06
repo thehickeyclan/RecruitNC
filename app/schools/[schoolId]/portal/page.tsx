@@ -1800,8 +1800,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           key={prospect.id}
                           draggable
                           onDragStart={() => handleDragStart(prospect)}
-                          onClick={() => openAthleteModal(prospect)}
-                          className="bg-gray-50 border-2 border-gray-200 hover:border-gray-900 active:border-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-grab active:cursor-grabbing transition-all rounded-lg touch-manipulation"
+                          onClick={() => router.push(`/schools/${params.schoolId}/athlete/${prospect.id}`)}
+                          className="bg-gray-50 border-2 border-gray-200 hover:border-gray-900 active:border-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer hover:cursor-pointer transition-all rounded-lg touch-manipulation"
                         >
                           <CardContent className="p-3 md:p-4">
                             <div className="flex gap-3 mb-3 relative">
