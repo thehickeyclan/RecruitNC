@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
           // Get athletes where notes mention this school name
           const { data: adminStarredData } = await supabase
             .from("college_coach_stars")
-            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, notes")
+            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year")
             .in("coach_user_id", adminUserIds)
             .ilike("notes", `%${schoolInfo.name}%`)
 
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
       
       const { data: coachStarredData, error: starError } = await supabase
         .from("college_coach_stars")
-        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns")
+        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year")
         .in("coach_user_id", coachUserIds)
 
       if (starError) {
@@ -304,6 +304,16 @@ export async function GET(request: NextRequest) {
         interest_level: starInfo?.interest_level,
         starred_at: starInfo?.starred_at,
         star_rating: starInfo?.star_rating || null,
+        // Override fields take precedence over base athlete data
+        phone: starInfo?.override_phone ?? prospect.phone,
+        contactEmail: starInfo?.override_email ?? prospect.contactEmail,
+        location: starInfo?.override_location ?? prospect.location,
+        academic_gpa: starInfo?.override_gpa ?? prospect.academic_gpa,
+        academic_sat: starInfo?.override_sat ?? prospect.academic_sat,
+        academic_act: starInfo?.override_act ?? prospect.academic_act,
+        weightclass: starInfo?.override_weight ?? prospect.weightclass,
+        highschool: starInfo?.override_highschool ?? prospect.highschool,
+        graduationyear: starInfo?.override_graduation_year ?? prospect.graduationyear,
         financial_efc: starInfo?.financial_efc,
         financial_aid_needs: starInfo?.financial_aid_needs,
         scholarship_requirements: starInfo?.scholarship_requirements,

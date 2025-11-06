@@ -123,12 +123,24 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Merge athlete data with recruiting tracking data
+    // Override fields take precedence over base athlete data
     const athleteWithTracking = {
       ...athlete,
       is_starred: true,
       starred_at: starData.starred_at,
       pipeline_stage: starData.pipeline_stage,
       interest_level: starData.interest_level,
+      
+      // Override fields (coach-specific data)
+      phone: starData.override_phone ?? athlete.phone,
+      contactEmail: starData.override_email ?? athlete.contactEmail,
+      location: starData.override_location ?? athlete.location,
+      academic_gpa: starData.override_gpa ?? athlete.academic_gpa,
+      academic_sat: starData.override_sat ?? athlete.academic_sat,
+      academic_act: starData.override_act ?? athlete.academic_act,
+      weightclass: starData.override_weight ?? athlete.weightclass,
+      highschool: starData.override_highschool ?? athlete.highschool,
+      graduationyear: starData.override_graduation_year ?? athlete.graduationyear,
       
       // Milestone tracking
       first_contact_date: starData.first_contact_date,

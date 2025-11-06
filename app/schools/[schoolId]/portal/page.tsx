@@ -232,6 +232,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const dashboardRef = useRef<RecruitingActionsDashboardRef>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<Prospect | null>(null)
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState<string>("")
   const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState("")
   const [newActivity, setNewActivity] = useState({
@@ -1189,6 +1191,75 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     } catch (error) {
       console.error("Error deleting family member:", error)
     }
+  }
+
+  const handleFieldUpdate = async (field: string, value: string) => {
+    if (!selectedAthlete) return
+
+    const previousValue = selectedAthlete[field as keyof Prospect]
+    
+    // Optimistic update
+    setSelectedAthlete((prev) => {
+      if (!prev) return null
+      return { ...prev, [field]: value || null }
+    })
+
+    try {
+      const response = await fetch("/api/coaches/update-athlete-field", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: selectedAthlete.id,
+          field,
+          value: value || null,
+          viewAsCoachId,
+        }),
+      })
+
+      if (!response.ok) {
+        // Revert on error
+        setSelectedAthlete((prev) => {
+          if (!prev) return null
+          return { ...prev, [field]: previousValue }
+        })
+        const errorData = await response.json()
+        toast({
+          title: "Update Failed",
+          description: errorData.error || "Failed to update field",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Also update in prospects list
+      setProspects((prev) =>
+        prev.map((p) => (p.id === selectedAthlete.id ? { ...p, [field]: value || null } : p))
+      )
+
+      toast({
+        title: "Updated",
+        description: "Field updated successfully",
+      })
+    } catch (error) {
+      // Revert on error
+      setSelectedAthlete((prev) => {
+        if (!prev) return null
+        return { ...prev, [field]: previousValue }
+      })
+      toast({
+        title: "Update Failed",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setEditingField(null)
+      setEditingValue("")
+    }
+  }
+
+  const startEditing = (field: string, currentValue: any) => {
+    setEditingField(field)
+    setEditingValue(currentValue?.toString() || "")
   }
 
   const handleStageChange = async (prospectId: string, newStage: string) => {
@@ -2515,35 +2586,130 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   <TabsContent value="overview" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
                     <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
                       <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Contact Information</h3>
-                      <div className="space-y-1 md:space-2 text-sm">
-                        {selectedAthlete.contactEmail && (
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <Mail className="h-4 w-4 text-gray-500" />
-                            <a
-                              href={`mailto:${selectedAthlete.contactEmail}`}
-                              className="hover:text-blue-600 break-all"
+                      <div className="space-y-2 md:space-3 text-sm">
+                        {/* Email */}
+                        <div className="flex items-center gap-2 text-gray-700 group">
+                          <Mail className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          {editingField === "contactEmail" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="email"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("contactEmail", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("contactEmail", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => startEditing("contactEmail", selectedAthlete.contactEmail)}
                             >
-                              {selectedAthlete.contactEmail}
-                            </a>
-                          </div>
-                        )}
-                        {selectedAthlete.phone && (
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <Phone className="h-4 w-4 text-gray-500" />
-                            <a href={`tel:${selectedAthlete.phone}`} className="hover:text-blue-600">
-                              {selectedAthlete.phone}
-                            </a>
-                          </div>
-                        )}
-                        {selectedAthlete.location && (
-                          <div className="flex items-center gap-2 text-gray-700">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            {selectedAthlete.location}
-                          </div>
-                        )}
-                        {!selectedAthlete.contactEmail && !selectedAthlete.phone && !selectedAthlete.location && (
-                          <p className="text-gray-500 italic">No contact information available</p>
-                        )}
+                              {selectedAthlete.contactEmail ? (
+                                <a
+                                  href={`mailto:${selectedAthlete.contactEmail}`}
+                                  className="hover:text-blue-600 break-all flex-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {selectedAthlete.contactEmail}
+                                </a>
+                              ) : (
+                                <span className="text-gray-400 italic">Click to add email</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Phone */}
+                        <div className="flex items-center gap-2 text-gray-700 group">
+                          <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          {editingField === "phone" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="tel"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("phone", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("phone", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => startEditing("phone", selectedAthlete.phone)}
+                            >
+                              {selectedAthlete.phone ? (
+                                <a
+                                  href={`tel:${selectedAthlete.phone}`}
+                                  className="hover:text-blue-600 flex-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {selectedAthlete.phone}
+                                </a>
+                              ) : (
+                                <span className="text-gray-400 italic">Click to add phone</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Location */}
+                        <div className="flex items-center gap-2 text-gray-700 group">
+                          <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          {editingField === "location" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="text"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("location", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("location", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                placeholder="State (e.g., NC, VA)"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => startEditing("location", selectedAthlete.location)}
+                            >
+                              {selectedAthlete.location ? (
+                                <span className="flex-1">{selectedAthlete.location}</span>
+                              ) : (
+                                <span className="text-gray-400 italic">Click to add location</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -2790,35 +2956,124 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         Academic Profile
                       </h3>
 
-                      {selectedAthlete.academic_gpa || selectedAthlete.academic_sat || selectedAthlete.academic_act ? (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {selectedAthlete.academic_gpa && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-xs text-gray-600 mb-1">GPA</div>
-                              <div className="text-3xl font-bold text-blue-600">
-                                {selectedAthlete.academic_gpa.toFixed(2)}
-                              </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* GPA */}
+                        <div className="bg-gray-100 rounded-lg p-4 group relative">
+                          <div className="text-xs text-gray-600 mb-1">GPA</div>
+                          {editingField === "academic_gpa" ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              max="4"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onBlur={() => handleFieldUpdate("academic_gpa", editingValue)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleFieldUpdate("academic_gpa", editingValue)
+                                } else if (e.key === "Escape") {
+                                  setEditingField(null)
+                                  setEditingValue("")
+                                }
+                              }}
+                              className="text-3xl font-bold h-12 text-blue-600"
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-200 rounded p-1 -m-1"
+                              onClick={() => startEditing("academic_gpa", selectedAthlete.academic_gpa)}
+                            >
+                              {selectedAthlete.academic_gpa ? (
+                                <div className="text-3xl font-bold text-blue-600">
+                                  {selectedAthlete.academic_gpa.toFixed(2)}
+                                </div>
+                              ) : (
+                                <div className="text-3xl font-bold text-gray-400">-</div>
+                              )}
                               <div className="text-xs text-gray-500 mt-1">4.0 Scale</div>
-                            </div>
-                          )}
-                          {selectedAthlete.academic_sat && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-xs text-gray-600 mb-1">SAT</div>
-                              <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_sat}</div>
-                              <div className="text-xs text-gray-500 mt-1">Out of 1600</div>
-                            </div>
-                          )}
-                          {selectedAthlete.academic_act && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-xs text-gray-600 mb-1">ACT</div>
-                              <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_act}</div>
-                              <div className="text-xs text-gray-500 mt-1">Out of 36</div>
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <p className="text-gray-500 italic">No academic information available</p>
-                      )}
+
+                        {/* SAT */}
+                        <div className="bg-gray-100 rounded-lg p-4 group relative">
+                          <div className="text-xs text-gray-600 mb-1">SAT</div>
+                          {editingField === "academic_sat" ? (
+                            <Input
+                              type="number"
+                              min="0"
+                              max="1600"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onBlur={() => handleFieldUpdate("academic_sat", editingValue)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleFieldUpdate("academic_sat", editingValue)
+                                } else if (e.key === "Escape") {
+                                  setEditingField(null)
+                                  setEditingValue("")
+                                }
+                              }}
+                              className="text-3xl font-bold h-12 text-blue-600"
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-200 rounded p-1 -m-1"
+                              onClick={() => startEditing("academic_sat", selectedAthlete.academic_sat)}
+                            >
+                              {selectedAthlete.academic_sat ? (
+                                <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_sat}</div>
+                              ) : (
+                                <div className="text-3xl font-bold text-gray-400">-</div>
+                              )}
+                              <div className="text-xs text-gray-500 mt-1">Out of 1600</div>
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ACT */}
+                        <div className="bg-gray-100 rounded-lg p-4 group relative">
+                          <div className="text-xs text-gray-600 mb-1">ACT</div>
+                          {editingField === "academic_act" ? (
+                            <Input
+                              type="number"
+                              min="0"
+                              max="36"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onBlur={() => handleFieldUpdate("academic_act", editingValue)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleFieldUpdate("academic_act", editingValue)
+                                } else if (e.key === "Escape") {
+                                  setEditingField(null)
+                                  setEditingValue("")
+                                }
+                              }}
+                              className="text-3xl font-bold h-12 text-blue-600"
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-200 rounded p-1 -m-1"
+                              onClick={() => startEditing("academic_act", selectedAthlete.academic_act)}
+                            >
+                              {selectedAthlete.academic_act ? (
+                                <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_act}</div>
+                              ) : (
+                                <div className="text-3xl font-bold text-gray-400">-</div>
+                              )}
+                              <div className="text-xs text-gray-500 mt-1">Out of 36</div>
+                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
                       {selectedAthlete.academic_summary && (
                         <div className="mt-4 bg-gray-100 rounded-lg p-4">
