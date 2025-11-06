@@ -80,6 +80,10 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
 
   useEffect(() => {
     console.log("[v0] RecruitingActionsDashboard mounted with schoolId:", schoolId)
+    console.log("[v0] Dashboard received prospects:", prospects?.length || 0)
+    if (prospects && prospects.length > 0) {
+      console.log("[v0] Dashboard - Prospects with birthdates:", prospects.filter(p => p.birthdate).map(p => ({ name: p.name, birthdate: p.birthdate })))
+    }
     fetchActions()
     
     // If athletes are provided as prop, use those; otherwise fetch
@@ -90,7 +94,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       fetchAthletes()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId, providedAthletes])
+  }, [schoolId, providedAthletes, prospects])
 
   const fetchAthletes = async () => {
     // Skip if we're using schoolId - athletes for school portals come from prospects API
