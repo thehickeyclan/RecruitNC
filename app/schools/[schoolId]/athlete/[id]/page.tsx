@@ -24,7 +24,9 @@ import {
   FileText,
   MessageSquare,
   Save,
-  Plus
+  Plus,
+  Edit2,
+  Award
 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -49,6 +51,18 @@ interface Athlete {
   careerRecord: string
   college_opens_experience: string
   highlight_video_url: string
+  
+  // Performance/Tournament Data
+  super_32_2023_record?: string
+  super_32_2023_placement?: string
+  super_32_2024_record?: string
+  super_32_2024_placement?: string
+  super_32_2025_record?: string
+  super_32_2025_placement?: string
+  nhsca_2024_record?: string
+  nhsca_2024_placement?: string
+  nhsca_2025_record?: string
+  nhsca_2025_placement?: string
   
   // Recruiting tracking data
   is_starred: boolean
@@ -81,6 +95,10 @@ interface Athlete {
   scholarship_requirements?: string
   ability_to_pay?: string
   financial_notes?: string
+  financial_concerns?: string
+  merit_scholarship_eligible?: boolean
+  need_based_aid_eligible?: boolean
+  aid_application_status?: string
 }
 
 export default function AthleteRecruitingDetailPage() {
@@ -92,6 +110,10 @@ export default function AthleteRecruitingDetailPage() {
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  
+  // Inline editing state
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState<string>("")
   
   // Form states for milestones
   const [milestones, setMilestones] = useState({
@@ -123,6 +145,62 @@ export default function AthleteRecruitingDetailPage() {
   useEffect(() => {
     fetchAthleteDetails()
   }, [athleteId])
+
+  const handleFieldUpdate = async (field: string, value: string) => {
+    if (!athlete) return
+
+    const previousValue = athlete[field as keyof Athlete]
+    
+    // Optimistic update
+    setAthlete((prev) => {
+      if (!prev) return null
+      return { ...prev, [field]: value || null } as Athlete
+    })
+
+    try {
+      const searchParams = new URLSearchParams(window.location.search)
+      const viewAsCoachId = searchParams.get("viewAsCoachId")
+      
+      const response = await fetch("/api/coaches/update-athlete-field", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: athlete.id,
+          field,
+          value: value || null,
+          viewAsCoachId,
+        }),
+      })
+
+      if (!response.ok) {
+        // Revert on error
+        setAthlete((prev) => {
+          if (!prev) return null
+          return { ...prev, [field]: previousValue } as Athlete
+        })
+        const errorData = await response.json()
+        toast.error(errorData.error || "Failed to update field")
+        return
+      }
+
+      toast.success("Field updated successfully")
+    } catch (error) {
+      // Revert on error
+      setAthlete((prev) => {
+        if (!prev) return null
+        return { ...prev, [field]: previousValue } as Athlete
+      })
+      toast.error("Network error. Please try again.")
+    } finally {
+      setEditingField(null)
+      setEditingValue("")
+    }
+  }
+
+  const startEditing = (field: string, currentValue: any) => {
+    setEditingField(field)
+    setEditingValue(currentValue?.toString() || "")
+  }
 
   const fetchAthleteDetails = async () => {
     try {
@@ -417,8 +495,9 @@ export default function AthleteRecruitingDetailPage() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
             <TabsTrigger value="profile" className="text-xs md:text-sm">Profile</TabsTrigger>
+            <TabsTrigger value="performance" className="text-xs md:text-sm">Performance</TabsTrigger>
             <TabsTrigger value="recruiting" className="text-xs md:text-sm">Recruiting</TabsTrigger>
             <TabsTrigger value="financial" className="text-xs md:text-sm">Financial</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs md:text-sm">Notes</TabsTrigger>
@@ -427,7 +506,7 @@ export default function AthleteRecruitingDetailPage() {
           {/* PROFILE TAB */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Academic Stats */}
+              {/* Academic Stats - Inline Editable */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -436,30 +515,123 @@ export default function AthleteRecruitingDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {athlete.academic_gpa && (
-                    <div>
-                      <Label className="text-sm text-gray-600">GPA</Label>
-                      <p className="text-2xl font-bold text-[#002147]">{athlete.academic_gpa.toFixed(2)}</p>
-                    </div>
-                  )}
+                  {/* GPA */}
+                  <div className="group relative">
+                    <Label className="text-sm text-gray-600">GPA</Label>
+                    {editingField === "academic_gpa" ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="4"
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onBlur={() => handleFieldUpdate("academic_gpa", editingValue)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleFieldUpdate("academic_gpa", editingValue)
+                          } else if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        className="text-2xl font-bold h-12"
+                        autoFocus
+                      />
+                    ) : (
+                      <div
+                        className="cursor-pointer hover:bg-gray-50 rounded p-2 -m-2"
+                        onClick={() => startEditing("academic_gpa", athlete.academic_gpa)}
+                      >
+                        {athlete.academic_gpa ? (
+                          <p className="text-2xl font-bold text-[#002147]">{athlete.academic_gpa.toFixed(2)}</p>
+                        ) : (
+                          <p className="text-2xl font-bold text-gray-400">-</p>
+                        )}
+                        <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                      </div>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
-                    {athlete.academic_sat && (
-                      <div>
-                        <Label className="text-sm text-gray-600">SAT</Label>
-                        <p className="text-xl font-semibold text-gray-900">{athlete.academic_sat}</p>
-                      </div>
-                    )}
-                    {athlete.academic_act && (
-                      <div>
-                        <Label className="text-sm text-gray-600">ACT</Label>
-                        <p className="text-xl font-semibold text-gray-900">{athlete.academic_act}</p>
-                      </div>
-                    )}
+                    {/* SAT */}
+                    <div className="group relative">
+                      <Label className="text-sm text-gray-600">SAT</Label>
+                      {editingField === "academic_sat" ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max="1600"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleFieldUpdate("academic_sat", editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleFieldUpdate("academic_sat", editingValue)
+                            } else if (e.key === "Escape") {
+                              setEditingField(null)
+                              setEditingValue("")
+                            }
+                          }}
+                          className="text-xl font-semibold h-10"
+                          autoFocus
+                        />
+                      ) : (
+                        <div
+                          className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                          onClick={() => startEditing("academic_sat", athlete.academic_sat)}
+                        >
+                          {athlete.academic_sat ? (
+                            <p className="text-xl font-semibold text-gray-900">{athlete.academic_sat}</p>
+                          ) : (
+                            <p className="text-xl font-semibold text-gray-400">-</p>
+                          )}
+                          <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-1 right-1" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ACT */}
+                    <div className="group relative">
+                      <Label className="text-sm text-gray-600">ACT</Label>
+                      {editingField === "academic_act" ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max="36"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleFieldUpdate("academic_act", editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleFieldUpdate("academic_act", editingValue)
+                            } else if (e.key === "Escape") {
+                              setEditingField(null)
+                              setEditingValue("")
+                            }
+                          }}
+                          className="text-xl font-semibold h-10"
+                          autoFocus
+                        />
+                      ) : (
+                        <div
+                          className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                          onClick={() => startEditing("academic_act", athlete.academic_act)}
+                        >
+                          {athlete.academic_act ? (
+                            <p className="text-xl font-semibold text-gray-900">{athlete.academic_act}</p>
+                          ) : (
+                            <p className="text-xl font-semibold text-gray-400">-</p>
+                          )}
+                          <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-1 right-1" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Contact Info */}
+              {/* Contact Info - Inline Editable */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -468,28 +640,129 @@ export default function AthleteRecruitingDetailPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {athlete.contactEmail && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      <a href={`mailto:${athlete.contactEmail}`} className="text-blue-600 hover:underline">
-                        {athlete.contactEmail}
-                      </a>
-                    </div>
-                  )}
-                  {athlete.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      <a href={`tel:${athlete.phone}`} className="text-blue-600 hover:underline">
-                        {athlete.phone}
-                      </a>
-                    </div>
-                  )}
-                  {athlete.location && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-700">{athlete.location}</span>
-                    </div>
-                  )}
+                  {/* Email */}
+                  <div className="flex items-center gap-2 text-sm group">
+                    <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    {editingField === "contactEmail" ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Input
+                          type="email"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleFieldUpdate("contactEmail", editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleFieldUpdate("contactEmail", editingValue)
+                            } else if (e.key === "Escape") {
+                              setEditingField(null)
+                              setEditingValue("")
+                            }
+                          }}
+                          className="flex-1 h-8 text-sm"
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                        onClick={() => startEditing("contactEmail", athlete.contactEmail)}
+                      >
+                        {athlete.contactEmail ? (
+                          <a
+                            href={`mailto:${athlete.contactEmail}`}
+                            className="text-blue-600 hover:underline flex-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {athlete.contactEmail}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 italic">Click to add email</span>
+                        )}
+                        <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex items-center gap-2 text-sm group">
+                    <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    {editingField === "phone" ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Input
+                          type="tel"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleFieldUpdate("phone", editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleFieldUpdate("phone", editingValue)
+                            } else if (e.key === "Escape") {
+                              setEditingField(null)
+                              setEditingValue("")
+                            }
+                          }}
+                          className="flex-1 h-8 text-sm"
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                        onClick={() => startEditing("phone", athlete.phone)}
+                      >
+                        {athlete.phone ? (
+                          <a
+                            href={`tel:${athlete.phone}`}
+                            className="text-blue-600 hover:underline flex-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {athlete.phone}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 italic">Click to add phone</span>
+                        )}
+                        <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Location */}
+                  <div className="flex items-center gap-2 text-sm group">
+                    <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    {editingField === "location" ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Input
+                          type="text"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleFieldUpdate("location", editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleFieldUpdate("location", editingValue)
+                            } else if (e.key === "Escape") {
+                              setEditingField(null)
+                              setEditingValue("")
+                            }
+                          }}
+                          className="flex-1 h-8 text-sm"
+                          placeholder="State (e.g., NC, VA)"
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                        onClick={() => startEditing("location", athlete.location)}
+                      >
+                        {athlete.location ? (
+                          <span className="text-gray-700 flex-1">{athlete.location}</span>
+                        ) : (
+                          <span className="text-gray-400 italic">Click to add location</span>
+                        )}
+                        <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
 
@@ -547,6 +820,161 @@ export default function AthleteRecruitingDetailPage() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* PERFORMANCE TAB */}
+          <TabsContent value="performance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Award className="h-5 w-5 text-[#002147]" />
+                  Tournament Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Career Record */}
+                {athlete.careerRecord && (
+                  <div className="bg-gradient-to-r from-[#002147] to-[#13294B] rounded-lg p-6 text-white">
+                    <div className="text-sm font-semibold mb-2">Career Record</div>
+                    <div className="text-4xl font-bold">{athlete.careerRecord}</div>
+                  </div>
+                )}
+
+                {/* Super 32 Results */}
+                {(athlete.super_32_2023_record || athlete.super_32_2023_placement ||
+                  athlete.super_32_2024_record || athlete.super_32_2024_placement ||
+                  athlete.super_32_2025_record || athlete.super_32_2025_placement) && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-[#BC0B03]" />
+                      Super 32 Championships
+                    </h3>
+                    <div className="space-y-3">
+                      {(athlete.super_32_2023_record || athlete.super_32_2023_placement) && (
+                        <Card className="bg-gray-50">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold text-gray-900">Super 32 2023</div>
+                                {athlete.super_32_2023_record && (
+                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.super_32_2023_record}</div>
+                                )}
+                                {athlete.super_32_2023_placement && (
+                                  <div className="text-sm text-gray-600 mt-1">{athlete.super_32_2023_placement}</div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(athlete.super_32_2024_record || athlete.super_32_2024_placement) && (
+                        <Card className="bg-gray-50">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold text-gray-900">Super 32 2024</div>
+                                {athlete.super_32_2024_record && (
+                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.super_32_2024_record}</div>
+                                )}
+                                {athlete.super_32_2024_placement && (
+                                  <div className="text-sm text-gray-600 mt-1">{athlete.super_32_2024_placement}</div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(athlete.super_32_2025_record || athlete.super_32_2025_placement) && (
+                        <Card className="bg-gray-50">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold text-gray-900">Super 32 2025</div>
+                                {athlete.super_32_2025_record && (
+                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.super_32_2025_record}</div>
+                                )}
+                                {athlete.super_32_2025_placement && (
+                                  <div className="text-sm text-gray-600 mt-1">{athlete.super_32_2025_placement}</div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* NHSCA Results */}
+                {(athlete.nhsca_2024_record || athlete.nhsca_2024_placement ||
+                  athlete.nhsca_2025_record || athlete.nhsca_2025_placement) && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-[#BC0B03]" />
+                      NHSCA Nationals
+                    </h3>
+                    <div className="space-y-3">
+                      {(athlete.nhsca_2024_record || athlete.nhsca_2024_placement) && (
+                        <Card className="bg-gray-50">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold text-gray-900">NHSCA 2024</div>
+                                {athlete.nhsca_2024_record && (
+                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.nhsca_2024_record}</div>
+                                )}
+                                {athlete.nhsca_2024_placement && (
+                                  <div className="text-sm text-gray-600 mt-1">{athlete.nhsca_2024_placement}</div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {(athlete.nhsca_2025_record || athlete.nhsca_2025_placement) && (
+                        <Card className="bg-gray-50">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold text-gray-900">NHSCA 2025</div>
+                                {athlete.nhsca_2025_record && (
+                                  <div className="text-lg font-bold text-[#BC0B03] mt-1">{athlete.nhsca_2025_record}</div>
+                                )}
+                                {athlete.nhsca_2025_placement && (
+                                  <div className="text-sm text-gray-600 mt-1">{athlete.nhsca_2025_placement}</div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* College Opens Experience */}
+                {athlete.college_opens_experience && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-3">College Opens Experience</h3>
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <p className="text-sm text-gray-700">{athlete.college_opens_experience}</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {!athlete.careerRecord && 
+                 !athlete.super_32_2023_record && !athlete.super_32_2024_record && !athlete.super_32_2025_record &&
+                 !athlete.nhsca_2024_record && !athlete.nhsca_2025_record &&
+                 !athlete.college_opens_experience && (
+                  <div className="text-center py-12 text-gray-500">
+                    <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="italic">No performance data available</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* RECRUITING STATUS TAB */}
