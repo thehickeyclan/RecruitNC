@@ -3546,6 +3546,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       <CreateProspectModal
         isOpen={showCreateProspectModal}
         onClose={() => setShowCreateProspectModal(false)}
+        schoolId={params.schoolId}
         onProspectCreated={() => {
           setShowCreateProspectModal(false)
           fetchProspects() // Refresh the prospects list

@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
       phone,
       instagram,
       notes,
+      schoolId,
     } = body
 
     // Validation - align with admin athlete mandatory fields
@@ -49,6 +50,17 @@ export async function POST(request: NextRequest) {
 
     // Determine if this is an NC athlete
     const isNCathlete = state === "NC"
+
+    // Get school name if schoolId provided
+    let schoolName = null
+    if (schoolId) {
+      const { data: schoolData } = await supabase
+        .from("schools")
+        .select("name")
+        .eq("id", schoolId)
+        .single()
+      schoolName = schoolData?.name
+    }
 
     // Create the athlete record
     const { data: athlete, error: athleteError } = await supabase
@@ -81,14 +93,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-star this athlete for the coach using college_coach_stars
-    // Note: school_id is NOT stored in college_coach_stars, it's in user_profiles
+    // Store school name in notes so prospects API can find it (for admins viewing school portals)
+    const starNotes = schoolName 
+      ? `[School: ${schoolName}]${notes ? ` ${notes}` : ''}` 
+      : notes || null
+    
     const { error: starError } = await supabase
       .from("college_coach_stars")
       .insert({
         coach_user_id: session.user.id,
         athlete_id: athlete.id,
         pipeline_stage: "Prospect",
-        notes: notes || null,
+        notes: starNotes,
         starred_at: new Date().toISOString(),
       })
 

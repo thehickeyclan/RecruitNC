@@ -14,6 +14,7 @@ interface CreateProspectModalProps {
   isOpen: boolean
   onClose: () => void
   onProspectCreated: () => void
+  schoolId?: string
 }
 
 const US_STATES = [
@@ -81,7 +82,7 @@ const GRADUATION_YEARS = [
   new Date().getFullYear(),
 ]
 
-export function CreateProspectModal({ isOpen, onClose, onProspectCreated }: CreateProspectModalProps) {
+export function CreateProspectModal({ isOpen, onClose, onProspectCreated, schoolId }: CreateProspectModalProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -131,6 +132,7 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated }: Crea
           phone: formData.phone.trim() || null,
           instagram: formData.instagram.trim() || null,
           notes: formData.notes.trim() || null,
+          schoolId: schoolId,
         }),
       })
 
