@@ -835,11 +835,25 @@ export default function AthleteRecruitingDetailPage() {
                     ) : (
                       <div
                         className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
-                        onClick={() => startEditing("birthdate", athlete.birthdate?.split('T')[0])}
+                        onClick={() => {
+                          if (athlete.birthdate) {
+                            // Parse as local date to avoid timezone shifts
+                            const dateStr = athlete.birthdate.includes('T') ? athlete.birthdate.split('T')[0] : athlete.birthdate
+                            startEditing("birthdate", dateStr)
+                          } else {
+                            startEditing("birthdate", "")
+                          }
+                        }}
                       >
                         {athlete.birthdate ? (
                           <span className="text-gray-700 flex-1">
-                            {new Date(athlete.birthdate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            {(() => {
+                              // Parse as local date to avoid timezone shifts
+                              const dateStr = athlete.birthdate.includes('T') ? athlete.birthdate.split('T')[0] : athlete.birthdate
+                              const [year, month, day] = dateStr.split('-').map(Number)
+                              const date = new Date(year, month - 1, day)
+                              return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                            })()}
                           </span>
                         ) : (
                           <span className="text-gray-400 italic">Click to add birthdate</span>

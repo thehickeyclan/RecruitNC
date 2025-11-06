@@ -155,30 +155,55 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
 
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
-    if (!prospects) return []
+    if (!prospects) {
+      console.log("[v0] No prospects provided for birthday events")
+      return []
+    }
     
+    console.log("[v0] Processing birthdays for", prospects.length, "prospects")
     const currentYear = new Date().getFullYear()
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
-    return prospects
-      .filter(p => p.birthdate)
+    const birthdayEvents = prospects
+      .filter(p => {
+        const hasBirthdate = !!p.birthdate
+        if (hasBirthdate) {
+          console.log("[v0] Found birthdate for", p.name, ":", p.birthdate)
+        }
+        return hasBirthdate
+      })
       .map(prospect => {
         try {
-          const birthDate = new Date(prospect.birthdate!)
-          const thisYearBirthday = new Date(currentYear, birthDate.getMonth(), birthDate.getDate())
+          // Parse birthdate as local date to avoid timezone issues
+          const dateStr = prospect.birthdate!.includes('T') 
+            ? prospect.birthdate!.split('T')[0] 
+            : prospect.birthdate!
+          const [year, month, day] = dateStr.split('-').map(Number)
+          const birthDate = new Date(year, month - 1, day) // month is 0-indexed
+          
+          console.log("[v0] Parsed birth date for", prospect.name, ":", { year, month, day, birthDate })
+          
+          const thisYearBirthday = new Date(currentYear, month - 1, day)
           thisYearBirthday.setHours(0, 0, 0, 0)
+          
+          console.log("[v0] This year birthday:", thisYearBirthday, "Today:", today)
           
           // If birthday already passed this year, use next year
           const birthday = thisYearBirthday < today 
-            ? new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate())
+            ? new Date(currentYear + 1, month - 1, day)
             : thisYearBirthday
           
-          return {
+          birthday.setHours(0, 0, 0, 0)
+          
+          // Format as YYYY-MM-DD in local timezone
+          const birthdayStr = `${birthday.getFullYear()}-${String(birthday.getMonth() + 1).padStart(2, '0')}-${String(birthday.getDate()).padStart(2, '0')}`
+          
+          const event = {
             id: `birthday-${prospect.id}`,
             action_type: "birthday",
-            action_date: birthday.toISOString().split('T')[0],
-            follow_up_date: birthday.toISOString().split('T')[0],
+            action_date: birthdayStr,
+            follow_up_date: birthdayStr,
             description: `${prospect.name}'s Birthday`,
             outcome: null,
             athlete_id: prospect.id,
@@ -187,11 +212,18 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
             athlete_photo: prospect.photourl || "",
             coach_name: "",
           } as RecruitingAction
+          
+          console.log("[v0] Created birthday event for", prospect.name, "on", event.follow_up_date, "Birthday obj:", birthday)
+          return event
         } catch (e) {
+          console.error("[v0] Error processing birthday for", prospect.name, ":", e)
           return null
         }
       })
       .filter((e): e is RecruitingAction => e !== null)
+    
+    console.log("[v0] Created", birthdayEvents.length, "birthday events")
+    return birthdayEvents
   }
 
   const categorizeActions = () => {
