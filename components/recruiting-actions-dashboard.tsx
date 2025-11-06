@@ -165,9 +165,15 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     }
     
     console.log("[v0] Processing birthdays for", prospects.length, "prospects")
-    const currentYear = new Date().getFullYear()
-    const today = new Date()
+    
+    // Get today's date in local timezone (EST)
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    // Create today at midnight in local timezone
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     today.setHours(0, 0, 0, 0)
+    
+    console.log("[v0] Today (local):", today.toISOString(), "Date:", today.getDate(), "Month:", today.getMonth() + 1)
     
     const birthdayEvents = prospects
       .filter(p => {
@@ -184,23 +190,27 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
             ? prospect.birthdate!.split('T')[0] 
             : prospect.birthdate!
           const [year, month, day] = dateStr.split('-').map(Number)
-          const birthDate = new Date(year, month - 1, day) // month is 0-indexed
           
-          console.log("[v0] Parsed birth date for", prospect.name, ":", { year, month, day, birthDate })
+          console.log("[v0] Parsed birth date for", prospect.name, ":", { year, month, day, dateStr })
           
+          // Create this year's birthday in local timezone
           const thisYearBirthday = new Date(currentYear, month - 1, day)
           thisYearBirthday.setHours(0, 0, 0, 0)
           
-          console.log("[v0] This year birthday:", thisYearBirthday, "Today:", today)
+          // Create next year's birthday in local timezone
+          const nextYearBirthday = new Date(currentYear + 1, month - 1, day)
+          nextYearBirthday.setHours(0, 0, 0, 0)
+          
+          console.log("[v0] This year birthday (local):", thisYearBirthday.toISOString(), "Date:", thisYearBirthday.getDate(), "Month:", thisYearBirthday.getMonth() + 1)
+          console.log("[v0] Today (local):", today.toISOString(), "Date:", today.getDate(), "Month:", today.getMonth() + 1)
+          console.log("[v0] Comparison:", thisYearBirthday.getTime(), "vs", today.getTime(), "diff:", thisYearBirthday.getTime() - today.getTime())
           
           // If birthday already passed this year, use next year
           const birthday = thisYearBirthday < today 
-            ? new Date(currentYear + 1, month - 1, day)
+            ? nextYearBirthday
             : thisYearBirthday
           
-          birthday.setHours(0, 0, 0, 0)
-          
-          // Format as YYYY-MM-DD in local timezone
+          // Format as YYYY-MM-DD in local timezone (no time component)
           const birthdayStr = `${birthday.getFullYear()}-${String(birthday.getMonth() + 1).padStart(2, '0')}-${String(birthday.getDate()).padStart(2, '0')}`
           
           const event = {
@@ -217,7 +227,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
             coach_name: "",
           } as RecruitingAction
           
-          console.log("[v0] Created birthday event for", prospect.name, "on", event.follow_up_date, "Birthday obj:", birthday)
+          console.log("[v0] Created birthday event for", prospect.name, "on", event.follow_up_date, "Birthday date:", birthday.getDate(), "Month:", birthday.getMonth() + 1)
           return event
         } catch (e) {
           console.error("[v0] Error processing birthday for", prospect.name, ":", e)
@@ -231,10 +241,15 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   }
 
   const categorizeActions = () => {
+    // Get today's date in local timezone (EST)
     const now = new Date()
-    // Normalize today to midnight to avoid timezone issues
+    // Normalize today to midnight in local timezone
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     today.setHours(0, 0, 0, 0)
+
+    // Calculate end of current month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0) // Last day of current month
+    endOfMonth.setHours(23, 59, 59, 999)
 
     const todayActions: RecruitingAction[] = []
     const upcomingActions: RecruitingAction[] = []
@@ -247,25 +262,46 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
 
     console.log("[v0] Total actions to categorize:", actions.length)
     console.log("[v0] Birthday events:", birthdayEvents.length)
-    console.log("[v0] Today date:", today.toISOString())
+    console.log("[v0] Today (local):", today.toISOString(), "Date:", today.getDate(), "Month:", today.getMonth() + 1)
+    console.log("[v0] End of month:", endOfMonth.toISOString(), "Date:", endOfMonth.getDate(), "Month:", endOfMonth.getMonth() + 1)
 
     allEvents.forEach((action) => {
       // If action has a follow_up_date, categorize by that date
       if (action.follow_up_date) {
-        const followUpDate = new Date(action.follow_up_date)
-        // Normalize to midnight for comparison
-        const actionDate = new Date(followUpDate.getFullYear(), followUpDate.getMonth(), followUpDate.getDate())
+        // Parse the date string as local date (YYYY-MM-DD format)
+        const dateStr = action.follow_up_date.includes('T') 
+          ? action.follow_up_date.split('T')[0] 
+          : action.follow_up_date
+        const [year, month, day] = dateStr.split('-').map(Number)
+        
+        // Create date in local timezone
+        const actionDate = new Date(year, month - 1, day)
         actionDate.setHours(0, 0, 0, 0)
 
         const daysDiff = Math.floor((actionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+        if (action.action_type === "birthday") {
+          console.log("[v0] Birthday categorization:", {
+            name: action.athlete_name,
+            follow_up_date: action.follow_up_date,
+            actionDate: actionDate.toISOString(),
+            actionDateLocal: `${actionDate.getMonth() + 1}/${actionDate.getDate()}`,
+            today: today.toISOString(),
+            todayLocal: `${today.getMonth() + 1}/${today.getDate()}`,
+            daysDiff,
+            isThisMonth: actionDate <= endOfMonth
+          })
+        }
 
         if (daysDiff < 0) {
           overdueActions.push(action)
         } else if (daysDiff === 0) {
           todayActions.push(action)
-        } else {
+        } else if (actionDate <= endOfMonth) {
+          // Only show upcoming events that are within this month
           upcomingActions.push(action)
         }
+        // Events beyond this month are not shown in upcoming
       } else {
         // Actions without follow_up_date - show in upcoming (they need attention/scheduling)
         console.log("[v0] Action has no follow_up_date, adding to upcoming:", action.id, action.action_date)
