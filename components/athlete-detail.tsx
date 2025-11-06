@@ -5,13 +5,32 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy } from "lucide-react"
+import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { ContactInfoSection } from "./contact-info-section"
 import { useAuth } from "@/contexts/auth-context"
+
+// Helper function to extract YouTube video ID from various URL formats
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\?\/]+)/,
+    /youtube\.com\/shorts\/([^&\?\/]+)/,
+  ]
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match && match[1]) {
+      return match[1]
+    }
+  }
+  
+  return null
+}
 
 interface AthleteDetailProps {
   athlete: {
@@ -62,6 +81,7 @@ interface AthleteDetailProps {
     instagram?: string
     instagram_handle?: string
     instagram_username?: string
+    highlight_video_url?: string
     socialMedia?: any
     social_media?: any
     claimed_by_user_id?: string
@@ -632,6 +652,35 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           </div>
         </div>
       </Card>
+
+      {/* Highlight Video Section */}
+      {athlete?.highlight_video_url && (() => {
+        const videoId = getYouTubeVideoId(athlete.highlight_video_url)
+        if (!videoId) return null
+        
+        return (
+          <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
+            <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
+              <div className="flex items-center gap-3">
+                <Video className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Highlight Reel</h2>
+              </div>
+            </div>
+            <div className="p-8">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title="Wrestling Highlight Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                  style={{ border: 'none' }}
+                />
+              </div>
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Contact Info Section */}
       <ContactInfoSection athlete={athlete} />
