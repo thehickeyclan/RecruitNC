@@ -20,7 +20,7 @@ export async function GET() {
     // Fetch ALL user profiles (service role bypasses RLS)
     const { data: allProfiles, error: profilesError } = await supabase
       .from("user_profiles")
-      .select("id, full_name, email, school_id, role")
+      .select("id, user_id, full_name, email, school_id, role")
 
     if (profilesError) {
       console.error("[v0] Error fetching profiles:", profilesError)
@@ -50,6 +50,7 @@ export async function GET() {
         coach_count: schoolCoaches.length,
         coaches: schoolCoaches.map((c) => ({
           id: c.id,
+          user_id: c.user_id,
           full_name: c.full_name,
           email: c.email,
         })),

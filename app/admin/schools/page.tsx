@@ -11,6 +11,7 @@ import Image from "next/image"
 
 interface Coach {
   id: string
+  user_id: string
   full_name: string
   email: string
   institution: string
@@ -271,10 +272,10 @@ export default function SchoolsManagementPage() {
                                 size="sm"
                                 variant="outline"
                                 className="flex-shrink-0 text-xs bg-transparent"
-                                onClick={() => handleImpersonate(coach.id, coach.email, school.id)}
-                                disabled={impersonatingCoachId === coach.id}
+                                onClick={() => handleImpersonate(coach.user_id, coach.email, school.id)}
+                                disabled={impersonatingCoachId === coach.user_id}
                               >
-                                {impersonatingCoachId === coach.id ? "Loading..." : "Impersonate"}
+                                {impersonatingCoachId === coach.user_id ? "Loading..." : "Impersonate"}
                               </Button>
                             </div>
                           ))}
