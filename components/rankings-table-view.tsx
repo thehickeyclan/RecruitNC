@@ -48,12 +48,13 @@ interface Athlete {
 interface RankingsTableViewProps {
   athletes: Athlete[]
   loading?: boolean
+  hideRankColumn?: boolean
 }
 
 type SortField = "rank" | "name" | "school" | "weight"
 type SortDirection = "asc" | "desc"
 
-export function RankingsTableView({ athletes, loading }: RankingsTableViewProps) {
+export function RankingsTableView({ athletes, loading, hideRankColumn = false }: RankingsTableViewProps) {
   const [sortField, setSortField] = useState<SortField>("rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [collegeLogos, setCollegeLogos] = useState<Record<string, string>>({})
@@ -288,16 +289,18 @@ export function RankingsTableView({ athletes, loading }: RankingsTableViewProps)
                   <Star className="w-4 h-4 inline-block" />
                 </TableHead>
               )}
-              <TableHead className="w-16 text-white font-semibold">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleSort("rank")}
-                  className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
-                >
-                  Rank <SortIcon field="rank" />
-                </Button>
-              </TableHead>
+              {!hideRankColumn && (
+                <TableHead className="w-16 text-white font-semibold">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleSort("rank")}
+                    className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
+                  >
+                    Rank <SortIcon field="rank" />
+                  </Button>
+                </TableHead>
+              )}
               <TableHead className="min-w-[200px] text-white font-semibold">
                 <Button
                   variant="ghost"
@@ -340,7 +343,7 @@ export function RankingsTableView({ athletes, loading }: RankingsTableViewProps)
             {sortedAthletes.map((athlete, index) => (
               <>
                 {/* Add divider after rank #30 */}
-                {athlete.prospect_ranking === 30 && sortedAthletes.some(a => a.prospect_ranking > 30) && (
+                {!hideRankColumn && athlete.prospect_ranking === 30 && sortedAthletes.some(a => a.prospect_ranking > 30) && (
                   <TableRow key={`divider-${athlete.id}`} className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
                     <TableCell colSpan={canSeeWatchList ? 10 : 9} className="py-2 text-center">
                       <div className="flex items-center justify-center gap-3">
@@ -374,28 +377,30 @@ export function RankingsTableView({ athletes, loading }: RankingsTableViewProps)
                     </Button>
                   </TableCell>
                 )}
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {athlete.prospect_ranking <= 30 && (
-                      <div
-                        className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
-                        style={{ backgroundColor: "#B31B1B" }}
-                      >
-                        #{athlete.prospect_ranking}
-                      </div>
-                    )}
-                    {athlete.photourl && (
-                      <img
-                        src={athlete.photourl || "/placeholder.svg"}
-                        alt={athlete.name}
-                        className="w-8 h-8 rounded-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none"
-                        }}
-                      />
-                    )}
-                  </div>
-                </TableCell>
+                {!hideRankColumn && (
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {athlete.prospect_ranking <= 30 && (
+                        <div
+                          className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
+                          style={{ backgroundColor: "#B31B1B" }}
+                        >
+                          #{athlete.prospect_ranking}
+                        </div>
+                      )}
+                      {athlete.photourl && (
+                        <img
+                          src={athlete.photourl || "/placeholder.svg"}
+                          alt={athlete.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none"
+                          }}
+                        />
+                      )}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Link

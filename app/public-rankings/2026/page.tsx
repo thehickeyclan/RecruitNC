@@ -268,9 +268,34 @@ export default function ClassOf2026RankingsPage() {
             </CardContent>
           </Card>
 
+          {/* Top 30 Ranked Section */}
           <div className="mb-8 sm:mb-12">
-            <RankingsTableView athletes={athletes} loading={loadingAthletes} />
+            <div className="mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
+                Top 30 Ranked Prospects
+              </h2>
+            </div>
+            <RankingsTableView 
+              athletes={athletes.filter(a => a.prospect_ranking && a.prospect_ranking <= 30)} 
+              loading={loadingAthletes} 
+            />
           </div>
+
+          {/* North Carolina Prospects Section */}
+          {athletes.filter(a => !a.prospect_ranking || a.prospect_ranking > 30).length > 0 && (
+            <div className="mb-8 sm:mb-12">
+              <div className="mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
+                  North Carolina Prospects
+                </h2>
+              </div>
+              <RankingsTableView 
+                athletes={athletes.filter(a => !a.prospect_ranking || a.prospect_ranking > 30)} 
+                loading={loadingAthletes}
+                hideRankColumn={true}
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <Card className="bg-gradient-to-r from-[#03154C] to-[#1e3a8a] text-white">
