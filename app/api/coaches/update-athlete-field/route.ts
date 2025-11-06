@@ -41,6 +41,14 @@ export async function PUT(request: NextRequest) {
       highschool: "override_highschool",
       graduationyear: "override_graduation_year",
       graduation_year: "override_graduation_year",
+      // Performance fields
+      state_championships: "override_state_championships",
+      nhsca_results_text: "override_nhsca_results",
+      super32_results_text: "override_super32_results",
+      college_opens_experience: "override_college_opens",
+      fargo_experience: "override_fargo",
+      nationally_ranked_wins: "override_ranked_wins",
+      careerRecord: "override_career_record",
     }
 
     const dbField = fieldMap[field]

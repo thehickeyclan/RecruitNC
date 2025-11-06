@@ -108,6 +108,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       highschool: starData.override_highschool ?? athlete.highschool,
       graduationyear: starData.override_graduation_year ?? athlete.graduationyear,
       
+      // Performance overrides (for manually tracked athletes)
+      careerRecord: starData.override_career_record ?? athlete.careerRecord,
+      college_opens_experience: starData.override_college_opens ?? athlete.college_opens_experience,
+      fargo_experience: starData.override_fargo ?? athlete.fargo_experience,
+      nationally_ranked_wins: starData.override_ranked_wins ?? athlete.nationally_ranked_wins,
+      
       // Milestone tracking
       first_contact_date: starData.first_contact_date,
       first_contact_method: starData.first_contact_method,

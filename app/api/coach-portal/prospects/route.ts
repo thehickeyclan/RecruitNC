@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
           // Get athletes where notes mention this school name
           const { data: adminStarredData } = await supabase
             .from("college_coach_stars")
-            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year")
+            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
             .in("coach_user_id", adminUserIds)
             .ilike("notes", `%${schoolInfo.name}%`)
 
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       
       const { data: coachStarredData, error: starError } = await supabase
         .from("college_coach_stars")
-        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year")
+        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
         .in("coach_user_id", coachUserIds)
 
       if (starError) {
@@ -333,6 +333,11 @@ export async function GET(request: NextRequest) {
         weightclass: starInfo?.override_weight ?? prospect.weightclass,
         highschool: starInfo?.override_highschool ?? prospect.highschool,
         graduationyear: starInfo?.override_graduation_year ?? prospect.graduationyear,
+        // Performance overrides
+        careerRecord: starInfo?.override_career_record ?? prospect.careerRecord,
+        college_opens_experience: starInfo?.override_college_opens ?? prospect.college_opens_experience,
+        fargo_experience: starInfo?.override_fargo ?? prospect.fargo_experience,
+        nationally_ranked_wins: starInfo?.override_ranked_wins ?? prospect.nationally_ranked_wins,
         financial_efc: starInfo?.financial_efc,
         financial_aid_needs: starInfo?.financial_aid_needs,
         scholarship_requirements: starInfo?.scholarship_requirements,

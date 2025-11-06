@@ -48,6 +48,7 @@ import { createClient } from "@/lib/supabase/client"
 import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/components/recruiting-actions-dashboard"
 import { CreateProspectModal } from "@/components/create-prospect-modal"
 import { StarRating } from "@/components/star-rating"
+import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 
 interface Prospect {
   id: string
@@ -75,6 +76,8 @@ interface Prospect {
   star_count?: number
   star_rating?: number | null
   careerRecord?: string
+  nhsca_results?: any[]
+  super32_results?: any[]
   super_32_2024_record?: string
   super_32_2024_placement?: string
   super_32_2023_record?: string
@@ -234,6 +237,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [selectedAthlete, setSelectedAthlete] = useState<Prospect | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState<string>("")
+  const [nchsaaResults, setNchsaaResults] = useState<any[]>([])
   const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState("")
   const [newActivity, setNewActivity] = useState({
@@ -597,6 +601,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       console.error("[v0] Error fetching notes:", error)
     }
   }
+
+  const fetchNCHSAAResults = async (athleteName: string, graduationYear: number) => {
+    try {
+      const response = await fetch(`/api/nchsaa-results?athleteName=${encodeURIComponent(athleteName)}&graduationYear=${graduationYear}`)
+      if (response.ok) {
+        const data = await response.json()
+        setNchsaaResults(data.results || [])
+      }
+    } catch (error) {
+      console.error("Error fetching NCHSAA results:", error)
+      setNchsaaResults([])
+    }
+  }
+
+  // Fetch NCHSAA results when athlete is selected
+  useEffect(() => {
+    if (selectedAthlete && selectedAthlete.location === "NC") {
+      fetchNCHSAAResults(selectedAthlete.name, selectedAthlete.graduationyear)
+    } else {
+      setNchsaaResults([])
+    }
+  }, [selectedAthlete?.id])
 
   const fetchActivities = async (athleteId?: string) => {
     try {
@@ -2791,139 +2817,32 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   </TabsContent>
 
                   <TabsContent value="performance" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
-                        <Award className="h-5 w-5" />
-                        Tournament Results
-                      </h3>
+                    {/* Career Record */}
+                    {selectedAthlete.careerRecord && (
+                      <div className="bg-gradient-to-r from-[#002147] to-[#13294B] rounded-lg p-6 text-white mb-4">
+                        <div className="text-sm font-semibold mb-2">Career Record</div>
+                        <div className="text-4xl font-bold">{selectedAthlete.careerRecord}</div>
+                      </div>
+                    )}
 
-                      {nchsaaResults.length > 0 && (
-                        <div className="mb-4">
-                          <div className="text-sm font-semibold text-gray-900 mb-3">NCHSAA State Championships</div>
-                          <div className="space-y-2">
-                            {nchsaaResults.map((result, index) => (
-                              <div key={index} className="bg-gray-100 rounded-lg p-3">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <div className="text-lg font-bold text-blue-600">
-                                      {result.place
-                                        ? `${result.place}${result.place === 1 ? "st" : result.place === 2 ? "nd" : result.place === 3 ? "rd" : "th"} Place`
-                                        : "Participant"}
-                                    </div>
-                                    <div className="text-xs text-gray-600">
-                                      {result.year} • {result.weight_class} • {result.classification}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                    {/* Tournament Results Display (same as unified profile) */}
+                    <TournamentResultsDisplay
+                      nchsaaResults={nchsaaResults}
+                      nhscaResults={selectedAthlete.nhsca_results || []}
+                      super32Results={selectedAthlete.super32_results || []}
+                    />
 
-                      {selectedAthlete.careerRecord ||
-                      selectedAthlete.super_32_2024_record ||
-                      selectedAthlete.nhsca_2024_record ||
-                      selectedAthlete.super_32_2023_record ||
-                      selectedAthlete.super_32_2023_placement ||
-                      selectedAthlete.super_32_2024_record ||
-                      selectedAthlete.super_32_2024_placement ||
-                      selectedAthlete.super_32_2025_record ||
-                      selectedAthlete.super_32_2025_placement ||
-                      selectedAthlete.nhsca_2024_record ||
-                      selectedAthlete.nhsca_2024_placement ||
-                      selectedAthlete.nhsca_2025_record ||
-                      selectedAthlete.nhsca_2025_placement ||
-                      selectedAthlete.college_opens_experience ? (
-                        <div className="space-y-4">
-                          {selectedAthlete.careerRecord && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-xs text-gray-600 mb-1">Career Record</div>
-                              <div className="text-2xl font-bold text-gray-900">{selectedAthlete.careerRecord}</div>
-                            </div>
-                          )}
-
-                          {(selectedAthlete.super_32_2023_record || selectedAthlete.super_32_2023_placement) && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">Super 32 2023</div>
-                              {selectedAthlete.super_32_2023_record && (
-                                <div className="text-lg font-bold text-blue-600 mb-1">
-                                  {selectedAthlete.super_32_2023_record}
-                                </div>
-                              )}
-                              {selectedAthlete.super_32_2023_placement && (
-                                <div className="text-sm text-gray-700">{selectedAthlete.super_32_2023_placement}</div>
-                              )}
-                            </div>
-                          )}
-
-                          {(selectedAthlete.super_32_2024_record || selectedAthlete.super_32_2024_placement) && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">Super 32 2024</div>
-                              {selectedAthlete.super_32_2024_record && (
-                                <div className="text-lg font-bold text-blue-600 mb-1">
-                                  {selectedAthlete.super_32_2024_record}
-                                </div>
-                              )}
-                              {selectedAthlete.super_32_2024_placement && (
-                                <div className="text-sm text-gray-700">{selectedAthlete.super_32_2024_placement}</div>
-                              )}
-                            </div>
-                          )}
-
-                          {(selectedAthlete.super_32_2025_record || selectedAthlete.super_32_2025_placement) && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">Super 32 2025</div>
-                              {selectedAthlete.super_32_2025_record && (
-                                <div className="text-lg font-bold text-blue-600 mb-1">
-                                  {selectedAthlete.super_32_2025_record}
-                                </div>
-                              )}
-                              {selectedAthlete.super_32_2025_placement && (
-                                <div className="text-sm text-gray-700">{selectedAthlete.super_32_2025_placement}</div>
-                              )}
-                            </div>
-                          )}
-
-                          {(selectedAthlete.nhsca_2024_record || selectedAthlete.nhsca_2024_placement) && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">NHSCA 2024</div>
-                              {selectedAthlete.nhsca_2024_record && (
-                                <div className="text-lg font-bold text-blue-600 mb-1">
-                                  {selectedAthlete.nhsca_2024_record}
-                                </div>
-                              )}
-                              {selectedAthlete.nhsca_2024_placement && (
-                                <div className="text-sm text-gray-700">{selectedAthlete.nhsca_2024_placement}</div>
-                              )}
-                            </div>
-                          )}
-
-                          {(selectedAthlete.nhsca_2025_record || selectedAthlete.nhsca_2025_placement) && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">NHSCA 2025</div>
-                              {selectedAthlete.nhsca_2025_record && (
-                                <div className="text-lg font-bold text-blue-600 mb-1">
-                                  {selectedAthlete.nhsca_2025_record}
-                                </div>
-                              )}
-                              {selectedAthlete.nhsca_2025_placement && (
-                                <div className="text-sm text-gray-700">{selectedAthlete.nhsca_2025_placement}</div>
-                              )}
-                            </div>
-                          )}
-
-                          {selectedAthlete.college_opens_experience && (
-                            <div className="bg-gray-100 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-gray-900 mb-2">College Opens</div>
-                              <div className="text-sm text-gray-700">{selectedAthlete.college_opens_experience}</div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic">No tournament results available</p>
-                      )}
-                    </div>
+                    {/* Empty state */}
+                    {!selectedAthlete.careerRecord && 
+                     nchsaaResults.length === 0 &&
+                     (!selectedAthlete.nhsca_results || selectedAthlete.nhsca_results.length === 0) &&
+                     (!selectedAthlete.super32_results || selectedAthlete.super32_results.length === 0) &&
+                     !selectedAthlete.college_opens_experience && (
+                      <div className="text-center py-12 text-gray-500">
+                        <Award className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p className="italic">No performance data available</p>
+                      </div>
+                    )}
 
                     {selectedAthlete.achievements && selectedAthlete.achievements.length > 0 && (
                       <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">

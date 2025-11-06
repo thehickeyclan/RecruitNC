@@ -884,67 +884,222 @@ export default function AthleteRecruitingDetailPage() {
               super32Results={athlete.super32_results || []}
             />
 
-            {/* Additional Sections for Non-NC Athletes or All Athletes */}
-            <div className="space-y-6">
-              {/* College Opens */}
-              {athlete.college_opens_experience && (
-                <Card className="border-t-4 border-t-green-600 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 py-4">
-                    <CardTitle className="text-white flex items-center gap-2 text-lg">
-                      <Trophy className="h-5 w-5" />
-                      College Opens
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <p className="text-gray-700">{athlete.college_opens_experience}</p>
-                  </CardContent>
-                </Card>
-              )}
+            {/* Editable Performance Fields */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Trophy className="h-5 w-5 text-[#002147]" />
+                  Additional Performance Data
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* State Championships (for non-NC athletes) */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">State Championships</Label>
+                  {editingField === "state_championships" ? (
+                    <Textarea
+                      value={editingValue}
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={() => handleFieldUpdate("state_championships", editingValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setEditingField(null)
+                          setEditingValue("")
+                        }
+                      }}
+                      placeholder="e.g., 2024 - 1st Place, 2023 - 3rd Place"
+                      rows={3}
+                      className="w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      onClick={() => startEditing("state_championships", athlete.college_opens_experience)}
+                    >
+                      {athlete.college_opens_experience ? (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add state championship results</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
 
-              {/* Fargo */}
-              {athlete.fargo_experience && (
-                <Card className="border-t-4 border-t-purple-600 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-purple-600 to-purple-700 py-4">
-                    <CardTitle className="text-white flex items-center gap-2 text-lg">
-                      <Trophy className="h-5 w-5" />
-                      Fargo Nationals
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <p className="text-gray-700">{athlete.fargo_experience}</p>
-                  </CardContent>
-                </Card>
-              )}
+                {/* NHSCA Results */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">NHSCA Nationals</Label>
+                  {editingField === "nhsca_results_text" ? (
+                    <Textarea
+                      value={editingValue}
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={() => handleFieldUpdate("nhsca_results_text", editingValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setEditingField(null)
+                          setEditingValue("")
+                        }
+                      }}
+                      placeholder="e.g., 2024 - All-American, 2023 - 5th Place"
+                      rows={3}
+                      className="w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      onClick={() => startEditing("nhsca_results_text", athlete.college_opens_experience)}
+                    >
+                      {athlete.college_opens_experience ? (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add NHSCA results</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
 
-              {/* Nationally Ranked Wins */}
-              {athlete.nationally_ranked_wins && (
-                <Card className="border-t-4 border-t-orange-600 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-orange-600 to-orange-700 py-4">
-                    <CardTitle className="text-white flex items-center gap-2 text-lg">
-                      <Trophy className="h-5 w-5" />
-                      Nationally Ranked Wins
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <p className="text-gray-700">{athlete.nationally_ranked_wins}</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                {/* College Opens */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">College Opens</Label>
+                  {editingField === "college_opens_experience" ? (
+                    <Textarea
+                      value={editingValue}
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={() => handleFieldUpdate("college_opens_experience", editingValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setEditingField(null)
+                          setEditingValue("")
+                        }
+                      }}
+                      placeholder="e.g., Competed at Pembroke Open, Southern Scuffle"
+                      rows={3}
+                      className="w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      onClick={() => startEditing("college_opens_experience", athlete.college_opens_experience)}
+                    >
+                      {athlete.college_opens_experience ? (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add college opens experience</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
 
-            {/* Empty State */}
-            {!athlete.careerRecord && 
-             nchsaaResults.length === 0 &&
-             (!athlete.nhsca_results || athlete.nhsca_results.length === 0) &&
-             (!athlete.super32_results || athlete.super32_results.length === 0) &&
-             !athlete.college_opens_experience &&
-             !athlete.fargo_experience &&
-             !athlete.nationally_ranked_wins && (
-              <div className="text-center py-12 text-gray-500">
-                <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                <p className="italic">No performance data available</p>
-              </div>
-            )}
+                {/* Fargo */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">Fargo Nationals</Label>
+                  {editingField === "fargo_experience" ? (
+                    <Textarea
+                      value={editingValue}
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={() => handleFieldUpdate("fargo_experience", editingValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setEditingField(null)
+                          setEditingValue("")
+                        }
+                      }}
+                      placeholder="e.g., 2024 - Competed at 145lbs"
+                      rows={3}
+                      className="w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      onClick={() => startEditing("fargo_experience", athlete.fargo_experience)}
+                    >
+                      {athlete.fargo_experience ? (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.fargo_experience}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add Fargo results</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Nationally Ranked Wins */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">Nationally Ranked Wins</Label>
+                  {editingField === "nationally_ranked_wins" ? (
+                    <Textarea
+                      value={editingValue}
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={() => handleFieldUpdate("nationally_ranked_wins", editingValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          setEditingField(null)
+                          setEditingValue("")
+                        }
+                      }}
+                      placeholder="e.g., Win over #15 ranked John Doe"
+                      rows={3}
+                      className="w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      onClick={() => startEditing("nationally_ranked_wins", athlete.nationally_ranked_wins)}
+                    >
+                      {athlete.nationally_ranked_wins ? (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.nationally_ranked_wins}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add nationally ranked wins</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Career Record */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">Career Record</Label>
+                  {editingField === "careerRecord" ? (
+                    <Input
+                      value={editingValue}
+                      onChange={(e) => setEditingValue(e.target.value)}
+                      onBlur={() => handleFieldUpdate("careerRecord", editingValue)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleFieldUpdate("careerRecord", editingValue)
+                        } else if (e.key === "Escape") {
+                          setEditingField(null)
+                          setEditingValue("")
+                        }
+                      }}
+                      placeholder="e.g., 125-15"
+                      className="w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200"
+                      onClick={() => startEditing("careerRecord", athlete.careerRecord)}
+                    >
+                      {athlete.careerRecord ? (
+                        <p className="text-lg font-semibold text-gray-900">{athlete.careerRecord}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add career record</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
           </TabsContent>
 
           {/* RECRUITING STATUS TAB */}
