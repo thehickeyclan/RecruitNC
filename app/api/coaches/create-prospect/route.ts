@@ -80,28 +80,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the coach's school_id for college_coach_stars
-    const { data: coachProfile } = await supabase
-      .from("user_profiles")
-      .select("school_id")
-      .eq("user_id", session.user.id)
-      .single()
-
-    if (!coachProfile?.school_id) {
-      console.error("Coach has no school_id assigned")
-      return NextResponse.json(
-        { error: "Your account must be assigned to a school before creating prospects. Please contact an administrator." },
-        { status: 400 }
-      )
-    }
-
     // Auto-star this athlete for the coach using college_coach_stars
+    // Note: school_id is NOT stored in college_coach_stars, it's in user_profiles
     const { error: starError } = await supabase
       .from("college_coach_stars")
       .insert({
         coach_user_id: session.user.id,
         athlete_id: athlete.id,
-        school_id: coachProfile.school_id,
         pipeline_stage: "Prospect",
         recruiting_notes: notes || null,
         starred_at: new Date().toISOString(),

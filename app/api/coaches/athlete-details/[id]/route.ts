@@ -96,28 +96,19 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (!starData) {
       console.log("[v0] No star record found, creating one...")
       
-      // Get the coach's school_id
-      const { data: coachProfile } = await supabase
-        .from("user_profiles")
-        .select("school_id")
-        .eq("user_id", targetCoachId)
+      // Note: school_id is NOT in college_coach_stars, it's in user_profiles
+      const { data: newStar } = await supabase
+        .from("college_coach_stars")
+        .insert({
+          coach_user_id: targetCoachId,
+          athlete_id: athleteId,
+          pipeline_stage: "Prospect",
+          starred_at: new Date().toISOString(),
+        })
+        .select()
         .single()
 
-      if (coachProfile?.school_id) {
-        const { data: newStar } = await supabase
-          .from("college_coach_stars")
-          .insert({
-            coach_user_id: targetCoachId,
-            athlete_id: athleteId,
-            school_id: coachProfile.school_id,
-            pipeline_stage: "Prospect",
-            starred_at: new Date().toISOString(),
-          })
-          .select()
-          .single()
-
-        console.log("[v0] Created new star record:", newStar)
-      }
+      console.log("[v0] Created new star record:", newStar)
       
       // Return athlete data without recruiting tracking
       return NextResponse.json({
