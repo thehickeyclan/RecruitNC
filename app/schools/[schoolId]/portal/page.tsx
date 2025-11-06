@@ -604,10 +604,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   const fetchNCHSAAResults = async (athleteName: string, graduationYear: number) => {
     try {
+      console.log("[v0] Fetching NCHSAA for:", athleteName, graduationYear)
       const response = await fetch(`/api/nchsaa-results?athleteName=${encodeURIComponent(athleteName)}&graduationYear=${graduationYear}`)
       if (response.ok) {
         const data = await response.json()
+        console.log("[v0] NCHSAA results received:", data.results?.length || 0, data.results)
         setNchsaaResults(data.results || [])
+      } else {
+        console.error("[v0] NCHSAA API error:", response.status)
       }
     } catch (error) {
       console.error("Error fetching NCHSAA results:", error)
@@ -617,10 +621,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   // Fetch NCHSAA results when athlete is selected
   useEffect(() => {
-    if (selectedAthlete && selectedAthlete.location === "NC") {
-      fetchNCHSAAResults(selectedAthlete.name, selectedAthlete.graduationyear)
-    } else {
-      setNchsaaResults([])
+    if (selectedAthlete) {
+      console.log("[v0] Selected athlete changed:", selectedAthlete.name, "Location:", selectedAthlete.location)
+      if (selectedAthlete.location === "NC") {
+        fetchNCHSAAResults(selectedAthlete.name, selectedAthlete.graduationyear)
+      } else {
+        console.log("[v0] Not NC athlete, skipping NCHSAA fetch")
+        setNchsaaResults([])
+      }
     }
   }, [selectedAthlete?.id])
 
