@@ -333,6 +333,7 @@ export async function GET(request: NextRequest) {
         weightclass: starInfo?.override_weight ?? prospect.weightclass,
         highschool: starInfo?.override_highschool ?? prospect.highschool,
         graduationyear: starInfo?.override_graduation_year ?? prospect.graduationyear,
+        birthdate: starInfo?.override_birthdate ?? prospect.birthdate,
         // Performance overrides
         careerRecord: starInfo?.override_career_record ?? prospect.careerRecord,
         college_opens_experience: starInfo?.override_college_opens ?? prospect.college_opens_experience,

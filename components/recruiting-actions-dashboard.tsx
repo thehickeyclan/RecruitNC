@@ -4,7 +4,7 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Clock, AlertCircle, TableIcon, LayoutDashboard, ChevronLeft, ChevronRight, Edit, X, Check, Plus } from "lucide-react"
+import { CalendarIcon, Clock, AlertCircle, TableIcon, LayoutDashboard, ChevronLeft, ChevronRight, Edit, X, Check, Plus, Cake } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -27,9 +27,19 @@ interface RecruitingAction {
   coach_name: string
 }
 
+interface AthleteWithBirthday {
+  id: string
+  name: string
+  birthdate?: string
+  photourl?: string
+  graduationyear?: number
+  weightclass?: string
+}
+
 interface RecruitingActionsDashboardProps {
   schoolId?: string
   athletes?: { id: string; name: string }[] // Optional: pass athletes from parent (e.g., prospects from portal)
+  prospects?: AthleteWithBirthday[] // Optional: pass full prospects with birthdates
 }
 
 export interface RecruitingActionsDashboardRef {
@@ -37,7 +47,7 @@ export interface RecruitingActionsDashboardRef {
 }
 
 export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardRef, RecruitingActionsDashboardProps>(
-  ({ schoolId, athletes: providedAthletes }, ref) => {
+  ({ schoolId, athletes: providedAthletes, prospects }, ref) => {
   const [actions, setActions] = useState<RecruitingAction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -143,6 +153,47 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     }
   }
 
+  // Create birthday "events" from prospects
+  const getBirthdayEvents = () => {
+    if (!prospects) return []
+    
+    const currentYear = new Date().getFullYear()
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    return prospects
+      .filter(p => p.birthdate)
+      .map(prospect => {
+        try {
+          const birthDate = new Date(prospect.birthdate!)
+          const thisYearBirthday = new Date(currentYear, birthDate.getMonth(), birthDate.getDate())
+          thisYearBirthday.setHours(0, 0, 0, 0)
+          
+          // If birthday already passed this year, use next year
+          const birthday = thisYearBirthday < today 
+            ? new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate())
+            : thisYearBirthday
+          
+          return {
+            id: `birthday-${prospect.id}`,
+            action_type: "birthday",
+            action_date: birthday.toISOString().split('T')[0],
+            follow_up_date: birthday.toISOString().split('T')[0],
+            description: `${prospect.name}'s Birthday`,
+            outcome: null,
+            athlete_id: prospect.id,
+            coach_user_id: "",
+            athlete_name: prospect.name,
+            athlete_photo: prospect.photourl || "",
+            coach_name: "",
+          } as RecruitingAction
+        } catch (e) {
+          return null
+        }
+      })
+      .filter((e): e is RecruitingAction => e !== null)
+  }
+
   const categorizeActions = () => {
     const now = new Date()
     // Normalize today to midnight to avoid timezone issues
@@ -154,10 +205,15 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     const overdueActions: RecruitingAction[] = []
     const needsFollowUpDate: RecruitingAction[] = []
 
+    // Get birthday events
+    const birthdayEvents = getBirthdayEvents()
+    const allEvents = [...actions, ...birthdayEvents]
+
     console.log("[v0] Total actions to categorize:", actions.length)
+    console.log("[v0] Birthday events:", birthdayEvents.length)
     console.log("[v0] Today date:", today.toISOString())
 
-    actions.forEach((action) => {
+    allEvents.forEach((action) => {
       // If action has a follow_up_date, categorize by that date
       if (action.follow_up_date) {
         const followUpDate = new Date(action.follow_up_date)
@@ -184,8 +240,8 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     })
 
     console.log("[v0] Categorized actions:", {
-      total: actions.length,
-      withFollowUp: actions.filter(a => a.follow_up_date).length,
+      total: allEvents.length,
+      withFollowUp: allEvents.filter(a => a.follow_up_date).length,
       withoutFollowUp: needsFollowUpDate.length,
       today: todayActions.length,
       upcoming: upcomingActions.length,
@@ -226,7 +282,10 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     const dateToCheck = new Date(year, month, day)
     dateToCheck.setHours(0, 0, 0, 0)
 
-    return actions.filter((action) => {
+    const birthdayEvents = getBirthdayEvents()
+    const allEvents = [...actions, ...birthdayEvents]
+
+    return allEvents.filter((action) => {
       // Check both follow_up_date and action_date for calendar display
       let dateToCompare: Date | null = null
       
@@ -465,12 +524,12 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
         {/* Dashboard Tab - Today's Follow-ups, Upcoming, Overdue */}
         <TabsContent value="dashboard">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Today's Follow-ups */}
+            {/* Today's Events */}
             <Card className="border-blue-200 bg-blue-50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Clock className="h-5 w-5 text-blue-600" />
-                  Today's Follow-ups
+                  Today's Events
                   <Badge variant="secondary" className="ml-auto bg-blue-600 text-white">
                     {todayActions.length}
                   </Badge>
@@ -478,50 +537,65 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               </CardHeader>
               <CardContent>
                 {todayActions.length === 0 ? (
-                  <p className="text-sm text-gray-500">No follow-ups scheduled for today</p>
+                  <p className="text-sm text-gray-500">No events scheduled for today</p>
                 ) : (
                   <div className="space-y-3">
-                    {todayActions.map((action) => (
-                      <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : 'border-blue-100'}`}>
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={isCompleted(action)}
-                            onCheckedChange={() => handleComplete(action.id)}
-                            className="mt-1"
-                          />
-                          <img
-                            src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
-                            alt={action.athlete_name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
-                            <p className="text-xs text-gray-600">{formatActionType(action.action_type)}</p>
-                            {action.description && (
-                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{action.description}</p>
+                    {todayActions.map((action) => {
+                      const isBirthday = action.action_type === "birthday"
+                      return (
+                        <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : isBirthday ? 'border-pink-200 bg-pink-50' : 'border-blue-100'}`}>
+                          <div className="flex items-start gap-3">
+                            {!isBirthday && (
+                              <Checkbox
+                                checked={isCompleted(action)}
+                                onCheckedChange={() => handleComplete(action.id)}
+                                className="mt-1"
+                              />
+                            )}
+                            {isBirthday ? (
+                              <div className="w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center flex-shrink-0">
+                                <Cake className="h-5 w-5 text-pink-600" />
+                              </div>
+                            ) : (
+                              <img
+                                src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
+                                alt={action.athlete_name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
+                              <p className={`text-xs ${isBirthday ? 'text-pink-600 font-semibold' : 'text-gray-600'}`}>
+                                {isBirthday ? '🎂 Birthday' : formatActionType(action.action_type)}
+                              </p>
+                              {action.description && (
+                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{action.description}</p>
+                              )}
+                            </div>
+                            {!isBirthday && (
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => handleEdit(action)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                  onClick={() => handleDelete(action.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
                             )}
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => handleEdit(action)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                              onClick={() => handleDelete(action.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -543,47 +617,62 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                   <p className="text-sm text-gray-500">No upcoming follow-ups</p>
                 ) : (
                   <div className="space-y-3">
-                    {upcomingActions.slice(0, 5).map((action) => (
-                      <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : 'border-green-100'}`}>
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={isCompleted(action)}
-                            onCheckedChange={() => handleComplete(action.id)}
-                            className="mt-1"
-                          />
-                          <img
-                            src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
-                            alt={action.athlete_name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
-                            <p className="text-xs text-gray-600">{formatActionType(action.action_type)}</p>
-                            <p className={`text-xs font-medium mt-1 ${action.follow_up_date ? 'text-green-600' : 'text-gray-500'}`}>
-                              {action.follow_up_date ? formatDate(action.follow_up_date) : formatDate(action.action_date)}
-                            </p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => handleEdit(action)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                              onClick={() => handleDelete(action.id)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                    {upcomingActions.slice(0, 5).map((action) => {
+                      const isBirthday = action.action_type === "birthday"
+                      return (
+                        <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : isBirthday ? 'border-pink-200 bg-pink-50' : 'border-green-100'}`}>
+                          <div className="flex items-start gap-3">
+                            {!isBirthday && (
+                              <Checkbox
+                                checked={isCompleted(action)}
+                                onCheckedChange={() => handleComplete(action.id)}
+                                className="mt-1"
+                              />
+                            )}
+                            {isBirthday ? (
+                              <div className="w-10 h-10 rounded-full bg-pink-200 flex items-center justify-center flex-shrink-0">
+                                <Cake className="h-5 w-5 text-pink-600" />
+                              </div>
+                            ) : (
+                              <img
+                                src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
+                                alt={action.athlete_name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
+                              <p className={`text-xs ${isBirthday ? 'text-pink-600 font-semibold' : 'text-gray-600'}`}>
+                                {isBirthday ? '🎂 Birthday' : formatActionType(action.action_type)}
+                              </p>
+                              <p className={`text-xs font-medium mt-1 ${action.follow_up_date ? 'text-green-600' : 'text-gray-500'}`}>
+                                {action.follow_up_date ? formatDate(action.follow_up_date) : formatDate(action.action_date)}
+                              </p>
+                            </div>
+                            {!isBirthday && (
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => handleEdit(action)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                  onClick={() => handleDelete(action.id)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -724,13 +813,17 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                           {dayActivities.length > 0 && (
                             <div className="space-y-1">
                               {dayActivities.slice(0, 2).map((activity) => {
-                                const colors = getActivityColor(activity.action_type)
+                                const isBirthday = activity.action_type === "birthday"
+                                const colors = isBirthday 
+                                  ? { bg: "bg-pink-100", text: "text-pink-700", border: "border-pink-300" }
+                                  : getActivityColor(activity.action_type)
                                 return (
                                   <div
                                     key={activity.id}
-                                    className={`text-xs ${colors.bg} ${colors.text} px-2 py-1 rounded truncate border ${colors.border}`}
-                                    title={`${activity.athlete_name} - ${formatActionType(activity.action_type)}`}
+                                    className={`text-xs ${colors.bg} ${colors.text} px-2 py-1 rounded truncate border ${colors.border} flex items-center gap-1`}
+                                    title={`${activity.athlete_name} - ${isBirthday ? '🎂 Birthday' : formatActionType(activity.action_type)}`}
                                   >
+                                    {isBirthday && <Cake className="h-3 w-3" />}
                                     {activity.athlete_name}
                                   </div>
                                 )

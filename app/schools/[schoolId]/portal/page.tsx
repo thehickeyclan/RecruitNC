@@ -49,6 +49,7 @@ import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/com
 import { CreateProspectModal } from "@/components/create-prospect-modal"
 import { StarRating } from "@/components/star-rating"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+import { BirthdayCalendar } from "@/components/birthday-calendar"
 
 interface Prospect {
   id: string
@@ -99,6 +100,7 @@ interface Prospect {
   need_based_aid_eligible?: boolean
   aid_application_status?: string
   financial_concerns?: string
+  birthdate?: string
 }
 
 interface Note {
@@ -1922,7 +1924,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         <RecruitingActionsDashboard 
           ref={dashboardRef}
           schoolId={params.schoolId} 
-          athletes={prospects.map(p => ({ id: p.id, name: p.name }))} 
+          athletes={prospects.map(p => ({ id: p.id, name: p.name }))}
+          prospects={prospects.map(p => ({
+            id: p.id,
+            name: p.name,
+            birthdate: p.birthdate,
+            photourl: p.photourl,
+            graduationyear: p.graduationyear,
+            weightclass: p.weightclass,
+          }))}
         />
       </div>
 

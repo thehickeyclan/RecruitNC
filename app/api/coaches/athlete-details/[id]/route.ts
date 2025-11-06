@@ -107,6 +107,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       weightclass: starData.override_weight ?? athlete.weightclass,
       highschool: starData.override_highschool ?? athlete.highschool,
       graduationyear: starData.override_graduation_year ?? athlete.graduationyear,
+      birthdate: starData.override_birthdate ?? athlete.birthdate,
       
       // Performance overrides (for manually tracked athletes)
       careerRecord: starData.override_career_record ?? athlete.careerRecord,

@@ -65,6 +65,7 @@ interface Athlete {
   phone: string
   contactEmail: string
   bio: string
+  birthdate?: string
   careerRecord: string
   college_opens_experience: string
   highlight_video_url: string
@@ -440,10 +441,10 @@ export default function AthleteRecruitingDetailPage() {
             Back to Portal
           </Button>
 
-          <div className="flex items-start gap-6">
+          <div className="flex items-start gap-3 md:gap-6">
             {/* Athlete Photo */}
             {athlete.photourl && (
-              <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-200">
+              <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-200">
                 <Image
                   src={athlete.photourl}
                   alt={athlete.name}
@@ -454,27 +455,27 @@ export default function AthleteRecruitingDetailPage() {
             )}
 
             {/* Athlete Info */}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-[#002147] mb-2">{athlete.name}</h1>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge variant="outline" className="bg-white">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl md:text-3xl font-bold text-[#002147] mb-2 truncate">{athlete.name}</h1>
+              <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
+                <Badge variant="outline" className="bg-white text-xs">
                   Class of {athlete.graduationyear}
                 </Badge>
-                <Badge variant="outline" className="bg-white">
+                <Badge variant="outline" className="bg-white text-xs">
                   {athlete.weightclass} lbs
                 </Badge>
-                <Badge variant="outline" className="bg-white">
+                <Badge variant="outline" className="bg-white text-xs truncate max-w-[150px]">
                   {athlete.highschool}
                 </Badge>
                 {athlete.prospect_ranking && (
-                  <Badge className="bg-[#BC0B03] text-white">
-                    #{athlete.prospect_ranking} NC Prospect
+                  <Badge className="bg-[#BC0B03] text-white text-xs">
+                    #{athlete.prospect_ranking}
                   </Badge>
                 )}
               </div>
-              <div className="flex gap-2 text-sm text-gray-600">
-                <span>⭐ Starred: {new Date(athlete.starred_at).toLocaleDateString()}</span>
-                <span>•</span>
+              <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-600">
+                <span>⭐ {new Date(athlete.starred_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                <span className="hidden md:inline">•</span>
                 <span className="capitalize">{athlete.pipeline_stage}</span>
               </div>
             </div>
@@ -482,16 +483,16 @@ export default function AthleteRecruitingDetailPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-2 md:px-4 py-4 md:py-8 max-w-7xl">
         {/* Recruiting Timeline */}
-        <Card className="mb-6">
-          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+        <Card className="mb-4 md:mb-6">
+          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white py-3 md:py-4">
+            <CardTitle className="text-base md:text-xl flex items-center gap-2">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5" />
               Recruiting Timeline
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6 px-3 md:px-6">
             <div className="relative">
               {/* Progress bar */}
               <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200">
@@ -538,17 +539,19 @@ export default function AthleteRecruitingDetailPage() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
-            <TabsTrigger value="profile" className="text-xs md:text-sm">Profile</TabsTrigger>
-            <TabsTrigger value="performance" className="text-xs md:text-sm">Performance</TabsTrigger>
-            <TabsTrigger value="recruiting" className="text-xs md:text-sm">Recruiting</TabsTrigger>
-            <TabsTrigger value="financial" className="text-xs md:text-sm">Financial</TabsTrigger>
-            <TabsTrigger value="activity" className="text-xs md:text-sm">Notes</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="inline-flex md:grid md:grid-cols-5 w-auto md:w-full min-w-full md:min-w-0">
+              <TabsTrigger value="profile" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Profile</TabsTrigger>
+              <TabsTrigger value="performance" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Performance</TabsTrigger>
+              <TabsTrigger value="recruiting" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Recruiting</TabsTrigger>
+              <TabsTrigger value="financial" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Financial</TabsTrigger>
+              <TabsTrigger value="activity" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Notes</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* PROFILE TAB */}
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <TabsContent value="profile" className="space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Academic Stats - Inline Editable */}
               <Card>
                 <CardHeader>
@@ -787,20 +790,59 @@ export default function AthleteRecruitingDetailPage() {
                               setEditingValue("")
                             }
                           }}
-                          className="flex-1 h-8 text-sm"
+                          className="flex-1 h-10 md:h-8 text-base md:text-sm"
                           placeholder="State (e.g., NC, VA)"
                           autoFocus
                         />
                       </div>
                     ) : (
                       <div
-                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
                         onClick={() => startEditing("location", athlete.location)}
                       >
                         {athlete.location ? (
                           <span className="text-gray-700 flex-1">{athlete.location}</span>
                         ) : (
                           <span className="text-gray-400 italic">Click to add location</span>
+                        )}
+                        <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Birthdate */}
+                  <div className="flex items-center gap-2 text-sm group">
+                    <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    {editingField === "birthdate" ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Input
+                          type="date"
+                          value={editingValue}
+                          onChange={(e) => setEditingValue(e.target.value)}
+                          onBlur={() => handleFieldUpdate("birthdate", editingValue)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleFieldUpdate("birthdate", editingValue)
+                            } else if (e.key === "Escape") {
+                              setEditingField(null)
+                              setEditingValue("")
+                            }
+                          }}
+                          className="flex-1 h-10 md:h-8 text-base md:text-sm"
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
+                        onClick={() => startEditing("birthdate", athlete.birthdate?.split('T')[0])}
+                      >
+                        {athlete.birthdate ? (
+                          <span className="text-gray-700 flex-1">
+                            {new Date(athlete.birthdate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">Click to add birthdate</span>
                         )}
                         <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
@@ -867,16 +909,6 @@ export default function AthleteRecruitingDetailPage() {
 
           {/* PERFORMANCE TAB */}
           <TabsContent value="performance" className="space-y-6">
-            {/* Career Record */}
-            {athlete.careerRecord && (
-              <Card className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white">
-                <CardContent className="p-6">
-                  <div className="text-sm font-semibold mb-2">Career Record</div>
-                  <div className="text-4xl font-bold">{athlete.careerRecord}</div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Tournament Results Display (same as unified profile) */}
             <TournamentResultsDisplay
               nchsaaResults={nchsaaResults}
@@ -893,25 +925,102 @@ export default function AthleteRecruitingDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* State Championships (for non-NC athletes) */}
+                {/* Career Record - FIRST */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">Career Record</Label>
+                  {editingField === "careerRecord" ? (
+                    <div className="space-y-2">
+                      <Input
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleFieldUpdate("careerRecord", editingValue)
+                          } else if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., 125-15"
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("careerRecord", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200"
+                      onClick={() => startEditing("careerRecord", athlete.careerRecord)}
+                    >
+                      {athlete.careerRecord ? (
+                        <p className="text-lg font-semibold text-gray-900">{athlete.careerRecord}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add career record</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
+
+                {/* State Championships - SECOND */}
                 <div className="group relative">
                   <Label className="text-sm font-semibold mb-2 block">State Championships</Label>
                   {editingField === "state_championships" ? (
-                    <Textarea
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleFieldUpdate("state_championships", editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setEditingField(null)
-                          setEditingValue("")
-                        }
-                      }}
-                      placeholder="e.g., 2024 - 1st Place, 2023 - 3rd Place"
-                      rows={3}
-                      className="w-full"
-                      autoFocus
-                    />
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., 2024 - 1st Place, 2023 - 3rd Place"
+                        rows={3}
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("state_championships", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
@@ -927,25 +1036,101 @@ export default function AthleteRecruitingDetailPage() {
                   )}
                 </div>
 
-                {/* NHSCA Results */}
+                {/* Super 32 - THIRD */}
+                <div className="group relative">
+                  <Label className="text-sm font-semibold mb-2 block">Super 32</Label>
+                  {editingField === "super32_results_text" ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., 2024 - All-American (5th Place), 2023 - Competed"
+                        rows={3}
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("super32_results_text", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      onClick={() => startEditing("super32_results_text", athlete.college_opens_experience)}
+                    >
+                      {athlete.college_opens_experience ? (
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">Click to add Super 32 results</p>
+                      )}
+                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
+                    </div>
+                  )}
+                </div>
+
+                {/* NHSCA Results - FOURTH */}
                 <div className="group relative">
                   <Label className="text-sm font-semibold mb-2 block">NHSCA Nationals</Label>
                   {editingField === "nhsca_results_text" ? (
-                    <Textarea
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleFieldUpdate("nhsca_results_text", editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setEditingField(null)
-                          setEditingValue("")
-                        }
-                      }}
-                      placeholder="e.g., 2024 - All-American, 2023 - 5th Place"
-                      rows={3}
-                      className="w-full"
-                      autoFocus
-                    />
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., 2024 - All-American, 2023 - 5th Place"
+                        rows={3}
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("nhsca_results_text", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
@@ -965,21 +1150,42 @@ export default function AthleteRecruitingDetailPage() {
                 <div className="group relative">
                   <Label className="text-sm font-semibold mb-2 block">College Opens</Label>
                   {editingField === "college_opens_experience" ? (
-                    <Textarea
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleFieldUpdate("college_opens_experience", editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setEditingField(null)
-                          setEditingValue("")
-                        }
-                      }}
-                      placeholder="e.g., Competed at Pembroke Open, Southern Scuffle"
-                      rows={3}
-                      className="w-full"
-                      autoFocus
-                    />
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., Competed at Pembroke Open, Southern Scuffle"
+                        rows={3}
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("college_opens_experience", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
@@ -999,21 +1205,42 @@ export default function AthleteRecruitingDetailPage() {
                 <div className="group relative">
                   <Label className="text-sm font-semibold mb-2 block">Fargo Nationals</Label>
                   {editingField === "fargo_experience" ? (
-                    <Textarea
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleFieldUpdate("fargo_experience", editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setEditingField(null)
-                          setEditingValue("")
-                        }
-                      }}
-                      placeholder="e.g., 2024 - Competed at 145lbs"
-                      rows={3}
-                      className="w-full"
-                      autoFocus
-                    />
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., 2024 - Competed at 145lbs"
+                        rows={3}
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("fargo_experience", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
@@ -1033,21 +1260,42 @@ export default function AthleteRecruitingDetailPage() {
                 <div className="group relative">
                   <Label className="text-sm font-semibold mb-2 block">Nationally Ranked Wins</Label>
                   {editingField === "nationally_ranked_wins" ? (
-                    <Textarea
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleFieldUpdate("nationally_ranked_wins", editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          setEditingField(null)
-                          setEditingValue("")
-                        }
-                      }}
-                      placeholder="e.g., Win over #15 ranked John Doe"
-                      rows={3}
-                      className="w-full"
-                      autoFocus
-                    />
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }
+                        }}
+                        placeholder="e.g., Win over #15 ranked John Doe"
+                        rows={3}
+                        className="w-full text-base"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleFieldUpdate("nationally_ranked_wins", editingValue)}
+                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingField(null)
+                            setEditingValue("")
+                          }}
+                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div
                       className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
@@ -1057,41 +1305,6 @@ export default function AthleteRecruitingDetailPage() {
                         <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.nationally_ranked_wins}</p>
                       ) : (
                         <p className="text-sm text-gray-400 italic">Click to add nationally ranked wins</p>
-                      )}
-                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Career Record */}
-                <div className="group relative">
-                  <Label className="text-sm font-semibold mb-2 block">Career Record</Label>
-                  {editingField === "careerRecord" ? (
-                    <Input
-                      value={editingValue}
-                      onChange={(e) => setEditingValue(e.target.value)}
-                      onBlur={() => handleFieldUpdate("careerRecord", editingValue)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleFieldUpdate("careerRecord", editingValue)
-                        } else if (e.key === "Escape") {
-                          setEditingField(null)
-                          setEditingValue("")
-                        }
-                      }}
-                      placeholder="e.g., 125-15"
-                      className="w-full"
-                      autoFocus
-                    />
-                  ) : (
-                    <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200"
-                      onClick={() => startEditing("careerRecord", athlete.careerRecord)}
-                    >
-                      {athlete.careerRecord ? (
-                        <p className="text-lg font-semibold text-gray-900">{athlete.careerRecord}</p>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Click to add career record</p>
                       )}
                       <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
                     </div>

@@ -41,6 +41,7 @@ export async function PUT(request: NextRequest) {
       highschool: "override_highschool",
       graduationyear: "override_graduation_year",
       graduation_year: "override_graduation_year",
+      birthdate: "override_birthdate",
       // Performance fields
       state_championships: "override_state_championships",
       nhsca_results_text: "override_nhsca_results",
