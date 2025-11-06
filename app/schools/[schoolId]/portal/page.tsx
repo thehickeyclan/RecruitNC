@@ -158,9 +158,14 @@ interface School {
 export default function BrandedSchoolPortalPage({ params }: { params: { schoolId: string } }) {
   const { profile, loading: authLoading } = useAuth() // Changed isLoading to loading
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { branding: schoolBranding, isLoading: brandingLoading } = useSchoolBranding(params.schoolId)
   // Removed redundant school state - using schoolBranding from hook instead
+
+  // Admin viewing as specific coach
+  const viewAsCoachId = searchParams?.get("viewAsCoachId") || null
+  const viewAsCoachEmail = searchParams?.get("coachEmail") || null
 
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -442,7 +447,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         headers["Authorization"] = `Bearer ${session.access_token}`
       }
 
-      const response = await fetch(`/api/coach-portal/prospects?schoolId=${params.schoolId}`, {
+      const viewAsParam = viewAsCoachId ? `&viewAsCoachId=${viewAsCoachId}` : ""
+      const response = await fetch(`/api/coach-portal/prospects?schoolId=${params.schoolId}${viewAsParam}`, {
         credentials: "include",
         headers,
       })
@@ -1300,11 +1306,35 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       />
 
       {profile?.is_admin && (
-        <div className="bg-blue-50 border-b border-blue-100">
-          <div className="container mx-auto px-4 py-2">
-            <Badge variant="secondary" className="bg-blue-600 text-white">
-              ADMIN PREVIEW MODE
-            </Badge>
+        <div className={viewAsCoachId ? "bg-orange-100 border-b border-orange-200" : "bg-blue-50 border-b border-blue-100"}>
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            {viewAsCoachId ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-orange-600 text-white text-sm px-3 py-1">
+                    👁️ VIEWING AS COACH
+                  </Badge>
+                  <span className="text-sm font-medium text-orange-900">
+                    {viewAsCoachEmail || "Coach View"}
+                  </span>
+                  <span className="text-xs text-orange-700">
+                    ({filteredProspects.length} athletes in their pipeline)
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => router.push("/admin/schools")}
+                  className="border-orange-300 text-orange-700 hover:bg-orange-200"
+                >
+                  Exit Coach View
+                </Button>
+              </>
+            ) : (
+              <Badge variant="secondary" className="bg-blue-600 text-white">
+                ADMIN PREVIEW MODE
+              </Badge>
+            )}
           </div>
         </div>
       )}

@@ -55,26 +55,36 @@ export async function GET(request: NextRequest) {
     const gender = searchParams.get("gender")
     const minGpa = searchParams.get("minGpa")
     const minSat = searchParams.get("minSat")
+    const viewAsCoachId = searchParams.get("viewAsCoachId") // Admin viewing as specific coach
 
     const targetSchoolId = schoolId || profile.school_id
 
     console.log("[v0] Prospects API - User:", user.email)
     console.log("[v0] Prospects API - Profile school_id:", profile.school_id)
     console.log("[v0] Prospects API - Target school_id:", targetSchoolId)
+    console.log("[v0] Prospects API - View as coach ID:", viewAsCoachId)
 
     if (!targetSchoolId) {
       return NextResponse.json({ error: "No school associated with this account" }, { status: 400 })
     }
 
-    const { data: schoolCoaches } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("school_id", targetSchoolId)
+    // If admin is viewing as a specific coach, only get that coach's stars
+    let coachUserIds: string[] = []
+    
+    if (viewAsCoachId && profile?.is_admin) {
+      console.log("[v0] Prospects API - Admin viewing as specific coach:", viewAsCoachId)
+      coachUserIds = [viewAsCoachId]
+    } else {
+      // Normal flow: get all coaches from this school
+      const { data: schoolCoaches } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .eq("school_id", targetSchoolId)
 
-    const coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
+      coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
+    }
 
-    console.log("[v0] Prospects API - Coaches found at school:", coachUserIds.length)
-    console.log("[v0] Prospects API - Coach user IDs:", coachUserIds)
+    console.log("[v0] Prospects API - Coach user IDs to fetch:", coachUserIds)
 
     // If admin is viewing a school portal (schoolId param provided) but no coaches exist,
     // allow them to see prospects associated with admins for this school
@@ -127,7 +137,8 @@ export async function GET(request: NextRequest) {
     }
 
     console.log("[v0] Prospects API - Starred athletes found:", starredData?.length || 0)
-    console.log("[v0] Prospects API - Starred data:", starredData)
+    console.log("[v0] Prospects API - Starred athlete IDs:", starredData?.map((s: any) => s.athlete_id) || [])
+    console.log("[v0] Prospects API - Full starred data sample:", starredData?.slice(0, 3))
 
     // ALSO check athletes table directly for athletes whose college field matches this school
     // This catches athletes committed via the admin athlete profile "college" tab

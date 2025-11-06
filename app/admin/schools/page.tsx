@@ -107,22 +107,13 @@ export default function SchoolsManagementPage() {
     try {
       setImpersonatingCoachId(coachUserId)
 
-      const response = await fetch("/api/admin/impersonate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coachUserId }),
-      })
-
-      if (response.ok) {
-        window.location.href = `/schools/${schoolId}/portal`
-      } else {
-        const data = await response.json()
-        alert(`Failed to impersonate: ${data.error}`)
-      }
+      // Admin "View as Coach" - pass coachUserId as query parameter instead of session swap
+      // This is safer and allows read-only viewing of coach's data
+      window.location.href = `/schools/${schoolId}/portal?viewAsCoachId=${coachUserId}&coachEmail=${encodeURIComponent(coachEmail)}`
+      
     } catch (error) {
-      console.error("[v0] Impersonation error:", error)
-      alert("Failed to impersonate coach")
-    } finally {
+      console.error("Error viewing as coach:", error)
+      alert(`Failed to view portal: ${error}`)
       setImpersonatingCoachId(null)
     }
   }

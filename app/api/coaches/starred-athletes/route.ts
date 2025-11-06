@@ -19,25 +19,24 @@ export async function GET() {
 
     const { data: profile } = await supabase.from("user_profiles").select("school_id").eq("user_id", user.id).single()
 
-    if (!profile?.school_id) {
-      return NextResponse.json({ error: "No school associated with this account" }, { status: 400 })
+    let coachUserIds = [user.id]
+
+    // If coach has a school_id, get all coaches from the same school
+    if (profile?.school_id) {
+      const { data: schoolCoaches } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .eq("school_id", profile.school_id)
+
+      coachUserIds = schoolCoaches?.map((c) => c.user_id) || [user.id]
     }
 
-    // Get all coaches from the same school
-    const { data: schoolCoaches } = await supabase
-      .from("user_profiles")
-      .select("user_id")
-      .eq("school_id", profile.school_id)
-
-    const coachUserIds = schoolCoaches?.map((c) => c.user_id) || [user.id]
-
-    // Fetch stars for ALL coaches from the same school
+    // Fetch stars for this coach (or all coaches from same school if assigned)
     const { data: stars, error: starsError } = await supabase
       .from("college_coach_stars")
       .select("*")
       .in("coach_user_id", coachUserIds)
       .order("starred_at", { ascending: false })
-    // </CHANGE>
 
     if (starsError) {
       console.error("Error fetching stars:", starsError)
