@@ -23,7 +23,7 @@ ON college_coach_stars(star_rating);
 
 -- Add comment for documentation
 COMMENT ON COLUMN college_coach_stars.star_rating IS 
-'Recruit quality/fit rating (1-5 stars). 5 = dream recruit, 1 = long shot. Separate from pipeline_stage which tracks process.';
+'Recruit quality/fit rating (1-5 stars). 5 = dream recruit, 1 = low priority. Separate from pipeline_stage which tracks process.';
 
 -- Verify the column was added
 SELECT 

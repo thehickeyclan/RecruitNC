@@ -40,7 +40,7 @@ export function StarRating({
       case 4: return "Excellent Fit"
       case 3: return "Solid Prospect"
       case 2: return "Backup Option"
-      case 1: return "Long Shot"
+      case 1: return "Low Priority"
       default: return "Not Rated"
     }
   }

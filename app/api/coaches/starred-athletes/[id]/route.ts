@@ -85,6 +85,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       starred_at: star.starred_at,
       star_notes: star.notes,
       interest_level: star.interest_level,
+      star_rating: star.star_rating,
       notes: notes || [],
       actions: actions || [],
       updated_at: athlete.updated_at || athlete.updatedAt || athlete.created_at,

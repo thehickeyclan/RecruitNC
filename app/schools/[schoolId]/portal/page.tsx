@@ -177,7 +177,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedGender, setSelectedGender] = useState<string>("all")
-  const [viewMode, setViewMode] = useState<"board" | "table">("board")
+  const [viewMode, setViewMode] = useState<"board" | "table">("table")
+  const [sortColumn, setSortColumn] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const dashboardRef = useRef<RecruitingActionsDashboardRef>(null)
   const [selectedAthlete, setSelectedAthlete] = useState<Prospect | null>(null)
   const [notes, setNotes] = useState<Note[]>([])
@@ -1257,6 +1259,66 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     selectedGender,
   })
 
+  // Sorting logic for table view
+  const sortedProspects = [...filteredProspects].sort((a, b) => {
+    if (!sortColumn) return 0
+
+    let aValue: any
+    let bValue: any
+
+    switch (sortColumn) {
+      case "name":
+        aValue = a.name?.toLowerCase() || ""
+        bValue = b.name?.toLowerCase() || ""
+        break
+      case "year":
+        aValue = a.graduationyear || 0
+        bValue = b.graduationyear || 0
+        break
+      case "weight":
+        aValue = parseInt(a.weightclass) || 0
+        bValue = parseInt(b.weightclass) || 0
+        break
+      case "highschool":
+        aValue = a.highschool?.toLowerCase() || ""
+        bValue = b.highschool?.toLowerCase() || ""
+        break
+      case "stage":
+        aValue = a.pipeline_stage?.toLowerCase() || ""
+        bValue = b.pipeline_stage?.toLowerCase() || ""
+        break
+      case "gpa":
+        aValue = a.academic_gpa || 0
+        bValue = b.academic_gpa || 0
+        break
+      case "ranking":
+        aValue = a.prospect_ranking || 9999
+        bValue = b.prospect_ranking || 9999
+        break
+      case "rating":
+        aValue = a.star_rating || 0
+        bValue = b.star_rating || 0
+        break
+      default:
+        return 0
+    }
+
+    if (sortDirection === "asc") {
+      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+    } else {
+      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+    }
+  })
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortColumn(column)
+      setSortDirection("asc")
+    }
+  }
+
   const graduationYears = [...new Set(prospects.map((p) => p.graduationyear).filter(Boolean))].sort((a, b) => a - b)
 
   const normalizeStage = (stage: string | null | undefined): string => {
@@ -1964,39 +2026,122 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               <div className="md:hidden text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b">
                 ← Swipe to see more columns →
               </div>
-              <table className="w-full caption-bottom text-sm min-w-[800px]">
+              <table className="w-full caption-bottom text-sm min-w-[900px]">
                 <thead className="[&_tr]:border-b bg-gray-50">
                   <tr className="border-b transition-colors">
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Name</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Year</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Weight</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">High School</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Stage</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">GPA</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Ranking</th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("name")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Name
+                        {sortColumn === "name" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("year")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Year
+                        {sortColumn === "year" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("weight")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Weight
+                        {sortColumn === "weight" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("highschool")}
+                    >
+                      <div className="flex items-center gap-1">
+                        High School
+                        {sortColumn === "highschool" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("stage")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Stage
+                        {sortColumn === "stage" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("rating")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Rating
+                        {sortColumn === "rating" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("gpa")}
+                    >
+                      <div className="flex items-center gap-1">
+                        GPA
+                        {sortColumn === "gpa" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort("ranking")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Ranking
+                        {sortColumn === "ranking" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
                     <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Last Contact</th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
-                  {filteredProspects.length === 0 ? (
+                  {sortedProspects.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-gray-500">
+                      <td colSpan={9} className="p-8 text-center text-gray-500">
                         No prospects found
                       </td>
                     </tr>
                   ) : (
-                    filteredProspects.map((prospect) => {
+                    sortedProspects.map((prospect) => {
                       const stage = PIPELINE_STAGES.find(s => s.id === prospect.pipeline_stage) || PIPELINE_STAGES[0]
                       return (
                         <tr
                           key={prospect.id}
-                          onClick={() => {
-                            const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                            router.push(url)
-                          }}
-                          className="border-b transition-colors hover:bg-gray-50 active:bg-gray-100 cursor-pointer touch-manipulation"
+                          className="border-b transition-colors hover:bg-gray-50 active:bg-gray-100 group"
                         >
-                          <td className="p-4 align-middle">
+                          <td 
+                            className="p-4 align-middle cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
                             <div className="flex items-center gap-3">
                               <img
                                 src={prospect.photourl || "/placeholder.svg?height=40&width=40&query=wrestler"}
@@ -2006,10 +2151,40 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <span className="font-medium text-gray-900">{prospect.name}</span>
                             </div>
                           </td>
-                          <td className="p-4 align-middle text-gray-600">{prospect.graduationyear}</td>
-                          <td className="p-4 align-middle text-gray-600">{prospect.weightclass}lbs</td>
-                          <td className="p-4 align-middle text-gray-600">{prospect.highschool || "-"}</td>
-                          <td className="p-4 align-middle">
+                          <td 
+                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.graduationyear}
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.weightclass}lbs
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.highschool || "-"}
+                          </td>
+                          <td 
+                            className="p-4 align-middle cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
                             <Badge
                               className="text-xs"
                               style={{
@@ -2020,13 +2195,41 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               {stage.label}
                             </Badge>
                           </td>
-                          <td className="p-4 align-middle text-gray-600">
+                          <td 
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <StarRating
+                              rating={prospect.star_rating ?? null}
+                              onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
+                              size="sm"
+                            />
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
                             {prospect.academic_gpa ? prospect.academic_gpa.toFixed(1) : "-"}
                           </td>
-                          <td className="p-4 align-middle text-gray-600">
+                          <td 
+                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
                             {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
                           </td>
-                          <td className="p-4 align-middle text-gray-600 text-sm">
+                          <td 
+                            className="p-4 align-middle text-gray-600 text-sm cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
                             {formatLastContactDate(getLastContactedDate(prospect.id))}
                           </td>
                         </tr>

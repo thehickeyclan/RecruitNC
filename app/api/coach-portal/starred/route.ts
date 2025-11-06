@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         starred_at,
         notes,
         interest_level,
+        star_rating,
         athletes!inner (
           id,
           name,
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest) {
       is_starred: true,
       star_notes: star.notes,
       interest_level: star.interest_level,
+      star_rating: star.star_rating,
       starred_at: star.starred_at,
     }))
 

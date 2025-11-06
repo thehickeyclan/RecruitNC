@@ -98,6 +98,7 @@ export async function GET() {
           starred_at: star.starred_at,
           star_notes: star.notes,
           interest_level: star.interest_level,
+          star_rating: star.star_rating,
           notes: athleteNotes,
           actions: athleteActions,
           updated_at: athlete.updated_at || athlete.updatedAt || athlete.created_at,
