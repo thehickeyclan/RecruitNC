@@ -69,10 +69,12 @@ export async function GET(request: Request) {
         super_32_2025_placement,
         nationally_ranked_wins,
         recruiting_status,
-        college
+        college,
+        is_nc_athlete
       `)
       .eq("graduationyear", year)
       .eq("gender", gender)
+      .eq("is_nc_athlete", true)
       .not("prospect_ranking", "is", null)
       .order("prospect_ranking", { ascending: true })
 

@@ -25,11 +25,13 @@ import {
   GripVertical,
   Plus,
   Edit,
+  UserPlus,
 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { CreateProspectModal } from "@/components/create-prospect-modal"
 
 interface StarredAthlete {
   id: string
@@ -158,6 +160,8 @@ export default function MyRecruitsPage() {
   const [isSearchingProspects, setIsSearchingProspects] = useState(false)
   const [prospectGradYearFilter, setProspectGradYearFilter] = useState("all")
   const [prospectWeightFilter, setProspectWeightFilter] = useState("all")
+  
+  const [showCreateProspectModal, setShowCreateProspectModal] = useState(false)
 
   // State for new activity logging
   const [activityType, setActivityType] = useState("")
@@ -990,6 +994,13 @@ export default function MyRecruitsPage() {
                 Export CSV
               </Button>
               <Button
+                onClick={() => setShowCreateProspectModal(true)}
+                className="bg-[#B31B1B] hover:bg-[#8B1515] text-white"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Create New Prospect
+              </Button>
+              <Button
                 onClick={() => {
                   console.log("[v0] Look Up Prospects button clicked - redirecting to rankings")
                   window.location.href = "/rankings"
@@ -997,7 +1008,7 @@ export default function MyRecruitsPage() {
                 className="bg-[#D3B574] hover:bg-[#CBAF5D] text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Look Up Prospects
+                Look Up NC Prospects
               </Button>
             </div>
           </div>
@@ -2560,6 +2571,16 @@ export default function MyRecruitsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Create New Prospect Modal */}
+      <CreateProspectModal
+        isOpen={showCreateProspectModal}
+        onClose={() => setShowCreateProspectModal(false)}
+        onProspectCreated={() => {
+          // Refresh the athletes list
+          fetchAthletes()
+        }}
+      />
     </div>
   )
 }

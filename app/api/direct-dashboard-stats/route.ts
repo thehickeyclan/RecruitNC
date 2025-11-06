@@ -18,10 +18,11 @@ export async function GET(request: Request) {
     // "College Athlete" = already in college (past graduation years)
     let query = supabase
       .from("athletes")
-      .select("id, name, college, division, graduationyear, recruiting_status, gender")
+      .select("id, name, college, division, graduationyear, recruiting_status, gender, is_nc_athlete")
       .not("college", "is", null)
       .neq("college", "")
       .in("recruiting_status", ["Committed", "Signed", "College Athlete", "committed", "signed"])
+      .eq("is_nc_athlete", true)
     
     // Apply filters if provided
     if (yearFilter && yearFilter !== "all") {
