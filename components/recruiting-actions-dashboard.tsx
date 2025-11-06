@@ -399,7 +399,14 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    // Parse date string as local date to avoid timezone issues
+    const dateStr = dateString.includes('T') 
+      ? dateString.split('T')[0] 
+      : dateString
+    const [year, month, day] = dateStr.split('-').map(Number)
+    const date = new Date(year, month - 1, day)
+    
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
