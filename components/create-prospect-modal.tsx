@@ -106,11 +106,11 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated }: Crea
     setIsSubmitting(true)
 
     try {
-      // Validation
-      if (!formData.name || !formData.state || !formData.graduationYear) {
+      // Validation - align with admin athlete mandatory fields
+      if (!formData.name || !formData.state || !formData.graduationYear || !formData.highschool || !formData.gender) {
         toast({
           title: "Missing Required Fields",
-          description: "Please fill in Name, State, and Graduation Year",
+          description: "Please fill in Name, State, High School, Graduation Year, and Gender",
           variant: "destructive",
         })
         setIsSubmitting(false)
@@ -221,12 +221,13 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated }: Crea
                 </div>
 
                 <div>
-                  <Label htmlFor="highschool">High School</Label>
+                  <Label htmlFor="highschool">High School *</Label>
                   <Input
                     id="highschool"
                     value={formData.highschool}
                     onChange={(e) => handleChange("highschool", e.target.value)}
                     placeholder="Liberty High School"
+                    required
                   />
                 </div>
 
@@ -264,8 +265,8 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated }: Crea
                 </div>
 
                 <div>
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select value={formData.gender} onValueChange={(val) => handleChange("gender", val)}>
+                  <Label htmlFor="gender">Gender *</Label>
+                  <Select value={formData.gender} onValueChange={(val) => handleChange("gender", val)} required>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

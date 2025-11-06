@@ -39,10 +39,10 @@ export async function POST(request: NextRequest) {
       notes,
     } = body
 
-    // Validation
-    if (!name || !state || !graduationyear) {
+    // Validation - align with admin athlete mandatory fields
+    if (!name || !state || !graduationyear || !highschool || !gender) {
       return NextResponse.json(
-        { error: "Name, state, and graduation year are required" },
+        { error: "Name, state, high school, graduation year, and gender are required" },
         { status: 400 }
       )
     }
@@ -80,20 +80,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Auto-star this athlete for the coach
+    // Get the coach's school_id for college_coach_stars
+    const { data: coachProfile } = await supabase
+      .from("user_profiles")
+      .select("school_id")
+      .eq("user_id", session.user.id)
+      .single()
+
+    if (!coachProfile?.school_id) {
+      console.error("Coach has no school_id assigned")
+      return NextResponse.json(
+        { error: "Your account must be assigned to a school before creating prospects. Please contact an administrator." },
+        { status: 400 }
+      )
+    }
+
+    // Auto-star this athlete for the coach using college_coach_stars
     const { error: starError } = await supabase
-      .from("coach_starred_athletes")
+      .from("college_coach_stars")
       .insert({
-        coach_id: session.user.id,
+        coach_user_id: session.user.id,
         athlete_id: athlete.id,
+        school_id: coachProfile.school_id,
         pipeline_stage: "Prospect",
-        notes: notes || null,
-        created_at: new Date().toISOString(),
+        recruiting_notes: notes || null,
+        starred_at: new Date().toISOString(),
       })
 
     if (starError) {
       console.error("Error starring athlete:", starError)
-      // Don't fail the whole operation if starring fails
+      // Don't fail the whole operation if starring fails, but log it
     }
 
     console.log("[v0] Custom prospect created:", {

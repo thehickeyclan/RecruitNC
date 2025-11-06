@@ -46,6 +46,7 @@ import { SchoolBrandedHeader } from "@/components/school-branded-header"
 import { useSchoolBranding } from "@/hooks/use-school-branding"
 import { createClient } from "@/lib/supabase/client"
 import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/components/recruiting-actions-dashboard"
+import { CreateProspectModal } from "@/components/create-prospect-modal"
 
 interface Prospect {
   id: string
@@ -59,6 +60,7 @@ interface Prospect {
   gender?: string
   prospect_ranking?: number
   recruiting_status?: string
+  college?: string
   academic_gpa?: number
   academic_sat?: number
   academic_act?: number
@@ -231,6 +233,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [pipelineHistory, setPipelineHistory] = useState<any[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
   const [editingRosterEntry, setEditingRosterEntry] = useState<any | null>(null)
+  const [showCreateProspectModal, setShowCreateProspectModal] = useState(false)
   const [rosterEditForm, setRosterEditForm] = useState({
     roster_status: "Active",
     roster_notes: "",
@@ -1246,6 +1249,22 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     return stageProspects
   }
 
+  // Check if athlete is committed to a different school
+  const isCommittedElsewhere = (prospect: Prospect) => {
+    if (!prospect.college || !schoolBranding?.name) return false
+    
+    const athleteCollege = prospect.college.trim().toLowerCase()
+    const thisSchool = schoolBranding.name.trim().toLowerCase()
+    
+    // Check if committed/signed
+    const isCommitted = prospect.recruiting_status === "Committed" || 
+                        prospect.recruiting_status === "Signed" ||
+                        prospect.recruiting_status === "College Athlete"
+    
+    // Return true if committed and school doesn't match
+    return isCommitted && athleteCollege !== thisSchool && !thisSchool.includes(athleteCollege) && !athleteCollege.includes(thisSchool)
+  }
+
   const stageCounts = PIPELINE_STAGES.reduce(
     (acc, stage) => {
       acc[stage.label] = getProspectsByStage(stage.id).length
@@ -1353,19 +1372,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               <Plus className="h-5 w-5 mr-2" />
               Create Activity
             </Button>
-            <Button
-              onClick={() => {
-                console.log("[v0] Add Prospect button clicked - redirecting to public rankings")
-                window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
-              }}
-              className="flex-1 h-12 px-4 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
-              style={{
-                backgroundColor: schoolBranding?.primary_color || "#3B82F6",
-              }}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Prospect
-            </Button>
+            <div className="flex-1 flex gap-2">
+              <Button
+                onClick={() => {
+                  console.log("[v0] Browse NC Rankings button clicked")
+                  window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
+                }}
+                className="flex-1 h-12 px-3 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+                style={{
+                  backgroundColor: schoolBranding?.primary_color || "#3B82F6",
+                }}
+              >
+                <Search className="h-4 w-4 mr-1" />
+                Rankings
+              </Button>
+              <Button
+                onClick={() => setShowCreateProspectModal(true)}
+                className="flex-1 h-12 px-3 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Create
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -1743,19 +1771,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </div>
             </div>
 
-            <Button
-              onClick={() => {
-                console.log("[v0] Add Prospect button clicked - redirecting to public rankings")
-                window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
-              }}
-              className="hidden md:flex h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all md:w-auto touch-manipulation"
-              style={{
-                backgroundColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
-              }}
-            >
-              <Plus className="h-[18px] w-[18px] mr-2" />
-              Add Prospect
-            </Button>
+            <div className="hidden md:flex gap-3">
+              <Button
+                onClick={() => {
+                  console.log("[v0] Browse NC Rankings button clicked")
+                  window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
+                }}
+                className="h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+                style={{
+                  backgroundColor: schoolBranding?.primary_color || "#3B82F6",
+                }}
+              >
+                <Search className="h-[18px] w-[18px] mr-2" />
+                Browse NC Rankings
+              </Button>
+              <Button
+                onClick={() => setShowCreateProspectModal(true)}
+                className="h-11 px-5 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              >
+                <Plus className="h-[18px] w-[18px] mr-2" />
+                Create New Prospect
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -1795,7 +1832,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         </div>
                       </div>
                     ) : (
-                      stageProspects.map((prospect) => (
+                      stageProspects.map((prospect) => {
+                        const committedElsewhere = isCommittedElsewhere(prospect)
+                        
+                        return (
                         <Card
                           key={prospect.id}
                           draggable
@@ -1804,17 +1844,30 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                             router.push(url)
                           }}
-                          className="bg-gray-50 border-2 border-gray-200 hover:border-gray-900 active:border-gray-900 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer hover:cursor-pointer transition-all rounded-lg touch-manipulation"
+                          className={`border-2 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer hover:cursor-pointer transition-all rounded-lg touch-manipulation ${
+                            committedElsewhere 
+                              ? 'bg-gray-200 border-gray-300 opacity-75' 
+                              : 'bg-gray-50 border-gray-200 hover:border-gray-900 active:border-gray-900'
+                          }`}
                         >
                           <CardContent className="p-3 md:p-4">
+                            {/* Committed Elsewhere Badge */}
+                            {committedElsewhere && (
+                              <div className="mb-2 bg-gray-700 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                                <span>⚠️ Committed to {prospect.college}</span>
+                              </div>
+                            )}
+                            
                             <div className="flex gap-3 mb-3 relative">
                               <img
                                 src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
                                 alt={prospect.name}
-                                className="w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0"
+                                className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0 ${
+                                  committedElsewhere ? 'grayscale' : ''
+                                }`}
                               />
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-bold text-sm md:text-base text-gray-900 truncate mb-1">
+                                <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-gray-600' : 'text-gray-900'}`}>
                                   {prospect.name}
                                 </h4>
                                 <p className="text-xs md:text-sm text-gray-600 font-semibold mb-1">
@@ -1822,10 +1875,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 </p>
                                 <p className="text-[10px] md:text-xs text-gray-400 truncate">{prospect.highschool}</p>
                               </div>
-                              {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && (
+                              {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && !committedElsewhere && (
                                 <div
                                   className="absolute top-0 right-0 px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-xs md:text-sm font-bold text-white"
-                                  style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
+                                  style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }}
                                 >
                                   #{prospect.prospect_ranking}
                                 </div>
@@ -1861,7 +1914,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             </div>
                           </CardContent>
                         </Card>
-                      ))
+                        )
+                      })
                     )}
                   </div>
                 </div>
@@ -3090,6 +3144,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Create New Prospect Modal */}
+      <CreateProspectModal
+        isOpen={showCreateProspectModal}
+        onClose={() => setShowCreateProspectModal(false)}
+        onProspectCreated={() => {
+          setShowCreateProspectModal(false)
+          fetchProspects() // Refresh the prospects list
+        }}
+      />
     </div>
   )
 }

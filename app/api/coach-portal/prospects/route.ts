@@ -240,6 +240,7 @@ export async function GET(request: NextRequest) {
         achievements,
         prospect_ranking,
         recruiting_status,
+        college,
         academic_gpa,
         academic_sat,
         academic_act,
