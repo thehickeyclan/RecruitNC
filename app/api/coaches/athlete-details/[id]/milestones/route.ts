@@ -25,10 +25,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     console.log("[v0] Target coach ID:", targetCoachId)
     console.log("[v0] Milestone data:", milestones)
 
-    // Update the college_coach_stars record
+    // Update the college_coach_stars record (milestones + financial data)
     const { data, error } = await supabase
       .from("college_coach_stars")
       .update({
+        // Milestones
         first_contact_date: milestones.first_contact_date || null,
         first_contact_method: milestones.first_contact_method || null,
         has_applied: milestones.has_applied || false,
@@ -45,6 +46,17 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         committed_date: milestones.committed_date || null,
         nli_signed_date: milestones.nli_signed_date || null,
         recruiting_notes: milestones.recruiting_notes || null,
+        
+        // Financial data (if included in the request)
+        financial_efc: milestones.financial_efc || null,
+        financial_aid_needs: milestones.financial_aid_needs || null,
+        scholarship_requirements: milestones.scholarship_requirements || null,
+        ability_to_pay: milestones.ability_to_pay || null,
+        financial_notes: milestones.financial_notes || null,
+        financial_concerns: milestones.financial_concerns || null,
+        merit_scholarship_eligible: milestones.merit_scholarship_eligible || false,
+        need_based_aid_eligible: milestones.need_based_aid_eligible || false,
+        aid_application_status: milestones.aid_application_status || null,
       })
       .eq("athlete_id", athleteId)
       .eq("coach_user_id", targetCoachId)

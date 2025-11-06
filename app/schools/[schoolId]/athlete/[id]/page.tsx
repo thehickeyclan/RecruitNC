@@ -175,10 +175,24 @@ export default function AthleteRecruitingDetailPage() {
       const viewAsCoachId = searchParams.get("viewAsCoachId")
       const apiUrl = `/api/coaches/athlete-details/${athleteId}/milestones${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
       
+      // Combine milestones and financial data
+      const dataToSave = {
+        ...milestones,
+        financial_efc: athlete.financial_efc,
+        financial_aid_needs: athlete.financial_aid_needs,
+        scholarship_requirements: athlete.scholarship_requirements,
+        ability_to_pay: athlete.ability_to_pay,
+        financial_notes: athlete.financial_notes,
+        financial_concerns: athlete.financial_concerns,
+        merit_scholarship_eligible: athlete.merit_scholarship_eligible,
+        need_based_aid_eligible: athlete.need_based_aid_eligible,
+        aid_application_status: athlete.aid_application_status,
+      }
+      
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(milestones),
+        body: JSON.stringify(dataToSave),
       })
 
       if (response.ok) {
@@ -717,65 +731,166 @@ export default function AthleteRecruitingDetailPage() {
           {/* FINANCIAL AID TAB */}
           <TabsContent value="financial" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-[#002147]" />
-                  Financial Aid Profile
+              <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Financial Aid Profile
+                  </span>
+                  <Button 
+                    onClick={saveMilestones} 
+                    disabled={saving}
+                    size="sm"
+                    className="bg-white text-green-700 hover:bg-gray-100"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Financial Data
+                  </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* EFC */}
                   <div>
-                    <Label>Expected Family Contribution (EFC)</Label>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {athlete.financial_efc ? `$${athlete.financial_efc.toLocaleString()}` : "Not provided"}
+                    <Label htmlFor="efc" className="text-sm font-semibold mb-2 block">
+                      Expected Family Contribution (EFC)
+                    </Label>
+                    <Input
+                      id="efc"
+                      type="number"
+                      placeholder="Enter EFC amount"
+                      value={athlete.financial_efc || ""}
+                      onChange={(e) => setAthlete({ ...athlete, financial_efc: parseFloat(e.target.value) || 0 })}
+                      className="mb-2"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Amount family is expected to contribute toward college costs
                     </p>
                   </div>
+
+                  {/* Ability to Pay */}
                   <div>
-                    <Label>Ability to Pay</Label>
-                    <p className="text-lg font-semibold text-gray-900 capitalize">
-                      {athlete.ability_to_pay || "Not specified"}
-                    </p>
+                    <Label htmlFor="ability_to_pay" className="text-sm font-semibold mb-2 block">
+                      Ability to Pay
+                    </Label>
+                    <select
+                      id="ability_to_pay"
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={athlete.ability_to_pay || ""}
+                      onChange={(e) => setAthlete({ ...athlete, ability_to_pay: e.target.value })}
+                    >
+                      <option value="">Select ability to pay</option>
+                      <option value="full">Full Pay</option>
+                      <option value="partial">Partial Need</option>
+                      <option value="significant">Significant Need</option>
+                      <option value="full_need">Full Need</option>
+                      <option value="unknown">Unknown</option>
+                    </select>
+                  </div>
+
+                  {/* Aid Application Status */}
+                  <div>
+                    <Label htmlFor="aid_status" className="text-sm font-semibold mb-2 block">
+                      Aid Application Status
+                    </Label>
+                    <select
+                      id="aid_status"
+                      className="w-full px-3 py-2 border rounded-md"
+                      value={athlete.aid_application_status || ""}
+                      onChange={(e) => setAthlete({ ...athlete, aid_application_status: e.target.value })}
+                    >
+                      <option value="">Select status</option>
+                      <option value="not_started">Not Started</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="fafsa_submitted">FAFSA Submitted</option>
+                      <option value="completed">Completed</option>
+                      <option value="not_applying">Not Applying</option>
+                    </select>
+                  </div>
+
+                  {/* Eligibility Checkboxes */}
+                  <div>
+                    <Label className="text-sm font-semibold mb-3 block">Scholarship Eligibility</Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="merit_eligible"
+                          checked={athlete.merit_scholarship_eligible || false}
+                          onCheckedChange={(checked) => setAthlete({ ...athlete, merit_scholarship_eligible: checked as boolean })}
+                        />
+                        <Label htmlFor="merit_eligible" className="text-sm font-normal cursor-pointer">
+                          Merit Scholarship Eligible
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="need_based_eligible"
+                          checked={athlete.need_based_aid_eligible || false}
+                          onCheckedChange={(checked) => setAthlete({ ...athlete, need_based_aid_eligible: checked as boolean })}
+                        />
+                        <Label htmlFor="need_based_eligible" className="text-sm font-normal cursor-pointer">
+                          Need-Based Aid Eligible
+                        </Label>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {athlete.financial_aid_needs && (
-                  <div>
-                    <Label>Financial Aid Needs</Label>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.financial_aid_needs}</p>
-                  </div>
-                )}
+                {/* Financial Aid Needs */}
+                <div>
+                  <Label htmlFor="aid_needs" className="text-sm font-semibold mb-2 block">
+                    Financial Aid Needs
+                  </Label>
+                  <Textarea
+                    id="aid_needs"
+                    placeholder="Describe the athlete's/family's financial aid needs..."
+                    value={athlete.financial_aid_needs || ""}
+                    onChange={(e) => setAthlete({ ...athlete, financial_aid_needs: e.target.value })}
+                    rows={3}
+                  />
+                </div>
 
-                {athlete.scholarship_requirements && (
-                  <div>
-                    <Label>Scholarship Requirements</Label>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.scholarship_requirements}</p>
-                  </div>
-                )}
+                {/* Scholarship Requirements */}
+                <div>
+                  <Label htmlFor="scholarship_req" className="text-sm font-semibold mb-2 block">
+                    Scholarship Requirements
+                  </Label>
+                  <Textarea
+                    id="scholarship_req"
+                    placeholder="Required scholarship amounts or specific needs..."
+                    value={athlete.scholarship_requirements || ""}
+                    onChange={(e) => setAthlete({ ...athlete, scholarship_requirements: e.target.value })}
+                    rows={3}
+                  />
+                </div>
 
-                {athlete.financial_notes && (
-                  <div>
-                    <Label>Financial Notes</Label>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.financial_notes}</p>
-                  </div>
-                )}
+                {/* Financial Concerns */}
+                <div>
+                  <Label htmlFor="financial_concerns" className="text-sm font-semibold mb-2 block">
+                    Financial Concerns
+                  </Label>
+                  <Textarea
+                    id="financial_concerns"
+                    placeholder="Any financial concerns or constraints..."
+                    value={athlete.financial_concerns || ""}
+                    onChange={(e) => setAthlete({ ...athlete, financial_concerns: e.target.value })}
+                    rows={3}
+                  />
+                </div>
 
-                {/* Package Summary */}
-                {milestones.financial_package_sent && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-                    <p className="font-semibold text-green-900 mb-2">📦 Package Sent</p>
-                    {milestones.package_sent_date && (
-                      <p className="text-sm text-green-700">
-                        Date: {new Date(milestones.package_sent_date).toLocaleDateString()}
-                      </p>
-                    )}
-                    {milestones.package_amount && (
-                      <p className="text-sm text-green-700">
-                        Amount: ${parseFloat(milestones.package_amount).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* Financial Notes */}
+                <div>
+                  <Label htmlFor="financial_notes" className="text-sm font-semibold mb-2 block">
+                    Additional Financial Notes
+                  </Label>
+                  <Textarea
+                    id="financial_notes"
+                    placeholder="General financial notes or conversation details..."
+                    value={athlete.financial_notes || ""}
+                    onChange={(e) => setAthlete({ ...athlete, financial_notes: e.target.value })}
+                    rows={4}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
