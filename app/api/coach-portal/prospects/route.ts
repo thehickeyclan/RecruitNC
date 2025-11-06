@@ -303,6 +303,7 @@ export async function GET(request: NextRequest) {
         pipeline_stage: starInfo?.pipeline_stage || "prospect",
         interest_level: starInfo?.interest_level,
         starred_at: starInfo?.starred_at,
+        star_rating: starInfo?.star_rating || null,
         financial_efc: starInfo?.financial_efc,
         financial_aid_needs: starInfo?.financial_aid_needs,
         scholarship_requirements: starInfo?.scholarship_requirements,
