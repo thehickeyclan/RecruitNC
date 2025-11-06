@@ -1271,7 +1271,7 @@ export default function MyRecruitsPage() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <button
-                                    onClick={() => openCRM(athlete)}
+                                    onClick={() => router.push(`/coaches/my-recruits/athlete/${athlete.id}`)}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     className="font-semibold text-sm hover:text-[#0D1A4D] transition-colors text-left w-full truncate"
                                   >
