@@ -96,7 +96,7 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log(`🔍 Featured Athletes API: Querying for committed ${targetYear} athletes`)
+    console.log(`🔍 Featured Athletes API: Querying for top ranked ${targetYear} prospects`)
 
     const specificResult = await safeSupabaseQuery(
       () =>
@@ -104,12 +104,10 @@ export async function GET(request: Request) {
           .from("athletes")
           .select("*")
           .eq("graduationyear", targetYear)
-          .ilike("recruiting_status", "committed")
-          .not("college", "is", null)
-          .not("college", "eq", "")
-          .order("commitmentdate", { ascending: false, nullsLast: true })
+          .not("prospect_ranking", "is", null)
+          .order("prospect_ranking", { ascending: true })
           .limit(3),
-      `Featured Athletes API - Committed ${targetYear} Athletes`,
+      `Featured Athletes API - Top ${targetYear} Prospects`,
     )
 
     if (!specificResult.success) {
@@ -126,46 +124,7 @@ export async function GET(request: Request) {
 
     let athletes = specificResult.data || []
 
-    // If we don't have enough specific athletes, get recent commitments as fallback
-    if (athletes.length < 3) {
-      console.log("🔄 Featured Athletes API: Getting fallback athletes")
-
-      const fallbackResult = await safeSupabaseQuery(
-        () =>
-          supabase
-            .from("athletes")
-            .select("*")
-            .ilike("recruiting_status", "committed")
-            .not("college", "is", null)
-            .not("college", "eq", "")
-            .order("commitmentdate", { ascending: false, nullsLast: true })
-            .limit(6),
-        "Featured Athletes API - Fallback Athletes",
-      )
-
-      if (!fallbackResult.success) {
-        if (fallbackResult.isRateLimit) {
-          // If we have some athletes from the first query, return them
-          if (athletes.length > 0) {
-            console.log("🔄 Using partial results due to rate limiting")
-          } else {
-            return NextResponse.json({
-              success: false,
-              error: "Database is temporarily busy. Please try again in a moment.",
-              athletes: [],
-            })
-          }
-        } else {
-          console.error("❌ Featured Athletes API: Error fetching fallback athletes:", fallbackResult.error)
-          console.log("🔄 Continuing with existing athletes due to fallback error")
-        }
-      } else if (fallbackResult.data) {
-        // Combine specific athletes with fallback, removing duplicates
-        const existingNames = new Set(athletes.map((a) => a.name))
-        const additionalAthletes = fallbackResult.data.filter((a) => !existingNames.has(a.name))
-        athletes = [...athletes, ...additionalAthletes].slice(0, 6)
-      }
-    }
+    // No fallback needed - if we don't have 3 ranked prospects, just return what we have
 
     console.log(`✅ Featured Athletes API: Found ${athletes.length} athletes`)
 
