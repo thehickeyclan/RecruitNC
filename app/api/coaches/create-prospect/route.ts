@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         gender: gender || "Male",
         contactEmail: email || null,
         phone: phone || null,
-        instagram: instagram || null,
+        socialMedia: instagram ? { instagram: instagram } : null,
         recruiting_status: "Prospect",
         is_nc_athlete: isNCathlete,
         added_by_coach_id: session.user.id,
