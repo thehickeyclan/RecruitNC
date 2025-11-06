@@ -237,7 +237,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [selectedAthlete, setSelectedAthlete] = useState<Prospect | null>(null)
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState<string>("")
-  const [nchsaaResults, setNchsaaResults] = useState<any[]>([])
   const [notes, setNotes] = useState<Note[]>([])
   const [newNote, setNewNote] = useState("")
   const [newActivity, setNewActivity] = useState({
@@ -257,7 +256,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   })
   const [showFamilyForm, setShowFamilyForm] = useState(false)
   const [activities, setActivities] = useState<Activity[]>([])
-  const [nchsaaResults, setNchsaaResults] = useState<NCHSAAResult[]>([])
+  const [nchsaaResults, setNchsaaResults] = useState<any[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
   const [uploadingDocument, setUploadingDocument] = useState(false)
