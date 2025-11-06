@@ -1905,14 +1905,24 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </Select>
 
               <Select value={selectedState} onValueChange={setSelectedState}>
-                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
-                  <SelectValue placeholder="All States" />
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation transition-all">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <SelectValue placeholder="All States" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-200">
-                  <SelectItem value="all">All States</SelectItem>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <span>All States</span>
+                    </div>
+                  </SelectItem>
                   {states.map((state) => (
                     <SelectItem key={state} value={state}>
-                      {state}
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-700">{state}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
