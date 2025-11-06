@@ -68,12 +68,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No school associated with this account" }, { status: 400 })
     }
 
-    // If admin is viewing as a specific coach, only get that coach's stars
+    // Get all coaches from the school (including when impersonating)
     let coachUserIds: string[] = []
     
     if (viewAsCoachId && profile?.is_admin) {
       console.log("[v0] Prospects API - Admin viewing as specific coach:", viewAsCoachId)
-      coachUserIds = [viewAsCoachId]
+      
+      // Get the impersonated coach's school, then get ALL coaches from that school
+      const { data: viewAsCoachProfile } = await supabase
+        .from("user_profiles")
+        .select("school_id")
+        .eq("user_id", viewAsCoachId)
+        .single()
+      
+      if (viewAsCoachProfile?.school_id) {
+        const { data: schoolCoaches } = await supabase
+          .from("user_profiles")
+          .select("user_id")
+          .eq("school_id", viewAsCoachProfile.school_id)
+        
+        coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
+        console.log("[v0] Prospects API - Impersonating coach, fetching all coaches from their school:", coachUserIds)
+      } else {
+        // Fallback: just use the impersonated coach if no school
+        coachUserIds = [viewAsCoachId]
+      }
     } else {
       // Normal flow: get all coaches from this school
       const { data: schoolCoaches } = await supabase
