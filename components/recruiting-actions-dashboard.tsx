@@ -180,6 +180,9 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
         const hasBirthdate = !!p.birthdate
         if (hasBirthdate) {
           console.log("[v0] Found birthdate for", p.name, ":", p.birthdate)
+          if (p.name.toLowerCase().includes('meadows')) {
+            console.log("[v0] 🎂 ANDREW MEADOWS RAW BIRTHDATE:", p.birthdate, "Type:", typeof p.birthdate)
+          }
         }
         return hasBirthdate
       })
@@ -192,6 +195,10 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
           const [year, month, day] = dateStr.split('-').map(Number)
           
           console.log("[v0] Parsed birth date for", prospect.name, ":", { year, month, day, dateStr })
+          
+          if (prospect.name.toLowerCase().includes('meadows')) {
+            console.log("[v0] 🎂 ANDREW MEADOWS PARSED:", { dateStr, year, month, day })
+          }
           
           // Create this year's birthday in local timezone
           const thisYearBirthday = new Date(currentYear, month - 1, day)
@@ -362,12 +369,21 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       let dateToCompare: Date | null = null
       
       if (action.follow_up_date) {
-        const followUpDate = new Date(action.follow_up_date)
-        dateToCompare = new Date(followUpDate.getFullYear(), followUpDate.getMonth(), followUpDate.getDate())
+        // Parse date string as local date to avoid timezone issues
+        const dateStr = action.follow_up_date.includes('T') 
+          ? action.follow_up_date.split('T')[0] 
+          : action.follow_up_date
+        const [y, m, d] = dateStr.split('-').map(Number)
+        dateToCompare = new Date(y, m - 1, d)
+        dateToCompare.setHours(0, 0, 0, 0)
       } else if (action.action_date) {
         // If no follow_up_date, use action_date so actions appear on calendar
-        const actionDate = new Date(action.action_date)
-        dateToCompare = new Date(actionDate.getFullYear(), actionDate.getMonth(), actionDate.getDate())
+        const dateStr = action.action_date.includes('T') 
+          ? action.action_date.split('T')[0] 
+          : action.action_date
+        const [y, m, d] = dateStr.split('-').map(Number)
+        dateToCompare = new Date(y, m - 1, d)
+        dateToCompare.setHours(0, 0, 0, 0)
       }
       
       if (!dateToCompare) return false
