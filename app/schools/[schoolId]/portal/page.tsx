@@ -141,13 +141,13 @@ interface FamilyMember {
 }
 
 const PIPELINE_STAGES = [
-  { id: "Prospect", label: "Prospect", color: "bg-gray-500" },
-  { id: "Evaluating", label: "Evaluating", color: "bg-purple-500" },
-  { id: "Recruiting", label: "Recruiting", color: "bg-orange-500" },
-  { id: "Offered", label: "Offered", color: "bg-green-500" },
-  { id: "Committed", label: "Committed", color: "bg-emerald-600" },
-  { id: "Signed", label: "Signed", color: "bg-blue-600" },
-  { id: "Lost", label: "Lost", color: "bg-red-500" },
+  { id: "Prospect", label: "Prospect", color: "#6B7280" },
+  { id: "Evaluating", label: "Evaluating", color: "#A855F7" },
+  { id: "Recruiting", label: "Recruiting", color: "#F97316" },
+  { id: "Offered", label: "Offered", color: "#22C55E" },
+  { id: "Committed", label: "Committed", color: "#059669" },
+  { id: "Signed", label: "Signed", color: "#2563EB" },
+  { id: "Lost", label: "Lost", color: "#EF4444" },
 ]
 
 interface School {
@@ -177,6 +177,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedYear, setSelectedYear] = useState<string>("all")
   const [selectedGender, setSelectedGender] = useState<string>("all")
+  const [selectedState, setSelectedState] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"board" | "table">("table")
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
@@ -1239,7 +1240,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     const matchesSearch =
       !searchTerm ||
       prospect.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      prospect.highschool?.toLowerCase().includes(searchTerm.toLowerCase())
+      prospect.highschool?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prospect.location?.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesYear = selectedYear === "all" || prospect.graduationyear?.toString() === selectedYear
 
@@ -1248,7 +1250,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       (selectedGender === "male" && prospect.gender?.toLowerCase() === "male") ||
       (selectedGender === "female" && prospect.gender?.toLowerCase() === "female")
 
-    return matchesSearch && matchesYear && matchesGender
+    const matchesState = 
+      selectedState === "all" || 
+      (prospect.location || "NC") === selectedState
+
+    return matchesSearch && matchesYear && matchesGender && matchesState
   })
 
   console.log("[v0] Filtered prospects:", {
@@ -1257,6 +1263,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     searchTerm,
     selectedYear,
     selectedGender,
+    selectedState,
   })
 
   // Sorting logic for table view
@@ -1279,9 +1286,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         aValue = parseInt(a.weightclass) || 0
         bValue = parseInt(b.weightclass) || 0
         break
-      case "highschool":
-        aValue = a.highschool?.toLowerCase() || ""
-        bValue = b.highschool?.toLowerCase() || ""
+      case "state":
+        aValue = a.location?.toLowerCase() || ""
+        bValue = b.location?.toLowerCase() || ""
         break
       case "stage":
         aValue = a.pipeline_stage?.toLowerCase() || ""
@@ -1320,6 +1327,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }
 
   const graduationYears = [...new Set(prospects.map((p) => p.graduationyear).filter(Boolean))].sort((a, b) => a - b)
+  const states = [...new Set(prospects.map((p) => p.location || "NC").filter(Boolean))].sort()
 
   const normalizeStage = (stage: string | null | undefined): string => {
     const normalized = (stage || "Prospect").trim()
@@ -1847,6 +1855,20 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   <SelectItem value="female">Women's</SelectItem>
                 </SelectContent>
               </Select>
+
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-gray-200">
+                  <SelectItem value="all">All States</SelectItem>
+                  {states.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               </div>
 
               {/* View Mode Toggle */}
@@ -2064,11 +2086,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     </th>
                     <th 
                       className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
-                      onClick={() => handleSort("highschool")}
+                      onClick={() => handleSort("state")}
                     >
                       <div className="flex items-center gap-1">
-                        High School
-                        {sortColumn === "highschool" && (
+                        State
+                        {sortColumn === "state" && (
                           <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
                         )}
                       </div>
@@ -2176,24 +2198,43 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               router.push(url)
                             }}
                           >
-                            {prospect.highschool || "-"}
+                            {prospect.location || "NC"}
                           </td>
                           <td 
-                            className="p-4 align-middle cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                              router.push(url)
-                            }}
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Badge
-                              className="text-xs"
-                              style={{
-                                backgroundColor: stage.color || "#6B7280",
-                                color: "white",
-                              }}
+                            <Select
+                              value={prospect.pipeline_stage || "Prospect"}
+                              onValueChange={(value) => handleStageChange(prospect.id, value)}
                             >
-                              {stage.label}
-                            </Badge>
+                              <SelectTrigger className="h-7 w-[140px] text-xs border-gray-300 bg-white hover:bg-gray-50">
+                                <SelectValue>
+                                  <Badge
+                                    className="text-xs"
+                                    style={{
+                                      backgroundColor: stage.color || "#6B7280",
+                                      color: "white",
+                                    }}
+                                  >
+                                    {stage.label}
+                                  </Badge>
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PIPELINE_STAGES.map((s) => (
+                                  <SelectItem key={s.id} value={s.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: s.color }}
+                                      />
+                                      <span>{s.label}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </td>
                           <td 
                             className="p-4 align-middle"
