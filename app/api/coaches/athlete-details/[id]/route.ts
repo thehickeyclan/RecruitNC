@@ -28,51 +28,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // Get athlete data
     const { data: athlete, error: athleteError } = await supabase
       .from("athletes")
-      .select(`
-        id,
-        name,
-        firstName,
-        lastName,
-        graduationyear,
-        gender,
-        weightclass,
-        highschool,
-        wrestlingClub,
-        photourl,
-        achievements,
-        prospect_ranking,
-        recruiting_status,
-        academic_gpa,
-        academic_sat,
-        academic_act,
-        academic_summary,
-        location,
-        phone,
-        contactEmail,
-        bio,
-        careerRecord,
-        college_opens_experience,
-        highlight_video_url,
-        super_32_2023_record,
-        super_32_2023_placement,
-        super_32_2024_record,
-        super_32_2024_placement,
-        super_32_2025_record,
-        super_32_2025_placement,
-        nhsca_2024_record,
-        nhsca_2024_placement,
-        nhsca_2025_record,
-        nhsca_2025_placement,
-        nhsca_results,
-        super32_results,
-        nationally_ranked_wins,
-        fargo_experience
-      `)
+      .select("*")
       .eq("id", athleteId)
       .single()
 
     if (athleteError || !athlete) {
-      return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
+      console.error("[v0] Athlete query error:", athleteError)
+      return NextResponse.json({ error: "Athlete not found", details: athleteError?.message }, { status: 404 })
     }
 
     // Get star/recruiting tracking data for this athlete
