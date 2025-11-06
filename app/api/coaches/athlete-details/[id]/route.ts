@@ -79,16 +79,56 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       `)
       .eq("athlete_id", athleteId)
       .eq("coach_user_id", targetCoachId)
-      .single()
+      .maybeSingle()
+
+    console.log("[v0] Star query result:", { starData, starError, athleteId, targetCoachId })
 
     if (starError) {
       console.error("Error fetching star data:", starError)
       console.error("Star error details:", { athleteId, targetCoachId, error: starError })
-      // If no star data exists, athlete might not be starred by this coach
       return NextResponse.json({ 
-        error: "Athlete not in recruits list", 
+        error: "Database error fetching recruiting data", 
         details: starError.message 
-      }, { status: 404 })
+      }, { status: 500 })
+    }
+
+    // If no star record exists, create a basic one for this coach
+    if (!starData) {
+      console.log("[v0] No star record found, creating one...")
+      
+      // Get the coach's school_id
+      const { data: coachProfile } = await supabase
+        .from("user_profiles")
+        .select("school_id")
+        .eq("user_id", targetCoachId)
+        .single()
+
+      if (coachProfile?.school_id) {
+        const { data: newStar } = await supabase
+          .from("college_coach_stars")
+          .insert({
+            coach_user_id: targetCoachId,
+            athlete_id: athleteId,
+            school_id: coachProfile.school_id,
+            pipeline_stage: "Prospect",
+            starred_at: new Date().toISOString(),
+          })
+          .select()
+          .single()
+
+        console.log("[v0] Created new star record:", newStar)
+      }
+      
+      // Return athlete data without recruiting tracking
+      return NextResponse.json({
+        success: true,
+        athlete: {
+          ...athlete,
+          is_starred: false,
+          pipeline_stage: "Prospect",
+          communication_log: [],
+        },
+      })
     }
 
     // Merge athlete data with recruiting tracking data
