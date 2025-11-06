@@ -237,13 +237,7 @@ export default function AthleteRecruitingDetailPage() {
         label: "First Contact", 
         date: athlete?.first_contact_date,
         completed: !!athlete?.first_contact_date,
-        icon: "📧"
-      },
-      { 
-        label: "Applied", 
-        date: athlete?.applied_date,
-        completed: athlete?.has_applied || false,
-        icon: "📝"
+        icon: "💬"
       },
       { 
         label: "Campus Visit", 
@@ -252,16 +246,10 @@ export default function AthleteRecruitingDetailPage() {
         icon: "🏫"
       },
       { 
-        label: "Package Sent", 
-        date: athlete?.package_sent_date,
-        completed: athlete?.financial_package_sent || false,
-        icon: "💰"
-      },
-      { 
         label: "Offer Extended", 
         date: athlete?.offer_date,
         completed: athlete?.offer_extended || false,
-        icon: "🎯"
+        icon: "💰"
       },
       { 
         label: "Committed", 
@@ -270,10 +258,16 @@ export default function AthleteRecruitingDetailPage() {
         icon: "✅"
       },
       { 
+        label: "Applied", 
+        date: athlete?.applied_date,
+        completed: athlete?.has_applied || false,
+        icon: "📝"
+      },
+      { 
         label: "Signed NLI", 
         date: athlete?.nli_signed_date,
         completed: !!athlete?.nli_signed_date,
-        icon: "✍️"
+        icon: "🖊️"
       },
     ]
   }
@@ -375,12 +369,12 @@ export default function AthleteRecruitingDetailPage() {
               </div>
 
               {/* Timeline steps */}
-              <div className="relative flex justify-between">
+              <div className="relative flex justify-between overflow-x-auto pb-2">
                 {timelineSteps.map((step, index) => (
-                  <div key={index} className="flex flex-col items-center" style={{ width: `${100 / timelineSteps.length}%` }}>
+                  <div key={index} className="flex flex-col items-center flex-shrink-0" style={{ minWidth: '80px' }}>
                     {/* Icon */}
                     <div className={`
-                      w-10 h-10 rounded-full flex items-center justify-center text-lg mb-2 border-2
+                      w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-base md:text-lg mb-2 border-2
                       ${step.completed 
                         ? 'bg-[#BC0B03] border-[#BC0B03] text-white' 
                         : 'bg-white border-gray-300 text-gray-400'
@@ -390,14 +384,14 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                     
                     {/* Label */}
-                    <p className={`text-xs font-medium text-center mb-1 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                    <p className={`text-[10px] md:text-xs font-medium text-center mb-1 px-1 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
                       {step.label}
                     </p>
                     
                     {/* Date */}
                     {step.date && (
-                      <p className="text-xs text-gray-500">
-                        {new Date(step.date).toLocaleDateString()}
+                      <p className="text-[9px] md:text-xs text-gray-500">
+                        {new Date(step.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </p>
                     )}
                   </div>
@@ -409,11 +403,11 @@ export default function AthleteRecruitingDetailPage() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="recruiting">Recruiting Status</TabsTrigger>
-            <TabsTrigger value="financial">Financial Aid</TabsTrigger>
-            <TabsTrigger value="activity">Notes & Activity</TabsTrigger>
+          <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+            <TabsTrigger value="profile" className="text-xs md:text-sm">Profile</TabsTrigger>
+            <TabsTrigger value="recruiting" className="text-xs md:text-sm">Recruiting</TabsTrigger>
+            <TabsTrigger value="financial" className="text-xs md:text-sm">Financial</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs md:text-sm">Notes</TabsTrigger>
           </TabsList>
 
           {/* PROFILE TAB */}
@@ -647,46 +641,6 @@ export default function AthleteRecruitingDetailPage() {
                   </div>
                 </div>
 
-                {/* Financial Package */}
-                <div className="border-b pb-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    💰 Financial Aid Package
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        id="financial_package_sent"
-                        checked={milestones.financial_package_sent}
-                        onCheckedChange={(checked) => setMilestones({ ...milestones, financial_package_sent: checked as boolean })}
-                      />
-                      <Label htmlFor="financial_package_sent" className="font-medium cursor-pointer">
-                        Financial aid package has been sent
-                      </Label>
-                    </div>
-                    {milestones.financial_package_sent && (
-                      <div className="ml-7 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Package Sent Date</Label>
-                          <Input
-                            type="date"
-                            value={milestones.package_sent_date}
-                            onChange={(e) => setMilestones({ ...milestones, package_sent_date: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <Label>Total Package Amount ($)</Label>
-                          <Input
-                            type="number"
-                            placeholder="25000"
-                            value={milestones.package_amount}
-                            onChange={(e) => setMilestones({ ...milestones, package_amount: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* Offer */}
                 <div className="border-b pb-6">
                   <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -714,12 +668,12 @@ export default function AthleteRecruitingDetailPage() {
                           />
                         </div>
                         <div>
-                          <Label>Offer Details</Label>
+                          <Label>Offer Details (Scholarship, Package Amount, etc.)</Label>
                           <Textarea
-                            placeholder="Scholarship amount, roster guarantees, etc."
+                            placeholder="Example: $25,000 total package - $15,000 athletic scholarship + $10,000 academic merit"
                             value={milestones.offer_details}
                             onChange={(e) => setMilestones({ ...milestones, offer_details: e.target.value })}
-                            rows={3}
+                            rows={4}
                           />
                         </div>
                       </div>
