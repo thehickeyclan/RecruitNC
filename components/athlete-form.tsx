@@ -386,6 +386,7 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
         firstName: safeTrim(formData.firstName, initialData?.firstName),
         lastName: safeTrim(formData.lastName, initialData?.lastName),
         gender: safeTrim(formData.gender, initialData?.gender),
+        birthdate: formData.birthdate || null,
         graduationYear: safeTrim(formData.graduationYear, initialData?.graduationYear),
         weightClass: safeTrim(formData.weightClass, initialData?.weightClass),
         college_weight_class: safeTrim(formData.collegeWeightClass, initialData?.college_weight_class),

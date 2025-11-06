@@ -64,6 +64,7 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     college_weight_class: data.college_weight_class || "", // Added college_weight_class field mapping
     graduationyear: data.graduationyear || new Date().getFullYear(),
     graduationYear: data.graduationyear || new Date().getFullYear(),
+    birthdate: data.birthdate || null,
     commitmentdate: data.commitmentdate || new Date().toISOString().split("T")[0],
     commitmentDate: data.commitmentdate || new Date().toISOString().split("T")[0],
     photourl: validatePhotoUrl(data.photourl),
@@ -136,6 +137,7 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       weightclass: athlete.weightClass || athlete.weightclass || "",
       college_weight_class: athlete.collegeWeightClass || athlete.college_weight_class || "", // Added college_weight_class field mapping to database
       graduationyear: athlete.graduationYear || athlete.graduationyear || new Date().getFullYear(),
+      birthdate: athlete.birthdate || null,
       commitmentdate: athlete.commitmentDate || athlete.commitmentdate || new Date().toISOString().split("T")[0],
       photourl: athlete.photoUrl || athlete.photourl || "/wrestler-silhouette.png",
       commitmentPhotoUrl: athlete.commitmentPhotoUrl || "",
