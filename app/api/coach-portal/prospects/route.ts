@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If we have coaches, get their starred athletes (normal flow)
-    if (!starredData && coachUserIds.length > 0) {
+    if ((!starredData || starredData.length === 0) && coachUserIds.length > 0) {
       console.log("[v0] Prospects API - Fetching stars for coach user IDs:", coachUserIds)
       
       const { data: coachStarredData, error: starError } = await supabase
