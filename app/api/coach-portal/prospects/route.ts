@@ -128,11 +128,19 @@ export async function GET(request: NextRequest) {
 
     // If we have coaches, get their starred athletes (normal flow)
     if (!starredData && coachUserIds.length > 0) {
-      const { data: coachStarredData } = await supabase
+      console.log("[v0] Prospects API - Fetching stars for coach user IDs:", coachUserIds)
+      
+      const { data: coachStarredData, error: starError } = await supabase
         .from("college_coach_stars")
         .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns")
         .in("coach_user_id", coachUserIds)
 
+      if (starError) {
+        console.error("[v0] Prospects API - ERROR fetching stars:", starError)
+      } else {
+        console.log("[v0] Prospects API - Stars query returned:", coachStarredData?.length, "records")
+      }
+      
       starredData = coachStarredData
     }
 
