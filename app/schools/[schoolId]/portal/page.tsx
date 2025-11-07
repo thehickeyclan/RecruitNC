@@ -864,6 +864,35 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
+  const formatPhoneNumber = (phone?: string | null) => {
+    if (!phone) return ""
+
+    const digits = phone.replace(/\D/g, "")
+
+    if (digits.length === 11 && digits.startsWith("1")) {
+      return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`
+    }
+
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+    }
+
+    if (digits.length === 7) {
+      return `${digits.slice(0, 3)}-${digits.slice(3)}`
+    }
+
+    return phone
+  }
+
+  const normalizePhoneForTel = (phone?: string | null) => {
+    if (!phone) return ""
+
+    const digits = phone.replace(/\D/g, "")
+    if (!digits) return phone
+
+    return digits
+  }
+
   const handleAddNote = async () => {
     if (!newNote.trim() || !selectedAthlete) return
 
@@ -2241,6 +2270,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   {prospect.graduationyear} • {prospect.weightclass}lbs
                                 </p>
                                 <p className="text-[10px] md:text-xs text-gray-400 truncate">{prospect.highschool}</p>
+                                {prospect.phone && (
+                                  <div className="mt-1 flex items-center gap-1.5 text-[10px] md:text-xs text-gray-500">
+                                    <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 text-gray-400 flex-shrink-0" />
+                                    <a
+                                      href={`tel:${normalizePhoneForTel(prospect.phone)}`}
+                                      className="hover:text-blue-600 transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {formatPhoneNumber(prospect.phone)}
+                                    </a>
+                                  </div>
+                                )}
                               </div>
                               {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && !committedElsewhere && (
                                 <div
