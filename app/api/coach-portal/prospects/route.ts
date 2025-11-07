@@ -142,7 +142,7 @@ export async function GET(request: NextRequest) {
 
         if (adminUserIds.length > 0) {
           // Get athletes where notes mention this school name
-          const { data: adminStarredData } = await supabase
+          const { data: adminStarredData } = await adminSupabase
             .from("college_coach_stars")
             .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
             .in("coach_user_id", adminUserIds)
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
     if ((!starredData || starredData.length === 0) && coachUserIds.length > 0) {
       console.log("[v0] Prospects API - Fetching stars for coach user IDs:", coachUserIds)
       
-      const { data: coachStarredData, error: starError } = await supabase
+      const { data: coachStarredData, error: starError } = await adminSupabase
         .from("college_coach_stars")
         .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
         .in("coach_user_id", coachUserIds)
@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
       const adminUserIds = adminUsers?.map((u) => u.user_id) || []
 
       if (adminUserIds.length > 0) {
-        const { data: adminStars, error: adminStarError } = await supabase
+        const { data: adminStars, error: adminStarError } = await adminSupabase
           .from("college_coach_stars")
           .select(
             "athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating"
