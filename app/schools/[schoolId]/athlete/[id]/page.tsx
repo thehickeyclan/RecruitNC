@@ -26,12 +26,16 @@ import {
   Save,
   Plus,
   Edit2,
-  Award
+  Award,
+  Trash2,
+  Loader2,
+  Activity as ActivityIcon
 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useAuth } from "@/contexts/auth-context"
 
 interface TournamentResult {
   year: number
@@ -124,11 +128,43 @@ interface Athlete {
   gi_bill_eligible?: boolean
 }
 
+interface RecruitingActivity {
+  id: string
+  action_type: string
+  action_date: string
+  follow_up_date?: string | null
+  description: string
+  outcome?: string | null
+  coach_name?: string
+}
+
+type ActivityOptionValue = (typeof ACTIVITY_OPTIONS)[number]["value"]
+
+const ACTIVITY_OPTIONS = [
+  { value: "call", label: "Phone Call" },
+  { value: "text", label: "Text Message" },
+  { value: "email", label: "Email" },
+  { value: "visit", label: "Official Visit" },
+  { value: "prospect_camp", label: "Prospect Camp" },
+  { value: "watched_live", label: "Watched Live" },
+  { value: "letter", label: "Handwritten Letter" },
+  { value: "social_media", label: "Social Media" },
+  { value: "other", label: "Other" },
+]
+
+const ACTIVITY_LABELS = ACTIVITY_OPTIONS.reduce<Record<string, string>>((acc, option) => {
+  acc[option.value] = option.label
+  return acc
+}, {})
+
 export default function AthleteRecruitingDetailPage() {
   const params = useParams()
   const router = useRouter()
   const athleteId = params.id as string
   const schoolId = params.schoolId as string
+  const { profile } = useAuth()
+
+  const todayIso = new Date().toISOString().split("T")[0]
 
   const [athlete, setAthlete] = useState<Athlete | null>(null)
   const [loading, setLoading] = useState(true)
@@ -165,6 +201,27 @@ export default function AthleteRecruitingDetailPage() {
     date: "",
     notes: "",
   })
+  const [activities, setActivities] = useState<RecruitingActivity[]>([])
+  const [isSavingActivity, setIsSavingActivity] = useState(false)
+  const [showActivityForm, setShowActivityForm] = useState(false)
+  const [viewAsCoachId, setViewAsCoachId] = useState<string | null>(null)
+  const [newActivity, setNewActivity] = useState<{
+    actionType: ActivityOptionValue
+    actionDate: string
+    description: string
+    outcome: string
+    followUpDate: string
+    isScheduled: boolean
+  }>({
+    actionType: "call",
+    actionDate: todayIso,
+    description: "",
+    outcome: "",
+    followUpDate: "",
+    isScheduled: false,
+  })
+
+  const canLogActivities = !profile?.is_admin || Boolean(viewAsCoachId)
 
   useEffect(() => {
     fetchAthleteDetails()
@@ -176,6 +233,16 @@ export default function AthleteRecruitingDetailPage() {
       fetchNCHSAAResults()
     }
   }, [athlete])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    setViewAsCoachId(params.get("viewAsCoachId"))
+  }, [athleteId])
+
+  useEffect(() => {
+    fetchActivities()
+  }, [athleteId])
 
   const fetchNCHSAAResults = async () => {
     if (!athlete) return
@@ -363,6 +430,108 @@ export default function AthleteRecruitingDetailPage() {
     }
   }
 
+  const fetchActivities = async () => {
+    if (!athleteId) return
+    try {
+      const response = await fetch(`/api/coach-portal/activities?athleteId=${athleteId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setActivities(data.activities || [])
+      }
+    } catch (error) {
+      console.error("Error fetching activities:", error)
+    }
+  }
+
+  const handleLogActivity = async () => {
+    if (!canLogActivities) {
+      toast.error("Impersonate a coach to log activities.")
+      return
+    }
+
+    if (!newActivity.actionType || !newActivity.actionDate || !newActivity.description.trim()) {
+      toast.error("Please fill in activity type, date, and description.")
+      return
+    }
+
+    try {
+      setIsSavingActivity(true)
+      const payload: Record<string, any> = {
+        athleteId,
+        actionType: newActivity.actionType,
+        actionDate: newActivity.actionDate,
+        description: newActivity.description.trim(),
+        outcome: newActivity.outcome?.trim() || null,
+        followUpDate: newActivity.isScheduled
+          ? (newActivity.followUpDate || newActivity.actionDate)
+          : null,
+      }
+
+      if (viewAsCoachId) {
+        payload.viewAsCoachId = viewAsCoachId
+      }
+
+      const response = await fetch("/api/coach-portal/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to log activity")
+        return
+      }
+
+      toast.success("Activity logged")
+      setShowActivityForm(false)
+      setNewActivity({
+        actionType: "call",
+        actionDate: todayIso,
+        description: "",
+        outcome: "",
+        followUpDate: "",
+        isScheduled: false,
+      })
+      await fetchActivities()
+      await fetchAthleteDetails()
+    } catch (error) {
+      console.error("Error logging activity:", error)
+      toast.error("Failed to log activity")
+    } finally {
+      setIsSavingActivity(false)
+    }
+  }
+
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!canLogActivities) {
+      toast.error("Impersonate a coach to delete activities.")
+      return
+    }
+
+    if (!confirm("Delete this activity?")) return
+
+    try {
+      const response = await fetch(`/api/coach-portal/activities?activityId=${activityId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        toast.error(data.error || "Failed to delete activity")
+        return
+      }
+
+      toast.success("Activity deleted")
+      await fetchActivities()
+      await fetchAthleteDetails()
+    } catch (error) {
+      console.error("Error deleting activity:", error)
+      toast.error("Failed to delete activity")
+    }
+  }
+
   const getTimelineSteps = () => {
     return [
       { 
@@ -542,12 +711,13 @@ export default function AthleteRecruitingDetailPage() {
         {/* Main Content Tabs */}
         <Tabs defaultValue="profile" className="space-y-6">
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <TabsList className="inline-flex md:grid md:grid-cols-5 w-auto md:w-full min-w-full md:min-w-0">
+            <TabsList className="inline-flex md:grid md:grid-cols-6 w-auto md:w-full min-w-full md:min-w-0">
               <TabsTrigger value="profile" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Profile</TabsTrigger>
               <TabsTrigger value="performance" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Performance</TabsTrigger>
               <TabsTrigger value="recruiting" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Recruiting</TabsTrigger>
               <TabsTrigger value="financial" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Financial</TabsTrigger>
-              <TabsTrigger value="activity" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Notes</TabsTrigger>
+              <TabsTrigger value="notes" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Notes</TabsTrigger>
+              <TabsTrigger value="activity" className="text-xs md:text-sm whitespace-nowrap flex-shrink-0">Activity</TabsTrigger>
             </TabsList>
           </div>
 
@@ -1687,8 +1857,8 @@ export default function AthleteRecruitingDetailPage() {
             </Card>
           </TabsContent>
 
-          {/* NOTES & ACTIVITY TAB */}
-          <TabsContent value="activity" className="space-y-6">
+          {/* NOTES TAB */}
+          <TabsContent value="notes" className="space-y-6">
             {/* Recruiting Notes */}
             <Card>
               <CardHeader>
@@ -1795,6 +1965,219 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-gray-500 italic">No communication logged yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ACTIVITY TAB */}
+          <TabsContent value="activity" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <ActivityIcon className="h-5 w-5 text-[#002147]" />
+                  Activity Log
+                </CardTitle>
+                <Button
+                  onClick={() => setShowActivityForm((prev) => !prev)}
+                  size="sm"
+                  disabled={!canLogActivities}
+                  className="bg-[#002147] hover:bg-[#13294B] disabled:bg-muted disabled:text-muted-foreground"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {showActivityForm ? "Cancel" : "Log Activity"}
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!canLogActivities && (
+                  <p className="text-xs text-muted-foreground">
+                    You&apos;re in admin preview mode. Impersonate a coach to log activities.
+                  </p>
+                )}
+
+                {showActivityForm && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="schedule-activity"
+                        className="rounded"
+                        checked={newActivity.isScheduled}
+                        disabled={!canLogActivities}
+                        onChange={(e) =>
+                          setNewActivity((prev) => ({
+                            ...prev,
+                            isScheduled: e.target.checked,
+                            followUpDate: e.target.checked ? prev.followUpDate || prev.actionDate : "",
+                          }))
+                        }
+                      />
+                      <label htmlFor="schedule-activity" className="text-sm text-muted-foreground cursor-pointer">
+                        {newActivity.isScheduled ? "Schedule follow-up" : "Log completed activity"}
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-sm font-medium">Type</Label>
+                        <select
+                          value={newActivity.actionType}
+                          disabled={!canLogActivities}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          onChange={(e) =>
+                            setNewActivity((prev) => ({
+                              ...prev,
+                              actionType: e.target.value as (typeof ACTIVITY_OPTIONS)[number]["value"],
+                            }))
+                          }
+                        >
+                          {ACTIVITY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Date</Label>
+                        <Input
+                          type="date"
+                          value={newActivity.actionDate}
+                          disabled={!canLogActivities}
+                          onChange={(e) =>
+                            setNewActivity((prev) => ({
+                              ...prev,
+                              actionDate: e.target.value,
+                              followUpDate: prev.isScheduled && !prev.followUpDate ? e.target.value : prev.followUpDate,
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-sm font-medium">Description</Label>
+                        <Textarea
+                          rows={3}
+                          disabled={!canLogActivities}
+                          placeholder="What happened?"
+                          value={newActivity.description}
+                          onChange={(e) =>
+                            setNewActivity((prev) => ({
+                              ...prev,
+                              description: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Outcome (optional)</Label>
+                          <Input
+                            type="text"
+                            disabled={!canLogActivities}
+                            placeholder="Outcome or next steps"
+                            value={newActivity.outcome}
+                            onChange={(e) =>
+                              setNewActivity((prev) => ({
+                                ...prev,
+                                outcome: e.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        {newActivity.isScheduled && (
+                          <div>
+                            <Label className="text-sm font-medium">Follow-up Date</Label>
+                            <Input
+                              type="date"
+                              disabled={!canLogActivities}
+                              value={newActivity.followUpDate}
+                              onChange={(e) =>
+                                setNewActivity((prev) => ({
+                                  ...prev,
+                                  followUpDate: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleLogActivity}
+                      disabled={isSavingActivity || !canLogActivities}
+                      className="bg-[#002147] hover:bg-[#13294B] text-white"
+                    >
+                      {isSavingActivity ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          {newActivity.isScheduled ? "Schedule Activity" : "Save Activity"}
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-900">Recent Activity</h4>
+                  {activities.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">No activity logged yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {activities.map((activity) => (
+                        <div key={activity.id} className="border rounded-lg p-3 bg-white">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <Badge variant="outline" className="uppercase text-[10px]">
+                                {ACTIVITY_LABELS[activity.action_type] || activity.action_type}
+                              </Badge>
+                              <p className="text-sm text-gray-700 mt-2 whitespace-pre-line">
+                                {activity.description}
+                              </p>
+                              <div className="mt-2 space-y-1 text-xs text-gray-500">
+                                <div>
+                                  {new Date(activity.action_date).toLocaleDateString(undefined, {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </div>
+                                {activity.outcome && <div>Outcome: {activity.outcome}</div>}
+                                {activity.follow_up_date && (
+                                  <div>
+                                    Follow-up:{" "}
+                                    {new Date(activity.follow_up_date).toLocaleDateString(undefined, {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </div>
+                                )}
+                                {activity.coach_name && <div>Logged by {activity.coach_name}</div>}
+                              </div>
+                            </div>
+                            {canLogActivities && (
+                              <button
+                                onClick={() => handleDeleteActivity(activity.id)}
+                                className="text-red-500 hover:text-red-600 transition-colors"
+                                aria-label="Delete activity"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </CardContent>
