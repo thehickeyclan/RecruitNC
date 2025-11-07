@@ -560,6 +560,13 @@ export default function AthleteRecruitingDetailPage() {
   }
 
   const timelineSteps = getTimelineSteps()
+  const emojiActivityTypes: Record<string, string> = {
+    call: "📞",
+    text: "💬",
+    email: "✉️",
+    letter: "📝",
+    social_media: "📱",
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors">
@@ -644,23 +651,58 @@ export default function AthleteRecruitingDetailPage() {
               {/* Timeline steps */}
               <div className="relative flex justify-between overflow-x-auto pb-2">
                 {timelineSteps.map((step, index) => (
-                  <div key={index} className="flex flex-col items-center flex-shrink-0" style={{ minWidth: '80px' }}>
+                  <div
+                    key={index}
+                    className="flex flex-col items-center flex-shrink-0 relative"
+                    style={{ minWidth: "80px" }}
+                  >
                     {/* Icon */}
-                    <div className={`
+                    <div
+                      className={`
                       w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-base md:text-lg mb-2 border-2
-                      ${step.completed 
-                        ? 'bg-[#BC0B03] border-[#BC0B03] text-white' 
-                        : 'bg-background border-border text-muted-foreground'
+                      ${
+                        step.completed
+                          ? "bg-[#BC0B03] border-[#BC0B03] text-white"
+                          : "bg-background border-border text-muted-foreground"
                       }
-                    `}>
+                    `}
+                    >
                       {step.icon}
                     </div>
-                    
+
+                    {/* Emoji row */}
+                    {activities.length > 0 && (
+                      <div className="flex items-center gap-1 mb-1">
+                        {[...new Set(
+                          activities
+                            .filter((activity) => {
+                              const emoji = emojiActivityTypes[activity.action_type]
+                              if (!emoji) return false
+                              return (
+                                step.completed &&
+                                step.date &&
+                                new Date(activity.action_date).toDateString() ===
+                                  new Date(step.date).toDateString()
+                              )
+                            })
+                            .map((activity) => emojiActivityTypes[activity.action_type]),
+                        )].map((emoji, emojiIndex) => (
+                          <span key={`${index}-emoji-${emojiIndex}`} className="text-sm md:text-base">
+                            {emoji}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Label */}
-                    <p className={`text-[10px] md:text-xs font-medium text-center mb-1 px-1 ${step.completed ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <p
+                      className={`text-[10px] md:text-xs font-medium text-center mb-1 px-1 ${
+                        step.completed ? "text-foreground" : "text-muted-foreground"
+                      }`}
+                    >
                       {step.label}
                     </p>
-                    
+
                     {/* Date */}
                     {step.date && (
                       <p className="text-[9px] md:text-xs text-muted-foreground">

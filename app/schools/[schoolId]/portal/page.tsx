@@ -2929,20 +2929,20 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                   {lastActivity.coach_name ? `by ${lastActivity.coach_name}` : " "}
-                                </span>
-                                <span className="text-xs text-muted-foreground/80">
-                                  {formatLastContactDate(lastActivity.action_date)} ·{" "}
+                                  {" · "}
                                   {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
                                     year: "numeric",
                                   })}
+                                  {" ("}
+                                  {formatLastContactDate(lastActivity.action_date)}
+                                  {")"}
                                 </span>
                               </div>
                             ) : (
                               <div className="flex flex-col">
                                 <span className="font-medium text-foreground">No activity yet</span>
-                                <span className="text-xs text-muted-foreground"> </span>
                               </div>
                             )}
                           </td>
