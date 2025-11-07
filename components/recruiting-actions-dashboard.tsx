@@ -310,11 +310,10 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
         }
         // Events beyond this month are not shown in upcoming
       } else {
-        // Actions without follow_up_date - show in upcoming (they need attention/scheduling)
-        console.log("[v0] Action has no follow_up_date, adding to upcoming:", action.id, action.action_date)
+        // Actions without follow_up_date are typically logged history items.
+        // Track them for analytics, but don't surface them in Upcoming/Todays dashboard buckets.
+        console.log("[v0] Action has no follow_up_date, treating as historical log:", action.id, action.action_date)
         needsFollowUpDate.push(action)
-        // Show all actions without follow-up dates in upcoming so they get attention
-        upcomingActions.push(action)
       }
     })
 
