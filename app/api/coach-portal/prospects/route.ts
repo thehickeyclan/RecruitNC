@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
 
     let adminStarredForSchool: any[] = []
     let directCollegeAthletes: any[] = []
-    if (schoolInfo?.name) {
+    if (profile?.is_admin && schoolInfo?.name) {
       console.log("[v0] Prospects API - Checking athletes.college field for school:", schoolInfo.name)
 
       const { data: adminUsers } = await supabase

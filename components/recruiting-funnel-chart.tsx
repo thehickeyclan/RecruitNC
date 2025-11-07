@@ -227,12 +227,11 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
 
               // Determine text color based on background brightness
               const isLightBg = isLightColor(stageColor)
-              const textColor = isLightBg 
-                ? (schoolBranding?.primary_color || "#006341") // Use dark green primary color, or fallback to dark green
-                : "white"
-              
-              // Adjust stroke color for light backgrounds
-              const strokeColor = isLightBg ? "#666666" : "white"
+              const textColor = "#FFFFFF"
+              const strokeColor = isLightBg ? "rgba(255,255,255,0.45)" : "white"
+              const textShadow = isLightBg
+                ? "0 1px 3px rgba(0,0,0,0.45)"
+                : "0 1px 3px rgba(0,0,0,0.65)"
 
               return (
                 <g key={stage.name}>
@@ -252,7 +251,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                     textAnchor="middle"
                     fill={textColor}
                     className={`font-semibold uppercase tracking-wide ${isMobile ? "text-xs" : "text-sm"}`}
-                    style={{ textShadow: isLightBg ? "0 1px 2px rgba(255, 255, 255, 0.5)" : "0 1px 2px rgba(0, 0, 0, 0.3)" }}
+                    style={{ textShadow }}
                   >
                     {stage.name}
                   </text>
@@ -262,7 +261,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                     textAnchor="middle"
                     fill={textColor}
                     className={`font-bold ${isMobile ? "text-xl" : "text-lg"}`}
-                    style={{ textShadow: isLightBg ? "0 1px 2px rgba(255, 255, 255, 0.5)" : "0 1px 2px rgba(0, 0, 0, 0.3)" }}
+                    style={{ textShadow }}
                   >
                     {stage.count}
                   </text>
@@ -272,10 +271,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
                     textAnchor="middle"
                     fill={textColor}
                     className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}
-                    style={{ 
-                      textShadow: isLightBg ? "0 1px 2px rgba(255, 255, 255, 0.5)" : "0 1px 2px rgba(0, 0, 0, 0.3)", 
-                      opacity: 0.9 
-                    }}
+                    style={{ textShadow, opacity: 0.9 }}
                   >
                     ({conversionRate}%)
                   </text>
