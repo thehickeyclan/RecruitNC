@@ -2708,7 +2708,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Last Activity</th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Activity Date</th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
@@ -2924,9 +2923,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             }}
                           >
                             {lastActivity ? (
-                              <div className="flex flex-col">
-                                <span>{formatLastContactDate(lastActivity.action_date)}</span>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium text-foreground">
+                                  {lastActivityLabel ?? "Activity"}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {lastActivity.coach_name ? `by ${lastActivity.coach_name}` : " "}
+                                </span>
                                 <span className="text-xs text-muted-foreground/80">
+                                  {formatLastContactDate(lastActivity.action_date)} ·{" "}
                                   {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
@@ -2935,7 +2940,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 </span>
                               </div>
                             ) : (
-                              <span>No activity</span>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-foreground">No activity yet</span>
+                                <span className="text-xs text-muted-foreground"> </span>
+                              </div>
                             )}
                           </td>
                         </tr>
