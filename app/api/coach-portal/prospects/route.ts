@@ -295,7 +295,7 @@ export async function GET(request: NextRequest) {
     const starredAthleteIds = [...new Set(starredData.map((s) => s.athlete_id))]
     console.log("[v0] Prospects API - Total unique athlete IDs (stars + direct):", starredAthleteIds.length)
 
-    let query = supabase
+    let query = adminSupabase
       .from("athletes")
       .select(`
         id,
