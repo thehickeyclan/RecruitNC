@@ -545,16 +545,16 @@ export default function AthleteRecruitingDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading athlete details...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
+        <p className="text-muted-foreground">Loading athlete details...</p>
       </div>
     )
   }
 
   if (!athlete) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Athlete not found</p>
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
+        <p className="text-muted-foreground">Athlete not found</p>
       </div>
     )
   }
@@ -562,9 +562,9 @@ export default function AthleteRecruitingDetailPage() {
   const timelineSteps = getTimelineSteps()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
+      <div className="bg-card border-b border-border sticky top-0 z-10 transition-colors">
         <div className="container mx-auto px-4 py-4">
           <Button
             variant="ghost"
@@ -576,10 +576,10 @@ export default function AthleteRecruitingDetailPage() {
             Back to Portal
           </Button>
 
-          <div className="flex items-start gap-3 md:gap-6">
+          <div className="flex items-start gap-3 md:gap-6 text-foreground">
             {/* Athlete Photo */}
             {athlete.photourl && (
-              <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-gray-200">
+              <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 border-border">
                 <Image
                   src={athlete.photourl}
                   alt={athlete.name}
@@ -591,15 +591,15 @@ export default function AthleteRecruitingDetailPage() {
 
             {/* Athlete Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl md:text-3xl font-bold text-[#002147] mb-2 truncate">{athlete.name}</h1>
+              <h1 className="text-xl md:text-3xl font-bold mb-2 truncate">{athlete.name}</h1>
               <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
-                <Badge variant="outline" className="bg-white text-xs">
+                <Badge variant="outline" className="bg-background text-xs border-border">
                   Class of {athlete.graduationyear}
                 </Badge>
-                <Badge variant="outline" className="bg-white text-xs">
+                <Badge variant="outline" className="bg-background text-xs border-border">
                   {athlete.weightclass} lbs
                 </Badge>
-                <Badge variant="outline" className="bg-white text-xs truncate max-w-[150px]">
+                <Badge variant="outline" className="bg-background text-xs border-border truncate max-w-[150px]">
                   {athlete.highschool}
                 </Badge>
                 {athlete.prospect_ranking && (
@@ -608,8 +608,10 @@ export default function AthleteRecruitingDetailPage() {
                   </Badge>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-600">
-                <span>⭐ {new Date(athlete.starred_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              <div className="flex flex-wrap gap-2 text-xs md:text-sm text-muted-foreground">
+                <span>
+                  ⭐ {new Date(athlete.starred_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </span>
                 <span className="hidden md:inline">•</span>
                 <span className="capitalize">{athlete.pipeline_stage}</span>
               </div>
@@ -620,17 +622,17 @@ export default function AthleteRecruitingDetailPage() {
 
       <div className="container mx-auto px-2 md:px-4 py-4 md:py-8 max-w-7xl">
         {/* Recruiting Timeline */}
-        <Card className="mb-4 md:mb-6">
-          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white py-3 md:py-4">
-            <CardTitle className="text-base md:text-xl flex items-center gap-2">
-              <Calendar className="h-4 w-4 md:h-5 md:w-5" />
+        <Card className="mb-4 md:mb-6 bg-card border-border">
+          <CardHeader className="bg-gradient-to-r from-[#0b1728] to-[#1f2f4a] text-white py-3 md:py-4">
+            <CardTitle className="text-base md:text-xl flex items-center gap-2 text-white">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-white" />
               Recruiting Timeline
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6 px-3 md:px-6">
             <div className="relative">
               {/* Progress bar */}
-              <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200">
+              <div className="absolute top-5 left-0 right-0 h-1 bg-muted-foreground/20">
                 <div 
                   className="h-full bg-[#BC0B03] transition-all duration-500"
                   style={{ 
@@ -648,21 +650,21 @@ export default function AthleteRecruitingDetailPage() {
                       w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-base md:text-lg mb-2 border-2
                       ${step.completed 
                         ? 'bg-[#BC0B03] border-[#BC0B03] text-white' 
-                        : 'bg-white border-gray-300 text-gray-400'
+                        : 'bg-background border-border text-muted-foreground'
                       }
                     `}>
                       {step.icon}
                     </div>
                     
                     {/* Label */}
-                    <p className={`text-[10px] md:text-xs font-medium text-center mb-1 px-1 ${step.completed ? 'text-gray-900' : 'text-gray-400'}`}>
+                    <p className={`text-[10px] md:text-xs font-medium text-center mb-1 px-1 ${step.completed ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {step.label}
                     </p>
                     
                     {/* Date */}
                     {step.date && (
-                      <p className="text-[9px] md:text-xs text-gray-500">
-                        {new Date(step.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      <p className="text-[9px] md:text-xs text-muted-foreground">
+                        {new Date(step.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </p>
                     )}
                   </div>
@@ -722,7 +724,7 @@ export default function AthleteRecruitingDetailPage() {
                       />
                     ) : (
                       <div
-                        className="cursor-pointer hover:bg-gray-50 rounded p-2 -m-2"
+                        className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-2 -m-2"
                         onClick={() => startEditing("academic_gpa", athlete.academic_gpa)}
                       >
                         {athlete.academic_gpa ? (
@@ -760,7 +762,7 @@ export default function AthleteRecruitingDetailPage() {
                         />
                       ) : (
                         <div
-                          className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                        className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-1 -m-1"
                           onClick={() => startEditing("academic_sat", athlete.academic_sat)}
                         >
                           {athlete.academic_sat ? (
@@ -797,7 +799,7 @@ export default function AthleteRecruitingDetailPage() {
                         />
                       ) : (
                         <div
-                          className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1"
+                        className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-1 -m-1"
                           onClick={() => startEditing("academic_act", athlete.academic_act)}
                         >
                           {athlete.academic_act ? (
@@ -846,7 +848,7 @@ export default function AthleteRecruitingDetailPage() {
                       </div>
                     ) : (
                       <div
-                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
                         onClick={() => startEditing("contactEmail", athlete.contactEmail)}
                       >
                         {athlete.contactEmail ? (
@@ -889,7 +891,7 @@ export default function AthleteRecruitingDetailPage() {
                       </div>
                     ) : (
                       <div
-                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
                         onClick={() => startEditing("phone", athlete.phone)}
                       >
                         {athlete.phone ? (
@@ -933,7 +935,7 @@ export default function AthleteRecruitingDetailPage() {
                       </div>
                     ) : (
                       <div
-                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
                         onClick={() => startEditing("location", athlete.location)}
                       >
                         {athlete.location ? (
@@ -970,7 +972,7 @@ export default function AthleteRecruitingDetailPage() {
                       </div>
                     ) : (
                       <div
-                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
+                        className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-2 md:py-1 -mx-2 -my-2 md:-my-1 min-h-[44px] md:min-h-0 touch-manipulation"
                         onClick={() => {
                           if (athlete.birthdate) {
                             // Parse as local date to avoid timezone shifts
@@ -1118,7 +1120,7 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200"
+                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border transition-colors"
                       onClick={() => startEditing("careerRecord", athlete.careerRecord)}
                     >
                       {athlete.careerRecord ? (
@@ -1173,7 +1175,7 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
                       onClick={() => startEditing("state_championships", athlete.college_opens_experience)}
                     >
                       {athlete.college_opens_experience ? (
@@ -1228,7 +1230,7 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
                       onClick={() => startEditing("super32_results_text", athlete.college_opens_experience)}
                     >
                       {athlete.college_opens_experience ? (
@@ -1283,7 +1285,7 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
                       onClick={() => startEditing("nhsca_results_text", athlete.college_opens_experience)}
                     >
                       {athlete.college_opens_experience ? (
@@ -1338,7 +1340,7 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
                       onClick={() => startEditing("college_opens_experience", athlete.college_opens_experience)}
                     >
                       {athlete.college_opens_experience ? (
@@ -1393,7 +1395,7 @@ export default function AthleteRecruitingDetailPage() {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer hover:bg-gray-50 rounded p-3 border border-gray-200 min-h-[80px]"
+                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
                       onClick={() => startEditing("fargo_experience", athlete.fargo_experience)}
                     >
                       {athlete.fargo_experience ? (
@@ -1657,7 +1659,7 @@ export default function AthleteRecruitingDetailPage() {
                     onClick={saveMilestones} 
                     disabled={saving}
                     size="sm"
-                    className="bg-white text-green-700 hover:bg-gray-100"
+                    className="bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-200 dark:hover:bg-green-900/50 transition-colors"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     Save Financial Data
