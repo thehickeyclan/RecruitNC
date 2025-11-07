@@ -617,7 +617,7 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate }: Athle
                           <SelectItem value="email">Email</SelectItem>
                           <SelectItem value="visit">Campus Visit</SelectItem>
                           <SelectItem value="event">Event/Tournament</SelectItem>
-                          <SelectItem value="note">Note</SelectItem>
+                          <SelectItem value="letter">Letter</SelectItem>
                           <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>

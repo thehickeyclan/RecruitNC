@@ -11,4 +11,4 @@ DROP CONSTRAINT IF EXISTS recruiting_actions_action_type_check;
 -- Create new constraint with correct values
 ALTER TABLE recruiting_actions
 ADD CONSTRAINT recruiting_actions_action_type_check
-CHECK (action_type IN ('call', 'email', 'text', 'visit', 'event', 'note', 'other'));
+CHECK (action_type IN ('call', 'email', 'text', 'visit', 'event', 'letter', 'other'));

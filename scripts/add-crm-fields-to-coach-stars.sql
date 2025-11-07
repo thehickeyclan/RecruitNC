@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS recruiting_actions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   coach_user_id UUID NOT NULL REFERENCES user_profiles(user_id) ON DELETE CASCADE,
   athlete_id UUID NOT NULL REFERENCES athletes(id) ON DELETE CASCADE,
-  action_type TEXT NOT NULL CHECK (action_type IN ('call', 'text', 'email', 'visit', 'event', 'note', 'other')),
+  action_type TEXT NOT NULL CHECK (action_type IN ('call', 'text', 'email', 'visit', 'event', 'letter', 'other')),
   action_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   description TEXT NOT NULL,
   outcome TEXT,

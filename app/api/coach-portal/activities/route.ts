@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { ACTIVITY_TYPE_LABELS, applyActivityEffects, getDefaultActivityDescription } from "./activity-helpers"
 
 export async function GET(request: Request) {
   try {
@@ -165,12 +166,23 @@ export async function POST(request: Request) {
 
     console.log("[v0] Coach profile:", coachProfile)
 
-    const timestamp = actionDate.includes("T") ? actionDate : `${actionDate}T00:00:00Z`
+    if (!athleteId || !actionType) {
+      return NextResponse.json({ error: "Athlete ID and action type are required" }, { status: 400 })
+    }
+
+    if (!ACTIVITY_TYPE_LABELS[actionType] && !["visit", "event", "letter", "other", "prospect_camp", "watched_live", "social_media"].includes(actionType)) {
+      return NextResponse.json({ error: `Unsupported activity type: ${actionType}` }, { status: 400 })
+    }
+
+    const nowIso = new Date().toISOString()
+    const timestamp = actionDate ? (actionDate.includes("T") ? actionDate : `${actionDate}T00:00:00Z`) : nowIso
     const followUpTimestamp = followUpDate
       ? followUpDate.includes("T")
         ? followUpDate
         : `${followUpDate}T00:00:00Z`
       : null
+
+    const activityDescription = description && description.trim().length > 0 ? description.trim() : getDefaultActivityDescription(actionType)
 
     const insertData = {
       athlete_id: athleteId,
@@ -178,7 +190,7 @@ export async function POST(request: Request) {
       action_type: actionType,
       action_date: timestamp,
       follow_up_date: followUpTimestamp,
-      description: description,
+      description: activityDescription,
       outcome: outcome || null,
     }
     console.log("[v0] Attempting to insert:", insertData)
@@ -193,7 +205,9 @@ export async function POST(request: Request) {
 
     console.log("[v0] Activity created successfully:", data)
 
-    return NextResponse.json({ activity: data })
+    const effects = await applyActivityEffects(supabase, user.id, athleteId, actionType, timestamp)
+
+    return NextResponse.json({ activity: data, effects })
   } catch (error) {
     console.error("[v0] Error adding activity:", error)
     return NextResponse.json(
