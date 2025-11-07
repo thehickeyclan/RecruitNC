@@ -22,7 +22,6 @@ import {
   GraduationCap,
   DollarSign,
   FileText,
-  MessageSquare,
   Save,
   Plus,
   Edit2,
@@ -196,11 +195,6 @@ export default function AthleteRecruitingDetailPage() {
   })
 
   // Communication log
-  const [newCommunication, setNewCommunication] = useState({
-    type: "email",
-    date: "",
-    notes: "",
-  })
   const [activities, setActivities] = useState<RecruitingActivity[]>([])
   const [isSavingActivity, setIsSavingActivity] = useState(false)
   const [showActivityForm, setShowActivityForm] = useState(false)
@@ -397,36 +391,6 @@ export default function AthleteRecruitingDetailPage() {
       toast.error("Failed to update milestones")
     } finally {
       setSaving(false)
-    }
-  }
-
-  const addCommunication = async () => {
-    if (!newCommunication.date || !newCommunication.notes) {
-      toast.error("Please fill in date and notes")
-      return
-    }
-
-    try {
-      const searchParams = new URLSearchParams(window.location.search)
-      const viewAsCoachId = searchParams.get("viewAsCoachId")
-      const apiUrl = `/api/coaches/athlete-details/${athleteId}/communication${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-      
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCommunication),
-      })
-
-      if (response.ok) {
-        toast.success("Communication logged")
-        setNewCommunication({ type: "email", date: "", notes: "" })
-        fetchAthleteDetails() // Refresh
-      } else {
-        toast.error("Failed to log communication")
-      }
-    } catch (error) {
-      console.error("Error adding communication:", error)
-      toast.error("Failed to log communication")
     }
   }
 
@@ -1886,87 +1850,6 @@ export default function AthleteRecruitingDetailPage() {
                   rows={8}
                   className="w-full"
                 />
-              </CardContent>
-            </Card>
-
-            {/* Communication Log */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-[#002147]" />
-                  Communication Log
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Add new communication */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                  <h4 className="font-semibold text-blue-900">Log New Communication</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-sm">Type</Label>
-                      <select
-                        className="w-full px-3 py-2 border rounded-md"
-                        value={newCommunication.type}
-                        onChange={(e) => setNewCommunication({ ...newCommunication, type: e.target.value })}
-                      >
-                        <option value="email">Email</option>
-                        <option value="phone">Phone Call</option>
-                        <option value="text">Text Message</option>
-                        <option value="in-person">In-Person Meeting</option>
-                        <option value="video">Video Call</option>
-                      </select>
-                    </div>
-                    <div>
-                      <Label className="text-sm">Date</Label>
-                      <Input
-                        type="date"
-                        value={newCommunication.date}
-                        onChange={(e) => setNewCommunication({ ...newCommunication, date: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-sm">Notes</Label>
-                    <Textarea
-                      placeholder="What was discussed?"
-                      value={newCommunication.notes}
-                      onChange={(e) => setNewCommunication({ ...newCommunication, notes: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-                  <Button 
-                    onClick={addCommunication}
-                    size="sm"
-                    className="bg-[#002147] hover:bg-[#13294B]"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Log Communication
-                  </Button>
-                </div>
-
-                {/* Communication history */}
-                <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900">Communication History</h4>
-                  {athlete.communication_log && athlete.communication_log.length > 0 ? (
-                    <div className="space-y-2">
-                      {athlete.communication_log.map((comm: any, index: number) => (
-                        <div key={index} className="border rounded-lg p-3 bg-white">
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="outline" className="capitalize">
-                              {comm.type}
-                            </Badge>
-                            <span className="text-sm text-gray-500">
-                              {new Date(comm.date).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700">{comm.notes}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 italic">No communication logged yet</p>
-                  )}
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

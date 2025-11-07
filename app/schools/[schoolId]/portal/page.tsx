@@ -1002,14 +1002,32 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     if (!dateString) return "No contact"
 
     const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    if (Number.isNaN(date.getTime())) return "No contact"
+
+    const today = new Date()
+
+    const startOfDay = (d: Date) => {
+      const copy = new Date(d)
+      copy.setHours(0, 0, 0, 0)
+      return copy
+    }
+
+    const target = startOfDay(date)
+    const current = startOfDay(today)
+
+    const diffMs = current.getTime() - target.getTime()
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffDays < 0) {
+      if (diffDays === -1) return "Tomorrow"
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+    }
 
     if (diffDays === 0) return "Today"
     if (diffDays === 1) return "Yesterday"
-    if (diffDays < 7) return `${diffDays}d ago`
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+    if (diffDays > 1 && diffDays < 7) return `${diffDays}d ago`
+    if (diffDays >= 7 && diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
