@@ -105,13 +105,20 @@ export async function GET(request: NextRequest) {
       coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
     }
 
-    const activeCoachId = viewAsCoachId && profile?.is_admin ? viewAsCoachId : user.id
-    if (activeCoachId && !coachUserIds.includes(activeCoachId)) {
-      coachUserIds.push(activeCoachId)
+    let activeCoachId: string | null = null
+
+    if (profile?.is_admin) {
+      if (viewAsCoachId) {
+        activeCoachId = viewAsCoachId
+      } else if (profile.school_id && profile.school_id === targetSchoolId) {
+        activeCoachId = user.id
+      }
+    } else {
+      activeCoachId = user.id
     }
 
-    if (coachUserIds.length === 0 && activeCoachId) {
-      coachUserIds = [activeCoachId]
+    if (activeCoachId && !coachUserIds.includes(activeCoachId)) {
+      coachUserIds.push(activeCoachId)
     }
 
     console.log("[v0] Prospects API - Coach user IDs to fetch:", coachUserIds)
