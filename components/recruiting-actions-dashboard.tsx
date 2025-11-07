@@ -609,7 +609,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               </TabsTrigger>
               <TabsTrigger value="table" className="gap-2">
                 <TableIcon className="h-4 w-4" />
-                Table
+                Today's Activity
             </TabsTrigger>
           </TabsList>
         </div>

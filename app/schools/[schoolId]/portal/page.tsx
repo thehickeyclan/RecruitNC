@@ -2896,8 +2896,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                     )}
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="min-w-[200px]">
-                                  <DropdownMenuLabel>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="min-w-[200px] bg-white text-slate-800 dark:bg-slate-900 dark:text-slate-100 border border-border shadow-lg"
+                                >
+                                  <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground dark:text-slate-300">
                                     {canLogActivities ? "Log Activity" : "Impersonate a coach to log"}
                                   </DropdownMenuLabel>
                                   {ACTIVITY_OPTIONS.map((option) => (
@@ -2905,6 +2908,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                       key={option.value}
                                       disabled={isLoggingActivity || !canLogActivities}
                                       onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
+                                      className="text-sm text-foreground dark:text-slate-100 dark:focus:bg-slate-800 focus:bg-muted"
                                     >
                                       {option.label}
                                     </DropdownMenuItem>
