@@ -564,33 +564,33 @@ export default function AthleteRecruitingDetailPage() {
     ]
   }
 
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
-          <p className="text-muted-foreground">Loading athlete details...</p>
-        </div>
-      )
-    }
-
-    if (!athlete) {
-      return (
-        <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
-          <p className="text-muted-foreground">Athlete not found</p>
-        </div>
-      )
-    }
-
-    const timelineSteps = getTimelineSteps()
-    const emojiActivityTypes: Record<string, string> = {
-      call: "📞",
-      text: "💬",
-      email: "✉️",
-      letter: "📝",
-      social_media: "📱",
-    }
-
+  if (loading) {
     return (
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
+        <p className="text-muted-foreground">Loading athlete details...</p>
+      </div>
+    )
+  }
+
+  if (!athlete) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
+        <p className="text-muted-foreground">Athlete not found</p>
+      </div>
+    )
+  }
+
+  const timelineSteps = getTimelineSteps()
+  const emojiActivityTypes: Record<string, string> = {
+    call: "📞",
+    text: "💬",
+    email: "✉️",
+    letter: "📝",
+    social_media: "📱",
+  }
+
+  return (
+    <div className={isDarkMode ? "dark" : ""}>
       <div className="min-h-screen bg-background text-foreground transition-colors">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10 transition-colors">
@@ -2184,9 +2184,8 @@ export default function AthleteRecruitingDetailPage() {
         </Tabs>
       </div>
     </div>
-    )
-  }
-
-  return <div className={isDarkMode ? "dark" : ""}>{renderContent()}</div>
+      </div>
+    </div>
+  )
 }
 
