@@ -162,6 +162,8 @@ export default function AthleteRecruitingDetailPage() {
   const athleteId = params.id as string
   const schoolId = params.schoolId as string
   const { profile } = useAuth()
+  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isThemeMounted, setIsThemeMounted] = useState(false)
 
   const todayIso = new Date().toISOString().split("T")[0]
 
@@ -232,7 +234,26 @@ export default function AthleteRecruitingDetailPage() {
     if (typeof window === "undefined") return
     const params = new URLSearchParams(window.location.search)
     setViewAsCoachId(params.get("viewAsCoachId"))
+    setIsThemeMounted(true)
+    const storedTheme = window.localStorage.getItem("portal-theme")
+    if (storedTheme === "light") {
+      setIsDarkMode(false)
+    } else if (storedTheme === "dark") {
+      setIsDarkMode(true)
+    } else {
+      setIsDarkMode(true)
+    }
   }, [athleteId])
+
+  const handleThemeToggle = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("portal-theme", next ? "dark" : "light")
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     fetchActivities()
@@ -569,7 +590,8 @@ export default function AthleteRecruitingDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors">
+    <div className={isDarkMode ? "dark" : ""}>
+      <div className="min-h-screen bg-background text-foreground transition-colors">
       {/* Header */}
       <div className="bg-card border-b border-border sticky top-0 z-10 transition-colors">
         <div className="container mx-auto px-4 py-4">
@@ -598,9 +620,58 @@ export default function AthleteRecruitingDetailPage() {
 
             {/* Athlete Info */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl md:text-3xl font-bold mb-2 truncate">{athlete.name}</h1>
-              <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
-                <Badge variant="outline" className="bg-background text-xs border-border">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <h1 className="text-xl md:text-3xl font-bold mb-2 truncate">{athlete.name}</h1>
+                  <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
+                    <Badge variant="outline" className="bg-background text-xs border-border">
+                      Class of {athlete.graduationyear}
+                    </Badge>
+                    <Badge variant="outline" className="bg-background text-xs border-border">
+                      {athlete.weightclass} lbs
+                    </Badge>
+                    <Badge variant="outline" className="bg-background text-xs border-border truncate max-w-[150px]">
+                      {athlete.highschool}
+                    </Badge>
+                    {athlete.prospect_ranking && (
+                      <Badge className="bg-[#BC0B03] text-white text-xs">
+                        #{athlete.prospect_ranking}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs md:text-sm text-muted-foreground">
+                    <span>
+                      ⭐ {new Date(athlete.starred_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                    <span className="hidden md:inline">•</span>
+                    <span className="capitalize">{athlete.pipeline_stage}</span>
+                  </div>
+                </div>
+                {isThemeMounted && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleThemeToggle}
+                    className="flex items-center gap-2 rounded-full bg-white/80 text-[#0b1728] hover:bg-white dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-900 transition-colors"
+                  >
+                    {isDarkMode ? "Light Mode" : "Dark Mode"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-2 md:px-4 py-4 md:py-8 max-w-7xl">
+        {/* Recruiting Timeline */}
+        <Card className="mb-4 md:mb-6 bg-card border-border">
+          <CardHeader className="bg-gradient-to-r from-[#0b1728] to-[#1f2f4a] text-white py-3 md:py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <CardTitle className="text-base md:text-xl flex items-center gap-2 text-white">
+              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-white" />
+              Recruiting Timeline
+            </CardTitle>
+          </CardHeader>
                   Class of {athlete.graduationyear}
                 </Badge>
                 <Badge variant="outline" className="bg-background text-xs border-border">
