@@ -58,6 +58,27 @@ export async function GET(request: Request) {
         throw error
       }
 
+      const activityCoachIds =
+        activities?.map((activity: any) => activity.coach_user_id).filter(Boolean) || []
+      const uniqueCoachIds = Array.from(new Set(activityCoachIds))
+
+      let coachNameMap: Record<string, string> = {}
+      if (uniqueCoachIds.length > 0) {
+        const { data: coachProfiles, error: coachProfilesError } = await supabase
+          .from("user_profiles")
+          .select("user_id, full_name")
+          .in("user_id", uniqueCoachIds)
+
+        if (coachProfilesError) {
+          console.error("[v0] Error fetching coach names:", coachProfilesError)
+        } else {
+          coachNameMap = (coachProfiles || []).reduce<Record<string, string>>((acc, profile) => {
+            acc[profile.user_id] = profile.full_name || "Unknown Coach"
+            return acc
+          }, {})
+        }
+      }
+
       console.log("[v0] Raw activities from database:", activities?.length || 0, "records")
       console.log("[v0] First activity sample:", activities?.[0])
 
@@ -66,6 +87,7 @@ export async function GET(request: Request) {
           ...activity,
           athlete_name: `${activity.athletes?.firstName || ""} ${activity.athletes?.lastName || ""}`.trim(),
           athlete_photo: activity.athletes?.photourl || "",
+          coach_name: coachNameMap[activity.coach_user_id] || "Unknown Coach",
         })) || []
 
       console.log("[v0] Transformed activities:", transformedActivities.length, "records")
@@ -96,6 +118,27 @@ export async function GET(request: Request) {
         throw error
       }
 
+      const activityCoachIds =
+        activities?.map((activity: any) => activity.coach_user_id).filter(Boolean) || []
+      const uniqueCoachIds = Array.from(new Set(activityCoachIds))
+
+      let coachNameMap: Record<string, string> = {}
+      if (uniqueCoachIds.length > 0) {
+        const { data: coachProfiles, error: coachProfilesError } = await supabase
+          .from("user_profiles")
+          .select("user_id, full_name")
+          .in("user_id", uniqueCoachIds)
+
+        if (coachProfilesError) {
+          console.error("[v0] Error fetching coach names:", coachProfilesError)
+        } else {
+          coachNameMap = (coachProfiles || []).reduce<Record<string, string>>((acc, profile) => {
+            acc[profile.user_id] = profile.full_name || "Unknown Coach"
+            return acc
+          }, {})
+        }
+      }
+
       console.log("[v0] Raw activities from database:", activities?.length || 0, "records")
 
       const transformedActivities =
@@ -103,6 +146,7 @@ export async function GET(request: Request) {
           ...activity,
           athlete_name: `${activity.athletes?.firstName || ""} ${activity.athletes?.lastName || ""}`.trim(),
           athlete_photo: activity.athletes?.photourl || "",
+          coach_name: coachNameMap[activity.coach_user_id] || "Unknown Coach",
         })) || []
 
       return NextResponse.json({ activities: transformedActivities })
@@ -207,7 +251,12 @@ export async function POST(request: Request) {
 
     const effects = await applyActivityEffects(supabase, user.id, athleteId, actionType, timestamp)
 
-    return NextResponse.json({ activity: data, effects })
+    const activityWithCoach = {
+      ...data,
+      coach_name: coachProfile.full_name || "Unknown Coach",
+    }
+
+    return NextResponse.json({ activity: activityWithCoach, effects })
   } catch (error) {
     console.error("[v0] Error adding activity:", error)
     return NextResponse.json(

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -39,6 +39,7 @@ import {
   ChevronDown,
   Moon,
   Sun,
+  Loader2,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -52,6 +53,13 @@ import { CreateProspectModal } from "@/components/create-prospect-modal"
 import { StarRating } from "@/components/star-rating"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { BirthdayCalendar } from "@/components/birthday-calendar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Prospect {
   id: string
@@ -124,6 +132,7 @@ interface Activity {
   athlete_id?: string // Added for filtering activities
   athlete_name?: string // Added for displaying in overdue list
   athlete_photo?: string // Added for displaying in overdue list
+  coach_name?: string
 }
 
 interface NCHSAAResult {
@@ -159,6 +168,23 @@ const PIPELINE_STAGES_BASE = [
   { id: "Signed", label: "Signed" },
   { id: "Lost", label: "Lost" },
 ]
+
+const ACTIVITY_OPTIONS = [
+  { value: "call", label: "Call" },
+  { value: "text", label: "Text" },
+  { value: "email", label: "Email" },
+  { value: "visit", label: "Official Visit" },
+  { value: "prospect_camp", label: "Prospect Camp" },
+  { value: "watched_live", label: "Watched Live" },
+  { value: "letter", label: "Handwritten Letter" },
+  { value: "social_media", label: "Social Media" },
+  { value: "other", label: "Other" },
+] as const
+
+const ACTIVITY_LABELS = ACTIVITY_OPTIONS.reduce<Record<string, string>>((acc, option) => {
+  acc[option.value] = option.label
+  return acc
+}, {})
 
 // Helper function to convert hex to RGB
 const hexToRgb = (hex: string): string => {
@@ -266,6 +292,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   })
   const [showFamilyForm, setShowFamilyForm] = useState(false)
   const [activities, setActivities] = useState<Activity[]>([])
+  const [selectedAthleteActivities, setSelectedAthleteActivities] = useState<Activity[]>([])
+  const [loggingActivity, setLoggingActivity] = useState<Record<string, boolean>>({})
   const [nchsaaResults, setNchsaaResults] = useState<any[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
@@ -662,21 +690,106 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        // Enrich activities with athlete data if fetching all
+        const fetchedActivities: Activity[] = (data.activities || []).map((activity: Activity & { prospect?: { name?: string; photourl?: string } }) => ({
+          ...activity,
+          athlete_id: activity.athlete_id,
+          athlete_name: activity.athlete_name || activity.prospect?.name,
+          athlete_photo: activity.athlete_photo || activity.prospect?.photourl,
+          coach_name: activity.coach_name || "Unknown Coach",
+        }))
+
         if (athleteId) {
-          setActivities(data.activities || [])
-        } else {
-          // Map to include athlete details for overdue list display
-          const enrichedActivities = data.activities.map((activity: any) => ({
+          const normalizedForAthlete = fetchedActivities.map((activity) => ({
             ...activity,
-            athlete_name: activity.prospect?.name,
-            athlete_photo: activity.prospect?.photourl,
+            athlete_id: activity.athlete_id || athleteId,
           }))
-          setActivities(enrichedActivities || [])
+
+          setSelectedAthleteActivities(normalizedForAthlete)
+          setActivities((previousActivities) => {
+            const withoutAthlete = previousActivities.filter((activity) => activity.athlete_id !== athleteId)
+            return [...withoutAthlete, ...normalizedForAthlete].sort(
+              (a, b) => new Date(b.action_date).getTime() - new Date(a.action_date).getTime(),
+            )
+          })
+        } else {
+          const sortedActivities = fetchedActivities.sort(
+            (a, b) => new Date(b.action_date).getTime() - new Date(a.action_date).getTime(),
+          )
+          setActivities(sortedActivities)
+
+          if (selectedAthlete) {
+            const matchingActivities = sortedActivities.filter(
+              (activity) => activity.athlete_id === selectedAthlete.id,
+            )
+            setSelectedAthleteActivities(matchingActivities)
+          }
         }
       }
     } catch (error) {
       console.error("[v0] Error fetching activities:", error)
+    }
+  }
+
+  useEffect(() => {
+    if (!selectedAthlete) {
+      setSelectedAthleteActivities([])
+    }
+  }, [selectedAthlete])
+
+  const handleInlineActivityLog = async (
+    athleteId: string,
+    actionType: (typeof ACTIVITY_OPTIONS)[number]["value"],
+  ) => {
+    setLoggingActivity((previous) => ({ ...previous, [athleteId]: true }))
+
+    try {
+      const response = await fetch("/api/coach-portal/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId,
+          actionType,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to log activity")
+      }
+
+      const pipelineStage = data.effects?.pipeline_stage as string | undefined
+      if (pipelineStage) {
+        setProspects((existing) =>
+          existing.map((prospect) =>
+            prospect.id === athleteId ? { ...prospect, pipeline_stage: pipelineStage } : prospect,
+          ),
+        )
+
+        setSelectedAthlete((current) =>
+          current && current.id === athleteId ? { ...current, pipeline_stage: pipelineStage } : current,
+        )
+      }
+
+      toast({
+        title: "Activity logged",
+        description: `${ACTIVITY_LABELS[actionType]} saved to timeline`,
+      })
+
+      await fetchActivities()
+    } catch (error) {
+      console.error("[v0] Error logging inline activity:", error)
+      toast({
+        title: "Unable to log activity",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      })
+    } finally {
+      setLoggingActivity((previous) => {
+        const next = { ...previous }
+        delete next[athleteId]
+        return next
+      })
     }
   }
 
@@ -855,18 +968,29 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }
 
+  const lastActivityByAthlete = useMemo(() => {
+    const map: Record<string, Activity> = {}
+
+    activities.forEach((activity) => {
+      if (!activity.athlete_id) return
+
+      const existing = map[activity.athlete_id]
+      if (
+        !existing ||
+        new Date(activity.action_date).getTime() > new Date(existing.action_date).getTime()
+      ) {
+        map[activity.athlete_id] = activity
+      }
+    })
+
+    return map
+  }, [activities])
+
+  const getLastActivityForAthlete = (athleteId: string) => lastActivityByAthlete[athleteId] || null
+
   const getLastContactedDate = (athleteId: string) => {
-    // Find all activities for this athlete
-    const athleteActivities = activities.filter((a) => a.athlete_id === athleteId)
-
-    if (athleteActivities.length === 0) return null
-
-    // Sort by action_date descending and get the most recent
-    const sortedActivities = athleteActivities.sort(
-      (a, b) => new Date(b.action_date).getTime() - new Date(a.action_date).getTime(),
-    )
-
-    return sortedActivities[0].action_date
+    const lastActivity = getLastActivityForAthlete(athleteId)
+    return lastActivity ? lastActivity.action_date : null
   }
 
   const formatLastContactDate = (dateString: string | null) => {
@@ -2477,20 +2601,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         )}
                       </div>
                     </th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Last Contact</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Last Activity</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Activity Date</th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
                   {sortedProspects.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={10} className="p-8 text-center text-muted-foreground">
                         No prospects found
                       </td>
                     </tr>
                   ) : (
                     sortedProspects.map((prospect) => {
-                      const stage = PIPELINE_STAGES_BASE.find(s => s.id === prospect.pipeline_stage) || PIPELINE_STAGES_BASE[0]
+                      const stage =
+                        PIPELINE_STAGES_BASE.find((s) => s.id === prospect.pipeline_stage) ||
+                        PIPELINE_STAGES_BASE[0]
                       const stageColor = getStageColor(stage.id, schoolBranding?.primary_color)
+                      const lastActivity = getLastActivityForAthlete(prospect.id)
+                      const lastActivityLabel = lastActivity
+                        ? ACTIVITY_LABELS[lastActivity.action_type] || lastActivity.action_type
+                        : null
+                      const isLoggingActivity = Boolean(loggingActivity[prospect.id])
                       return (
                         <tr
                           key={prospect.id}
@@ -2602,14 +2734,77 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           >
                             {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
                           </td>
-                          <td 
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium text-foreground">
+                                  {lastActivityLabel ?? "No activity yet"}
+                                </span>
+                                {lastActivity?.coach_name && (
+                                  <span className="text-xs text-muted-foreground">
+                                    by {lastActivity.coach_name}
+                                  </span>
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={isLoggingActivity}
+                                    className="rounded-full"
+                                  >
+                                    {isLoggingActivity ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                        Logging...
+                                      </>
+                                    ) : (
+                                      "Log Activity"
+                                    )}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="min-w-[180px]">
+                                  <DropdownMenuLabel>Log Activity</DropdownMenuLabel>
+                                  {ACTIVITY_OPTIONS.map((option) => (
+                                    <DropdownMenuItem
+                                      key={option.value}
+                                      disabled={isLoggingActivity}
+                                      onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
+                                    >
+                                      {option.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </td>
+                          <td
                             className="p-4 align-middle text-muted-foreground text-sm cursor-pointer"
                             onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
+                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""
+                              }`
                               router.push(url)
                             }}
                           >
-                            {formatLastContactDate(getLastContactedDate(prospect.id))}
+                            {lastActivity ? (
+                              <div className="flex flex-col">
+                                <span>{formatLastContactDate(lastActivity.action_date)}</span>
+                                <span className="text-xs text-muted-foreground/80">
+                                  {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </span>
+                              </div>
+                            ) : (
+                              <span>No activity</span>
+                            )}
                           </td>
                         </tr>
                       )
@@ -3801,9 +3996,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     </div>
 
                     {/* Activity List */}
-                    {activities.length > 0 ? (
+                    {selectedAthleteActivities.length > 0 ? (
                       <div className="space-y-2 mt-4">
-                        {activities.map((activity) => (
+                        {selectedAthleteActivities.map((activity) => (
                           <div key={activity.id} className="bg-card border border-border rounded-lg p-3">
                             <div className="flex items-start justify-between mb-2">
                               <Badge variant="outline" className="text-xs uppercase">
@@ -3821,6 +4016,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <p className="text-xs text-muted-foreground mt-1">
                                 Follow-up: {new Date(activity.follow_up_date).toLocaleDateString()}
                               </p>
+                            )}
+                            {activity.coach_name && (
+                              <p className="text-xs text-muted-foreground mt-1">Logged by {activity.coach_name}</p>
                             )}
                           </div>
                         ))}
