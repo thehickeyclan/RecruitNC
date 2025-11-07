@@ -152,6 +152,7 @@ export async function GET() {
           need_based_aid_eligible: star.need_based_aid_eligible,
           aid_application_status: star.aid_application_status,
           financial_concerns: star.financial_concerns,
+          gi_bill_eligible: star.gi_bill_eligible,
         }
       })
       .filter(Boolean)

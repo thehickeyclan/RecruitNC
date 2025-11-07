@@ -40,6 +40,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       need_based_aid_eligible: body.needBasedAidEligible || false,
       aid_application_status: body.aidApplicationStatus || null,
       financial_concerns: body.financialConcerns || null,
+      gi_bill_eligible: body.giBillEligible || false,
       updated_at: new Date().toISOString(),
     }
 

@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useState, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useTheme } from "next-themes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +38,8 @@ import {
   Table,
   X,
   ChevronDown,
+  Moon,
+  Sun,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -101,6 +104,7 @@ interface Prospect {
   need_based_aid_eligible?: boolean
   aid_application_status?: string
   financial_concerns?: string
+  gi_bill_eligible?: boolean
   birthdate?: string
 }
 
@@ -219,6 +223,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const { branding: schoolBranding, isLoading: brandingLoading } = useSchoolBranding(params.schoolId)
+  const { resolvedTheme, setTheme } = useTheme()
+  const [isThemeMounted, setIsThemeMounted] = useState(false)
   // Removed redundant school state - using schoolBranding from hook instead
 
   // Admin viewing as specific coach
@@ -286,6 +292,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     needBasedAidEligible: false,
     aidApplicationStatus: "",
     financialConcerns: "",
+    giBillEligible: false,
   })
   const [isSavingFinancials, setIsSavingFinancials] = useState(false)
   // Use a more descriptive state name if `showActivityDialog` refers to the dialog for adding/editing activities
@@ -306,6 +313,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
 
   // Removed redundant fetchSchool - using useSchoolBranding hook instead
+
+  useEffect(() => {
+    setIsThemeMounted(true)
+  }, [])
 
   useEffect(() => {
     const isAuthorized = profile?.is_admin || profile?.school_id === params.schoolId
@@ -722,6 +733,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         needBasedAidEligible: selectedAthlete.need_based_aid_eligible || false,
         aidApplicationStatus: selectedAthlete.aid_application_status || "",
         financialConcerns: selectedAthlete.financial_concerns || "",
+        giBillEligible: selectedAthlete.gi_bill_eligible || false,
       })
       // Load academic notes from star data
       setAcademicNotes((selectedAthlete as any).academic_notes || "")
@@ -791,6 +803,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           needBasedAidEligible: financialData.needBasedAidEligible,
           aidApplicationStatus: financialData.aidApplicationStatus,
           financialConcerns: financialData.financialConcerns,
+          giBillEligible: financialData.giBillEligible,
         }),
       })
 
@@ -1583,13 +1596,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }
 
   const stats = calculateStats()
+  const isDarkMode = resolvedTheme === "dark"
+
+  const handleThemeToggle = () => {
+    setTheme(isDarkMode ? "light" : "dark")
+  }
 
   if (authLoading || isLoading || brandingLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white">Loading portal...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-foreground">Loading portal...</p>
         </div>
       </div>
     )
@@ -1598,9 +1616,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   // Show loading state while school branding is being fetched
   if (brandingLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
         <div className="text-center">
-          <p className="text-white">Loading...</p>
+          <p className="text-foreground">Loading...</p>
         </div>
       </div>
     )
@@ -1609,24 +1627,46 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   // Show error if school branding couldn't be loaded
   if (!schoolBranding) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
         <div className="text-center">
-          <p className="text-white">School not found</p>
+          <p className="text-foreground">School not found</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <SchoolBrandedHeader
         schoolId={params.schoolId}
         schoolName={schoolBranding?.name || ""}
         subtitle={`${filteredProspects.length} Active Prospects`}
       />
 
+      <div className="container mx-auto px-4 py-3 flex justify-end">
+        {isThemeMounted && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleThemeToggle}
+            className="flex items-center gap-2 rounded-full bg-white/80 text-slate-700 hover:bg-white dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-900 transition-colors"
+          >
+            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <span className="hidden sm:inline text-xs font-semibold tracking-wide">
+              {isDarkMode ? "Light Mode" : "Dark Mode"}
+            </span>
+          </Button>
+        )}
+      </div>
+
       {profile?.is_admin && (
-        <div className={viewAsCoachId ? "bg-orange-100 border-b border-orange-200" : "bg-blue-50 border-b border-blue-100"}>
+        <div
+          className={
+            viewAsCoachId
+              ? "bg-orange-100 border-b border-orange-200 dark:bg-orange-500/20 dark:border-orange-600/40"
+              : "bg-blue-50 border-b border-blue-100 dark:bg-blue-500/10 dark:border-blue-400/30"
+          }
+        >
           <div className="container mx-auto px-4 py-3 flex items-center justify-between">
             {viewAsCoachId ? (
               <>
@@ -1660,7 +1700,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       )}
 
       {/* Mobile-only Quick Actions Bar */}
-      <div className="md:hidden sticky top-0 z-30 bg-white border-b-2 border-gray-200 shadow-sm">
+      <div className="md:hidden sticky top-0 z-30 bg-background border-b-2 border-border shadow-sm transition-colors">
         <div className="container mx-auto px-4 py-3">
           <div className="flex gap-2">
             <Button
@@ -1735,7 +1775,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     return followUpDate < today
                   })
                   .map((activity) => (
-                    <div key={activity.id} className="bg-white p-3 rounded-lg border border-red-200">
+                    <div key={activity.id} className="bg-card p-3 rounded-lg border border-red-200 dark:border-red-400/50">
                       <div className="flex items-start gap-3">
                         <img
                           src={activity.athlete_photo || "/placeholder.svg?height=40&width=40"}
@@ -1743,8 +1783,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           className="w-10 h-10 rounded-full object-cover"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-gray-900">{activity.athlete_name}</p>
-                          <p className="text-xs text-gray-600">
+                          <p className="font-medium text-sm text-foreground">{activity.athlete_name}</p>
+                          <p className="text-xs text-muted-foreground">
                             {activity.action_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                           </p>
                           <p className="text-xs text-red-600 font-medium mt-1">
@@ -1767,18 +1807,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       {/* NC Roster History Section */}
       <div className="container mx-auto px-4 pt-6 pb-4">
         <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
-          <Card className="border border-gray-200 shadow-sm bg-white">
+          <Card className="border border-border shadow-sm bg-card transition-colors">
             <CollapsibleTrigger asChild>
-              <CardHeader className="pb-4 cursor-pointer hover:bg-gray-50 transition-colors">
+              <CardHeader className="pb-4 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 transition-colors">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-2xl font-bold text-gray-900">NC Roster History</CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <CardTitle className="text-2xl font-bold text-foreground">NC Roster History</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
                       North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
                     </p>
                   </div>
                   <ChevronDown 
-                    className={`h-6 w-6 text-gray-500 transition-transform ${isRosterHistoryOpen ? 'rotate-180' : ''}`}
+                    className={`h-6 w-6 text-muted-foreground transition-transform ${isRosterHistoryOpen ? 'rotate-180' : ''}`}
                   />
                 </div>
               </CardHeader>
@@ -1787,32 +1827,32 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               <CardContent className="p-6">
             {loadingHistory ? (
               <div className="text-center py-8">
-                <div className="animate-pulse text-gray-400">Loading roster history...</div>
+                <div className="animate-pulse text-muted-foreground/70">Loading roster history...</div>
               </div>
             ) : pipelineHistory.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No historical NC athletes found. Athletes with "College Athlete" status will appear here.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full caption-bottom text-sm">
-                  <thead className="[&_tr]:border-b bg-gray-50">
+                  <thead className="[&_tr]:border-b bg-muted">
                     <tr className="border-b transition-colors">
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Class Year</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Name</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Weight</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">High School</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Current Status</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Roster Status</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Years on Team</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Actions</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Class Year</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Current Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Roster Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Years on Team</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="[&_tr:last-child]:border-0">
                     {pipelineHistory.map((athlete) => (
                       <tr
                         key={athlete.id}
-                        className="border-b transition-colors hover:bg-gray-50 data-[state=selected]:bg-muted"
+                        className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
                       >
                         <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
                         <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
@@ -1829,13 +1869,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             className={
                               athlete.roster_status === "Active" 
                                 ? "bg-green-50 text-green-700 border-green-200" 
-                                : "bg-gray-50 text-gray-700 border-gray-200"
+                                : "bg-muted text-muted-foreground border-border"
                             }
                           >
                             {athlete.roster_status || "Active"}
                           </Badge>
                         </td>
-                        <td className="p-4 align-middle text-gray-600">
+                        <td className="p-4 align-middle text-muted-foreground">
                           {athlete.years_on_team || "Current"}
                         </td>
                         <td className="p-4 align-middle">
@@ -1880,39 +1920,39 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
       {/* North Carolina Recruits Section */}
       <div className="container mx-auto px-4 pt-6 pb-4">
-        <Card className="border border-gray-200 shadow-sm bg-white">
+        <Card className="border border-border shadow-sm bg-card transition-colors">
           <CardHeader className="pb-4">
-            <CardTitle className="text-2xl font-bold text-gray-900">Committed Recruits</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">
+            <CardTitle className="text-2xl font-bold text-foreground">Committed Recruits</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
               North Carolina athletes committed or signed to {schoolBranding?.name || "this school"}
             </p>
           </CardHeader>
           <CardContent className="p-6">
             {loadingNcRecruits ? (
               <div className="text-center py-8">
-                <div className="animate-pulse text-gray-400">Loading recruits...</div>
+                <div className="animate-pulse text-muted-foreground/70">Loading recruits...</div>
               </div>
             ) : ncRecruits.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">No committed/signed recruits found</div>
+              <div className="text-center py-8 text-muted-foreground">No committed/signed recruits found</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full caption-bottom text-sm">
-                  <thead className="[&_tr]:border-b bg-gray-50">
+                  <thead className="[&_tr]:border-b bg-muted">
                     <tr className="border-b transition-colors">
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Year</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Name</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Weight</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">High School</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">College</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Division</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Year</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">College</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Division</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Status</th>
                     </tr>
                   </thead>
                   <tbody className="[&_tr:last-child]:border-0">
                     {ncRecruits.map((recruit) => (
                       <tr
                         key={recruit.id}
-                        className="border-b transition-colors hover:bg-gray-50 data-[state=selected]:bg-muted"
+                        className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
                       >
                         <td className="p-4 align-middle font-medium">{recruit.year || "-"}</td>
                         <td className="p-4 align-middle font-medium">{recruit.name || "-"}</td>
@@ -1979,7 +2019,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {/* Total Pipeline - Primary metric with school branding */}
           <div
-            className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-white rounded-xl border-2 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-card dark:bg-slate-900 rounded-xl border-2 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
             style={{
               borderColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
             }}
@@ -1989,8 +2029,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               style={{ color: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
             />
             <div className="min-w-0">
-              <div className="text-2xl md:text-3xl font-bold text-gray-900">{stats.total}</div>
-              <div className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Total Pipeline
               </div>
             </div>
@@ -2001,7 +2041,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-red-600" />
             <div className="min-w-0">
               <div className="text-2xl md:text-3xl font-bold text-red-600">{stats.lost}</div>
-              <div className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Lost to Others
               </div>
             </div>
@@ -2012,7 +2052,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-blue-600" />
             <div className="min-w-0">
               <div className="text-2xl md:text-3xl font-bold text-blue-600">{stats.offersOut}</div>
-              <div className="text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Offers Out
               </div>
             </div>
@@ -2021,25 +2061,25 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       </div>
 
       <div className="container mx-auto px-4 pb-5">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 md:p-4">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-3 md:p-4 transition-colors">
           <div className="flex flex-col md:flex-row md:flex-wrap gap-3">
             <div className="relative flex-1 min-w-full md:min-w-[250px]">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-[18px] w-[18px]" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-[18px] w-[18px]" />
               <Input
                 placeholder="Search athletes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-2 border-gray-200 focus:border-gray-900 bg-white text-gray-900 placeholder:text-gray-400 h-11 rounded-lg transition-colors"
+                className="pl-10 border-2 border-border focus:border-primary bg-background text-foreground placeholder:text-muted-foreground h-11 rounded-lg transition-colors"
               />
             </div>
 
             <div className="flex flex-col md:flex-row gap-3">
             <div className="flex gap-3">
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
+                <SelectContent className="bg-card border border-border text-foreground">
                   <SelectItem value="all">All Years</SelectItem>
                   {graduationYears.map((year) => (
                     <SelectItem key={year} value={year.toString()}>
@@ -2050,10 +2090,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </Select>
 
               <Select value={selectedGender} onValueChange={setSelectedGender}>
-                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
+                <SelectContent className="bg-card border border-border text-foreground">
                   <SelectItem value="all">All Genders</SelectItem>
                   <SelectItem value="male">Men's</SelectItem>
                   <SelectItem value="female">Women's</SelectItem>
@@ -2061,10 +2101,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </Select>
 
               <Select value={selectedState} onValueChange={setSelectedState}>
-                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
                   <SelectValue placeholder="All States" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
+                <SelectContent className="bg-card border border-border text-foreground">
                   <SelectItem value="all">All States</SelectItem>
                   {states.map((state) => (
                     <SelectItem key={state} value={state}>
@@ -2075,10 +2115,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </Select>
 
               <Select value={selectedRating} onValueChange={setSelectedRating}>
-                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-900 h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
                   <SelectValue placeholder="All Ratings" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
+                <SelectContent className="bg-card border border-border text-foreground">
                   <SelectItem value="all">All Ratings</SelectItem>
                   <SelectItem value="5">
                     <div className="flex items-center gap-2">
@@ -2087,7 +2127,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                      <span className="ml-1 text-xs text-gray-600">Dream Recruit</span>
+                      <span className="ml-1 text-xs text-muted-foreground">Dream Recruit</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="4">
@@ -2096,8 +2136,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <span className="ml-1 text-xs text-gray-600">Excellent Fit</span>
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Excellent Fit</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="3">
@@ -2105,39 +2145,39 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <span className="ml-1 text-xs text-gray-600">Solid Prospect</span>
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Solid Prospect</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="2">
                     <div className="flex items-center gap-2">
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <span className="ml-1 text-xs text-gray-600">Backup Option</span>
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Backup Option</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="1">
                     <div className="flex items-center gap-2">
                       <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <span className="ml-1 text-xs text-gray-600">Low Priority</span>
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Low Priority</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="unrated">
                     <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <Star className="h-4 w-4 fill-none text-gray-300" />
-                      <span className="ml-1 text-xs text-gray-600">Not Rated</span>
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Not Rated</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -2145,12 +2185,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               </div>
 
               {/* View Mode Toggle */}
-              <div className="flex gap-2 border-2 border-gray-200 rounded-lg p-1 bg-white w-full md:w-auto">
+              <div className="flex gap-2 border border-border rounded-lg p-1 bg-background dark:bg-slate-900/70 w-full md:w-auto transition-colors">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setViewMode("board")}
-                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation ${viewMode === "board" ? "bg-gray-100" : ""}`}
+                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation transition-colors ${viewMode === "board" ? "bg-muted" : ""}`}
                 >
                   <LayoutGrid className="h-4 w-4 mr-2" />
                   <span className="text-sm">Board</span>
@@ -2159,7 +2199,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   variant="ghost"
                   size="sm"
                   onClick={() => setViewMode("table")}
-                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation ${viewMode === "table" ? "bg-gray-100" : ""}`}
+                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation transition-colors ${viewMode === "table" ? "bg-muted" : ""}`}
                 >
                   <Table className="h-4 w-4 mr-2" />
                   <span className="text-sm">Table</span>
@@ -2205,9 +2245,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 onDragOver={handleDragOver}
                 onDrop={() => handleDrop(stage.id)}
               >
-                <div className="bg-white rounded-xl border-2 border-gray-200 flex flex-col transition-all hover:border-gray-300">
-                  <div className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b-2 border-gray-100">
-                    <h3 className="text-xs md:text-sm font-bold text-gray-900 uppercase tracking-wide">
+                <div className="bg-card rounded-xl border border-border flex flex-col transition-all hover:border-primary/40 dark:hover:border-primary/60">
+                  <div className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-border/60 dark:border-border/40">
+                    <h3 className="text-xs md:text-sm font-bold text-foreground uppercase tracking-wide">
                       {stage.label}
                     </h3>
                     <div
@@ -2222,8 +2262,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     {stageProspects.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
                         <div className="text-4xl md:text-5xl opacity-10 mb-2 md:mb-3">📋</div>
-                        <div className="text-xs md:text-sm font-semibold text-gray-600 mb-1">No athletes yet</div>
-                        <div className="text-[10px] md:text-xs text-gray-400">
+                        <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">No athletes yet</div>
+                        <div className="text-[10px] md:text-xs text-muted-foreground/70">
                           Drag athletes here or add new prospects
                         </div>
                       </div>
@@ -2240,16 +2280,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                             router.push(url)
                           }}
-                          className={`border-2 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer hover:cursor-pointer transition-all rounded-lg touch-manipulation ${
+                          className={`border hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer transition-all rounded-lg touch-manipulation ${
                             committedElsewhere 
-                              ? 'bg-gray-200 border-gray-300 opacity-75' 
-                              : 'bg-gray-50 border-gray-200 hover:border-gray-900 active:border-gray-900'
+                              ? 'bg-muted border-border opacity-80 dark:bg-slate-800 dark:border-slate-700' 
+                              : 'bg-card border-border hover:border-primary/40 active:border-primary/60 dark:hover:border-primary/60'
                           }`}
                         >
                           <CardContent className="p-3 md:p-4">
                             {/* Committed Elsewhere Badge */}
                             {committedElsewhere && (
-                              <div className="mb-2 bg-gray-700 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                              <div className="mb-2 bg-gray-700 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 dark:bg-slate-700">
                                 <span>⚠️ Committed to {prospect.college}</span>
                               </div>
                             )}
@@ -2258,24 +2298,24 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <img
                                 src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
                                 alt={prospect.name}
-                                className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border-2 border-gray-200 flex-shrink-0 ${
+                                className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
                                   committedElsewhere ? 'grayscale' : ''
                                 }`}
                               />
                               <div className="flex-1 min-w-0">
-                                <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-gray-600' : 'text-gray-900'}`}>
+                                <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-muted-foreground' : 'text-foreground'}`}>
                                   {prospect.name}
                                 </h4>
-                                <p className="text-xs md:text-sm text-gray-600 font-semibold mb-1">
+                                <p className="text-xs md:text-sm text-muted-foreground font-semibold mb-1">
                                   {prospect.graduationyear} • {prospect.weightclass}lbs
                                 </p>
-                                <p className="text-[10px] md:text-xs text-gray-400 truncate">{prospect.highschool}</p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground/80 truncate">{prospect.highschool}</p>
                                 {prospect.phone && (
-                                  <div className="mt-1 flex items-center gap-1.5 text-[10px] md:text-xs text-gray-500">
-                                    <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 text-gray-400 flex-shrink-0" />
+                                  <div className="mt-1 flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground">
+                                    <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground/70 flex-shrink-0" />
                                     <a
                                       href={`tel:${normalizePhoneForTel(prospect.phone)}`}
-                                      className="hover:text-blue-600 transition-colors"
+                                      className="hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       {formatPhoneNumber(prospect.phone)}
@@ -2295,16 +2335,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
                             {prospect.academic_gpa && (
                               <div className="flex gap-2 mb-3">
-                                <div className="flex items-center gap-1.5 bg-gray-50 px-2 md:px-3 py-1.5 md:py-2 rounded-md">
-                                  <GraduationCap className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-600" />
-                                  <span className="text-xs md:text-sm font-bold text-gray-900">
+                                <div className="flex items-center gap-1.5 bg-muted px-2 md:px-3 py-1.5 md:py-2 rounded-md">
+                                  <GraduationCap className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
+                                  <span className="text-xs md:text-sm font-bold text-foreground">
                                     {prospect.academic_gpa.toFixed(1)}
                                   </span>
                                 </div>
                               </div>
                             )}
 
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div className="flex items-center justify-between pt-3 border-t border-border/60 dark:border-border/40">
                               <div onClick={(e) => e.stopPropagation()}>
                                 <StarRating
                                   rating={prospect.star_rating ?? null}
@@ -2312,7 +2352,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   size="sm"
                                 />
                               </div>
-                              <span className="text-[10px] md:text-xs text-gray-500 font-medium">
+                              <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
                                 {formatLastContactDate(getLastContactedDate(prospect.id))}
                               </span>
                             </div>
@@ -2328,16 +2368,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           })}
         </div>
         ) : (
-          <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-colors">
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <div className="md:hidden text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b">
+              <div className="md:hidden text-xs text-muted-foreground px-4 py-2 bg-muted border-b border-border/60">
                 ← Swipe to see more columns →
               </div>
               <table className="w-full caption-bottom text-sm min-w-[900px]">
-                <thead className="[&_tr]:border-b bg-gray-50">
-                  <tr className="border-b transition-colors">
+                <thead className="[&_tr]:border-b border-border/60 bg-muted">
+                  <tr className="border-b border-border/60 transition-colors">
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("name")}
                     >
                       <div className="flex items-center gap-1">
@@ -2348,7 +2388,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("year")}
                     >
                       <div className="flex items-center gap-1">
@@ -2359,7 +2399,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("weight")}
                     >
                       <div className="flex items-center gap-1">
@@ -2370,7 +2410,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("state")}
                     >
                       <div className="flex items-center gap-1">
@@ -2381,7 +2421,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("stage")}
                     >
                       <div className="flex items-center gap-1">
@@ -2392,7 +2432,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("rating")}
                     >
                       <div className="flex items-center gap-1">
@@ -2403,7 +2443,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("gpa")}
                     >
                       <div className="flex items-center gap-1">
@@ -2414,7 +2454,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     </th>
                     <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none"
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("ranking")}
                     >
                       <div className="flex items-center gap-1">
@@ -2424,13 +2464,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         )}
                       </div>
                     </th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-gray-900">Last Contact</th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Last Contact</th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
                   {sortedProspects.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-gray-500">
+                      <td colSpan={9} className="p-8 text-center text-muted-foreground">
                         No prospects found
                       </td>
                     </tr>
@@ -2441,7 +2481,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       return (
                         <tr
                           key={prospect.id}
-                          className="border-b transition-colors hover:bg-gray-50 active:bg-gray-100 group"
+                          className="border-b border-border/60 transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 active:bg-muted/80 group"
                         >
                           <td 
                             className="p-4 align-middle cursor-pointer"
@@ -2454,13 +2494,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <img
                                 src={prospect.photourl || "/placeholder.svg?height=40&width=40&query=wrestler"}
                                 alt={prospect.name}
-                                className="w-10 h-10 rounded-lg object-cover border-2 border-gray-200"
+                                className="w-10 h-10 rounded-lg object-cover border border-border"
                               />
-                              <span className="font-medium text-gray-900">{prospect.name}</span>
+                              <span className="font-medium text-foreground">{prospect.name}</span>
                             </div>
                           </td>
                           <td 
-                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                               router.push(url)
@@ -2469,7 +2509,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             {prospect.graduationyear}
                           </td>
                           <td 
-                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                               router.push(url)
@@ -2478,7 +2518,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             {prospect.weightclass}lbs
                           </td>
                           <td 
-                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                               router.push(url)
@@ -2532,7 +2572,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             />
                           </td>
                           <td 
-                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                               router.push(url)
@@ -2541,7 +2581,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             {prospect.academic_gpa ? prospect.academic_gpa.toFixed(1) : "-"}
                           </td>
                           <td 
-                            className="p-4 align-middle text-gray-600 cursor-pointer"
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                               router.push(url)
@@ -2550,7 +2590,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
                           </td>
                           <td 
-                            className="p-4 align-middle text-gray-600 text-sm cursor-pointer"
+                            className="p-4 align-middle text-muted-foreground text-sm cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
                               router.push(url)
@@ -2570,19 +2610,19 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       </div>
 
       <Dialog open={!!selectedAthlete} onOpenChange={() => setSelectedAthlete(null)}>
-        <DialogContent className="max-w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] p-0 bg-white border-0 md:border md:border-gray-200 text-gray-900 md:rounded-lg flex flex-col [&>button]:hidden">
+        <DialogContent className="max-w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] p-0 bg-background border-0 md:border border-border text-foreground md:rounded-lg flex flex-col [&>button]:hidden transition-colors">
           {selectedAthlete && (
             <>
-              <DialogHeader className="pb-4 p-4 md:p-6 sticky top-0 bg-white z-10 border-b border-gray-200 relative">
+              <DialogHeader className="pb-4 p-4 md:p-6 sticky top-0 bg-background z-10 border-b border-border relative">
                 {/* Close button - prominent on mobile */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-2 z-20 h-10 w-10 md:h-8 md:w-8 rounded-full bg-white shadow-lg border-2 border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-all md:right-4 md:top-4 touch-manipulation"
+                  className="absolute right-2 top-2 z-20 h-10 w-10 md:h-8 md:w-8 rounded-full bg-card shadow-lg border border-border hover:bg-muted transition-all md:right-4 md:top-4 touch-manipulation"
                   onClick={() => setSelectedAthlete(null)}
                   aria-label="Close"
                 >
-                  <X className="h-5 w-5 md:h-4 md:w-4 text-gray-700" />
+                  <X className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground" />
                 </Button>
                 <div className="flex items-start gap-4 pr-12 md:pr-0">
                   <img
@@ -2591,8 +2631,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-xl md:text-2xl text-gray-900 mb-1">{selectedAthlete.name}</DialogTitle>
-                    <DialogDescription className="text-sm md:text-base text-gray-600 mb-2">
+                    <DialogTitle className="text-xl md:text-2xl text-foreground mb-1">{selectedAthlete.name}</DialogTitle>
+                    <DialogDescription className="text-sm md:text-base text-muted-foreground mb-2">
                       {selectedAthlete.highschool} • {selectedAthlete.wrestlingClub}
                     </DialogDescription>
                     <div className="flex flex-wrap gap-2">
@@ -2610,62 +2650,62 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 </div>
               </DialogHeader>
 
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-muted" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <Tabs defaultValue="overview" className="mt-0">
                   <div className="-mx-4 px-4 md:mx-0 md:px-0">
-                    <TabsList className="bg-white border border-gray-200 grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto">
+                    <TabsList className="bg-card border border-border grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto">
                       <TabsTrigger
                         value="overview"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Overview
                       </TabsTrigger>
                       <TabsTrigger
                         value="performance"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Performance
                       </TabsTrigger>
                       <TabsTrigger
                         value="academics"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Academics
                       </TabsTrigger>
                       <TabsTrigger
                         value="documents"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Documents
                       </TabsTrigger>
                       <TabsTrigger
                         value="family"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Family
                       </TabsTrigger>
                       <TabsTrigger
                         value="notes"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Notes ({notes.length})
                       </TabsTrigger>
                       <TabsTrigger
                         value="financials"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Financials
                       </TabsTrigger>
                       <TabsTrigger
                         value="activity"
-                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-gray-100 touch-manipulation min-h-[44px]"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
                         style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
                       >
                         Activity
@@ -2674,12 +2714,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   </div>
 
                   <TabsContent value="overview" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Contact Information</h3>
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Contact Information</h3>
                       <div className="space-y-2 md:space-3 text-sm">
                         {/* Email */}
-                        <div className="flex items-center gap-2 text-gray-700 group">
-                          <Mail className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           {editingField === "contactEmail" ? (
                             <div className="flex-1 flex items-center gap-2">
                               <Input
@@ -2701,7 +2741,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             </div>
                           ) : (
                             <div
-                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
                               onClick={() => startEditing("contactEmail", selectedAthlete.contactEmail)}
                             >
                               {selectedAthlete.contactEmail ? (
@@ -2713,16 +2753,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   {selectedAthlete.contactEmail}
                                 </a>
                               ) : (
-                                <span className="text-gray-400 italic">Click to add email</span>
+                                <span className="text-muted-foreground/70 italic">Click to add email</span>
                               )}
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           )}
                         </div>
 
                         {/* Phone */}
-                        <div className="flex items-center gap-2 text-gray-700 group">
-                          <Phone className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           {editingField === "phone" ? (
                             <div className="flex-1 flex items-center gap-2">
                               <Input
@@ -2744,7 +2784,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             </div>
                           ) : (
                             <div
-                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
                               onClick={() => startEditing("phone", selectedAthlete.phone)}
                             >
                               {selectedAthlete.phone ? (
@@ -2756,16 +2796,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   {selectedAthlete.phone}
                                 </a>
                               ) : (
-                                <span className="text-gray-400 italic">Click to add phone</span>
+                                <span className="text-muted-foreground/70 italic">Click to add phone</span>
                               )}
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           )}
                         </div>
 
                         {/* Location */}
-                        <div className="flex items-center gap-2 text-gray-700 group">
-                          <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           {editingField === "location" ? (
                             <div className="flex-1 flex items-center gap-2">
                               <Input
@@ -2788,22 +2828,22 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             </div>
                           ) : (
                             <div
-                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
                               onClick={() => startEditing("location", selectedAthlete.location)}
                             >
                               {selectedAthlete.location ? (
                                 <span className="flex-1">{selectedAthlete.location}</span>
                               ) : (
-                                <span className="text-gray-400 italic">Click to add location</span>
+                                <span className="text-muted-foreground/70 italic">Click to add location</span>
                               )}
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           )}
                         </div>
 
                         {/* Birthdate */}
-                        <div className="flex items-center gap-2 text-gray-700 group">
-                          <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           {editingField === "birthdate" ? (
                             <div className="flex-1 flex items-center gap-2">
                               <Input
@@ -2825,7 +2865,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             </div>
                           ) : (
                             <div
-                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1 -mx-2 -my-1"
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
                               onClick={() => {
                                 if (selectedAthlete.birthdate) {
                                   const dateStr = selectedAthlete.birthdate.includes('T') 
@@ -2849,9 +2889,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   })()}
                                 </span>
                               ) : (
-                                <span className="text-gray-400 italic">Click to add birthdate</span>
+                                <span className="text-muted-foreground/70 italic">Click to add birthdate</span>
                               )}
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           )}
                         </div>
@@ -2859,59 +2899,59 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     </div>
 
                     {selectedAthlete.bio && (
-                      <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Bio</h3>
-                        <p className="text-sm text-gray-700 leading-relaxed">{selectedAthlete.bio}</p>
+                      <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                        <h3 className="font-semibold text-foreground mb-2 md:mb-3">Bio</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{selectedAthlete.bio}</p>
                       </div>
                     )}
 
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Recruiting Stage</h3>
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Recruiting Stage</h3>
                       <Select
                         value={(selectedAthlete.pipeline_stage || "Prospect").toLowerCase()}
                         onValueChange={(value) => handleStageChange(selectedAthlete.id, value)}
                       >
-                        <SelectTrigger className="bg-white border-gray-300 text-gray-900 hover:bg-gray-50">
+                        <SelectTrigger className="bg-background border-border text-foreground hover:bg-muted/60 dark:hover:bg-muted/40">
                           <SelectValue placeholder="Select stage" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200">
-                          <SelectItem value="prospect" className="text-gray-900 hover:bg-gray-100">
+                        <SelectContent className="bg-card border border-border text-foreground">
+                          <SelectItem value="prospect" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-gray-400" />
                               Prospect
                             </div>
                           </SelectItem>
-                          <SelectItem value="contacted" className="text-gray-900 hover:bg-gray-100">
+                          <SelectItem value="contacted" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-purple-500" />
                               Contacted
                             </div>
                           </SelectItem>
-                          <SelectItem value="recruiting" className="text-gray-900 hover:bg-gray-100">
+                          <SelectItem value="recruiting" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-orange-500" />
                               Recruiting
                             </div>
                           </SelectItem>
-                          <SelectItem value="offered" className="text-gray-900 hover:bg-gray-100">
+                          <SelectItem value="offered" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-green-500" />
                               Offered
                             </div>
                           </SelectItem>
-                          <SelectItem value="committed" className="text-gray-900 hover:bg-gray-100">
+                          <SelectItem value="committed" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-emerald-600" />
                               Committed
                             </div>
                           </SelectItem>
-                          <SelectItem value="signed" className="text-gray-900 hover:bg-gray-100">
+                          <SelectItem value="signed" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-blue-600" />
                               Signed
                             </div>
                           </SelectItem>
-                          <SelectItem value="lost" className="text-gray-900 hover:bg-gray-100">
+                          <SelectItem value="lost" className="text-foreground hover:bg-gray-100">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full bg-red-500" />
                               Lost
@@ -2921,8 +2961,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </Select>
                     </div>
 
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Public Profile</h3>
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Public Profile</h3>
                       <a
                         href={`/unified-profile/${selectedAthlete.id}`}
                         target="_blank"
@@ -2957,18 +2997,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                      (!selectedAthlete.nhsca_results || selectedAthlete.nhsca_results.length === 0) &&
                      (!selectedAthlete.super32_results || selectedAthlete.super32_results.length === 0) &&
                      !selectedAthlete.college_opens_experience && (
-                      <div className="text-center py-12 text-gray-500">
+                      <div className="text-center py-12 text-muted-foreground">
                         <Award className="h-12 w-12 mx-auto mb-3 opacity-20" />
                         <p className="italic">No performance data available</p>
                       </div>
                     )}
 
                     {selectedAthlete.achievements && selectedAthlete.achievements.length > 0 && (
-                      <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Achievements</h3>
+                      <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                        <h3 className="font-semibold text-foreground mb-2 md:mb-3">Achievements</h3>
                         <div className="flex flex-wrap gap-2">
                           {selectedAthlete.achievements.map((achievement, index) => (
-                            <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 text-xs">
+                            <Badge key={index} variant="secondary" className="bg-gray-100 text-muted-foreground text-xs">
                               {achievement}
                             </Badge>
                           ))}
@@ -2977,8 +3017,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     )}
 
                     {selectedAthlete.prospect_ranking && (
-                      <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                        <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Rankings</h3>
+                      <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                        <h3 className="font-semibold text-foreground mb-2 md:mb-3">Rankings</h3>
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                           <div className="text-sm text-yellow-500 mb-1">Prospect Ranking</div>
                           <div className="text-3xl font-bold text-yellow-500">#{selectedAthlete.prospect_ranking}</div>
@@ -2988,8 +3028,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   </TabsContent>
 
                   <TabsContent value="academics" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
                         <GraduationCap className="h-5 w-5" />
                         Academic Profile
                       </h3>
@@ -2997,7 +3037,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* GPA */}
                         <div className="bg-gray-100 rounded-lg p-4 group relative">
-                          <div className="text-xs text-gray-600 mb-1">GPA</div>
+                          <div className="text-xs text-muted-foreground mb-1">GPA</div>
                           {editingField === "academic_gpa" ? (
                             <Input
                               type="number"
@@ -3028,17 +3068,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   {selectedAthlete.academic_gpa.toFixed(2)}
                                 </div>
                               ) : (
-                                <div className="text-3xl font-bold text-gray-400">-</div>
+                                <div className="text-3xl font-bold text-muted-foreground/70">-</div>
                               )}
-                              <div className="text-xs text-gray-500 mt-1">4.0 Scale</div>
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                              <div className="text-xs text-muted-foreground mt-1">4.0 Scale</div>
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
                             </div>
                           )}
                         </div>
 
                         {/* SAT */}
                         <div className="bg-gray-100 rounded-lg p-4 group relative">
-                          <div className="text-xs text-gray-600 mb-1">SAT</div>
+                          <div className="text-xs text-muted-foreground mb-1">SAT</div>
                           {editingField === "academic_sat" ? (
                             <Input
                               type="number"
@@ -3066,17 +3106,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               {selectedAthlete.academic_sat ? (
                                 <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_sat}</div>
                               ) : (
-                                <div className="text-3xl font-bold text-gray-400">-</div>
+                                <div className="text-3xl font-bold text-muted-foreground/70">-</div>
                               )}
-                              <div className="text-xs text-gray-500 mt-1">Out of 1600</div>
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                              <div className="text-xs text-muted-foreground mt-1">Out of 1600</div>
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
                             </div>
                           )}
                         </div>
 
                         {/* ACT */}
                         <div className="bg-gray-100 rounded-lg p-4 group relative">
-                          <div className="text-xs text-gray-600 mb-1">ACT</div>
+                          <div className="text-xs text-muted-foreground mb-1">ACT</div>
                           {editingField === "academic_act" ? (
                             <Input
                               type="number"
@@ -3104,10 +3144,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               {selectedAthlete.academic_act ? (
                                 <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_act}</div>
                               ) : (
-                                <div className="text-3xl font-bold text-gray-400">-</div>
+                                <div className="text-3xl font-bold text-muted-foreground/70">-</div>
                               )}
-                              <div className="text-xs text-gray-500 mt-1">Out of 36</div>
-                              <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                              <div className="text-xs text-muted-foreground mt-1">Out of 36</div>
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
                             </div>
                           )}
                         </div>
@@ -3115,19 +3155,19 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
                       {selectedAthlete.academic_summary && (
                         <div className="mt-4 bg-gray-100 rounded-lg p-4">
-                          <div className="text-sm font-semibold text-gray-900 mb-2">Academic Summary</div>
-                          <p className="text-sm text-gray-700">{selectedAthlete.academic_summary}</p>
+                          <div className="text-sm font-semibold text-foreground mb-2">Academic Summary</div>
+                          <p className="text-sm text-muted-foreground">{selectedAthlete.academic_summary}</p>
                         </div>
                       )}
                     </div>
 
                     {/* Coach's Academic Notes Section */}
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
                         <FileText className="h-5 w-5" />
                         Your Academic Notes
                       </h3>
-                      <p className="text-xs text-gray-600 mb-3">
+                      <p className="text-xs text-muted-foreground mb-3">
                         Add your own academic information or notes that aren't in the public profile (e.g., GPA obtained during conversation, test scores, academic interests, etc.)
                       </p>
                       
@@ -3151,15 +3191,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   </TabsContent>
 
                   <TabsContent value="documents" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-3 md:mb-4 flex items-center gap-2">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
                         <FileText className="h-5 w-5" />
                         Documents & Media
                       </h3>
 
                       <div className="mb-4">
                         <label className="block">
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 cursor-pointer transition-colors">
+                          <div className="border-2 border-dashed border-border/70 rounded-lg p-6 text-center hover:border-blue-500 cursor-pointer transition-colors">
                             <input
                               type="file"
                               className="hidden"
@@ -3169,11 +3209,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               }}
                               disabled={uploadingDocument}
                             />
-                            <Plus className="h-8 w-8 mx-auto mb-2 text-gray-500" />
-                            <div className="text-sm text-gray-600">
+                            <Plus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                            <div className="text-sm text-muted-foreground">
                               {uploadingDocument ? "Uploading..." : "Click to upload document"}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">PDF, DOC, or images</div>
+                            <div className="text-xs text-muted-foreground mt-1">PDF, DOC, or images</div>
                           </div>
                         </label>
                       </div>
@@ -3182,7 +3222,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         <div className="bg-gray-100 rounded-lg p-4 mb-3">
                           <div className="flex items-center gap-3 mb-2">
                             <Video className="h-5 w-5 text-blue-600" />
-                            <div className="text-sm font-semibold text-gray-900">Highlight Video</div>
+                            <div className="text-sm font-semibold text-foreground">Highlight Video</div>
                           </div>
                           <a
                             href={selectedAthlete.highlight_video_url}
@@ -3203,8 +3243,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <div className="flex items-center gap-3">
                                 <FileText className="h-5 w-5 text-blue-600" />
                                 <div>
-                                  <div className="text-sm font-semibold text-gray-900">{doc.file_name}</div>
-                                  <div className="text-xs text-gray-600">
+                                  <div className="text-sm font-semibold text-foreground">{doc.file_name}</div>
+                                  <div className="text-xs text-muted-foreground">
                                     {new Date(doc.uploaded_at).toLocaleDateString()}
                                   </div>
                                 </div>
@@ -3220,7 +3260,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 </a>
                                 <button
                                   onClick={() => handleDeleteDocument(doc.id)}
-                                  className="text-gray-400 hover:text-red-500 p-1"
+                                  className="text-muted-foreground/70 hover:text-red-500 p-1"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -3231,15 +3271,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       )}
 
                       {!selectedAthlete.highlight_video_url && documents.length === 0 && (
-                        <p className="text-gray-500 italic">No documents or media uploaded yet</p>
+                        <p className="text-muted-foreground italic">No documents or media uploaded yet</p>
                       )}
                     </div>
                   </TabsContent>
 
                   <TabsContent value="family" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
                       <div className="flex items-center justify-between mb-3 md:mb-4">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground flex items-center gap-2">
                           <Users className="h-5 w-5" />
                           Family Information
                         </h3>
@@ -3254,21 +3294,21 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
 
                       {showFamilyForm && (
-                        <div className="bg-gray-50 rounded-lg p-4 mb-4 space-y-3 border border-gray-200">
+                        <div className="bg-muted rounded-lg p-4 mb-4 space-y-3 border border-border transition-colors">
                           <Input
                             placeholder="Name *"
                             value={newFamilyMember.name}
                             onChange={(e) => setNewFamilyMember({ ...newFamilyMember, name: e.target.value })}
-                            className="bg-white border-gray-300 text-gray-900"
+                            className="bg-background border-border text-foreground"
                           />
                           <Select
                             value={newFamilyMember.relationship}
                             onValueChange={(value) => setNewFamilyMember({ ...newFamilyMember, relationship: value })}
                           >
-                            <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                            <SelectTrigger className="bg-background border-border text-foreground">
                               <SelectValue placeholder="Relationship *" />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-gray-200">
+                            <SelectContent className="bg-card border border-border text-foreground">
                               <SelectItem value="Father">Father</SelectItem>
                               <SelectItem value="Mother">Mother</SelectItem>
                               <SelectItem value="Guardian">Guardian</SelectItem>
@@ -3280,14 +3320,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             placeholder="Phone"
                             value={newFamilyMember.phone}
                             onChange={(e) => setNewFamilyMember({ ...newFamilyMember, phone: e.target.value })}
-                            className="bg-white border-gray-300 text-gray-900"
+                            className="bg-background border-border text-foreground"
                           />
                           <Input
                             placeholder="Email"
                             type="email"
                             value={newFamilyMember.email}
                             onChange={(e) => setNewFamilyMember({ ...newFamilyMember, email: e.target.value })}
-                            className="bg-white border-gray-300 text-gray-900"
+                            className="bg-background border-border text-foreground"
                           />
                           <div className="flex gap-2">
                             <Button onClick={handleAddFamilyMember} className="bg-blue-600 hover:bg-blue-700">
@@ -3296,7 +3336,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             <Button
                               onClick={() => setShowFamilyForm(false)}
                               variant="outline"
-                              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                              className="border-border text-muted-foreground hover:bg-muted/60 dark:hover:bg-muted/40"
                             >
                               Cancel
                             </Button>
@@ -3307,15 +3347,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       {familyMembers.length > 0 ? (
                         <div className="space-y-3">
                           {familyMembers.map((member) => (
-                            <div key={member.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                            <div key={member.id} className="bg-card border border-border rounded-lg p-4 transition-colors">
                               <div className="flex items-start justify-between mb-2">
                                 <div>
-                                  <div className="text-sm font-semibold text-gray-900">{member.name}</div>
-                                  <div className="text-xs text-gray-600">{member.relationship}</div>
+                                  <div className="text-sm font-semibold text-foreground">{member.name}</div>
+                                  <div className="text-xs text-muted-foreground">{member.relationship}</div>
                                 </div>
                                 <button
                                   onClick={() => handleDeleteFamilyMember(member.id)}
-                                  className="text-gray-400 hover:text-red-500 p-1"
+                                  className="text-muted-foreground/70 hover:text-red-500 p-1"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -3323,16 +3363,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               {(member.phone || member.email) && (
                                 <div className="space-y-1 mt-2">
                                   {member.phone && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                                      <Phone className="h-3.5 w-3.5 text-gray-500" />
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
                                       <a href={`tel:${member.phone}`} className="hover:text-blue-600">
                                         {member.phone}
                                       </a>
                                     </div>
                                   )}
                                   {member.email && (
-                                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                                      <Mail className="h-3.5 w-3.5 text-gray-500" />
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                                       <a href={`mailto:${member.email}`} className="hover:text-blue-600">
                                         {member.email}
                                       </a>
@@ -3344,20 +3384,20 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 italic">No family information available</p>
+                        <p className="text-muted-foreground italic">No family information available</p>
                       )}
                     </div>
                   </TabsContent>
 
                   <TabsContent value="notes" className="space-y-3 md:space-y-4 mt-4 md:mt-6">
                     {/* Add Note */}
-                    <div className="bg-white rounded-lg p-3 md:p-4 border border-gray-200">
-                      <h3 className="font-semibold text-gray-900 mb-2 md:mb-3">Add Note</h3>
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Add Note</h3>
                       <Textarea
                         placeholder="Add recruiting notes, call summaries, or observations..."
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
-                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 mb-3"
+                        className="bg-background border-border text-foreground placeholder:text-muted-foreground mb-3"
                         rows={3}
                       />
                       <Button onClick={handleAddNote} className="bg-blue-600 hover:bg-blue-700">
@@ -3368,13 +3408,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
                     <div className="space-y-3">
                       {notes.map((note) => (
-                        <div key={note.id} className="bg-white border border-gray-200 rounded-lg p-3 md:p-4">
+                        <div key={note.id} className="bg-card border border-border rounded-lg p-3 md:p-4 transition-colors">
                           <div className="flex items-start justify-between mb-2">
                             <Badge variant="outline" className="text-xs">
                               {note.note_type || "General"}
                             </Badge>
                             <div className="flex items-center gap-1 md:gap-2">
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-muted-foreground">
                                 {new Date(note.created_at).toLocaleDateString()}
                                 {" at "}
                                 {new Date(note.created_at).toLocaleTimeString()}
@@ -3386,13 +3426,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 }}
                                 className="p-0.5 md:p-1 hover:bg-gray-100 rounded"
                               >
-                                <Edit2 className="h-3.5 w-3.5 text-gray-500 hover:text-blue-600" />
+                                <Edit2 className="h-3.5 w-3.5 text-muted-foreground hover:text-blue-600" />
                               </button>
                               <button
                                 onClick={() => handleDeleteNote(note.id)}
                                 className="p-0.5 md:p-1 hover:bg-gray-100 rounded"
                               >
-                                <Trash2 className="h-3.5 w-3.5 text-gray-500 hover:text-red-500" />
+                                <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
                               </button>
                             </div>
                           </div>
@@ -3401,7 +3441,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <Textarea
                                 value={editingNoteText}
                                 onChange={(e) => setEditingNoteText(e.target.value)}
-                                className="bg-white border-gray-300 text-gray-900"
+                                className="bg-background border-border text-foreground"
                                 rows={3}
                               />
                               <div className="flex gap-2">
@@ -3419,20 +3459,20 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   }}
                                   size="sm"
                                   variant="outline"
-                                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                                  className="border-border text-muted-foreground hover:bg-muted/60 dark:hover:bg-muted/40"
                                 >
                                   Cancel
                                 </Button>
                               </div>
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-700">{note.note}</p>
+                            <p className="text-sm text-muted-foreground">{note.note}</p>
                           )}
                         </div>
                       ))}
 
                       {notes.length === 0 && (
-                        <div className="text-center py-4 md:py-8 text-gray-600">
+                        <div className="text-center py-4 md:py-8 text-muted-foreground">
                           No notes yet. Add your first note above.
                         </div>
                       )}
@@ -3451,7 +3491,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                       {/* EFC (Expected Family Contribution) */}
-                      <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                         <Label htmlFor="efc" className="text-base font-semibold mb-2 block">
                           Expected Family Contribution (EFC)
                         </Label>
@@ -3463,13 +3503,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           onChange={(e) => setFinancialData({ ...financialData, efc: e.target.value })}
                           className="mb-2"
                         />
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           The amount the family is expected to contribute toward college costs
                         </p>
                       </div>
 
                       {/* Ability to Pay */}
-                      <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                         <Label htmlFor="abilityToPay" className="text-base font-semibold mb-2 block">
                           Ability to Pay
                         </Label>
@@ -3491,7 +3531,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
 
                       {/* Aid Application Status */}
-                      <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                         <Label htmlFor="aidApplicationStatus" className="text-base font-semibold mb-2 block">
                           Aid Application Status
                         </Label>
@@ -3513,7 +3553,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
 
                       {/* Merit Scholarship Eligible */}
-                      <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                         <Label className="text-base font-semibold mb-2 block">Eligibility</Label>
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
@@ -3540,12 +3580,24 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               Need-Based Aid Eligible
                             </Label>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="giBillEligible"
+                              checked={financialData.giBillEligible}
+                              onCheckedChange={(checked) =>
+                                setFinancialData({ ...financialData, giBillEligible: checked as boolean })
+                              }
+                            />
+                            <Label htmlFor="giBillEligible" className="text-sm font-normal cursor-pointer">
+                              Eligible for GI Bill Benefits
+                            </Label>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Financial Aid Needs */}
-                    <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                       <Label htmlFor="aidNeeds" className="text-base font-semibold mb-2 block">
                         Financial Aid Needs
                       </Label>
@@ -3557,13 +3609,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         rows={4}
                         className="mb-2"
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Specific financial aid needs, amounts required, or special circumstances
                       </p>
                     </div>
 
                     {/* Scholarship Requirements */}
-                    <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                       <Label htmlFor="scholarshipRequirements" className="text-base font-semibold mb-2 block">
                         Scholarship Requirements / Needs
                       </Label>
@@ -3575,13 +3627,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         rows={4}
                         className="mb-2"
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Required scholarship amounts, athletic scholarship needs, or merit scholarship requirements
                       </p>
                     </div>
 
                     {/* Financial Concerns */}
-                    <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                       <Label htmlFor="financialConcerns" className="text-base font-semibold mb-2 block">
                         Financial Concerns
                       </Label>
@@ -3593,13 +3645,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         rows={3}
                         className="mb-2"
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Any financial concerns that may affect enrollment decisions
                       </p>
                     </div>
 
                     {/* Financial Notes */}
-                    <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
                       <Label htmlFor="financialNotes" className="text-base font-semibold mb-2 block">
                         Additional Financial Notes
                       </Label>
@@ -3611,7 +3663,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         rows={4}
                         className="mb-2"
                       />
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         General notes about financial situation, discussions with family, or important details
                       </p>
                     </div>
@@ -3629,9 +3681,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   </TabsContent>
 
                   <TabsContent value="activity" className="mt-4 md:mt-6">
-                    <div className="bg-white border border-gray-200 rounded-lg p-3 md:p-4">
+                    <div className="bg-card border border-border rounded-lg p-3 md:p-4 transition-colors">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900">Log Activity</h3>
+                        <h3 className="font-semibold text-foreground">Log Activity</h3>
                         <Button
                           onClick={() => setShowActivityDialog(!showActivityDialog)}
                           size="sm"
@@ -3661,7 +3713,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 }
                                 className="rounded"
                               />
-                              <span className="text-sm text-gray-700">
+                              <span className="text-sm text-muted-foreground">
                                 {newActivity.isScheduled ? "Schedule Future Activity" : "Log Past Activity"}
                               </span>
                             </label>
@@ -3677,10 +3729,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               })
                             }
                           >
-                            <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                            <SelectTrigger className="bg-background border-border text-foreground">
                               <SelectValue placeholder="Select activity type" />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-gray-200">
+                            <SelectContent className="bg-card border border-border text-foreground">
                               <SelectItem value="email">Email</SelectItem>
                               <SelectItem value="text">Text Message</SelectItem>
                               <SelectItem value="visit">Campus Visit</SelectItem>
@@ -3698,14 +3750,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             type="date"
                             value={newActivity.actionDate}
                             onChange={(e) => setNewActivity({ ...newActivity, actionDate: e.target.value })}
-                            className="bg-white border-gray-300 text-gray-900"
+                            className="bg-background border-border text-foreground"
                           />
 
                           <Textarea
                             placeholder="Description of activity... *"
                             value={newActivity.description}
                             onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-                            className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                             rows={3}
                           />
 
@@ -3713,7 +3765,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             placeholder="Outcome (optional)"
                             value={newActivity.outcome}
                             onChange={(e) => setNewActivity({ ...newActivity, outcome: e.target.value })}
-                            className="bg-white border-gray-300 text-gray-900"
+                            className="bg-background border-border text-foreground"
                           />
 
                           {/* Only show Follow-up Date input if isScheduled is true */}
@@ -3723,7 +3775,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               placeholder="Follow-up Date"
                               value={newActivity.followUpDate}
                               onChange={(e) => setNewActivity({ ...newActivity, followUpDate: e.target.value })}
-                              className="bg-white border-gray-300 text-gray-900"
+                              className="bg-background border-border text-foreground"
                             />
                           )}
 
@@ -3739,21 +3791,21 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     {activities.length > 0 ? (
                       <div className="space-y-2 mt-4">
                         {activities.map((activity) => (
-                          <div key={activity.id} className="bg-white border border-gray-200 rounded-lg p-3">
+                          <div key={activity.id} className="bg-card border border-border rounded-lg p-3">
                             <div className="flex items-start justify-between mb-2">
                               <Badge variant="outline" className="text-xs uppercase">
                                 {activity.action_type.replace("_", " ")}
                               </Badge>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-muted-foreground">
                                 {new Date(activity.action_date).toLocaleDateString()}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-700">{activity.description}</p>
+                            <p className="text-sm text-muted-foreground">{activity.description}</p>
                             {activity.outcome && (
-                              <p className="text-xs text-gray-500 mt-1">Outcome: {activity.outcome}</p>
+                              <p className="text-xs text-muted-foreground mt-1">Outcome: {activity.outcome}</p>
                             )}
                             {activity.follow_up_date && (
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 Follow-up: {new Date(activity.follow_up_date).toLocaleDateString()}
                               </p>
                             )}
@@ -3761,7 +3813,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-gray-500 mt-4">
+                      <div className="text-center py-8 text-muted-foreground mt-4">
                         <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
                         <p>No activity yet. Interactions will appear here as you recruit this athlete.</p>
                       </div>
@@ -3776,7 +3828,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
       {/* Edit Roster Entry Dialog */}
       <Dialog open={!!editingRosterEntry} onOpenChange={(open) => !open && setEditingRosterEntry(null)}>
-        <DialogContent className="bg-white">
+        <DialogContent className="bg-background border border-border text-foreground transition-colors">
           <DialogHeader>
             <DialogTitle>Edit Roster Entry</DialogTitle>
             <DialogDescription>

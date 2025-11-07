@@ -57,6 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         merit_scholarship_eligible: milestones.merit_scholarship_eligible || false,
         need_based_aid_eligible: milestones.need_based_aid_eligible || false,
         aid_application_status: milestones.aid_application_status || null,
+        gi_bill_eligible: milestones.gi_bill_eligible || false,
       })
       .eq("athlete_id", athleteId)
       .eq("coach_user_id", targetCoachId)

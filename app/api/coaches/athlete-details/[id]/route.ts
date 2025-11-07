@@ -144,6 +144,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       need_based_aid_eligible: starData.need_based_aid_eligible,
       aid_application_status: starData.aid_application_status,
       financial_concerns: starData.financial_concerns,
+      gi_bill_eligible: starData.gi_bill_eligible,
     }
 
     return NextResponse.json({

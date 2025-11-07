@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
           // Get athletes where notes mention this school name
           const { data: adminStarredData } = await supabase
             .from("college_coach_stars")
-            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
+            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
             .in("coach_user_id", adminUserIds)
             .ilike("notes", `%${schoolInfo.name}%`)
 
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       
       const { data: coachStarredData, error: starError } = await supabase
         .from("college_coach_stars")
-        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
+        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
         .in("coach_user_id", coachUserIds)
 
       if (starError) {
@@ -175,10 +175,35 @@ export async function GET(request: NextRequest) {
       .eq("id", targetSchoolId)
       .single()
 
+    let adminStarredForSchool: any[] = []
     let directCollegeAthletes: any[] = []
     if (schoolInfo?.name) {
       console.log("[v0] Prospects API - Checking athletes.college field for school:", schoolInfo.name)
-      
+
+      const { data: adminUsers } = await supabase
+        .from("user_profiles")
+        .select("user_id")
+        .or("is_admin.eq.true,role.eq.admin")
+
+      const adminUserIds = adminUsers?.map((u) => u.user_id) || []
+
+      if (adminUserIds.length > 0) {
+        const { data: adminStars, error: adminStarError } = await supabase
+          .from("college_coach_stars")
+          .select(
+            "athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating"
+          )
+          .in("coach_user_id", adminUserIds)
+          .ilike("notes", `%${schoolInfo.name}%`)
+
+        if (adminStarError) {
+          console.error("[v0] Prospects API - ERROR fetching admin-starred athletes for school:", adminStarError)
+        } else if (adminStars?.length) {
+          adminStarredForSchool = adminStars
+          console.log("[v0] Prospects API - Found", adminStars.length, "admin-starred athletes for", schoolInfo.name)
+        }
+      }
+
       // Try exact match with school name
       // EXCLUDE College Athletes - they should only appear in Pipeline History
       const { data: exactMatch } = await supabase
@@ -234,6 +259,22 @@ export async function GET(request: NextRequest) {
         console.log("[v0] Prospects API - Adding", newDirectStars.length, "direct college matches to prospects")
         starredData = [...(starredData || []), ...newDirectStars]
       }
+    }
+
+    // Merge in admin-starred athletes tagged for this school (if not already present)
+    if (adminStarredForSchool.length > 0) {
+      const existingIds = new Set((starredData || []).map((s: any) => s.athlete_id))
+      const mergedStarData = Array.isArray(starredData) ? [...starredData] : []
+
+      for (const adminStar of adminStarredForSchool) {
+        if (!existingIds.has(adminStar.athlete_id)) {
+          mergedStarData.push(adminStar)
+          existingIds.add(adminStar.athlete_id)
+        }
+      }
+
+      starredData = mergedStarData
+      console.log("[v0] Prospects API - Added", adminStarredForSchool.length, "admin-tagged athletes to school results")
     }
 
     if (!starredData || starredData.length === 0) {
@@ -349,6 +390,7 @@ export async function GET(request: NextRequest) {
         need_based_aid_eligible: starInfo?.need_based_aid_eligible || false,
         aid_application_status: starInfo?.aid_application_status,
         financial_concerns: starInfo?.financial_concerns,
+        gi_bill_eligible: starInfo?.gi_bill_eligible || false,
       }
     })
 

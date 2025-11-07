@@ -121,6 +121,7 @@ interface Athlete {
   merit_scholarship_eligible?: boolean
   need_based_aid_eligible?: boolean
   aid_application_status?: string
+  gi_bill_eligible?: boolean
 }
 
 export default function AthleteRecruitingDetailPage() {
@@ -309,6 +310,7 @@ export default function AthleteRecruitingDetailPage() {
         merit_scholarship_eligible: athlete.merit_scholarship_eligible,
         need_based_aid_eligible: athlete.need_based_aid_eligible,
         aid_application_status: athlete.aid_application_status,
+        gi_bill_eligible: athlete.gi_bill_eligible,
       }
       
       const response = await fetch(apiUrl, {
@@ -1610,6 +1612,16 @@ export default function AthleteRecruitingDetailPage() {
                         />
                         <Label htmlFor="need_based_eligible" className="text-sm font-normal cursor-pointer">
                           Need-Based Aid Eligible
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="gi_bill_eligible"
+                          checked={athlete.gi_bill_eligible || false}
+                          onCheckedChange={(checked) => setAthlete({ ...athlete, gi_bill_eligible: checked as boolean })}
+                        />
+                        <Label htmlFor="gi_bill_eligible" className="text-sm font-normal cursor-pointer">
+                          Eligible for GI Bill Benefits
                         </Label>
                       </div>
                     </div>

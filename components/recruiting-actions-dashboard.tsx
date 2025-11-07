@@ -458,7 +458,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       offer_extended: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" },
       evaluation: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200" },
     }
-    return colors[actionType] || { bg: "bg-gray-100", text: "text-gray-800", border: "border-gray-200" }
+    return colors[actionType] || { bg: "bg-muted", text: "text-muted-foreground", border: "border-border" }
   }
 
   const handleComplete = async (actionId: string) => {
@@ -589,7 +589,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     )
   }
@@ -599,7 +599,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       <Tabs defaultValue="dashboard" className="w-full">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center justify-center flex-1">
-            <TabsList className="bg-white border border-gray-200">
+            <TabsList className="bg-card border border-border transition-colors">
               <TabsTrigger value="dashboard" className="gap-2">
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
@@ -620,7 +620,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
         <TabsContent value="dashboard">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Today's Events */}
-            <Card className="border-blue-200 bg-blue-50">
+            <Card className="border border-blue-200/60 bg-blue-50 dark:bg-blue-500/10 dark:border-blue-500/40 transition-colors">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Clock className="h-5 w-5 text-blue-600" />
@@ -632,13 +632,22 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               </CardHeader>
               <CardContent>
                 {todayActions.length === 0 ? (
-                  <p className="text-sm text-gray-500">No events scheduled for today</p>
+                  <p className="text-sm text-muted-foreground">No events scheduled for today</p>
                 ) : (
                   <div className="space-y-3">
                     {todayActions.map((action) => {
                       const isBirthday = action.action_type === "birthday"
                       return (
-                        <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : isBirthday ? 'border-pink-200 bg-pink-50' : 'border-blue-100'}`}>
+                        <div
+                          key={action.id}
+                          className={`p-3 rounded-lg border transition-colors ${
+                            isCompleted(action)
+                              ? 'bg-card border-border opacity-60 dark:border-border/40'
+                              : isBirthday
+                                ? 'border-pink-200 bg-pink-50 dark:border-pink-400/60 dark:bg-pink-500/10'
+                                : 'bg-card border-blue-100 dark:bg-blue-500/10 dark:border-blue-400/40'
+                          }`}
+                        >
                           <div className="flex items-start gap-3">
                             {!isBirthday && (
                               <Checkbox
@@ -659,12 +668,14 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
-                              <p className={`text-xs ${isBirthday ? 'text-pink-600 font-semibold' : 'text-gray-600'}`}>
+                              <p className={`font-medium text-sm ${isCompleted(action) ? 'text-muted-foreground/70 line-through' : 'text-foreground'}`}>
+                                {action.athlete_name}
+                              </p>
+                              <p className={`text-xs ${isBirthday ? 'text-pink-600 font-semibold' : 'text-muted-foreground'}`}>
                                 {isBirthday ? '🎂 Birthday' : formatActionType(action.action_type)}
                               </p>
                               {action.description && (
-                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{action.description}</p>
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{action.description}</p>
                               )}
                             </div>
                             {!isBirthday && (
@@ -697,7 +708,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
             </Card>
 
             {/* Upcoming */}
-            <Card className="border-green-200 bg-green-50">
+            <Card className="border border-green-200/60 bg-green-50 dark:bg-green-500/10 dark:border-green-500/40 transition-colors">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <CalendarIcon className="h-5 w-5 text-green-600" />
@@ -709,13 +720,22 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               </CardHeader>
               <CardContent>
                 {upcomingActions.length === 0 ? (
-                  <p className="text-sm text-gray-500">No upcoming follow-ups</p>
+                  <p className="text-sm text-muted-foreground">No upcoming follow-ups</p>
                 ) : (
                   <div className="space-y-3">
                     {upcomingActions.slice(0, 5).map((action) => {
                       const isBirthday = action.action_type === "birthday"
                       return (
-                        <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : isBirthday ? 'border-pink-200 bg-pink-50' : 'border-green-100'}`}>
+                        <div
+                          key={action.id}
+                          className={`p-3 rounded-lg border transition-colors ${
+                            isCompleted(action)
+                              ? 'bg-card border-border opacity-60 dark:border-border/40'
+                              : isBirthday
+                                ? 'border-pink-200 bg-pink-50 dark:border-pink-400/60 dark:bg-pink-500/10'
+                                : 'bg-card border-green-100 dark:bg-green-500/10 dark:border-green-500/40'
+                          }`}
+                        >
                           <div className="flex items-start gap-3">
                             {!isBirthday && (
                               <Checkbox
@@ -736,11 +756,13 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
-                              <p className={`text-xs ${isBirthday ? 'text-pink-600 font-semibold' : 'text-gray-600'}`}>
+                              <p className={`font-medium text-sm ${isCompleted(action) ? 'text-muted-foreground/70 line-through' : 'text-foreground'}`}>
+                                {action.athlete_name}
+                              </p>
+                              <p className={`text-xs ${isBirthday ? 'text-pink-600 font-semibold' : 'text-muted-foreground'}`}>
                                 {isBirthday ? '🎂 Birthday' : formatActionType(action.action_type)}
                               </p>
-                              <p className={`text-xs font-medium mt-1 ${action.follow_up_date ? 'text-green-600' : 'text-gray-500'}`}>
+                              <p className={`text-xs font-medium mt-1 ${action.follow_up_date ? 'text-green-600' : 'text-muted-foreground'}`}>
                                 {action.follow_up_date ? formatDate(action.follow_up_date) : formatDate(action.action_date)}
                               </p>
                             </div>
@@ -774,7 +796,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
             </Card>
 
             {/* Overdue */}
-            <Card className="border-red-200 bg-red-50">
+            <Card className="border border-red-200/60 bg-red-50 dark:bg-red-500/10 dark:border-red-500/40 transition-colors">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600" />
@@ -786,11 +808,18 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               </CardHeader>
               <CardContent>
                 {overdueActions.length === 0 ? (
-                  <p className="text-sm text-gray-500">No overdue actions</p>
+                  <p className="text-sm text-muted-foreground">No overdue actions</p>
                 ) : (
                   <div className="space-y-3">
                     {overdueActions.map((action) => (
-                      <div key={action.id} className={`bg-white p-3 rounded-lg border ${isCompleted(action) ? 'border-gray-200 opacity-60' : 'border-red-100'}`}>
+                      <div
+                        key={action.id}
+                        className={`p-3 rounded-lg border transition-colors ${
+                          isCompleted(action)
+                            ? 'bg-card border-border opacity-60 dark:border-border/40'
+                            : 'bg-card border-red-100 dark:bg-red-500/10 dark:border-red-500/40'
+                        }`}
+                      >
                         <div className="flex items-start gap-3">
                           <Checkbox
                             checked={isCompleted(action)}
@@ -803,8 +832,10 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                             className="w-10 h-10 rounded-full object-cover"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{action.athlete_name}</p>
-                            <p className="text-xs text-gray-600">{formatActionType(action.action_type)}</p>
+                            <p className={`font-medium text-sm ${isCompleted(action) ? 'text-muted-foreground/70 line-through' : 'text-foreground'}`}>
+                              {action.athlete_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{formatActionType(action.action_type)}</p>
                             <p className="text-xs text-red-600 font-medium mt-1">
                               {formatDate(action.follow_up_date!)}
                             </p>
@@ -857,7 +888,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               <div className="grid grid-cols-7 gap-2">
                 {/* Day headers */}
                 {dayNames.map((day) => (
-                  <div key={day} className="text-center font-semibold text-sm text-gray-600 py-2">
+                  <div key={day} className="text-center font-semibold text-sm text-muted-foreground py-2">
                     {day}
                   </div>
                 ))}
@@ -876,15 +907,15 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                       key={index}
                       onClick={() => day && handleDayClick(day)}
                       className={`min-h-[80px] p-2 border rounded-lg relative ${
-                        day ? "bg-white hover:bg-gray-50 cursor-pointer" : "bg-gray-50"
-                      } ${isToday ? "border-blue-500 border-2" : "border-gray-200"} ${
+                        day ? "bg-card hover:bg-muted cursor-pointer" : "bg-muted"
+                      } ${isToday ? "border-blue-500 border-2" : "border-border"} ${
                         dayActivities.length > 0 ? "hover:shadow-md transition-shadow" : ""
                       }`}
                     >
                       {day && (
                         <>
                           <div className="flex items-center justify-between mb-1">
-                            <div className={`text-sm font-medium ${isToday ? "text-blue-600" : "text-gray-900"}`}>
+                            <div className={`text-sm font-medium ${isToday ? "text-blue-600" : "text-foreground"}`}>
                               {day}
                             </div>
                             <button
@@ -899,7 +930,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                                 })
                                 setShowCreateDialog(true)
                               }}
-                              className="h-5 w-5 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+                              className="h-5 w-5 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
                               title="Add activity"
                             >
                               <Plus className="h-3 w-3" />
@@ -924,7 +955,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                                 )
                               })}
                               {dayActivities.length > 2 && (
-                                <div className="text-xs text-gray-500 px-2">+{dayActivities.length - 2} more</div>
+                                <div className="text-xs text-muted-foreground px-2">+{dayActivities.length - 2} more</div>
                               )}
                             </div>
                           )}
@@ -946,24 +977,24 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
             </CardHeader>
             <CardContent>
               {actions.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No activities scheduled</p>
+                <p className="text-center text-muted-foreground py-8">No activities scheduled</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Athlete</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Coach</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Activity Type</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Date</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Follow-up</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Description</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Athlete</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Coach</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Activity Type</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Date</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Follow-up</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Description</th>
+                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {actions.map((action) => (
-                        <tr key={action.id} className={`border-b hover:bg-gray-50 ${isCompleted(action) ? 'opacity-60' : ''}`}>
+                        <tr key={action.id} className={`border-b border-border hover:bg-muted ${isCompleted(action) ? 'opacity-60' : ''}`}>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <Checkbox
@@ -975,18 +1006,18 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                                 alt={action.athlete_name}
                                 className="w-8 h-8 rounded-full object-cover"
                               />
-                              <span className={`font-medium text-sm ${isCompleted(action) ? 'text-gray-400 line-through' : ''}`}>{action.athlete_name}</span>
+                              <span className={`font-medium text-sm ${isCompleted(action) ? 'text-muted-foreground/70 line-through' : ''}`}>{action.athlete_name}</span>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">{action.coach_name}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">{action.coach_name}</td>
                           <td className="py-3 px-4">
                             <Badge variant="outline">{formatActionType(action.action_type)}</Badge>
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">{formatDate(action.action_date)}</td>
-                          <td className="py-3 px-4 text-sm text-gray-600">
+                          <td className="py-3 px-4 text-sm text-muted-foreground">{formatDate(action.action_date)}</td>
+                          <td className="py-3 px-4 text-sm text-muted-foreground">
                             {action.follow_up_date ? formatDate(action.follow_up_date) : "-"}
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600 max-w-xs truncate">
+                          <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs truncate">
                             {action.description || "-"}
                           </td>
                           <td className="py-3 px-4">
@@ -1054,7 +1085,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
           </DialogHeader>
           <div className="space-y-4 mt-4">
             {selectedDay?.activities.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p className="mb-2">No activities scheduled for this day</p>
                 <Button
@@ -1078,7 +1109,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               selectedDay?.activities.map((activity) => {
                 const colors = getActivityColor(activity.action_type)
                 return (
-                  <Card key={activity.id} className={`border-gray-200 ${isCompleted(activity) ? 'opacity-60' : ''}`}>
+                  <Card key={activity.id} className={`border border-border transition-colors ${isCompleted(activity) ? 'opacity-60' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-4">
                         <Checkbox
@@ -1094,8 +1125,8 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h4 className={`font-semibold ${isCompleted(activity) ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{activity.athlete_name}</h4>
-                              <p className="text-sm text-gray-600">{activity.coach_name}</p>
+                              <h4 className={`font-semibold ${isCompleted(activity) ? 'text-muted-foreground/70 line-through' : 'text-foreground'}`}>{activity.athlete_name}</h4>
+                              <p className="text-sm text-muted-foreground">{activity.coach_name}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge className={`${colors.bg} ${colors.text} border-0`}>
@@ -1119,14 +1150,14 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                               </Button>
                             </div>
                           </div>
-                          {activity.description && <p className="text-sm text-gray-700 mb-2">{activity.description}</p>}
+                          {activity.description && <p className="text-sm text-muted-foreground mb-2">{activity.description}</p>}
                           {activity.outcome && (
                             <div className="text-sm">
-                              <span className="font-medium text-gray-700">Outcome: </span>
-                              <span className="text-gray-600">{activity.outcome}</span>
+                              <span className="font-medium text-muted-foreground">Outcome: </span>
+                              <span className="text-muted-foreground">{activity.outcome}</span>
                             </div>
                           )}
-                          <div className="text-xs text-gray-500 mt-2">Logged: {formatDate(activity.action_date)}</div>
+                          <div className="text-xs text-muted-foreground mt-2">Logged: {formatDate(activity.action_date)}</div>
                         </div>
                       </div>
                     </CardContent>
