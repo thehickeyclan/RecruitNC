@@ -154,6 +154,7 @@ const PIPELINE_STAGES_BASE = [
   { id: "Prospect", label: "Prospect" },
   { id: "Contacted", label: "Contacted" },
   { id: "Recruiting", label: "Recruiting" },
+  { id: "Visited", label: "Visited" },
   { id: "Offered", label: "Offered" },
   { id: "Committed", label: "Committed" },
   { id: "Signed", label: "Signed" },
@@ -200,6 +201,7 @@ const getStageColor = (stageId: string, schoolPrimaryColor?: string | null): str
     "#c76e7f", // Light pink (Prospect)
     "#a95463", // Lighter maroon (Contacted)
     "#9a4755", // Light maroon (Recruiting)
+    "#8f424e", // Mid-tone maroon (Visited)
     "#8b3a47", // Medium maroon (Offered)
     "#7c2d3a", // Dark maroon (Committed)
     "#6d2628", // Darker maroon (Signed)

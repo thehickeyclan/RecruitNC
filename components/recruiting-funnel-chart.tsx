@@ -3,7 +3,7 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Search, Target, Gift, CheckCircle } from "lucide-react"
+import { Users, Search, Target, Gift, MapPin, CheckCircle } from "lucide-react"
 
 interface FunnelStage {
   name: string
@@ -132,6 +132,11 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
       count: stageCounts["Recruiting"] || 0,
       icon: <Target className="h-5 w-5" />,
     },
+  {
+    name: "Visited",
+    count: stageCounts["Visited"] || 0,
+    icon: <MapPin className="h-5 w-5" />,
+  },
     {
       name: "Offered",
       count: stageCounts["Offered"] || 0,
@@ -183,6 +188,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
       "#c76e7f", // Light pink (Prospect)
       "#a95463", // Lighter maroon (Contacted)
       "#9a4755", // Light maroon (Recruiting)
+      "#8f424e", // Mid-tone maroon (Visited)
       "#8b3a47", // Medium maroon (Offered)
       "#7c2d3a", // Dark maroon (Committed)
       "#6d2628", // Darker maroon (Signed)

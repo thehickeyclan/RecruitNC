@@ -6,4 +6,4 @@ DROP CONSTRAINT IF EXISTS valid_pipeline_stage;
 -- Add new constraint that allows all pipeline stages including Lost
 ALTER TABLE college_coach_stars 
 ADD CONSTRAINT valid_pipeline_stage 
-CHECK (pipeline_stage IN ('Prospect', 'Contacted', 'Evaluating', 'Recruiting', 'Offered', 'Committed', 'Lost'));
+CHECK (pipeline_stage IN ('Prospect', 'Contacted', 'Recruiting', 'Visited', 'Offered', 'Committed', 'Signed', 'Lost'));
