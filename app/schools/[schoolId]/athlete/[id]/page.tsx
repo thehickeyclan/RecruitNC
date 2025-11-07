@@ -672,41 +672,6 @@ export default function AthleteRecruitingDetailPage() {
               Recruiting Timeline
             </CardTitle>
           </CardHeader>
-                  Class of {athlete.graduationyear}
-                </Badge>
-                <Badge variant="outline" className="bg-background text-xs border-border">
-                  {athlete.weightclass} lbs
-                </Badge>
-                <Badge variant="outline" className="bg-background text-xs border-border truncate max-w-[150px]">
-                  {athlete.highschool}
-                </Badge>
-                {athlete.prospect_ranking && (
-                  <Badge className="bg-[#BC0B03] text-white text-xs">
-                    #{athlete.prospect_ranking}
-                  </Badge>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2 text-xs md:text-sm text-muted-foreground">
-                <span>
-                  ⭐ {new Date(athlete.starred_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
-                <span className="hidden md:inline">•</span>
-                <span className="capitalize">{athlete.pipeline_stage}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-2 md:px-4 py-4 md:py-8 max-w-7xl">
-        {/* Recruiting Timeline */}
-        <Card className="mb-4 md:mb-6 bg-card border-border">
-          <CardHeader className="bg-gradient-to-r from-[#0b1728] to-[#1f2f4a] text-white py-3 md:py-4">
-            <CardTitle className="text-base md:text-xl flex items-center gap-2 text-white">
-              <Calendar className="h-4 w-4 md:h-5 md:w-5 text-white" />
-              Recruiting Timeline
-            </CardTitle>
-          </CardHeader>
           <CardContent className="pt-4 md:pt-6 pb-4 md:pb-6 px-3 md:px-6">
             <div className="relative">
               {/* Progress bar */}
