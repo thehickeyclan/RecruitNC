@@ -5,7 +5,6 @@ import type React from "react"
 import { useEffect, useState, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useTheme } from "next-themes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -225,7 +224,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const { branding: schoolBranding, isLoading: brandingLoading } = useSchoolBranding(params.schoolId)
-  const { resolvedTheme, setTheme } = useTheme()
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const [isThemeMounted, setIsThemeMounted] = useState(false)
   // Removed redundant school state - using schoolBranding from hook instead
 
@@ -318,6 +317,12 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   useEffect(() => {
     setIsThemeMounted(true)
+    if (typeof window !== "undefined") {
+      const storedTheme = window.localStorage.getItem("portal-theme")
+      if (storedTheme === "dark") {
+        setIsDarkMode(true)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -1598,10 +1603,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }
 
   const stats = calculateStats()
-  const isDarkMode = resolvedTheme === "dark"
 
   const handleThemeToggle = () => {
-    setTheme(isDarkMode ? "light" : "dark")
+    setIsDarkMode((prev) => {
+      const next = !prev
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("portal-theme", next ? "dark" : "light")
+      }
+      return next
+    })
   }
 
   if (authLoading || isLoading || brandingLoading) {
@@ -1638,7 +1648,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className={isDarkMode ? "dark" : ""}>
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <SchoolBrandedHeader
         schoolId={params.schoolId}
         schoolName={schoolBranding?.name || ""}
@@ -2021,7 +2032,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {/* Total Pipeline - Primary metric with school branding */}
           <div
-            className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-card dark:bg-slate-900 rounded-xl border-2 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-card dark:bg-slate-900/70 rounded-xl border-2 dark:border-slate-700 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
             style={{
               borderColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
             }}
@@ -2039,22 +2050,22 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </div>
 
           {/* Lost to Others - Negative metric */}
-          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-red-50 rounded-xl border-2 border-red-200 hover:border-red-300 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
-            <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-red-600" />
+          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-red-50 dark:bg-red-900/40 rounded-xl border-2 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
+            <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-red-600 dark:text-red-300" />
             <div className="min-w-0">
-              <div className="text-2xl md:text-3xl font-bold text-red-600">{stats.lost}</div>
-              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <div className="text-2xl md:text-3xl font-bold text-red-600 dark:text-red-200">{stats.lost}</div>
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground dark:text-red-100/70 uppercase tracking-wide">
                 Lost to Others
               </div>
             </div>
           </div>
 
           {/* Offers Out - Informational */}
-          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-blue-50 rounded-xl border-2 border-blue-200 hover:border-blue-300 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
-            <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-blue-600" />
+          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
+            <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-blue-600 dark:text-blue-300" />
             <div className="min-w-0">
-              <div className="text-2xl md:text-3xl font-bold text-blue-600">{stats.offersOut}</div>
-              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-200">{stats.offersOut}</div>
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground dark:text-blue-100/70 uppercase tracking-wide">
                 Offers Out
               </div>
             </div>
@@ -3899,6 +3910,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           fetchProspects() // Refresh the prospects list
         }}
       />
+      </div>
     </div>
   )
 }
