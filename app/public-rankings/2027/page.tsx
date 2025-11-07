@@ -164,6 +164,10 @@ export default function Class2027RankingsPage() {
     return numA - numB
   })
 
+  const topRankedAthletes = rankings.slice(0, 3)
+  const heroAthlete = topRankedAthletes[0]
+  const heroImage = heroAthlete?.photourl && heroAthlete.photourl.trim() !== "" ? heroAthlete.photourl : null
+
   if (!isLaunched) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#03154C] to-[#1e3a8a] px-4 py-16">
@@ -259,7 +263,20 @@ export default function Class2027RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#03154C] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#03154C] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
+          {heroImage && (
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url(${heroImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                filter: "saturate(1.1)",
+                opacity: 0.35,
+              }}
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#03154C]/90 via-[#03154C]/65 to-[#1e3a8a]/80"></div>
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-8">
@@ -298,51 +315,43 @@ export default function Class2027RankingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 sm:p-8 shadow-xl">
+              <div className="bg-white/95 rounded-2xl p-4 sm:p-8 shadow-xl">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2027</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                  <div className="text-center">
-                    <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[250px] sm:h-[300px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
-                      <img
-                        src="/images/jack-harty-wrestling.png"
-                        alt="Jack Harty competing in NC United singlet"
-                        className="w-full h-full object-contain"
-                      />
+                  {topRankedAthletes.length > 0 ? (
+                    topRankedAthletes.map((athlete, index) => {
+                      const photo = athlete.photourl && athlete.photourl.trim() !== "" ? athlete.photourl : "/diverse-wrestlers.png"
+                      const profileHref = `/unified-profile/${athlete.id}`
+                      return (
+                        <div key={athlete.id} className="text-center">
+                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
+                            <img
+                              src={photo}
+                              alt={athlete.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = "/diverse-wrestlers.png"
+                              }}
+                            />
+                            <div className="absolute top-3 left-3">
+                              <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1">#{athlete.prospect_ranking}</Badge>
+                            </div>
+                          </div>
+                          <Link href={profileHref} className="hover:text-[#D3B574] transition-colors">
+                            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">{athlete.name}</h3>
+                          </Link>
+                          <p className="text-sm text-gray-600 mb-2">{athlete.highschool || "High School TBD"}</p>
+                          <Badge variant="outline" className="border-[#D3B574] text-[#D3B574]">
+                            {athlete.weight_display}
+                          </Badge>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="col-span-full text-center text-gray-500 text-sm">
+                      Rankings are coming soon. Check back shortly for featured athletes.
                     </div>
-                    <Link href="/unified-profile/jack-harty" className="hover:text-[#D3B574] transition-colors">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">Jack Harty</h3>
-                    </Link>
-                    <p className="text-sm text-gray-600 mb-2">Greens Farms Academy</p>
-                    <Badge className="bg-[#D3B574] text-gray-900">#1 Ranked</Badge>
-                  </div>
-                  <div className="text-center">
-                    <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[250px] sm:h-[300px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
-                      <img
-                        src="/images/tye-johnson-wrestling.png"
-                        alt="Tye Johnson competing at a wrestling tournament"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                    <Link href="/unified-profile/tye-johnson" className="hover:text-[#D3B574] transition-colors">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">Tye Johnson</h3>
-                    </Link>
-                    <p className="text-sm text-gray-600 mb-2">Cape Fear</p>
-                    <Badge className="bg-[#D3B574] text-gray-900">#2 Ranked</Badge>
-                  </div>
-                  <div className="text-center">
-                    <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[250px] sm:h-[300px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
-                      <img
-                        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-10-11%20at%207.12.36%E2%80%AFPM-ZkEfz3JhMiotyYS7Ad8xnnDymOCFwT.png"
-                        alt="Tobin McNair competing for Wakefield"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <Link href="/unified-profile/tobin-mcnair" className="hover:text-[#D3B574] transition-colors">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">Tobin McNair</h3>
-                    </Link>
-                    <p className="text-sm text-gray-600 mb-2">Wakefield</p>
-                    <Badge className="bg-[#D3B574] text-gray-900">#3 Ranked</Badge>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
