@@ -244,9 +244,6 @@ export async function POST(request: Request) {
       targetCoachId = impersonatedProfile.user_id
       targetCoachName = impersonatedProfile.full_name || "Unknown Coach"
       targetCoachSchoolId = impersonatedProfile.school_id
-    } else if (currentProfile.is_admin && viewAsCoachId === user.id) {
-      // Admin explicitly logging as themselves should still respect their own school assignment
-      targetCoachId = currentProfile.id
     }
 
     if (!targetCoachSchoolId) {

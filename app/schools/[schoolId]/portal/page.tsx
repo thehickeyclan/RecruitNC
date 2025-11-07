@@ -258,6 +258,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const viewAsCoachId = searchParams?.get("viewAsCoachId") || null
   const viewAsCoachEmail = searchParams?.get("coachEmail") || null
 
+  const isAdmin = profile?.is_admin === true
+  const isImpersonatingCoach = Boolean(viewAsCoachId)
+  const canLogActivities = !isAdmin || isImpersonatingCoach
+
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -2756,7 +2760,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    disabled={isLoggingActivity}
+                                    disabled={isLoggingActivity || !canLogActivities}
                                     className="rounded-full"
                                   >
                                     {isLoggingActivity ? (
@@ -2764,17 +2768,21 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                         <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                                         Logging...
                                       </>
+                                    ) : !canLogActivities ? (
+                                      "Admin Preview"
                                     ) : (
                                       "Log Activity"
                                     )}
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="min-w-[180px]">
-                                  <DropdownMenuLabel>Log Activity</DropdownMenuLabel>
+                                <DropdownMenuContent align="end" className="min-w-[200px]">
+                                  <DropdownMenuLabel>
+                                    {canLogActivities ? "Log Activity" : "Impersonate a coach to log"}
+                                  </DropdownMenuLabel>
                                   {ACTIVITY_OPTIONS.map((option) => (
                                     <DropdownMenuItem
                                       key={option.value}
-                                      disabled={isLoggingActivity}
+                                      disabled={isLoggingActivity || !canLogActivities}
                                       onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
                                     >
                                       {option.label}
@@ -3897,12 +3905,19 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         <Button
                           onClick={() => setShowActivityDialog(!showActivityDialog)}
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700"
+                          disabled={!canLogActivities}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground"
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           {showActivityDialog ? "Cancel" : "New Activity"}
                         </Button>
                       </div>
+
+                      {!canLogActivities && (
+                        <p className="text-xs text-muted-foreground mb-3">
+                          You&apos;re in admin preview mode. Impersonate a coach to log activities.
+                        </p>
+                      )}
 
                       {showActivityDialog && (
                         <div className="space-y-3 mt-3">
@@ -3932,6 +3947,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           {/* Activity Type Select */}
                           <Select
                             value={newActivity.actionType}
+                            disabled={!canLogActivities}
                             onValueChange={(value) =>
                               setNewActivity({
                                 ...newActivity,
@@ -3943,22 +3959,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <SelectValue placeholder="Select activity type" />
                             </SelectTrigger>
                             <SelectContent className="bg-card border border-border text-foreground">
-                              <SelectItem value="email">Email</SelectItem>
-                              <SelectItem value="text">Text Message</SelectItem>
-                              <SelectItem value="visit">Campus Visit</SelectItem>
-                              <SelectItem value="camp">Camp/Event</SelectItem>
-                              <SelectItem value="phone">Phone</SelectItem>
-                              <SelectItem value="meeting">Meeting</SelectItem>
-                              <SelectItem value="offer">Offer</SelectItem>
-                              <SelectItem value="follow_up">Follow-up</SelectItem>
-                              <SelectItem value="evaluation">Evaluation</SelectItem>
-                              <SelectItem value="contact">Contact</SelectItem>
+                              {ACTIVITY_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
 
                           <Input
                             type="date"
                             value={newActivity.actionDate}
+                            disabled={!canLogActivities}
                             onChange={(e) => setNewActivity({ ...newActivity, actionDate: e.target.value })}
                             className="bg-background border-border text-foreground"
                           />
@@ -3966,6 +3978,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           <Textarea
                             placeholder="Description of activity... *"
                             value={newActivity.description}
+                            disabled={!canLogActivities}
                             onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
                             className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                             rows={3}
@@ -3974,6 +3987,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           <Input
                             placeholder="Outcome (optional)"
                             value={newActivity.outcome}
+                            disabled={!canLogActivities}
                             onChange={(e) => setNewActivity({ ...newActivity, outcome: e.target.value })}
                             className="bg-background border-border text-foreground"
                           />
@@ -3984,12 +3998,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               type="date"
                               placeholder="Follow-up Date"
                               value={newActivity.followUpDate}
+                              disabled={!canLogActivities}
                               onChange={(e) => setNewActivity({ ...newActivity, followUpDate: e.target.value })}
                               className="bg-background border-border text-foreground"
                             />
                           )}
 
-                          <Button onClick={handleAddActivity} className="w-full bg-blue-600 hover:bg-blue-700">
+                          <Button
+                            onClick={handleAddActivity}
+                            disabled={!canLogActivities}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground"
+                          >
                             <Plus className="h-4 w-4 mr-2" />
                             {newActivity.isScheduled ? "Schedule Activity" : "Save Activity"}
                           </Button>
@@ -4003,12 +4022,24 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         {selectedAthleteActivities.map((activity) => (
                           <div key={activity.id} className="bg-card border border-border rounded-lg p-3">
                             <div className="flex items-start justify-between mb-2">
-                              <Badge variant="outline" className="text-xs uppercase">
-                                {activity.action_type.replace("_", " ")}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(activity.action_date).toLocaleDateString()}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs uppercase">
+                                  {activity.action_type.replace("_", " ")}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(activity.action_date).toLocaleDateString()}
+                                </span>
+                              </div>
+                              {canLogActivities && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-red-500"
+                                  onClick={() => handleDeleteActivity(activity.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground">{activity.description}</p>
                             {activity.outcome && (
