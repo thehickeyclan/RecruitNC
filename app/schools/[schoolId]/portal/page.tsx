@@ -113,6 +113,8 @@ interface Prospect {
   financial_concerns?: string
   gi_bill_eligible?: boolean
   birthdate?: string
+  has_applied?: boolean
+  applied_date?: string | null
 }
 
 interface Note {
@@ -298,6 +300,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [activities, setActivities] = useState<Activity[]>([])
   const [selectedAthleteActivities, setSelectedAthleteActivities] = useState<Activity[]>([])
   const [loggingActivity, setLoggingActivity] = useState<Record<string, boolean>>({})
+  const [appliedUpdating, setAppliedUpdating] = useState<Record<string, boolean>>({})
   const [nchsaaResults, setNchsaaResults] = useState<any[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
@@ -1555,6 +1558,84 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   }
 
+  const handleAppliedToggle = async (prospectId: string, applied: boolean) => {
+    const previousProspects = [...prospects]
+    const previousSelectedAthlete = selectedAthlete ? { ...selectedAthlete } : null
+    const timestamp = new Date().toISOString()
+
+    setProspects((current) =>
+      current.map((prospect) =>
+        prospect.id === prospectId
+          ? { ...prospect, has_applied: applied, applied_date: applied ? timestamp : null }
+          : prospect,
+      ),
+    )
+
+    if (selectedAthlete?.id === prospectId) {
+      setSelectedAthlete({
+        ...selectedAthlete,
+        has_applied: applied,
+        applied_date: applied ? timestamp : null,
+      })
+    }
+
+    setAppliedUpdating((prev) => ({ ...prev, [prospectId]: true }))
+
+    try {
+      const response = await fetch("/api/coach-portal/update-applied", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: prospectId,
+          hasApplied: applied,
+          schoolId: params.schoolId,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update applied status")
+      }
+
+      const updatedApplied = data.has_applied ?? applied
+      const updatedDate = data.applied_date ?? (applied ? timestamp : null)
+
+      setProspects((current) =>
+        current.map((prospect) =>
+          prospect.id === prospectId
+            ? { ...prospect, has_applied: updatedApplied, applied_date: updatedDate }
+            : prospect,
+        ),
+      )
+
+      if (selectedAthlete?.id === prospectId) {
+        setSelectedAthlete({
+          ...selectedAthlete,
+          has_applied: updatedApplied,
+          applied_date: updatedDate,
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Error updating applied status:", error)
+      setProspects(previousProspects)
+      if (previousSelectedAthlete) {
+        setSelectedAthlete(previousSelectedAthlete)
+      }
+      toast({
+        title: "Update Failed",
+        description: "Unable to update applied status. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setAppliedUpdating((prev) => {
+        const next = { ...prev }
+        delete next[prospectId]
+        return next
+      })
+    }
+  }
+
   const handleDragStart = (prospect: Prospect) => {
     console.log("[v0] Drag started:", { name: prospect.name, stage: prospect.pipeline_stage })
     setDraggedProspect(prospect)
@@ -2592,6 +2673,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         )}
                       </div>
                     </th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Applied</th>
                     <th 
                       className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("rating")}
@@ -2632,7 +2714,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 <tbody className="[&_tr:last-child]:border-0">
                   {sortedProspects.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={11} className="p-8 text-center text-muted-foreground">
                         No prospects found
                       </td>
                     </tr>
@@ -2729,6 +2811,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 ))}
                               </SelectContent>
                             </Select>
+                          </td>
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={prospect.has_applied ?? false}
+                                disabled={appliedUpdating[prospect.id] || !canLogActivities}
+                                onCheckedChange={(checked) =>
+                                  handleAppliedToggle(prospect.id, Boolean(checked))
+                                }
+                              />
+                              {prospect.applied_date && (
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(prospect.applied_date).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td 
                             className="p-4 align-middle"
