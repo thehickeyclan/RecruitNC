@@ -2184,8 +2184,6 @@ export default function AthleteRecruitingDetailPage() {
         </Tabs>
       </div>
     </div>
-      </div>
-    </div>
   )
 }
 
