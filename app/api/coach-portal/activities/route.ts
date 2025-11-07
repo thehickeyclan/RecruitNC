@@ -168,7 +168,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { athleteId, actionType, actionDate, followUpDate, description, outcome } = await request.json()
+    const {
+      athleteId,
+      actionType,
+      actionDate,
+      followUpDate,
+      description,
+      outcome,
+      viewAsCoachId,
+    } = await request.json()
 
     console.log("[v0] POST /api/coach-portal/activities - Request body:", {
       athleteId,
@@ -189,13 +197,13 @@ export async function POST(request: Request) {
 
     console.log("[v0] Current user:", user.id)
 
-    const { data: coachProfile, error: profileError } = await supabase
+    const { data: currentProfile, error: profileError } = await supabase
       .from("user_profiles")
-      .select("id, school_id, full_name")
+      .select("id, school_id, full_name, is_admin")
       .eq("user_id", user.id)
       .single()
 
-    if (profileError || !coachProfile) {
+    if (profileError || !currentProfile) {
       console.error("[v0] Coach profile not found:", profileError)
       return NextResponse.json(
         { error: "Coach profile not found. Please complete your profile setup." },
@@ -203,12 +211,53 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!coachProfile.school_id) {
-      console.error("[v0] Coach has no school_id")
+    let targetCoachId = user.id
+    let targetCoachName = currentProfile.full_name || "Unknown Coach"
+    let targetCoachSchoolId = currentProfile.school_id
+
+    if (viewAsCoachId && viewAsCoachId !== user.id) {
+      if (!currentProfile.is_admin) {
+        console.error("[v0] Non-admin attempted to log activity for another coach:", {
+          userId: user.id,
+          viewAsCoachId,
+        })
+        return NextResponse.json(
+          { error: "Admin privileges required to log activity for another coach." },
+          { status: 403 },
+        )
+      }
+
+      const { data: impersonatedProfile, error: impersonatedError } = await supabase
+        .from("user_profiles")
+        .select("user_id, full_name, school_id")
+        .eq("user_id", viewAsCoachId)
+        .single()
+
+      if (impersonatedError || !impersonatedProfile) {
+        console.error("[v0] Impersonated coach profile not found:", impersonatedError)
+        return NextResponse.json(
+          { error: "Selected coach profile could not be found." },
+          { status: 400 },
+        )
+      }
+
+      targetCoachId = impersonatedProfile.user_id
+      targetCoachName = impersonatedProfile.full_name || "Unknown Coach"
+      targetCoachSchoolId = impersonatedProfile.school_id
+    }
+
+    if (!targetCoachSchoolId) {
+      console.error("[v0] Coach has no school_id", { targetCoachId })
       return NextResponse.json({ error: "You must be associated with a school to log activities." }, { status: 400 })
     }
 
-    console.log("[v0] Coach profile:", coachProfile)
+    console.log("[v0] Coach profile:", {
+      actingUserId: user.id,
+      actingIsAdmin: currentProfile.is_admin,
+      targetCoachId,
+      targetCoachName,
+      targetCoachSchoolId,
+    })
 
     if (!athleteId || !actionType) {
       return NextResponse.json({ error: "Athlete ID and action type are required" }, { status: 400 })
@@ -230,7 +279,7 @@ export async function POST(request: Request) {
 
     const insertData = {
       athlete_id: athleteId,
-      coach_user_id: user.id,
+      coach_user_id: targetCoachId,
       action_type: actionType,
       action_date: timestamp,
       follow_up_date: followUpTimestamp,
@@ -249,11 +298,11 @@ export async function POST(request: Request) {
 
     console.log("[v0] Activity created successfully:", data)
 
-    const effects = await applyActivityEffects(supabase, user.id, athleteId, actionType, timestamp)
+    const effects = await applyActivityEffects(supabase, targetCoachId, athleteId, actionType, timestamp)
 
     const activityWithCoach = {
       ...data,
-      coach_name: coachProfile.full_name || "Unknown Coach",
+      coach_name: targetCoachName,
     }
 
     return NextResponse.json({ activity: activityWithCoach, effects })

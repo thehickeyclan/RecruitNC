@@ -749,6 +749,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         body: JSON.stringify({
           athleteId,
           actionType,
+          ...(viewAsCoachId ? { viewAsCoachId } : {}),
         }),
       })
 
@@ -1129,6 +1130,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           outcome: newActivity.outcome || null, // Ensure outcome is null if empty
           // Added followUpDate: if isScheduled is true, use the actionDate, otherwise null
           followUpDate: newActivity.isScheduled ? newActivity.actionDate : null,
+          ...(viewAsCoachId ? { viewAsCoachId } : {}),
         }),
       })
 
