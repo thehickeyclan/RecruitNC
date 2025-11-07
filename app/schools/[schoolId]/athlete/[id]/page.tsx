@@ -594,7 +594,7 @@ export default function AthleteRecruitingDetailPage() {
       <div className="min-h-screen bg-background text-foreground transition-colors">
         {/* Header */}
         <div className="bg-card border-b border-border sticky top-0 z-10 transition-colors">
-        <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-4">
           <Button
             variant="ghost"
             size="sm"
