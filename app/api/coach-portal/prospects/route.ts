@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
+    const adminSupabase = createAdminClient()
 
     let user = null
     let userError = null
@@ -75,14 +77,14 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Prospects API - Admin viewing as specific coach:", viewAsCoachId)
       
       // Get the impersonated coach's school, then get ALL coaches from that school
-      const { data: viewAsCoachProfile } = await supabase
+      const { data: viewAsCoachProfile } = await adminSupabase
         .from("user_profiles")
         .select("school_id")
         .eq("user_id", viewAsCoachId)
         .single()
       
       if (viewAsCoachProfile?.school_id) {
-        const { data: schoolCoaches } = await supabase
+        const { data: schoolCoaches } = await adminSupabase
           .from("user_profiles")
           .select("user_id")
           .eq("school_id", viewAsCoachProfile.school_id)
@@ -95,12 +97,21 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // Normal flow: get all coaches from this school
-      const { data: schoolCoaches } = await supabase
+      const { data: schoolCoaches } = await adminSupabase
         .from("user_profiles")
         .select("user_id")
         .eq("school_id", targetSchoolId)
 
       coachUserIds = schoolCoaches?.map((c) => c.user_id) || []
+    }
+
+    const activeCoachId = viewAsCoachId && profile?.is_admin ? viewAsCoachId : user.id
+    if (activeCoachId && !coachUserIds.includes(activeCoachId)) {
+      coachUserIds.push(activeCoachId)
+    }
+
+    if (coachUserIds.length === 0 && activeCoachId) {
+      coachUserIds = [activeCoachId]
     }
 
     console.log("[v0] Prospects API - Coach user IDs to fetch:", coachUserIds)
