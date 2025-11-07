@@ -102,7 +102,7 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
 
   if (!isMounted) {
     return (
-      <Card className="border-2 bg-white/95 backdrop-blur-sm">
+      <Card className="border-2 border-border bg-card/95 dark:bg-slate-900/85 dark:border-slate-800/80 backdrop-blur-sm transition-colors">
         <CardHeader>
           <CardTitle className="text-xl font-bold">Recruiting Pipeline Funnel</CardTitle>
           <p className="text-muted-foreground text-sm">Loading...</p>
@@ -197,9 +197,9 @@ export function RecruitingFunnelChart({ stageCounts, schoolBranding }: Recruitin
   }
 
   return (
-    <Card className="border-2 bg-white/95 backdrop-blur-sm">
+    <Card className="border-2 border-border bg-card/95 dark:bg-slate-900/85 dark:border-slate-800/80 backdrop-blur-sm transition-colors">
       <CardHeader>
-        <CardTitle className="text-xl font-bold">Recruiting Pipeline Funnel</CardTitle>
+        <CardTitle className="text-xl font-bold text-foreground">Recruiting Pipeline Funnel</CardTitle>
         <p className="text-muted-foreground text-sm">{totalAthletes} total athletes in pipeline</p>
       </CardHeader>
       <CardContent>
