@@ -116,177 +116,29 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Prospects API - Coach user IDs to fetch:", coachUserIds)
 
-    // If admin is viewing a school portal (schoolId param provided) but no coaches exist,
-    // allow them to see prospects associated with admins for this school
-    let starredData = null
-    if (coachUserIds.length === 0 && profile?.is_admin && schoolId) {
-      console.log("[v0] Prospects API - No coaches found, but admin is viewing school portal. Checking for admin-added prospects...")
-      
-      // For admin preview: look for athletes associated with admins where notes mention this school
-      // OR create a mechanism to tag athletes with schools
-      // For now, we'll check notes for school name pattern
-      const { data: schoolInfo } = await supabase
-        .from("schools")
-        .select("name")
-        .eq("id", targetSchoolId)
-        .single()
-
-      if (schoolInfo) {
-        // Get all admin user IDs
-        const { data: adminUsers } = await supabase
-          .from("user_profiles")
-          .select("user_id")
-          .or("is_admin.eq.true,role.eq.admin")
-
-        const adminUserIds = adminUsers?.map((u) => u.user_id) || []
-
-        if (adminUserIds.length > 0) {
-          // Get athletes where notes mention this school name
-          const { data: adminStarredData } = await adminSupabase
-            .from("college_coach_stars")
-            .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
-            .in("coach_user_id", adminUserIds)
-            .ilike("notes", `%${schoolInfo.name}%`)
-
-          starredData = adminStarredData
-          console.log("[v0] Prospects API - Found % admin-added prospects for %", adminStarredData?.length || 0, schoolInfo.name)
-        }
-      }
-    } else if (coachUserIds.length === 0) {
+    if (coachUserIds.length === 0) {
       return NextResponse.json({ success: true, prospects: [] })
     }
 
-    // If we have coaches, get their starred athletes (normal flow)
-    if ((!starredData || starredData.length === 0) && coachUserIds.length > 0) {
-      console.log("[v0] Prospects API - Fetching stars for coach user IDs:", coachUserIds)
-      
-      const { data: coachStarredData, error: starError } = await adminSupabase
-        .from("college_coach_stars")
-        .select("athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating")
-        .in("coach_user_id", coachUserIds)
+    console.log("[v0] Prospects API - Fetching stars for coach user IDs:", coachUserIds)
 
-      if (starError) {
-        console.error("[v0] Prospects API - ERROR fetching stars:", starError)
-      } else {
-        console.log("[v0] Prospects API - Stars query returned:", coachStarredData?.length, "records")
-      }
-      
-      starredData = coachStarredData
+    const { data: coachStarredData, error: starError } = await adminSupabase
+      .from("college_coach_stars")
+      .select(
+        "athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating",
+      )
+      .in("coach_user_id", coachUserIds)
+
+    if (starError) {
+      console.error("[v0] Prospects API - ERROR fetching stars:", starError)
+      return NextResponse.json({ error: "Failed to fetch prospects" }, { status: 500 })
     }
+
+    const starredData = coachStarredData || []
 
     console.log("[v0] Prospects API - Starred athletes found:", starredData?.length || 0)
     console.log("[v0] Prospects API - Starred athlete IDs:", starredData?.map((s: any) => s.athlete_id) || [])
     console.log("[v0] Prospects API - Full starred data sample:", starredData?.slice(0, 3))
-
-    // ALSO check athletes table directly for athletes whose college field matches this school
-    // This catches athletes committed via the admin athlete profile "college" tab
-    const { data: schoolInfo } = await supabase
-      .from("schools")
-      .select("name")
-      .eq("id", targetSchoolId)
-      .single()
-
-    let adminStarredForSchool: any[] = []
-    let directCollegeAthletes: any[] = []
-    if (profile?.is_admin && schoolInfo?.name) {
-      console.log("[v0] Prospects API - Checking athletes.college field for school:", schoolInfo.name)
-
-      const { data: adminUsers } = await supabase
-        .from("user_profiles")
-        .select("user_id")
-        .or("is_admin.eq.true,role.eq.admin")
-
-      const adminUserIds = adminUsers?.map((u) => u.user_id) || []
-
-      if (adminUserIds.length > 0) {
-        const { data: adminStars, error: adminStarError } = await adminSupabase
-          .from("college_coach_stars")
-          .select(
-            "athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, notes, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating"
-          )
-          .in("coach_user_id", adminUserIds)
-          .ilike("notes", `%${schoolInfo.name}%`)
-
-        if (adminStarError) {
-          console.error("[v0] Prospects API - ERROR fetching admin-starred athletes for school:", adminStarError)
-        } else if (adminStars?.length) {
-          adminStarredForSchool = adminStars
-          console.log("[v0] Prospects API - Found", adminStars.length, "admin-starred athletes for", schoolInfo.name)
-        }
-      }
-
-      // Try exact match with school name
-      // EXCLUDE College Athletes - they should only appear in Pipeline History
-      const { data: exactMatch } = await supabase
-        .from("athletes")
-        .select("id, recruiting_status")
-        .ilike("college", `%${schoolInfo.name}%`)
-        .not("recruiting_status", "eq", "College Athlete")
-      
-      if (exactMatch) {
-        directCollegeAthletes.push(...exactMatch)
-      }
-      
-      // Try shortened name (e.g., "Lynchburg" from "Lynchburg College")
-      const shortName = schoolInfo.name.replace(/College|University|Institute|School/i, "").trim()
-      if (shortName && shortName.length > 2 && shortName !== schoolInfo.name) {
-        const { data: shortMatch } = await supabase
-          .from("athletes")
-          .select("id, recruiting_status")
-          .ilike("college", `%${shortName}%`)
-          .not("recruiting_status", "eq", "College Athlete")
-        
-        if (shortMatch) {
-          const existingIds = new Set(directCollegeAthletes.map(a => a.id))
-          directCollegeAthletes.push(...shortMatch.filter(a => !existingIds.has(a.id)))
-        }
-      }
-      
-      console.log("[v0] Prospects API - Found athletes with matching college field:", directCollegeAthletes.length)
-      
-      // Debug: Check if Cameron Gue is in the direct matches
-      const cameronMatch = directCollegeAthletes.find(a => a.id === "969fb4a7-fe96-4b95-bf3e-4adf2a3d16f8")
-      if (cameronMatch) {
-        console.log("[v0] Prospects API - ✅ Cameron Gue FOUND in direct college matches:", cameronMatch)
-      } else {
-        console.log("[v0] Prospects API - ❌ Cameron Gue NOT in direct college matches")
-      }
-      
-      // Create star-like entries for these athletes (if not already starred)
-      const existingStarredIds = new Set((starredData || []).map(s => s.athlete_id))
-      console.log("[v0] Prospects API - Existing starred IDs count:", existingStarredIds.size)
-      
-      const newDirectStars = directCollegeAthletes
-        .filter(a => !existingStarredIds.has(a.id))
-        .map(a => ({
-          athlete_id: a.id,
-          pipeline_stage: a.recruiting_status || "Committed",
-          interest_level: "high",
-          starred_at: new Date().toISOString(),
-          coach_user_id: user.id, // Use current user as placeholder
-        }))
-      
-      if (newDirectStars.length > 0) {
-        console.log("[v0] Prospects API - Adding", newDirectStars.length, "direct college matches to prospects")
-        starredData = [...(starredData || []), ...newDirectStars]
-      }
-    }
-
-    // Merge in admin-starred athletes tagged for this school (if not already present)
-    if (adminStarredForSchool.length > 0) {
-      const existingIds = new Set((starredData || []).map((s: any) => s.athlete_id))
-      const mergedStarData = Array.isArray(starredData) ? [...starredData] : []
-
-      for (const adminStar of adminStarredForSchool) {
-        if (!existingIds.has(adminStar.athlete_id)) {
-          mergedStarData.push(adminStar)
-          existingIds.add(adminStar.athlete_id)
-        }
-      }
-
-      starredData = mergedStarData
-      console.log("[v0] Prospects API - Added", adminStarredForSchool.length, "admin-tagged athletes to school results")
-    }
 
     if (!starredData || starredData.length === 0) {
       return NextResponse.json({ success: true, prospects: [] })
