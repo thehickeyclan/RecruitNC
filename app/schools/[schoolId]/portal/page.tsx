@@ -2427,6 +2427,78 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
       </div>
 
+      {/* North Carolina Recruits Section */}
+      <div className="container mx-auto px-4 pt-4 pb-6">
+        <Card className="border border-border shadow-sm bg-card transition-colors">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl font-bold text-foreground">Committed Recruits</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              North Carolina athletes committed or signed to {schoolBranding?.name || "this school"}
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            {loadingNcRecruits ? (
+              <div className="text-center py-8">
+                <div className="animate-pulse text-muted-foreground/70">Loading recruits...</div>
+              </div>
+            ) : ncRecruits.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No committed/signed recruits found</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full caption-bottom text-sm">
+                  <thead className="[&_tr]:border-b bg-muted">
+                    <tr className="border-b transition-colors">
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Year</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">College</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Division</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="[&_tr:last-child]:border-0">
+                    {ncRecruits.map((recruit) => (
+                      <tr
+                        key={recruit.id}
+                        className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
+                      >
+                        <td className="p-4 align-middle font-medium">{recruit.year || "-"}</td>
+                        <td className="p-4 align-middle font-medium">{recruit.name || "-"}</td>
+                        <td className="p-4 align-middle">{recruit.weight ? `${recruit.weight}lbs` : "-"}</td>
+                        <td className="p-4 align-middle">{recruit.highschool || "-"}</td>
+                        <td className="p-4 align-middle">{recruit.college || "-"}</td>
+                        <td className="p-4 align-middle">
+                          {recruit.division ? (
+                            <Badge variant="outline" className="text-xs">
+                              {recruit.division}
+                            </Badge>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <Badge
+                            variant="outline"
+                            className={
+                              recruit.status?.toLowerCase() === "signed"
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-blue-50 text-blue-700 border-blue-200"
+                            }
+                          >
+                            {recruit.status || "Committed"}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="container mx-auto px-4 pb-5">
         <div className="bg-card rounded-xl shadow-sm border border-border p-3 md:p-4 transition-colors">
           <div className="flex flex-col md:flex-row md:flex-wrap gap-3">
