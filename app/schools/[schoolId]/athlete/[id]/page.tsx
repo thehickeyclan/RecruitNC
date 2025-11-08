@@ -238,10 +238,11 @@ export default function AthleteRecruitingDetailPage() {
     const storedTheme = window.localStorage.getItem("portal-theme")
     if (storedTheme === "light") {
       setIsDarkMode(false)
-    } else if (storedTheme === "dark") {
-      setIsDarkMode(true)
     } else {
       setIsDarkMode(true)
+      if (!storedTheme) {
+        window.localStorage.setItem("portal-theme", "dark")
+      }
     }
   }, [athleteId])
 

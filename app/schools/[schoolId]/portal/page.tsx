@@ -262,7 +262,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const { branding: schoolBranding, isLoading: brandingLoading } = useSchoolBranding(params.schoolId)
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(true)
   const [isThemeMounted, setIsThemeMounted] = useState(false)
   // Removed redundant school state - using schoolBranding from hook instead
 
@@ -368,8 +368,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     setIsThemeMounted(true)
     if (typeof window !== "undefined") {
       const storedTheme = window.localStorage.getItem("portal-theme")
-      if (storedTheme === "dark") {
+      if (storedTheme === "light") {
+        setIsDarkMode(false)
+      } else {
         setIsDarkMode(true)
+        if (!storedTheme) {
+          window.localStorage.setItem("portal-theme", "dark")
+        }
       }
     }
   }, [])
@@ -3258,7 +3263,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           }
         }}
       >
-        <DialogContent className="max-w-2xl bg-background text-foreground">
+        <DialogContent className="max-w-2xl bg-background text-foreground dark:bg-slate-900 dark:text-slate-100">
           <DialogHeader>
             <DialogTitle>
               Log Activity for {bulkSelectedCount} {bulkSelectedCount === 1 ? "Athlete" : "Athletes"}
@@ -3275,10 +3280,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {previewSelectedProspects.map((prospect) => (
-                    <Badge
+                  <Badge
                       key={prospect.id}
-                      variant="secondary"
-                      className="bg-background text-foreground border border-border"
+                    variant="secondary"
+                    className="bg-background text-foreground border border-border dark:bg-slate-800 dark:text-slate-100"
                     >
                       {prospect.name}
                     </Badge>
@@ -3301,10 +3306,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     }))
                   }
                 >
-                  <SelectTrigger id="bulk-activity-type">
+                  <SelectTrigger id="bulk-activity-type" className="bg-background dark:bg-slate-950">
                     <SelectValue placeholder="Select activity" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="dark:bg-slate-900">
                     {ACTIVITY_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
