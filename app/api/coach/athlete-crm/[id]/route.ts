@@ -44,7 +44,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         socialMedia,
         wrestling_name,
         first_name,
-        last_name
+        last_name,
+        added_by_coach_id
       `)
       .eq("id", athleteId)
       .single()
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const { data: crmData } = await supabase
       .from("college_coach_stars")
       .select(
-        "pipeline_stage, last_contacted, parent_name, parent_phone, parent_email, athlete_cell, athlete_email, athlete_instagram",
+        "pipeline_stage, last_contacted, parent_name, parent_phone, parent_email, athlete_cell, athlete_email, athlete_instagram, lead_source, lead_subsource, lead_source_detail",
       )
       .eq("coach_user_id", user.id)
       .eq("athlete_id", athleteId)
@@ -137,6 +138,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     allResults.sort((a, b) => b.year - a.year)
 
+    const isCoachCreatedProspect = athlete.added_by_coach_id === user.id
+    const leadSourceLocked = !isCoachCreatedProspect
+    const leadSourceValue =
+      crmData?.lead_source ??
+      (leadSourceLocked ? "RecruitNC Rankings" : null)
+
     return NextResponse.json({
       ...athlete,
       pipeline_stage: crmData?.pipeline_stage || "Prospect",
@@ -147,6 +154,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       athlete_cell: crmData?.athlete_cell || null,
       athlete_email: crmData?.athlete_email || null,
       athlete_instagram: crmData?.athlete_instagram || null,
+      lead_source: leadSourceValue,
+      lead_subsource: crmData?.lead_subsource || null,
+      lead_source_detail: crmData?.lead_source_detail || null,
+      lead_source_locked: leadSourceLocked,
       nchsaa_results: allResults,
       actions: actions || [],
     })

@@ -37,6 +37,9 @@ export async function POST(request: NextRequest) {
       phone,
       instagram,
       notes,
+      lead_source,
+      lead_subsource,
+      lead_source_detail,
       schoolId,
     } = body
 
@@ -106,6 +109,10 @@ export async function POST(request: NextRequest) {
         pipeline_stage: "Prospect",
         notes: starNotes,
         starred_at: new Date().toISOString(),
+        lead_source: lead_source || null,
+        lead_subsource: lead_subsource || null,
+        lead_source_detail: lead_source_detail || null,
+        updated_at: new Date().toISOString(),
       })
 
     if (starError) {

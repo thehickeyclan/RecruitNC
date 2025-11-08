@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Loader2, UserPlus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { LEAD_SOURCE_OPTIONS } from "@/components/lead-source-form"
 
 interface CreateProspectModalProps {
   isOpen: boolean
@@ -96,6 +97,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
     phone: "",
     instagram: "",
     notes: "",
+    leadSource: "",
+    leadSubsource: "",
+    leadSourceDetail: "",
   })
 
   const handleChange = (field: string, value: string) => {
@@ -132,6 +136,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
           phone: formData.phone.trim() || null,
           instagram: formData.instagram.trim() || null,
           notes: formData.notes.trim() || null,
+          lead_source: formData.leadSource || null,
+          lead_subsource: formData.leadSubsource.trim() || null,
+          lead_source_detail: formData.leadSourceDetail.trim() || null,
           schoolId: schoolId,
         }),
       })
@@ -159,6 +166,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
         phone: "",
         instagram: "",
         notes: "",
+        leadSource: "",
+        leadSubsource: "",
+        leadSourceDetail: "",
       })
 
       onProspectCreated()
@@ -332,6 +342,54 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
                   onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="E.g., Saw at Beast of the East, interested in D2 programs, 3.5 GPA..."
                   rows={4}
+                  className="resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Lead Source */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-[#13294B] border-b pb-2">Lead Source Tracking</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="leadSource">Lead Source</Label>
+                  <Select
+                    value={formData.leadSource}
+                    onValueChange={(val) => handleChange("leadSource", val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select source (optional)" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[240px]">
+                      {LEAD_SOURCE_OPTIONS.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="leadSubsource">Lead Subsource</Label>
+                  <Input
+                    id="leadSubsource"
+                    value={formData.leadSubsource}
+                    onChange={(e) => handleChange("leadSubsource", e.target.value)}
+                    placeholder='e.g. "Super 32", "Instagram DM"'
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="leadSourceDetail">Additional Context</Label>
+                <Textarea
+                  id="leadSourceDetail"
+                  value={formData.leadSourceDetail}
+                  onChange={(e) => handleChange("leadSourceDetail", e.target.value)}
+                  placeholder='Optional notes (e.g. "Met family at UNC dual; coach follow-up scheduled")'
+                  rows={3}
                   className="resize-none"
                 />
               </div>

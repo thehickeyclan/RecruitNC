@@ -265,6 +265,7 @@ export default function AthletesPage() {
                     <TableHead className="font-semibold text-gray-700">Photo</TableHead>
                     <TableHead className="font-semibold text-gray-700">Name</TableHead>
                     <TableHead className="font-semibold text-gray-700">High School</TableHead>
+                    <TableHead className="font-semibold text-gray-700">State</TableHead>
                     <TableHead className="font-semibold text-gray-700">College</TableHead>
                     <TableHead className="font-semibold text-gray-700">Division</TableHead>
                     <TableHead className="font-semibold text-gray-700">Weight Class</TableHead>
@@ -287,6 +288,7 @@ export default function AthletesPage() {
                       </TableCell>
                       <TableCell className="font-medium">{athlete.name || "N/A"}</TableCell>
                       <TableCell>{athlete.highschool || "N/A"}</TableCell>
+                      <TableCell>{athlete.state || athlete.state_abbreviation || athlete.hometown_state || "N/A"}</TableCell>
                       <TableCell>{athlete.college || "N/A"}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-[#002147] text-white border-[#002147]">

@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Trophy, GraduationCap, User, Users, Plus, Save, Phone, Mail, Instagram } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { LeadSourceForm } from "@/components/lead-source-form"
 
 interface Action {
   id: string
@@ -68,6 +69,11 @@ interface AthleteCRMData {
 
   // Actions history
   actions: Action[]
+  lead_source?: string | null
+  lead_subsource?: string | null
+  lead_source_detail?: string | null
+  lead_source_locked?: boolean
+  added_by_coach_id?: string | null
 }
 
 interface AthleteCRMDrawerProps {
@@ -75,9 +81,10 @@ interface AthleteCRMDrawerProps {
   isOpen: boolean
   onClose: () => void
   onUpdate: () => void
+  viewAsCoachId?: string | null
 }
 
-export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate }: AthleteCRMDrawerProps) {
+export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsCoachId }: AthleteCRMDrawerProps) {
   const [athlete, setAthlete] = useState<AthleteCRMData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -123,8 +130,8 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate }: Athle
     }
   }, [athleteId, isOpen])
 
-  const fetchAthleteData = async () => {
-    if (!athleteId || hasFetchedRef.current) return
+  const fetchAthleteData = async (force = false) => {
+    if (!athleteId || (hasFetchedRef.current && !force)) return
 
     hasFetchedRef.current = true
     setIsLoading(true)
@@ -152,6 +159,13 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate }: Athle
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleLeadSourceSaved = async () => {
+    if (!athleteId) return
+    hasFetchedRef.current = false
+    await fetchAthleteData(true)
+    onUpdate()
   }
 
   const handleSaveContact = async () => {
@@ -328,6 +342,18 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate }: Athle
                     )}
                   </CardContent>
                 </Card>
+
+                <LeadSourceForm
+                  athleteId={athlete.id}
+                  isStarred={athlete.lead_source_locked ?? false}
+                  defaultValues={{
+                    lead_source: athlete.lead_source || undefined,
+                    lead_subsource: athlete.lead_subsource || undefined,
+                    lead_source_detail: athlete.lead_source_detail || undefined,
+                  }}
+                  onSaved={handleLeadSourceSaved}
+                  viewAsCoachId={viewAsCoachId || undefined}
+                />
 
                 <Card>
                   <CardHeader>

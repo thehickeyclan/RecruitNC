@@ -244,6 +244,12 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   }
 
   const statusBadge = getRecruitingStatusBadge()
+  const normalizedStatus = (recruitingStatus || "").toLowerCase().trim()
+  const isCommittedStatus =
+    normalizedStatus.includes("committed") ||
+    normalizedStatus.includes("college athlete") ||
+    normalizedStatus === "verbal commit" ||
+    normalizedStatus === "signed"
 
   const getALLAmericanStatus = () => {
     try {
@@ -554,6 +560,35 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
               <h1 className="text-3xl font-bold mb-3">{athleteName}</h1>
 
+              {isCommittedStatus && college && college !== "Not specified" && (
+                <div className="flex items-center gap-3 mb-4">
+                  {collegeLogo ? (
+                    <div className="relative h-14 w-14 rounded-full overflow-hidden border border-white/40 bg-white/90 shadow-lg">
+                      <Image
+                        src={collegeLogo}
+                        alt={`${college} logo`}
+                        fill
+                        className="object-contain p-2"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-14 w-14 rounded-full border border-white/40 bg-white/20 flex items-center justify-center text-white text-lg font-semibold shadow-lg">
+                      {college
+                        .split(" ")
+                        .slice(0, 2)
+                        .map((word) => word[0]?.toUpperCase())
+                        .join("") || "C"}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Committed To</p>
+                    <p className="text-lg font-bold text-white drop-shadow">
+                      {college}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {prospectRanking && (
                 <div className="mb-4">
                   <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
@@ -563,7 +598,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Year</p>
                   <p className="text-xl font-bold">{graduationYear || "N/A"}</p>
                 </div>
@@ -629,6 +664,33 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
                 <div className="flex-1 text-white pt-4">
                   <h1 className="text-5xl font-bold mb-4 text-white drop-shadow-lg">{athleteName}</h1>
+
+                  {isCommittedStatus && college && college !== "Not specified" && (
+                    <div className="flex items-center gap-4 mb-6">
+                      {collegeLogo ? (
+                        <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-white/50 bg-white/95 shadow-xl">
+                          <Image
+                            src={collegeLogo}
+                            alt={`${college} logo`}
+                            fill
+                            className="object-contain p-3"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-20 w-20 rounded-full border-2 border-white/40 bg-white/20 flex items-center justify-center text-white text-2xl font-semibold shadow-xl">
+                          {college
+                            .split(" ")
+                            .slice(0, 2)
+                            .map((word) => word[0]?.toUpperCase())
+                            .join("") || "C"}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-widest text-white/70">Committed To</p>
+                        <p className="text-3xl font-bold text-white drop-shadow-lg leading-tight">{college}</p>
+                      </div>
+                    </div>
+                  )}
 
                   {prospectRanking && (
                     <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
