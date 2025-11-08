@@ -2135,118 +2135,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         )}
       </div>
 
-      {/* NC Roster History Section */}
-      <div className="container mx-auto px-4 pt-6 pb-10">
-        <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
-          <Card className="border border-border shadow-sm bg-card transition-colors">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="pb-4 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl font-bold text-foreground">NC Roster History</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    className={`h-6 w-6 text-muted-foreground transition-transform ${isRosterHistoryOpen ? "rotate-180" : ""}`}
-                  />
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-6">
-                {loadingHistory ? (
-                  <div className="text-center py-8">
-                    <div className="animate-pulse text-muted-foreground/70">Loading roster history...</div>
-                  </div>
-                ) : pipelineHistory.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No historical NC athletes found. Athletes with "College Athlete" status will appear here.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full caption-bottom text-sm">
-                      <thead className="[&_tr]:border-b bg-muted">
-                        <tr className="border-b transition-colors">
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Class Year</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Current Status</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Roster Status</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Years on Team</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="[&_tr:last-child]:border-0">
-                        {pipelineHistory.map((athlete) => (
-                          <tr
-                            key={athlete.id}
-                            className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
-                          >
-                            <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
-                            <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
-                            <td className="p-4 align-middle">{athlete.weight ? `${athlete.weight}lbs` : "-"}</td>
-                            <td className="p-4 align-middle">{athlete.highschool || "-"}</td>
-                            <td className="p-4 align-middle">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                {athlete.status || "Enrolled"}
-                              </Badge>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <Badge
-                                variant="outline"
-                                className={
-                                  athlete.roster_status === "Active"
-                                    ? "bg-green-50 text-green-700 border-green-200"
-                                    : "bg-muted text-muted-foreground border-border"
-                                }
-                              >
-                                {athlete.roster_status || "Active"}
-                              </Badge>
-                            </td>
-                            <td className="p-4 align-middle text-muted-foreground">{athlete.years_on_team || "Current"}</td>
-                            <td className="p-4 align-middle">
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingRosterEntry(athlete)
-                                    setRosterEditForm({
-                                      roster_status: athlete.roster_status || "Active",
-                                      roster_notes: athlete.roster_notes || "",
-                                    })
-                                  }}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (confirm(`Remove ${athlete.name} from roster history?`)) {
-                                      handleDeleteRosterEntry(athlete.id)
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-600" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      </div>
-
       <div className="container mx-auto px-4 pb-4" data-recruiting-dashboard>
         <RecruitingActionsDashboard
           ref={dashboardRef}
@@ -3254,6 +3142,118 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             </div>
           </div>
         )}
+      </div>
+
+      {/* NC Roster History Section */}
+      <div className="container mx-auto px-4 pt-6 pb-10">
+        <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
+          <Card className="border border-border shadow-sm bg-card transition-colors">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-4 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-foreground">NC Roster History</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`h-6 w-6 text-muted-foreground transition-transform ${isRosterHistoryOpen ? "rotate-180" : ""}`}
+                  />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6">
+                {loadingHistory ? (
+                  <div className="text-center py-8">
+                    <div className="animate-pulse text-muted-foreground/70">Loading roster history...</div>
+                  </div>
+                ) : pipelineHistory.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No historical NC athletes found. Athletes with "College Athlete" status will appear here.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full caption-bottom text-sm">
+                      <thead className="[&_tr]:border-b bg-muted">
+                        <tr className="border-b transition-colors">
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Class Year</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Current Status</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Roster Status</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Years on Team</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {pipelineHistory.map((athlete) => (
+                          <tr
+                            key={athlete.id}
+                            className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
+                          >
+                            <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
+                            <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
+                            <td className="p-4 align-middle">{athlete.weight ? `${athlete.weight}lbs` : "-"}</td>
+                            <td className="p-4 align-middle">{athlete.highschool || "-"}</td>
+                            <td className="p-4 align-middle">
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                {athlete.status || "Enrolled"}
+                              </Badge>
+                            </td>
+                            <td className="p-4 align-middle">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  athlete.roster_status === "Active"
+                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    : "bg-muted text-muted-foreground border-border"
+                                }
+                              >
+                                {athlete.roster_status || "Active"}
+                              </Badge>
+                            </td>
+                            <td className="p-4 align-middle text-muted-foreground">{athlete.years_on_team || "Current"}</td>
+                            <td className="p-4 align-middle">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingRosterEntry(athlete)
+                                    setRosterEditForm({
+                                      roster_status: athlete.roster_status || "Active",
+                                      roster_notes: athlete.roster_notes || "",
+                                    })
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (confirm(`Remove ${athlete.name} from roster history?`)) {
+                                      handleDeleteRosterEntry(athlete.id)
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
 
       <Dialog
