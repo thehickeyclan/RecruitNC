@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
@@ -188,6 +188,15 @@ const ACTIVITY_LABELS = ACTIVITY_OPTIONS.reduce<Record<string, string>>((acc, op
   return acc
 }, {})
 
+const buildInitialBulkActivityForm = () => ({
+  actionType: ACTIVITY_OPTIONS[0].value,
+  actionDate: new Date().toISOString().split("T")[0],
+  description: "",
+  outcome: "",
+  isScheduled: false,
+  followUpDate: "",
+})
+
 // Helper function to convert hex to RGB
 const hexToRgb = (hex: string): string => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -300,6 +309,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [activities, setActivities] = useState<Activity[]>([])
   const [selectedAthleteActivities, setSelectedAthleteActivities] = useState<Activity[]>([])
   const [loggingActivity, setLoggingActivity] = useState<Record<string, boolean>>({})
+  const [selectedProspectIds, setSelectedProspectIds] = useState<Set<string>>(() => new Set())
+  const [isBulkActivityOpen, setIsBulkActivityOpen] = useState(false)
+  const [isBulkLogging, setIsBulkLogging] = useState(false)
+  const [bulkActivityForm, setBulkActivityForm] = useState(() => buildInitialBulkActivityForm())
   const [appliedUpdating, setAppliedUpdating] = useState<Record<string, boolean>>({})
   const [nchsaaResults, setNchsaaResults] = useState<any[]>([])
   const [documents, setDocuments] = useState<Document[]>([])
@@ -366,6 +379,32 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       router.push("/")
     }
   }, [authLoading, profile, params.schoolId, router])
+
+  useEffect(() => {
+    setSelectedProspectIds((previous) => {
+      if (previous.size === 0) return previous
+
+      const validIds = new Set(prospects.map((prospect) => prospect.id))
+      let changed = false
+      const next = new Set<string>()
+
+      previous.forEach((id) => {
+        if (validIds.has(id)) {
+          next.add(id)
+        } else {
+          changed = true
+        }
+      })
+
+      return changed ? next : previous
+    })
+  }, [prospects])
+
+  useEffect(() => {
+    if (viewMode === "board") {
+      setSelectedProspectIds(new Set())
+    }
+  }, [viewMode])
 
   const fetchPipelineHistory = async () => {
     const schoolName = schoolBranding?.name
@@ -798,6 +837,169 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         delete next[athleteId]
         return next
       })
+    }
+  }
+
+  const resetBulkActivityForm = (persistActionType = true) => {
+    setBulkActivityForm((previous) => {
+      const baseline = buildInitialBulkActivityForm()
+      if (!persistActionType) {
+        return baseline
+      }
+      return { ...baseline, actionType: previous.actionType }
+    })
+  }
+
+  const clearSelectedProspects = () => setSelectedProspectIds(new Set())
+
+  const handleToggleProspectSelection = (prospectId: string, checked: boolean) => {
+    setSelectedProspectIds((previous) => {
+      const next = new Set(previous)
+      if (checked) {
+        next.add(prospectId)
+      } else {
+        next.delete(prospectId)
+      }
+      return next
+    })
+  }
+
+  const handleToggleAllVisible = (visibleProspects: Prospect[]) => {
+    setSelectedProspectIds((previous) => {
+      const next = new Set(previous)
+      const visibleIds = visibleProspects.map((prospect) => prospect.id)
+      const allSelected = visibleIds.every((id) => next.has(id))
+
+      if (allSelected) {
+        visibleIds.forEach((id) => next.delete(id))
+      } else {
+        visibleIds.forEach((id) => next.add(id))
+      }
+
+      return next
+    })
+  }
+
+  const handleOpenBulkActivityModal = () => {
+    if (!canLogActivities) {
+      toast.error("Impersonate a coach to log activities.")
+      return
+    }
+
+    if (selectedProspectIds.size === 0) {
+      toast.error("Select at least one athlete to log an activity.")
+      return
+    }
+
+    resetBulkActivityForm()
+    setIsBulkActivityOpen(true)
+  }
+
+  const handleBulkActivitySubmit = async () => {
+    if (selectedProspectIds.size === 0) {
+      toast.error("Select at least one athlete to log an activity.")
+      return
+    }
+
+    if (!bulkActivityForm.actionDate) {
+      toast.error("Pick an activity date.")
+      return
+    }
+
+    if (bulkActivityForm.isScheduled && !bulkActivityForm.followUpDate) {
+      toast.error("Pick a follow-up date.")
+      return
+    }
+
+    setIsBulkLogging(true)
+
+    try {
+      const response = await fetch("/api/coach-portal/activities/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteIds: Array.from(selectedProspectIds),
+          actionType: bulkActivityForm.actionType,
+          actionDate: bulkActivityForm.actionDate,
+          followUpDate:
+            bulkActivityForm.isScheduled && bulkActivityForm.followUpDate
+              ? bulkActivityForm.followUpDate
+              : null,
+          description: bulkActivityForm.description,
+          outcome: bulkActivityForm.outcome,
+          isScheduled: bulkActivityForm.isScheduled,
+          ...(viewAsCoachId ? { viewAsCoachId } : {}),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to log activities")
+      }
+
+      const successCount: number = data.successCount ?? 0
+      const failureCount: number = data.failureCount ?? 0
+      const results: Array<{
+        athleteId: string
+        success: boolean
+        error?: string
+        effects?: { pipeline_stage?: string }
+      }> = data.results ?? []
+
+      if (successCount > 0) {
+        toast.success(`Logged ${successCount} ${successCount === 1 ? "activity" : "activities"}.`)
+      }
+
+      if (failureCount > 0) {
+        toast.error(
+          `${failureCount} ${failureCount === 1 ? "activity" : "activities"} failed. Please review and try again.`,
+        )
+      }
+
+      if (results.length > 0) {
+        const pipelineUpdates = new Map<string, string>()
+        results.forEach((result) => {
+          if (result.success && result.effects?.pipeline_stage) {
+            pipelineUpdates.set(result.athleteId, result.effects.pipeline_stage)
+          }
+        })
+
+        if (pipelineUpdates.size > 0) {
+          setProspects((existing) =>
+            existing.map((prospect) =>
+              pipelineUpdates.has(prospect.id)
+                ? { ...prospect, pipeline_stage: pipelineUpdates.get(prospect.id) || prospect.pipeline_stage }
+                : prospect,
+            ),
+          )
+
+          setSelectedAthlete((current) =>
+            current && pipelineUpdates.has(current.id)
+              ? { ...current, pipeline_stage: pipelineUpdates.get(current.id)! }
+              : current,
+          )
+        }
+      }
+
+      await fetchActivities()
+      await fetchProspects()
+
+      if (failureCount > 0 && data.results) {
+        const failedIds = data.results
+          .filter((result: any) => !result.success)
+          .map((result: any) => result.athleteId)
+        setSelectedProspectIds(new Set(failedIds))
+      } else {
+        clearSelectedProspects()
+        setIsBulkActivityOpen(false)
+        resetBulkActivityForm()
+      }
+    } catch (error) {
+      console.error("[v0] Error logging bulk activity:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to log activities")
+    } finally {
+      setIsBulkLogging(false)
     }
   }
 
@@ -1757,6 +1959,32 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     }
   })
 
+  const selectedProspectList = useMemo(
+    () => prospects.filter((prospect) => selectedProspectIds.has(prospect.id)),
+    [prospects, selectedProspectIds],
+  )
+  const bulkSelectedCount = selectedProspectIds.size
+  const selectedVisibleCount = useMemo(
+    () =>
+      sortedProspects.reduce(
+        (count, prospect) => (selectedProspectIds.has(prospect.id) ? count + 1 : count),
+        0,
+      ),
+    [sortedProspects, selectedProspectIds],
+  )
+  const allVisibleSelected = sortedProspects.length > 0 && selectedVisibleCount === sortedProspects.length
+  const someVisibleSelected = selectedVisibleCount > 0 && !allVisibleSelected
+  const headerCheckboxState: boolean | "indeterminate" = allVisibleSelected
+    ? true
+    : someVisibleSelected
+      ? "indeterminate"
+      : false
+  const previewSelectedProspects = useMemo(
+    () => selectedProspectList.slice(0, 6),
+    [selectedProspectList],
+  )
+  const remainingSelectedCount = Math.max(selectedProspectList.length - previewSelectedProspects.length, 0)
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc")
@@ -2611,6 +2839,44 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
         ) : (
           <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-colors">
+            {bulkSelectedCount > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-blue-50/70 px-4 py-3 text-sm dark:bg-slate-800/70">
+                <div className="font-medium text-foreground">
+                  {bulkSelectedCount} athlete{bulkSelectedCount === 1 ? "" : "s"} selected
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSelectedProspects}
+                    className="rounded-full"
+                    disabled={isBulkLogging}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-[#0b1728] text-white hover:bg-[#13294B]"
+                    onClick={handleOpenBulkActivityModal}
+                    disabled={!canLogActivities || isBulkLogging}
+                  >
+                    {isBulkLogging ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Logging...
+                      </>
+                    ) : !canLogActivities ? (
+                      "Admin Preview"
+                    ) : (
+                      <>
+                        <ActivityIcon className="mr-2 h-4 w-4" />
+                        Log Activity
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
               <div className="md:hidden text-xs text-muted-foreground px-4 py-2 bg-muted border-b border-border/60">
                 ← Swipe to see more columns →
@@ -2618,6 +2884,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               <table className="w-full caption-bottom text-sm min-w-[900px]">
                 <thead className="[&_tr]:border-b border-border/60 bg-muted">
                   <tr className="border-b border-border/60 transition-colors">
+                    <th className="h-12 w-12 px-4 align-middle text-left font-semibold text-foreground">
+                      <Checkbox
+                        checked={headerCheckboxState}
+                        onCheckedChange={() => handleToggleAllVisible(sortedProspects)}
+                        aria-label="Select all prospects"
+                        disabled={sortedProspects.length === 0}
+                      />
+                    </th>
                     <th 
                       className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
                       onClick={() => handleSort("name")}
@@ -2713,7 +2987,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                 <tbody className="[&_tr:last-child]:border-0">
                   {sortedProspects.length === 0 ? (
                     <tr>
-                      <td colSpan={11} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={12} className="p-8 text-center text-muted-foreground">
                         No prospects found
                       </td>
                     </tr>
@@ -2733,6 +3007,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           key={prospect.id}
                           className="border-b border-border/60 transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 active:bg-muted/80 group"
                         >
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedProspectIds.has(prospect.id)}
+                              onCheckedChange={(checked) =>
+                                handleToggleProspectSelection(prospect.id, checked === true)
+                              }
+                              aria-label={`Select ${prospect.name}`}
+                            />
+                          </td>
                           <td 
                             className="p-4 align-middle cursor-pointer"
                             onClick={() => {
@@ -2960,6 +3246,184 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </div>
         )}
       </div>
+
+      <Dialog
+        open={isBulkActivityOpen}
+        onOpenChange={(open) => {
+          if (isBulkLogging && !open) return
+          setIsBulkActivityOpen(open)
+          if (!open) {
+            resetBulkActivityForm()
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl bg-background text-foreground">
+          <DialogHeader>
+            <DialogTitle>
+              Log Activity for {bulkSelectedCount} {bulkSelectedCount === 1 ? "Athlete" : "Athletes"}
+            </DialogTitle>
+            <DialogDescription>
+              Bulk logging will add this activity to each selected athlete and update timelines automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedProspectList.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/60 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Selected Athletes
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {previewSelectedProspects.map((prospect) => (
+                    <Badge
+                      key={prospect.id}
+                      variant="secondary"
+                      className="bg-background text-foreground border border-border"
+                    >
+                      {prospect.name}
+                    </Badge>
+                  ))}
+                </div>
+                {remainingSelectedCount > 0 && (
+                  <p className="mt-2 text-xs text-muted-foreground">+ {remainingSelectedCount} more</p>
+                )}
+              </div>
+            )}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="bulk-activity-type">Activity Type</Label>
+                <Select
+                  value={bulkActivityForm.actionType}
+                  onValueChange={(value) =>
+                    setBulkActivityForm((previous) => ({
+                      ...previous,
+                      actionType: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="bulk-activity-type">
+                    <SelectValue placeholder="Select activity" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bulk-activity-date">Activity Date</Label>
+                <Input
+                  id="bulk-activity-date"
+                  type="date"
+                  value={bulkActivityForm.actionDate}
+                  onChange={(event) =>
+                    setBulkActivityForm((previous) => ({
+                      ...previous,
+                      actionDate: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-activity-description">Description (optional)</Label>
+              <Textarea
+                id="bulk-activity-description"
+                rows={3}
+                value={bulkActivityForm.description}
+                onChange={(event) =>
+                  setBulkActivityForm((previous) => ({
+                    ...previous,
+                    description: event.target.value,
+                  }))
+                }
+                placeholder="Add context for this touchpoint"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-activity-outcome">Outcome (optional)</Label>
+              <Input
+                id="bulk-activity-outcome"
+                value={bulkActivityForm.outcome}
+                onChange={(event) =>
+                  setBulkActivityForm((previous) => ({
+                    ...previous,
+                    outcome: event.target.value,
+                  }))
+                }
+                placeholder="e.g., Scheduled next call"
+              />
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="bulk-activity-follow-up"
+                  checked={bulkActivityForm.isScheduled}
+                  onCheckedChange={(checked) =>
+                    setBulkActivityForm((previous) => ({
+                      ...previous,
+                      isScheduled: checked === true,
+                      followUpDate: checked === true ? previous.followUpDate : "",
+                    }))
+                  }
+                />
+                <Label htmlFor="bulk-activity-follow-up" className="text-sm font-medium">
+                  Schedule follow-up
+                </Label>
+              </div>
+              {bulkActivityForm.isScheduled && (
+                <div className="mt-3 space-y-2">
+                  <Label htmlFor="bulk-activity-follow-up-date" className="text-sm">
+                    Follow-up Date
+                  </Label>
+                  <Input
+                    id="bulk-activity-follow-up-date"
+                    type="date"
+                    value={bulkActivityForm.followUpDate}
+                    onChange={(event) =>
+                      setBulkActivityForm((previous) => ({
+                        ...previous,
+                        followUpDate: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (isBulkLogging) return
+                setIsBulkActivityOpen(false)
+                resetBulkActivityForm()
+              }}
+              disabled={isBulkLogging}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleBulkActivitySubmit}
+              disabled={isBulkLogging}
+              className="bg-[#0b1728] text-white hover:bg-[#13294B]"
+            >
+              {isBulkLogging ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Log Activities"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!selectedAthlete} onOpenChange={() => setSelectedAthlete(null)}>
         <DialogContent className="max-w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] p-0 bg-background border-0 md:border border-border text-foreground md:rounded-lg flex flex-col [&>button]:hidden transition-colors">
