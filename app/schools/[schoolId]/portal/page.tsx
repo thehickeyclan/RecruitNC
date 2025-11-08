@@ -2135,6 +2135,32 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         )}
       </div>
 
+      <div className="container mx-auto px-4 pb-4" data-recruiting-dashboard>
+        <RecruitingActionsDashboard
+          ref={dashboardRef}
+          schoolId={params.schoolId}
+          athletes={prospects.map((prospect) => ({ id: prospect.id, name: prospect.name }))}
+          prospects={(() => {
+            const prospectsWithBirthdays = prospects.map((prospect) => ({
+              id: prospect.id,
+              name: prospect.name,
+              birthdate: prospect.birthdate,
+              photourl: prospect.photourl,
+              graduationyear: prospect.graduationyear,
+              weightclass: prospect.weightclass,
+            }))
+            console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
+            console.log(
+              "[v0] Portal - Prospects with birthdates:",
+              prospectsWithBirthdays
+                .filter((prospect) => prospect.birthdate)
+                .map((prospect) => ({ name: prospect.name, birthdate: prospect.birthdate })),
+            )
+            return prospectsWithBirthdays
+          })()}
+        />
+      </div>
+
       {profile?.is_admin && (
         <div
           className={
@@ -2464,27 +2490,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             )}
           </CardContent>
         </Card>
-      </div>
-
-      <div className="container mx-auto px-4 py-6" data-recruiting-dashboard>
-        <RecruitingActionsDashboard 
-          ref={dashboardRef}
-          schoolId={params.schoolId} 
-          athletes={prospects.map(p => ({ id: p.id, name: p.name }))}
-          prospects={(() => {
-            const prospectsWithBirthdays = prospects.map(p => ({
-              id: p.id,
-              name: p.name,
-              birthdate: p.birthdate,
-              photourl: p.photourl,
-              graduationyear: p.graduationyear,
-              weightclass: p.weightclass,
-            }))
-            console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
-            console.log("[v0] Portal - Prospects with birthdates:", prospectsWithBirthdays.filter(p => p.birthdate).map(p => ({ name: p.name, birthdate: p.birthdate })))
-            return prospectsWithBirthdays
-          })()}
-        />
       </div>
 
       <div className="container mx-auto px-4 py-6">
