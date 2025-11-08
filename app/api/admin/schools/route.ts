@@ -41,13 +41,43 @@ export async function GET() {
       console.log(`[v0]   - ${c.full_name} (${c.email}) - School ID: ${c.school_id}`)
     })
 
+    // Fetch recruiter counts for each coach
+    const coachUserIds = coaches.map((coach) => coach.user_id).filter(Boolean)
+    const coachAthleteMap = new Map<string, Set<string>>()
+
+    if (coachUserIds.length > 0) {
+      const { data: coachStars, error: starError } = await supabase
+        .from("college_coach_stars")
+        .select("coach_user_id, athlete_id")
+        .in("coach_user_id", coachUserIds as string[])
+
+      if (starError) {
+        console.error("[v0] Error fetching coach stars:", starError)
+      } else if (coachStars) {
+        coachStars.forEach((star) => {
+          if (!star.coach_user_id || !star.athlete_id) return
+          if (!coachAthleteMap.has(star.coach_user_id)) {
+            coachAthleteMap.set(star.coach_user_id, new Set<string>())
+          }
+          coachAthleteMap.get(star.coach_user_id)!.add(star.athlete_id)
+        })
+      }
+    }
+
     // Map schools with their coaches
     const schoolsWithCoaches = schools.map((school) => {
       const schoolCoaches = coaches.filter((coach) => coach.school_id === school.id)
+      const schoolAthletes = new Set<string>()
+
+      schoolCoaches.forEach((coach) => {
+        const athleteIds = coachAthleteMap.get(coach.user_id) || new Set()
+        athleteIds.forEach((athleteId) => schoolAthletes.add(athleteId))
+      })
 
       return {
         ...school,
         coach_count: schoolCoaches.length,
+        total_recruits: schoolAthletes.size,
         coaches: schoolCoaches.map((c) => ({
           id: c.id,
           user_id: c.user_id,

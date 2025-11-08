@@ -68,6 +68,15 @@ export function Navbar() {
     { href: "/contact", label: "Contact" },
   ]
 
+  const highlightNavItems = showMyRecruits
+    ? [
+        {
+          href: getRecruitingPortalUrl(),
+          label: "My Recruits",
+        },
+      ]
+    : []
+
   return (
     <nav className="bg-white shadow-sm border-b touch-scroll sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -126,6 +135,15 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              {highlightNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="px-3 py-2 rounded-md text-sm font-semibold transition-all mobile-optimized bg-red-600 text-white hover:bg-red-700"
                 >
                   {item.label}
                 </Link>
@@ -261,6 +279,16 @@ export function Navbar() {
                       key={item.href}
                       href={item.href}
                       className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                  {highlightNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="px-3 py-2 rounded-md text-base font-semibold transition-all mobile-optimized min-h-[44px] flex items-center bg-red-600 text-white hover:bg-red-700"
                       onClick={() => setIsOpen(false)}
                     >
                       {item.label}

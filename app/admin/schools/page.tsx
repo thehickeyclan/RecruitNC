@@ -26,6 +26,7 @@ interface School {
   secondary_color: string | null
   created_at: string
   coach_count: number
+  total_recruits: number
   coaches: Coach[]
   is_test?: boolean
 }
@@ -208,6 +209,11 @@ export default function SchoolsManagementPage() {
                         {school.coach_count} {school.coach_count === 1 ? "coach" : "coaches"}
                       </Badge>
                     </CardDescription>
+                    <div className="mt-3">
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                        {school.total_recruits} Active {school.total_recruits === 1 ? "Recruit" : "Recruits"}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
