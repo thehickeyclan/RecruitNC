@@ -20,6 +20,18 @@ interface HighSchool {
   name: string
 }
 
+type Match = {
+  date: string
+  winner: string
+  winner_school: string
+  loser: string
+  loser_school: string
+  result: string
+  venue: string
+  weight: string
+  opp_percent: number | null
+}
+
 interface UploadProgress {
   athleteId: string
   athleteName: string
@@ -431,181 +443,83 @@ export default function MatchManagerPage() {
   const selectedAthleteData = athletes.find((a) => a.id === selectedAthlete)
   const athleteProgress = selectedAthlete ? getAthleteProgress(selectedAthlete) : null
 
-  const parseRawTextToJson = (rawText: string, athleteName: string) => {
-    try {
-      const lines = rawText
-        .trim()
-        .split("\n")
-        .filter((line) => line.trim())
+  const parseRawTextToJson = (rawText: string) => {
+    const lines = rawText.trim().split("\n")
 
-      if (lines.length < 2) {
-        throw new Error("Not enough data - need at least header row and one match")
+    const matches: Match[] = []
+
+    if (lines.length === 0) return matches
+
+    // Check if this is the new format (has "Summary" column)
+    const headerLine = lines[0].toLowerCase()
+    const isNewFormat = headerLine.includes("summary")
+
+    if (isNewFormat) {
+      // New format: Date | Event | Weight | Summary
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) continue
+
+        const parts = line.split("\t")
+
+        if (parts.length < 4) continue
+
+        const [date, event, weight, summary] = parts
+
+        // Skip "Bye" entries
+        if (summary.toLowerCase().includes("bye")) continue
+
+        // Parse the summary to extract match details
+        // Format: "Athlete1 (School1) over Athlete2 (School2) (Result)"
+        const overMatch = summary.match(/^(.+?)\s*\(([^)]+)\)\s+over\s+(.+?)\s*\(([^)]+)\)\s*(\([^)]+\))?$/)
+
+        if (overMatch) {
+          const [, winner, winnerSchool, loser, loserSchool, resultRaw] = overMatch
+          const result = resultRaw ? resultRaw.replace(/[()]/g, "").trim() : ""
+
+          // Skip matches against "Unknown" opponents
+          if (loser.trim().toLowerCase() === "unknown") continue
+
+          matches.push({
+            date: date.trim(),
+            winner: winner.trim(),
+            winner_school: winnerSchool.trim(),
+            loser: loser.trim(),
+            loser_school: loserSchool.trim(),
+            result: result,
+            venue: event.trim(),
+            weight: weight.trim(),
+            opp_percent: null,
+          })
+        }
       }
+    } else {
+      // Old format: Date | Winner | Winner School | Loser | Loser School | Result | Venue | Weight | Opp%
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) continue
 
-      let startIndex = 0
+        const parts = line.split("\t")
 
-      const firstLine = lines[0].toLowerCase()
-      if (
-        firstLine.includes("date") &&
-        (firstLine.includes("winner") || firstLine.includes("loser") || firstLine.includes("opponent"))
-      ) {
-        startIndex = 1
-      }
+        if (parts.length < 8) continue
 
-      const nameParts = athleteName.split(" ")
-      const firstName = nameParts[0] || ""
-      const lastName = nameParts.slice(1).join(" ") || ""
-
-      const matches = []
-      let athleteSchool = ""
-
-      for (let i = startIndex; i < lines.length; i++) {
-        const matchLine = lines[i]
-        const parts = matchLine.split("\t")
-
-        if (parts.length < 7) {
-          continue
-        }
-
-        const dateField = parts[0]?.trim()
-        if (!dateField || !dateField.match(/\d{1,2}[-/]\d{1,2}[-/]\d{2,4}/)) {
-          continue
-        }
-
-        const winner = parts[1]?.trim() || ""
-        const winnerSchool = parts[2]?.trim() || ""
-        const loser = parts[3]?.trim() || ""
-        const loserSchool = parts[4]?.trim() || ""
-        const result = parts[5]?.trim() || ""
-        const venue = parts[6]?.trim() || ""
-        const matchWeight = parts[7]?.trim() || "0"
-        const oppAdj = parts[8]?.trim() || "0%"
-
-        const athleteNameLower = athleteName.trim().toLowerCase()
-        const winnerLower = winner.toLowerCase()
-        const loserLower = loser.toLowerCase()
-
-        // Split names into parts and compare last name + first initial
-        const athleteParts = athleteNameLower.split(" ")
-        const athleteFirstInitial = athleteParts[0]?.[0] || ""
-        const athleteLastName = athleteParts[athleteParts.length - 1] || ""
-
-        const winnerParts = winnerLower.split(" ")
-        const winnerFirstInitial = winnerParts[0]?.[0] || ""
-        const winnerLastName = winnerParts[winnerParts.length - 1] || ""
-
-        const loserParts = loserLower.split(" ")
-        const loserFirstInitial = loserParts[0]?.[0] || ""
-        const loserLastName = loserParts[loserParts.length - 1] || ""
-
-        // Match if first initial and last name match (handles Max vs Maxwell, etc.)
-        const isWinnerMatch = winnerFirstInitial === athleteFirstInitial && winnerLastName === athleteLastName
-        const isLoserMatch = loserFirstInitial === athleteFirstInitial && loserLastName === athleteLastName
-
-        const isWin = isWinnerMatch && !isLoserMatch
-
-        const opponent = isWin ? loser : winner
-        const opponentSchool = isWin ? loserSchool : winnerSchool
-
-        if (!athleteSchool) {
-          athleteSchool = isWin ? winnerSchool : loserSchool
-        }
+        const [date, winner, winner_school, loser, loser_school, result, venue, weight, opp_percent] = parts
 
         matches.push({
-          date: dateField,
-          weight: Number.parseInt(matchWeight) || 0,
-          opponent: opponent || "Unknown",
-          opponent_school: opponentSchool || "Unknown",
-          result: result,
-          venue: venue,
-          win_loss: isWin ? "W" : "L",
-          opponent_percentage: oppAdj,
+          date: date.trim(),
+          winner: winner.trim(),
+          winner_school: winner_school.trim(),
+          loser: loser.trim(),
+          loser_school: loser_school.trim(),
+          result: result.trim(),
+          venue: venue.trim(),
+          weight: weight.trim(),
+          opp_percent: opp_percent ? parseFloat(opp_percent.trim()) : null,
         })
       }
-
-      if (matches.length === 0) {
-        throw new Error("No valid match data found. Please check the format.")
-      }
-
-      const wins = matches.filter((m) => m.win_loss === "W").length
-      const losses = matches.filter((m) => m.win_loss === "L").length
-      const pins = matches.filter((m) => m.win_loss === "W" && m.result === "Fall").length
-      const techFalls = matches.filter((m) => m.win_loss === "W" && m.result === "TF").length
-      const majorDecisions = matches.filter((m) => m.win_loss === "W" && m.result === "MD").length
-      const decisions = matches.filter((m) => m.win_loss === "W" && (m.result === "Dec" || m.result === "SV-1")).length
-      const forfeits = matches.filter(
-        (m) => m.win_loss === "W" && (m.result === "For." || m.result === "Forfeit"),
-      ).length
-
-      const dates = matches.map((m) => {
-        const parts = m.date.split(/[-/]/)
-        const month = Number.parseInt(parts[0])
-        const day = Number.parseInt(parts[1])
-        const year = Number.parseInt(parts[2])
-        const fullYear = year < 100 ? (year > 50 ? 1900 + year : 2000 + year) : year
-        return { month, day, year: fullYear }
-      })
-
-      const years = dates.map((d) => d.year)
-      const minYear = Math.min(...years)
-      const maxYear = Math.max(...years)
-
-      let season = ""
-      if (minYear === maxYear) {
-        season = `${minYear - 1}-${minYear.toString().slice(-2)}`
-      } else {
-        season = `${minYear}-${maxYear.toString().slice(-2)}`
-      }
-
-      const currentYear = new Date().getFullYear()
-      const currentMonth = new Date().getMonth() + 1
-      const seasonStartYear = Number.parseInt(season.split("-")[0])
-
-      const currentSchoolYear = currentMonth >= 8 ? currentYear : currentYear - 1
-      const yearsAgo = currentSchoolYear - seasonStartYear
-
-      let inferredGrade = "Unknown"
-      if (yearsAgo === 0) inferredGrade = "Senior"
-      else if (yearsAgo === 1) inferredGrade = "Junior"
-      else if (yearsAgo === 2) inferredGrade = "Sophomore"
-      else if (yearsAgo === 3) inferredGrade = "Freshman"
-
-      const totalMatches = wins + losses
-      const pinPercentage = totalMatches > 0 ? ((pins / totalMatches) * 100).toFixed(1) : "0.0"
-      const tfPercentage = totalMatches > 0 ? ((techFalls / totalMatches) * 100).toFixed(1) : "0.0"
-      const finishingPercentage = totalMatches > 0 ? (((pins + techFalls) / totalMatches) * 100).toFixed(1) : "0.0"
-
-      const jsonData = {
-        wrestler_info: {
-          first_name: firstName,
-          last_name: lastName,
-          season: season,
-          grade: inferredGrade,
-          high_school: athleteSchool || "Unknown",
-        },
-        season_summary: {
-          total_matches: totalMatches,
-          wins: wins,
-          losses: losses,
-          pins: pins,
-          tech_falls: techFalls,
-          decisions: decisions,
-          major_decisions: majorDecisions,
-          forfeits_won: forfeits,
-          pin_percentage: Number.parseFloat(pinPercentage),
-          tf_percentage: Number.parseFloat(tfPercentage),
-          finishing_percentage: Number.parseFloat(finishingPercentage),
-        },
-        matches: matches,
-      }
-
-      return { success: true, data: jsonData }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to parse raw text",
-      }
     }
+
+    return matches
   }
 
   const handleRawTextParse = () => {
@@ -620,17 +534,174 @@ export default function MatchManagerPage() {
       return
     }
 
-    const result = parseRawTextToJson(rawTextData, selectedAthleteData.name)
+    const parsedMatches = parseRawTextToJson(rawTextData)
 
-    if (result.success) {
-      setJsonData(JSON.stringify(result.data, null, 2))
-      setParseResult({
-        success: true,
-        message: `Successfully parsed ${result.data.matches.length} matches. JSON has been loaded into the Single Athlete Upload tab.`,
-      })
-    } else {
-      setParseResult(result)
+    if (parsedMatches.length === 0) {
+      setParseResult({ success: false, error: "No valid matches were found. Please check the format." })
+      return
     }
+
+    const athleteNameLower = selectedAthleteData.name.trim().toLowerCase()
+    const athleteParts = athleteNameLower.split(" ")
+    const athleteFirstInitial = athleteParts[0]?.[0] || ""
+    const athleteLastName = athleteParts[athleteParts.length - 1] || ""
+
+    const convertedMatches: {
+      date: string
+      weight: number
+      opponent: string
+      opponent_school: string
+      result: string
+      venue: string
+      win_loss: "W" | "L"
+      opponent_percentage: string | null
+    }[] = []
+
+    let athleteSchool = ""
+
+    parsedMatches.forEach((match) => {
+      const winnerLower = match.winner.toLowerCase()
+      const loserLower = match.loser.toLowerCase()
+
+      const winnerParts = winnerLower.split(" ")
+      const winnerFirstInitial = winnerParts[0]?.[0] || ""
+      const winnerLastName = winnerParts[winnerParts.length - 1] || ""
+
+      const loserParts = loserLower.split(" ")
+      const loserFirstInitial = loserParts[0]?.[0] || ""
+      const loserLastName = loserParts[loserParts.length - 1] || ""
+
+      const isWinnerMatch =
+        winnerLower === athleteNameLower ||
+        (winnerFirstInitial === athleteFirstInitial && winnerLastName === athleteLastName)
+      const isLoserMatch =
+        loserLower === athleteNameLower || (loserFirstInitial === athleteFirstInitial && loserLastName === athleteLastName)
+
+      if (!isWinnerMatch && !isLoserMatch) {
+        return
+      }
+
+      const isWin = isWinnerMatch && !isLoserMatch
+      const opponent = isWin ? match.loser : match.winner
+      const opponentSchool = isWin ? match.loser_school : match.winner_school
+
+      if (!athleteSchool) {
+        athleteSchool = isWin ? match.winner_school : match.loser_school
+      }
+
+      convertedMatches.push({
+        date: match.date.trim(),
+        weight: Number.parseInt(match.weight) || 0,
+        opponent: opponent.trim(),
+        opponent_school: opponentSchool.trim(),
+        result: match.result ? match.result.trim() : "",
+        venue: match.venue.trim(),
+        win_loss: isWin ? "W" : "L",
+        opponent_percentage: match.opp_percent !== null ? match.opp_percent.toString() : null,
+      })
+    })
+
+    if (convertedMatches.length === 0) {
+      setParseResult({
+        success: false,
+        error:
+          "Could not match any bouts to the selected athlete. Please verify the athlete's name matches the data in the summary column.",
+      })
+      return
+    }
+
+    const firstName = selectedAthleteData.name.split(" ")[0] || ""
+    const lastName = selectedAthleteData.name.split(" ").slice(1).join(" ") || ""
+
+    const wins = convertedMatches.filter((m) => m.win_loss === "W").length
+    const losses = convertedMatches.filter((m) => m.win_loss === "L").length
+    const pins = convertedMatches.filter(
+      (m) => m.win_loss === "W" && m.result.toLowerCase().includes("fall"),
+    ).length
+    const techFalls = convertedMatches.filter(
+      (m) => m.win_loss === "W" && (m.result.toLowerCase().includes("tf") || m.result.toLowerCase().includes("tech")),
+    ).length
+    const majorDecisions = convertedMatches.filter(
+      (m) => m.win_loss === "W" && m.result.toLowerCase().includes("major"),
+    ).length
+    const decisions = convertedMatches.filter(
+      (m) =>
+        m.win_loss === "W" &&
+        (m.result.toLowerCase().includes("dec") || m.result.toLowerCase().includes("sv")),
+    ).length
+    const forfeits = convertedMatches.filter(
+      (m) => m.win_loss === "W" && m.result.toLowerCase().includes("for"),
+    ).length
+
+    const dates = convertedMatches
+      .map((m) => {
+        const parts = m.date.split(/[-/]/)
+        if (parts.length !== 3) return null
+        const month = Number.parseInt(parts[0])
+        const day = Number.parseInt(parts[1])
+        const year = Number.parseInt(parts[2])
+        const fullYear = year < 100 ? (year > 50 ? 1900 + year : 2000 + year) : year
+        return { month, day, year: fullYear }
+      })
+      .filter(Boolean) as { month: number; day: number; year: number }[]
+
+    const years = dates.map((d) => d.year)
+    const minYear = Math.min(...years)
+    const maxYear = Math.max(...years)
+
+    let season = ""
+    if (Number.isFinite(minYear) && Number.isFinite(maxYear)) {
+      season = minYear === maxYear ? `${minYear - 1}-${minYear.toString().slice(-2)}` : `${minYear}-${maxYear.toString().slice(-2)}`
+    }
+
+    const currentYear = new Date().getFullYear()
+    const currentMonth = new Date().getMonth() + 1
+    const seasonStartYear = season ? Number.parseInt(season.split("-")[0]) : currentYear
+
+    const currentSchoolYear = currentMonth >= 8 ? currentYear : currentYear - 1
+    const yearsAgo = currentSchoolYear - seasonStartYear
+
+    let inferredGrade = "Unknown"
+    if (yearsAgo === 0) inferredGrade = "Senior"
+    else if (yearsAgo === 1) inferredGrade = "Junior"
+    else if (yearsAgo === 2) inferredGrade = "Sophomore"
+    else if (yearsAgo === 3) inferredGrade = "Freshman"
+
+    const totalMatches = wins + losses
+    const pinPercentage = totalMatches > 0 ? Number(((pins / totalMatches) * 100).toFixed(1)) : 0
+    const tfPercentage = totalMatches > 0 ? Number(((techFalls / totalMatches) * 100).toFixed(1)) : 0
+    const finishingPercentage =
+      totalMatches > 0 ? Number((((pins + techFalls) / totalMatches) * 100).toFixed(1)) : 0
+
+    const jsonPayload = {
+      wrestler_info: {
+        first_name: firstName,
+        last_name: lastName,
+        season: season || "Unknown",
+        grade: inferredGrade,
+        high_school: athleteSchool || "Unknown",
+      },
+      season_summary: {
+        total_matches: totalMatches,
+        wins,
+        losses,
+        pins,
+        tech_falls: techFalls,
+        decisions,
+        major_decisions: majorDecisions,
+        forfeits_won: forfeits,
+        pin_percentage: pinPercentage,
+        tf_percentage: tfPercentage,
+        finishing_percentage: finishingPercentage,
+      },
+      matches: convertedMatches,
+    }
+
+    setJsonData(JSON.stringify(jsonPayload, null, 2))
+    setParseResult({
+      success: true,
+      message: `Successfully parsed ${convertedMatches.length} matches. JSON has been loaded into the Single Athlete Upload tab.`,
+    })
   }
 
   const handleClearRawData = () => {
