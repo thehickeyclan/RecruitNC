@@ -4743,6 +4743,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         isOpen={showCreateProspectModal}
         onClose={() => setShowCreateProspectModal(false)}
         schoolId={params.schoolId}
+        isDarkMode={isDarkMode}
         onProspectCreated={() => {
           setShowCreateProspectModal(false)
           fetchProspects() // Refresh the prospects list

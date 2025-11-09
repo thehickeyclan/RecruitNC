@@ -16,6 +16,7 @@ interface CreateProspectModalProps {
   onClose: () => void
   onProspectCreated: () => void
   schoolId?: string
+  isDarkMode?: boolean
 }
 
 const US_STATES = [
@@ -83,7 +84,13 @@ const GRADUATION_YEARS = [
   new Date().getFullYear(),
 ]
 
-export function CreateProspectModal({ isOpen, onClose, onProspectCreated, schoolId }: CreateProspectModalProps) {
+export function CreateProspectModal({
+  isOpen,
+  onClose,
+  onProspectCreated,
+  schoolId,
+  isDarkMode = false,
+}: CreateProspectModalProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
@@ -187,13 +194,14 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className={isDarkMode ? "dark" : ""}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl">
-            <UserPlus className="h-6 w-6 text-[#13294B]" />
+          <DialogTitle className="flex items-center gap-2 text-2xl text-[#13294B] dark:text-slate-50">
+            <UserPlus className="h-6 w-6 text-[#13294B] dark:text-sky-300" />
             Add New Prospect to Track
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-slate-600 dark:text-slate-300">
             Add an athlete to your recruiting pipeline. This can be anyone - NC or out-of-state, ranked or unranked.
           </DialogDescription>
         </DialogHeader>
@@ -202,7 +210,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
           <div className="space-y-6 py-4">
             {/* Basic Info */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-[#13294B] border-b pb-2">Basic Information</h3>
+              <h3 className="font-semibold text-[#13294B] dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                Basic Information
+              </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -293,7 +303,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
 
             {/* Contact Info */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-[#13294B] border-b pb-2">Contact Information</h3>
+              <h3 className="font-semibold text-[#13294B] dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                Contact Information
+              </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -332,7 +344,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
 
             {/* Notes */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-[#13294B] border-b pb-2">Recruiting Notes</h3>
+              <h3 className="font-semibold text-[#13294B] dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                Recruiting Notes
+              </h3>
               
               <div>
                 <Label htmlFor="notes">Notes (Optional)</Label>
@@ -349,7 +363,9 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
 
             {/* Lead Source */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-[#13294B] border-b pb-2">Lead Source Tracking</h3>
+              <h3 className="font-semibold text-[#13294B] dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                Lead Source Tracking
+              </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -358,10 +374,10 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
                     value={formData.leadSource}
                     onValueChange={(val) => handleChange("leadSource", val)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
                       <SelectValue placeholder="Select source (optional)" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[240px]">
+                    <SelectContent className="max-h-[240px] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
                       {LEAD_SOURCE_OPTIONS.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
@@ -378,6 +394,7 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
                     value={formData.leadSubsource}
                     onChange={(e) => handleChange("leadSubsource", e.target.value)}
                     placeholder='e.g. "Super 32", "Instagram DM"'
+                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
@@ -390,14 +407,14 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
                   onChange={(e) => handleChange("leadSourceDetail", e.target.value)}
                   placeholder='Optional notes (e.g. "Met family at UNC dual; coach follow-up scheduled")'
                   rows={3}
-                  className="resize-none"
+                  className="resize-none bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
 
             {/* Info Banner */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-900">
+            <div className="bg-blue-50 dark:bg-slate-800/70 border border-blue-200 dark:border-slate-700 rounded-lg p-4">
+              <p className="text-sm text-blue-900 dark:text-slate-200">
                 <strong>Privacy:</strong> This prospect will only be visible to you in your "My Recruits" portal. 
                 Other coaches will not see them unless you share their information.
               </p>
@@ -405,13 +422,19 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
           </div>
 
           <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={isSubmitting}
-              className="bg-[#13294B] hover:bg-[#1e3a5f] text-white"
+              className="bg-[#13294B] hover:bg-[#1e3a5f] text-white dark:bg-sky-600 dark:hover:bg-sky-500"
             >
               {isSubmitting ? (
                 <>
@@ -427,7 +450,8 @@ export function CreateProspectModal({ isOpen, onClose, onProspectCreated, school
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+        </DialogContent>
+      </div>
     </Dialog>
   )
 }
