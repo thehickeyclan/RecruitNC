@@ -16,6 +16,16 @@ interface ImageUploadProps {
   disabled?: boolean
 }
 
+interface ImageUploadProps {
+  category: string
+  onUploadComplete: (url: string) => void
+  existingImageUrl?: string
+  entityName?: string
+  aspectRatio?: "square" | "announcement" | "wide"
+  disabled?: boolean
+  enableDarkMode?: boolean
+}
+
 export function ImageUpload({
   category,
   onUploadComplete,
@@ -23,6 +33,7 @@ export function ImageUpload({
   entityName = "entity",
   aspectRatio = "square",
   disabled = false,
+  enableDarkMode = false,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null)
@@ -141,10 +152,14 @@ export function ImageUpload({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${enableDarkMode ? "dark" : ""}`}>
       <div
-        className={`relative border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50 w-32 h-32 ${
+        className={`relative border-2 border-dashed rounded-lg overflow-hidden w-32 h-32 transition-colors ${
           disabled ? "opacity-50 cursor-not-allowed" : ""
+        } ${
+          previewUrl && !imageError
+            ? "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+            : "border-slate-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/60"
         }`}
       >
         {previewUrl && !imageError ? (
@@ -160,9 +175,9 @@ export function ImageUpload({
           />
         ) : (
           // Show upload placeholder
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center text-slate-600 dark:text-slate-300">
             <svg
-              className="w-10 h-10 text-gray-400"
+              className="w-10 h-10 text-slate-400 dark:text-slate-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -175,7 +190,7 @@ export function ImageUpload({
                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm">
               {imageError ? "Failed to load image. Click to upload a new one." : "Click to upload an image"}
             </p>
             {imageError && previewUrl && (
@@ -195,6 +210,7 @@ export function ImageUpload({
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || disabled}
+          className="bg-white dark:bg-slate-900/70 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
         >
           {isUploading ? "Uploading..." : previewUrl ? "Change Image" : "Upload Image"}
         </Button>
@@ -209,6 +225,7 @@ export function ImageUpload({
               setUploadSuccess(false)
               onUploadComplete("")
             }}
+            className="bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-500"
           >
             Remove
           </Button>
@@ -233,11 +250,13 @@ export function ImageUpload({
       </div>
 
       {uploadSuccess && !imageError && previewUrl !== existingImageUrl && (
-        <div className="text-sm text-green-600 bg-green-50 p-2 rounded">✓ Profile picture uploaded successfully</div>
+        <div className="text-sm text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-900/40 p-2 rounded">
+          ✓ Profile picture uploaded successfully
+        </div>
       )}
 
       {imageError && (
-        <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+        <div className="text-sm text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-900/40 p-2 rounded">
           <p>⚠️ Image failed to load. This could be because:</p>
           <ul className="list-disc list-inside mt-1 text-xs">
             <li>The image URL is invalid or broken</li>

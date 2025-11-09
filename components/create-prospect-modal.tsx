@@ -243,6 +243,7 @@ export function CreateProspectModal({
                   existingImageUrl={formData.photoUrl || fallbackPhoto}
                   onUploadComplete={handleImageUpload}
                   entityName={formData.name || "prospect"}
+                  enableDarkMode={isDarkMode}
                 />
                 <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md">
                   Add a headshot so your staff can instantly recognize the athlete. If you skip this step we’ll use your
