@@ -527,47 +527,54 @@ export default function AthleteRecruitingDetailPage() {
 
   const getTimelineSteps = () => {
     return [
-      { 
-        label: "Starred", 
+      {
+        label: "Starred",
         date: athlete?.starred_at,
         completed: true,
-        icon: "⭐"
+        icon: "⭐",
+        accentColor: "#ef4444",
       },
-      { 
-        label: "First Contact", 
+      {
+        label: "First Contact",
         date: athlete?.first_contact_date,
         completed: !!athlete?.first_contact_date,
-        icon: "💬"
+        icon: "💬",
+        accentColor: "#3b82f6",
       },
-      { 
-        label: "Campus Visit", 
+      {
+        label: "Campus Visit",
         date: athlete?.campus_visit_date,
         completed: !!athlete?.campus_visit_date,
-        icon: "🏫"
+        icon: "🏫",
+        accentColor: "#6366f1",
       },
-      { 
-        label: "Offer Extended", 
+      {
+        label: "Offer Extended",
         date: athlete?.offer_date,
         completed: athlete?.offer_extended || false,
-        icon: "💰"
+        icon: "💰",
+        accentColor: "#f59e0b",
       },
-      { 
-        label: "Committed", 
+      {
+        label: "Committed",
         date: athlete?.committed_date,
         completed: !!athlete?.committed_date,
-        icon: "✅"
+        icon: "✅",
+        accentColor: "#22c55e",
       },
-      { 
-        label: "Applied", 
+      {
+        label: "Applied",
         date: athlete?.applied_date,
         completed: athlete?.has_applied || false,
-        icon: "📝"
+        icon: "📝",
+        accentColor: "#0ea5e9",
       },
-      { 
-        label: "Signed NLI", 
+      {
+        label: "Signed NLI",
         date: athlete?.nli_signed_date,
         completed: !!athlete?.nli_signed_date,
-        icon: "🖊️"
+        icon: "🖊️",
+        accentColor: "#a855f7",
       },
     ]
   }
@@ -694,7 +701,7 @@ export default function AthleteRecruitingDetailPage() {
 
               {/* Timeline steps */}
               <div className="relative flex justify-between overflow-x-auto pb-2">
-                {timelineSteps.map((step, index) => (
+        {timelineSteps.map((step, index) => (
                   <div
                     key={index}
                     className="flex flex-col items-center flex-shrink-0 relative"
@@ -706,10 +713,25 @@ export default function AthleteRecruitingDetailPage() {
                       w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-base md:text-lg mb-2 border-2
                       ${
                         step.completed
-                          ? "bg-[#BC0B03] border-[#BC0B03] text-white"
-                          : "bg-background border-border text-muted-foreground"
+                  ? ""
+                  : "bg-background border-border text-muted-foreground"
                       }
                     `}
+              style={
+                step.completed
+                  ? {
+                      background:
+                        "linear-gradient(135deg, " +
+                        (step.accentColor || "#2563eb") +
+                        " 0%, " +
+                        (step.accentColor ? `${step.accentColor}cc` : "#2563ebcc") +
+                        " 100%)",
+                      borderColor: step.accentColor || "#2563eb",
+                      color: "#fff",
+                      boxShadow: `0 6px 18px ${(step.accentColor || "#2563eb")}33`,
+                    }
+                  : undefined
+              }
                     >
                       {step.icon}
                     </div>
