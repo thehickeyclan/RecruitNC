@@ -948,6 +948,26 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
+      {additionalAchievements.length > 0 && (
+        <Card className="border-t-4 border-t-[#1D4ED8] shadow-md">
+          <div className="bg-gradient-to-r from-[#1D4ED8] to-[#1E3A8A] p-6">
+            <div className="flex items-center gap-3">
+              <Award className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Additional Achievements</h2>
+            </div>
+          </div>
+          <div className="p-8">
+            <ul className="list-disc list-inside space-y-2 text-gray-700">
+              {additionalAchievements.map((achievement, index) => (
+                <li key={`additional-achievement-${index}`} className="text-base leading-relaxed">
+                  {achievement}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      )}
+
       {/* Tournament Results - New Format */}
       {tournamentResultsComponent}
 
