@@ -165,6 +165,13 @@ export default function AthleteRecruitingDetailPage() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [isThemeMounted, setIsThemeMounted] = useState(false)
 
+  const inputFieldClass =
+    "w-full bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition"
+  const selectFieldClass =
+    "w-full bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition"
+  const textareaFieldClass =
+    "w-full bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-md focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition"
+
   const todayIso = new Date().toISOString().split("T")[0]
 
   const [athlete, setAthlete] = useState<Athlete | null>(null)
@@ -845,7 +852,7 @@ export default function AthleteRecruitingDetailPage() {
                           onClick={() => startEditing("academic_sat", athlete.academic_sat)}
                         >
                           {athlete.academic_sat ? (
-                            <p className="text-xl font-semibold text-gray-900">{athlete.academic_sat}</p>
+                            <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">{athlete.academic_sat}</p>
                           ) : (
                             <p className="text-xl font-semibold text-gray-400">-</p>
                           )}
@@ -882,7 +889,7 @@ export default function AthleteRecruitingDetailPage() {
                           onClick={() => startEditing("academic_act", athlete.academic_act)}
                         >
                           {athlete.academic_act ? (
-                            <p className="text-xl font-semibold text-gray-900">{athlete.academic_act}</p>
+                            <p className="text-xl font-semibold text-slate-900 dark:text-slate-100">{athlete.academic_act}</p>
                           ) : (
                             <p className="text-xl font-semibold text-gray-400">-</p>
                           )}
@@ -1093,18 +1100,18 @@ export default function AthleteRecruitingDetailPage() {
                 <CardContent className="space-y-3">
                   <div>
                     <Label className="text-sm text-gray-600">High School</Label>
-                    <p className="font-medium text-gray-900">{athlete.highschool}</p>
+                    <p className="font-medium text-slate-900 dark:text-slate-100">{athlete.highschool}</p>
                   </div>
                   {athlete.wrestlingClub && (
                     <div>
                       <Label className="text-sm text-gray-600">Club Team</Label>
-                      <p className="font-medium text-gray-900">{athlete.wrestlingClub}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{athlete.wrestlingClub}</p>
                     </div>
                   )}
                   {athlete.careerRecord && (
                     <div>
                       <Label className="text-sm text-gray-600">Career Record</Label>
-                      <p className="font-medium text-gray-900">{athlete.careerRecord}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{athlete.careerRecord}</p>
                     </div>
                   )}
                   {athlete.highlight_video_url && (
@@ -1203,7 +1210,7 @@ export default function AthleteRecruitingDetailPage() {
                       onClick={() => startEditing("careerRecord", athlete.careerRecord)}
                     >
                       {athlete.careerRecord ? (
-                        <p className="text-lg font-semibold text-gray-900">{athlete.careerRecord}</p>
+                        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{athlete.careerRecord}</p>
                       ) : (
                         <p className="text-sm text-gray-400 italic">Click to add career record</p>
                       )}
@@ -1568,7 +1575,7 @@ export default function AthleteRecruitingDetailPage() {
               <CardContent className="space-y-6">
                 {/* First Contact */}
                 <div className="border-b pb-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                     📧 First Contact
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1578,12 +1585,13 @@ export default function AthleteRecruitingDetailPage() {
                         type="date"
                         value={milestones.first_contact_date}
                         onChange={(e) => setMilestones({ ...milestones, first_contact_date: e.target.value })}
+                        className={inputFieldClass}
                       />
                     </div>
                     <div>
                       <Label>Method</Label>
                       <select
-                        className="w-full px-3 py-2 border rounded-md"
+                        className={selectFieldClass}
                         value={milestones.first_contact_method}
                         onChange={(e) => setMilestones({ ...milestones, first_contact_method: e.target.value })}
                       >
@@ -1600,7 +1608,7 @@ export default function AthleteRecruitingDetailPage() {
 
                 {/* Application */}
                 <div className="border-b pb-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                     📝 Application Status
                   </h3>
                   <div className="space-y-4">
@@ -1621,6 +1629,7 @@ export default function AthleteRecruitingDetailPage() {
                           type="date"
                           value={milestones.applied_date}
                           onChange={(e) => setMilestones({ ...milestones, applied_date: e.target.value })}
+                          className={inputFieldClass}
                         />
                       </div>
                     )}
@@ -1629,7 +1638,7 @@ export default function AthleteRecruitingDetailPage() {
 
                 {/* Campus Visits */}
                 <div className="border-b pb-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                     🏫 Campus Visits
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1639,6 +1648,7 @@ export default function AthleteRecruitingDetailPage() {
                         type="date"
                         value={milestones.campus_visit_date}
                         onChange={(e) => setMilestones({ ...milestones, campus_visit_date: e.target.value })}
+                        className={inputFieldClass}
                       />
                     </div>
                     <div>
@@ -1647,6 +1657,7 @@ export default function AthleteRecruitingDetailPage() {
                         type="date"
                         value={milestones.official_visit_date}
                         onChange={(e) => setMilestones({ ...milestones, official_visit_date: e.target.value })}
+                        className={inputFieldClass}
                       />
                     </div>
                   </div>
@@ -1654,7 +1665,7 @@ export default function AthleteRecruitingDetailPage() {
 
                 {/* Offer */}
                 <div className="border-b pb-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                     🎯 Offer Status
                   </h3>
                   <div className="space-y-4">
@@ -1676,6 +1687,7 @@ export default function AthleteRecruitingDetailPage() {
                             type="date"
                             value={milestones.offer_date}
                             onChange={(e) => setMilestones({ ...milestones, offer_date: e.target.value })}
+                          className={inputFieldClass}
                           />
                         </div>
                         <div>
@@ -1685,6 +1697,7 @@ export default function AthleteRecruitingDetailPage() {
                             value={milestones.offer_details}
                             onChange={(e) => setMilestones({ ...milestones, offer_details: e.target.value })}
                             rows={4}
+                            className={textareaFieldClass}
                           />
                         </div>
                       </div>
@@ -1694,7 +1707,7 @@ export default function AthleteRecruitingDetailPage() {
 
                 {/* Commitment */}
                 <div className="border-b pb-6">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                     ✅ Commitment
                   </h3>
                   <div>
@@ -1702,14 +1715,15 @@ export default function AthleteRecruitingDetailPage() {
                     <Input
                       type="date"
                       value={milestones.committed_date}
-                      onChange={(e) => setMilestones({ ...milestones, committed_date: e.target.value })}
+                    onChange={(e) => setMilestones({ ...milestones, committed_date: e.target.value })}
+                    className={inputFieldClass}
                     />
                   </div>
                 </div>
 
                 {/* NLI Signing */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
                     ✍️ National Letter of Intent
                   </h3>
                   <div>
@@ -1717,7 +1731,8 @@ export default function AthleteRecruitingDetailPage() {
                     <Input
                       type="date"
                       value={milestones.nli_signed_date}
-                      onChange={(e) => setMilestones({ ...milestones, nli_signed_date: e.target.value })}
+                    onChange={(e) => setMilestones({ ...milestones, nli_signed_date: e.target.value })}
+                    className={inputFieldClass}
                     />
                   </div>
                 </div>
@@ -1758,9 +1773,9 @@ export default function AthleteRecruitingDetailPage() {
                       placeholder="Enter EFC amount"
                       value={athlete.financial_efc || ""}
                       onChange={(e) => setAthlete({ ...athlete, financial_efc: parseFloat(e.target.value) || 0 })}
-                      className="mb-2"
+                      className={`${inputFieldClass} mb-2`}
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Amount family is expected to contribute toward college costs
                     </p>
                   </div>
@@ -1772,7 +1787,7 @@ export default function AthleteRecruitingDetailPage() {
                     </Label>
                     <select
                       id="ability_to_pay"
-                      className="w-full px-3 py-2 border rounded-md"
+                      className={selectFieldClass}
                       value={athlete.ability_to_pay || ""}
                       onChange={(e) => setAthlete({ ...athlete, ability_to_pay: e.target.value })}
                     >
@@ -1792,7 +1807,7 @@ export default function AthleteRecruitingDetailPage() {
                     </Label>
                     <select
                       id="aid_status"
-                      className="w-full px-3 py-2 border rounded-md"
+                      className={selectFieldClass}
                       value={athlete.aid_application_status || ""}
                       onChange={(e) => setAthlete({ ...athlete, aid_application_status: e.target.value })}
                     >
@@ -1854,6 +1869,7 @@ export default function AthleteRecruitingDetailPage() {
                     value={athlete.financial_aid_needs || ""}
                     onChange={(e) => setAthlete({ ...athlete, financial_aid_needs: e.target.value })}
                     rows={3}
+                    className={textareaFieldClass}
                   />
                 </div>
 
@@ -1961,7 +1977,7 @@ export default function AthleteRecruitingDetailPage() {
                 )}
 
                 {showActivityForm && (
-                  <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 space-y-3">
+                  <div className="border border-blue-200 bg-blue-50 dark:border-slate-700 dark:bg-slate-900/60 rounded-lg p-4 space-y-3 transition-colors">
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -1988,7 +2004,7 @@ export default function AthleteRecruitingDetailPage() {
                         <select
                           value={newActivity.actionType}
                           disabled={!canLogActivities}
-                          className="w-full px-3 py-2 border rounded-md text-sm"
+                        className={`${selectFieldClass} text-sm`}
                           onChange={(e) =>
                             setNewActivity((prev) => ({
                               ...prev,
@@ -2009,6 +2025,7 @@ export default function AthleteRecruitingDetailPage() {
                           type="date"
                           value={newActivity.actionDate}
                           disabled={!canLogActivities}
+                          className={inputFieldClass}
                           onChange={(e) =>
                             setNewActivity((prev) => ({
                               ...prev,
@@ -2028,6 +2045,7 @@ export default function AthleteRecruitingDetailPage() {
                           disabled={!canLogActivities}
                           placeholder="What happened?"
                           value={newActivity.description}
+                          className={textareaFieldClass}
                           onChange={(e) =>
                             setNewActivity((prev) => ({
                               ...prev,
@@ -2044,6 +2062,7 @@ export default function AthleteRecruitingDetailPage() {
                             disabled={!canLogActivities}
                             placeholder="Outcome or next steps"
                             value={newActivity.outcome}
+                            className={inputFieldClass}
                             onChange={(e) =>
                               setNewActivity((prev) => ({
                                 ...prev,
@@ -2059,6 +2078,7 @@ export default function AthleteRecruitingDetailPage() {
                               type="date"
                               disabled={!canLogActivities}
                               value={newActivity.followUpDate}
+                              className={inputFieldClass}
                               onChange={(e) =>
                                 setNewActivity((prev) => ({
                                   ...prev,
