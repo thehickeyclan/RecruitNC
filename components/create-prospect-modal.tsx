@@ -111,6 +111,7 @@ export function CreateProspectModal({
     graduationYear: "",
     weightclass: "",
     gender: "Male",
+    birthdate: "",
     email: "",
     phone: "",
     instagram: "",
@@ -152,6 +153,7 @@ export function CreateProspectModal({
         graduationyear: parseInt(formData.graduationYear),
         weightclass: formData.weightclass || null,
         gender: formData.gender,
+        birthdate: formData.birthdate ? new Date(formData.birthdate).toISOString() : null,
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
         instagram: formData.instagram.trim() || null,
@@ -188,6 +190,7 @@ export function CreateProspectModal({
         graduationYear: "",
         weightclass: "",
         gender: "Male",
+        birthdate: "",
         email: "",
         phone: "",
         instagram: "",
@@ -339,6 +342,19 @@ export function CreateProspectModal({
                       <SelectItem value="Female">Female</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label htmlFor="birthdate">Date of Birth</Label>
+                  <Input
+                    id="birthdate"
+                    type="date"
+                    value={formData.birthdate}
+                    onChange={(e) => handleChange("birthdate", e.target.value)}
+                    className={inputClass}
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Helps with NCAA eligibility tracking and graduation timelines.
+                  </p>
                 </div>
               </div>
             </div>

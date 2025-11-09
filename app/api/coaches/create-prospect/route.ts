@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       lead_source,
       lead_subsource,
       lead_source_detail,
+      birthdate,
       photoUrl,
       schoolId,
     } = body
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         graduationyear: graduationyear,
         weightclass: weightclass || null,
         gender: gender || "Male",
+        birthdate: birthdate || null,
         contactEmail: email || null,
         phone: phone || null,
         socialMedia: instagram ? { instagram: instagram } : null,
