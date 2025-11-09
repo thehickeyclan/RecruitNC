@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Loader2, UserPlus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { LEAD_SOURCE_OPTIONS } from "@/components/lead-source-form"
+import { ImageUpload } from "@/components/image-upload"
 
 interface CreateProspectModalProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ interface CreateProspectModalProps {
   onProspectCreated: () => void
   schoolId?: string
   isDarkMode?: boolean
+  schoolLogoUrl?: string | null
 }
 
 const US_STATES = [
@@ -90,9 +92,18 @@ export function CreateProspectModal({
   onProspectCreated,
   schoolId,
   isDarkMode = false,
+  schoolLogoUrl = null,
 }: CreateProspectModalProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const fallbackPhoto = schoolLogoUrl || "/wrestler-silhouette.png"
+  const inputClass =
+    "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+  const selectTriggerClass =
+    "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+  const selectContentClass = "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700"
+  const textareaClass =
+    "resize-none bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
   const [formData, setFormData] = useState({
     name: "",
     state: "",
@@ -107,10 +118,15 @@ export function CreateProspectModal({
     leadSource: "",
     leadSubsource: "",
     leadSourceDetail: "",
+    photoUrl: "",
   })
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleImageUpload = (url: string) => {
+    setFormData((prev) => ({ ...prev, photoUrl: url }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,25 +145,28 @@ export function CreateProspectModal({
         return
       }
 
+      const payload = {
+        name: formData.name.trim(),
+        state: formData.state,
+        highschool: formData.highschool.trim() || null,
+        graduationyear: parseInt(formData.graduationYear),
+        weightclass: formData.weightclass || null,
+        gender: formData.gender,
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null,
+        instagram: formData.instagram.trim() || null,
+        notes: formData.notes.trim() || null,
+        lead_source: formData.leadSource || null,
+        lead_subsource: formData.leadSubsource.trim() || null,
+        lead_source_detail: formData.leadSourceDetail.trim() || null,
+        photoUrl: formData.photoUrl || fallbackPhoto,
+        schoolId: schoolId,
+      }
+
       const response = await fetch("/api/coaches/create-prospect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          state: formData.state,
-          highschool: formData.highschool.trim() || null,
-          graduationyear: parseInt(formData.graduationYear),
-          weightclass: formData.weightclass || null,
-          gender: formData.gender,
-          email: formData.email.trim() || null,
-          phone: formData.phone.trim() || null,
-          instagram: formData.instagram.trim() || null,
-          notes: formData.notes.trim() || null,
-          lead_source: formData.leadSource || null,
-          lead_subsource: formData.leadSubsource.trim() || null,
-          lead_source_detail: formData.leadSourceDetail.trim() || null,
-          schoolId: schoolId,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
@@ -176,6 +195,7 @@ export function CreateProspectModal({
         leadSource: "",
         leadSubsource: "",
         leadSourceDetail: "",
+        photoUrl: "",
       })
 
       onProspectCreated()
@@ -208,6 +228,26 @@ export function CreateProspectModal({
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-6 py-4">
+            {/* Profile Photo */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-[#13294B] dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
+                Profile Photo
+              </h3>
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <ImageUpload
+                  key={formData.photoUrl || fallbackPhoto}
+                  category="prospects"
+                  existingImageUrl={formData.photoUrl || fallbackPhoto}
+                  onUploadComplete={handleImageUpload}
+                  entityName={formData.name || "prospect"}
+                />
+                <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md">
+                  Add a headshot so your staff can instantly recognize the athlete. If you skip this step we’ll use your
+                  school logo by default.
+                </p>
+              </div>
+            </div>
+
             {/* Basic Info */}
             <div className="space-y-4">
               <h3 className="font-semibold text-[#13294B] dark:text-slate-100 border-b border-slate-200 dark:border-slate-700 pb-2">
@@ -223,16 +263,17 @@ export function CreateProspectModal({
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="John Smith"
                     required
+                    className={inputClass}
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="state">State *</Label>
                   <Select value={formData.state} onValueChange={(val) => handleChange("state", val)}>
-                    <SelectTrigger>
+                    <SelectTrigger className={selectTriggerClass}>
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
+                    <SelectContent className={`max-h-[300px] ${selectContentClass}`}>
                       {US_STATES.map((state) => (
                         <SelectItem key={state.code} value={state.code}>
                           {state.name} ({state.code})
@@ -250,16 +291,17 @@ export function CreateProspectModal({
                     onChange={(e) => handleChange("highschool", e.target.value)}
                     placeholder="Liberty High School"
                     required
+                    className={inputClass}
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="graduationYear">Graduation Year *</Label>
                   <Select value={formData.graduationYear} onValueChange={(val) => handleChange("graduationYear", val)}>
-                    <SelectTrigger>
+                    <SelectTrigger className={selectTriggerClass}>
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={selectContentClass}>
                       {GRADUATION_YEARS.map((year) => (
                         <SelectItem key={year} value={year.toString()}>
                           Class of {year}
@@ -272,10 +314,10 @@ export function CreateProspectModal({
                 <div>
                   <Label htmlFor="weightclass">Weight Class</Label>
                   <Select value={formData.weightclass} onValueChange={(val) => handleChange("weightclass", val)}>
-                    <SelectTrigger>
+                    <SelectTrigger className={selectTriggerClass}>
                       <SelectValue placeholder="Select weight (optional)" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={selectContentClass}>
                       <SelectItem value="TBD">TBD</SelectItem>
                       {WEIGHT_CLASSES.map((weight) => (
                         <SelectItem key={weight} value={weight}>
@@ -289,10 +331,10 @@ export function CreateProspectModal({
                 <div>
                   <Label htmlFor="gender">Gender *</Label>
                   <Select value={formData.gender} onValueChange={(val) => handleChange("gender", val)} required>
-                    <SelectTrigger>
+                    <SelectTrigger className={selectTriggerClass}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={selectContentClass}>
                       <SelectItem value="Male">Male</SelectItem>
                       <SelectItem value="Female">Female</SelectItem>
                     </SelectContent>
@@ -316,6 +358,7 @@ export function CreateProspectModal({
                     value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="athlete@email.com"
+                    className={inputClass}
                   />
                 </div>
 
@@ -327,6 +370,7 @@ export function CreateProspectModal({
                     value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
                     placeholder="(555) 123-4567"
+                    className={inputClass}
                   />
                 </div>
 
@@ -337,6 +381,7 @@ export function CreateProspectModal({
                     value={formData.instagram}
                     onChange={(e) => handleChange("instagram", e.target.value)}
                     placeholder="@wrestler_username"
+                    className={inputClass}
                   />
                 </div>
               </div>
@@ -356,7 +401,7 @@ export function CreateProspectModal({
                   onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="E.g., Saw at Beast of the East, interested in D2 programs, 3.5 GPA..."
                   rows={4}
-                  className="resize-none"
+                  className={textareaClass}
                 />
               </div>
             </div>
@@ -374,10 +419,10 @@ export function CreateProspectModal({
                     value={formData.leadSource}
                     onValueChange={(val) => handleChange("leadSource", val)}
                   >
-                    <SelectTrigger className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100">
+                    <SelectTrigger className={selectTriggerClass}>
                       <SelectValue placeholder="Select source (optional)" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[240px] bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+                    <SelectContent className={`max-h-[240px] ${selectContentClass}`}>
                       {LEAD_SOURCE_OPTIONS.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option}
@@ -394,7 +439,7 @@ export function CreateProspectModal({
                     value={formData.leadSubsource}
                     onChange={(e) => handleChange("leadSubsource", e.target.value)}
                     placeholder='e.g. "Super 32", "Instagram DM"'
-                    className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    className={inputClass}
                   />
                 </div>
               </div>
@@ -407,7 +452,7 @@ export function CreateProspectModal({
                   onChange={(e) => handleChange("leadSourceDetail", e.target.value)}
                   placeholder='Optional notes (e.g. "Met family at UNC dual; coach follow-up scheduled")'
                   rows={3}
-                  className="resize-none bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className={textareaClass}
                 />
               </div>
             </div>

@@ -4744,6 +4744,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         onClose={() => setShowCreateProspectModal(false)}
         schoolId={params.schoolId}
         isDarkMode={isDarkMode}
+        schoolLogoUrl={schoolBranding?.logo_url || null}
         onProspectCreated={() => {
           setShowCreateProspectModal(false)
           fetchProspects() // Refresh the prospects list

@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       lead_source,
       lead_subsource,
       lead_source_detail,
+      photoUrl,
       schoolId,
     } = body
 
@@ -56,13 +57,15 @@ export async function POST(request: NextRequest) {
 
     // Get school name if schoolId provided
     let schoolName = null
+    let schoolLogo = null
     if (schoolId) {
       const { data: schoolData } = await supabase
         .from("schools")
-        .select("name")
+        .select("name, logo_url")
         .eq("id", schoolId)
         .single()
       schoolName = schoolData?.name
+      schoolLogo = schoolData?.logo_url
     }
 
     // Create the athlete record
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
         is_nc_athlete: isNCathlete,
         added_by_coach_id: session.user.id,
         bio: notes || null, // Store notes in bio field for now
+        photourl: photoUrl || schoolLogo || "/wrestler-silhouette.png",
         created_at: new Date().toISOString(),
       })
       .select()
