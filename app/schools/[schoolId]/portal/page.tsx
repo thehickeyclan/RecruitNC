@@ -2192,6 +2192,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             return prospectsWithBirthdays
           })()}
           onViewChange={(view) => setActivePortalView(view)}
+          brandColor={schoolBranding?.primary_color || "#0b1728"}
         />
       </div>
 

@@ -13,6 +13,27 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
+const DEFAULT_BRAND_COLOR = "#0b1728"
+
+const hexToRgb = (hex: string) => {
+  const sanitized = hex.replace("#", "")
+  if (sanitized.length !== 6) return null
+  const bigint = Number.parseInt(sanitized, 16)
+  return {
+    r: (bigint >> 16) & 255,
+    g: (bigint >> 8) & 255,
+    b: bigint & 255,
+  }
+}
+
+const rgbaFromHex = (hex: string, alpha: number) => {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return `rgba(37, 99, 235, ${alpha})` // fallback blue
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
+}
 
 interface RecruitingAction {
   id: string
@@ -36,6 +57,7 @@ interface AthleteWithBirthday {
   graduationyear?: number
   weightclass?: string
   pipeline_stage?: string | null
+  star_rating?: number | null
 }
 
 interface RecruitingActionsDashboardProps {
@@ -43,6 +65,7 @@ interface RecruitingActionsDashboardProps {
   athletes?: { id: string; name: string }[] // Optional: pass athletes from parent (e.g., prospects from portal)
   prospects?: AthleteWithBirthday[] // Optional: pass full prospects with birthdates
   onViewChange?: (view: "dashboard" | "calendar" | "activity") => void
+  brandColor?: string
 }
 
 export interface RecruitingActionsDashboardRef {
@@ -50,7 +73,7 @@ export interface RecruitingActionsDashboardRef {
 }
 
 export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardRef, RecruitingActionsDashboardProps>(
-  ({ schoolId, athletes: providedAthletes, prospects, onViewChange }, ref) => {
+  ({ schoolId, athletes: providedAthletes, prospects, onViewChange, brandColor }, ref) => {
   const [actions, setActions] = useState<RecruitingAction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -76,6 +99,8 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [selectedAthleteFilter, setSelectedAthleteFilter] = useState<string>("all")
   const [selectedCoachFilter, setSelectedCoachFilter] = useState<string>("all")
   const [tabValue, setTabValue] = useState<"dashboard" | "calendar" | "activity">("dashboard")
+  const [insightMode, setInsightMode] = useState<"athletes" | "stage">("athletes")
+  const resolvedBrandColor = brandColor || DEFAULT_BRAND_COLOR
 
   // Expose method to parent component to open the create activity modal
   useImperativeHandle(ref, () => ({
@@ -281,14 +306,91 @@ const activityTrendData = useMemo(() => {
   }, [actions])
 
   const activityTypes = useMemo(() => {
-  const set = new Set<string>()
-  actions.forEach((action) => {
-    if (action.action_type) {
-      set.add(normalizeActionType(action.action_type))
+    const set = new Set<string>()
+    actions.forEach((action) => {
+      if (action.action_type) {
+        set.add(normalizeActionType(action.action_type))
+      }
+    })
+    return Array.from(set).filter((type) => type !== "birthday")
+  }, [actions])
+
+  const cadenceStats = useMemo(() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+
+    const thresholdForYear = (graduationYear?: number | null) => {
+      if (!graduationYear) return 28
+      const yearsOut = graduationYear - currentYear
+      if (yearsOut <= 1) return 21
+      if (yearsOut === 2) return 28
+      if (yearsOut === 3) return 35
+      return 42
     }
-  })
-  return Array.from(set).filter((type) => type !== "birthday")
-}, [actions])
+
+    const lastTouchMap = new Map<string, Date>()
+    actions.forEach((action) => {
+      const date = new Date(action.action_date)
+      if (Number.isNaN(date.getTime())) return
+      const previous = lastTouchMap.get(action.athlete_id)
+      if (!previous || date > previous) {
+        lastTouchMap.set(action.athlete_id, date)
+      }
+    })
+
+    const details =
+      prospects?.map((prospect) => {
+        const lastTouch = lastTouchMap.get(prospect.id) || null
+        const threshold = thresholdForYear(prospect.graduationyear)
+        let status: "noActivity" | "overdue" | "warning" | "onTrack" = "noActivity"
+        let daysSince: number | null = null
+        if (lastTouch) {
+          daysSince = Math.floor((now.getTime() - lastTouch.getTime()) / (1000 * 60 * 60 * 24))
+          if (daysSince > threshold) {
+            status = "overdue"
+          } else if (daysSince > threshold * 0.6) {
+            status = "warning"
+          } else {
+            status = "onTrack"
+          }
+        }
+
+        return {
+          id: prospect.id,
+          name: prospect.name,
+          graduationYear: prospect.graduationyear ?? null,
+          starRating: prospect.star_rating ?? null,
+          lastTouch,
+          daysSince,
+          status,
+          threshold,
+        }
+      }) ?? []
+
+    const summary = details.reduce(
+      (acc, detail) => {
+        acc[detail.status] += 1
+        return acc
+      },
+      { noActivity: 0, overdue: 0, warning: 0, onTrack: 0 },
+    )
+
+    const overdueList = details
+      .filter((detail) => detail.status === "overdue")
+      .sort((a, b) => (b.daysSince ?? 0) - (a.daysSince ?? 0))
+    const warningList = details
+      .filter((detail) => detail.status === "warning")
+      .sort((a, b) => (b.daysSince ?? 0) - (a.daysSince ?? 0))
+    const noActivityList = details.filter((detail) => detail.status === "noActivity")
+
+    return {
+      summary,
+      details,
+      overdueList,
+      warningList,
+      noActivityList,
+    }
+  }, [actions, prospects])
 
   const STAGE_ORDER: { id: string; label: string }[] = [
     { id: "Prospect", label: "Prospect" },
@@ -362,9 +464,18 @@ const activityTrendData = useMemo(() => {
     cutoff.setDate(cutoff.getDate() - 30)
 
     const nameMap = new Map<string, string>()
+    const starMap = new Map<string, number | null>()
     ;(prospects || []).forEach((prospect) => {
-      nameMap.set(prospect.id, prospect.name)
+      if (prospect.name) {
+        nameMap.set(prospect.id, prospect.name)
+      }
+      starMap.set(prospect.id, prospect.star_rating ?? null)
     })
+
+    const activityList =
+      activityTypes.length > 0
+        ? activityTypes
+        : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
 
     const leaderboardCounts = new Map<
       string,
@@ -372,23 +483,30 @@ const activityTrendData = useMemo(() => {
         name: string
         counts: Record<string, number>
         total: number
+        starRating: number | null
       }
     >()
 
-    const activityList =
-      activityTypes.length > 0
-        ? activityTypes
-        : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
-
-    const addAthleteCount = (athleteId: string, displayName: string, activityType: string) => {
+    const addAthleteCount = (
+      athleteId: string,
+      displayName: string,
+      starRating: number | null,
+      activityType: string,
+    ) => {
       if (!leaderboardCounts.has(athleteId)) {
         const initialCounts: Record<string, number> = {}
         activityList.forEach((type) => {
           initialCounts[type] = 0
         })
-        leaderboardCounts.set(athleteId, { name: displayName, counts: initialCounts, total: 0 })
+        leaderboardCounts.set(athleteId, {
+          name: displayName,
+          counts: initialCounts,
+          total: 0,
+          starRating,
+        })
       }
       const athleteCounts = leaderboardCounts.get(athleteId)!
+      athleteCounts.starRating = starRating
       athleteCounts.counts[activityType] = (athleteCounts.counts[activityType] || 0) + 1
       athleteCounts.total += 1
     }
@@ -402,19 +520,298 @@ const activityTrendData = useMemo(() => {
       if (type === "birthday") return
       const displayName =
         nameMap.get(action.athlete_id) || action.athlete_name || "Unknown Athlete"
-      addAthleteCount(action.athlete_id, displayName, type)
+      const starRating = starMap.get(action.athlete_id) ?? null
+      addAthleteCount(action.athlete_id, displayName, starRating, type)
     })
 
     const data = Array.from(leaderboardCounts.entries())
       .map(([, value]) => value)
       .filter((entry) => entry.total > 0)
-      .sort((a, b) => b.total - a.total)
+      .sort((a, b) => {
+        const starDiff = (b.starRating ?? 0) - (a.starRating ?? 0)
+        if (starDiff !== 0) return starDiff
+        return b.total - a.total
+      })
       .slice(0, 10)
 
     const max = data.reduce((maxValue, entry) => Math.max(maxValue, entry.total), 0)
 
     return { data, activityList, max }
   }, [actions, activityTypes, prospects])
+
+  const renderCadenceSummary = () => {
+    const { summary, overdueList, warningList, noActivityList } = cadenceStats
+    const formatList = (list: typeof overdueList) =>
+      list
+        .slice(0, 3)
+        .map((detail) =>
+          detail.daysSince !== null ? `${detail.name} (${detail.daysSince}d)` : detail.name,
+        )
+        .join(", ")
+
+    const cards = [
+      {
+        key: "overdue",
+        label: "Overdue",
+        value: summary.overdue,
+        description: "Touches past cadence",
+        highlight: rgbaFromHex(resolvedBrandColor, 0.18),
+        border: rgbaFromHex(resolvedBrandColor, 0.35),
+        text: resolvedBrandColor,
+        detail: summary.overdue > 0 ? `Top: ${formatList(overdueList)}` : "",
+      },
+      {
+        key: "warning",
+        label: "Needs attention",
+        value: summary.warning,
+        description: "Approaching cadence",
+        highlight: rgbaFromHex(resolvedBrandColor, 0.12),
+        border: rgbaFromHex(resolvedBrandColor, 0.25),
+        text: resolvedBrandColor,
+        detail: summary.warning > 0 ? `Top: ${formatList(warningList)}` : "",
+      },
+      {
+        key: "noActivity",
+        label: "No activity",
+        value: summary.noActivity,
+        description: "No touches yet logged",
+        highlight: rgbaFromHex(resolvedBrandColor, 0.08),
+        border: "rgba(148, 163, 184, 0.35)",
+        text: resolvedBrandColor,
+        detail: summary.noActivity > 0 ? `Examples: ${formatList(noActivityList)}` : "",
+      },
+      {
+        key: "onTrack",
+        label: "On track",
+        value: summary.onTrack,
+        description: "Touches within cadence",
+        highlight: "rgba(15, 23, 42, 0.08)",
+        border: "rgba(148, 163, 184, 0.35)",
+        text: "rgba(15, 23, 42, 0.9)",
+        detail: "",
+      },
+    ]
+
+    return (
+      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card) => (
+          <div
+            key={card.key}
+            className="rounded-xl border p-4"
+            style={{ backgroundColor: card.highlight, borderColor: card.border }}
+          >
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {card.label}
+            </div>
+            <div className="mt-2 text-2xl font-bold" style={{ color: card.text }}>
+              {card.value}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
+            {card.detail && (
+              <p className="text-xs text-muted-foreground/80 mt-2 leading-relaxed">{card.detail}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  const renderTrendCard = () => {
+    if (activityTrendData.length === 0) {
+      return (
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
+          </div>
+          <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
+            No activity logged in the last 14 days. Consider scheduling follow-ups.
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
+          <span className="text-xs font-medium text-muted-foreground">
+            {activityTrendData.reduce((sum, point) => sum + (Number(point.total) || 0), 0)} total logs
+          </span>
+        </div>
+        <div className="h-60">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={activityTrendData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+              <Tooltip
+                formatter={(value: number, key: string) => [
+                  `${value} ${key === "total" ? "activities" : formatActionType(key)}`,
+                  key === "total" ? "Total" : formatActionType(key),
+                ]}
+                labelFormatter={(label) => label}
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "0.75rem",
+                  color: "hsl(var(--foreground))",
+                }}
+              />
+              <Legend formatter={(value) => (value === "total" ? "Total" : formatActionType(value))} iconType="circle" />
+              {activityTypes.map((type) => (
+                <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).fill} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    )
+  }
+
+  const renderHeatmapCard = () => {
+    if (stageHeatmap.rows.length === 0) {
+      return (
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-muted-foreground">Stage touch coverage (last 30 days)</h4>
+          </div>
+          <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
+            No touch activity recorded for the selected window.
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-muted-foreground">Stage touch coverage (last 30 days)</h4>
+          <span className="text-xs font-medium text-muted-foreground">
+            {stageHeatmap.rows
+              .map((row) => Object.values(row.counts).reduce((sum, value) => sum + value, 0))
+              .reduce((sum, value) => sum + value, 0)}{" "}
+            logged touches
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[520px]">
+            <div className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
+              <div className="h-10" />
+              {stageHeatmap.activityList.map((type) => (
+                <div
+                  key={type}
+                  className="h-10 px-2 flex items-center justify-center text-xs font-medium text-muted-foreground border border-border/50 bg-muted/40 first:border-l border-t-0"
+                >
+                  {formatActionType(type)}
+                </div>
+              ))}
+            </div>
+            {stageHeatmap.rows.map((row) => (
+              <div key={row.stage} className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
+                <div className="h-12 flex items-center px-3 text-sm font-medium border border-border/60 bg-muted/40 first:border-l">
+                  {row.stage}
+                </div>
+                {stageHeatmap.activityList.map((type) => {
+                  const count = row.counts[type] || 0
+                  const intensity = stageHeatmap.max === 0 ? 0 : count / stageHeatmap.max
+                  const bg =
+                    intensity === 0
+                      ? "rgba(148,163,184,0.15)"
+                      : rgbaFromHex(resolvedBrandColor, 0.1 + intensity * 0.6)
+                  const textColor = intensity > 0.5 ? "text-white" : "text-foreground"
+                  return (
+                    <div
+                      key={`${row.stage}-${type}`}
+                      className={`h-12 border border-border/60 flex items-center justify-center text-sm font-semibold transition-colors ${textColor}`}
+                      style={{ backgroundColor: bg }}
+                    >
+                      {count}
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const renderLeaderboardCard = () => {
+    if (athleteActivityLeaderboard.data.length === 0) {
+      return (
+        <div className="rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-muted-foreground">Priority athletes (last 30 days)</h4>
+          </div>
+          <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
+            No athlete activity to display yet. Log touches to populate this view.
+          </div>
+        </div>
+      )
+    }
+
+    const highlights = athleteActivityLeaderboard.data.slice(0, 3)
+
+    return (
+      <div className="rounded-xl border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-muted-foreground">Priority athletes (last 30 days)</h4>
+          <span className="text-xs font-medium text-muted-foreground">
+            Sorted by star rating and total touches
+          </span>
+        </div>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={athleteActivityLeaderboard.data.map((entry) => ({
+                name: entry.name,
+                ...entry.counts,
+              }))}
+              layout="vertical"
+              margin={{ left: 120, right: 16, top: 8, bottom: 8 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+              <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+              <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" width={120} tick={{ fontSize: 12 }} />
+              <Tooltip
+                formatter={(value: number, key: string) => [`${value} ${formatActionType(key)}`, formatActionType(key)]}
+                labelFormatter={(label) => label}
+                contentStyle={{
+                  backgroundColor: "hsl(var(--card))",
+                  borderColor: "hsl(var(--border))",
+                  borderRadius: "0.75rem",
+                  color: "hsl(var(--foreground))",
+                }}
+              />
+              <Legend formatter={(value) => formatActionType(value)} iconType="circle" />
+              {athleteActivityLeaderboard.activityList.map((type) => (
+                <Bar key={type} dataKey={type} stackId="leaderboard" fill={getActivityColor(type).fill} radius={[0, 6, 6, 0]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-3 text-xs text-muted-foreground/90">
+          Top focus:
+          <ul className="mt-1 space-y-1">
+            {highlights.map((entry) => (
+              <li key={entry.name} className="flex items-center gap-2">
+                <span className="font-medium text-foreground">{entry.name}</span>
+                {entry.starRating ? (
+                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: rgbaFromHex(resolvedBrandColor, 0.2), color: resolvedBrandColor }}>
+                    {entry.starRating}★
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground uppercase">Unrated</span>
+                )}
+                <span className="text-[10px] text-muted-foreground">{entry.total} touches</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )
+  }
 
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
@@ -652,18 +1049,37 @@ const activityTrendData = useMemo(() => {
 
   const getActivityColor = (actionType: string) => {
     const key = normalizeActionType(actionType)
-    const colors: Record<string, { bg: string; text: string; border: string; fill: string }> = {
-      call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", fill: "rgba(59,130,246,0.85)" },
-      text: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", fill: "rgba(124,58,237,0.75)" },
-      email: { bg: "bg-green-100", text: "text-green-800", border: "border-green-200", fill: "rgba(34,197,94,0.75)" },
-      visit: { bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200", fill: "rgba(249,115,22,0.75)" },
-      prospect_camp: { bg: "bg-amber-100", text: "text-amber-900", border: "border-amber-200", fill: "rgba(245,158,11,0.75)" },
-      watched_live: { bg: "bg-sky-100", text: "text-sky-800", border: "border-sky-200", fill: "rgba(56,189,248,0.75)" },
-      letter: { bg: "bg-rose-100", text: "text-rose-800", border: "border-rose-200", fill: "rgba(244,114,182,0.75)" },
-      social_media: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200", fill: "rgba(99,102,241,0.75)" },
-      other: { bg: "bg-slate-200", text: "text-slate-800", border: "border-slate-300", fill: "rgba(148,163,184,0.75)" },
+    const fillAlpha: Record<string, number> = {
+      call: 0.95,
+      text: 0.8,
+      email: 0.65,
+      visit: 0.75,
+      prospect_camp: 0.6,
+      watched_live: 0.55,
+      letter: 0.5,
+      social_media: 0.45,
+      other: 0.4,
     }
-    return colors[key] || { bg: "bg-muted", text: "text-muted-foreground", border: "border-border", fill: "rgba(148,163,184,0.6)" }
+    const fillColor = rgbaFromHex(resolvedBrandColor, fillAlpha[key] ?? 0.5)
+    const colors: Record<string, { bg: string; text: string; border: string; fill: string }> = {
+      call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", fill: fillColor },
+      text: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", fill: fillColor },
+      email: { bg: "bg-green-100", text: "text-green-800", border: "border-green-200", fill: fillColor },
+      visit: { bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200", fill: fillColor },
+      prospect_camp: { bg: "bg-amber-100", text: "text-amber-900", border: "border-amber-200", fill: fillColor },
+      watched_live: { bg: "bg-sky-100", text: "text-sky-800", border: "border-sky-200", fill: fillColor },
+      letter: { bg: "bg-rose-100", text: "text-rose-800", border: "border-rose-200", fill: fillColor },
+      social_media: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200", fill: fillColor },
+      other: { bg: "bg-slate-200", text: "text-slate-800", border: "border-slate-300", fill: fillColor },
+    }
+    return (
+      colors[key] || {
+        bg: "bg-muted",
+        text: "text-muted-foreground",
+        border: "border-border",
+        fill: rgbaFromHex(resolvedBrandColor, 0.45),
+      }
+    )
   }
 
   const handleComplete = async (actionId: string) => {
@@ -1189,281 +1605,54 @@ const activityTrendData = useMemo(() => {
               <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
             </CardHeader>
             <CardContent>
-              {(activityTrendData.length > 0 || stageHeatmap.rows.length > 0) && (
-                <div className="mb-6 grid gap-6 lg:grid-cols-2">
-                  {activityTrendData.length > 0 && (
-                    <div className="rounded-xl border border-border p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {activityTrendData.reduce((sum, point) => sum + (Number(point.total) || 0), 0)} total logs
-                        </span>
-                      </div>
-                      <div className="h-60">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={activityTrendData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                            <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                            <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                            <Tooltip
-                              formatter={(value: number, key: string) => [
-                                `${value} ${key === "total" ? "activities" : formatActionType(key)}`,
-                                key === "total" ? "Total" : formatActionType(key),
-                              ]}
-                              labelFormatter={(label) => label}
-                              contentStyle={{
-                                backgroundColor: "hsl(var(--card))",
-                                borderColor: "hsl(var(--border))",
-                                borderRadius: "0.75rem",
-                                color: "hsl(var(--foreground))",
-                              }}
-                            />
-                            <Legend
-                              formatter={(value) => (value === "total" ? "Total" : formatActionType(value))}
-                              iconType="circle"
-                            />
-                            {activityTypes.map((type) => (
-                              <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).fill} />
-                            ))}
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  )}
-
-                  {stageHeatmap.rows.length > 0 && (
-                    <div className="rounded-xl border border-border p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-semibold text-muted-foreground">Stage touch coverage (last 30 days)</h4>
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {stageHeatmap.rows
-                            .map((row) => Object.values(row.counts).reduce((sum, value) => sum + value, 0))
-                            .reduce((sum, value) => sum + value, 0)}{" "}
-                          logged touches
-                        </span>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <div className="min-w-[520px]">
-                          <div className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
-                            <div className="h-10" />
-                            {stageHeatmap.activityList.map((type) => (
-                              <div
-                                key={type}
-                                className="h-10 px-2 flex items-center justify-center text-xs font-medium text-muted-foreground border border-border/50 bg-muted/40 first:border-l border-t-0"
-                              >
-                                {formatActionType(type)}
-                              </div>
-                            ))}
-                          </div>
-                          {stageHeatmap.rows.map((row, index) => (
-                            <div
-                              key={row.stage}
-                              className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]"
-                            >
-                              <div className="h-12 flex items-center px-3 text-sm font-medium border border-border/60 bg-muted/40 first:border-l">
-                                {row.stage}
-                              </div>
-                              {stageHeatmap.activityList.map((type) => {
-                                const count = row.counts[type] || 0
-                                const intensity =
-                                  stageHeatmap.max === 0 ? 0 : count / stageHeatmap.max
-                                const bg = intensity === 0 ? "rgba(148,163,184,0.15)" : `rgba(59,130,246,${0.15 + intensity * 0.7})`
-                                const textColor = intensity > 0.5 ? "text-white" : "text-foreground"
-                                return (
-                                  <div
-                                    key={`${row.stage}-${type}`}
-                                    className={`h-12 border border-border/60 flex items-center justify-center text-sm font-semibold transition-colors ${textColor}`}
-                                    style={{ backgroundColor: bg }}
-                                  >
-                                    {count}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              {athleteActivityLeaderboard.data.length > 0 && (
-                <div className="mb-6 rounded-xl border border-border p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-muted-foreground">Activity leaderboard (last 30 days)</h4>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {athleteActivityLeaderboard.data.reduce((sum, entry) => sum + entry.total, 0)} total logs
-                    </span>
-                  </div>
-                  <div className="h-[340px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={athleteActivityLeaderboard.data.map((entry) => ({
-                          name: entry.name,
-                          ...entry.counts,
-                        }))}
-                        layout="vertical"
-                        margin={{ left: 120, right: 16, top: 8, bottom: 8 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-                        <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" width={120} tick={{ fontSize: 12 }} />
-                        <Tooltip
-                          formatter={(value: number, key: string) => [`${value} ${formatActionType(key)}`, formatActionType(key)]}
-                          labelFormatter={(label) => label}
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            borderColor: "hsl(var(--border))",
-                            borderRadius: "0.75rem",
-                            color: "hsl(var(--foreground))",
-                          }}
-                        />
-                        <Legend formatter={(value) => formatActionType(value)} iconType="circle" />
-                        {athleteActivityLeaderboard.activityList.map((type) => (
-                          <Bar
-                            key={type}
-                            dataKey={type}
-                            stackId="leaderboard"
-                            fill={getActivityColor(type).fill}
-                            radius={[0, 6, 6, 0]}
-                          />
-                        ))}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              )}
-              <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
-                  {athleteFilterOptions.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="activity-athlete-filter" className="text-sm font-medium text-muted-foreground">
-                        Athlete
-                      </Label>
-                      <Select value={selectedAthleteFilter} onValueChange={setSelectedAthleteFilter}>
-                        <SelectTrigger id="activity-athlete-filter" className="w-[200px]">
-                          <SelectValue placeholder="All athletes" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All athletes</SelectItem>
-                          {athleteFilterOptions.map((athlete) => (
-                            <SelectItem key={athlete.id} value={athlete.id}>
-                              {athlete.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {coachFilterOptions.length > 1 && (
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="activity-coach-filter" className="text-sm font-medium text-muted-foreground">
-                        Coach
-                      </Label>
-                      <Select value={selectedCoachFilter} onValueChange={setSelectedCoachFilter}>
-                        <SelectTrigger id="activity-coach-filter" className="w-[200px]">
-                          <SelectValue placeholder="All coaches" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All coaches</SelectItem>
-                          {coachFilterOptions.map((coach) => (
-                            <SelectItem key={coach.id} value={coach.id}>
-                              {coach.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-                {(selectedAthleteFilter !== "all" || selectedCoachFilter !== "all") && (
+              {renderCadenceSummary()}
+              <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <span className="text-sm font-semibold text-muted-foreground">Pipeline insights</span>
+                <div className="inline-flex items-center rounded-full border border-border overflow-hidden">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="self-start md:self-auto"
-                    onClick={() => {
-                      setSelectedAthleteFilter("all")
-                      setSelectedCoachFilter("all")
-                    }}
+                    onClick={() => setInsightMode("athletes")}
+                    className={`rounded-none px-4 py-1 text-xs font-semibold ${
+                      insightMode === "athletes" ? "text-white" : "text-muted-foreground"
+                    }`}
+                    style={
+                      insightMode === "athletes"
+                        ? { backgroundColor: rgbaFromHex(resolvedBrandColor, 0.9) }
+                        : {}
+                    }
                   >
-                    Clear filters
+                    Athletes
                   </Button>
-                )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setInsightMode("stage")}
+                    className={`rounded-none px-4 py-1 text-xs font-semibold ${
+                      insightMode === "stage" ? "text-white" : "text-muted-foreground"
+                    }`}
+                    style={
+                      insightMode === "stage"
+                        ? { backgroundColor: rgbaFromHex(resolvedBrandColor, 0.9) }
+                        : {}
+                    }
+                  >
+                    Stage
+                  </Button>
+                </div>
               </div>
-              {filteredActions.length === 0 ? (
-                <p className="py-8 text-center text-muted-foreground">
-                  {selectedAthleteFilter === "all"
-                    ? "No activities logged yet."
-                    : "No activities logged for this athlete yet."}
-                </p>
+              {insightMode === "athletes" ? (
+                <div className="mb-6 grid gap-6 lg:grid-cols-2">
+                  {renderTrendCard()}
+                  {renderLeaderboardCard()}
+                </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Athlete</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Coach</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Activity Type</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Date</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Follow-up</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Description</th>
-                        <th className="text-left py-3 px-4 font-semibold text-sm text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredActions.map((action) => (
-                        <tr key={action.id} className={`border-b border-border hover:bg-muted ${isCompleted(action) ? 'opacity-60' : ''}`}>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={isCompleted(action)}
-                                onCheckedChange={() => handleComplete(action.id)}
-                              />
-                              <img
-                                src={action.athlete_photo || "/placeholder.svg?height=32&width=32"}
-                                alt={action.athlete_name}
-                                className="w-8 h-8 rounded-full object-cover"
-                              />
-                              <span className={`font-medium text-sm ${isCompleted(action) ? 'text-muted-foreground/70 line-through' : ''}`}>{action.athlete_name}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-muted-foreground">{action.coach_name}</td>
-                          <td className="py-3 px-4">
-                            <Badge variant="outline">{formatActionType(action.action_type)}</Badge>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-muted-foreground">{formatDate(action.action_date)}</td>
-                          <td className="py-3 px-4 text-sm text-muted-foreground">
-                            {action.follow_up_date ? formatDate(action.follow_up_date) : "-"}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs truncate">
-                            {action.description || "-"}
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleEdit(action)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                onClick={() => handleDelete(action.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mb-6 grid gap-6 lg:grid-cols-2">
+                  {renderTrendCard()}
+                  {renderHeatmapCard()}
                 </div>
               )}
+              {/* additional insights rendered via renderLeaderboardCard/renderHeatmapCard */}
             </CardContent>
           </Card>
         </TabsContent>
