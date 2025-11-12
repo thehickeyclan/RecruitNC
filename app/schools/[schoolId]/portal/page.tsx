@@ -189,6 +189,18 @@ const ACTIVITY_LABELS = ACTIVITY_OPTIONS.reduce<Record<string, string>>((acc, op
   return acc
 }, {})
 
+const ACTIVITY_EMOJI_MAP: Record<string, string> = {
+  call: "📞",
+  text: "💬",
+  email: "📧",
+  visit: "🏛️",
+  prospect_camp: "🏕️",
+  watched_live: "👀",
+  letter: "✍️",
+  social_media: "📱",
+  other: "📝",
+}
+
 const buildInitialBulkActivityForm = () => ({
   actionType: ACTIVITY_OPTIONS[0].value,
   actionDate: new Date().toISOString().split("T")[0],
@@ -1240,6 +1252,16 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     if (diffDays >= 7 && diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
 
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  }
+
+  const getCoachInitials = (name?: string | null) => {
+    if (!name) return ""
+    const initials = name
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("")
+    return initials.slice(0, 2)
   }
 
   const formatPhoneNumber = (phone?: string | null) => {
@@ -3044,44 +3066,49 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                           >
                             {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
                           </td>
-                          <td
-                            className="p-4 align-middle"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-between gap-3">
-                              <div className="flex flex-col">
-                                <span className="text-sm font-medium text-foreground">
-                                  {lastActivityLabel ?? "No activity yet"}
-                                </span>
-                                {lastActivity?.coach_name && (
-                                  <span className="text-xs text-muted-foreground">
-                                    by {lastActivity.coach_name}
-                                  </span>
+                              <div className="min-w-0">
+                                {lastActivity ? (
+                                  <div className="flex items-center gap-2 text-sm text-foreground">
+                                    <span className="font-medium">
+                                      {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                    <span className="text-lg" aria-label={lastActivityLabel ?? "Activity"}>
+                                      {ACTIVITY_EMOJI_MAP[lastActivity.action_type] ?? ACTIVITY_EMOJI_MAP.other}
+                                    </span>
+                                    {lastActivity.coach_name && (
+                                      <span className="rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-muted-foreground dark:bg-slate-800 dark:text-slate-200">
+                                        {getCoachInitials(lastActivity.coach_name)}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">No activity yet</span>
                                 )}
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button
-                                    variant="outline"
-                                    size="sm"
+                                    variant="ghost"
+                                    size="icon"
                                     disabled={isLoggingActivity || !canLogActivities}
-                                    className="rounded-full"
+                                    className="h-8 w-8 rounded-full border border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200"
+                                    aria-label="Log activity"
                                   >
                                     {isLoggingActivity ? (
-                                      <>
-                                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                        Logging...
-                                      </>
-                                    ) : !canLogActivities ? (
-                                      "Admin Preview"
+                                      <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
-                                      "Log Activity"
+                                      <span className="text-lg leading-none">+</span>
                                     )}
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
                                   align="end"
-                                  className="min-w-[200px] bg-white text-slate-800 dark:bg-slate-900 dark:text-slate-100 border border-border shadow-lg"
+                                  className="min-w-[220px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100"
                                 >
                                   <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground dark:text-slate-300">
                                     {canLogActivities ? "Log Activity" : "Impersonate a coach to log"}
@@ -3093,45 +3120,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                       onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
                                       className="text-sm text-foreground dark:text-slate-100 dark:focus:bg-slate-800 focus:bg-muted"
                                     >
+                                      <span className="mr-2 text-lg">
+                                        {ACTIVITY_EMOJI_MAP[option.value] ?? ACTIVITY_EMOJI_MAP.other}
+                                      </span>
                                       {option.label}
                                     </DropdownMenuItem>
                                   ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
-                          </td>
-                          <td
-                            className="p-4 align-middle text-muted-foreground text-sm cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
-                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""
-                              }`
-                              router.push(url)
-                            }}
-                          >
-                            {lastActivity ? (
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-medium text-foreground">
-                                  {lastActivityLabel ?? "Activity"}
-                                </span>
-                                <span className="text-xs text-muted-foreground">
-                                  {lastActivity.coach_name ? `by ${lastActivity.coach_name}` : " "}
-                                  {" · "}
-                                  {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                  {" ("}
-                                  {formatLastContactDate(lastActivity.action_date)}
-                                  {")"}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col">
-                                <span className="font-medium text-foreground">No activity yet</span>
-                              </div>
-                            )}
                           </td>
                         </tr>
                       )
