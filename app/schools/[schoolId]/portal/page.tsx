@@ -1254,9 +1254,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
-  const getCoachInitials = (name?: string | null) => {
-    if (!name) return ""
-    const initials = name
+  const getInitials = (value?: string | null) => {
+    if (!value) return ""
+    const initials = value
       .split(" ")
       .filter(Boolean)
       .map((part) => part[0]?.toUpperCase() ?? "")
@@ -1976,6 +1976,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         aValue = a.star_rating || 0
         bValue = b.star_rating || 0
         break
+      case "lastActivity": {
+        const lastA = getLastActivityForAthlete(a.id)
+        const lastB = getLastActivityForAthlete(b.id)
+        aValue = lastA ? new Date(lastA.action_date).getTime() : 0
+        bValue = lastB ? new Date(lastB.action_date).getTime() : 0
+        break
+      }
       default:
         return 0
     }
@@ -2242,10 +2249,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   console.log("[v0] Browse NC Rankings button clicked")
                   window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
                 }}
-                className="flex-1 h-12 px-3 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
-                style={{
-                  backgroundColor: schoolBranding?.primary_color || "#3B82F6",
-                }}
+                className="flex-1 h-12 px-3 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
               >
                 <Search className="h-4 w-4 mr-1" />
                 Rankings
@@ -2602,10 +2606,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   console.log("[v0] Browse NC Rankings button clicked")
                   window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
                 }}
-                className="h-11 px-5 rounded-lg font-semibold text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
-                style={{
-                  backgroundColor: schoolBranding?.primary_color || "#3B82F6",
-                }}
+                className="h-11 px-5 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
               >
                 <Search className="h-[18px] w-[18px] mr-2" />
                 Browse NC Rankings
@@ -2900,7 +2901,17 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         )}
                       </div>
                     </th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Last Activity</th>
+                    <th
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("lastActivity")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Last Activity
+                        {sortColumn === "lastActivity" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
@@ -2938,20 +2949,62 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               aria-label={`Select ${prospect.name}`}
                             />
                           </td>
-                          <td 
+                          <td
                             className="p-4 align-middle cursor-pointer"
                             onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
+                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""
+                              }`
                               router.push(url)
                             }}
                           >
                             <div className="flex items-center gap-3">
-                              <img
-                                src={prospect.photourl || "/placeholder.svg?height=40&width=40&query=wrestler"}
-                                alt={prospect.name}
-                                className="w-10 h-10 rounded-lg object-cover border border-border"
-                              />
-                              <span className="font-medium text-foreground">{prospect.name}</span>
+                              {prospect.photourl ? (
+                                <img
+                                  src={prospect.photourl}
+                                  alt={prospect.name}
+                                  className="w-10 h-10 rounded-lg object-cover border border-border"
+                                />
+                              ) : (
+                                <div
+                                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-sm font-semibold uppercase text-white"
+                                  style={{ backgroundColor: stageColor || "#334155" }}
+                                >
+                                  {getInitials(prospect.name)}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium text-foreground truncate block">{prospect.name}</span>
+                                {(prospect.phone || prospect.contactEmail) && (
+                                  <span className="mt-0.5 block text-xs text-muted-foreground truncate">
+                                    {prospect.phone && formatPhoneNumber(prospect.phone)}
+                                    {prospect.phone && prospect.contactEmail ? " • " : ""}
+                                    {prospect.contactEmail}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="ml-2 flex items-center gap-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                                {prospect.phone && (
+                                  <a
+                                    href={`tel:${normalizePhoneForTel(prospect.phone)}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    aria-label={`Call ${prospect.name}`}
+                                  >
+                                    <Phone className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                                {prospect.contactEmail && (
+                                  <a
+                                    href={`mailto:${prospect.contactEmail}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    aria-label={`Email ${prospect.name}`}
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td 
@@ -2985,36 +3038,36 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             className="p-4 align-middle"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Select
-                              value={prospect.pipeline_stage || "Prospect"}
-                              onValueChange={(value) => handleStageChange(prospect.id, value)}
-                            >
-                              <SelectTrigger className="h-auto w-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:ring-offset-0">
-                                <Badge
-                                  className="text-xs cursor-pointer hover:opacity-90 transition-opacity"
-                                  style={{
-                                    backgroundColor: stageColor,
-                                    color: "white",
-                                  }}
-                                >
-                                  {stage.label}
-                                  <ChevronDown className="ml-1 h-3 w-3 inline" />
-                                </Badge>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PIPELINE_STAGES_BASE.map((s) => (
-                                  <SelectItem key={s.id} value={s.id}>
-                                    <div className="flex items-center gap-2">
-                                      <div
-                                        className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: getStageColor(s.id, schoolBranding?.primary_color) }}
-                                      />
-                                      <span>{s.label}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          <Select
+                            value={prospect.pipeline_stage || "Prospect"}
+                            onValueChange={(value) => handleStageChange(prospect.id, value)}
+                          >
+                            <SelectTrigger className="h-auto w-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:ring-offset-0">
+                              <Badge
+                                className="text-xs cursor-pointer hover:opacity-90 transition-opacity"
+                                style={{
+                                  backgroundColor: stageColor,
+                                  color: "white",
+                                }}
+                              >
+                                {stage.label}
+                                <ChevronDown className="ml-1 h-3 w-3 inline" />
+                              </Badge>
+                            </SelectTrigger>
+                            <SelectContent className="min-w-[180px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100">
+                              {PIPELINE_STAGES_BASE.map((s) => (
+                                <SelectItem key={s.id} value={s.id} className="text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: getStageColor(s.id, schoolBranding?.primary_color) }}
+                                    />
+                                    <span>{s.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           </td>
                           <td
                             className="p-4 align-middle"
@@ -3082,7 +3135,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                     </span>
                                     {lastActivity.coach_name && (
                                       <span className="rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-muted-foreground dark:bg-slate-800 dark:text-slate-200">
-                                        {getCoachInitials(lastActivity.coach_name)}
+                                        {getInitials(lastActivity.coach_name)}
                                       </span>
                                     )}
                                   </div>
@@ -4741,7 +4794,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         onClose={() => setShowCreateProspectModal(false)}
         schoolId={params.schoolId}
         isDarkMode={isDarkMode}
-        schoolLogoUrl={schoolBranding?.logo_url || null}
         onProspectCreated={() => {
           setShowCreateProspectModal(false)
           fetchProspects() // Refresh the prospects list

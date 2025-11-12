@@ -18,7 +18,6 @@ interface CreateProspectModalProps {
   onProspectCreated: () => void
   schoolId?: string
   isDarkMode?: boolean
-  schoolLogoUrl?: string | null
 }
 
 const US_STATES = [
@@ -92,11 +91,9 @@ export function CreateProspectModal({
   onProspectCreated,
   schoolId,
   isDarkMode = false,
-  schoolLogoUrl = null,
 }: CreateProspectModalProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const fallbackPhoto = schoolLogoUrl || "/wrestler-silhouette.png"
   const inputClass =
     "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
   const selectTriggerClass =
@@ -161,7 +158,7 @@ export function CreateProspectModal({
         lead_source: formData.leadSource || null,
         lead_subsource: formData.leadSubsource.trim() || null,
         lead_source_detail: formData.leadSourceDetail.trim() || null,
-        photoUrl: formData.photoUrl || fallbackPhoto,
+        photoUrl: formData.photoUrl || null,
         schoolId: schoolId,
       }
 
@@ -238,16 +235,16 @@ export function CreateProspectModal({
               </h3>
               <div className="flex flex-col md:flex-row md:items-center gap-4">
                 <ImageUpload
-                  key={formData.photoUrl || fallbackPhoto}
+                  key={formData.photoUrl || "new-prospect"}
                   category="prospects"
-                  existingImageUrl={formData.photoUrl || fallbackPhoto}
+                  existingImageUrl={formData.photoUrl || undefined}
                   onUploadComplete={handleImageUpload}
                   entityName={formData.name || "prospect"}
                   enableDarkMode={isDarkMode}
                 />
                 <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md">
-                  Add a headshot so your staff can instantly recognize the athlete. If you skip this step we’ll use your
-                  school logo by default.
+                  Add a headshot so your staff can instantly recognize the athlete. If you skip this step we’ll show their
+                  initials with stage colors automatically.
                 </p>
               </div>
             </div>

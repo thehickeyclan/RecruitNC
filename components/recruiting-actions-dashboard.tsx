@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, forwardRef, useImperativeHandle } from "react"
+import { useEffect, useState, forwardRef, useImperativeHandle, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
 
 interface RecruitingAction {
   id: string
@@ -70,6 +71,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     outcome: "",
   })
   const [availableAthletes, setAvailableAthletes] = useState<{ id: string; name: string }[]>([])
+  const [selectedAthleteFilter, setSelectedAthleteFilter] = useState<string>("all")
 
   // Expose method to parent component to open the create activity modal
   useImperativeHandle(ref, () => ({
@@ -156,6 +158,58 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       setIsLoading(false)
     }
   }
+
+  const athleteFilterOptions = useMemo(() => {
+    const unique = new Map<string, string>()
+    actions.forEach((action) => {
+      if (action.athlete_id && action.athlete_name) {
+        unique.set(action.athlete_id, action.athlete_name)
+      }
+    })
+    return Array.from(unique.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [actions])
+
+  const filteredActions = useMemo(() => {
+    if (selectedAthleteFilter === "all") {
+      return actions
+    }
+    return actions.filter((action) => action.athlete_id === selectedAthleteFilter)
+  }, [actions, selectedAthleteFilter])
+
+  const activityTrendData = useMemo(() => {
+    const daysToShow = 14
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const dateBuckets = new Map<string, number>()
+    for (let i = daysToShow - 1; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(today.getDate() - i)
+      const key = date.toISOString().split("T")[0]
+      dateBuckets.set(key, 0)
+    }
+
+    actions.forEach((action) => {
+      const rawDate = action.action_date || action.follow_up_date
+      if (!rawDate) return
+      const normalized = rawDate.includes("T") ? rawDate.split("T")[0] : rawDate
+      if (!dateBuckets.has(normalized)) return
+      dateBuckets.set(normalized, (dateBuckets.get(normalized) || 0) + 1)
+    })
+
+    return Array.from(dateBuckets.entries()).map(([key, count]) => {
+      const date = new Date(`${key}T00:00:00`)
+      return {
+        fullDate: key,
+        date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        count,
+      }
+    })
+  }, [actions])
+
+  const hasTrendActivity = useMemo(() => activityTrendData.some((dataPoint) => dataPoint.count > 0), [activityTrendData])
 
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
@@ -609,7 +663,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
               </TabsTrigger>
               <TabsTrigger value="table" className="gap-2">
                 <TableIcon className="h-4 w-4" />
-                Today's Activity
+                Activity
             </TabsTrigger>
           </TabsList>
         </div>
@@ -971,12 +1025,83 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
         {/* Table Tab - List view */}
         <TabsContent value="table">
           <Card>
-            <CardHeader>
-              <CardTitle>All Activities</CardTitle>
+            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle>Activity Log</CardTitle>
+                <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
+              </div>
+              {athleteFilterOptions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="activity-athlete-filter" className="hidden text-sm font-medium text-muted-foreground md:block">
+                    Athlete
+                  </Label>
+                  <Select value={selectedAthleteFilter} onValueChange={setSelectedAthleteFilter}>
+                    <SelectTrigger id="activity-athlete-filter" className="w-[200px]">
+                      <SelectValue placeholder="All athletes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All athletes</SelectItem>
+                      {athleteFilterOptions.map((athlete) => (
+                        <SelectItem key={athlete.id} value={athlete.id}>
+                          {athlete.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
-              {actions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No activities scheduled</p>
+              {activityTrendData.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
+                    {hasTrendActivity && (
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {activityTrendData.reduce((sum, point) => sum + point.count, 0)} total logs
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={activityTrendData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                        <YAxis
+                          allowDecimals={false}
+                          stroke="hsl(var(--muted-foreground))"
+                          width={35}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip
+                          formatter={(value: number) => [`${value} activities`, "Activity"]}
+                          labelFormatter={(label) => label}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            borderColor: "hsl(var(--border))",
+                            borderRadius: "0.75rem",
+                            color: "hsl(var(--foreground))",
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="count"
+                          stroke="#BC0B03"
+                          strokeWidth={2}
+                          dot={{ r: 3, strokeWidth: 2, stroke: "#BC0B03", fill: "white" }}
+                          activeDot={{ r: 5 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+              {filteredActions.length === 0 ? (
+                <p className="py-8 text-center text-muted-foreground">
+                  {selectedAthleteFilter === "all"
+                    ? "No activities logged yet."
+                    : "No activities logged for this athlete yet."}
+                </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -992,7 +1117,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                       </tr>
                     </thead>
                     <tbody>
-                      {actions.map((action) => (
+                      {filteredActions.map((action) => (
                         <tr key={action.id} className={`border-b border-border hover:bg-muted ${isCompleted(action) ? 'opacity-60' : ''}`}>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
