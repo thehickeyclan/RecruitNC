@@ -357,6 +357,65 @@ const activityTrendData = useMemo(() => {
     return { rows, activityList, max }
   }, [actions, activityTypes, prospects])
 
+  const athleteActivityLeaderboard = useMemo(() => {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 30)
+
+    const nameMap = new Map<string, string>()
+    ;(prospects || []).forEach((prospect) => {
+      nameMap.set(prospect.id, prospect.name)
+    })
+
+    const leaderboardCounts = new Map<
+      string,
+      {
+        name: string
+        counts: Record<string, number>
+        total: number
+      }
+    >()
+
+    const activityList =
+      activityTypes.length > 0
+        ? activityTypes
+        : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
+
+    const addAthleteCount = (athleteId: string, displayName: string, activityType: string) => {
+      if (!leaderboardCounts.has(athleteId)) {
+        const initialCounts: Record<string, number> = {}
+        activityList.forEach((type) => {
+          initialCounts[type] = 0
+        })
+        leaderboardCounts.set(athleteId, { name: displayName, counts: initialCounts, total: 0 })
+      }
+      const athleteCounts = leaderboardCounts.get(athleteId)!
+      athleteCounts.counts[activityType] = (athleteCounts.counts[activityType] || 0) + 1
+      athleteCounts.total += 1
+    }
+
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const actionDate = new Date(action.action_date)
+      if (Number.isNaN(actionDate.getTime())) return
+      if (actionDate < cutoff) return
+      const type = normalizeActionType(action.action_type)
+      if (type === "birthday") return
+      const displayName =
+        nameMap.get(action.athlete_id) || action.athlete_name || "Unknown Athlete"
+      addAthleteCount(action.athlete_id, displayName, type)
+    })
+
+    const data = Array.from(leaderboardCounts.entries())
+      .map(([, value]) => value)
+      .filter((entry) => entry.total > 0)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 10)
+
+    const max = data.reduce((maxValue, entry) => Math.max(maxValue, entry.total), 0)
+
+    return { data, activityList, max }
+  }, [actions, activityTypes, prospects])
+
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
     if (!prospects) {
@@ -1131,7 +1190,7 @@ const activityTrendData = useMemo(() => {
             </CardHeader>
             <CardContent>
               {(activityTrendData.length > 0 || stageHeatmap.rows.length > 0) && (
-                <div className="mb-6 grid gap-6 xl:grid-cols-2">
+                <div className="mb-6 grid gap-6 lg:grid-cols-2">
                   {activityTrendData.length > 0 && (
                     <div className="rounded-xl border border-border p-4">
                       <div className="flex items-center justify-between mb-3">
@@ -1226,6 +1285,52 @@ const activityTrendData = useMemo(() => {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+              {athleteActivityLeaderboard.data.length > 0 && (
+                <div className="mb-6 rounded-xl border border-border p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-muted-foreground">Activity leaderboard (last 30 days)</h4>
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {athleteActivityLeaderboard.data.reduce((sum, entry) => sum + entry.total, 0)} total logs
+                    </span>
+                  </div>
+                  <div className="h-[340px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={athleteActivityLeaderboard.data.map((entry) => ({
+                          name: entry.name,
+                          ...entry.counts,
+                        }))}
+                        layout="vertical"
+                        margin={{ left: 120, right: 16, top: 8, bottom: 8 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                        <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                        <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" width={120} tick={{ fontSize: 12 }} />
+                        <Tooltip
+                          formatter={(value: number, key: string) => [`${value} ${formatActionType(key)}`, formatActionType(key)]}
+                          labelFormatter={(label) => label}
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            borderColor: "hsl(var(--border))",
+                            borderRadius: "0.75rem",
+                            color: "hsl(var(--foreground))",
+                          }}
+                        />
+                        <Legend formatter={(value) => formatActionType(value)} iconType="circle" />
+                        {athleteActivityLeaderboard.activityList.map((type) => (
+                          <Bar
+                            key={type}
+                            dataKey={type}
+                            stackId="leaderboard"
+                            fill={getActivityColor(type).fill}
+                            radius={[0, 6, 6, 0]}
+                          />
+                        ))}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               )}
               <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
