@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
 
 interface RecruitingAction {
   id: string
@@ -72,6 +72,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   })
   const [availableAthletes, setAvailableAthletes] = useState<{ id: string; name: string }[]>([])
   const [selectedAthleteFilter, setSelectedAthleteFilter] = useState<string>("all")
+  const [selectedCoachFilter, setSelectedCoachFilter] = useState<string>("all")
 
   // Expose method to parent component to open the create activity modal
   useImperativeHandle(ref, () => ({
@@ -171,45 +172,85 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [actions])
 
+const coachFilterOptions = useMemo(() => {
+  const unique = new Map<string, string>()
+  actions.forEach((action) => {
+    if (action.coach_user_id && action.coach_name) {
+      unique.set(action.coach_user_id, action.coach_name)
+    }
+  })
+  return Array.from(unique.entries())
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+}, [actions])
+
   const filteredActions = useMemo(() => {
     if (selectedAthleteFilter === "all") {
-      return actions
+    return selectedCoachFilter === "all"
+      ? actions
+      : actions.filter((action) => action.coach_user_id === selectedCoachFilter)
     }
-    return actions.filter((action) => action.athlete_id === selectedAthleteFilter)
-  }, [actions, selectedAthleteFilter])
+  return actions.filter((action) => {
+    const matchesAthlete = action.athlete_id === selectedAthleteFilter
+    const matchesCoach = selectedCoachFilter === "all" || action.coach_user_id === selectedCoachFilter
+    return matchesAthlete && matchesCoach
+  })
+}, [actions, selectedAthleteFilter, selectedCoachFilter])
 
-  const activityTrendData = useMemo(() => {
+const activityTrendData = useMemo(() => {
     const daysToShow = 14
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const dateBuckets = new Map<string, number>()
+  const dateBuckets = new Map<
+    string,
+    {
+      total: number
+      [key: string]: number
+    }
+  >()
     for (let i = daysToShow - 1; i >= 0; i--) {
       const date = new Date(today)
       date.setDate(today.getDate() - i)
       const key = date.toISOString().split("T")[0]
-      dateBuckets.set(key, 0)
+    dateBuckets.set(key, { total: 0 })
     }
 
-    actions.forEach((action) => {
+  actions.forEach((action) => {
       const rawDate = action.action_date || action.follow_up_date
       if (!rawDate) return
       const normalized = rawDate.includes("T") ? rawDate.split("T")[0] : rawDate
-      if (!dateBuckets.has(normalized)) return
-      dateBuckets.set(normalized, (dateBuckets.get(normalized) || 0) + 1)
+    const bucket = dateBuckets.get(normalized)
+    if (!bucket) return
+    bucket.total += 1
+    const key = action.action_type || "other"
+    bucket[key] = (bucket[key] || 0) + 1
     })
 
-    return Array.from(dateBuckets.entries()).map(([key, count]) => {
+  return Array.from(dateBuckets.entries()).map(([key, bucket]) => {
       const date = new Date(`${key}T00:00:00`)
-      return {
+    const formatted: Record<string, number | string> = {
         fullDate: key,
         date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        count,
+      total: bucket.total,
       }
+    Object.entries(bucket).forEach(([type, value]) => {
+      if (type === "total") return
+      formatted[type] = value
+    })
+    return formatted
     })
   }, [actions])
 
-  const hasTrendActivity = useMemo(() => activityTrendData.some((dataPoint) => dataPoint.count > 0), [activityTrendData])
+const activityTypes = useMemo(() => {
+  const set = new Set<string>()
+  actions.forEach((action) => {
+    if (action.action_type) {
+      set.add(action.action_type)
+    }
+  })
+  return Array.from(set)
+}, [actions])
 
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
@@ -1025,56 +1066,30 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
         {/* Table Tab - List view */}
         <TabsContent value="table">
           <Card>
-            <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <CardTitle>Activity Log</CardTitle>
-                <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
-              </div>
-              {athleteFilterOptions.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="activity-athlete-filter" className="hidden text-sm font-medium text-muted-foreground md:block">
-                    Athlete
-                  </Label>
-                  <Select value={selectedAthleteFilter} onValueChange={setSelectedAthleteFilter}>
-                    <SelectTrigger id="activity-athlete-filter" className="w-[200px]">
-                      <SelectValue placeholder="All athletes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All athletes</SelectItem>
-                      {athleteFilterOptions.map((athlete) => (
-                        <SelectItem key={athlete.id} value={athlete.id}>
-                          {athlete.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+            <CardHeader>
+              <CardTitle>Activity Log</CardTitle>
+              <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
             </CardHeader>
             <CardContent>
               {activityTrendData.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
-                    {hasTrendActivity && (
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {activityTrendData.reduce((sum, point) => sum + point.count, 0)} total logs
-                      </span>
-                    )}
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {activityTrendData.reduce((sum, point) => sum + (Number(point.total) || 0), 0)} total logs
+                    </span>
                   </div>
-                  <div className="h-56">
+                  <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={activityTrendData}>
+                      <BarChart data={activityTrendData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                         <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                        <YAxis
-                          allowDecimals={false}
-                          stroke="hsl(var(--muted-foreground))"
-                          width={35}
-                          tick={{ fontSize: 12 }}
-                        />
+                        <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                         <Tooltip
-                          formatter={(value: number) => [`${value} activities`, "Activity"]}
+                          formatter={(value: number, key: string) => [
+                            `${value} ${key === "total" ? "activities" : formatActionType(key)}`,
+                            key === "total" ? "Total" : formatActionType(key),
+                          ]}
                           labelFormatter={(label) => label}
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
@@ -1083,19 +1098,75 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
                             color: "hsl(var(--foreground))",
                           }}
                         />
-                        <Line
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#BC0B03"
-                          strokeWidth={2}
-                          dot={{ r: 3, strokeWidth: 2, stroke: "#BC0B03", fill: "white" }}
-                          activeDot={{ r: 5 }}
+                        <Legend
+                          formatter={(value) => (value === "total" ? "Total" : formatActionType(value))}
+                          iconType="circle"
                         />
-                      </LineChart>
+                        {activityTypes.map((type) => (
+                          <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).bgColor} />
+                        ))}
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               )}
+              <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+                  {athleteFilterOptions.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="activity-athlete-filter" className="text-sm font-medium text-muted-foreground">
+                        Athlete
+                      </Label>
+                      <Select value={selectedAthleteFilter} onValueChange={setSelectedAthleteFilter}>
+                        <SelectTrigger id="activity-athlete-filter" className="w-[200px]">
+                          <SelectValue placeholder="All athletes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All athletes</SelectItem>
+                          {athleteFilterOptions.map((athlete) => (
+                            <SelectItem key={athlete.id} value={athlete.id}>
+                              {athlete.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {coachFilterOptions.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="activity-coach-filter" className="text-sm font-medium text-muted-foreground">
+                        Coach
+                      </Label>
+                      <Select value={selectedCoachFilter} onValueChange={setSelectedCoachFilter}>
+                        <SelectTrigger id="activity-coach-filter" className="w-[200px]">
+                          <SelectValue placeholder="All coaches" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All coaches</SelectItem>
+                          {coachFilterOptions.map((coach) => (
+                            <SelectItem key={coach.id} value={coach.id}>
+                              {coach.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+                {(selectedAthleteFilter !== "all" || selectedCoachFilter !== "all") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="self-start md:self-auto"
+                    onClick={() => {
+                      setSelectedAthleteFilter("all")
+                      setSelectedCoachFilter("all")
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
               {filteredActions.length === 0 ? (
                 <p className="py-8 text-center text-muted-foreground">
                   {selectedAthleteFilter === "all"

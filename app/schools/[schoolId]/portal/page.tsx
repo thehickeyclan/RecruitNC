@@ -2975,11 +2975,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               )}
                               <div className="flex-1 min-w-0">
                                 <span className="font-medium text-foreground truncate block">{prospect.name}</span>
-                                {(prospect.phone || prospect.contactEmail) && (
+                                {prospect.phone && (
                                   <span className="mt-0.5 block text-xs text-muted-foreground truncate">
-                                    {prospect.phone && formatPhoneNumber(prospect.phone)}
-                                    {prospect.phone && prospect.contactEmail ? " • " : ""}
-                                    {prospect.contactEmail}
+                                    {formatPhoneNumber(prospect.phone)}
                                   </span>
                                 )}
                               </div>
