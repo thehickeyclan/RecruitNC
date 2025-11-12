@@ -36,6 +36,80 @@ export async function GET(request: Request) {
 
     console.log(`🔍 Featured Athletes API: Starting fetch for year ${targetYear}`)
 
+    // First attempt: latest commitments across all classes
+    const recentCommitmentsResult = await safeSupabaseQuery(
+      () =>
+        supabase
+          .from("athletes")
+          .select("*")
+          .or("not.commitmentdate.is.null,not.commitment_date.is.null")
+          .order("commitment_date", { ascending: false })
+          .order("commitmentdate", { ascending: false })
+          .limit(25),
+      "Featured Athletes API - Recent Commitments",
+    )
+
+    let recentCommitmentAthletes: any[] = []
+
+    if (recentCommitmentsResult.success && Array.isArray(recentCommitmentsResult.data) && recentCommitmentsResult.data.length > 0) {
+      const sortedCommitments = recentCommitmentsResult.data
+        .filter((athlete: any) => {
+          const dateStr = athlete.commitment_date || athlete.commitmentdate || athlete.commitmentDate
+          return Boolean(dateStr && !Number.isNaN(new Date(dateStr).getTime()))
+        })
+        .sort((a: any, b: any) => {
+          const dateA = new Date(a.commitment_date || a.commitmentdate || a.commitmentDate || 0).getTime()
+          const dateB = new Date(b.commitment_date || b.commitmentdate || b.commitmentDate || 0).getTime()
+          return dateB - dateA
+        })
+        .slice(0, 3)
+
+      recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
+        id: athlete.id?.toString() || "",
+        name: athlete.name || "Unknown",
+        highschool: athlete.highschool || "Unknown High School",
+        college: athlete.college || "Unknown College",
+        division: athlete.division || "Unknown Division",
+        graduationyear: athlete.graduationyear || targetYear,
+        photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
+        weightclass: athlete.weightclass || "Unknown",
+        college_weight_class: athlete.college_weight_class || null,
+        hs_weight_class: athlete.weightclass || "Unknown",
+        wrestlingclub: athlete.wrestlingClub || athlete.wrestlingclub || "",
+        club: athlete.wrestlingClub || athlete.wrestlingclub || "",
+        wrestlingClub: athlete.wrestlingClub || athlete.wrestlingclub || "",
+        achievements: Array.isArray(athlete.achievements)
+          ? athlete.achievements
+          : typeof athlete.achievements === "string"
+            ? athlete.achievements
+                .split(",")
+                .map((a: string) => a.trim())
+                .filter(Boolean)
+            : [],
+        team: athlete.team || "",
+        gender: athlete.gender || "Male",
+        commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
+      }))
+
+      if (recentCommitmentAthletes.length >= 3) {
+        console.log(`✅ Featured Athletes API: Returning ${recentCommitmentAthletes.length} recent commitments`)
+
+        return NextResponse.json(
+          {
+            success: true,
+            athletes: recentCommitmentAthletes.slice(0, 3),
+          },
+          {
+            headers: {
+              "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
+              "CDN-Cache-Control": "public, s-maxage=600",
+              "Vercel-CDN-Cache-Control": "public, s-maxage=600",
+            },
+          },
+        )
+      }
+    }
+
     if (targetYear === 2025) {
       console.log("🔍 Featured Athletes API: Fetching specific 2025 athletes")
 
@@ -80,10 +154,14 @@ export async function GET(request: Request) {
           gender: athlete.gender || "Male",
         }))
 
+        const combinedAthletes = [...recentCommitmentAthletes, ...mappedAthletes]
+          .filter((athlete, index, self) => self.findIndex((a) => a.id === athlete.id) === index)
+          .slice(0, 3)
+
         return NextResponse.json(
           {
             success: true,
-            athletes: mappedAthletes,
+            athletes: combinedAthletes,
           },
           {
             headers: {
@@ -172,6 +250,7 @@ export async function GET(request: Request) {
             : [],
         team: athlete.team || "",
         gender: athlete.gender || "Male",
+        commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
       }
     })
 
@@ -180,10 +259,14 @@ export async function GET(request: Request) {
     console.log("[v0] First athlete in response:", JSON.stringify(mappedAthletes[0], null, 2))
     console.log("[v0] ===== API RESPONSE DEBUG END =====")
 
+    const combinedFallback = [...recentCommitmentAthletes, ...mappedAthletes]
+      .filter((athlete, index, self) => self.findIndex((a) => a.id === athlete.id) === index)
+      .slice(0, 3)
+
     return NextResponse.json(
       {
         success: true,
-        athletes: mappedAthletes,
+        athletes: combinedFallback,
       },
       {
         headers: {
