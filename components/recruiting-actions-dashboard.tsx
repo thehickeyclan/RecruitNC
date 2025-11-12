@@ -203,6 +203,37 @@ const coachFilterOptions = useMemo(() => {
   })
 }, [actions, selectedAthleteFilter, selectedCoachFilter])
 
+  const normalizeActionType = (type?: string | null) => {
+    const value = (type || "other").toLowerCase()
+    switch (value) {
+      case "phone_call":
+      case "call":
+        return "call"
+      case "text_message":
+      case "text":
+        return "text"
+      case "email":
+        return "email"
+      case "official_visit":
+      case "visit":
+        return "visit"
+      case "prospect_camp":
+      case "camp":
+        return "prospect_camp"
+      case "watched_live":
+      case "watched":
+        return "watched_live"
+      case "letter":
+      case "handwritten_letter":
+        return "letter"
+      case "social_media":
+      case "dm":
+        return "social_media"
+      default:
+        return value || "other"
+    }
+  }
+
 const activityTrendData = useMemo(() => {
     const daysToShow = 14
     const today = new Date()
@@ -248,7 +279,7 @@ const activityTrendData = useMemo(() => {
     })
   }, [actions])
 
-const activityTypes = useMemo(() => {
+  const activityTypes = useMemo(() => {
   const set = new Set<string>()
   actions.forEach((action) => {
     if (action.action_type) {
@@ -261,12 +292,9 @@ const activityTypes = useMemo(() => {
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
     if (!prospects) {
-      console.log("[v0] No prospects provided for birthday events")
       return []
     }
-    
-    console.log("[v0] Processing birthdays for", prospects.length, "prospects")
-    
+
     // Get today's date in local timezone (EST)
     const now = new Date()
     const currentYear = now.getFullYear()
@@ -277,16 +305,7 @@ const activityTypes = useMemo(() => {
     console.log("[v0] Today (local):", today.toISOString(), "Date:", today.getDate(), "Month:", today.getMonth() + 1)
     
     const birthdayEvents = prospects
-      .filter(p => {
-        const hasBirthdate = !!p.birthdate
-        if (hasBirthdate) {
-          console.log("[v0] Found birthdate for", p.name, ":", p.birthdate)
-          if (p.name.toLowerCase().includes('meadows')) {
-            console.log("[v0] 🎂 ANDREW MEADOWS RAW BIRTHDATE:", p.birthdate, "Type:", typeof p.birthdate)
-          }
-        }
-        return hasBirthdate
-      })
+      .filter((p) => !!p.birthdate)
       .map(prospect => {
         try {
           // Parse birthdate as local date to avoid timezone issues
@@ -295,12 +314,6 @@ const activityTypes = useMemo(() => {
             : prospect.birthdate!
           const [year, month, day] = dateStr.split('-').map(Number)
           
-          console.log("[v0] Parsed birth date for", prospect.name, ":", { year, month, day, dateStr })
-          
-          if (prospect.name.toLowerCase().includes('meadows')) {
-            console.log("[v0] 🎂 ANDREW MEADOWS PARSED:", { dateStr, year, month, day })
-          }
-          
           // Create this year's birthday in local timezone
           const thisYearBirthday = new Date(currentYear, month - 1, day)
           thisYearBirthday.setHours(0, 0, 0, 0)
@@ -308,10 +321,6 @@ const activityTypes = useMemo(() => {
           // Create next year's birthday in local timezone
           const nextYearBirthday = new Date(currentYear + 1, month - 1, day)
           nextYearBirthday.setHours(0, 0, 0, 0)
-          
-          console.log("[v0] This year birthday (local):", thisYearBirthday.toISOString(), "Date:", thisYearBirthday.getDate(), "Month:", thisYearBirthday.getMonth() + 1)
-          console.log("[v0] Today (local):", today.toISOString(), "Date:", today.getDate(), "Month:", today.getMonth() + 1)
-          console.log("[v0] Comparison:", thisYearBirthday.getTime(), "vs", today.getTime(), "diff:", thisYearBirthday.getTime() - today.getTime())
           
           // If birthday already passed this year, use next year
           const birthday = thisYearBirthday < today 
@@ -334,17 +343,12 @@ const activityTypes = useMemo(() => {
             athlete_photo: prospect.photourl || "",
             coach_name: "",
           } as RecruitingAction
-          
-          console.log("[v0] Created birthday event for", prospect.name, "on", event.follow_up_date, "Birthday date:", birthday.getDate(), "Month:", birthday.getMonth() + 1)
           return event
         } catch (e) {
-          console.error("[v0] Error processing birthday for", prospect.name, ":", e)
           return null
         }
       })
       .filter((e): e is RecruitingAction => e !== null)
-    
-    console.log("[v0] Created", birthdayEvents.length, "birthday events")
     return birthdayEvents
   }
 
@@ -368,11 +372,6 @@ const activityTypes = useMemo(() => {
     const birthdayEvents = getBirthdayEvents()
     const allEvents = [...actions, ...birthdayEvents]
 
-    console.log("[v0] Total actions to categorize:", actions.length)
-    console.log("[v0] Birthday events:", birthdayEvents.length)
-    console.log("[v0] Today (local):", today.toISOString(), "Date:", today.getDate(), "Month:", today.getMonth() + 1)
-    console.log("[v0] End of month:", endOfMonth.toISOString(), "Date:", endOfMonth.getDate(), "Month:", endOfMonth.getMonth() + 1)
-
     allEvents.forEach((action) => {
       // If action has a follow_up_date, categorize by that date
       if (action.follow_up_date) {
@@ -388,19 +387,6 @@ const activityTypes = useMemo(() => {
 
         const daysDiff = Math.floor((actionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
-        if (action.action_type === "birthday") {
-          console.log("[v0] Birthday categorization:", {
-            name: action.athlete_name,
-            follow_up_date: action.follow_up_date,
-            actionDate: actionDate.toISOString(),
-            actionDateLocal: `${actionDate.getMonth() + 1}/${actionDate.getDate()}`,
-            today: today.toISOString(),
-            todayLocal: `${today.getMonth() + 1}/${today.getDate()}`,
-            daysDiff,
-            isThisMonth: actionDate <= endOfMonth
-          })
-        }
-
         if (daysDiff < 0) {
           overdueActions.push(action)
         } else if (daysDiff === 0) {
@@ -413,18 +399,8 @@ const activityTypes = useMemo(() => {
       } else {
         // Actions without follow_up_date are typically logged history items.
         // Track them for analytics, but don't surface them in Upcoming/Todays dashboard buckets.
-        console.log("[v0] Action has no follow_up_date, treating as historical log:", action.id, action.action_date)
         needsFollowUpDate.push(action)
       }
-    })
-
-    console.log("[v0] Categorized actions:", {
-      total: allEvents.length,
-      withFollowUp: allEvents.filter(a => a.follow_up_date).length,
-      withoutFollowUp: needsFollowUpDate.length,
-      today: todayActions.length,
-      upcoming: upcomingActions.length,
-      overdue: overdueActions.length,
     })
 
     return { todayActions, upcomingActions, overdueActions }
@@ -545,37 +521,6 @@ const activityTypes = useMemo(() => {
 
     // Always open day detail modal, even if no activities
     setSelectedDay({ date: clickedDate, activities: dayActivities })
-  }
-
-  const normalizeActionType = (type?: string | null) => {
-    const value = (type || "other").toLowerCase()
-    switch (value) {
-      case "phone_call":
-      case "call":
-        return "call"
-      case "text_message":
-      case "text":
-        return "text"
-      case "email":
-        return "email"
-      case "official_visit":
-      case "visit":
-        return "visit"
-      case "prospect_camp":
-      case "camp":
-        return "prospect_camp"
-      case "watched_live":
-      case "watched":
-        return "watched_live"
-      case "letter":
-      case "handwritten_letter":
-        return "letter"
-      case "social_media":
-      case "dm":
-        return "social_media"
-      default:
-        return value || "other"
-    }
   }
 
   const getActivityColor = (actionType: string) => {
