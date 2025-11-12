@@ -41,6 +41,7 @@ interface RecruitingActionsDashboardProps {
   schoolId?: string
   athletes?: { id: string; name: string }[] // Optional: pass athletes from parent (e.g., prospects from portal)
   prospects?: AthleteWithBirthday[] // Optional: pass full prospects with birthdates
+  onViewChange?: (view: "dashboard" | "calendar" | "activity") => void
 }
 
 export interface RecruitingActionsDashboardRef {
@@ -48,7 +49,7 @@ export interface RecruitingActionsDashboardRef {
 }
 
 export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardRef, RecruitingActionsDashboardProps>(
-  ({ schoolId, athletes: providedAthletes, prospects }, ref) => {
+  ({ schoolId, athletes: providedAthletes, prospects, onViewChange }, ref) => {
   const [actions, setActions] = useState<RecruitingAction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -73,6 +74,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [availableAthletes, setAvailableAthletes] = useState<{ id: string; name: string }[]>([])
   const [selectedAthleteFilter, setSelectedAthleteFilter] = useState<string>("all")
   const [selectedCoachFilter, setSelectedCoachFilter] = useState<string>("all")
+  const [tabValue, setTabValue] = useState<"dashboard" | "calendar" | "activity">("dashboard")
 
   // Expose method to parent component to open the create activity modal
   useImperativeHandle(ref, () => ({
@@ -98,6 +100,10 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schoolId, providedAthletes, prospects])
+
+  useEffect(() => {
+    onViewChange?.(tabValue)
+  }, [tabValue, onViewChange])
 
   const fetchAthletes = async () => {
     // Skip if we're using schoolId - athletes for school portals come from prospects API
@@ -223,7 +229,7 @@ const activityTrendData = useMemo(() => {
     const bucket = dateBuckets.get(normalized)
     if (!bucket) return
     bucket.total += 1
-    const key = action.action_type || "other"
+    const key = normalizeActionType(action.action_type)
     bucket[key] = (bucket[key] || 0) + 1
     })
 
@@ -246,7 +252,7 @@ const activityTypes = useMemo(() => {
   const set = new Set<string>()
   actions.forEach((action) => {
     if (action.action_type) {
-      set.add(action.action_type)
+      set.add(normalizeActionType(action.action_type))
     }
   })
   return Array.from(set)
@@ -541,18 +547,51 @@ const activityTypes = useMemo(() => {
     setSelectedDay({ date: clickedDate, activities: dayActivities })
   }
 
-  const getActivityColor = (actionType: string) => {
-    const colors: Record<string, { bg: string; text: string; border: string }> = {
-      phone_call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200" },
-      text_message: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200" },
-      email: { bg: "bg-green-100", text: "text-green-800", border: "border-green-200" },
-      in_person_visit: { bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200" },
-      campus_tour: { bg: "bg-yellow-100", text: "text-yellow-800", border: "border-yellow-200" },
-      game_attendance: { bg: "bg-pink-100", text: "text-pink-800", border: "border-pink-200" },
-      offer_extended: { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" },
-      evaluation: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200" },
+  const normalizeActionType = (type?: string | null) => {
+    const value = (type || "other").toLowerCase()
+    switch (value) {
+      case "phone_call":
+      case "call":
+        return "call"
+      case "text_message":
+      case "text":
+        return "text"
+      case "email":
+        return "email"
+      case "official_visit":
+      case "visit":
+        return "visit"
+      case "prospect_camp":
+      case "camp":
+        return "prospect_camp"
+      case "watched_live":
+      case "watched":
+        return "watched_live"
+      case "letter":
+      case "handwritten_letter":
+        return "letter"
+      case "social_media":
+      case "dm":
+        return "social_media"
+      default:
+        return value || "other"
     }
-    return colors[actionType] || { bg: "bg-muted", text: "text-muted-foreground", border: "border-border" }
+  }
+
+  const getActivityColor = (actionType: string) => {
+    const key = normalizeActionType(actionType)
+    const colors: Record<string, { bg: string; text: string; border: string; fill: string }> = {
+      call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", fill: "rgba(59,130,246,0.85)" },
+      text: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", fill: "rgba(124,58,237,0.75)" },
+      email: { bg: "bg-green-100", text: "text-green-800", border: "border-green-200", fill: "rgba(34,197,94,0.75)" },
+      visit: { bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200", fill: "rgba(249,115,22,0.75)" },
+      prospect_camp: { bg: "bg-amber-100", text: "text-amber-900", border: "border-amber-200", fill: "rgba(245,158,11,0.75)" },
+      watched_live: { bg: "bg-sky-100", text: "text-sky-800", border: "border-sky-200", fill: "rgba(56,189,248,0.75)" },
+      letter: { bg: "bg-rose-100", text: "text-rose-800", border: "border-rose-200", fill: "rgba(244,114,182,0.75)" },
+      social_media: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200", fill: "rgba(99,102,241,0.75)" },
+      other: { bg: "bg-slate-200", text: "text-slate-800", border: "border-slate-300", fill: "rgba(148,163,184,0.75)" },
+    }
+    return colors[key] || { bg: "bg-muted", text: "text-muted-foreground", border: "border-border", fill: "rgba(148,163,184,0.6)" }
   }
 
   const handleComplete = async (actionId: string) => {
@@ -690,7 +729,14 @@ const activityTypes = useMemo(() => {
 
   return (
     <>
-      <Tabs defaultValue="dashboard" className="w-full">
+      <Tabs
+        value={tabValue}
+        onValueChange={(value) => {
+          const next = (value as "dashboard" | "calendar" | "activity") || "dashboard"
+          setTabValue(next)
+        }}
+        className="w-full"
+      >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center justify-center flex-1">
             <TabsList className="bg-card border border-border transition-colors">
@@ -702,7 +748,7 @@ const activityTypes = useMemo(() => {
                 <CalendarIcon className="h-4 w-4" />
                 Calendar
               </TabsTrigger>
-              <TabsTrigger value="table" className="gap-2">
+              <TabsTrigger value="activity" className="gap-2">
                 <TableIcon className="h-4 w-4" />
                 Activity
             </TabsTrigger>
@@ -1064,7 +1110,7 @@ const activityTypes = useMemo(() => {
         </TabsContent>
 
         {/* Table Tab - List view */}
-        <TabsContent value="table">
+        <TabsContent value="activity">
           <Card>
             <CardHeader>
               <CardTitle>Activity Log</CardTitle>
@@ -1103,7 +1149,7 @@ const activityTypes = useMemo(() => {
                           iconType="circle"
                         />
                         {activityTypes.map((type) => (
-                          <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).bgColor} />
+                          <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).fill} />
                         ))}
                       </BarChart>
                     </ResponsiveContainer>

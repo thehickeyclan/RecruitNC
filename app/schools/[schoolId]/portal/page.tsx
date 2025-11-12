@@ -295,6 +295,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [selectedState, setSelectedState] = useState<string>("all")
   const [selectedRating, setSelectedRating] = useState<string>("all")
   const [viewMode, setViewMode] = useState<"board" | "table">("table")
+  const [activePortalView, setActivePortalView] = useState<"dashboard" | "calendar" | "activity">("dashboard")
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const dashboardRef = useRef<RecruitingActionsDashboardRef>(null)
@@ -2096,6 +2097,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
   const stats = calculateStats()
 
+  const isDashboardView = activePortalView === "dashboard"
+
   const handleThemeToggle = () => {
     setIsDarkMode((prev) => {
       const next = !prev
@@ -2187,6 +2190,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             )
             return prospectsWithBirthdays
           })()}
+          onViewChange={(view) => setActivePortalView(view)}
         />
       </div>
 
@@ -2266,13 +2270,14 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
       </div>
 
-      {activities.filter((a) => {
-        if (!a.follow_up_date) return false
-        const followUpDate = new Date(a.follow_up_date)
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        return followUpDate < today
-      }).length > 0 && (
+      {isDashboardView &&
+        activities.filter((a) => {
+          if (!a.follow_up_date) return false
+          const followUpDate = new Date(a.follow_up_date)
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          return followUpDate < today
+        }).length > 0 && (
         <div className="container mx-auto px-4 pb-4">
           <Card className="border-2 border-red-300 bg-red-50">
             <CardHeader className="pb-3">
@@ -2332,12 +2337,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-6">
-        <RecruitingFunnelChart stageCounts={stageCounts} schoolBranding={schoolBranding} />
-      </div>
+      {isDashboardView && (
+        <div className="container mx-auto px-4 py-6">
+          <RecruitingFunnelChart stageCounts={stageCounts} schoolBranding={schoolBranding} />
+        </div>
+      )}
 
-      <div className="container mx-auto px-4 pb-5">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+      {isDashboardView && (
+        <div className="container mx-auto px-4 pb-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {/* Total Pipeline - Primary metric with school branding */}
           <div
             className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-card dark:bg-slate-900/70 rounded-xl border-2 dark:border-slate-700 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
@@ -2380,9 +2388,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </div>
         </div>
       </div>
+      )}
 
       {/* North Carolina Recruits Section */}
-      <div className="container mx-auto px-4 pt-4 pb-6">
+      {isDashboardView && (
+        <div className="container mx-auto px-4 pt-4 pb-6">
         <Card className="border border-border shadow-sm bg-card transition-colors">
           <CardHeader className="pb-4">
             <CardTitle className="text-2xl font-bold text-foreground">Committed Recruits</CardTitle>
@@ -2452,7 +2462,10 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </CardContent>
         </Card>
       </div>
+      )}
 
+      {isDashboardView && (
+        <>
       <div className="container mx-auto px-4 pb-5">
         <div className="bg-card rounded-xl shadow-sm border border-border p-3 md:p-4 transition-colors">
           <div className="flex flex-col md:flex-row md:flex-wrap gap-3">
@@ -3192,7 +3205,11 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         )}
       </div>
 
+        </>
+      )}
+
       {/* NC Roster History Section */}
+      {isDashboardView && (
       <div className="container mx-auto px-4 pt-6 pb-10">
         <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
           <Card className="border border-border shadow-sm bg-card transition-colors">
@@ -3303,6 +3320,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
           </Card>
         </Collapsible>
       </div>
+      )}
 
       <Dialog
         open={isBulkActivityOpen}
