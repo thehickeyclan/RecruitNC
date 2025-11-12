@@ -35,6 +35,7 @@ interface AthleteWithBirthday {
   photourl?: string
   graduationyear?: number
   weightclass?: string
+  pipeline_stage?: string | null
 }
 
 interface RecruitingActionsDashboardProps {
@@ -286,8 +287,75 @@ const activityTrendData = useMemo(() => {
       set.add(normalizeActionType(action.action_type))
     }
   })
-  return Array.from(set)
+  return Array.from(set).filter((type) => type !== "birthday")
 }, [actions])
+
+  const STAGE_ORDER: { id: string; label: string }[] = [
+    { id: "Prospect", label: "Prospect" },
+    { id: "Contacted", label: "Contacted" },
+    { id: "Recruiting", label: "Recruiting" },
+    { id: "Visited", label: "Visited" },
+    { id: "Offered", label: "Offered" },
+    { id: "Committed", label: "Committed" },
+    { id: "Signed", label: "Signed" },
+    { id: "Lost", label: "Lost" },
+  ]
+
+  const normalizeStage = (stage?: string | null) => {
+    if (!stage) return "Prospect"
+    const lower = stage.trim().toLowerCase()
+    if (lower === "college athlete" || lower === "current college athlete") return "Signed"
+    if (lower === "evaluating" || lower === "reached out") return "Contacted"
+    const matched = STAGE_ORDER.find((s) => s.id.toLowerCase() === lower || s.label.toLowerCase() === lower)
+    return matched ? matched.label : stage
+  }
+
+  const stageHeatmap = useMemo(() => {
+    const stageMap = new Map<string, string>()
+    ;(prospects || []).forEach((prospect) => {
+      stageMap.set(prospect.id, normalizeStage(prospect.pipeline_stage))
+    })
+
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 30)
+
+    const stageLabels = STAGE_ORDER.map((stage) => stage.label)
+    const activityList = activityTypes.length > 0 ? activityTypes : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
+
+    const counts = new Map<string, Map<string, number>>()
+    const addCount = (stageLabel: string, activityType: string) => {
+      if (!counts.has(stageLabel)) counts.set(stageLabel, new Map<string, number>())
+      const stageCounts = counts.get(stageLabel)!
+      stageCounts.set(activityType, (stageCounts.get(activityType) || 0) + 1)
+    }
+
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const actionDate = new Date(action.action_date)
+      if (Number.isNaN(actionDate.getTime())) return
+      if (actionDate < cutoff) return
+      const type = normalizeActionType(action.action_type)
+      if (type === "birthday") return
+      const stageLabel = stageMap.get(action.athlete_id) || "Unassigned"
+      addCount(stageLabel, type)
+    })
+
+    const rows = [...stageLabels, "Unassigned"].map((stage) => {
+      const stageCounts = counts.get(stage) || new Map<string, number>()
+      const record: Record<string, number> = {}
+      activityList.forEach((type) => {
+        record[type] = stageCounts.get(type) || 0
+      })
+      return { stage, counts: record }
+    })
+
+    const max = rows.reduce((maxValue, row) => {
+      const rowMax = Math.max(...Object.values(row.counts))
+      return Math.max(maxValue, rowMax)
+    }, 0)
+
+    return { rows, activityList, max }
+  }, [actions, activityTypes, prospects])
 
   // Create birthday "events" from prospects
   const getBirthdayEvents = () => {
@@ -1062,43 +1130,102 @@ const activityTrendData = useMemo(() => {
               <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
             </CardHeader>
             <CardContent>
-              {activityTrendData.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {activityTrendData.reduce((sum, point) => sum + (Number(point.total) || 0), 0)} total logs
-                    </span>
-                  </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={activityTrendData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                        <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-                        <Tooltip
-                          formatter={(value: number, key: string) => [
-                            `${value} ${key === "total" ? "activities" : formatActionType(key)}`,
-                            key === "total" ? "Total" : formatActionType(key),
-                          ]}
-                          labelFormatter={(label) => label}
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            borderColor: "hsl(var(--border))",
-                            borderRadius: "0.75rem",
-                            color: "hsl(var(--foreground))",
-                          }}
-                        />
-                        <Legend
-                          formatter={(value) => (value === "total" ? "Total" : formatActionType(value))}
-                          iconType="circle"
-                        />
-                        {activityTypes.map((type) => (
-                          <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).fill} />
-                        ))}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+              {(activityTrendData.length > 0 || stageHeatmap.rows.length > 0) && (
+                <div className="mb-6 grid gap-6 xl:grid-cols-2">
+                  {activityTrendData.length > 0 && (
+                    <div className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {activityTrendData.reduce((sum, point) => sum + (Number(point.total) || 0), 0)} total logs
+                        </span>
+                      </div>
+                      <div className="h-60">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={activityTrendData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                            <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                            <Tooltip
+                              formatter={(value: number, key: string) => [
+                                `${value} ${key === "total" ? "activities" : formatActionType(key)}`,
+                                key === "total" ? "Total" : formatActionType(key),
+                              ]}
+                              labelFormatter={(label) => label}
+                              contentStyle={{
+                                backgroundColor: "hsl(var(--card))",
+                                borderColor: "hsl(var(--border))",
+                                borderRadius: "0.75rem",
+                                color: "hsl(var(--foreground))",
+                              }}
+                            />
+                            <Legend
+                              formatter={(value) => (value === "total" ? "Total" : formatActionType(value))}
+                              iconType="circle"
+                            />
+                            {activityTypes.map((type) => (
+                              <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).fill} />
+                            ))}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+
+                  {stageHeatmap.rows.length > 0 && (
+                    <div className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-muted-foreground">Stage touch coverage (last 30 days)</h4>
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {stageHeatmap.rows
+                            .map((row) => Object.values(row.counts).reduce((sum, value) => sum + value, 0))
+                            .reduce((sum, value) => sum + value, 0)}{" "}
+                          logged touches
+                        </span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <div className="min-w-[520px]">
+                          <div className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
+                            <div className="h-10" />
+                            {stageHeatmap.activityList.map((type) => (
+                              <div
+                                key={type}
+                                className="h-10 px-2 flex items-center justify-center text-xs font-medium text-muted-foreground border border-border/50 bg-muted/40 first:border-l border-t-0"
+                              >
+                                {formatActionType(type)}
+                              </div>
+                            ))}
+                          </div>
+                          {stageHeatmap.rows.map((row, index) => (
+                            <div
+                              key={row.stage}
+                              className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]"
+                            >
+                              <div className="h-12 flex items-center px-3 text-sm font-medium border border-border/60 bg-muted/40 first:border-l">
+                                {row.stage}
+                              </div>
+                              {stageHeatmap.activityList.map((type) => {
+                                const count = row.counts[type] || 0
+                                const intensity =
+                                  stageHeatmap.max === 0 ? 0 : count / stageHeatmap.max
+                                const bg = intensity === 0 ? "rgba(148,163,184,0.15)" : `rgba(59,130,246,${0.15 + intensity * 0.7})`
+                                const textColor = intensity > 0.5 ? "text-white" : "text-foreground"
+                                return (
+                                  <div
+                                    key={`${row.stage}-${type}`}
+                                    className={`h-12 border border-border/60 flex items-center justify-center text-sm font-semibold transition-colors ${textColor}`}
+                                    style={{ backgroundColor: bg }}
+                                  >
+                                    {count}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">

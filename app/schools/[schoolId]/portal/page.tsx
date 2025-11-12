@@ -2180,6 +2180,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
               photourl: prospect.photourl,
               graduationyear: prospect.graduationyear,
               weightclass: prospect.weightclass,
+              pipeline_stage: prospect.pipeline_stage,
             }))
             console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
             console.log(
