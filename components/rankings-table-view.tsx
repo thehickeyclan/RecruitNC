@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExternalLink, ChevronUp, ChevronDown, Star } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -38,7 +38,7 @@ interface Athlete {
   state_results?: StateResult[]
   has_ranked_win: boolean
   academic_gpa: number | null
-  prospect_ranking: number
+  prospect_ranking?: number | null
   photourl?: string
   nationally_ranked_wins?: string | number
   college?: string
@@ -49,12 +49,20 @@ interface RankingsTableViewProps {
   athletes: Athlete[]
   loading?: boolean
   hideRankColumn?: boolean
+  additionalDividerLabel?: string
+  dividerAfterRank?: number
 }
 
 type SortField = "rank" | "name" | "school" | "weight"
 type SortDirection = "asc" | "desc"
 
-export function RankingsTableView({ athletes, loading, hideRankColumn = false }: RankingsTableViewProps) {
+export function RankingsTableView({
+  athletes,
+  loading,
+  hideRankColumn = false,
+  additionalDividerLabel = "Additional Ranked Prospects",
+  dividerAfterRank = 30,
+}: RankingsTableViewProps) {
   const [sortField, setSortField] = useState<SortField>("rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [collegeLogos, setCollegeLogos] = useState<Record<string, string>>({})
@@ -224,8 +232,8 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
 
     switch (sortField) {
       case "rank":
-        aValue = a.prospect_ranking
-        bValue = b.prospect_ranking
+        aValue = a.prospect_ranking ?? Number.POSITIVE_INFINITY
+        bValue = b.prospect_ranking ?? Number.POSITIVE_INFINITY
         break
       case "name":
         aValue = a.name.toLowerCase()
@@ -340,24 +348,33 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white">
-            {sortedAthletes.map((athlete, index) => (
-              <>
-                {/* Add divider after rank #30 */}
-                {!hideRankColumn && athlete.prospect_ranking === 30 && sortedAthletes.some(a => a.prospect_ranking > 30) && (
-                  <TableRow key={`divider-${athlete.id}`} className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                    <TableCell colSpan={canSeeWatchList ? 10 : 9} className="py-2 text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
-                          Additional Ranked Prospects
-                        </span>
-                        <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+            {sortedAthletes.map((athlete, index) => {
+              const rankValue =
+                typeof athlete.prospect_ranking === "number" && Number.isFinite(athlete.prospect_ranking)
+                  ? athlete.prospect_ranking
+                  : null
+
+              const shouldRenderDivider =
+                !hideRankColumn &&
+                index === dividerAfterRank &&
+                sortedAthletes.length > dividerAfterRank
+
+              return (
+                <Fragment key={athlete.id}>
+                  {shouldRenderDivider && (
+                    <TableRow className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
+                      <TableCell colSpan={canSeeWatchList ? 10 : 9} className="py-2 text-center">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
+                            {additionalDividerLabel}
+                          </span>
+                          <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 <TableRow
-                  key={athlete.id}
                   className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
                 >
                 {canSeeWatchList && (
@@ -380,12 +397,24 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                 {!hideRankColumn && (
                   <TableCell className="font-medium pr-2">
                     <div className="flex items-center gap-2 min-w-[82px]">
-                      {athlete.prospect_ranking <= 30 && (
+                      {rankValue !== null && rankValue <= dividerAfterRank && (
                         <div
                           className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
                           style={{ backgroundColor: "#B31B1B" }}
                         >
-                          #{athlete.prospect_ranking}
+                          #{rankValue}
+                        </div>
+                      )}
+                      {rankValue !== null && rankValue > dividerAfterRank && (
+                        <div
+                          className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600"
+                        >
+                          #{rankValue}
+                        </div>
+                      )}
+                      {rankValue === null && (
+                        <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-200 text-gray-400">
+                          —
                         </div>
                       )}
                       {athlete.photourl && (
@@ -531,8 +560,9 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   </Link>
                 </TableCell>
               </TableRow>
-              </>
-            ))}
+                </Fragment>
+              )
+            })}
           </TableBody>
         </Table>
       </div>

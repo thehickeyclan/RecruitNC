@@ -12,6 +12,12 @@ import { Filter, Loader2, Search, Users } from "lucide-react"
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
 
+type TournamentResult = {
+  text: string
+  placement: number | null
+  year?: number
+}
+
 interface Prospect {
   id: string
   name: string
@@ -30,6 +36,22 @@ interface Prospect {
   academic_gpa?: number | null
   nationally_ranked_wins?: string | number | null
   location?: string | null
+  state?: string | null
+  state_results?: TournamentResult[]
+  state_championship_summary?: string | null
+  nhsca_results?: TournamentResult[]
+  nhsca_record_display?: string | null
+  nhsca_2024_placement?: string | null
+  nhsca_2025_placement?: string | null
+  nhsca_2024_record?: string | null
+  nhsca_2025_record?: string | null
+  super_32_results?: TournamentResult[]
+  super32_results?: TournamentResult[]
+  super_32_record_display?: string | null
+  super_32_2024_placement?: string | null
+  super_32_2025_placement?: string | null
+  super_32_2024_record?: string | null
+  super_32_2025_record?: string | null
 }
 
 export default function AllProspectsPage() {
@@ -65,10 +87,9 @@ export default function AllProspectsPage() {
         const data = await response.json()
         const rawProspects = Array.isArray(data?.prospects) ? data.prospects : Array.isArray(data) ? data : null
         if (rawProspects) {
-          // Exclude Class of 2025 athletes from the prospects directory per product requirements
-          const filtered = rawProspects.filter(
-            (prospect: Prospect) => Number(prospect.graduationyear) !== 2025,
-          )
+          const filtered = rawProspects
+            .filter((prospect: Prospect) => Number(prospect.graduationyear) !== 2025)
+            .filter(isNorthCarolinaProspect)
           setProspects(filtered)
         } else {
           throw new Error("Unexpected response shape from /api/prospects")
@@ -87,7 +108,7 @@ export default function AllProspectsPage() {
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     for (const prospect of prospects) {
-      if (prospect.graduationyear && prospect.graduationyear >= 2024 && prospect.graduationyear <= 2030) {
+      if (prospect.graduationyear && prospect.graduationyear >= 2026 && prospect.graduationyear <= 2030) {
         years.add(prospect.graduationyear)
       }
     }
@@ -185,23 +206,49 @@ export default function AllProspectsPage() {
         !!prospect.nationally_ranked_wins &&
         (!["0", "none", "None"].includes(String(prospect.nationally_ranked_wins).trim()))
 
+      const stateResults = coerceTournamentResults(
+        prospect.state_results,
+        buildLegacyStateResults(prospect),
+      )
+
+      const nhscaResults = coerceTournamentResults(
+        prospect.nhsca_results,
+        buildLegacyNHSCAResults(prospect),
+      )
+
+      const super32Results = coerceTournamentResults(
+        prospect.super_32_results ?? prospect.super32_results,
+        buildLegacySuper32Results(prospect),
+      )
+
       return {
         id: prospect.id || `prospect-${index}`,
         name: prospect.name || "Unknown",
         highschool: prospect.highschool || "—",
-        weight_display: weightValue,
-        nhsca_record_display: null,
-        nhsca_results: undefined,
-        super_32_record_display: null,
-        super_32_results: undefined,
+        weight_display: weightValue || "-",
+        nhsca_record_display:
+          prospect.nhsca_record_display ||
+          prospect.nhsca_2025_record ||
+          prospect.nhsca_2024_record ||
+          null,
+        nhsca_results: nhscaResults,
+        super_32_record_display:
+          prospect.super_32_record_display ||
+          prospect.super_32_2025_record ||
+          prospect.super_32_2024_record ||
+          null,
+        super_32_results: super32Results,
         state_championship_summary:
+          prospect.state_championship_summary ||
+          stateResults?.[0]?.text ||
           prospect.achievements?.find((achievement) =>
             achievement.toLowerCase().includes("state"),
-          ) || "—",
-        state_results: undefined,
+          ) ||
+          "—",
+        state_results: stateResults,
         has_ranked_win: hasRankedWin,
         academic_gpa: prospect.academic_gpa ?? null,
-        prospect_ranking: prospect.prospect_ranking ?? 9999,
+        prospect_ranking: prospect.prospect_ranking ?? null,
         photourl: prospect.photourl ?? undefined,
         nationally_ranked_wins: prospect.nationally_ranked_wins ?? undefined,
         college: prospect.college ?? undefined,
@@ -389,7 +436,12 @@ export default function AllProspectsPage() {
               </div>
             ) : (
               <div className="overflow-x-auto px-2 pb-6">
-                <RankingsTableView athletes={tableAthletes} hideRankColumn={false} />
+                <RankingsTableView
+                  athletes={tableAthletes}
+                  hideRankColumn={false}
+                  additionalDividerLabel="Additional North Carolina Prospects"
+                  dividerAfterRank={30}
+                />
               </div>
             )}
           </div>
@@ -397,5 +449,159 @@ export default function AllProspectsPage() {
       </div>
     </AuthGuard>
   )
+}
+
+function isNorthCarolinaProspect(prospect: Prospect) {
+  const state = (prospect.state || "").trim().toLowerCase()
+  if (state) {
+    if (state === "nc" || state === "north carolina") return true
+    return false
+  }
+
+  const location = (prospect.location || "").trim().toLowerCase()
+  if (location) {
+    if (/\bnorth carolina\b/.test(location) || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
+      return true
+    }
+
+    const nonNcStates = [
+      "sc",
+      "south carolina",
+      "ga",
+      "georgia",
+      "va",
+      "virginia",
+      "tn",
+      "tennessee",
+      "fl",
+      "florida",
+      "oh",
+      "ohio",
+      "pa",
+      "pennsylvania",
+      "ny",
+      "new york",
+      "tx",
+      "texas",
+      "ca",
+      "california",
+      "al",
+      "alabama",
+    ]
+
+    if (nonNcStates.some((stateToken) => location.includes(stateToken))) {
+      return false
+    }
+  }
+
+  // Default to including when we can't determine
+  return true
+}
+
+function parsePlacement(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null
+  if (typeof value === "string") {
+    const digits = value.match(/\d+/)
+    if (digits) {
+      return Number.parseInt(digits[0], 10)
+    }
+  }
+  return null
+}
+
+function coerceTournamentResults(
+  source?: TournamentResult[] | null,
+  fallback?: TournamentResult[],
+): TournamentResult[] | undefined {
+  if (Array.isArray(source) && source.length > 0) {
+    return source.map((entry) => ({
+      placement: parsePlacement(entry.placement ?? null),
+      text: entry.text,
+      year: entry.year,
+    }))
+  }
+
+  if (fallback && fallback.length > 0) {
+    return fallback
+  }
+
+  return undefined
+}
+
+function buildLegacyTournamentEntry(
+  label: string,
+  placement?: string | number | null,
+  record?: string | null,
+  year?: number,
+): TournamentResult | null {
+  if (!placement && !record) return null
+  const parts = []
+  if (placement) parts.push(String(placement))
+  if (record) parts.push(`Record: ${record}`)
+  return {
+    placement: parsePlacement(placement ?? null),
+    text: `${label}${parts.length > 0 ? " – " + parts.join(" • ") : ""}`,
+    year,
+  }
+}
+
+function buildLegacyNHSCAResults(prospect: Prospect): TournamentResult[] {
+  const results: TournamentResult[] = []
+
+  const entry2025 = buildLegacyTournamentEntry(
+    "NHSCA Nationals 2025",
+    prospect.nhsca_2025_placement,
+    prospect.nhsca_2025_record,
+    2025,
+  )
+  if (entry2025) results.push(entry2025)
+
+  const entry2024 = buildLegacyTournamentEntry(
+    "NHSCA Nationals 2024",
+    prospect.nhsca_2024_placement,
+    prospect.nhsca_2024_record,
+    2024,
+  )
+  if (entry2024) results.push(entry2024)
+
+  return results
+}
+
+function buildLegacySuper32Results(prospect: Prospect): TournamentResult[] {
+  const results: TournamentResult[] = []
+
+  const entry2025 = buildLegacyTournamentEntry(
+    "Super 32 (2025)",
+    prospect.super_32_2025_placement,
+    prospect.super_32_2025_record,
+    2025,
+  )
+  if (entry2025) results.push(entry2025)
+
+  const entry2024 = buildLegacyTournamentEntry(
+    "Super 32 (2024)",
+    prospect.super_32_2024_placement,
+    prospect.super_32_2024_record,
+    2024,
+  )
+  if (entry2024) results.push(entry2024)
+
+  return results
+}
+
+function buildLegacyStateResults(prospect: Prospect): TournamentResult[] {
+  const summary =
+    prospect.state_championship_summary ||
+    prospect.achievements?.find((achievement) => achievement.toLowerCase().includes("state"))
+
+  if (!summary) return []
+
+  return [
+    {
+      text: summary,
+      placement: parsePlacement(summary),
+      year: prospect.graduationyear ?? undefined,
+    },
+  ]
 }
 
