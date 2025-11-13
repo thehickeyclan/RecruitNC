@@ -316,84 +316,6 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     return map
   }, [prospects])
 
-  const cadenceStats = useMemo(() => {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-
-    const thresholdForYear = (graduationYear?: number | null) => {
-      if (!graduationYear) return 28
-      const yearsOut = graduationYear - currentYear
-      if (yearsOut <= 1) return 21
-      if (yearsOut === 2) return 28
-      if (yearsOut === 3) return 35
-      return 42
-    }
-
-    const lastTouchMap = new Map<string, Date>()
-    actions.forEach((action) => {
-      const date = new Date(action.action_date)
-      if (Number.isNaN(date.getTime())) return
-      const previous = lastTouchMap.get(action.athlete_id)
-      if (!previous || date > previous) {
-        lastTouchMap.set(action.athlete_id, date)
-      }
-    })
-
-    const details =
-      prospects?.map((prospect) => {
-        const lastTouch = lastTouchMap.get(prospect.id) || null
-        const threshold = thresholdForYear(prospect.graduationyear)
-        let status: "noActivity" | "overdue" | "warning" | "onTrack" = "noActivity"
-        let daysSince: number | null = null
-        if (lastTouch) {
-          daysSince = Math.floor((now.getTime() - lastTouch.getTime()) / (1000 * 60 * 60 * 24))
-          if (daysSince > threshold) {
-            status = "overdue"
-          } else if (daysSince > threshold * 0.6) {
-            status = "warning"
-          } else {
-            status = "onTrack"
-          }
-        }
-
-        return {
-          id: prospect.id,
-          name: prospect.name,
-          graduationYear: prospect.graduationyear ?? null,
-          starRating: prospect.star_rating ?? null,
-          stage: normalizeStage(prospect.pipeline_stage),
-          lastTouch,
-          daysSince,
-          status,
-          threshold,
-        }
-      }) ?? []
-
-    const summary = details.reduce(
-      (acc, detail) => {
-        acc[detail.status] += 1
-        return acc
-      },
-      { noActivity: 0, overdue: 0, warning: 0, onTrack: 0 },
-    )
-
-    const overdueList = details
-      .filter((detail) => detail.status === "overdue")
-      .sort((a, b) => (b.daysSince ?? 0) - (a.daysSince ?? 0))
-    const warningList = details
-      .filter((detail) => detail.status === "warning")
-      .sort((a, b) => (b.daysSince ?? 0) - (a.daysSince ?? 0))
-    const noActivityList = details.filter((detail) => detail.status === "noActivity")
-
-    return {
-      summary,
-      details,
-      overdueList,
-      warningList,
-      noActivityList,
-    }
-  }, [actions, prospects])
-
   const cadenceDetailByAthlete = useMemo(() => {
     const map = new Map<string, any>()
     cadenceStats.details.forEach((detail) => map.set(detail.id, detail))
@@ -511,6 +433,84 @@ const activityTrendData = useMemo(() => {
     })
     return Array.from(set).filter((type) => type !== "birthday")
   }, [actions])
+
+  const cadenceStats = useMemo(() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+
+    const thresholdForYear = (graduationYear?: number | null) => {
+      if (!graduationYear) return 28
+      const yearsOut = graduationYear - currentYear
+      if (yearsOut <= 1) return 21
+      if (yearsOut === 2) return 28
+      if (yearsOut === 3) return 35
+      return 42
+    }
+
+    const lastTouchMap = new Map<string, Date>()
+    actions.forEach((action) => {
+      const date = new Date(action.action_date)
+      if (Number.isNaN(date.getTime())) return
+      const previous = lastTouchMap.get(action.athlete_id)
+      if (!previous || date > previous) {
+        lastTouchMap.set(action.athlete_id, date)
+      }
+    })
+
+    const details =
+      prospects?.map((prospect) => {
+        const lastTouch = lastTouchMap.get(prospect.id) || null
+        const threshold = thresholdForYear(prospect.graduationyear)
+        let status: "noActivity" | "overdue" | "warning" | "onTrack" = "noActivity"
+        let daysSince: number | null = null
+        if (lastTouch) {
+          daysSince = Math.floor((now.getTime() - lastTouch.getTime()) / (1000 * 60 * 60 * 24))
+          if (daysSince > threshold) {
+            status = "overdue"
+          } else if (daysSince > threshold * 0.6) {
+            status = "warning"
+          } else {
+            status = "onTrack"
+          }
+        }
+
+        return {
+          id: prospect.id,
+          name: prospect.name,
+          graduationYear: prospect.graduationyear ?? null,
+          starRating: prospect.star_rating ?? null,
+          stage: normalizeStage(prospect.pipeline_stage),
+          lastTouch,
+          daysSince,
+          status,
+          threshold,
+        }
+      }) ?? []
+
+    const summary = details.reduce(
+      (acc, detail) => {
+        acc[detail.status] += 1
+        return acc
+      },
+      { noActivity: 0, overdue: 0, warning: 0, onTrack: 0 },
+    )
+
+    const overdueList = details
+      .filter((detail) => detail.status === "overdue")
+      .sort((a, b) => (b.daysSince ?? 0) - (a.daysSince ?? 0))
+    const warningList = details
+      .filter((detail) => detail.status === "warning")
+      .sort((a, b) => (b.daysSince ?? 0) - (a.daysSince ?? 0))
+    const noActivityList = details.filter((detail) => detail.status === "noActivity")
+
+    return {
+      summary,
+      details,
+      overdueList,
+      warningList,
+      noActivityList,
+    }
+  }, [actions, prospects])
 
   const stageHeatmap = useMemo(() => {
     const stageMap = new Map<string, string>()
