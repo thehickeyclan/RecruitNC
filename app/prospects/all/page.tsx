@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import { AuthGuard } from "@/components/auth-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RankingsTableView } from "@/components/rankings-table-view"
@@ -66,7 +67,8 @@ export default function AllProspectsPage() {
   const [yearFilter, setYearFilter] = useState<string>("all")
   const [genderFilter, setGenderFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [divisionFilter, setDivisionFilter] = useState<string>("all")
+  const [rankFilter, setRankFilter] = useState<"all" | "ranked" | "unranked">("all")
+  const [weightFilters, setWeightFilters] = useState<string[]>([])
 
   useEffect(() => {
     const fetchProspects = async () => {
@@ -118,14 +120,22 @@ export default function AllProspectsPage() {
     return Array.from(years).sort((a, b) => a - b)
   }, [prospects])
 
-  const availableDivisions = useMemo(() => {
-    const divisions = new Set<string>()
+  const availableWeightClasses = useMemo(() => {
+    const weights = new Set<string>()
     prospects.forEach((prospect) => {
-      if (prospect.division) {
-        divisions.add(prospect.division)
+      const weight = (prospect.weightclass || prospect.weight?.toString() || "").trim()
+      if (weight) {
+        weights.add(weight.replace(/\s*l?bs?\.?$/i, "").trim())
       }
     })
-    return Array.from(divisions).sort((a, b) => a.localeCompare(b))
+    return Array.from(weights)
+      .map((weight) => (/\d/.test(weight) ? weight : weight.toUpperCase()))
+      .sort((a, b) => {
+        const aNum = Number.parseInt(a)
+        const bNum = Number.parseInt(b)
+        if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum
+        return a.localeCompare(b)
+      })
   }, [prospects])
 
   const summarizeStatus = (status?: string | null): RecruitingStatus => {
@@ -161,10 +171,6 @@ export default function AllProspectsPage() {
           return false
       }
 
-      if (divisionFilter !== "all") {
-        if ((prospect.division || "").toLowerCase() !== divisionFilter.toLowerCase()) return false
-      }
-
       if (statusFilter !== "all") {
         const summarized = summarizeStatus(prospect.recruiting_status)
         if (statusFilter === "committed" && summarized !== "committed") return false
@@ -172,9 +178,19 @@ export default function AllProspectsPage() {
         if (statusFilter === "verbal" && summarized !== "verbal") return false
       }
 
+      if (rankFilter === "ranked" && !prospect.prospect_ranking) return false
+      if (rankFilter === "unranked" && prospect.prospect_ranking) return false
+
+      if (weightFilters.length > 0) {
+        const normalizedWeight = (prospect.weightclass || prospect.weight?.toString() || "")
+          .replace(/\s*l?bs?\.?$/i, "")
+          .trim()
+        if (!weightFilters.includes(normalizedWeight)) return false
+      }
+
       return true
     })
-  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, divisionFilter])
+  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters])
 
   const sortedProspects = useMemo(() => {
     return [...filteredProspects].sort((a, b) => {
@@ -270,7 +286,8 @@ export default function AllProspectsPage() {
     setYearFilter("all")
     setGenderFilter("all")
     setStatusFilter("all")
-    setDivisionFilter("all")
+    setRankFilter("all")
+    setWeightFilters([])
   }
 
   return (
@@ -409,21 +426,61 @@ export default function AllProspectsPage() {
                 </Select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">Division Interest</label>
-                <Select value={divisionFilter} onValueChange={setDivisionFilter}>
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">Ranking Status</label>
+                <Select value={rankFilter} onValueChange={(value) => setRankFilter(value as typeof rankFilter)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Divisions" />
+                    <SelectValue placeholder="All Prospects" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Divisions</SelectItem>
-                    {availableDivisions.map((division) => (
-                      <SelectItem key={division} value={division}>
-                        {division}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">All Prospects</SelectItem>
+                    <SelectItem value="ranked">Ranked</SelectItem>
+                    <SelectItem value="unranked">Unranked</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-muted-foreground">Weight Classes</label>
+                {weightFilters.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setWeightFilters([])}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+              {availableWeightClasses.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Weights populate once prospect data loads.</p>
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  {availableWeightClasses.map((weight) => {
+                    const normalized = weight
+                    const isChecked = weightFilters.includes(normalized)
+                    return (
+                      <label
+                        key={normalized}
+                        className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium shadow-sm transition hover:border-[#D3B574] hover:text-[#03154C]"
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            setWeightFilters((prev) =>
+                              checked ? [...prev, normalized] : prev.filter((w) => w !== normalized),
+                            )
+                          }}
+                        />
+                        <span>{normalized.match(/^\d+$/) ? `${normalized} lbs` : normalized}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
