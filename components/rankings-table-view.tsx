@@ -290,7 +290,7 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                 </TableHead>
               )}
               {!hideRankColumn && (
-                <TableHead className="w-16 text-white font-semibold">
+                <TableHead className="w-20 text-white font-semibold text-left">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -301,7 +301,8 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   </Button>
                 </TableHead>
               )}
-              <TableHead className="min-w-[200px] text-white font-semibold">
+              <TableHead className="w-[110px] text-white font-semibold text-center">Committed</TableHead>
+              <TableHead className="min-w-[220px] text-white font-semibold pl-4">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -311,7 +312,6 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   Name <SortIcon field="name" />
                 </Button>
               </TableHead>
-              <TableHead className="w-24 text-white font-semibold">Committed</TableHead>
               <TableHead className="min-w-[180px] text-white font-semibold">
                 <Button
                   variant="ghost"
@@ -378,8 +378,8 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   </TableCell>
                 )}
                 {!hideRankColumn && (
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
+                  <TableCell className="font-medium pr-2">
+                    <div className="flex items-center gap-2 min-w-[82px]">
                       {athlete.prospect_ranking <= 30 && (
                         <div
                           className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
@@ -401,17 +401,7 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                     </div>
                   </TableCell>
                 )}
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Link
-                      href={`/unified-profile/${athlete.id}`}
-                      className="hover:text-[#D3B574] transition-colors underline"
-                    >
-                      <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
-                    </Link>
-                  </div>
-                </TableCell>
-                <TableCell>
+                <TableCell className="text-center">
                   {athlete.recruiting_status === "Committed" &&
                   athlete.college &&
                   athlete.college !== "Not specified" &&
@@ -438,6 +428,16 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   ) : (
                     <span className="text-gray-400 text-sm">-</span>
                   )}
+                </TableCell>
+                <TableCell className="pl-4">
+                  <div className="flex items-center gap-3 leading-tight">
+                    <Link
+                      href={`/unified-profile/${athlete.id}`}
+                      className="hover:text-[#D3B574] transition-colors underline"
+                    >
+                      <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
+                    </Link>
+                  </div>
                 </TableCell>
                 <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
                 <TableCell>
