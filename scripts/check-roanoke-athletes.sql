@@ -28,4 +28,3 @@ FROM athletes a
 LEFT JOIN college_coach_stars ccs ON ccs.athlete_id = a.id
 WHERE a.college ILIKE '%Roanoke%'
 ORDER BY a.graduationyear DESC;
-

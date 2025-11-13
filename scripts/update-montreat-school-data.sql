@@ -18,4 +18,3 @@ SELECT
   is_test
 FROM schools
 WHERE name = 'Montreat College';
-

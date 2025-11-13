@@ -16,11 +16,11 @@ A scalable tournament results system that:
 ### Step 1: Add New Database Columns ✅ READY
 **Run this in Supabase SQL Editor:**
 
-```sql
+\`\`\`sql
 ALTER TABLE athletes 
 ADD COLUMN IF NOT EXISTS nhsca_results JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS super32_results JSONB DEFAULT '[]'::jsonb;
-```
+\`\`\`
 
 **What this does:**
 - Adds two new columns for JSON storage
@@ -91,7 +91,7 @@ You'll see:
 ### How It Works
 All display components now use a **"try new, fallback to old"** pattern:
 
-```typescript
+\`\`\`typescript
 // Try new JSON format
 if (athlete.nhsca_results && athlete.nhsca_results.length > 0) {
   return athlete.nhsca_results // Use this
@@ -99,7 +99,7 @@ if (athlete.nhsca_results && athlete.nhsca_results.length > 0) {
   // Fallback to old columns
   return { /* parse old columns */ }
 }
-```
+\`\`\`
 
 ### Components Updated ✅
 - ✅ `components/prospect-card.tsx` - Prospect cards
@@ -250,4 +250,3 @@ Before running migration:
 **Status:** ✅ All code deployed and ready
 **Date:** November 4, 2025
 **Environment:** Production (app.ncwrestlingunited.com)
-

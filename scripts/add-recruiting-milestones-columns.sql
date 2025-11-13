@@ -121,4 +121,3 @@ AND column_name IN (
   'communication_log', 'recruiting_notes'
 )
 ORDER BY column_name;
-

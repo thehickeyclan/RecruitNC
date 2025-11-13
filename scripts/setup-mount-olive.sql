@@ -124,4 +124,3 @@ SELECT
 FROM athletes
 WHERE college ILIKE '%mount olive%' OR college ILIKE '%UMO%'
 ORDER BY graduationyear, name;
-

@@ -33,4 +33,3 @@ WHERE
   AND school_id IS NULL
 ORDER BY created_at DESC
 LIMIT 20;
-

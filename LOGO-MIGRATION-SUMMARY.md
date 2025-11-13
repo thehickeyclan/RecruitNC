@@ -88,13 +88,13 @@ Successfully consolidated logo management from two redundant systems (`media_ite
 - ⏳ Need to push to GitHub to trigger Vercel
 
 ## Commands to Complete
-```bash
+\`\`\`bash
 # Push to GitHub (run from local terminal)
 cd /Users/matthickey/Downloads/Recruit-NC-main
 git push origin main
 
 # Then Vercel will auto-deploy
-```
+\`\`\`
 
 ## Rollback Plan (if needed)
 If any issues arise:
@@ -106,4 +106,3 @@ If any issues arise:
 ---
 **Date:** November 4, 2025
 **Status:** Phase 2 Complete, Awaiting Deployment
-

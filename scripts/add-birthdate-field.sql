@@ -39,4 +39,3 @@ SELECT
 FROM information_schema.columns
 WHERE (table_name = 'athletes' AND column_name = 'birthdate')
    OR (table_name = 'college_coach_stars' AND column_name = 'override_birthdate');
-

@@ -14,4 +14,3 @@ COMMENT ON COLUMN college_coach_stars.ability_to_pay IS 'Family ability to pay (
 COMMENT ON COLUMN college_coach_stars.merit_scholarship_eligible IS 'Whether the athlete is eligible for merit scholarships';
 COMMENT ON COLUMN college_coach_stars.need_based_aid_eligible IS 'Whether the athlete is eligible for need-based aid';
 COMMENT ON COLUMN college_coach_stars.aid_application_status IS 'Status of financial aid application (not_started, in_progress, fafsa_submitted, completed, not_applying)';
-

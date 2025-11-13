@@ -14,4 +14,3 @@ SELECT *
 FROM athletes
 WHERE name ILIKE '%Jalen%Bethea%'
 LIMIT 1;
-

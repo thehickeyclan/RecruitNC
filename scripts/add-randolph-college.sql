@@ -13,4 +13,3 @@ ON CONFLICT (name) DO UPDATE SET
   primary_color = EXCLUDED.primary_color,
   secondary_color = EXCLUDED.secondary_color
 RETURNING id, name, primary_color, secondary_color, logo_url;
-

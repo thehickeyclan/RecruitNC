@@ -72,6 +72,7 @@
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "latest",
     "typescript": "^5",
     "vaul": "latest",
     "zod": "^3.24.1"

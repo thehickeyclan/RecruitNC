@@ -51,4 +51,3 @@ SELECT
   COUNT(*) FILTER (WHERE nhsca_results IS NOT NULL AND nhsca_results != '[]'::jsonb) as has_nhsca_json,
   COUNT(*) FILTER (WHERE super32_results IS NOT NULL AND super32_results != '[]'::jsonb) as has_super32_json
 FROM athletes;
-

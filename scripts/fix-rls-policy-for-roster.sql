@@ -58,4 +58,3 @@ USING (
   OR
   coach_user_id = auth.uid()
 );
-

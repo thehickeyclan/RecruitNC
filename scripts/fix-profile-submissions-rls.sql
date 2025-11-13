@@ -51,4 +51,3 @@ WITH CHECK (
     AND user_profiles.is_admin = true
   )
 );
-

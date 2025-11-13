@@ -127,4 +127,3 @@ BEGIN
   RAISE NOTICE 'Cameron Gue Athlete ID: %', cameron_athlete_id;
   RAISE NOTICE 'Coach/Admin User ID: %', admin_user_id;
 END $$;
-

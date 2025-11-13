@@ -39,4 +39,3 @@ SELECT
   name as school_name
 FROM schools 
 WHERE name ILIKE '%montreat%';
-

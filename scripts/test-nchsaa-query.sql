@@ -27,4 +27,3 @@ FROM wrestling_nchsaa_results
 WHERE wrestler_name ILIKE '%lorenzo%'
    OR wrestler_name ILIKE '%alston%'
 ORDER BY year DESC;
-

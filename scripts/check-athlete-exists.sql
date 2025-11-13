@@ -26,4 +26,3 @@ SELECT
 FROM college_coach_stars ccs
 LEFT JOIN user_profiles up ON up.user_id = ccs.coach_user_id
 WHERE ccs.athlete_id = '6334fc1c-ae94-4e0f-96a5-4cb5d9ca66f4';
-

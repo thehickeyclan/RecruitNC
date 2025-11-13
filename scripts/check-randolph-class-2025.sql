@@ -18,4 +18,3 @@ AND (
   a.name ILIKE '%Eli%Frizzell%'
 )
 ORDER BY a.name;
-

@@ -98,4 +98,3 @@ FROM information_schema.columns
 WHERE table_name = 'athletes'
   AND column_name IN ('is_nc_athlete', 'added_by_coach_id', 'state')
 ORDER BY column_name;
-

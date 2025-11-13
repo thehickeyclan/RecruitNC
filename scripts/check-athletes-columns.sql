@@ -7,4 +7,3 @@ SELECT
 FROM information_schema.columns
 WHERE table_name = 'athletes'
 ORDER BY column_name;
-

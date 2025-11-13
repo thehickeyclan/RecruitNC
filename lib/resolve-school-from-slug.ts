@@ -64,4 +64,3 @@ export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchoo
 
   return null
 }
-

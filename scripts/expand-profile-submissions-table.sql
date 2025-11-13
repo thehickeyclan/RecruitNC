@@ -51,4 +51,3 @@ COMMENT ON COLUMN athlete_profile_submissions.career_record IS 'Overall wrestlin
 COMMENT ON COLUMN athlete_profile_submissions.highlight_video_url IS 'URL to highlight video';
 COMMENT ON COLUMN athlete_profile_submissions.headshot_url IS 'URL to headshot photo';
 COMMENT ON COLUMN athlete_profile_submissions.college_weight_class IS 'Projected college weight class';
-

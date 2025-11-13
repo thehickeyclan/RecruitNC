@@ -25,4 +25,3 @@ SELECT
   secondary_color
 FROM schools
 WHERE name = 'Averett University';
-

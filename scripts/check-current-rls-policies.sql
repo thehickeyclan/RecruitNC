@@ -8,4 +8,3 @@ SELECT
 FROM pg_policies
 WHERE tablename = 'college_coach_stars'
 ORDER BY cmd, policyname;
-

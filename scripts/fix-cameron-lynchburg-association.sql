@@ -94,4 +94,3 @@ BEGIN
   RAISE NOTICE 'Lynchburg School ID: %', lynchburg_school_id;
   RAISE NOTICE 'Cameron Gue Athlete ID: %', cameron_athlete_id;
 END $$;
-

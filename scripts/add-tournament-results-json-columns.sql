@@ -24,4 +24,3 @@ SELECT column_name, data_type, column_default
 FROM information_schema.columns
 WHERE table_name = 'athletes' 
 AND column_name IN ('nhsca_results', 'super32_results');
-

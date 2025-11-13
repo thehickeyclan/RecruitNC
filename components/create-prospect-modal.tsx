@@ -514,4 +514,3 @@ export function CreateProspectModal({
     </Dialog>
   )
 }
-

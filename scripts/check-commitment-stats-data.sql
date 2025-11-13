@@ -41,4 +41,3 @@ SELECT
 FROM athletes
 WHERE college IS NOT NULL AND college != ''
 GROUP BY is_prospect;
-

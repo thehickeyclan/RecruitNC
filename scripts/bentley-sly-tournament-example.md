@@ -3,7 +3,7 @@
 ## Current Structure (What You Have Now)
 
 **Separate columns for each year:**
-```
+\`\`\`
 nhsca_2025_placement: "3rd"
 nhsca_2025_record: "5-1"
 nhsca_2024_placement: "5th"
@@ -17,7 +17,7 @@ super_32_2024_placement: "Finalist"
 super_32_2024_record: "5-1"
 super_32_2023_placement: null
 super_32_2023_record: null
-```
+\`\`\`
 
 **Problems:**
 - Need new columns every year (what about 2026, 2027?)
@@ -31,7 +31,7 @@ super_32_2023_record: null
 **Two JSON columns:**
 
 ### `nhsca_results` (JSONB column)
-```json
+\`\`\`json
 [
   {
     "year": 2025,
@@ -50,10 +50,10 @@ super_32_2023_record: null
     "notes": "Competed up a weight class"
   }
 ]
-```
+\`\`\`
 
 ### `super32_results` (JSONB column)
-```json
+\`\`\`json
 [
   {
     "year": 2025,
@@ -72,7 +72,7 @@ super_32_2023_record: null
     "notes": ""
   }
 ]
-```
+\`\`\`
 
 ---
 
@@ -80,7 +80,7 @@ super_32_2023_record: null
 
 ### Visual Layout (NC United Branded)
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────────────────┐
 │ 🏆 National Tournament Results                                      │
 │                                                                      │
@@ -112,11 +112,11 @@ super_32_2023_record: null
 │                                                                      │
 │ [Save All Tournament Data]                                          │
 └─────────────────────────────────────────────────────────────────────┘
-```
+\`\`\`
 
 ### When You Click "Edit" or "+ Add Year"
 
-```
+\`\`\`
 ┌─────────────────────────────────────┐
 │ Add/Edit NHSCA Result               │
 ├─────────────────────────────────────┤
@@ -153,7 +153,7 @@ super_32_2023_record: null
 │                                     │
 │  [Cancel]           [Save Result]  │
 └─────────────────────────────────────┘
-```
+\`\`\`
 
 ---
 
@@ -176,7 +176,7 @@ super_32_2023_record: null
 
 **How it would show on Bentley's prospect page:**
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────┐
 │ 🏆 National Tournament Performance          │
 ├─────────────────────────────────────────────┤
@@ -189,13 +189,13 @@ super_32_2023_record: null
 │ • 2025: 🥇 Champion (6-0)                   │
 │ • 2024: 🥈 Finalist (5-1)                   │
 └─────────────────────────────────────────────┘
-```
+\`\`\`
 
 ---
 
 ## Migration Script (Safe - No Data Loss)
 
-```sql
+\`\`\`sql
 -- 1. Add new JSON columns
 ALTER TABLE athletes 
 ADD COLUMN nhsca_results JSONB,
@@ -217,7 +217,7 @@ WHERE name = 'Bentley Sly';
 -- 3. Keep old columns for now (for verification)
 -- 4. Once verified, can drop old columns:
 -- ALTER TABLE athletes DROP COLUMN nhsca_2025_placement, DROP COLUMN nhsca_2025_record, ... etc
-```
+\`\`\`
 
 ---
 
@@ -241,4 +241,3 @@ WHERE name = 'Bentley Sly';
 4. Test with Bentley Sly
 5. Verify old vs new data matches
 6. Drop old columns once confident
-

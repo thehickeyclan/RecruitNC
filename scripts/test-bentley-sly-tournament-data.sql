@@ -55,4 +55,3 @@ WHERE name ILIKE '%Bentley%Sly%';
 --   super32_results
 -- FROM athletes
 -- WHERE id = 'ATHLETE_ID_HERE';
-

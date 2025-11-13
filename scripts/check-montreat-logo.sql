@@ -20,4 +20,3 @@ FROM athletes
 WHERE college ILIKE '%montreat%'
 ORDER BY name
 LIMIT 5;
-

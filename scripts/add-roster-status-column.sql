@@ -15,4 +15,3 @@ ALTER TABLE college_coach_stars
 ADD COLUMN IF NOT EXISTS roster_notes TEXT;
 
 COMMENT ON COLUMN college_coach_stars.roster_notes IS 'Additional notes about roster status (e.g., "Transferred to UNC", "Medical redshirt - knee injury")';
-

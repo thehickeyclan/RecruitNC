@@ -27,4 +27,3 @@ WHERE a.recruiting_status = 'College Athlete'
 AND a.graduationyear = 2025
 AND a.college ILIKE '%Roanoke%'
 ORDER BY a.name;
-

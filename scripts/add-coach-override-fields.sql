@@ -102,4 +102,3 @@ FROM information_schema.columns
 WHERE table_name = 'college_coach_stars'
   AND column_name LIKE 'override_%'
 ORDER BY column_name;
-

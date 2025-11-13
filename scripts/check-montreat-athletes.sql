@@ -25,4 +25,3 @@ LEFT JOIN college_coach_stars ccs ON ccs.coach_user_id = up.user_id
 WHERE up.school_id = '8a071081-6b9b-4811-8154-bf38d1900f44'
 GROUP BY up.id, up.full_name, up.email
 ORDER BY up.full_name;
-

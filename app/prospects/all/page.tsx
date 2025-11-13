@@ -760,4 +760,3 @@ function buildLegacyStateResults(prospect: Prospect): TournamentResult[] {
     },
   ]
 }
-

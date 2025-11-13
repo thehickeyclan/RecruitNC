@@ -25,4 +25,3 @@ WHERE pipeline_stage = 'Contacted'
 LIMIT 10;
 
 COMMENT ON COLUMN college_coach_stars.pipeline_stage IS 'Recruiting pipeline stage: Prospect, Contacted, Recruiting, Offered, Committed, Signed, Lost';
-

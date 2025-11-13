@@ -356,5 +356,3 @@ export default function GreensboroCollegePage() {
     </div>
   )
 }
-
-

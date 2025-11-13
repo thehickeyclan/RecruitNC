@@ -134,4 +134,3 @@ FROM athletes;
 -- 3. Weight class is pulled from athlete's main weight class field
 -- 4. All placement and record data is preserved exactly as-is
 -- 5. Empty arrays ([]) mean no tournament data for that tournament
-

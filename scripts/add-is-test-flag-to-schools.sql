@@ -16,4 +16,3 @@ COMMENT ON COLUMN schools.is_test IS 'Marks schools as test/internal. These scho
 SELECT id, name, is_test 
 FROM schools 
 ORDER BY is_test DESC, name;
-

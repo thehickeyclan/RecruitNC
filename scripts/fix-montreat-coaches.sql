@@ -29,4 +29,3 @@ SELECT
   verified_coach
 FROM user_profiles
 WHERE email IN ('james.connaghan@montreat.edu', 'jacob.power@montreat.edu');
-

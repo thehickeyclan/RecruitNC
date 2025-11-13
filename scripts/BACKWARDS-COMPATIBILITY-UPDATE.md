@@ -54,23 +54,23 @@ All display components now:
 ### Example: Getting NHSCA Data
 
 **New Way (if data migrated):**
-```javascript
+\`\`\`javascript
 athlete.nhsca_results = [
   {year: 2025, placement: "3rd", record: "5-1"},
   {year: 2024, placement: "5th", record: "4-2"}
 ]
 // ✅ Uses this
-```
+\`\`\`
 
 **Old Way (if not yet migrated):**
-```javascript
+\`\`\`javascript
 athlete.nhsca_2025_placement = "3rd"
 athlete.nhsca_2025_record = "5-1"
 // ✅ Falls back to this
-```
+\`\`\`
 
 ### Code Pattern Used Everywhere:
-```typescript
+\`\`\`typescript
 // Try new format
 if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
   // Use JSON data
@@ -79,7 +79,7 @@ if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhs
   // Fallback to old columns
   return parseOldColumns(athlete)
 }
-```
+\`\`\`
 
 ---
 
@@ -146,7 +146,7 @@ if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhs
 These still have hardcoded references to old columns in the athlete detail modal.
 
 **Pattern to use:**
-```typescript
+\`\`\`typescript
 // Current (hardcoded):
 {selectedAthlete.nhsca_2024_placement && ...}
 
@@ -156,7 +156,7 @@ These still have hardcoded references to old columns in the athlete detail modal
   const result2024 = nhscaResults.find(r => r.year === 2024)
   return result2024?.placement && ...
 })()}
-```
+\`\`\`
 
 ---
 
@@ -187,4 +187,3 @@ After running migration:
 **Status:** ✅ Core components updated and deployed  
 **Next:** Run migration script when ready  
 **Date:** November 4, 2025
-

@@ -180,4 +180,3 @@ export function BirthdayCalendar({ prospects, onAthleteClick }: BirthdayCalendar
     </Card>
   )
 }
-

@@ -31,4 +31,3 @@ async function redirectToPortal(collegeParam: string) {
 
   redirect(`/schools/${resolved.id}/portal`)
 }
-

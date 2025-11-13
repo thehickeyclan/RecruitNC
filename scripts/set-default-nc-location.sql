@@ -25,4 +25,3 @@ WHERE location = 'NC'
 LIMIT 10;
 
 COMMENT ON COLUMN athletes.location IS 'Athlete state/location (e.g., NC, VA, SC). Used to track in-state vs out-of-state recruiting.';
-

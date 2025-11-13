@@ -31,4 +31,3 @@ async function redirectToMyRecruits(collegeParam: string) {
 
   redirect(`/schools/${resolved.id}/portal`)
 }
-

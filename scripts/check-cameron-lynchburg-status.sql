@@ -78,4 +78,3 @@ BEGIN
   RAISE NOTICE 'Admin users (not tied to Lynchburg): %', admin_user_count;
 
 END $$;
-

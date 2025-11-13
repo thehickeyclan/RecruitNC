@@ -157,4 +157,3 @@ export function getAllTournamentResults(athlete: any): {
     hasAny: nhsca.length > 0 || super32.length > 0,
   }
 }
-

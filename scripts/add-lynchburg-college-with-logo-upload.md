@@ -22,4 +22,3 @@ After you have the logo URL, update `scripts/add-lynchburg-college.sql` with the
 The colors from the logo are:
 - **Primary Color**: #DC143C (Crimson red - vibrant red from the hornet body and letters)
 - **Secondary Color**: #808080 (Medium grey - from the hornet head and stripes)
-

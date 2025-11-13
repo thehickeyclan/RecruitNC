@@ -19,4 +19,3 @@ AND column_name IN (
 ORDER BY column_name;
 
 -- This should return 11 rows (9 financial + 2 roster)
-

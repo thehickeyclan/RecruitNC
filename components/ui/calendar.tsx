@@ -52,4 +52,3 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(({ className, c
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-

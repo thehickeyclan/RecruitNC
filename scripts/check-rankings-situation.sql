@@ -38,4 +38,3 @@ BEGIN
     RAISE NOTICE 'prospect_rankings table exists, checking contents...';
   END IF;
 END $$;
-

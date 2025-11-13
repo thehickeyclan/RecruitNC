@@ -123,4 +123,3 @@ export async function applyActivityEffects(
     return { pipeline_stage: undefined }
   }
 }
-

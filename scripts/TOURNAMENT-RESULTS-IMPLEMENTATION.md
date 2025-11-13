@@ -23,11 +23,11 @@ A scalable, branded tournament results management system for NHSCA and Super 32 
 - Safe migration (uses `IF NOT EXISTS`)
 
 **⚠️ ACTION REQUIRED:** Run this SQL in Supabase SQL Editor:
-```sql
+\`\`\`sql
 ALTER TABLE athletes 
 ADD COLUMN IF NOT EXISTS nhsca_results JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS super32_results JSONB DEFAULT '[]'::jsonb;
-```
+\`\`\`
 
 ### 2. Tournament Results Editor Component
 **File:** `components/tournament-results-editor.tsx`
@@ -57,11 +57,11 @@ ADD COLUMN IF NOT EXISTS super32_results JSONB DEFAULT '[]'::jsonb;
 
 ### Step 1: Run Database Migration
 Go to Supabase SQL Editor and run:
-```sql
+\`\`\`sql
 ALTER TABLE athletes 
 ADD COLUMN IF NOT EXISTS nhsca_results JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS super32_results JSONB DEFAULT '[]'::jsonb;
-```
+\`\`\`
 
 ### Step 2: Access the Feature
 1. Go to `/admin/athletes`
@@ -113,7 +113,7 @@ ADD COLUMN IF NOT EXISTS super32_results JSONB DEFAULT '[]'::jsonb;
 | 2024 | Finalist  | 5-1    | 152    | Junior   |
 
 This would be stored as:
-```json
+\`\`\`json
 {
   "nhsca_results": [
     {"year": 2025, "placement": "3rd", "record": "5-1", "weight": "157", "division": "Senior"},
@@ -124,7 +124,7 @@ This would be stored as:
     {"year": 2024, "placement": "Finalist", "record": "5-1", "weight": "152", "division": "Junior"}
   ]
 }
-```
+\`\`\`
 
 ---
 
@@ -221,4 +221,3 @@ The UI includes:
 **Status:** ✅ Complete and Deployed
 **Date:** November 4, 2025
 **Environment:** Production (app.ncwrestlingunited.com)
-

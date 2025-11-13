@@ -21,4 +21,3 @@ COMMENT ON COLUMN college_coach_stars.merit_scholarship_eligible IS 'Whether the
 COMMENT ON COLUMN college_coach_stars.need_based_aid_eligible IS 'Whether the athlete is eligible for need-based aid';
 COMMENT ON COLUMN college_coach_stars.aid_application_status IS 'Status of financial aid application (not_started, in_progress, fafsa_submitted, completed, not_applying)';
 COMMENT ON COLUMN college_coach_stars.financial_concerns IS 'Any financial concerns that may affect enrollment decisions';
-

@@ -18,4 +18,3 @@ WHERE (
   ("firstName" ILIKE '%Jalen%' AND "lastName" ILIKE '%Bethea%')
 )
 AND graduationyear = 2025;
-

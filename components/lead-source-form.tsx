@@ -187,4 +187,3 @@ export function LeadSourceForm({ athleteId, isStarred, defaultValues, onSaved, v
     </Card>
   )
 }
-

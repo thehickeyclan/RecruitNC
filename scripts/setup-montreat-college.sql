@@ -86,4 +86,3 @@ ORDER BY graduationyear;
 -- app/recruiting-portal/montreat-college/page.tsx
 -- Use the template from other school portals (lynchburg, etc.)
 -- Brand colors: Blue (#0047AB or similar) and Gold (#FFD700)
-

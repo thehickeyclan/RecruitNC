@@ -41,4 +41,3 @@ JOIN athletes a ON a.id = ccs.athlete_id
 JOIN user_profiles up ON up.user_id = ccs.coach_user_id
 WHERE up.school_id = 'YOUR_MONTREAT_SCHOOL_ID'  -- Replace this!
 ORDER BY ccs.starred_at DESC;
-

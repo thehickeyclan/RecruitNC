@@ -21,4 +21,3 @@ CHECK (
 
 COMMENT ON CONSTRAINT recruiting_actions_action_type_check ON recruiting_actions
 IS 'Allowed activity types for recruiting_actions table';
-

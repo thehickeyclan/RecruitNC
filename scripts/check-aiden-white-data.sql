@@ -16,4 +16,3 @@ SELECT
   super_32_2024_placement
 FROM athletes
 WHERE id = 'a95c204d-785c-427a-98cf-1930410b0dc7';
-

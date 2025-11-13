@@ -13,4 +13,3 @@ FROM college_coach_stars
 WHERE pipeline_stage IS NOT NULL
 GROUP BY pipeline_stage
 ORDER BY count DESC;
-
