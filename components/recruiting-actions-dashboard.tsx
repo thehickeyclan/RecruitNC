@@ -18,6 +18,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 const DEFAULT_BRAND_COLOR = "#0b1728"
 
+const STAGE_ORDER: { id: string; label: string }[] = [
+  { id: "Prospect", label: "Prospect" },
+  { id: "Contacted", label: "Contacted" },
+  { id: "Recruiting", label: "Recruiting" },
+  { id: "Visited", label: "Visited" },
+  { id: "Offered", label: "Offered" },
+  { id: "Committed", label: "Committed" },
+  { id: "Signed", label: "Signed" },
+  { id: "Lost", label: "Lost" },
+]
+
 const hexToRgb = (hex: string) => {
   const sanitized = hex.replace("#", "")
   if (sanitized.length !== 6) return null
@@ -33,6 +44,21 @@ const rgbaFromHex = (hex: string, alpha: number) => {
   const rgb = hexToRgb(hex)
   if (!rgb) return `rgba(37, 99, 235, ${alpha})` // fallback blue
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
+}
+
+const normalizeStage = (stage: string | null | undefined): string => {
+  const normalized = (stage || "Prospect").trim()
+  const stageLower = normalized.toLowerCase()
+
+  if (stageLower === "college athlete" || stageLower === "current college athlete") {
+    return "Signed"
+  }
+
+  if (stageLower === "evaluating" || stageLower === "reached out") {
+    return "Contacted"
+  }
+
+  return normalized
 }
 
 interface RecruitingAction {
