@@ -13,6 +13,13 @@ const HARDCODED_SLUG_MAP: Record<string, { id: string; label?: string }> = {
   "lynchburg-college": { id: "56e27c86-7b74-441b-a18a-c2606abe7356", label: "Lynchburg College" },
   "university-of-lynchburg": { id: "56e27c86-7b74-441b-a18a-c2606abe7356", label: "Lynchburg College" },
   "marymount": { id: "e4c7b37e-4f3f-47a0-9b7c-ea3a3e820007", label: "Marymount University" },
+  "marymount-university": { id: "e4c7b37e-4f3f-47a0-9b7c-ea3a3e820007", label: "Marymount University" },
+  ferrum: { id: "f1b3e0e1-6c3d-4a20-bcda-412ace284002", label: "Ferrum University" },
+  "ferrum-college": { id: "f1b3e0e1-6c3d-4a20-bcda-412ace284002", label: "Ferrum University" },
+  "ferrum-university": { id: "f1b3e0e1-6c3d-4a20-bcda-412ace284002", label: "Ferrum University" },
+  "emory-and-henry": { id: "107a4ce9-7e38-416f-886b-2589b4479f77", label: "Emory & Henry College" },
+  "emory-and-henry-college": { id: "107a4ce9-7e38-416f-886b-2589b4479f77", label: "Emory & Henry College" },
+  "emory-henry": { id: "107a4ce9-7e38-416f-886b-2589b4479f77", label: "Emory & Henry College" },
 }
 
 export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchool | null> {
