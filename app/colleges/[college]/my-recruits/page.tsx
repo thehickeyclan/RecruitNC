@@ -1,4 +1,6 @@
-import { redirect } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+
+import { resolveSchoolFromSlug } from "@/lib/resolve-school-from-slug"
 
 interface CollegePageProps {
   params: {
@@ -6,14 +8,24 @@ interface CollegePageProps {
   }
 }
 
-export default function CollegeMyRecruitsRedirect({ params }: CollegePageProps) {
-  const slug = params.college?.toLowerCase()
-  const schoolId = slug
+export default async function CollegeMyRecruitsRedirect({ params }: CollegePageProps) {
+  await redirectToMyRecruits(params.college)
+}
 
-  if (!schoolId) {
-    redirect("/404")
+async function redirectToMyRecruits(collegeParam: string) {
+  const slug = collegeParam?.toLowerCase()
+
+  if (!slug) {
+    notFound()
   }
 
-  redirect(`/schools/${schoolId}/portal`)
+  const resolved = await resolveSchoolFromSlug(slug)
+
+  if (!resolved) {
+    console.error(`[college my recruits redirect] Unable to resolve slug "${slug}" to a school`)
+    notFound()
+  }
+
+  redirect(`/schools/${resolved.id}/portal`)
 }
 
