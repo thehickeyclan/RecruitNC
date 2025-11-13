@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
-import { Filter, LayoutGrid, List, Loader2, Search, Users } from "lucide-react"
+import { Filter, LayoutGrid, List, Loader2, Search, Users } from 'lucide-react'
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
 
@@ -305,6 +305,24 @@ export default function AllProspectsPage() {
         buildLegacySuper32Results(prospect),
       )
 
+      if (index < 5) {
+        console.log(`[v0] Tournament data for ${prospect.name}:`, {
+          raw_state_results: prospect.state_results,
+          processed_state_results: stateResults,
+          raw_nhsca_results: prospect.nhsca_results,
+          processed_nhsca_results: nhscaResults,
+          raw_super32_results: prospect.super_32_results,
+          processed_super32_results: super32Results,
+          legacy_fields: {
+            nhsca_2024_placement: prospect.nhsca_2024_placement,
+            nhsca_2025_placement: prospect.nhsca_2025_placement,
+            super_32_2024_placement: prospect.super_32_2024_placement,
+            super_32_2025_placement: prospect.super_32_2025_placement,
+            state_championship_summary: prospect.state_championship_summary,
+          }
+        })
+      }
+
       return {
         id: prospect.id || `prospect-${index}`,
         name: prospect.name || "Unknown",
@@ -339,6 +357,15 @@ export default function AllProspectsPage() {
         recruiting_status: prospect.recruiting_status ?? undefined,
       }
     })
+    
+    const tournamentStats = {
+      totalAthletes: mapped.length,
+      withStateData: mapped.filter(a => a.state_results && a.state_results.length > 0).length,
+      withNHSCAData: mapped.filter(a => a.nhsca_results && a.nhsca_results.length > 0).length,
+      withSuper32Data: mapped.filter(a => a.super_32_results && a.super_32_results.length > 0).length,
+    }
+    console.log("[v0] Tournament data summary:", tournamentStats)
+    
     if (mapped.length > 0) {
       console.log("[prospects/all] tableAthletes sample", mapped.slice(0, 3))
     }
