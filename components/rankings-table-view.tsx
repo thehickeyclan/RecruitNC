@@ -285,12 +285,12 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
           <TableHeader>
             <TableRow style={{ backgroundColor: "#0D1A4D" }} className="text-white hover:bg-[#0D1A4D]">
               {canSeeWatchList && (
-                <TableHead className="w-12 text-white font-semibold text-center">
+                <TableHead className="w-16 text-white font-semibold text-center">
                   <Star className="w-4 h-4 inline-block" />
                 </TableHead>
               )}
               {!hideRankColumn && (
-                <TableHead className="w-20 text-white font-semibold">
+                <TableHead className="w-16 text-white font-semibold">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -301,7 +301,7 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   </Button>
                 </TableHead>
               )}
-              <TableHead className="min-w-[220px] text-white font-semibold pl-4">
+              <TableHead className="min-w-[200px] text-white font-semibold">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -311,7 +311,7 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   Name <SortIcon field="name" />
                 </Button>
               </TableHead>
-              <TableHead className="w-[110px] text-white font-semibold text-center">Committed</TableHead>
+              <TableHead className="w-24 text-white font-semibold">Committed</TableHead>
               <TableHead className="min-w-[180px] text-white font-semibold">
                 <Button
                   variant="ghost"
@@ -361,7 +361,7 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
                 >
                 {canSeeWatchList && (
-                  <TableCell className="text-center align-middle">
+                  <TableCell className="text-center">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -378,8 +378,8 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                   </TableCell>
                 )}
                 {!hideRankColumn && (
-                  <TableCell className="font-medium pr-2">
-                    <div className="flex items-center gap-2 min-w-[82px]">
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
                       {athlete.prospect_ranking <= 30 && (
                         <div
                           className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
@@ -401,8 +401,8 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                     </div>
                   </TableCell>
                 )}
-                <TableCell className="pl-4">
-                  <div className="flex items-center gap-3 leading-tight">
+                <TableCell>
+                  <div className="flex items-center gap-3">
                     <Link
                       href={`/unified-profile/${athlete.id}`}
                       className="hover:text-[#D3B574] transition-colors underline"
@@ -411,7 +411,7 @@ export function RankingsTableView({ athletes, loading, hideRankColumn = false }:
                     </Link>
                   </div>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell>
                   {athlete.recruiting_status === "Committed" &&
                   athlete.college &&
                   athlete.college !== "Not specified" &&
