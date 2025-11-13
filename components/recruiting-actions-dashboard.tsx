@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState, forwardRef, useImperativeHandle, useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Clock, AlertCircle, TableIcon, LayoutDashboard, ChevronLeft, ChevronRight, Edit, X, Check, Plus, Cake } from "lucide-react"
+import { CalendarIcon, Clock, AlertCircle, TableIcon, LayoutDashboard, ChevronLeft, ChevronRight, Edit, X, Check, Plus, Cake, Sparkles, Phone, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -72,6 +72,46 @@ export interface RecruitingActionsDashboardRef {
   openCreateActivity: () => void
 }
 
+const ACTIVITY_EMOJI_MAP: Record<string, string> = {
+  call: "📞",
+  phone_call: "📞",
+  text: "💬",
+  text_message: "💬",
+  email: "📧",
+  visit: "🏛️",
+  campus_visit: "🏛️",
+  prospect_camp: "🏕️",
+  watched_live: "👀",
+  letter: "✍️",
+  social_media: "📱",
+  other: "📝",
+}
+
+const ACTION_TYPE_TO_FORM_VALUE: Record<string, string> = {
+  call: "phone_call",
+  phone_call: "phone_call",
+  text: "text_message",
+  text_message: "text_message",
+  email: "email",
+  visit: "campus_visit",
+  campus_visit: "campus_visit",
+  prospect_camp: "prospect_camp",
+  watched_live: "watched_live",
+  letter: "letter",
+  social_media: "social_media",
+  other: "other",
+}
+
+const getCoachInitials = (name?: string | null) => {
+  if (!name) return ""
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+  return initials.slice(0, 2)
+}
+
 export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardRef, RecruitingActionsDashboardProps>(
   ({ schoolId, athletes: providedAthletes, prospects, onViewChange, brandColor }, ref) => {
   const [actions, setActions] = useState<RecruitingAction[]>([])
@@ -100,6 +140,8 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [selectedCoachFilter, setSelectedCoachFilter] = useState<string>("all")
   const [tabValue, setTabValue] = useState<"dashboard" | "calendar" | "activity">("dashboard")
   const [insightMode, setInsightMode] = useState<"athletes" | "stage">("athletes")
+  const [selectedStarFilter, setSelectedStarFilter] = useState<string>("all")
+  const [showUntouchedOnly, setShowUntouchedOnly] = useState<boolean>(false)
   const resolvedBrandColor = brandColor || DEFAULT_BRAND_COLOR
 
   // Expose method to parent component to open the create activity modal
@@ -204,30 +246,43 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [actions])
 
-const coachFilterOptions = useMemo(() => {
-  const unique = new Map<string, string>()
-  actions.forEach((action) => {
-    if (action.coach_user_id && action.coach_name) {
-      unique.set(action.coach_user_id, action.coach_name)
-    }
-  })
-  return Array.from(unique.entries())
-    .map(([id, name]) => ({ id, name }))
-    .sort((a, b) => a.name.localeCompare(b.name))
-}, [actions])
+  const coachFilterOptions = useMemo(() => {
+    const unique = new Map<string, string>()
+    actions.forEach((action) => {
+      if (action.coach_user_id && action.coach_name) {
+        unique.set(action.coach_user_id, action.coach_name)
+      }
+    })
+    return Array.from(unique.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [actions])
 
   const filteredActions = useMemo(() => {
-    if (selectedAthleteFilter === "all") {
-    return selectedCoachFilter === "all"
-      ? actions
-      : actions.filter((action) => action.coach_user_id === selectedCoachFilter)
+    let result = actions
+
+    if (selectedAthleteFilter !== "all") {
+      result = result.filter((action) => action.athlete_id === selectedAthleteFilter)
     }
-  return actions.filter((action) => {
-    const matchesAthlete = action.athlete_id === selectedAthleteFilter
-    const matchesCoach = selectedCoachFilter === "all" || action.coach_user_id === selectedCoachFilter
-    return matchesAthlete && matchesCoach
-  })
-}, [actions, selectedAthleteFilter, selectedCoachFilter])
+
+    if (selectedCoachFilter !== "all") {
+      result = result.filter((action) => action.coach_user_id === selectedCoachFilter)
+    }
+
+    if (selectedStarFilter !== "all") {
+      result = result.filter((action) => {
+        const rating = starRatingByAthlete.get(action.athlete_id) ?? null
+        if (selectedStarFilter === "unrated") return rating === null
+        return rating === Number(selectedStarFilter)
+      })
+    }
+
+    if (showUntouchedOnly) {
+      return []
+    }
+
+    return result
+  }, [actions, selectedAthleteFilter, selectedCoachFilter, selectedStarFilter, showUntouchedOnly, starRatingByAthlete])
 
   const normalizeActionType = (type?: string | null) => {
     const value = (type || "other").toLowerCase()
@@ -360,6 +415,7 @@ const activityTrendData = useMemo(() => {
           name: prospect.name,
           graduationYear: prospect.graduationyear ?? null,
           starRating: prospect.star_rating ?? null,
+          stage: normalizeStage(prospect.pipeline_stage),
           lastTouch,
           daysSince,
           status,
@@ -392,37 +448,23 @@ const activityTrendData = useMemo(() => {
     }
   }, [actions, prospects])
 
-  const STAGE_ORDER: { id: string; label: string }[] = [
-    { id: "Prospect", label: "Prospect" },
-    { id: "Contacted", label: "Contacted" },
-    { id: "Recruiting", label: "Recruiting" },
-    { id: "Visited", label: "Visited" },
-    { id: "Offered", label: "Offered" },
-    { id: "Committed", label: "Committed" },
-    { id: "Signed", label: "Signed" },
-    { id: "Lost", label: "Lost" },
-  ]
-
-  const normalizeStage = (stage?: string | null) => {
-    if (!stage) return "Prospect"
-    const lower = stage.trim().toLowerCase()
-    if (lower === "college athlete" || lower === "current college athlete") return "Signed"
-    if (lower === "evaluating" || lower === "reached out") return "Contacted"
-    const matched = STAGE_ORDER.find((s) => s.id.toLowerCase() === lower || s.label.toLowerCase() === lower)
-    return matched ? matched.label : stage
-  }
-
   const stageHeatmap = useMemo(() => {
     const stageMap = new Map<string, string>()
+    const stageCountMap = new Map<string, number>()
     ;(prospects || []).forEach((prospect) => {
-      stageMap.set(prospect.id, normalizeStage(prospect.pipeline_stage))
+      const normalizedStage = normalizeStage(prospect.pipeline_stage)
+      stageMap.set(prospect.id, normalizedStage)
+      stageCountMap.set(normalizedStage, (stageCountMap.get(normalizedStage) || 0) + 1)
     })
 
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - 30)
 
     const stageLabels = STAGE_ORDER.map((stage) => stage.label)
-    const activityList = activityTypes.length > 0 ? activityTypes : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
+    const activityList =
+      activityTypes.length > 0
+        ? activityTypes
+        : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
 
     const counts = new Map<string, Map<string, number>>()
     const addCount = (stageLabel: string, activityType: string) => {
@@ -456,7 +498,12 @@ const activityTrendData = useMemo(() => {
       return Math.max(maxValue, rowMax)
     }, 0)
 
-    return { rows, activityList, max }
+    const stageCountsObject: Record<string, number> = {}
+    ;[...stageCountMap.entries()].forEach(([label, value]) => {
+      stageCountsObject[label] = value
+    })
+
+    return { rows, activityList, max, stageCounts: stageCountsObject }
   }, [actions, activityTypes, prospects])
 
   const athleteActivityLeaderboard = useMemo(() => {
@@ -538,6 +585,50 @@ const activityTrendData = useMemo(() => {
 
     return { data, activityList, max }
   }, [actions, activityTypes, prospects])
+
+  const activityMixByAthlete = useMemo(() => {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 30)
+
+    const map = new Map<string, { total: number; calls: number; texts: number; emails: number; visits: number; other: number }>()
+
+    const increment = (athleteId: string, key: "calls" | "texts" | "emails" | "visits" | "other") => {
+      if (!map.has(athleteId)) {
+        map.set(athleteId, { total: 0, calls: 0, texts: 0, emails: 0, visits: 0, other: 0 })
+      }
+      const entry = map.get(athleteId)!
+      entry[key] += 1
+      entry.total += 1
+    }
+
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const actionDate = new Date(action.action_date)
+      if (Number.isNaN(actionDate.getTime())) return
+      if (actionDate < cutoff) return
+      const type = normalizeActionType(action.action_type)
+      switch (type) {
+        case "call":
+          increment(action.athlete_id, "calls")
+          break
+        case "text":
+        case "social_media":
+          increment(action.athlete_id, "texts")
+          break
+        case "email":
+          increment(action.athlete_id, "emails")
+          break
+        case "visit":
+        case "prospect_camp":
+          increment(action.athlete_id, "visits")
+          break
+        default:
+          increment(action.athlete_id, "other")
+      }
+    })
+
+    return map
+  }, [actions])
 
   const renderCadenceSummary = () => {
     const { summary, overdueList, warningList, noActivityList } = cadenceStats
@@ -709,7 +800,12 @@ const activityTrendData = useMemo(() => {
             {stageHeatmap.rows.map((row) => (
               <div key={row.stage} className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
                 <div className="h-12 flex items-center px-3 text-sm font-medium border border-border/60 bg-muted/40 first:border-l">
-                  {row.stage}
+                  <div className="flex flex-col">
+                    <span>{row.stage}</span>
+                    <span className="text-[11px] font-normal text-muted-foreground">
+                      {stageHeatmap.stageCounts[row.stage] ?? 0} athletes
+                    </span>
+                  </div>
                 </div>
                 {stageHeatmap.activityList.map((type) => {
                   const count = row.counts[type] || 0
@@ -1207,6 +1303,205 @@ const activityTrendData = useMemo(() => {
     }
   }
 
+  const starRatingByAthlete = useMemo(() => {
+    const map = new Map<string, number | null>()
+    ;(prospects || []).forEach((prospect) => {
+      map.set(prospect.id, prospect.star_rating ?? null)
+    })
+    return map
+  }, [prospects])
+
+  const cadenceDetailByAthlete = useMemo(() => {
+    const map = new Map<string, any>()
+    cadenceStats.details.forEach((detail) => map.set(detail.id, detail))
+    return map
+  }, [cadenceStats])
+
+  const filteredUntouchedAthletes = useMemo(() => {
+    let list = cadenceStats.noActivityList
+
+    if (selectedAthleteFilter !== "all") {
+      list = list.filter((detail) => detail.id === selectedAthleteFilter)
+    }
+
+    if (selectedStarFilter !== "all") {
+      list = list.filter((detail) => {
+        if (selectedStarFilter === "unrated") return detail.starRating == null
+        return detail.starRating === Number(selectedStarFilter)
+      })
+    }
+
+    if (selectedCoachFilter !== "all") {
+      // Untouched athletes do not have an assigned coach interaction yet
+      return []
+    }
+
+    return list
+  }, [cadenceStats, selectedAthleteFilter, selectedCoachFilter, selectedStarFilter])
+
+  const openScheduleForAthlete = (
+    athleteId: string,
+    defaultType: string = "phone_call",
+    options?: { followUpDate?: string },
+  ) => {
+    const today = new Date()
+    const isoDate = today.toISOString().split("T")[0]
+    const actionTypeValue = ACTION_TYPE_TO_FORM_VALUE[defaultType] ?? defaultType
+    setNewActivityForm((prev) => ({
+      ...prev,
+      athleteId,
+      actionType: actionTypeValue,
+      actionDate: isoDate,
+      followUpDate: options?.followUpDate ?? "",
+      description: "",
+      outcome: "",
+    }))
+    setCreatingActivity(true)
+  }
+
+  const renderTodayPlan = () => {
+    const getSuggestedAction = (detail: any) => {
+      const mix = activityMixByAthlete.get(detail.id)
+      if (!detail.lastTouch) {
+        return { label: "Kick off with a call", actionType: "call" }
+      }
+      if (mix) {
+        if (mix.texts >= 3 && mix.calls === 0) {
+          return { label: "Place a call to balance the touch mix", actionType: "call" }
+        }
+        if (mix.calls >= 2 && mix.texts === 0) {
+          return { label: "Send a text or email check-in", actionType: "text" }
+        }
+      }
+      if (detail.stage === "Offered") {
+        return { label: "Follow up on offer details", actionType: "call" }
+      }
+      if (detail.stage === "Recruiting" && detail.daysSince && detail.daysSince > detail.threshold * 0.7) {
+        return { label: "Schedule a visit or video call", actionType: "visit" }
+      }
+      return { label: "Log a meaningful touch", actionType: "call" }
+    }
+
+    const highPriority = cadenceStats.overdueList.slice(0, 5)
+    const watchlist = cadenceStats.warningList.slice(0, 5)
+    const untouched = cadenceStats.noActivityList.slice(0, 5)
+    const momentum = cadenceStats.details
+      .filter((detail) => detail.status === "onTrack" && detail.daysSince !== null && detail.daysSince <= 2)
+      .slice(0, 5)
+
+    const hasContent = highPriority.length + watchlist.length + untouched.length + momentum.length > 0
+    if (!hasContent) {
+      return null
+    }
+
+    const renderPlanList = (opts: {
+      title: string
+      items: typeof cadenceStats.details
+      emptyCopy: string
+      tone?: "primary" | "warning" | "danger"
+    }) => {
+      const { title, items, emptyCopy, tone = "primary" } = opts
+      const toneClasses =
+        tone === "danger"
+          ? "text-red-500"
+          : tone === "warning"
+            ? "text-amber-500"
+            : "text-primary"
+
+      return (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
+            <Badge variant="secondary" className="text-[10px] font-medium">
+              {items.length}
+            </Badge>
+          </div>
+          {items.length === 0 ? (
+            <p className="text-xs text-muted-foreground">{emptyCopy}</p>
+          ) : (
+            <ul className="space-y-3">
+              {items.map((detail) => {
+                const suggestion = getSuggestedAction(detail)
+                const daysCopy =
+                  detail.daysSince === null ? "No touches logged" : `${detail.daysSince}d since last touch`
+
+                return (
+                  <li key={detail.id} className="flex items-start justify-between gap-3 rounded-md border border-border/40 bg-background/60 p-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{detail.name}</span>
+                        {detail.starRating ? (
+                          <Badge variant="outline" className="text-[10px] font-medium">
+                            {detail.starRating}★
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
+                            Unrated
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="text-[10px] font-medium">
+                          {detail.stage}
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">{daysCopy}</p>
+                      <p className={`text-xs font-medium ${toneClasses}`}>{suggestion.label}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 whitespace-nowrap"
+                      onClick={() => openScheduleForAthlete(detail.id, suggestion.actionType)}
+                    >
+                      Schedule
+                    </Button>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <Card className="border border-muted/50 bg-gradient-to-br from-background via-background to-background/80 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Today's Plan
+          </CardTitle>
+          <CardDescription>High-impact outreach suggestions based on recent cadence and activity mix.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-2">
+          {renderPlanList({
+            title: "High Priority",
+            items: highPriority,
+            emptyCopy: "Nobody is overdue right now. Keep the momentum!",
+            tone: "danger",
+          })}
+          {renderPlanList({
+            title: "Momentum",
+            items: momentum,
+            emptyCopy: "No fresh momentum yet. Log a fast touch today.",
+            tone: "primary",
+          })}
+          {renderPlanList({
+            title: "Watchlist",
+            items: watchlist,
+            emptyCopy: "No warnings today. Stay proactive!",
+            tone: "warning",
+          })}
+          {renderPlanList({
+            title: "Untouched",
+            items: untouched,
+            emptyCopy: "All athletes have at least one touch. Great job!",
+            tone: "primary",
+          })}
+        </CardContent>
+      </Card>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -1605,6 +1900,7 @@ const activityTrendData = useMemo(() => {
               <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
             </CardHeader>
             <CardContent>
+              {renderTodayPlan()}
               {renderCadenceSummary()}
               <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                 <span className="text-sm font-semibold text-muted-foreground">Pipeline insights</span>
@@ -1652,6 +1948,317 @@ const activityTrendData = useMemo(() => {
                   {renderHeatmapCard()}
                 </div>
               )}
+
+              <div className="mt-8 space-y-4">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Select value={selectedAthleteFilter} onValueChange={setSelectedAthleteFilter}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="All athletes" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+                        <SelectItem value="all">All athletes</SelectItem>
+                        {athleteFilterOptions.map((athlete) => (
+                          <SelectItem key={athlete.id} value={athlete.id}>
+                            {athlete.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedCoachFilter} onValueChange={setSelectedCoachFilter}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="All coaches" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+                        <SelectItem value="all">All coaches</SelectItem>
+                        {coachFilterOptions.map((coach) => (
+                          <SelectItem key={coach.id} value={coach.id}>
+                            {coach.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedStarFilter} onValueChange={setSelectedStarFilter}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue placeholder="All ratings" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+                        <SelectItem value="all">All ratings</SelectItem>
+                        <SelectItem value="5">5★</SelectItem>
+                        <SelectItem value="4">4★</SelectItem>
+                        <SelectItem value="3">3★</SelectItem>
+                        <SelectItem value="2">2★</SelectItem>
+                        <SelectItem value="1">1★</SelectItem>
+                        <SelectItem value="unrated">Unrated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant={showUntouchedOnly ? "default" : "outline"}
+                      size="sm"
+                      className="h-11"
+                      onClick={() => setShowUntouchedOnly((prev) => !prev)}
+                    >
+                      Untouched only
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAthleteFilter("all")
+                        setSelectedCoachFilter("all")
+                        setSelectedStarFilter("all")
+                        setShowUntouchedOnly(false)
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={() => setCreatingActivity(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Log activity
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card/60 shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[1100px] w-full text-sm">
+                      <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <tr>
+                          <th className="text-left px-4 py-3">Athlete</th>
+                          <th className="text-left px-4 py-3">Last activity</th>
+                          <th className="text-left px-4 py-3">Coach</th>
+                          <th className="text-left px-4 py-3">Outcome</th>
+                          <th className="text-left px-4 py-3">Follow-up</th>
+                          <th className="text-left px-4 py-3">Notes</th>
+                          <th className="text-right px-4 py-3">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {showUntouchedOnly ? (
+                          filteredUntouchedAthletes.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                                No untouched athletes match your filters.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredUntouchedAthletes.map((detail) => (
+                              <tr key={detail.id} className="border-t border-border/50 hover:bg-muted/20">
+                                <td className="px-4 py-4">
+                                  <div className="group flex items-center gap-3">
+                                    <div className="flex flex-col">
+                                      <span className="font-semibold text-foreground">{detail.name}</span>
+                                      <div className="flex gap-2 text-xs text-muted-foreground mt-1">
+                                        <span>{detail.stage}</span>
+                                        <span>•</span>
+                                        <span>{detail.starRating ? `${detail.starRating}★` : "Unrated"}</span>
+                                      </div>
+                                    </div>
+                                    <div className="ml-auto hidden items-center gap-1 group-hover:flex">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => openScheduleForAthlete(detail.id, "call")}
+                                      >
+                                        <Phone className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => openScheduleForAthlete(detail.id, "email")}
+                                      >
+                                        <Mail className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <Badge variant="outline" className="text-[10px] uppercase">
+                                      No activity logged
+                                    </Badge>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4">
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span className="text-lg">🆕</span>
+                                    <span>Log the first touch</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4 text-muted-foreground">—</td>
+                                <td className="px-4 py-4 text-muted-foreground">—</td>
+                                <td className="px-4 py-4">
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-8">
+                                        Schedule follow-up
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2" align="start">
+                                      <Calendar
+                                        mode="single"
+                                        selected={undefined}
+                                        onSelect={(date) => {
+                                          if (!date) return
+                                          const iso = date.toISOString().split("T")[0]
+                                          openScheduleForAthlete(detail.id, "call", { followUpDate: iso })
+                                        }}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </td>
+                                <td className="px-4 py-4 text-muted-foreground">—</td>
+                                <td className="px-4 py-4 text-right">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => openScheduleForAthlete(detail.id)}
+                                  >
+                                    Log activity
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))
+                          )
+                        ) : filteredActions.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                              No activities match your filters yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredActions.map((action) => {
+                            const normalizedType = normalizeActionType(action.action_type)
+                            const emoji = ACTIVITY_EMOJI_MAP[normalizedType] ?? "📝"
+                            const cadenceDetail = cadenceDetailByAthlete.get(action.athlete_id)
+                            const daysBadge = cadenceDetail?.daysSince === null ? "No touch" : `${cadenceDetail?.daysSince ?? 0}d`
+                            const coachInitials = getCoachInitials(action.coach_name)
+
+                            return (
+                              <tr key={action.id} className="border-t border-border/50 hover:bg-muted/20">
+                                <td className="px-4 py-4">
+                                  <div className="group flex items-center gap-3">
+                                    <img
+                                      src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
+                                      alt={action.athlete_name}
+                                      className="h-10 w-10 rounded-full object-cover shadow-sm"
+                                    />
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-semibold text-foreground">{action.athlete_name}</span>
+                                        <Badge variant="outline" className="text-[10px] uppercase">
+                                          {daysBadge}
+                                        </Badge>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                        <span>{cadenceDetail?.stage ?? "Prospect"}</span>
+                                        <span>•</span>
+                                        <span>{cadenceDetail?.starRating ? `${cadenceDetail.starRating}★` : "Unrated"}</span>
+                                      </div>
+                                    </div>
+                                    <div className="ml-auto hidden items-center gap-1 group-hover:flex">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => openScheduleForAthlete(action.athlete_id, "call")}
+                                      >
+                                        <Phone className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => openScheduleForAthlete(action.athlete_id, "email")}
+                                      >
+                                        <Mail className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-lg">{emoji}</span>
+                                    <div>
+                                      <div className="text-sm font-semibold text-foreground">{formatDate(action.action_date)}</div>
+                                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                                        <span>{coachInitials}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => openScheduleForAthlete(action.athlete_id)}
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-4 text-sm text-foreground">{action.coach_name || "—"}</td>
+                                <td className="px-4 py-4 text-sm text-muted-foreground">{action.outcome || "—"}</td>
+                                <td className="px-4 py-4">
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-8">
+                                        {action.follow_up_date ? formatDate(action.follow_up_date) : "Schedule"}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-2" align="start">
+                                      <Calendar
+                                        mode="single"
+                                        selected={action.follow_up_date ? new Date(action.follow_up_date) : undefined}
+                                        onSelect={(date) => {
+                                          if (!date) return
+                                          const iso = date.toISOString().split("T")[0]
+                                          openScheduleForAthlete(action.athlete_id, "call", { followUpDate: iso })
+                                        }}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </td>
+                                <td className="px-4 py-4 text-sm text-muted-foreground">
+                                  {action.description ? (
+                                    <span className="line-clamp-2">{action.description}</span>
+                                  ) : (
+                                    <span className="text-muted-foreground/60">—</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-4 text-right">
+                                  <div className="flex justify-end gap-1">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(action)}>
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-red-600 hover:text-red-700"
+                                      onClick={() => handleDelete(action.id)}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            )
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
               {/* additional insights rendered via renderLeaderboardCard/renderHeatmapCard */}
             </CardContent>
           </Card>
