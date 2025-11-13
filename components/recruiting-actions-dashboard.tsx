@@ -302,12 +302,6 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     return map
   }, [prospects])
 
-  const cadenceDetailByAthlete = useMemo(() => {
-    const map = new Map<string, any>()
-    cadenceStats.details.forEach((detail) => map.set(detail.id, detail))
-    return map
-  }, [cadenceStats])
-
   const filteredActions = useMemo(() => {
     let result = actions
 
@@ -497,6 +491,12 @@ const activityTrendData = useMemo(() => {
       noActivityList,
     }
   }, [actions, prospects])
+
+  const cadenceDetailByAthlete = useMemo(() => {
+    const map = new Map<string, any>()
+    cadenceStats.details.forEach((detail) => map.set(detail.id, detail))
+    return map
+  }, [cadenceStats])
 
   const stageHeatmap = useMemo(() => {
     if (!Array.isArray(STAGE_ORDER)) {
