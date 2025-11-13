@@ -35,37 +35,6 @@ const rgbaFromHex = (hex: string, alpha: number) => {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
 }
 
-const normalizeHex = (hex?: string | null) => {
-  if (!hex) return null
-  const trimmed = hex.trim().replace("#", "")
-  if (trimmed.length === 3) {
-    return `#${trimmed
-      .split("")
-      .map((char) => `${char}${char}`)
-      .join("")}`.toLowerCase()
-  }
-  if (trimmed.length === 6) {
-    return `#${trimmed.toLowerCase()}`
-  }
-  return null
-}
-
-const mixHexColors = (hexA: string, hexB: string, weight: number) => {
-  const colorA = hexToRgb(hexA)
-  const colorB = hexToRgb(hexB)
-  if (!colorA || !colorB) return hexA
-  const ratio = Math.min(Math.max(weight, 0), 1)
-  const r = Math.round(colorA.r * (1 - ratio) + colorB.r * ratio)
-  const g = Math.round(colorA.g * (1 - ratio) + colorB.g * ratio)
-  const b = Math.round(colorA.b * (1 - ratio) + colorB.b * ratio)
-  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b
-    .toString(16)
-    .padStart(2, "0")}`
-}
-
-const lightenHex = (hex: string, amount: number) => mixHexColors(hex, "#ffffff", amount)
-const darkenHex = (hex: string, amount: number) => mixHexColors(hex, "#000000", amount)
-
 interface RecruitingAction {
   id: string
   action_type: string
@@ -1190,19 +1159,18 @@ const activityTrendData = useMemo(() => {
 
   const getActivityColor = (actionType: string) => {
     const key = normalizeActionType(actionType)
-    const brandHex = normalizeHex(resolvedBrandColor) ?? DEFAULT_BRAND_COLOR
-    const fillPalette: Record<string, string> = {
-      call: darkenHex(brandHex, 0.18),
-      text: brandHex,
-      email: lightenHex(brandHex, 0.2),
-      visit: lightenHex(brandHex, 0.32),
-      prospect_camp: mixHexColors(brandHex, "#94a3b8", 0.45),
-      watched_live: lightenHex(brandHex, 0.55),
-      letter: mixHexColors(brandHex, "#e2e8f0", 0.65),
-      social_media: mixHexColors(brandHex, "#475569", 0.4),
-      other: mixHexColors(brandHex, "#d9e2f2", 0.55),
+    const fillAlpha: Record<string, number> = {
+      call: 0.95,
+      text: 0.8,
+      email: 0.65,
+      visit: 0.75,
+      prospect_camp: 0.6,
+      watched_live: 0.55,
+      letter: 0.5,
+      social_media: 0.45,
+      other: 0.4,
     }
-    const fillColor = fillPalette[key] || lightenHex(brandHex, 0.3)
+    const fillColor = rgbaFromHex(resolvedBrandColor, fillAlpha[key] ?? 0.5)
     const colors: Record<string, { bg: string; text: string; border: string; fill: string }> = {
       call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", fill: fillColor },
       text: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", fill: fillColor },
