@@ -35,56 +35,6 @@ const rgbaFromHex = (hex: string, alpha: number) => {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
-
-const normalizeHex = (hex?: string | null) => {
-  if (!hex) return null
-  const trimmed = hex.trim().replace("#", "")
-  if (trimmed.length === 3) {
-    return `#${trimmed
-      .split("")
-      .map((char) => `${char}${char}`)
-      .join("")}`.toLowerCase()
-  }
-  if (trimmed.length === 6) {
-    return `#${trimmed.toLowerCase()}`
-  }
-  return null
-}
-
-const componentToHex = (component: number) => {
-  const clamped = clamp(Math.round(component), 0, 255)
-  const hex = clamped.toString(16)
-  return hex.length === 1 ? `0${hex}` : hex
-}
-
-const mixHexColors = (hex1: string, hex2: string, weight: number) => {
-  const colorA = hexToRgb(hex1)
-  const colorB = hexToRgb(hex2)
-  if (!colorA || !colorB) return hex1
-  const ratio = clamp(weight, 0, 1)
-  const r = colorA.r * (1 - ratio) + colorB.r * ratio
-  const g = colorA.g * (1 - ratio) + colorB.g * ratio
-  const b = colorA.b * (1 - ratio) + colorB.b * ratio
-  return `#${componentToHex(r)}${componentToHex(g)}${componentToHex(b)}`
-}
-
-const lightenHex = (hex: string, amount: number) => {
-  const normalized = normalizeHex(hex) ?? DEFAULT_BRAND_COLOR
-  if (amount === 0) return normalized
-  if (amount > 0) {
-    return mixHexColors(normalized, "#ffffff", clamp(amount, 0, 1))
-  }
-  return mixHexColors(normalized, "#000000", clamp(Math.abs(amount), 0, 1))
-}
-
-const getReadableTextColor = (hex: string) => {
-  const rgb = hexToRgb(hex)
-  if (!rgb) return "#0f172a"
-  const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000
-  return brightness > 160 ? "#0f172a" : "#ffffff"
-}
-
 interface RecruitingAction {
   id: string
   action_type: string
@@ -1209,30 +1159,37 @@ const activityTrendData = useMemo(() => {
 
   const getActivityColor = (actionType: string) => {
     const key = normalizeActionType(actionType)
-    const brand = normalizeHex(resolvedBrandColor) ?? DEFAULT_BRAND_COLOR
-
-    const toneMap: Record<string, string> = {
-      call: lightenHex(brand, -0.18),
-      text: lightenHex(brand, 0.08),
-      email: mixHexColors(lightenHex(brand, 0.22), "#e2e8f0", 0.35),
-      visit: mixHexColors(lightenHex(brand, -0.32), "#0f172a", 0.25),
-      prospect_camp: mixHexColors(lightenHex(brand, 0.32), "#94a3b8", 0.4),
-      watched_live: mixHexColors(lightenHex(brand, 0.42), "#f8fafc", 0.45),
-      letter: mixHexColors(lightenHex(brand, 0.5), "#f1f5f9", 0.5),
-      social_media: mixHexColors(lightenHex(brand, 0.15), "#475569", 0.5),
-      other: mixHexColors(lightenHex(brand, 0.28), "#cbd5f5", 0.45),
+    const fillAlpha: Record<string, number> = {
+      call: 0.95,
+      text: 0.8,
+      email: 0.65,
+      visit: 0.75,
+      prospect_camp: 0.6,
+      watched_live: 0.55,
+      letter: 0.5,
+      social_media: 0.45,
+      other: 0.4,
     }
-
-    const baseTone = toneMap[key] || mixHexColors(brand, "#e2e8f0", 0.35)
-    const contrastTone = mixHexColors(baseTone, "#ffffff", 0.65)
-    const borderTone = mixHexColors(baseTone, "#ffffff", 0.35)
-
-    return {
-      fill: baseTone,
-      bg: contrastTone,
-      border: borderTone,
-      text: getReadableTextColor(contrastTone),
+    const fillColor = rgbaFromHex(resolvedBrandColor, fillAlpha[key] ?? 0.5)
+    const colors: Record<string, { bg: string; text: string; border: string; fill: string }> = {
+      call: { bg: "bg-blue-100", text: "text-blue-800", border: "border-blue-200", fill: fillColor },
+      text: { bg: "bg-purple-100", text: "text-purple-800", border: "border-purple-200", fill: fillColor },
+      email: { bg: "bg-green-100", text: "text-green-800", border: "border-green-200", fill: fillColor },
+      visit: { bg: "bg-orange-100", text: "text-orange-800", border: "border-orange-200", fill: fillColor },
+      prospect_camp: { bg: "bg-amber-100", text: "text-amber-900", border: "border-amber-200", fill: fillColor },
+      watched_live: { bg: "bg-sky-100", text: "text-sky-800", border: "border-sky-200", fill: fillColor },
+      letter: { bg: "bg-rose-100", text: "text-rose-800", border: "border-rose-200", fill: fillColor },
+      social_media: { bg: "bg-indigo-100", text: "text-indigo-800", border: "border-indigo-200", fill: fillColor },
+      other: { bg: "bg-slate-200", text: "text-slate-800", border: "border-slate-300", fill: fillColor },
     }
+    return (
+      colors[key] || {
+        bg: "bg-muted",
+        text: "text-muted-foreground",
+        border: "border-border",
+        fill: rgbaFromHex(resolvedBrandColor, 0.45),
+      }
+    )
   }
 
   const handleComplete = async (actionId: string) => {
@@ -1912,12 +1869,7 @@ const activityTrendData = useMemo(() => {
                                 return (
                                   <div
                                     key={activity.id}
-                                    className="text-xs px-2 py-1 rounded truncate border flex items-center gap-1"
-                                    style={{
-                                      backgroundColor: colors.bg,
-                                      color: colors.text,
-                                      borderColor: colors.border,
-                                    }}
+                                    className={`text-xs ${colors.bg} ${colors.text} px-2 py-1 rounded truncate border ${colors.border} flex items-center gap-1`}
                                     title={`${activity.athlete_name} - ${isBirthday ? '🎂 Birthday' : formatActionType(activity.action_type)}`}
                                   >
                                     {isBirthday && <Cake className="h-3 w-3" />}
@@ -2391,14 +2343,7 @@ const activityTrendData = useMemo(() => {
                               <p className="text-sm text-muted-foreground">{activity.coach_name}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Badge
-                                className="border"
-                                style={{
-                                  backgroundColor: colors.bg,
-                                  color: colors.text,
-                                  borderColor: colors.border,
-                                }}
-                              >
+                              <Badge className={`${colors.bg} ${colors.text} border-0`}>
                                 {formatActionType(activity.action_type)}
                               </Badge>
                               <Button
