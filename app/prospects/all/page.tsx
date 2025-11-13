@@ -76,89 +76,33 @@ export default function AllProspectsPage() {
       setError(null)
 
       try {
-        const [prospectsRes, rankingsRes] = await Promise.all([
-          fetch("/api/prospects?limit=1000", {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }),
-          fetch("/api/admin/prospects/simple-ranking", {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }),
-        ])
+        const response = await fetch("/api/prospects?limit=1000", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        })
 
-        if (!prospectsRes.ok) {
-          const text = await prospectsRes.text().catch(() => "")
-          throw new Error(
-            `Prospects API ${prospectsRes.status} ${prospectsRes.statusText}${text ? ` - ${text}` : ""}`,
-          )
+        if (!response.ok) {
+          const text = await response.text().catch(() => "")
+          throw new Error(`Prospects API ${response.status} ${response.statusText}${text ? ` - ${text}` : ""}`)
         }
 
-        if (!rankingsRes.ok) {
-          const text = await rankingsRes.text().catch(() => "")
-          throw new Error(
-            `Rankings API ${rankingsRes.status} ${rankingsRes.statusText}${text ? ` - ${text}` : ""}`,
-          )
-        }
-
-        const prospectsPayload = await prospectsRes.json()
-        const rankingsPayload = await rankingsRes.json()
-
-        const rawProspects = Array.isArray(prospectsPayload?.prospects)
-          ? prospectsPayload.prospects
-          : Array.isArray(prospectsPayload)
-            ? prospectsPayload
-            : []
-
-        const rawRankings = Array.isArray(rankingsPayload?.rankings)
-          ? rankingsPayload.rankings
-          : Array.isArray(rankingsPayload)
-            ? rankingsPayload
+        const payload = await response.json()
+        const rawProspects = Array.isArray(payload?.prospects)
+          ? payload.prospects
+          : Array.isArray(payload)
+            ? payload
             : []
 
         const filtered = rawProspects
           .filter((prospect: Prospect) => Number(prospect.graduationyear) !== 2025)
           .filter(isNorthCarolinaProspect)
 
-        const rankingMap = new Map<string, any>()
-        for (const ranking of rawRankings) {
-          if (ranking?.athlete_id) rankingMap.set(ranking.athlete_id, ranking)
+        if (filtered.length > 0) {
+          console.log("[prospects/all] normalized sample", filtered.slice(0, 3))
         }
 
-        const merged = filtered.map((prospect) => {
-          const ranking = rankingMap.get(prospect.id)
-          return {
-            ...prospect,
-            prospect_ranking: ranking?.prospect_ranking ?? ranking?.overall_rank ?? prospect.prospect_ranking ?? null,
-            nhsca_results: ranking?.nhsca_results ?? prospect.nhsca_results,
-            nhsca_record_display:
-              ranking?.nhsca_record_display ??
-              ranking?.nhsca_record ??
-              prospect.nhsca_record_display ??
-              prospect.nhsca_2025_record ??
-              prospect.nhsca_2024_record,
-            super_32_results: ranking?.super_32_results ?? prospect.super_32_results ?? prospect.super32_results,
-            super_32_record_display:
-              ranking?.super_32_record_display ??
-              ranking?.super_32_record ??
-              prospect.super_32_record_display ??
-              prospect.super_32_2025_record ??
-              prospect.super_32_2024_record,
-            state_results: ranking?.state_results ?? prospect.state_results,
-            state_championship_summary:
-              ranking?.state_championship_summary ??
-              prospect.state_championship_summary ??
-              prospect.achievements?.find((achievement) => achievement.toLowerCase().includes("state")),
-          }
-        })
-
-        if (merged.length > 0) {
-          console.log("[prospects/all] merged sample", merged.slice(0, 3))
-        }
-
-        setProspects(merged)
+        setProspects(filtered)
       } catch (fetchError: any) {
         console.error("[prospects/all] Error loading prospects:", fetchError)
         setError(fetchError?.message || "Unable to load prospects right now.")
