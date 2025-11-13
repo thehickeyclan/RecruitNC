@@ -9,8 +9,24 @@ interface ResolvedSchool {
 
 const STOP_WORDS_REGEX = /\b(college|university|state|community college|institute|school|academy|the)\b/gi
 
+const HARDCODED_SLUG_MAP: Record<string, { id: string; label?: string }> = {
+  "lynchburg-college": { id: "56e27c86-7b74-441b-a18a-c2606abe7356", label: "Lynchburg College" },
+  "university-of-lynchburg": { id: "56e27c86-7b74-441b-a18a-c2606abe7356", label: "Lynchburg College" },
+  "marymount": { id: "e4c7b37e-4f3f-47a0-9b7c-ea3a3e820007", label: "Marymount University" },
+}
+
 export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchool | null> {
   if (!slug) return null
+
+  console.log(`[college slug resolver] Incoming slug="${slug}"`)
+
+  const hardcoded = HARDCODED_SLUG_MAP[slug.toLowerCase()]
+  if (hardcoded) {
+    console.log(
+      `[college slug resolver] Using hardcoded mapping for slug="${slug}" -> id="${hardcoded.id}" label="${hardcoded.label}"`,
+    )
+    return { id: hardcoded.id, name: hardcoded.label }
+  }
 
   const supabase = createAdminClient()
 
@@ -34,6 +50,9 @@ export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchoo
     candidatePhrases.add(parts[0])
   }
 
+  const candidatesArray = Array.from(candidatePhrases)
+  console.log(`[college slug resolver] Candidates for slug="${slug}":`, candidatesArray)
+
   for (const candidate of candidatePhrases) {
     if (!candidate) continue
 
@@ -55,9 +74,18 @@ export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchoo
 
     if (data && data.length > 0) {
       const record = data[0] as any
+      console.log(
+        `[college slug resolver] Match found for slug="${slug}" candidate="${candidate}":`,
+        record?.id,
+        record?.name,
+        record?.school_name,
+      )
       return { id: record.id as string, name: record.school_name ?? record.name }
     }
+    console.log(`[college slug resolver] No match for slug="${slug}" candidate="${candidate}"`)
   }
+
+  console.warn(`[college slug resolver] No school resolved for slug="${slug}". Candidates attempted:`, candidatesArray)
 
   return null
 }
