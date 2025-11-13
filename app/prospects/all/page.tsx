@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RankingsTableView } from "@/components/rankings-table-view"
-import { Filter, Loader2, Search, Users } from "lucide-react"
+import { RankingsCardView } from "@/components/rankings-card-view"
+import { Filter, LayoutGrid, List, Loader2, Search, Users } from "lucide-react"
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
 
@@ -58,6 +59,8 @@ export default function AllProspectsPage() {
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table")
 
   const [searchTerm, setSearchTerm] = useState("")
   const [yearFilter, setYearFilter] = useState<string>("all")
@@ -193,6 +196,11 @@ export default function AllProspectsPage() {
     [sortedProspects],
   )
 
+  const uncommittedCount = useMemo(
+    () => sortedProspects.filter((prospect) => summarizeStatus(prospect.recruiting_status) === "uncommitted").length,
+    [sortedProspects],
+  )
+
   const tableAthletes = useMemo(() => {
     return sortedProspects.map((prospect, index) => {
       const weightValue =
@@ -248,7 +256,7 @@ export default function AllProspectsPage() {
         state_results: stateResults,
         has_ranked_win: hasRankedWin,
         academic_gpa: prospect.academic_gpa ?? null,
-        prospect_ranking: prospect.prospect_ranking ?? null,
+        prospect_ranking: prospect.prospect_ranking ?? 9999,
         photourl: prospect.photourl ?? undefined,
         nationally_ranked_wins: prospect.nationally_ranked_wins ?? undefined,
         college: prospect.college ?? undefined,
@@ -285,7 +293,7 @@ export default function AllProspectsPage() {
         </section>
 
         <section className="container mx-auto px-4 py-10 space-y-10">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border bg-card p-6 shadow-sm">
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Prospects</p>
               <p className="text-3xl font-bold text-[#03154C]">{sortedProspects.length}</p>
@@ -295,22 +303,39 @@ export default function AllProspectsPage() {
               <p className="text-3xl font-bold text-green-600">{committedCount}</p>
             </div>
             <div className="rounded-lg border bg-card p-6 shadow-sm">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Top 30 Ranked</p>
-              <p className="text-3xl font-bold text-[#B31B1B]">
-                {sortedProspects.filter((prospect) => (prospect.prospect_ranking ?? 9999) <= 30).length}
+              <p className="text-sm font-medium text-muted-foreground mb-1">Uncommitted</p>
+              <p className="text-3xl font-bold text-[#B31B1B]">{uncommittedCount}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="rounded-lg border bg-card p-4 shadow-sm md:max-w-xl">
+              <p className="text-sm text-muted-foreground">
+                Showing North Carolina prospects across all classes. Apply filters to refine the list, or switch layouts
+                for a quick card-style scan.
               </p>
             </div>
-            <div className="rounded-lg border bg-card p-6 shadow-sm">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Filters Active</p>
-              <p className="text-3xl font-bold text-[#D3B574]">
-                {["all", ""].includes(yearFilter) &&
-                ["all", ""].includes(genderFilter) &&
-                ["all", ""].includes(statusFilter) &&
-                ["all", ""].includes(divisionFilter) &&
-                searchTerm.trim() === ""
-                  ? "0"
-                  : "Yes"}
-              </p>
+            <div className="inline-flex items-center rounded-md border bg-background p-1 shadow-sm self-start md:self-center">
+              <Button
+                type="button"
+                variant={viewMode === "table" ? "default" : "ghost"}
+                size="sm"
+                className="gap-2"
+                onClick={() => setViewMode("table")}
+              >
+                <List className="h-4 w-4" />
+                Table
+              </Button>
+              <Button
+                type="button"
+                variant={viewMode === "cards" ? "default" : "ghost"}
+                size="sm"
+                className="gap-2"
+                onClick={() => setViewMode("cards")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                Cards
+              </Button>
             </div>
           </div>
 
@@ -407,7 +432,7 @@ export default function AllProspectsPage() {
               <div>
                 <h3 className="text-xl font-semibold text-[#03154C]">Prospect Directory</h3>
                 <p className="text-sm text-muted-foreground">
-                  Ranked prospects appear first. A divider marks the additional pool beyond the top 30.
+                  Ranked prospects are surfaced first, followed by the extended North Carolina talent pool.
                 </p>
               </div>
               <Badge variant="outline" className="gap-2 text-sm">
@@ -434,13 +459,23 @@ export default function AllProspectsPage() {
                   Clear Filters
                 </Button>
               </div>
-            ) : (
+            ) : viewMode === "table" ? (
               <div className="overflow-x-auto px-2 pb-6">
                 <RankingsTableView
                   athletes={tableAthletes}
-                  hideRankColumn={false}
+                  hideRankColumn={true}
+                  showRankColumn={false}
                   additionalDividerLabel="Additional North Carolina Prospects"
-                  dividerAfterRank={30}
+                  dividerAfterRank={sortedProspects.length + 1}
+                />
+              </div>
+            ) : (
+              <div className="px-2 pb-6">
+                <RankingsCardView
+                  athletes={tableAthletes}
+                  loading={false}
+                  showRankBadges={false}
+                  showAdditionalDivider={false}
                 />
               </div>
             )}

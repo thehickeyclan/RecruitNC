@@ -29,9 +29,16 @@ interface Athlete {
 interface RankingsCardViewProps {
   athletes: Athlete[]
   loading?: boolean
+  showRankBadges?: boolean
+  showAdditionalDivider?: boolean
 }
 
-export function RankingsCardView({ athletes, loading }: RankingsCardViewProps) {
+export function RankingsCardView({
+  athletes,
+  loading,
+  showRankBadges = true,
+  showAdditionalDivider = true,
+}: RankingsCardViewProps) {
   const { user, profile, isAdmin, isVerifiedCoach } = useAuth()
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
   const [starredAthletes, setStarredAthletes] = useState<Set<string>>(new Set())
@@ -138,18 +145,19 @@ export function RankingsCardView({ athletes, loading }: RankingsCardViewProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {athletes.map((athlete, index) => (
         <>
-          {/* Add divider after rank #30 */}
-          {athlete.prospect_ranking === 30 && athletes.some(a => a.prospect_ranking > 30) && (
-            <div key={`divider-${athlete.id}`} className="col-span-full my-6">
-              <div className="flex items-center justify-center gap-3 py-4 rounded-lg bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
-                <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
-                <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-4">
-                  Additional Ranked Prospects
-                </span>
-                <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
+          {showAdditionalDivider &&
+            athlete.prospect_ranking === 30 &&
+            athletes.some((a) => a.prospect_ranking > 30) && (
+              <div key={`divider-${athlete.id}`} className="col-span-full my-6">
+                <div className="flex items-center justify-center gap-3 py-4 rounded-lg bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
+                  <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
+                  <span className="text-sm font-semibold text-gray-500 uppercase tracking-wider px-4">
+                    Additional Ranked Prospects
+                  </span>
+                  <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           <Card
             key={athlete.id}
           className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
@@ -158,7 +166,7 @@ export function RankingsCardView({ athletes, loading }: RankingsCardViewProps) {
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
-                  {athlete.prospect_ranking <= 30 && (
+                  {showRankBadges && athlete.prospect_ranking <= 30 && (
                     <Badge className="bg-blue-600 text-white font-bold text-base px-2.5 py-1">
                       #{athlete.prospect_ranking}
                     </Badge>

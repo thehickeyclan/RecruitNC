@@ -51,6 +51,7 @@ interface RankingsTableViewProps {
   hideRankColumn?: boolean
   additionalDividerLabel?: string
   dividerAfterRank?: number
+  showRankColumn?: boolean
 }
 
 type SortField = "rank" | "name" | "school" | "weight"
@@ -62,6 +63,7 @@ export function RankingsTableView({
   hideRankColumn = false,
   additionalDividerLabel = "Additional Ranked Prospects",
   dividerAfterRank = 30,
+  showRankColumn = true,
 }: RankingsTableViewProps) {
   const [sortField, setSortField] = useState<SortField>("rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
@@ -297,7 +299,7 @@ export function RankingsTableView({
                   <Star className="w-4 h-4 inline-block" />
                 </TableHead>
               )}
-              {!hideRankColumn && (
+              {!hideRankColumn && showRankColumn && (
                 <TableHead className="w-20 text-white font-semibold text-left">
                   <Button
                     variant="ghost"
@@ -356,6 +358,7 @@ export function RankingsTableView({
 
               const shouldRenderDivider =
                 !hideRankColumn &&
+                showRankColumn &&
                 index === dividerAfterRank &&
                 sortedAthletes.length > dividerAfterRank
 
@@ -394,7 +397,7 @@ export function RankingsTableView({
                     </Button>
                   </TableCell>
                 )}
-                {!hideRankColumn && (
+                {!hideRankColumn && showRankColumn && (
                   <TableCell className="font-medium pr-2">
                     <div className="flex items-center gap-2 min-w-[82px]">
                       {rankValue !== null && rankValue <= dividerAfterRank && (
@@ -406,9 +409,7 @@ export function RankingsTableView({
                         </div>
                       )}
                       {rankValue !== null && rankValue > dividerAfterRank && (
-                        <div
-                          className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600"
-                        >
+                        <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600">
                           #{rankValue}
                         </div>
                       )}
