@@ -258,6 +258,20 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       .sort((a, b) => a.name.localeCompare(b.name))
   }, [actions])
 
+  const starRatingByAthlete = useMemo(() => {
+    const map = new Map<string, number | null>()
+    ;(prospects || []).forEach((prospect) => {
+      map.set(prospect.id, prospect.star_rating ?? null)
+    })
+    return map
+  }, [prospects])
+
+  const cadenceDetailByAthlete = useMemo(() => {
+    const map = new Map<string, any>()
+    cadenceStats.details.forEach((detail) => map.set(detail.id, detail))
+    return map
+  }, [cadenceStats])
+
   const filteredActions = useMemo(() => {
     let result = actions
 
@@ -1302,20 +1316,6 @@ const activityTrendData = useMemo(() => {
       console.error("Error creating activity:", error)
     }
   }
-
-  const starRatingByAthlete = useMemo(() => {
-    const map = new Map<string, number | null>()
-    ;(prospects || []).forEach((prospect) => {
-      map.set(prospect.id, prospect.star_rating ?? null)
-    })
-    return map
-  }, [prospects])
-
-  const cadenceDetailByAthlete = useMemo(() => {
-    const map = new Map<string, any>()
-    cadenceStats.details.forEach((detail) => map.set(detail.id, detail))
-    return map
-  }, [cadenceStats])
 
   const filteredUntouchedAthletes = useMemo(() => {
     let list = cadenceStats.noActivityList
