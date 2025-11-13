@@ -73,7 +73,8 @@ export async function GET(request: Request) {
         graduationyear: athlete.graduationyear || targetYear,
         photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
         weightclass: athlete.weightclass || "Unknown",
-        college_weight_class: athlete.college_weight_class || null,
+        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
+        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
         hs_weight_class: athlete.weightclass || "Unknown",
         wrestlingclub: athlete.wrestlingClub || athlete.wrestlingclub || "",
         club: athlete.wrestlingClub || athlete.wrestlingclub || "",
@@ -136,8 +137,9 @@ export async function GET(request: Request) {
           division: athlete.division || "Unknown Division",
           graduationyear: athlete.graduationyear || 2025,
           photourl: athlete.photourl || "/wrestler-silhouette.png",
-          weightclass: athlete.college_weight_class || athlete.weightclass || "Unknown",
-          college_weight_class: athlete.college_weight_class || athlete.weightclass || "Unknown",
+          weightclass: athlete.weightclass || "Unknown",
+        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
+        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
           hs_weight_class: athlete.weightclass || "Unknown",
           wrestlingclub: athlete.wrestlingClub || "",
           club: athlete.wrestlingClub || "",
@@ -235,7 +237,8 @@ export async function GET(request: Request) {
         graduationyear: athlete.graduationyear || targetYear,
         photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
         weightclass: athlete.weightclass || "Unknown", // HS weight only
-        college_weight_class: athlete.college_weight_class || null, // College weight only, no fallback
+        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null, // College weight only
+        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
         hs_weight_class: athlete.weightclass || "Unknown",
         wrestlingclub: athlete.wrestlingClub || "",
         club: athlete.wrestlingClub || "",

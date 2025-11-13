@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("athletes")
-      .select("id, name, highschool, college, gender, graduationyear, commitmentdate, rankings, weightclass, photo_url")
+      .select(
+        "id, name, highschool, college, gender, graduationyear, commitmentdate, rankings, weightclass, college_weight_class, projected_weight, photourl, photo_url",
+      )
       .ilike("college", `%${college}%`)
       .not("highschool", "is", null)
 
@@ -51,9 +53,17 @@ export async function GET(request: NextRequest) {
 
     console.log(`College Athletes API found ${athletes?.length || 0} athletes for ${college}`)
 
+    const normalizedAthletes =
+      athletes?.map((athlete) => ({
+        ...athlete,
+        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
+        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
+        photourl: athlete.photourl ?? athlete.photo_url ?? null,
+      })) ?? []
+
     return NextResponse.json({
-      athletes: athletes || [],
-      total: athletes?.length || 0,
+      athletes: normalizedAthletes,
+      total: normalizedAthletes.length,
     })
   } catch (error) {
     console.error("College Athletes API error:", error)
