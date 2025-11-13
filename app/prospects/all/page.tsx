@@ -1,15 +1,13 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useState } from "react"
-import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 
 import { AuthGuard } from "@/components/auth-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+import { RankingsTableView } from "@/components/rankings-table-view"
 import { Filter, Loader2, Search, Users } from "lucide-react"
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
@@ -65,10 +63,13 @@ export default function AllProspectsPage() {
         }
 
         const data = await response.json()
-        if (Array.isArray(data?.prospects)) {
-          setProspects(data.prospects)
-        } else if (Array.isArray(data)) {
-          setProspects(data)
+        const rawProspects = Array.isArray(data?.prospects) ? data.prospects : Array.isArray(data) ? data : null
+        if (rawProspects) {
+          // Exclude Class of 2025 athletes from the prospects directory per product requirements
+          const filtered = rawProspects.filter(
+            (prospect: Prospect) => Number(prospect.graduationyear) !== 2025,
+          )
+          setProspects(filtered)
         } else {
           throw new Error("Unexpected response shape from /api/prospects")
         }
@@ -171,21 +172,43 @@ export default function AllProspectsPage() {
     [sortedProspects],
   )
 
-  const getStatusDisplay = (status?: string | null) => {
-    const summarized = summarizeStatus(status)
-    switch (summarized) {
-      case "committed":
-        return { label: "Committed", className: "bg-green-600 text-white" }
-      case "verbal":
-        return { label: "Verbal Commit", className: "bg-blue-600 text-white" }
-      case "recruiting":
-        return { label: "Being Recruited", className: "bg-yellow-500 text-black" }
-      case "interested":
-        return { label: "Interested", className: "bg-purple-500 text-white" }
-      default:
-        return { label: "Uncommitted", className: "bg-gray-500 text-white" }
-    }
-  }
+  const tableAthletes = useMemo(() => {
+    return sortedProspects.map((prospect, index) => {
+      const weightValue =
+        prospect.weightclass && prospect.weightclass.trim() !== ""
+          ? prospect.weightclass
+          : prospect.weight
+            ? String(prospect.weight)
+            : ""
+
+      const hasRankedWin =
+        !!prospect.nationally_ranked_wins &&
+        (!["0", "none", "None"].includes(String(prospect.nationally_ranked_wins).trim()))
+
+      return {
+        id: prospect.id || `prospect-${index}`,
+        name: prospect.name || "Unknown",
+        highschool: prospect.highschool || "—",
+        weight_display: weightValue,
+        nhsca_record_display: null,
+        nhsca_results: undefined,
+        super_32_record_display: null,
+        super_32_results: undefined,
+        state_championship_summary:
+          prospect.achievements?.find((achievement) =>
+            achievement.toLowerCase().includes("state"),
+          ) || "—",
+        state_results: undefined,
+        has_ranked_win: hasRankedWin,
+        academic_gpa: prospect.academic_gpa ?? null,
+        prospect_ranking: prospect.prospect_ranking ?? 9999,
+        photourl: prospect.photourl ?? undefined,
+        nationally_ranked_wins: prospect.nationally_ranked_wins ?? undefined,
+        college: prospect.college ?? undefined,
+        recruiting_status: prospect.recruiting_status ?? undefined,
+      }
+    })
+  }, [sortedProspects])
 
   const resetFilters = () => {
     setSearchTerm("")
@@ -365,100 +388,8 @@ export default function AllProspectsPage() {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-[#03154C] hover:bg-[#03154C] text-white">
-                      <TableHead className="text-white font-semibold">Rank</TableHead>
-                      <TableHead className="text-white font-semibold">Name</TableHead>
-                      <TableHead className="text-white font-semibold">High School</TableHead>
-                      <TableHead className="text-white font-semibold">Graduation</TableHead>
-                      <TableHead className="text-white font-semibold">Weight</TableHead>
-                      <TableHead className="text-white font-semibold">College / Status</TableHead>
-                      <TableHead className="text-white font-semibold">Club</TableHead>
-                      <TableHead className="text-white font-semibold text-right">Profile</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      let dividerDisplayed = false
-                      return sortedProspects.map((prospect, index) => {
-                        const ranking = prospect.prospect_ranking ?? null
-                        const showDivider = !dividerDisplayed && (ranking ?? 9999) > 30
-                        if (showDivider) {
-                          dividerDisplayed = true
-                        }
-
-                        const statusDisplay = getStatusDisplay(prospect.recruiting_status)
-                        const graduationLabel = prospect.graduationyear ? `Class of ${prospect.graduationyear}` : "—"
-                        const weightLabel = prospect.weightclass
-                          ? `${prospect.weightclass} lbs`
-                          : prospect.weight
-                            ? `${prospect.weight} lbs`
-                            : "—"
-
-                        return (
-                          <Fragment key={prospect.id || `prospect-${index}`}>
-                            {showDivider && (
-                              <TableRow className="bg-gray-100">
-                                <TableCell colSpan={8} className="py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                  Additional Prospects
-                                </TableCell>
-                              </TableRow>
-                            )}
-                            <TableRow
-                              className={cn(
-                                "hover:bg-muted/60 transition-colors",
-                                ranking && ranking <= 30 ? "bg-blue-50/60" : undefined,
-                              )}
-                            >
-                              <TableCell className="font-semibold">
-                                {ranking && ranking <= 30 ? (
-                                  <Badge className="bg-[#B31B1B] text-white px-3 py-1 font-bold">#{ranking}</Badge>
-                                ) : ranking ? (
-                                  <Badge variant="outline">#{ranking}</Badge>
-                                ) : (
-                                  <span className="text-muted-foreground">—</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-col">
-                                  <span className="font-semibold text-[#03154C]">{prospect.name}</span>
-                                  {prospect.location && (
-                                    <span className="text-xs text-muted-foreground">{prospect.location}</span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {prospect.highschool || "—"}
-                              </TableCell>
-                              <TableCell className="font-medium text-[#03154C]">{graduationLabel}</TableCell>
-                              <TableCell>{weightLabel}</TableCell>
-                              <TableCell>
-                                <div className="flex flex-col gap-1">
-                                  {prospect.college ? (
-                                    <span className="font-semibold text-green-700">{prospect.college}</span>
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground">No commitment yet</span>
-                                  )}
-                                  <Badge className={statusDisplay.className}>{statusDisplay.label}</Badge>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {prospect.wrestlingClub || "—"}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Link href={`/unified-profile/${prospect.id}`} className="text-[#03154C] underline">
-                                  View Profile
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          </Fragment>
-                        )
-                      })
-                    })()}
-                  </TableBody>
-                </Table>
+              <div className="overflow-x-auto px-2 pb-6">
+                <RankingsTableView athletes={tableAthletes} hideRankColumn={false} />
               </div>
             )}
           </div>
