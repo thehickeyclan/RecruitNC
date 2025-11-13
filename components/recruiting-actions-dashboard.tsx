@@ -170,6 +170,16 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [showUntouchedOnly, setShowUntouchedOnly] = useState<boolean>(false)
   const resolvedBrandColor = brandColor || DEFAULT_BRAND_COLOR
 
+  useEffect(() => {
+    /* eslint-disable no-console */
+    console.log("[portal-debug] RecruitingActionsDashboard mounted", {
+      hasNormalizeStage: typeof normalizeStage,
+      stageOrderLength: Array.isArray(STAGE_ORDER) ? STAGE_ORDER.length : "not-array",
+      prospectCount: prospects?.length ?? 0,
+    })
+    /* eslint-enable no-console */
+  }, [prospects])
+
   // Expose method to parent component to open the create activity modal
   useImperativeHandle(ref, () => ({
     openCreateActivity: () => {
@@ -489,6 +499,11 @@ const activityTrendData = useMemo(() => {
   }, [actions, prospects])
 
   const stageHeatmap = useMemo(() => {
+    if (!Array.isArray(STAGE_ORDER)) {
+      console.error("[portal-debug] STAGE_ORDER is not an array", { STAGE_ORDER })
+      return { rows: [], activityList: [], max: 0, stageCounts: {} as Record<string, number> }
+    }
+
     const stageMap = new Map<string, string>()
     const stageCountMap = new Map<string, number>()
     ;(prospects || []).forEach((prospect) => {
@@ -501,6 +516,12 @@ const activityTrendData = useMemo(() => {
     cutoff.setDate(cutoff.getDate() - 30)
 
     const stageLabels = STAGE_ORDER.map((stage) => stage.label)
+    console.log("[portal-debug] stageHeatmap inputs", {
+      stageLabels,
+      activityTypesCount: activityTypes.length,
+      actionsCount: actions.length,
+    })
+
     const activityList =
       activityTypes.length > 0
         ? activityTypes
