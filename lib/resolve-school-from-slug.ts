@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 interface ResolvedSchool {
   id: string
@@ -12,7 +12,7 @@ const STOP_WORDS_REGEX = /\b(college|university|state|community college|institut
 export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchool | null> {
   if (!slug) return null
 
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const normalized = decodeURIComponent(slug)
     .replace(/-/g, " ")
