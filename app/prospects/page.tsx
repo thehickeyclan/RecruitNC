@@ -30,11 +30,10 @@ export default function ProspectsPage() {
                   Browse Rankings
                 </Button>
               </Link>
-              <Link href="#all-nc-prospects">
+              <Link href="/prospects/all">
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-white text-white hover:bg-white/10 w-full sm:w-auto shadow-lg"
+                  className="bg-[#D3B574] text-[#03154C] hover:bg-[#c4a151] w-full sm:w-auto shadow-lg font-semibold"
                 >
                   <Users className="h-5 w-5 mr-2" />
                   View All NC Prospects
@@ -207,10 +206,10 @@ export default function ProspectsPage() {
                     Browse Rankings
                   </Button>
                 </Link>
-                <Link href="/athletes-public">
+                <Link href="/prospects/all">
                   <Button
                     size="lg"
-                    className="bg-[#002147] text-white hover:bg-[#001634] w-full sm:w-auto"
+                    className="bg-[#D3B574] text-[#03154C] hover:bg-[#c4a151] w-full sm:w-auto font-semibold"
                   >
                     <Users className="h-5 w-5 mr-2" />
                     View All NC Prospects
