@@ -39,8 +39,13 @@ export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchoo
 
     const { data, error } = await supabase
       .from("schools")
-      .select("id, name")
-      .ilike("name", `%${candidate}%`)
+      .select("id, name, school_name")
+      .or(
+        [
+          `name.ilike.%${candidate.replace(/%/g, "\\%")}%`,
+          `school_name.ilike.%${candidate.replace(/%/g, "\\%")}%`,
+        ].join(","),
+      )
       .limit(1)
 
     if (error) {
@@ -49,7 +54,8 @@ export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchoo
     }
 
     if (data && data.length > 0) {
-      return { id: data[0].id as string, name: (data[0] as any)?.name }
+      const record = data[0] as any
+      return { id: record.id as string, name: record.school_name ?? record.name }
     }
   }
 
