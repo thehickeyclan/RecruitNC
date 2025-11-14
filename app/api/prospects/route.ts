@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
         )
       : await createClient()
     // NOTE: service role client path avoids RLS policies that still reference legacy columns
+    // Keep this temporary until the DB policy is updated to drop athletes.state_results references
     const { searchParams } = new URL(request.url)
 
     console.log("[v0] Prospects API - Request received")
