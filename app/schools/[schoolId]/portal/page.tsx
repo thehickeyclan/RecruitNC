@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState, useRef, useMemo } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,34 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import {
-  Search,
-  GraduationCap,
-  Plus,
-  Phone,
-  Mail,
-  MapPin,
-  Award,
-  Users,
-  Bell,
-  Target,
-  Star,
-  ExternalLink,
-  Video,
-  Edit2,
-  Trash2,
-  Clock,
-  FileText,
-  AlertCircle,
-  LayoutGrid,
-  Table,
-  X,
-  ChevronDown,
-  Moon,
-  Sun,
-  Loader2,
-  Activity as ActivityIcon,
-} from "lucide-react"
+import { Search, GraduationCap, Plus, Phone, Mail, MapPin, Award, Users, Bell, Target, Star, ExternalLink, Video, Edit2, Trash2, Clock, FileText, AlertCircle, LayoutGrid, Table, X, ChevronDown, Moon, Sun, Loader2, ActivityIcon, Calendar } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -113,9 +86,13 @@ interface Prospect {
   aid_application_status?: string
   financial_concerns?: string
   gi_bill_eligible?: boolean
-  birthdate?: string
+  birthdate?: string // Duplicate birthdate field, assuming the first one is intended
   has_applied?: boolean
   applied_date?: string | null
+  roster_status?: string // Added for pipeline history
+  roster_notes?: string // Added for pipeline history
+  years_on_team?: number | null // Added for pipeline history
+  academic_notes?: string // Added for academic notes
 }
 
 interface Note {
@@ -312,7 +289,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     followUpDate: "",
     isScheduled: false, // Renamed from isPastActivity for clarity
   })
-  const [showActivityForm, setShowActivityForm] = useState(false)
+  const [showActivityDialog, setShowActivityDialog] = useState(false) // Renamed from showActivityForm
   const [newFamilyMember, setNewFamilyMember] = useState({
     name: "",
     relationship: "",
@@ -358,8 +335,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     giBillEligible: false,
   })
   const [isSavingFinancials, setIsSavingFinancials] = useState(false)
-  // Use a more descriptive state name if `showActivityDialog` refers to the dialog for adding/editing activities
-  const [showActivityDialog, setShowActivityDialog] = useState(false)
   const [ncRecruits, setNcRecruits] = useState<any[]>([])
   const [loadingNcRecruits, setLoadingNcRecruits] = useState(true)
   const [pipelineHistory, setPipelineHistory] = useState<any[]>([])
@@ -2701,13 +2676,22 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             )}
                             
                             <div className="flex gap-3 mb-3 relative">
-                              <img
-                                src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
-                                alt={prospect.name}
-                                className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
-                                  committedElsewhere ? 'grayscale' : ''
-                                }`}
-                              />
+                              {prospect.photourl ? (
+                                <img
+                                  src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
+                                  alt={prospect.name}
+                                  className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
+                                    committedElsewhere ? 'grayscale' : ''
+                                  }`}
+                                />
+                              ) : (
+                                <div
+                                  className="flex h-12 w-12 md:h-14 md:w-14 flex-shrink-0 items-center justify-center rounded-lg border border-border text-sm md:text-base font-semibold uppercase text-white"
+                                  style={{ backgroundColor: getStageColor(prospect.pipeline_stage || "Prospect", schoolBranding?.primary_color) }}
+                                >
+                                  {getInitials(prospect.name)}
+                                </div>
+                              )}
                               <div className="flex-1 min-w-0">
                                 <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-muted-foreground' : 'text-foreground'}`}>
                                   {prospect.name}
@@ -2977,7 +2961,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             <div className="flex items-center gap-3">
                               {prospect.photourl ? (
                                 <img
-                                  src={prospect.photourl}
+                                  src={prospect.photourl || "/placeholder.svg"}
                                   alt={prospect.name}
                                   className="w-10 h-10 rounded-lg object-cover border border-border"
                                 />
