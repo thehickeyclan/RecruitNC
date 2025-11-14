@@ -323,6 +323,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     followUpDate: "", // Added followUpDate to state
   })
   const [draggedProspect, setDraggedProspect] = useState<Prospect | null>(null)
+  const [showBulkActivityModal, setShowBulkActivityModal] = useState(false) // Added state for bulk activity modal visibility
   
   // State for financial information
   const [financialData, setFinancialData] = useState({
@@ -2653,25 +2654,40 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
 
       <div className="container mx-auto px-4 pb-8">
         <RecruitsPipelineView
+          filteredProspects={filteredProspects}
           viewMode={viewMode}
-          prospects={filteredProspects}
+          onViewModeChange={setViewMode}
+          pipelineStages={PIPELINE_STAGES_BASE} // Use constants defined above
           schoolBranding={schoolBranding}
-          canLogActivities={canLogActivities}
-          bulkSelectedCount={bulkSelectedCount}
-          bulkSelectedProspects={selectedProspectList}
-          appliedUpdating={appliedUpdating}
-          offerUpdating={appliedUpdating} // Assuming this should be a separate state if it exists
-          isDarkMode={isDarkMode}
-          onProspectClick={handleProspectClick}
-          onBulkSelect={handleBulkSelect}
-          onBulkSelectAll={handleBulkSelectAll}
+          selectedProspectIds={selectedProspectIds}
+          onToggleProspectSelection={handleToggleProspectSelection}
+          onToggleAllVisible={(prospects) => {
+            const allSelected = prospects.every(p => selectedProspectIds.has(p.id));
+            prospects.forEach(p => {
+              if (allSelected) {
+                selectedProspectIds.delete(p.id);
+              } else {
+                selectedProspectIds.add(p.id);
+              }
+            });
+            setSelectedProspectIds(new Set(selectedProspectIds));
+          }}
           onStageChange={handleStageChange}
           onAppliedToggle={handleAppliedToggle}
-          onOfferToggle={handleOfferToggle} // Needs implementation
-          onBulkStageChange={onBulkStageChange} // Needs implementation
-          onBulkAppliedToggle={handleAppliedToggle} // Reuse handleAppliedToggle for now, or create specific bulk logic
-          onBulkOfferToggle={onBulkOfferToggle} // Needs implementation
-          onBulkDelete={onBulkDelete} // Needs implementation
+          appliedUpdating={appliedUpdating}
+          canLogActivities={canLogActivities}
+          viewAsCoachId={viewAsCoachId}
+          params={params} // Assuming params contains necessary info like schoolId
+          activities={activities}
+          isBulkLogging={isBulkLogging}
+          onOpenBulkActivityModal={() => setShowBulkActivityModal(true)} // Use state to control modal
+          onClearSelectedProspects={() => setSelectedProspectIds(new Set())}
+          getStageColor={getStageColor}
+          normalizeStage={normalizeStage}
+          getInitials={getInitials}
+          formatPhoneNumber={formatPhoneNumber}
+          normalizePhoneForTel={normalizePhoneForTel}
+          isCommittedElsewhere={isCommittedElsewhere}
         />
       </div>
 
