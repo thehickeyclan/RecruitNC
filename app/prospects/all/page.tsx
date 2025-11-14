@@ -56,6 +56,21 @@ interface Prospect {
   super_32_2025_record?: string | null
 }
 
+const stateQualifiers2025 = [
+  { full_name: "Damicquen Powell", graduation_year: 2026 },
+  { full_name: "Hutson Catullo", graduation_year: 2026 },
+  { full_name: "Jesse Farnsworth", graduation_year: 2026 },
+  { full_name: "Keilan Adams", graduation_year: 2026 },
+  { full_name: "Lleyton Hooper", graduation_year: 2026 },
+  { full_name: "Sydney Martin", graduation_year: 2026 },
+  { full_name: "Zack Sheets", graduation_year: 2026 },
+  { full_name: "Carter Furman", graduation_year: 2027 },
+  { full_name: "Colt Cambruzzi", graduation_year: 2027 },
+  { full_name: "Garrison Raper", graduation_year: 2027 },
+  { full_name: "Gavin Lopez", graduation_year: 2027 },
+  { full_name: "Logan Mumy", graduation_year: 2027 },
+]
+
 export default function AllProspectsPage() {
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -335,6 +350,24 @@ export default function AllProspectsPage() {
         buildLegacyStateResults(prospect),
       )
 
+      const isStateQualifier = stateQualifiers2025.some(sq => 
+        sq.full_name.toLowerCase() === prospect.name.toLowerCase() &&
+        sq.graduation_year === prospect.graduationyear
+      )
+      
+      let finalStateResults = stateResults
+      if (isStateQualifier) {
+        const hasStateResults = stateResults && stateResults.length > 0
+        
+        if (!hasStateResults) {
+          finalStateResults = [{
+            text: "2025 SQ",
+            placement: null,
+            year: 2025
+          }]
+        }
+      }
+
       const nhscaResults = coerceTournamentResults(
         prospect.nhsca_results,
         buildLegacyNHSCAResults(prospect),
@@ -348,7 +381,7 @@ export default function AllProspectsPage() {
       if (index < 5) {
         console.log(`[v0] Tournament data for ${prospect.name}:`, {
           raw_state_results: prospect.state_results,
-          processed_state_results: stateResults,
+          processed_state_results: finalStateResults,
           raw_nhsca_results: prospect.nhsca_results,
           processed_nhsca_results: nhscaResults,
           raw_super32_results: prospect.super_32_results,
@@ -382,12 +415,12 @@ export default function AllProspectsPage() {
         super_32_results: super32Results,
         state_championship_summary:
           prospect.state_championship_summary ||
-          stateResults?.[0]?.text ||
+          finalStateResults?.[0]?.text ||
           prospect.achievements?.find((achievement) =>
             achievement.toLowerCase().includes("state"),
           ) ||
           "—",
-        state_results: stateResults,
+        state_results: finalStateResults,
         has_ranked_win: hasRankedWin,
         academic_gpa: prospect.academic_gpa ?? null,
         prospect_ranking: prospect.prospect_ranking ?? 9999,
