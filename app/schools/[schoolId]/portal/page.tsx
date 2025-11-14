@@ -34,6 +34,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { RecruitsPipelineView } from "@/components/recruits-pipeline-view"
+
 
 interface Prospect {
   id: string
@@ -2085,6 +2087,40 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     })
   }
 
+  // Placeholder functions for the RecruitsPipelineView component props
+  const handleProspectClick = (prospect: Prospect) => {
+    const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+    router.push(url)
+  }
+
+  const handleBulkSelect = (prospectId: string, checked: boolean) => {
+    handleToggleProspectSelection(prospectId, checked)
+  }
+
+  const handleBulkSelectAll = () => {
+    handleToggleAllVisible(sortedProspects)
+  }
+
+  const handleOfferToggle = async (prospectId: string, offered: boolean) => {
+    // Placeholder - implement actual logic if needed
+    console.log("Offer toggle not implemented for individual prospect", prospectId, offered)
+  }
+
+  const onBulkOfferToggle = async (athleteIds: string[], offered: boolean) => {
+    // Placeholder - implement actual logic if needed
+    console.log("Bulk offer toggle not implemented", athleteIds, offered)
+  }
+
+  const onBulkStageChange = async (athleteIds: string[], newStage: string) => {
+    // Placeholder - implement actual logic if needed
+    console.log("Bulk stage change not implemented", athleteIds, newStage)
+  }
+  
+  const onBulkDelete = async (athleteIds: string[]) => {
+    // Placeholder - implement actual logic if needed
+    console.log("Bulk delete not implemented", athleteIds)
+  }
+
   if (authLoading || isLoading || brandingLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center transition-colors">
@@ -2616,703 +2652,144 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       </div>
 
       <div className="container mx-auto px-4 pb-8">
-        {viewMode === "board" ? (
-        <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
-          {PIPELINE_STAGES_BASE.map((stage) => {
-            const stageProspects = getProspectsByStage(stage.id)
-            return (
-              <div
-                key={stage.id}
-                className="md:flex-shrink-0 md:w-80"
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(stage.id)}
-              >
-                <div className="bg-card rounded-xl border border-border flex flex-col transition-all hover:border-primary/40 dark:hover:border-primary/60">
-                  <div className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-border/60 dark:border-border/40">
-                    <h3 className="text-xs md:text-sm font-bold text-foreground uppercase tracking-wide">
-                      {stage.label}
-                    </h3>
-                    <div
-                      className="flex items-center justify-center min-w-[24px] md:min-w-[28px] h-[24px] md:h-[28px] px-2 md:px-2.5 rounded-full text-xs md:text-sm font-bold text-white"
-                      style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
-                    >
-                      {stageProspects.length}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 p-3 md:p-4 space-y-3 min-h-[200px] md:min-h-[400px] max-h-[400px] md:max-h-[calc(100vh-400px)] overflow-y-auto">
-                    {stageProspects.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
-                        <div className="text-4xl md:text-5xl opacity-10 mb-2 md:mb-3">📋</div>
-                        <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">No athletes yet</div>
-                        <div className="text-[10px] md:text-xs text-muted-foreground/70">
-                          Drag athletes here or add new prospects
-                        </div>
-                      </div>
-                    ) : (
-                      stageProspects.map((prospect) => {
-                        const committedElsewhere = isCommittedElsewhere(prospect)
-                        
-                        return (
-                        <Card
-                          key={prospect.id}
-                          draggable
-                          onDragStart={() => handleDragStart(prospect)}
-                          onClick={() => {
-                            const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                            router.push(url)
-                          }}
-                          className={`border hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer transition-all rounded-lg touch-manipulation ${
-                            committedElsewhere 
-                              ? 'bg-muted border-border opacity-80 dark:bg-slate-800 dark:border-slate-700' 
-                              : 'bg-card border-border hover:border-primary/40 active:border-primary/60 dark:hover:border-primary/60'
-                          }`}
-                        >
-                          <CardContent className="p-3 md:p-4">
-                            {/* Committed Elsewhere Badge */}
-                            {committedElsewhere && (
-                              <div className="mb-2 bg-gray-700 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 dark:bg-slate-700">
-                                <span>⚠️ Committed to {prospect.college}</span>
-                              </div>
-                            )}
-                            
-                            <div className="flex gap-3 mb-3 relative">
-                              {/* CHANGE START */}
-                              {!prospect.prospect_id || !prospect.photourl ? (
-                                <div
-                                  className="flex h-12 w-12 md:h-14 md:w-14 flex-shrink-0 items-center justify-center rounded-lg border border-border text-sm md:text-base font-semibold uppercase text-white"
-                                  style={{ backgroundColor: getStageColor(prospect.pipeline_stage || "Prospect", schoolBranding?.primary_color) }}
-                                >
-                                  {getInitials(prospect.name)}
-                                </div>
-                              ) : (
-                                <img
-                                  src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
-                                  alt={prospect.name}
-                                  className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
-                                    committedElsewhere ? 'grayscale' : ''
-                                  }`}
-                                />
-                              )}
-                              {/* CHANGE END */}
-                              <div className="flex-1 min-w-0">
-                                <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-muted-foreground' : 'text-foreground'}`}>
-                                  {prospect.name}
-                                </h4>
-                                <p className="text-xs md:text-sm text-muted-foreground font-semibold mb-1">
-                                  {prospect.graduationyear} • {prospect.weightclass}lbs
-                                </p>
-                                <p className="text-[10px] md:text-xs text-muted-foreground/80 truncate">{prospect.highschool}</p>
-                                {prospect.phone && (
-                                  <div className="mt-1 flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground">
-                                    <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground/70 flex-shrink-0" />
-                                    <a
-                                      href={`tel:${normalizePhoneForTel(prospect.phone)}`}
-                                      className="hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      {formatPhoneNumber(prospect.phone)}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                              {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && !committedElsewhere && (
-                                <div
-                                  className="absolute top-0 right-0 px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-xs md:text-sm font-bold text-white"
-                                  style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }}
-                                >
-                                  #{prospect.prospect_ranking}
-                                </div>
-                              )}
-                            </div>
-
-                            {prospect.academic_gpa && (
-                              <div className="flex gap-2 mb-3">
-                                <div className="flex items-center gap-1.5 bg-muted px-2 md:px-3 py-1.5 md:py-2 rounded-md">
-                                  <GraduationCap className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
-                                  <span className="text-xs md:text-sm font-bold text-foreground">
-                                    {prospect.academic_gpa.toFixed(1)}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            <div className="flex items-center justify-between pt-3 border-t border-border/60 dark:border-border/40">
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <StarRating
-                                  rating={prospect.star_rating ?? null}
-                                  onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
-                                  size="sm"
-                                />
-                              </div>
-                              <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
-                                {formatLastContactDate(getLastContactedDate(prospect.id))}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        )
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+        {/* CHANGE START */}
+        <RecruitsPipelineView
+          viewMode={viewMode}
+          prospects={filteredProspects}
+          schoolBranding={schoolBranding}
+          canLogActivities={canLogActivities}
+          bulkSelectedCount={bulkSelectedCount}
+          bulkSelectedProspects={selectedProspectList}
+          appliedUpdating={appliedUpdating}
+          offerUpdating={appliedUpdating} // Assuming this should be a separate state if it exists
+          isDarkMode={isDarkMode}
+          onProspectClick={handleProspectClick}
+          onBulkSelect={handleBulkSelect}
+          onBulkSelectAll={handleBulkSelectAll}
+          onStageChange={handleStageChange}
+          onAppliedToggle={handleAppliedToggle}
+          onOfferToggle={handleOfferToggle} // Needs implementation
+          onBulkStageChange={onBulkStageChange} // Needs implementation
+          onBulkAppliedToggle={handleAppliedToggle} // Reuse handleAppliedToggle for now, or create specific bulk logic
+          onBulkOfferToggle={onBulkOfferToggle} // Needs implementation
+          onBulkDelete={onBulkDelete} // Needs implementation
+        />
+        {/* CHANGE END */}
         </div>
-        ) : (
-          <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-colors">
-            {bulkSelectedCount > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-blue-50/70 px-4 py-3 text-sm dark:bg-slate-800/70">
-                <div className="font-medium text-foreground">
-                  {bulkSelectedCount} athlete{bulkSelectedCount === 1 ? "" : "s"} selected
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={clearSelectedProspects}
-                    className="rounded-full"
-                    disabled={isBulkLogging}
-                  >
-                    Clear
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="rounded-full bg-[#0b1728] text-white hover:bg-[#13294B]"
-                    onClick={handleOpenBulkActivityModal}
-                    disabled={!canLogActivities || isBulkLogging}
-                  >
-                    {isBulkLogging ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging...
-                      </>
-                    ) : !canLogActivities ? (
-                      "Admin Preview"
-                    ) : (
-                      <>
-                        <ActivityIcon className="mr-2 h-4 w-4" />
-                        Log Activity
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <div className="md:hidden text-xs text-muted-foreground px-4 py-2 bg-muted border-b border-border/60">
-                ← Swipe to see more columns →
-              </div>
-              <table className="w-full caption-bottom text-sm min-w-[900px]">
-                <thead className="[&_tr]:border-b border-border/60 bg-muted">
-                  <tr className="border-b border-border/60 transition-colors">
-                    <th className="h-12 w-12 px-4 align-middle text-left font-semibold text-foreground">
-                      <Checkbox
-                        checked={headerCheckboxState}
-                        onCheckedChange={() => handleToggleAllVisible(sortedProspects)}
-                        aria-label="Select all prospects"
-                        disabled={sortedProspects.length === 0}
-                      />
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("name")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Name
-                        {sortColumn === "name" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("year")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Year
-                        {sortColumn === "year" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("weight")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Weight
-                        {sortColumn === "weight" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("state")}
-                    >
-                      <div className="flex items-center gap-1">
-                        State
-                        {sortColumn === "state" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("stage")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Stage
-                        {sortColumn === "stage" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Applied</th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("rating")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Rating
-                        {sortColumn === "rating" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("gpa")}
-                    >
-                      <div className="flex items-center gap-1">
-                        GPA
-                        {sortColumn === "gpa" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("ranking")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Ranking
-                        {sortColumn === "ranking" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                    <th
-                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                      onClick={() => handleSort("lastActivity")}
-                    >
-                      <div className="flex items-center gap-1">
-                        Last Activity
-                        {sortColumn === "lastActivity" && (
-                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="[&_tr:last-child]:border-0">
-                  {sortedProspects.length === 0 ? (
-                    <tr>
-                      <td colSpan={12} className="p-8 text-center text-muted-foreground">
-                        No prospects found
-                      </td>
-                    </tr>
+
+        {/* NC Roster History Section */}
+        {isDashboardView && (
+        <div className="container mx-auto px-4 pt-6 pb-10">
+          <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
+            <Card className="border border-border shadow-sm bg-card transition-colors">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="pb-4 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl font-bold text-foreground">NC Roster History</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={`h-6 w-6 text-muted-foreground transition-transform ${isRosterHistoryOpen ? "rotate-180" : ""}`}
+                    />
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="p-6">
+                  {loadingHistory ? (
+                    <div className="text-center py-8">
+                      <div className="animate-pulse text-muted-foreground/70">Loading roster history...</div>
+                    </div>
+                  ) : pipelineHistory.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No historical NC athletes found. Athletes with "College Athlete" status will appear here.
+                    </div>
                   ) : (
-                    sortedProspects.map((prospect) => {
-                      const stage =
-                        PIPELINE_STAGES_BASE.find((s) => s.id === prospect.pipeline_stage) ||
-                        PIPELINE_STAGES_BASE[0]
-                      const stageColor = getStageColor(stage.id, schoolBranding?.primary_color)
-                      const lastActivity = getLastActivityForAthlete(prospect.id)
-                      const lastActivityLabel = lastActivity
-                        ? ACTIVITY_LABELS[lastActivity.action_type] || lastActivity.action_type
-                        : null
-                      const isLoggingActivity = Boolean(loggingActivity[prospect.id])
-                      return (
-                        <tr
-                          key={prospect.id}
-                          className="border-b border-border/60 transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 active:bg-muted/80 group"
-                        >
-                          <td
-                            className="p-4 align-middle"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedProspectIds.has(prospect.id)}
-                              onCheckedChange={(checked) =>
-                                handleToggleProspectSelection(prospect.id, checked === true)
-                              }
-                              aria-label={`Select ${prospect.name}`}
-                            />
-                          </td>
-                          <td
-                            className="p-4 align-middle cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
-                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''
-                              }`
-                              router.push(url)
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              {/* CHANGE START */}
-                              {!prospect.prospect_id || !prospect.photourl ? (
-                                <div
-                                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-sm font-semibold uppercase text-white"
-                                  style={{ backgroundColor: stageColor || "#334155" }}
+                    <div className="overflow-x-auto">
+                      <table className="w-full caption-bottom text-sm">
+                        <thead className="[&_tr]:border-b bg-muted">
+                          <tr className="border-b transition-colors">
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Class Year</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Current Status</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Roster Status</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Years on Team</th>
+                            <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="[&_tr:last-child]:border-0">
+                          {pipelineHistory.map((athlete) => (
+                            <tr
+                              key={athlete.id}
+                              className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
+                            >
+                              <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
+                              <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
+                              <td className="p-4 align-middle">{athlete.weight ? `${athlete.weight}lbs` : "-"}</td>
+                              <td className="p-4 align-middle">{athlete.highschool || "-"}</td>
+                              <td className="p-4 align-middle">
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  {athlete.status || "Enrolled"}
+                                </Badge>
+                              </td>
+                              <td className="p-4 align-middle">
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    athlete.roster_status === "Active"
+                                      ? "bg-green-50 text-green-700 border-green-200"
+                                      : "bg-muted text-muted-foreground border-border"
+                                  }
                                 >
-                                  {getInitials(prospect.name)}
-                                </div>
-                              ) : (
-                                <img
-                                  src={prospect.photourl || "/placeholder.svg"}
-                                  alt={prospect.name}
-                                  className="w-10 h-10 rounded-lg object-cover border border-border"
-                                />
-                              )}
-                              {/* CHANGE END */}
-                              <div className="flex-1 min-w-0">
-                                <span className="font-medium text-foreground truncate block">{prospect.name}</span>
-                                {prospect.phone && (
-                                  <span className="mt-0.5 block text-xs text-muted-foreground truncate">
-                                    {formatPhoneNumber(prospect.phone)}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="ml-2 flex items-center gap-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                                {prospect.phone && (
-                                  <a
-                                    href={`tel:${normalizePhoneForTel(prospect.phone)}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                                    aria-label={`Call ${prospect.name}`}
-                                  >
-                                    <Phone className="h-3.5 w-3.5" />
-                                  </a>
-                                )}
-                                {prospect.contactEmail && (
-                                  <a
-                                    href={`mailto:${prospect.contactEmail}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                                    aria-label={`Email ${prospect.name}`}
-                                  >
-                                    <Mail className="h-3.5 w-3.5" />
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td 
-                            className="p-4 align-middle text-muted-foreground cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                              router.push(url)
-                            }}
-                          >
-                            {prospect.graduationyear}
-                          </td>
-                          <td 
-                            className="p-4 align-middle text-muted-foreground cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                              router.push(url)
-                            }}
-                          >
-                            {prospect.weightclass}lbs
-                          </td>
-                          <td 
-                            className="p-4 align-middle text-muted-foreground cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                              router.push(url)
-                            }}
-                          >
-                            {prospect.location || "NC"}
-                          </td>
-                          <td 
-                            className="p-4 align-middle"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                          <Select
-                            value={prospect.pipeline_stage || "Prospect"}
-                            onValueChange={(value) => handleStageChange(prospect.id, value)}
-                          >
-                            <SelectTrigger className="h-auto w-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:ring-offset-0">
-                              <Badge
-                                className="text-xs cursor-pointer hover:opacity-90 transition-opacity"
-                                style={{
-                                  backgroundColor: stageColor,
-                                  color: "white",
-                                }}
-                              >
-                                {stage.label}
-                                <ChevronDown className="ml-1 h-3 w-3 inline" />
-                              </Badge>
-                            </SelectTrigger>
-                            <SelectContent className="min-w-[180px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100">
-                              {PIPELINE_STAGES_BASE.map((s) => (
-                                <SelectItem key={s.id} value={s.id} className="text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <div
-                                      className="w-3 h-3 rounded-full"
-                                      style={{ backgroundColor: getStageColor(s.id, schoolBranding?.primary_color) }}
-                                    />
-                                    <span>{s.label}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          </td>
-                          <td
-                            className="p-4 align-middle"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={prospect.has_applied ?? false}
-                                disabled={appliedUpdating[prospect.id] || !canLogActivities}
-                                onCheckedChange={(checked) =>
-                                  handleAppliedToggle(prospect.id, Boolean(checked))
-                                }
-                              />
-                              {prospect.applied_date && (
-                                <span className="text-xs text-muted-foreground">
-                                  {new Date(prospect.applied_date).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td 
-                            className="p-4 align-middle"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <StarRating
-                              rating={prospect.star_rating ?? null}
-                              onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
-                              size="sm"
-                            />
-                          </td>
-                          <td 
-                            className="p-4 align-middle text-muted-foreground cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                              router.push(url)
-                            }}
-                          >
-                            {prospect.academic_gpa ? prospect.academic_gpa.toFixed(1) : "-"}
-                          </td>
-                          <td 
-                            className="p-4 align-middle text-muted-foreground cursor-pointer"
-                            onClick={() => {
-                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                              router.push(url)
-                            }}
-                          >
-                            {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
-                          </td>
-                          <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                {lastActivity ? (
-                                  <div className="flex items-center gap-2 text-sm text-foreground">
-                                    <span className="font-medium">
-                                      {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                      })}
-                                    </span>
-                                    <span className="text-lg" aria-label={lastActivityLabel ?? "Activity"}>
-                                      {ACTIVITY_EMOJI_MAP[lastActivity.action_type] ?? ACTIVITY_EMOJI_MAP.other}
-                                    </span>
-                                    {lastActivity.coach_name && (
-                                      <span className="rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-muted-foreground dark:bg-slate-800 dark:text-slate-200">
-                                        {getInitials(lastActivity.coach_name)}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">No activity yet</span>
-                                )}
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                                  {athlete.roster_status || "Active"}
+                                </Badge>
+                              </td>
+                              <td className="p-4 align-middle text-muted-foreground">{athlete.years_on_team || "Current"}</td>
+                              <td className="p-4 align-middle">
+                                <div className="flex items-center gap-2">
                                   <Button
                                     variant="ghost"
-                                    size="icon"
-                                    disabled={isLoggingActivity || !canLogActivities}
-                                    className="h-8 w-8 rounded-full border border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200"
-                                    aria-label="Log activity"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingRosterEntry(athlete)
+                                      setRosterEditForm({
+                                        roster_status: athlete.roster_status || "Active",
+                                        roster_notes: athlete.roster_notes || "",
+                                      })
+                                    }}
                                   >
-                                    {isLoggingActivity ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <span className="text-lg leading-none">+</span>
-                                    )}
+                                    <Edit2 className="h-4 w-4" />
                                   </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  className="min-w-[220px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100"
-                                >
-                                  <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground dark:text-slate-300">
-                                    {canLogActivities ? "Log Activity" : "Impersonate a coach to log"}
-                                  </DropdownMenuLabel>
-                                  {ACTIVITY_OPTIONS.map((option) => (
-                                    <DropdownMenuItem
-                                      key={option.value}
-                                      disabled={isLoggingActivity || !canLogActivities}
-                                      onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
-                                      className="text-sm text-foreground dark:text-slate-100 dark:focus:bg-slate-800 focus:bg-muted"
-                                    >
-                                      <span className="mr-2 text-lg">
-                                        {ACTIVITY_EMOJI_MAP[option.value] ?? ACTIVITY_EMOJI_MAP.other}
-                                      </span>
-                                      {option.label}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm(`Remove ${athlete.name} from roster history?`)) {
+                                        handleDeleteRosterEntry(athlete.id)
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-red-600" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        </div>
         )}
-      </div>
-
-        </>
-      )}
-
-      {/* NC Roster History Section */}
-      {isDashboardView && (
-      <div className="container mx-auto px-4 pt-6 pb-10">
-        <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
-          <Card className="border border-border shadow-sm bg-card transition-colors">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="pb-4 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl font-bold text-foreground">NC Roster History</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    className={`h-6 w-6 text-muted-foreground transition-transform ${isRosterHistoryOpen ? "rotate-180" : ""}`}
-                  />
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-6">
-                {loadingHistory ? (
-                  <div className="text-center py-8">
-                    <div className="animate-pulse text-muted-foreground/70">Loading roster history...</div>
-                  </div>
-                ) : pipelineHistory.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No historical NC athletes found. Athletes with "College Athlete" status will appear here.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full caption-bottom text-sm">
-                      <thead className="[&_tr]:border-b bg-muted">
-                        <tr className="border-b transition-colors">
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Class Year</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Current Status</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Roster Status</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Years on Team</th>
-                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="[&_tr:last-child]:border-0">
-                        {pipelineHistory.map((athlete) => (
-                          <tr
-                            key={athlete.id}
-                            className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
-                          >
-                            <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
-                            <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
-                            <td className="p-4 align-middle">{athlete.weight ? `${athlete.weight}lbs` : "-"}</td>
-                            <td className="p-4 align-middle">{athlete.highschool || "-"}</td>
-                            <td className="p-4 align-middle">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                {athlete.status || "Enrolled"}
-                              </Badge>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <Badge
-                                variant="outline"
-                                className={
-                                  athlete.roster_status === "Active"
-                                    ? "bg-green-50 text-green-700 border-green-200"
-                                    : "bg-muted text-muted-foreground border-border"
-                                }
-                              >
-                                {athlete.roster_status || "Active"}
-                              </Badge>
-                            </td>
-                            <td className="p-4 align-middle text-muted-foreground">{athlete.years_on_team || "Current"}</td>
-                            <td className="p-4 align-middle">
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingRosterEntry(athlete)
-                                    setRosterEditForm({
-                                      roster_status: athlete.roster_status || "Active",
-                                      roster_notes: athlete.roster_notes || "",
-                                    })
-                                  }}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (confirm(`Remove ${athlete.name} from roster history?`)) {
-                                      handleDeleteRosterEntry(athlete.id)
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-600" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      </div>
-      )}
 
       <Dialog
         open={isBulkActivityOpen}
