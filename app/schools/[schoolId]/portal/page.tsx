@@ -93,6 +93,7 @@ interface Prospect {
   roster_notes?: string // Added for pipeline history
   years_on_team?: number | null // Added for pipeline history
   academic_notes?: string // Added for academic notes
+  prospect_id?: string // Added to differentiate from manually added athletes
 }
 
 interface Note {
@@ -2676,7 +2677,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             )}
                             
                             <div className="flex gap-3 mb-3 relative">
-                              {prospect.photourl ? (
+                              {/* CHANGE START */}
+                              {!prospect.prospect_id || !prospect.photourl ? (
+                                <div
+                                  className="flex h-12 w-12 md:h-14 md:w-14 flex-shrink-0 items-center justify-center rounded-lg border border-border text-sm md:text-base font-semibold uppercase text-white"
+                                  style={{ backgroundColor: getStageColor(prospect.pipeline_stage || "Prospect", schoolBranding?.primary_color) }}
+                                >
+                                  {getInitials(prospect.name)}
+                                </div>
+                              ) : (
                                 <img
                                   src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
                                   alt={prospect.name}
@@ -2684,14 +2693,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                     committedElsewhere ? 'grayscale' : ''
                                   }`}
                                 />
-                              ) : (
-                                <div
-                                  className="flex h-12 w-12 md:h-14 md:w-14 flex-shrink-0 items-center justify-center rounded-lg border border-border text-sm md:text-base font-semibold uppercase text-white"
-                                  style={{ backgroundColor: getStageColor(prospect.pipeline_stage || "Prospect", schoolBranding?.primary_color) }}
-                                >
-                                  {getInitials(prospect.name)}
-                                </div>
                               )}
+                              {/* CHANGE END */}
                               <div className="flex-1 min-w-0">
                                 <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-muted-foreground' : 'text-foreground'}`}>
                                   {prospect.name}
@@ -2953,26 +2956,28 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                             className="p-4 align-middle cursor-pointer"
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
-                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""
+                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''
                               }`
                               router.push(url)
                             }}
                           >
                             <div className="flex items-center gap-3">
-                              {prospect.photourl ? (
-                                <img
-                                  src={prospect.photourl || "/placeholder.svg"}
-                                  alt={prospect.name}
-                                  className="w-10 h-10 rounded-lg object-cover border border-border"
-                                />
-                              ) : (
+                              {/* CHANGE START */}
+                              {!prospect.prospect_id || !prospect.photourl ? (
                                 <div
                                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-sm font-semibold uppercase text-white"
                                   style={{ backgroundColor: stageColor || "#334155" }}
                                 >
                                   {getInitials(prospect.name)}
                                 </div>
+                              ) : (
+                                <img
+                                  src={prospect.photourl || "/placeholder.svg"}
+                                  alt={prospect.name}
+                                  className="w-10 h-10 rounded-lg object-cover border border-border"
+                                />
                               )}
+                              {/* CHANGE END */}
                               <div className="flex-1 min-w-0">
                                 <span className="font-medium text-foreground truncate block">{prospect.name}</span>
                                 {prospect.phone && (
@@ -4800,6 +4805,13 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         onProspectCreated={() => {
           setShowCreateProspectModal(false)
           fetchProspects() // Refresh the prospects list
+        }}
+      />
+      </div>
+    </div>
+  )
+}
+ // Refresh the prospects list
         }}
       />
       </div>
