@@ -30,6 +30,7 @@ import {
   Users as UsersIcon,
   MessageCircle,
   ClipboardList,
+  TrendingUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
