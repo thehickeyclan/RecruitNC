@@ -2212,7 +2212,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </div>
 
         {/* Main Content Area - min-width: 0 prevents grid blowout */}
-        <div className="min-w-0">
+        <div className="min-w-0 overflow-x-auto">
+          {/* RecruitingActionsDashboard moved outside command center views */}
           <div className="container mx-auto px-4 py-3" data-recruiting-dashboard>
             <RecruitingActionsDashboard
               ref={dashboardRef}
@@ -2243,36 +2244,35 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             />
           </div>
 
-          <div className="overflow-x-auto">
-            {commandCenterView === 'dashboard' && (
-              <div className="container mx-auto px-4 pb-8">
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h3 className="text-xl font-bold mb-4">Dashboard Overview</h3>
-                  <p className="text-muted-foreground">Dashboard content coming soon...</p>
-                </div>
+          {commandCenterView === 'dashboard' && (
+            <div className="container mx-auto px-4 pb-8">
+              <div className="bg-card rounded-xl border border-border p-6">
+                <h3 className="text-xl font-bold mb-4">Dashboard Overview</h3>
+                <p className="text-muted-foreground">Dashboard content coming soon...</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {commandCenterView === 'activity' && (
-              <div className="container mx-auto px-4 pb-8">
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h3 className="text-xl font-bold mb-4">Activity Log</h3>
-                  <p className="text-muted-foreground">Activity log coming soon...</p>
-                </div>
+          {commandCenterView === 'activity' && (
+            <div className="container mx-auto px-4 pb-8">
+              <div className="bg-card rounded-xl border border-border p-6">
+                <h3 className="text-xl font-bold mb-4">Activity Log</h3>
+                <p className="text-muted-foreground">Activity log coming soon...</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {commandCenterView === 'calendar' && (
-              <div className="container mx-auto px-4 pb-8">
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h3 className="text-xl font-bold mb-4">Calendar</h3>
-                  <p className="text-muted-foreground">Calendar coming soon...</p>
-                </div>
+          {commandCenterView === 'calendar' && (
+            <div className="container mx-auto px-4 pb-8">
+              <div className="bg-card rounded-xl border border-border p-6">
+                <h3 className="text-xl font-bold mb-4">Calendar</h3>
+                <p className="text-muted-foreground">Calendar coming soon...</p>
               </div>
-            )}
+            </div>
+          )}
 
-            {commandCenterView === 'pipeline' && (
-              <>
+          {commandCenterView === 'pipeline' && (
+            <>
               {profile?.is_admin && (
                 <div
                   className={
