@@ -1,10 +1,36 @@
 "use client"
 
-import { useEffect, useState, forwardRef, useImperativeHandle, useMemo } from "react"
+import { useEffect, useState, forwardRef, useImperativeHandle, useMemo, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Clock, AlertCircle, TableIcon, LayoutDashboard, ChevronLeft, ChevronRight, Edit, X, Check, Plus, Cake, Sparkles, Phone, Mail } from "lucide-react"
+import {
+  CalendarIcon,
+  Clock,
+  AlertCircle,
+  TableIcon,
+  LayoutDashboard,
+  ChevronLeft,
+  ChevronRight,
+  Edit,
+  X,
+  Check,
+  Plus,
+  Cake,
+  Sparkles,
+  Phone,
+  Mail,
+  AlertTriangle,
+  Star,
+  CheckCircle,
+  Activity as ActivityIcon,
+  Flame,
+  ArrowUpRight,
+  Target,
+  Users as UsersIcon,
+  MessageCircle,
+  ClipboardList,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -46,6 +72,39 @@ const rgbaFromHex = (hex: string, alpha: number) => {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`
 }
 
+const clampChannel = (value: number) => Math.max(0, Math.min(255, value))
+
+const adjustHexShade = (hex: string, amount: number) => {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return hex
+  const r = clampChannel(rgb.r + amount)
+  const g = clampChannel(rgb.g + amount)
+  const b = clampChannel(rgb.b + amount)
+  const toHex = (channel: number) => channel.toString(16).padStart(2, "0")
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+const formatRelativeTimeFromNow = (date: Date) => {
+  const now = Date.now()
+  const diff = now - date.getTime()
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+
+  if (diff < minute) return "Just now"
+  if (diff < hour) {
+    const minutes = Math.floor(diff / minute)
+    return `${minutes} minute${minutes === 1 ? "" : "s"} ago`
+  }
+  if (diff < day) {
+    const hours = Math.floor(diff / hour)
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`
+  }
+  const days = Math.floor(diff / day)
+  if (days === 1) return "Yesterday"
+  return `${days} days ago`
+}
+
 const normalizeStage = (stage: string | null | undefined): string => {
   const normalized = (stage || "Prospect").trim()
   const stageLower = normalized.toLowerCase()
@@ -84,6 +143,8 @@ interface AthleteWithBirthday {
   weightclass?: string
   pipeline_stage?: string | null
   star_rating?: number | null
+  college?: string | null
+  commitmentdate?: string | null
 }
 
 interface RecruitingActionsDashboardProps {
@@ -162,13 +223,25 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     outcome: "",
   })
   const [availableAthletes, setAvailableAthletes] = useState<{ id: string; name: string }[]>([])
-  const [selectedAthleteFilter, setSelectedAthleteFilter] = useState<string>("all")
-  const [selectedCoachFilter, setSelectedCoachFilter] = useState<string>("all")
   const [tabValue, setTabValue] = useState<"dashboard" | "calendar" | "activity">("dashboard")
-  const [insightMode, setInsightMode] = useState<"athletes" | "stage">("athletes")
-  const [selectedStarFilter, setSelectedStarFilter] = useState<string>("all")
   const [showUntouchedOnly, setShowUntouchedOnly] = useState<boolean>(false)
+  const [stageFilter, setStageFilter] = useState<string>("all")
+  const [contactRangeFilter, setContactRangeFilter] = useState<"all" | "0-7" | "7-14" | "14-30" | "30+" | "never">("all")
+  const [engagementFilter, setEngagementFilter] = useState<"all" | "high" | "medium" | "low" | "at-risk" | "none">("all")
+  const [followUpFilter, setFollowUpFilter] = useState<"all" | "overdue" | "dueWeek" | "scheduled" | "none">("all")
+  const [showHighPriorityOnly, setShowHighPriorityOnly] = useState(false)
+  const [showStaleOnly, setShowStaleOnly] = useState(false)
+  const [selectedEngagementIds, setSelectedEngagementIds] = useState<Set<string>>(new Set())
+  const engagementTableRef = useRef<HTMLDivElement | null>(null)
   const resolvedBrandColor = brandColor || DEFAULT_BRAND_COLOR
+  const chartPalette = useMemo(() => {
+    return [
+      resolvedBrandColor,
+      adjustHexShade(resolvedBrandColor, 35),
+      adjustHexShade(resolvedBrandColor, -25),
+      "#ef4444",
+    ]
+  }, [resolvedBrandColor])
 
   useEffect(() => {
     /* eslint-disable no-console */
@@ -269,64 +342,6 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       setIsLoading(false)
     }
   }
-
-  const athleteFilterOptions = useMemo(() => {
-    const unique = new Map<string, string>()
-    actions.forEach((action) => {
-      if (action.athlete_id && action.athlete_name) {
-        unique.set(action.athlete_id, action.athlete_name)
-      }
-    })
-    return Array.from(unique.entries())
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [actions])
-
-  const coachFilterOptions = useMemo(() => {
-    const unique = new Map<string, string>()
-    actions.forEach((action) => {
-      if (action.coach_user_id && action.coach_name) {
-        unique.set(action.coach_user_id, action.coach_name)
-      }
-    })
-    return Array.from(unique.entries())
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [actions])
-
-  const starRatingByAthlete = useMemo(() => {
-    const map = new Map<string, number | null>()
-    ;(prospects || []).forEach((prospect) => {
-      map.set(prospect.id, prospect.star_rating ?? null)
-    })
-    return map
-  }, [prospects])
-
-  const filteredActions = useMemo(() => {
-    let result = actions
-
-    if (selectedAthleteFilter !== "all") {
-      result = result.filter((action) => action.athlete_id === selectedAthleteFilter)
-    }
-
-    if (selectedCoachFilter !== "all") {
-      result = result.filter((action) => action.coach_user_id === selectedCoachFilter)
-    }
-
-    if (selectedStarFilter !== "all") {
-      result = result.filter((action) => {
-        const rating = starRatingByAthlete.get(action.athlete_id) ?? null
-        if (selectedStarFilter === "unrated") return rating === null
-        return rating === Number(selectedStarFilter)
-      })
-    }
-
-    if (showUntouchedOnly) {
-      return []
-    }
-
-    return result
-  }, [actions, selectedAthleteFilter, selectedCoachFilter, selectedStarFilter, showUntouchedOnly, starRatingByAthlete])
 
   const normalizeActionType = (type?: string | null) => {
     const value = (type || "other").toLowerCase()
@@ -498,155 +513,6 @@ const activityTrendData = useMemo(() => {
     return map
   }, [cadenceStats])
 
-  const stageHeatmap = useMemo(() => {
-    if (!Array.isArray(STAGE_ORDER)) {
-      console.error("[portal-debug] STAGE_ORDER is not an array", { STAGE_ORDER })
-      return { rows: [], activityList: [], max: 0, stageCounts: {} as Record<string, number> }
-    }
-
-    const stageMap = new Map<string, string>()
-    const stageCountMap = new Map<string, number>()
-    ;(prospects || []).forEach((prospect) => {
-      const normalizedStage = normalizeStage(prospect.pipeline_stage)
-      stageMap.set(prospect.id, normalizedStage)
-      stageCountMap.set(normalizedStage, (stageCountMap.get(normalizedStage) || 0) + 1)
-    })
-
-    const cutoff = new Date()
-    cutoff.setDate(cutoff.getDate() - 30)
-
-    const stageLabels = STAGE_ORDER.map((stage) => stage.label)
-    console.log("[portal-debug] stageHeatmap inputs", {
-      stageLabels,
-      activityTypesCount: activityTypes.length,
-      actionsCount: actions.length,
-    })
-
-    const activityList =
-      activityTypes.length > 0
-        ? activityTypes
-        : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
-
-    const counts = new Map<string, Map<string, number>>()
-    const addCount = (stageLabel: string, activityType: string) => {
-      if (!counts.has(stageLabel)) counts.set(stageLabel, new Map<string, number>())
-      const stageCounts = counts.get(stageLabel)!
-      stageCounts.set(activityType, (stageCounts.get(activityType) || 0) + 1)
-    }
-
-    actions.forEach((action) => {
-      if (!action.action_date) return
-      const actionDate = new Date(action.action_date)
-      if (Number.isNaN(actionDate.getTime())) return
-      if (actionDate < cutoff) return
-      const type = normalizeActionType(action.action_type)
-      if (type === "birthday") return
-      const stageLabel = stageMap.get(action.athlete_id) || "Unassigned"
-      addCount(stageLabel, type)
-    })
-
-    const rows = [...stageLabels, "Unassigned"].map((stage) => {
-      const stageCounts = counts.get(stage) || new Map<string, number>()
-      const record: Record<string, number> = {}
-      activityList.forEach((type) => {
-        record[type] = stageCounts.get(type) || 0
-      })
-      return { stage, counts: record }
-    })
-
-    const max = rows.reduce((maxValue, row) => {
-      const rowMax = Math.max(...Object.values(row.counts))
-      return Math.max(maxValue, rowMax)
-    }, 0)
-
-    const stageCountsObject: Record<string, number> = {}
-    ;[...stageCountMap.entries()].forEach(([label, value]) => {
-      stageCountsObject[label] = value
-    })
-
-    return { rows, activityList, max, stageCounts: stageCountsObject }
-  }, [actions, activityTypes, prospects])
-
-  const athleteActivityLeaderboard = useMemo(() => {
-    const cutoff = new Date()
-    cutoff.setDate(cutoff.getDate() - 30)
-
-    const nameMap = new Map<string, string>()
-    const starMap = new Map<string, number | null>()
-    ;(prospects || []).forEach((prospect) => {
-      if (prospect.name) {
-        nameMap.set(prospect.id, prospect.name)
-      }
-      starMap.set(prospect.id, prospect.star_rating ?? null)
-    })
-
-    const activityList =
-      activityTypes.length > 0
-        ? activityTypes
-        : ["call", "text", "email", "visit", "prospect_camp", "watched_live", "letter", "social_media", "other"]
-
-    const leaderboardCounts = new Map<
-      string,
-      {
-        name: string
-        counts: Record<string, number>
-        total: number
-        starRating: number | null
-      }
-    >()
-
-    const addAthleteCount = (
-      athleteId: string,
-      displayName: string,
-      starRating: number | null,
-      activityType: string,
-    ) => {
-      if (!leaderboardCounts.has(athleteId)) {
-        const initialCounts: Record<string, number> = {}
-        activityList.forEach((type) => {
-          initialCounts[type] = 0
-        })
-        leaderboardCounts.set(athleteId, {
-          name: displayName,
-          counts: initialCounts,
-          total: 0,
-          starRating,
-        })
-      }
-      const athleteCounts = leaderboardCounts.get(athleteId)!
-      athleteCounts.starRating = starRating
-      athleteCounts.counts[activityType] = (athleteCounts.counts[activityType] || 0) + 1
-      athleteCounts.total += 1
-    }
-
-    actions.forEach((action) => {
-      if (!action.action_date) return
-      const actionDate = new Date(action.action_date)
-      if (Number.isNaN(actionDate.getTime())) return
-      if (actionDate < cutoff) return
-      const type = normalizeActionType(action.action_type)
-      if (type === "birthday") return
-      const displayName =
-        nameMap.get(action.athlete_id) || action.athlete_name || "Unknown Athlete"
-      const starRating = starMap.get(action.athlete_id) ?? null
-      addAthleteCount(action.athlete_id, displayName, starRating, type)
-    })
-
-    const data = Array.from(leaderboardCounts.entries())
-      .map(([, value]) => value)
-      .filter((entry) => entry.total > 0)
-      .sort((a, b) => {
-        const starDiff = (b.starRating ?? 0) - (a.starRating ?? 0)
-        if (starDiff !== 0) return starDiff
-        return b.total - a.total
-      })
-      .slice(0, 10)
-
-    const max = data.reduce((maxValue, entry) => Math.max(maxValue, entry.total), 0)
-
-    return { data, activityList, max }
-  }, [actions, activityTypes, prospects])
-
   const activityMixByAthlete = useMemo(() => {
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - 30)
@@ -691,283 +557,503 @@ const activityTrendData = useMemo(() => {
     return map
   }, [actions])
 
-  const renderCadenceSummary = () => {
-    const { summary, overdueList, warningList, noActivityList } = cadenceStats
-    const formatList = (list: typeof overdueList) =>
-      list
-        .slice(0, 3)
-        .map((detail) =>
-          detail.daysSince !== null ? `${detail.name} (${detail.daysSince}d)` : detail.name,
-        )
-        .join(", ")
+  const lastActionByAthlete = useMemo(() => {
+    const map = new Map<string, RecruitingAction>()
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const date = new Date(action.action_date)
+      if (Number.isNaN(date.getTime())) return
+      const existing = map.get(action.athlete_id)
+      if (!existing || new Date(existing.action_date) < date) {
+        map.set(action.athlete_id, action)
+      }
+    })
+    return map
+  }, [actions])
 
-    const cards = [
+  const touchesByAthlete = useMemo(() => {
+    const now = new Date()
+    const last7 = new Date(now)
+    last7.setDate(now.getDate() - 7)
+    const last30 = new Date(now)
+    last30.setDate(now.getDate() - 30)
+    const map = new Map<
+      string,
+      { total: number; last7: number; last30: number; first: Date | null; last: Date | null }
+    >()
+
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const date = new Date(action.action_date)
+      if (Number.isNaN(date.getTime())) return
+      if (!map.has(action.athlete_id)) {
+        map.set(action.athlete_id, { total: 0, last7: 0, last30: 0, first: null, last: null })
+      }
+      const entry = map.get(action.athlete_id)!
+      entry.total += 1
+      if (date >= last7) entry.last7 += 1
+      if (date >= last30) entry.last30 += 1
+      entry.last = !entry.last || date > entry.last ? date : entry.last
+      entry.first = !entry.first || date < entry.first ? date : entry.first
+    })
+
+    return map
+  }, [actions])
+
+  const nextFollowUpByAthlete = useMemo(() => {
+    const map = new Map<string, Date>()
+    actions.forEach((action) => {
+      if (!action.follow_up_date) return
+      const raw = action.follow_up_date.includes("T") ? action.follow_up_date.split("T")[0] : action.follow_up_date
+      const [y, m, d] = raw.split("-").map(Number)
+      const date = new Date(y, (m ?? 1) - 1, d ?? 1)
+      if (Number.isNaN(date.getTime())) return
+      const existing = map.get(action.athlete_id)
+      if (!existing || date < existing) {
+        map.set(action.athlete_id, date)
+      }
+    })
+    return map
+  }, [actions])
+
+  const engagementRows = useMemo(() => {
+    const dayMs = 1000 * 60 * 60 * 24
+    const now = new Date()
+    return cadenceStats.details.map((detail) => {
+      const touches = touchesByAthlete.get(detail.id) ?? {
+        total: 0,
+        last7: 0,
+        last30: 0,
+        first: null,
+        last: null,
+      }
+      const nextFollowUp = nextFollowUpByAthlete.get(detail.id) ?? null
+      const lastAction = lastActionByAthlete.get(detail.id)
+      const contactRange =
+        detail.daysSince === null
+          ? "never"
+          : detail.daysSince <= 7
+            ? "0-7"
+            : detail.daysSince <= 14
+              ? "7-14"
+              : detail.daysSince <= 30
+                ? "14-30"
+                : "30+"
+
+      let engagementLevel: "high" | "medium" | "low" | "at-risk" | "none" = "none"
+      if (detail.lastTouch) {
+        if ((detail.daysSince ?? Infinity) <= 7 && touches.last7 >= 2) {
+          engagementLevel = "high"
+        } else if ((detail.daysSince ?? Infinity) <= 14) {
+          engagementLevel = "medium"
+        } else if ((detail.daysSince ?? Infinity) <= 30) {
+          engagementLevel = "low"
+        } else {
+          engagementLevel = "at-risk"
+        }
+      }
+
+      const engagementScore =
+        engagementLevel === "high"
+          ? 90
+          : engagementLevel === "medium"
+            ? 70
+            : engagementLevel === "low"
+              ? 50
+              : engagementLevel === "at-risk"
+                ? 30
+                : 10
+
+      const followUpStatus: "overdue" | "dueWeek" | "scheduled" | "none" = nextFollowUp
+        ? nextFollowUp.getTime() < now.getTime()
+          ? "overdue"
+          : nextFollowUp.getTime() - now.getTime() <= 7 * dayMs
+            ? "dueWeek"
+            : "scheduled"
+        : "none"
+
+      const daysActive =
+        touches.first && touches.last
+          ? Math.max(1, (touches.last.getTime() - touches.first.getTime()) / dayMs)
+          : 1
+      const touchFrequency = Number((touches.total / Math.max(1, daysActive / 7)).toFixed(1))
+
+      return {
+        id: detail.id,
+        name: detail.name,
+        stage: detail.stage,
+        starRating: detail.starRating ?? null,
+        daysSince: detail.daysSince,
+        status: detail.status,
+        totalTouches: touches.total,
+        touchesLast30: touches.last30,
+        touchFrequency,
+        engagementLevel,
+        engagementScore,
+        contactRange,
+        nextFollowUp,
+        followUpStatus,
+        lastTouch: detail.lastTouch,
+        lastAction,
+      }
+    })
+  }, [cadenceStats.details, touchesByAthlete, nextFollowUpByAthlete, lastActionByAthlete])
+
+  const engagementSummary = useMemo(() => {
+    const highPriorityUntouched = cadenceStats.details.filter(
+      (detail) => detail.status === "noActivity" && (detail.starRating ?? 0) >= 4,
+    ).length
+    const activeThisWeek = new Set(
+      actions
+        .filter((action) => {
+          if (!action.action_date) return false
+          const date = new Date(action.action_date)
+          if (Number.isNaN(date.getTime())) return false
+          const now = new Date()
+          const seven = new Date()
+          seven.setDate(now.getDate() - 7)
+          return date >= seven
+        })
+        .map((action) => action.athlete_id),
+    ).size
+
+    return {
+      overdue: cadenceStats.summary.overdue,
+      stale: cadenceStats.summary.warning,
+      highPriorityUntouched,
+      activeThisWeek,
+    }
+  }, [cadenceStats, actions])
+
+  const activityVolumeSummary = useMemo(() => {
+    const days = 10
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const buckets: Array<{
+      date: string
+      calls: number
+      messages: number
+      visits: number
+    }> = []
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today)
+      date.setDate(today.getDate() - i)
+      buckets.push({
+        date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        calls: 0,
+        messages: 0,
+        visits: 0,
+      })
+    }
+    const bucketMap = new Map<string, (typeof buckets)[number]>()
+    buckets.forEach((bucket) => bucketMap.set(bucket.date, bucket))
+
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const actionDate = new Date(action.action_date)
+      if (Number.isNaN(actionDate.getTime())) return
+      actionDate.setHours(0, 0, 0, 0)
+      const key = actionDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      const bucket = bucketMap.get(key)
+      if (!bucket) return
+      const type = normalizeActionType(action.action_type)
+      if (type === "call") bucket.calls += 1
+      else if (type === "text" || type === "email" || type === "social_media") bucket.messages += 1
+      else bucket.visits += 1
+    })
+
+    return buckets
+  }, [actions])
+
+  const stageEngagementData = useMemo(() => {
+    const map = new Map<
+      string,
+      { touches: number; athletes: number; totalDays: number; staleCount: number }
+    >()
+    cadenceStats.details.forEach((detail) => {
+      if (!map.has(detail.stage)) {
+        map.set(detail.stage, { touches: 0, athletes: 0, totalDays: 0, staleCount: 0 })
+      }
+      const entry = map.get(detail.stage)!
+      entry.athletes += 1
+      if (detail.daysSince !== null) {
+        entry.totalDays += detail.daysSince
+        if (detail.daysSince >= 14) {
+          entry.staleCount += 1
+        }
+      }
+      const touches = touchesByAthlete.get(detail.id)
+      if (touches) {
+        entry.touches += touches.last30
+      }
+    })
+
+    return Array.from(map.entries()).map(([stage, stats]) => ({
+      stage,
+      touches: stats.touches,
+      avgDays: stats.athletes > 0 ? Math.round(stats.totalDays / stats.athletes) : 0,
+      stalePercent: stats.athletes > 0 ? Math.round((stats.staleCount / stats.athletes) * 100) : 0,
+    }))
+  }, [cadenceStats.details, touchesByAthlete])
+
+  const filteredEngagementRows = useMemo(() => {
+    return engagementRows.filter((row) => {
+      if (stageFilter !== "all" && row.stage !== stageFilter) return false
+      if (contactRangeFilter !== "all" && row.contactRange !== contactRangeFilter) return false
+      if (engagementFilter !== "all" && row.engagementLevel !== engagementFilter) return false
+      if (followUpFilter !== "all" && row.followUpStatus !== followUpFilter) return false
+      if (showHighPriorityOnly && (row.starRating ?? 0) < 4) return false
+      if (showStaleOnly && (row.daysSince ?? 0) < 14 && row.daysSince !== null) return false
+      if (showUntouchedOnly && row.status !== "noActivity") return false
+      return true
+    })
+  }, [
+    engagementRows,
+    stageFilter,
+    contactRangeFilter,
+    engagementFilter,
+    followUpFilter,
+    showHighPriorityOnly,
+    showStaleOnly,
+    showUntouchedOnly,
+  ])
+
+  const sortedEngagementRows = useMemo(() => {
+    return [...filteredEngagementRows].sort((a, b) => {
+      const daysA = a.daysSince === null ? Infinity : a.daysSince
+      const daysB = b.daysSince === null ? Infinity : b.daysSince
+      return daysB - daysA
+    })
+  }, [filteredEngagementRows])
+
+  const recentActivityTimeline = useMemo(() => {
+    return [...actions]
+      .filter((action) => action.action_date)
+      .sort((a, b) => {
+        const dateA = new Date(a.action_date)
+        const dateB = new Date(b.action_date)
+        return dateB.getTime() - dateA.getTime()
+      })
+      .slice(0, 50)
+  }, [actions])
+
+  const stageFunnelData = useMemo(() => {
+    const total = cadenceStats.details.length || 0
+    const rows = STAGE_ORDER.map((stage) => {
+      const count = cadenceStats.details.filter((detail) => detail.stage === stage.label).length
+      const percentage = total > 0 ? Math.round((count / total) * 100) : 0
+      return { label: stage.label, count, percentage }
+    })
+    return { total, rows }
+  }, [cadenceStats.details])
+
+  const lostRecruitEntries = useMemo(() => {
+    const lostProspects =
+      prospects
+        ?.filter((prospect) => normalizeStage(prospect.pipeline_stage) === "Lost")
+        .map((prospect) => ({
+          id: prospect.id,
+          name: prospect.name,
+          school: prospect.college || "Committed Elsewhere",
+          committedAgo: prospect.commitmentdate ? formatRelativeTimeFromNow(new Date(prospect.commitmentdate)) : "Recent",
+          previousStage: normalizeStage(prospect.pipeline_stage) || "Prospect",
+        })) || []
+
+    if (lostProspects.length >= 4) {
+      return lostProspects.slice(0, 4)
+    }
+
+    const sample = [
       {
-        key: "overdue",
-        label: "Overdue",
-        value: summary.overdue,
-        description: "Touches past cadence",
-        highlight: rgbaFromHex(resolvedBrandColor, 0.18),
-        border: rgbaFromHex(resolvedBrandColor, 0.35),
-        text: resolvedBrandColor,
-        detail: summary.overdue > 0 ? `Top: ${formatList(overdueList)}` : "",
+        id: "sample-1",
+        name: "Mason Rivera",
+        school: "NC State",
+        committedAgo: "3 days ago",
+        previousStage: "Offered",
       },
       {
-        key: "warning",
-        label: "Needs attention",
-        value: summary.warning,
-        description: "Approaching cadence",
-        highlight: rgbaFromHex(resolvedBrandColor, 0.12),
-        border: rgbaFromHex(resolvedBrandColor, 0.25),
-        text: resolvedBrandColor,
-        detail: summary.warning > 0 ? `Top: ${formatList(warningList)}` : "",
+        id: "sample-2",
+        name: "Evan Turner",
+        school: "Virginia Tech",
+        committedAgo: "6 days ago",
+        previousStage: "Recruiting",
       },
       {
-        key: "noActivity",
-        label: "No activity",
-        value: summary.noActivity,
-        description: "No touches yet logged",
-        highlight: rgbaFromHex(resolvedBrandColor, 0.08),
-        border: "rgba(148, 163, 184, 0.35)",
-        text: resolvedBrandColor,
-        detail: summary.noActivity > 0 ? `Examples: ${formatList(noActivityList)}` : "",
-      },
-      {
-        key: "onTrack",
-        label: "On track",
-        value: summary.onTrack,
-        description: "Touches within cadence",
-        highlight: "rgba(15, 23, 42, 0.08)",
-        border: "rgba(148, 163, 184, 0.35)",
-        text: "rgba(15, 23, 42, 0.9)",
-        detail: "",
+        id: "sample-3",
+        name: "Cole Bryant",
+        school: "Penn State",
+        committedAgo: "9 days ago",
+        previousStage: "Visited",
       },
     ]
 
-    return (
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <div
-            key={card.key}
-            className="rounded-xl border p-4"
-            style={{ backgroundColor: card.highlight, borderColor: card.border }}
-          >
-            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {card.label}
-            </div>
-            <div className="mt-2 text-2xl font-bold" style={{ color: card.text }}>
-              {card.value}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
-            {card.detail && (
-              <p className="text-xs text-muted-foreground/80 mt-2 leading-relaxed">{card.detail}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
+    return [...lostProspects, ...sample.slice(0, Math.max(0, 3 - lostProspects.length))]
+  }, [prospects])
 
-  const renderTrendCard = () => {
-    if (activityTrendData.length === 0) {
-      return (
-        <div className="rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
-          </div>
-          <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
-            No activity logged in the last 14 days. Consider scheduling follow-ups.
-          </div>
-        </div>
-      )
+  const committedRecruits = useMemo(() => {
+    const committed =
+      prospects
+        ?.filter((prospect) => {
+          const stage = normalizeStage(prospect.pipeline_stage)
+          return stage === "Committed" || stage === "Signed"
+        })
+        .map((prospect) => ({
+          id: prospect.id,
+          year: prospect.graduationyear ?? "—",
+          name: prospect.name,
+          weight: prospect.weightclass || "—",
+          highSchool: prospect.wrestlingClub || "—",
+          college: prospect.college || "Pending",
+          division: prospect.division || "—",
+          status: normalizeStage(prospect.pipeline_stage),
+        })) || []
+
+    if (committed.length > 0) {
+      return committed.slice(0, 5)
     }
 
-    return (
-      <div className="rounded-xl border border-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-muted-foreground">Activity volume (last 14 days)</h4>
-          <span className="text-xs font-medium text-muted-foreground">
-            {activityTrendData.reduce((sum, point) => sum + (Number(point.total) || 0), 0)} total logs
-          </span>
-        </div>
-        <div className="h-60">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={activityTrendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-              <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
-              <Tooltip
-                formatter={(value: number, key: string) => [
-                  `${value} ${key === "total" ? "activities" : formatActionType(key)}`,
-                  key === "total" ? "Total" : formatActionType(key),
-                ]}
-                labelFormatter={(label) => label}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  borderColor: "hsl(var(--border))",
-                  borderRadius: "0.75rem",
-                  color: "hsl(var(--foreground))",
-                }}
-              />
-              <Legend formatter={(value) => (value === "total" ? "Total" : formatActionType(value))} iconType="circle" />
-              {activityTypes.map((type) => (
-                <Bar key={type} dataKey={type} stackId="activity" fill={getActivityColor(type).fill} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    )
+    return [
+      {
+        id: "placeholder-1",
+        year: "2025",
+        name: "Sample Commit",
+        weight: "157",
+        highSchool: "NC United",
+        college: "Example U",
+        division: "Division I",
+        status: "Committed",
+      },
+    ]
+  }, [prospects])
+
+  const weeklyCallSummary = useMemo(() => {
+    const now = new Date()
+    const startCurrent = new Date(now)
+    startCurrent.setDate(now.getDate() - 7)
+    const startPrevious = new Date(now)
+    startPrevious.setDate(now.getDate() - 14)
+    const endPrevious = new Date(now)
+    endPrevious.setDate(now.getDate() - 7)
+
+    let current = 0
+    let previous = 0
+
+    actions.forEach((action) => {
+      if (!action.action_date) return
+      const date = new Date(action.action_date)
+      if (Number.isNaN(date.getTime())) return
+      const type = normalizeActionType(action.action_type)
+      if (type !== "call") return
+      if (date >= startCurrent) {
+        current += 1
+      } else if (date >= startPrevious && date < endPrevious) {
+        previous += 1
+      }
+    })
+
+    return { current, delta: current - previous }
+  }, [actions])
+
+  const resetEngagementFilters = () => {
+    setStageFilter("all")
+    setContactRangeFilter("all")
+    setEngagementFilter("all")
+    setFollowUpFilter("all")
+    setShowHighPriorityOnly(false)
+    setShowStaleOnly(false)
+    setShowUntouchedOnly(false)
   }
 
-  const renderHeatmapCard = () => {
-    if (stageHeatmap.rows.length === 0) {
-      return (
-        <div className="rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-semibold text-muted-foreground">Stage touch coverage (last 30 days)</h4>
-          </div>
-          <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
-            No touch activity recorded for the selected window.
-          </div>
-        </div>
-      )
+  const handlePriorityCardClick = (type: "overdue" | "stale" | "priority" | "active") => {
+    resetEngagementFilters()
+    switch (type) {
+      case "overdue":
+        setFollowUpFilter("overdue")
+        setContactRangeFilter("30+")
+        break
+      case "stale":
+        setContactRangeFilter("14-30")
+        setShowStaleOnly(true)
+        break
+      case "priority":
+        setShowHighPriorityOnly(true)
+        setShowUntouchedOnly(true)
+        setContactRangeFilter("never")
+        break
+      case "active":
+        setContactRangeFilter("0-7")
+        setEngagementFilter("high")
+        break
     }
-
-    return (
-      <div className="rounded-xl border border-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-muted-foreground">Stage touch coverage (last 30 days)</h4>
-          <span className="text-xs font-medium text-muted-foreground">
-            {stageHeatmap.rows
-              .map((row) => Object.values(row.counts).reduce((sum, value) => sum + value, 0))
-              .reduce((sum, value) => sum + value, 0)}{" "}
-            logged touches
-          </span>
-        </div>
-        <div className="overflow-x-auto">
-          <div className="min-w-[520px]">
-            <div className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
-              <div className="h-10" />
-              {stageHeatmap.activityList.map((type) => (
-                <div
-                  key={type}
-                  className="h-10 px-2 flex items-center justify-center text-xs font-medium text-muted-foreground border border-border/50 bg-muted/40 first:border-l border-t-0"
-                >
-                  {formatActionType(type)}
-                </div>
-              ))}
-            </div>
-            {stageHeatmap.rows.map((row) => (
-              <div key={row.stage} className="grid grid-cols-[160px_repeat(auto-fit,minmax(40px,1fr))]">
-                <div className="h-12 flex items-center px-3 text-sm font-medium border border-border/60 bg-muted/40 first:border-l">
-                  <div className="flex flex-col">
-                    <span>{row.stage}</span>
-                    <span className="text-[11px] font-normal text-muted-foreground">
-                      {stageHeatmap.stageCounts[row.stage] ?? 0} athletes
-                    </span>
-                  </div>
-                </div>
-                {stageHeatmap.activityList.map((type) => {
-                  const count = row.counts[type] || 0
-                  const intensity = stageHeatmap.max === 0 ? 0 : count / stageHeatmap.max
-                  const bg =
-                    intensity === 0
-                      ? "rgba(148,163,184,0.15)"
-                      : rgbaFromHex(resolvedBrandColor, 0.1 + intensity * 0.6)
-                  const textColor = intensity > 0.5 ? "text-white" : "text-foreground"
-                  return (
-                    <div
-                      key={`${row.stage}-${type}`}
-                      className={`h-12 border border-border/60 flex items-center justify-center text-sm font-semibold transition-colors ${textColor}`}
-                      style={{ backgroundColor: bg }}
-                    >
-                      {count}
-                    </div>
-                  )
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
+    requestAnimationFrame(() => {
+      engagementTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
   }
 
-  const renderLeaderboardCard = () => {
-    if (athleteActivityLeaderboard.data.length === 0) {
-      return (
-        <div className="rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-semibold text-muted-foreground">Priority athletes (last 30 days)</h4>
-          </div>
-          <div className="h-60 flex items-center justify-center text-sm text-muted-foreground">
-            No athlete activity to display yet. Log touches to populate this view.
-          </div>
-        </div>
-      )
+  const toggleRowSelection = (id: string) => {
+    setSelectedEngagementIds((previous) => {
+      const next = new Set(previous)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAllRows = () => {
+    setSelectedEngagementIds((previous) => {
+      if (previous.size === sortedEngagementRows.length) {
+        return new Set()
+      }
+      return new Set(sortedEngagementRows.map((row) => row.id))
+    })
+  }
+
+  const bulkSelectionCount = selectedEngagementIds.size
+  const isAllRowsSelected = sortedEngagementRows.length > 0 && bulkSelectionCount === sortedEngagementRows.length
+
+  const handleBulkAction = (actionType: "log" | "followup" | "message" | "export") => {
+    if (selectedEngagementIds.size === 0) return
+    const [firstId] = Array.from(selectedEngagementIds)
+    if (!firstId) return
+    if (actionType === "export") {
+      console.log("Exporting engagement report for athletes:", Array.from(selectedEngagementIds))
+      return
     }
+    if (actionType === "message") {
+      openScheduleForAthlete(firstId, "email")
+      return
+    }
+    if (actionType === "followup") {
+      openScheduleForAthlete(firstId, "call")
+      return
+    }
+    openScheduleForAthlete(firstId)
+  }
 
-    const highlights = athleteActivityLeaderboard.data.slice(0, 3)
+  const getDaysBadgeTone = (days: number | null) => {
+    if (days === null) return { label: "No touch", className: "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-white" }
+    if (days <= 7) return { label: `${days}d`, className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" }
+    if (days <= 14) return { label: `${days}d`, className: "bg-amber-500/10 text-amber-600 dark:text-amber-300" }
+    if (days <= 30) return { label: `${days}d`, className: "bg-orange-500/10 text-orange-600 dark:text-orange-300" }
+    return { label: `${days}d`, className: "bg-red-500/10 text-red-600 dark:text-red-300" }
+  }
 
-    return (
-      <div className="rounded-xl border border-border p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-muted-foreground">Priority athletes (last 30 days)</h4>
-          <span className="text-xs font-medium text-muted-foreground">
-            Sorted by star rating and total touches
-          </span>
-        </div>
-        <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={athleteActivityLeaderboard.data.map((entry) => ({
-                name: entry.name,
-                ...entry.counts,
-              }))}
-              layout="vertical"
-              margin={{ left: 120, right: 16, top: 8, bottom: 8 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-              <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" width={120} tick={{ fontSize: 12 }} />
-              <Tooltip
-                formatter={(value: number, key: string) => [`${value} ${formatActionType(key)}`, formatActionType(key)]}
-                labelFormatter={(label) => label}
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  borderColor: "hsl(var(--border))",
-                  borderRadius: "0.75rem",
-                  color: "hsl(var(--foreground))",
-                }}
-              />
-              <Legend formatter={(value) => formatActionType(value)} iconType="circle" />
-              {athleteActivityLeaderboard.activityList.map((type) => (
-                <Bar key={type} dataKey={type} stackId="leaderboard" fill={getActivityColor(type).fill} radius={[0, 6, 6, 0]} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-3 text-xs text-muted-foreground/90">
-          Top focus:
-          <ul className="mt-1 space-y-1">
-            {highlights.map((entry) => (
-              <li key={entry.name} className="flex items-center gap-2">
-                <span className="font-medium text-foreground">{entry.name}</span>
-                {entry.starRating ? (
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: rgbaFromHex(resolvedBrandColor, 0.2), color: resolvedBrandColor }}>
-                    {entry.starRating}★
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-muted-foreground uppercase">Unrated</span>
-                )}
-                <span className="text-[10px] text-muted-foreground">{entry.total} touches</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    )
+  const getEngagementBadgeClasses = (level: "high" | "medium" | "low" | "at-risk" | "none") => {
+    switch (level) {
+      case "high":
+        return "bg-emerald-500/10 text-emerald-500 border-emerald-500/40"
+      case "medium":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/30"
+      case "low":
+        return "bg-amber-500/10 text-amber-600 border-amber-500/40"
+      case "at-risk":
+        return "bg-red-500/10 text-red-500 border-red-500/40"
+      default:
+        return "bg-muted text-muted-foreground border-border"
+    }
   }
 
   // Create birthday "events" from prospects
@@ -1364,28 +1450,6 @@ const activityTrendData = useMemo(() => {
     }
   }
 
-  const filteredUntouchedAthletes = useMemo(() => {
-    let list = cadenceStats.noActivityList
-
-    if (selectedAthleteFilter !== "all") {
-      list = list.filter((detail) => detail.id === selectedAthleteFilter)
-    }
-
-    if (selectedStarFilter !== "all") {
-      list = list.filter((detail) => {
-        if (selectedStarFilter === "unrated") return detail.starRating == null
-        return detail.starRating === Number(selectedStarFilter)
-      })
-    }
-
-    if (selectedCoachFilter !== "all") {
-      // Untouched athletes do not have an assigned coach interaction yet
-      return []
-    }
-
-    return list
-  }, [cadenceStats, selectedAthleteFilter, selectedCoachFilter, selectedStarFilter])
-
   const openScheduleForAthlete = (
     athleteId: string,
     defaultType: string = "phone_call",
@@ -1407,143 +1471,77 @@ const activityTrendData = useMemo(() => {
   }
 
   const renderTodayPlan = () => {
-    const getSuggestedAction = (detail: any) => {
-      const mix = activityMixByAthlete.get(detail.id)
-      if (!detail.lastTouch) {
-        return { label: "Kick off with a call", actionType: "call" }
-      }
-      if (mix) {
-        if (mix.texts >= 3 && mix.calls === 0) {
-          return { label: "Place a call to balance the touch mix", actionType: "call" }
-        }
-        if (mix.calls >= 2 && mix.texts === 0) {
-          return { label: "Send a text or email check-in", actionType: "text" }
-        }
-      }
-      if (detail.stage === "Offered") {
-        return { label: "Follow up on offer details", actionType: "call" }
-      }
-      if (detail.stage === "Recruiting" && detail.daysSince && detail.daysSince > detail.threshold * 0.7) {
-        return { label: "Schedule a visit or video call", actionType: "visit" }
-      }
-      return { label: "Log a meaningful touch", actionType: "call" }
-    }
-
-    const highPriority = cadenceStats.overdueList.slice(0, 5)
-    const watchlist = cadenceStats.warningList.slice(0, 5)
-    const untouched = cadenceStats.noActivityList.slice(0, 5)
-    const momentum = cadenceStats.details
-      .filter((detail) => detail.status === "onTrack" && detail.daysSince !== null && detail.daysSince <= 2)
-      .slice(0, 5)
-
-    const hasContent = highPriority.length + watchlist.length + untouched.length + momentum.length > 0
-    if (!hasContent) {
-      return null
-    }
-
-    const renderPlanList = (opts: {
-      title: string
-      items: typeof cadenceStats.details
-      emptyCopy: string
-      tone?: "primary" | "warning" | "danger"
-    }) => {
-      const { title, items, emptyCopy, tone = "primary" } = opts
-      const toneClasses =
-        tone === "danger"
-          ? "text-red-500"
-          : tone === "warning"
-            ? "text-amber-500"
-            : "text-primary"
-
+    const callsOverdue = cadenceStats.summary.overdue
+    const followUpsDue = cadenceStats.summary.warning
+    const visitsThisWeek = actions.filter((action) => {
+      if (!action.action_date) return false
+      const date = new Date(action.action_date)
+      if (Number.isNaN(date.getTime())) return false
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
       return (
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
-            <Badge variant="secondary" className="text-[10px] font-medium">
-              {items.length}
-            </Badge>
-          </div>
-          {items.length === 0 ? (
-            <p className="text-xs text-muted-foreground">{emptyCopy}</p>
-          ) : (
-            <ul className="space-y-3">
-              {items.map((detail) => {
-                const suggestion = getSuggestedAction(detail)
-                const daysCopy =
-                  detail.daysSince === null ? "No touches logged" : `${detail.daysSince}d since last touch`
-
-                return (
-                  <li key={detail.id} className="flex items-start justify-between gap-3 rounded-md border border-border/40 bg-background/60 p-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">{detail.name}</span>
-                        {detail.starRating ? (
-                          <Badge variant="outline" className="text-[10px] font-medium">
-                            {detail.starRating}★
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
-                            Unrated
-                          </Badge>
-                        )}
-                        <Badge variant="secondary" className="text-[10px] font-medium">
-                          {detail.stage}
-                        </Badge>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">{daysCopy}</p>
-                      <p className={`text-xs font-medium ${toneClasses}`}>{suggestion.label}</p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 whitespace-nowrap"
-                      onClick={() => openScheduleForAthlete(detail.id, suggestion.actionType)}
-                    >
-                      Schedule
-                    </Button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-        </div>
+        date >= sevenDaysAgo &&
+        (normalizeActionType(action.action_type) === "visit" || normalizeActionType(action.action_type) === "prospect_camp")
       )
-    }
+    }).length
+
+    const priorityItems = [
+      {
+        label: "Calls overdue",
+        count: callsOverdue,
+        description: "Follow-ups past due",
+        color: "text-red-500",
+        icon: AlertCircle,
+        action: () => handlePriorityCardClick("overdue"),
+      },
+      {
+        label: "Follow-ups due",
+        count: followUpsDue,
+        description: "Within next 7 days",
+        color: "text-amber-500",
+        icon: Clock,
+        action: () => handlePriorityCardClick("stale"),
+      },
+      {
+        label: "Visits this week",
+        count: visitsThisWeek,
+        description: "On-site touchpoints",
+        color: "text-emerald-500",
+        icon: ActivityIcon,
+        action: () => handlePriorityCardClick("active"),
+      },
+    ]
 
     return (
-      <Card className="border border-muted/50 bg-gradient-to-br from-background via-background to-background/80 shadow-sm">
+      <Card className="border border-muted/50 shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4 text-primary" />
-            Today's Plan
+            Today's priorities
           </CardTitle>
-          <CardDescription>High-impact outreach suggestions based on recent cadence and activity mix.</CardDescription>
+          <CardDescription>Key items to keep the pipeline healthy.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6 lg:grid-cols-2">
-          {renderPlanList({
-            title: "High Priority",
-            items: highPriority,
-            emptyCopy: "Nobody is overdue right now. Keep the momentum!",
-            tone: "danger",
-          })}
-          {renderPlanList({
-            title: "Momentum",
-            items: momentum,
-            emptyCopy: "No fresh momentum yet. Log a fast touch today.",
-            tone: "primary",
-          })}
-          {renderPlanList({
-            title: "Watchlist",
-            items: watchlist,
-            emptyCopy: "No warnings today. Stay proactive!",
-            tone: "warning",
-          })}
-          {renderPlanList({
-            title: "Untouched",
-            items: untouched,
-            emptyCopy: "All athletes have at least one touch. Great job!",
-            tone: "primary",
-          })}
+        <CardContent className="space-y-4">
+          {priorityItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={item.action}
+              className="flex w-full items-center justify-between rounded-lg border border-border/70 bg-card/60 p-3 text-left transition hover:bg-muted/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+            >
+              <div>
+                <p className={`text-xs font-semibold uppercase tracking-wide ${item.color}`}>{item.label}</p>
+                <p className="text-[11px] text-muted-foreground">{item.description}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <item.icon className={`h-4 w-4 ${item.color}`} />
+                <span className="text-2xl font-bold text-foreground">{item.count}</span>
+              </div>
+            </button>
+          ))}
+          <Button variant="ghost" className="w-full text-sm" onClick={() => handlePriorityCardClick("priority")}>
+            View all tasks
+            <ArrowUpRight className="h-4 w-4 ml-1" />
+          </Button>
         </CardContent>
       </Card>
     )
@@ -1939,376 +1937,621 @@ const activityTrendData = useMemo(() => {
           </Card>
         </TabsContent>
 
-        {/* Table Tab - List view */}
+        {/* Activity Tab - Engagement intelligence */}
         <TabsContent value="activity">
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity Log</CardTitle>
-              <p className="text-sm text-muted-foreground">Review team outreach or drill into a single athlete.</p>
-            </CardHeader>
-            <CardContent>
-              {renderTodayPlan()}
-              {renderCadenceSummary()}
-              <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                <span className="text-sm font-semibold text-muted-foreground">Pipeline insights</span>
-                <div className="inline-flex items-center rounded-full border border-border overflow-hidden">
+          <div className="space-y-8">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  key: "overdue",
+                  label: "Overdue",
+                  sublabel: "Follow-ups past due",
+                  value: engagementSummary.overdue,
+                  accent: "border-red-500/40 bg-red-500/5",
+                  icon: AlertTriangle,
+                },
+                {
+                  key: "stale",
+                  label: "Stale",
+                  sublabel: "14+ days no touch",
+                  value: engagementSummary.stale,
+                  accent: "border-amber-500/40 bg-amber-500/5",
+                  icon: Clock,
+                },
+                {
+                  key: "priority",
+                  label: "High Priority",
+                  sublabel: "4-5★ no touch",
+                  value: engagementSummary.highPriorityUntouched,
+                  accent: "border-yellow-500/40 bg-yellow-500/5",
+                  icon: Star,
+                },
+                {
+                  key: "active",
+                  label: "Active This Week",
+                  sublabel: "Touches logged",
+                  value: engagementSummary.activeThisWeek,
+                  accent: "border-emerald-500/40 bg-emerald-500/5",
+                  icon: CheckCircle,
+                },
+              ].map((card) => (
+                <button
+                  key={card.key}
+                  onClick={() => handlePriorityCardClick(card.key as "overdue" | "stale" | "priority" | "active")}
+                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${card.accent} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary`}
+                >
+                  <div className="flex items-center justify-between text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    {card.label}
+                    <card.icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="mt-2 text-3xl font-bold text-foreground">{card.value}</div>
+                  <p className="text-xs text-muted-foreground mt-1">{card.sublabel}</p>
+                </button>
+              ))}
+            </div>
+
+            <Card className="border border-border/70 bg-gradient-to-br from-background to-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2">
+                  <ActivityIcon className="h-5 w-5 text-primary" />
+                  Recruiting Pipeline
+                </CardTitle>
+                <CardDescription>Track how prospects move from Prospect to Signed.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  {stageFunnelData.rows.map((stage, index) => {
+                    const width = stageFunnelData.total === 0 ? 0 : Math.max(8, stage.percentage)
+                    return (
+                      <div key={stage.label}>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                          <span className="font-semibold text-foreground">{stage.label}</span>
+                          <span>
+                            {stage.count} • {stage.percentage}%
+                          </span>
+                        </div>
+                        <div className="h-9 rounded-r-full bg-muted flex items-center">
+                          <div
+                            className="h-full rounded-r-full flex items-center px-3 text-xs font-semibold text-white transition-all"
+                            style={{
+                              width: `${width}%`,
+                              backgroundColor: rgbaFromHex(adjustHexShade(resolvedBrandColor, index * 12), 0.9),
+                            }}
+                          >
+                            {stage.count === 0 ? "—" : `${stage.count} athletes`}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {[
+                    {
+                      label: "Total Pipeline",
+                      value: stageFunnelData.total,
+                      subtext: "Active recruits",
+                      accent: "text-primary",
+                    },
+                    {
+                      label: "Lost to Others",
+                      value: stageFunnelData.rows.find((stage) => stage.label === "Lost")?.count ?? 0,
+                      subtext: "Needs review",
+                      accent: "text-red-500",
+                    },
+                    {
+                      label: "Offers Out",
+                      value: stageFunnelData.rows.find((stage) => stage.label === "Offered")?.count ?? 0,
+                      subtext: "Awaiting decisions",
+                      accent: "text-amber-500",
+                    },
+                  ].map((stat) => (
+                    <div key={stat.label} className="rounded-lg border border-border/60 bg-card/60 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {stat.label}
+                      </p>
+                      <p className={`text-3xl font-bold ${stat.accent}`}>{stat.value}</p>
+                      <p className="text-xs text-muted-foreground">{stat.subtext}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="border border-border/70">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                    Touch volume (last 10 days)
+                  </CardTitle>
+                  <CardDescription>
+                    You made {weeklyCallSummary.current} calls this week ({weeklyCallSummary.delta >= 0 ? "+" : ""}
+                    {weeklyCallSummary.delta} vs last week).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={activityVolumeSummary}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                      <YAxis allowDecimals={false} stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "0.75rem",
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="calls" stackId="activity" fill={chartPalette[0]} />
+                      <Bar dataKey="messages" stackId="activity" fill={chartPalette[1]} />
+                      <Bar dataKey="visits" stackId="activity" fill={chartPalette[2]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card className="border border-border/70">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Flame className="h-4 w-4 text-primary" />
+                    Stage velocity
+                  </CardTitle>
+                  <CardDescription>Average days between touches per stage.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {stageEngagementData.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No activity recorded for the selected window.</p>
+                  ) : (
+                    stageEngagementData.map((stage) => (
+                      <div key={stage.stage} className="flex items-center justify-between rounded-lg border border-border/70 p-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{stage.stage}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {stage.avgDays} days avg • {stage.touches} touches
+                          </p>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className={`text-[11px] font-semibold ${
+                            stage.stalePercent > 30 ? "bg-red-500/10 text-red-500" : "bg-emerald-500/10 text-emerald-500"
+                          }`}
+                        >
+                          {stage.stalePercent}% stale
+                        </Badge>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
+              <div className="space-y-6">
+                {renderTodayPlan()}
+                <Card className="border border-border/70">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Target className="h-4 w-4 text-primary" />
+                      Recently committed elsewhere
+                    </CardTitle>
+                    <CardDescription>NC recruits lost from your pipeline.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {lostRecruitEntries.map((entry) => (
+                      <div key={entry.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{entry.name}</p>
+                            <p className="text-xs text-muted-foreground">{entry.school}</p>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{entry.committedAgo}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-1">(Was in {entry.previousStage})</p>
+                      </div>
+                    ))}
+                    <Button variant="ghost" className="w-full text-sm text-primary">
+                      View all lost recruits
+                      <ArrowUpRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border border-border/70">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-primary" />
+                    Recent activity
+                  </CardTitle>
+                  <CardDescription>Latest touches across the staff.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {recentActivityTimeline.slice(0, 7).map((activity) => {
+                    const normalized = normalizeActionType(activity.action_type)
+                    const emoji = ACTIVITY_EMOJI_MAP[normalized] ?? "📝"
+                    return (
+                      <div key={activity.id} className="flex gap-3 border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                        <div className="text-xl">{emoji}</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-foreground">
+                            {activity.athlete_name} <span className="text-muted-foreground">({formatActionType(activity.action_type)})</span>
+                          </p>
+                          {activity.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">{activity.description}</p>
+                          )}
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            {formatRelativeTimeFromNow(new Date(activity.action_date))}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <Button variant="outline" className="w-full">
+                    View all activity
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div ref={engagementTableRef} className="space-y-4">
+              <div className="rounded-xl border border-border/70 bg-card/60 p-4 space-y-4">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <Select value={stageFilter} onValueChange={setStageFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All stages</SelectItem>
+                      {STAGE_ORDER.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.label}>
+                          {stage.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={contactRangeFilter} onValueChange={setContactRangeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Days since contact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any recency</SelectItem>
+                      <SelectItem value="0-7">0-7 days</SelectItem>
+                      <SelectItem value="7-14">7-14 days</SelectItem>
+                      <SelectItem value="14-30">14-30 days</SelectItem>
+                      <SelectItem value="30+">30+ days</SelectItem>
+                      <SelectItem value="never">No touch logged</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={engagementFilter} onValueChange={setEngagementFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Engagement level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All engagement</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="at-risk">At risk</SelectItem>
+                      <SelectItem value="none">No data</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={followUpFilter} onValueChange={setFollowUpFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Next follow-up" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Any status</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                      <SelectItem value="dueWeek">Due this week</SelectItem>
+                      <SelectItem value="scheduled">Scheduled</SelectItem>
+                      <SelectItem value="none">None scheduled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
                   <Button
-                    variant="ghost"
+                    variant={showHighPriorityOnly ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setInsightMode("athletes")}
-                    className={`rounded-none px-4 py-1 text-xs font-semibold ${
-                      insightMode === "athletes" ? "text-white" : "text-muted-foreground"
-                    }`}
-                    style={
-                      insightMode === "athletes"
-                        ? { backgroundColor: rgbaFromHex(resolvedBrandColor, 0.9) }
-                        : {}
-                    }
+                    onClick={() => setShowHighPriorityOnly((prev) => !prev)}
                   >
-                    Athletes
+                    High priority only
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={showStaleOnly ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setInsightMode("stage")}
-                    className={`rounded-none px-4 py-1 text-xs font-semibold ${
-                      insightMode === "stage" ? "text-white" : "text-muted-foreground"
-                    }`}
-                    style={
-                      insightMode === "stage"
-                        ? { backgroundColor: rgbaFromHex(resolvedBrandColor, 0.9) }
-                        : {}
-                    }
+                    onClick={() => setShowStaleOnly((prev) => !prev)}
                   >
-                    Stage
+                    Stale 14+ days
+                  </Button>
+                  <Button
+                    variant={showUntouchedOnly ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowUntouchedOnly((prev) => !prev)}
+                  >
+                    No touches logged
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={resetEngagementFilters}>
+                    Reset filters
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setCreatingActivity(true)}
+                    className="ml-auto"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Log activity
                   </Button>
                 </div>
               </div>
-              {insightMode === "athletes" ? (
-                <div className="mb-6 grid gap-6 lg:grid-cols-2">
-                  {renderTrendCard()}
-                  {renderLeaderboardCard()}
-                </div>
-              ) : (
-                <div className="mb-6 grid gap-6 lg:grid-cols-2">
-                  {renderTrendCard()}
-                  {renderHeatmapCard()}
+
+              {bulkSelectionCount > 0 && (
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-card/80 px-4 py-3">
+                  <span className="text-sm font-semibold">{bulkSelectionCount} athletes selected</span>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("log")}>
+                      Log activity
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("followup")}>
+                      Schedule follow-up
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("message")}>
+                      Send message
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("export")}>
+                      Export report
+                    </Button>
+                  </div>
                 </div>
               )}
 
-              <div className="mt-8 space-y-4">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Select value={selectedAthleteFilter} onValueChange={setSelectedAthleteFilter}>
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="All athletes" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-                        <SelectItem value="all">All athletes</SelectItem>
-                        {athleteFilterOptions.map((athlete) => (
-                          <SelectItem key={athlete.id} value={athlete.id}>
-                            {athlete.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={selectedCoachFilter} onValueChange={setSelectedCoachFilter}>
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="All coaches" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-                        <SelectItem value="all">All coaches</SelectItem>
-                        {coachFilterOptions.map((coach) => (
-                          <SelectItem key={coach.id} value={coach.id}>
-                            {coach.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={selectedStarFilter} onValueChange={setSelectedStarFilter}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="All ratings" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-                        <SelectItem value="all">All ratings</SelectItem>
-                        <SelectItem value="5">5★</SelectItem>
-                        <SelectItem value="4">4★</SelectItem>
-                        <SelectItem value="3">3★</SelectItem>
-                        <SelectItem value="2">2★</SelectItem>
-                        <SelectItem value="1">1★</SelectItem>
-                        <SelectItem value="unrated">Unrated</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      type="button"
-                      variant={showUntouchedOnly ? "default" : "outline"}
-                      size="sm"
-                      className="h-11"
-                      onClick={() => setShowUntouchedOnly((prev) => !prev)}
-                    >
-                      Untouched only
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedAthleteFilter("all")
-                        setSelectedCoachFilter("all")
-                        setSelectedStarFilter("all")
-                        setShowUntouchedOnly(false)
-                      }}
-                    >
-                      Clear filters
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90"
-                      onClick={() => setCreatingActivity(true)}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Log activity
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card/60 shadow-sm">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-[1100px] w-full text-sm">
-                      <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        <tr>
-                          <th className="text-left px-4 py-3">Athlete</th>
-                          <th className="text-left px-4 py-3">Last activity</th>
-                          <th className="text-left px-4 py-3">Coach</th>
-                          <th className="text-left px-4 py-3">Outcome</th>
-                          <th className="text-left px-4 py-3">Follow-up</th>
-                          <th className="text-left px-4 py-3">Notes</th>
-                          <th className="text-right px-4 py-3">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {showUntouchedOnly ? (
-                          filteredUntouchedAthletes.length === 0 ? (
-                            <tr>
-                              <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
-                                No untouched athletes match your filters.
-                              </td>
-                            </tr>
-                          ) : (
-                            filteredUntouchedAthletes.map((detail) => (
-                              <tr key={detail.id} className="border-t border-border/50 hover:bg-muted/20">
-                                <td className="px-4 py-4">
-                                  <div className="group flex items-center gap-3">
-                                    <div className="flex flex-col">
-                                      <span className="font-semibold text-foreground">{detail.name}</span>
-                                      <div className="flex gap-2 text-xs text-muted-foreground mt-1">
-                                        <span>{detail.stage}</span>
-                                        <span>•</span>
-                                        <span>{detail.starRating ? `${detail.starRating}★` : "Unrated"}</span>
-                                      </div>
-                                    </div>
-                                    <div className="ml-auto hidden items-center gap-1 group-hover:flex">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => openScheduleForAthlete(detail.id, "call")}
-                                      >
-                                        <Phone className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => openScheduleForAthlete(detail.id, "email")}
-                                      >
-                                        <Mail className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <div className="mt-2 flex items-center gap-2">
-                                    <Badge variant="outline" className="text-[10px] uppercase">
-                                      No activity logged
-                                    </Badge>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4">
-                                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span className="text-lg">🆕</span>
-                                    <span>Log the first touch</span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4 text-muted-foreground">—</td>
-                                <td className="px-4 py-4 text-muted-foreground">—</td>
-                                <td className="px-4 py-4">
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8">
-                                        Schedule follow-up
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2" align="start">
-                                      <Calendar
-                                        mode="single"
-                                        selected={undefined}
-                                        onSelect={(date) => {
-                                          if (!date) return
-                                          const iso = date.toISOString().split("T")[0]
-                                          openScheduleForAthlete(detail.id, "call", { followUpDate: iso })
-                                        }}
-                                        initialFocus
-                                      />
-                                    </PopoverContent>
-                                  </Popover>
-                                </td>
-                                <td className="px-4 py-4 text-muted-foreground">—</td>
-                                <td className="px-4 py-4 text-right">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => openScheduleForAthlete(detail.id)}
-                                  >
-                                    Log activity
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))
-                          )
-                        ) : filteredActions.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="px-4 py-6 text-center text-sm text-muted-foreground">
-                              No activities match your filters yet.
+              <div className="rounded-xl border border-border/70 bg-card/60 overflow-x-auto">
+                <table className="min-w-[1100px] w-full text-sm">
+                  <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3">
+                        <Checkbox checked={isAllRowsSelected} onCheckedChange={toggleSelectAllRows} />
+                      </th>
+                      <th className="text-left px-4 py-3">Athlete</th>
+                      <th className="text-left px-4 py-3">Stage</th>
+                      <th className="text-left px-4 py-3">Rating</th>
+                      <th className="text-left px-4 py-3">Last activity</th>
+                      <th className="text-left px-4 py-3">Days since</th>
+                      <th className="text-left px-4 py-3">Touches</th>
+                      <th className="text-left px-4 py-3">Frequency</th>
+                      <th className="text-left px-4 py-3">Engagement</th>
+                      <th className="text-left px-4 py-3">Next follow-up</th>
+                      <th className="text-right px-4 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedEngagementRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={11} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          No athletes match these filters yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      sortedEngagementRows.map((row) => {
+                        const isSelected = selectedEngagementIds.has(row.id)
+                        const daysBadge = getDaysBadgeTone(row.daysSince)
+                        const engagementBadge = getEngagementBadgeClasses(row.engagementLevel)
+                        return (
+                          <tr key={row.id} className="border-t border-border/50 hover:bg-muted/20">
+                            <td className="px-4 py-4">
+                              <Checkbox checked={isSelected} onCheckedChange={() => toggleRowSelection(row.id)} />
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="flex flex-col">
+                                <span className="font-semibold text-foreground">{row.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {row.status === "noActivity" ? "No touches logged" : `${row.totalTouches} touches lifetime`}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-sm">{row.stage}</td>
+                            <td className="px-4 py-4 text-sm">{row.starRating ? `${row.starRating}★` : "—"}</td>
+                            <td className="px-4 py-4">
+                              {row.lastAction ? (
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {formatActionType(row.lastAction.action_type)}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(row.lastAction.action_date)}
+                                  </p>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">No activity logged</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4">
+                              <Badge variant="outline" className={`text-[11px] ${daysBadge.className}`}>
+                                {daysBadge.label}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="text-sm font-semibold">{row.totalTouches}</div>
+                              <div className="text-[11px] text-muted-foreground">{row.touchesLast30} last 30d</div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <div className="text-sm font-semibold">{row.touchFrequency}/wk</div>
+                              <div className="text-[11px] text-muted-foreground">Avg cadence</div>
+                            </td>
+                            <td className="px-4 py-4">
+                              <Badge variant="outline" className={`text-[11px] ${engagementBadge}`}>
+                                {row.engagementLevel === "none" ? "None" : row.engagementLevel}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4">
+                              {row.nextFollowUp ? (
+                                <p
+                                  className={`text-sm font-medium ${
+                                    row.nextFollowUp.getTime() < Date.now() ? "text-red-500" : "text-foreground"
+                                  }`}
+                                >
+                                  {formatDate(row.nextFollowUp)}
+                                </p>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Not scheduled</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openScheduleForAthlete(row.id)}
+                                >
+                                  <ClipboardList className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openScheduleForAthlete(row.id, "call")}
+                                >
+                                  <Phone className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openScheduleForAthlete(row.id, "email")}
+                                >
+                                  <Mail className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </td>
                           </tr>
-                        ) : (
-                          filteredActions.map((action) => {
-                            const normalizedType = normalizeActionType(action.action_type)
-                            const emoji = ACTIVITY_EMOJI_MAP[normalizedType] ?? "📝"
-                            const cadenceDetail = cadenceDetailByAthlete.get(action.athlete_id)
-                            const daysBadge = cadenceDetail?.daysSince === null ? "No touch" : `${cadenceDetail?.daysSince ?? 0}d`
-                            const coachInitials = getCoachInitials(action.coach_name)
-
-                            return (
-                              <tr key={action.id} className="border-t border-border/50 hover:bg-muted/20">
-                                <td className="px-4 py-4">
-                                  <div className="group flex items-center gap-3">
-                                    <img
-                                      src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
-                                      alt={action.athlete_name}
-                                      className="h-10 w-10 rounded-full object-cover shadow-sm"
-                                    />
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-semibold text-foreground">{action.athlete_name}</span>
-                                        <Badge variant="outline" className="text-[10px] uppercase">
-                                          {daysBadge}
-                                        </Badge>
-                                      </div>
-                                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                                        <span>{cadenceDetail?.stage ?? "Prospect"}</span>
-                                        <span>•</span>
-                                        <span>{cadenceDetail?.starRating ? `${cadenceDetail.starRating}★` : "Unrated"}</span>
-                                      </div>
-                                    </div>
-                                    <div className="ml-auto hidden items-center gap-1 group-hover:flex">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => openScheduleForAthlete(action.athlete_id, "call")}
-                                      >
-                                        <Phone className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => openScheduleForAthlete(action.athlete_id, "email")}
-                                      >
-                                        <Mail className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4">
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-lg">{emoji}</span>
-                                    <div>
-                                      <div className="text-sm font-semibold text-foreground">{formatDate(action.action_date)}</div>
-                                      <div className="text-xs text-muted-foreground flex items-center gap-2">
-                                        <span>{coachInitials}</span>
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => openScheduleForAthlete(action.athlete_id)}
-                                        >
-                                          <Plus className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4 text-sm text-foreground">{action.coach_name || "—"}</td>
-                                <td className="px-4 py-4 text-sm text-muted-foreground">{action.outcome || "—"}</td>
-                                <td className="px-4 py-4">
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-8">
-                                        {action.follow_up_date ? formatDate(action.follow_up_date) : "Schedule"}
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-2" align="start">
-                                      <Calendar
-                                        mode="single"
-                                        selected={action.follow_up_date ? new Date(action.follow_up_date) : undefined}
-                                        onSelect={(date) => {
-                                          if (!date) return
-                                          const iso = date.toISOString().split("T")[0]
-                                          openScheduleForAthlete(action.athlete_id, "call", { followUpDate: iso })
-                                        }}
-                                        initialFocus
-                                      />
-                                    </PopoverContent>
-                                  </Popover>
-                                </td>
-                                <td className="px-4 py-4 text-sm text-muted-foreground">
-                                  {action.description ? (
-                                    <span className="line-clamp-2">{action.description}</span>
-                                  ) : (
-                                    <span className="text-muted-foreground/60">—</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-4 text-right">
-                                  <div className="flex justify-end gap-1">
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(action)}>
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-red-600 hover:text-red-700"
-                                      onClick={() => handleDelete(action.id)}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            )
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                        )
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
-              {/* additional insights rendered via renderLeaderboardCard/renderHeatmapCard */}
-            </CardContent>
-          </Card>
+            </div>
+
+            <Card className="border border-border/70">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ActivityIcon className="h-4 w-4 text-primary" />
+                  Activity timeline
+                </CardTitle>
+                <CardDescription>Last 50 activities logged across the staff.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {recentActivityTimeline.slice(0, 10).map((activity) => (
+                  <div key={activity.id} className="border-l-2 border-border/80 pl-4">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">{activity.athlete_name}</span>
+                      <span>{formatRelativeTimeFromNow(new Date(activity.action_date))}</span>
+                    </div>
+                    <p className="text-sm">
+                      {formatActionType(activity.action_type)}
+                      {activity.outcome ? ` • ${activity.outcome}` : ""}
+                    </p>
+                    {activity.description && (
+                      <p className="text-xs text-muted-foreground mt-1">{activity.description}</p>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="border border-border/70">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <UsersIcon className="h-4 w-4 text-primary" />
+                    Your committed recruits
+                  </CardTitle>
+                  <Button variant="ghost" size="sm">
+                    View all
+                    <ArrowUpRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+                <CardDescription>Recent commits and signees at your program.</CardDescription>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <table className="min-w-[800px] w-full text-sm">
+                  <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Year</th>
+                      <th className="px-4 py-2 text-left">Name</th>
+                      <th className="px-4 py-2 text-left">Weight</th>
+                      <th className="px-4 py-2 text-left">Club / HS</th>
+                      <th className="px-4 py-2 text-left">College</th>
+                      <th className="px-4 py-2 text-left">Division</th>
+                      <th className="px-4 py-2 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {committedRecruits.map((commit) => (
+                      <tr key={commit.id} className="border-t border-border/40">
+                        <td className="px-4 py-3">{commit.year}</td>
+                        <td className="px-4 py-3 font-semibold text-foreground">{commit.name}</td>
+                        <td className="px-4 py-3">{commit.weight}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{commit.highSchool}</td>
+                        <td className="px-4 py-3">{commit.college}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{commit.division}</td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            variant="outline"
+                            className={
+                              commit.status === "Signed"
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/40"
+                                : "bg-blue-500/10 text-blue-500 border-blue-500/40"
+                            }
+                          >
+                            {commit.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  label: "Browse NC Rankings",
+                  action: () => window.open("https://app.ncwrestlingunited.com/public-rankings", "_blank"),
+                  variant: "destructive" as const,
+                },
+                {
+                  label: "Create New Prospect",
+                  action: () => window.open("/create-prospect", "_blank"),
+                  variant: "destructive" as const,
+                },
+                {
+                  label: "View Full Pipeline",
+                  action: () => setTabValue("dashboard"),
+                  variant: "outline" as const,
+                },
+                {
+                  label: "Log Activity",
+                  action: () => setCreatingActivity(true),
+                  variant: "outline" as const,
+                },
+              ].map((quick) => (
+                <Button
+                  key={quick.label}
+                  variant={quick.variant}
+                  className="w-full h-12 text-sm font-semibold"
+                  onClick={quick.action}
+                >
+                  {quick.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
