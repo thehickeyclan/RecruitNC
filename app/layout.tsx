@@ -1,37 +1,85 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type React from "react"
+import Script from "next/script"
+import "@/app/globals.css"
+import "@/app/force-styles.css"
+import "@/app/flip-card.css"
+import { Footer } from "@/components/footer"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import { Navbar } from "@/components/navbar"
+import { AuthProvider } from "@/contexts/auth-context"
+import { CoachApprovalNotification } from "@/components/coach-approval-notification"
+import { IframeResizer } from "@/components/iframe-resizer"
 
-export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
-  icons: {
-    icon: '/icon.svg',
+export const metadata = {
+  title: "NC Wrestling Commits | Prospect Rankings",
+  description: "North Carolina wrestling prospect rankings and college commitments",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "NC Wrestling",
   },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
+    generator: 'v0.app'
+}
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#001f3f",
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ scrollBehavior: "smooth" }}>
       <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="NC Wrestling" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#001f3f" />
+        <meta name="msapplication-tap-highlight" content="no" />
       </head>
-      <body>
-        {children}
-        <Analytics />
+      <body
+        className="min-h-screen bg-background font-sans antialiased"
+        style={{
+          touchAction: "pan-y",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "none",
+          overflowX: "hidden",
+          maxWidth: "100vw",
+          scrollBehavior: "smooth",
+        }}
+      >
+        <ThemeProvider attribute="class" defaultTheme="light">
+          <AuthProvider>
+            <IframeResizer />
+            <CoachApprovalNotification />
+            <div className="relative flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
+        <Script
+          src="https://ncwrestlingunited.com/wp-content/plugins/advanced-iframe/js/ai_external.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
