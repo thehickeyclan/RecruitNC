@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AdminHeader } from "@/components/admin-header"
-import { ArrowUp, ArrowDown, Save, Rocket, Calculator, GripVertical } from "lucide-react"
+import { ArrowUp, ArrowDown, Save, Rocket, Calculator, GripVertical } from 'lucide-react'
 import Link from "next/link"
 import Image from "next/image"
 
@@ -423,9 +423,10 @@ export default function SimpleRankingPage() {
                       <div className="space-y-1">
                         {athlete.nchsaa_results.slice(0, 2).map((result, idx) => {
                           const emoji = result.place === 1 ? "🥇" : result.place === 2 ? "🥈" : result.place === 3 ? "🥉" : "🏅"
+                          const placeSuffix = result.place === 1 ? "st" : result.place === 2 ? "nd" : result.place === 3 ? "rd" : "th"
                           return (
                             <div key={idx} className="text-xs text-gray-700">
-                              {emoji} {result.classification} '{result.year.toString().slice(-2)}
+                              {emoji} {result.place}{placeSuffix} • {result.classification} {result.weight_class} '{result.year.toString().slice(-2)}
                             </div>
                           )
                         })}
@@ -443,29 +444,50 @@ export default function SimpleRankingPage() {
                       <div className="space-y-1">
                         {(athlete.nhsca_2025_placement || athlete.nhsca_2025_record) && (
                           <div className="text-xs text-gray-700">
-                            {athlete.nhsca_2025_placement ? (
-                              <>🥇 {athlete.nhsca_2025_placement} '25</>
-                            ) : (
-                              <>{athlete.nhsca_2025_record} '25</>
+                            {athlete.nhsca_2025_placement && (
+                              <>
+                                {athlete.nhsca_2025_placement <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2025_placement}
+                                {athlete.nhsca_2025_placement === 1 ? "st" : 
+                                 athlete.nhsca_2025_placement === 2 ? "nd" : 
+                                 athlete.nhsca_2025_placement === 3 ? "rd" : "th"}
+                              </>
                             )}
+                            {athlete.nhsca_2025_record && (
+                              <> {athlete.nhsca_2025_placement ? "• " : ""}Record: {athlete.nhsca_2025_record}</>
+                            )}
+                            {" '25"}
                           </div>
                         )}
                         {(athlete.nhsca_2024_placement || athlete.nhsca_2024_record) && (
                           <div className="text-xs text-gray-700">
-                            {athlete.nhsca_2024_placement ? (
-                              <>🥇 {athlete.nhsca_2024_placement} '24</>
-                            ) : (
-                              <>{athlete.nhsca_2024_record} '24</>
+                            {athlete.nhsca_2024_placement && (
+                              <>
+                                {athlete.nhsca_2024_placement <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2024_placement}
+                                {athlete.nhsca_2024_placement === 1 ? "st" : 
+                                 athlete.nhsca_2024_placement === 2 ? "nd" : 
+                                 athlete.nhsca_2024_placement === 3 ? "rd" : "th"}
+                              </>
                             )}
+                            {athlete.nhsca_2024_record && (
+                              <> {athlete.nhsca_2024_placement ? "• " : ""}Record: {athlete.nhsca_2024_record}</>
+                            )}
+                            {" '24"}
                           </div>
                         )}
                         {(athlete.nhsca_2023_placement || athlete.nhsca_2023_record) && (
                           <div className="text-xs text-gray-700">
-                            {athlete.nhsca_2023_placement ? (
-                              <>🥇 {athlete.nhsca_2023_placement} '23</>
-                            ) : (
-                              <>{athlete.nhsca_2023_record} '23</>
+                            {athlete.nhsca_2023_placement && (
+                              <>
+                                {athlete.nhsca_2023_placement <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2023_placement}
+                                {athlete.nhsca_2023_placement === 1 ? "st" : 
+                                 athlete.nhsca_2023_placement === 2 ? "nd" : 
+                                 athlete.nhsca_2023_placement === 3 ? "rd" : "th"}
+                              </>
                             )}
+                            {athlete.nhsca_2023_record && (
+                              <> {athlete.nhsca_2023_placement ? "• " : ""}Record: {athlete.nhsca_2023_record}</>
+                            )}
+                            {" '23"}
                           </div>
                         )}
                       </div>
@@ -481,20 +503,34 @@ export default function SimpleRankingPage() {
                       <div className="space-y-1">
                         {(athlete.super_32_2025_placement || athlete.super_32_2025_record) && (
                           <div className="text-xs text-gray-700">
-                            {athlete.super_32_2025_placement ? (
-                              <>🥇 {athlete.super_32_2025_placement} '25</>
-                            ) : (
-                              <>{athlete.super_32_2025_record} '25</>
+                            {athlete.super_32_2025_placement && (
+                              <>
+                                {athlete.super_32_2025_placement <= 8 ? "🥇" : "🏅"} {athlete.super_32_2025_placement}
+                                {athlete.super_32_2025_placement === 1 ? "st" : 
+                                 athlete.super_32_2025_placement === 2 ? "nd" : 
+                                 athlete.super_32_2025_placement === 3 ? "rd" : "th"}
+                              </>
                             )}
+                            {athlete.super_32_2025_record && (
+                              <> {athlete.super_32_2025_placement ? "• " : ""}Record: {athlete.super_32_2025_record}</>
+                            )}
+                            {" '25"}
                           </div>
                         )}
                         {(athlete.super_32_2024_placement || athlete.super_32_2024_record) && (
                           <div className="text-xs text-gray-700">
-                            {athlete.super_32_2024_placement ? (
-                              <>🥇 {athlete.super_32_2024_placement} '24</>
-                            ) : (
-                              <>{athlete.super_32_2024_record} '24</>
+                            {athlete.super_32_2024_placement && (
+                              <>
+                                {athlete.super_32_2024_placement <= 8 ? "🥇" : "🏅"} {athlete.super_32_2024_placement}
+                                {athlete.super_32_2024_placement === 1 ? "st" : 
+                                 athlete.super_32_2024_placement === 2 ? "nd" : 
+                                 athlete.super_32_2024_placement === 3 ? "rd" : "th"}
+                              </>
                             )}
+                            {athlete.super_32_2024_record && (
+                              <> {athlete.super_32_2024_placement ? "• " : ""}Record: {athlete.super_32_2024_record}</>
+                            )}
+                            {" '24"}
                           </div>
                         )}
                       </div>
