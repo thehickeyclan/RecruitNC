@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, forwardRef, useImperativeHandle, useMemo, useRef } from "react"
+import { useEffect, useState, forwardRef, useImperativeHandle, useMemo, useRef, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -43,6 +43,14 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 const DEFAULT_BRAND_COLOR = "#0b1728"
+
+const debugLog = (...args: unknown[]) => {
+  try {
+    console.log("[portal-activity]", ...args)
+  } catch {
+    // ignore logging failures
+  }
+}
 
 const STAGE_ORDER: { id: string; label: string }[] = [
   { id: "Prospect", label: "Prospect" },
@@ -233,6 +241,18 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [showStaleOnly, setShowStaleOnly] = useState(false)
   const [selectedEngagementIds, setSelectedEngagementIds] = useState<Set<string>>(new Set())
   const engagementTableRef = useRef<HTMLDivElement | null>(null)
+  const openExternal = useCallback((href: string, target: "_blank" | "_self" = "_blank") => {
+    if (typeof window === "undefined") {
+      debugLog("window.open skipped (server)", { href, target })
+      return
+    }
+    try {
+      window.open(href, target)
+    } catch (error) {
+      console.error("[portal-activity] window.open failed", error)
+      debugLog("window.open failed", { href, target, error })
+    }
+  }, [])
   const resolvedBrandColor = brandColor || DEFAULT_BRAND_COLOR
   const chartPalette = useMemo(() => {
     return [
@@ -242,6 +262,24 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       "#ef4444",
     ]
   }, [resolvedBrandColor])
+
+  useEffect(() => {
+    debugLog("component mounted", {
+      schoolId,
+      brandColor,
+      prospectsCount: prospects?.length ?? 0,
+    })
+    return () => debugLog("component unmounted")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    debugLog("actions updated", { count: actions.length })
+  }, [actions])
+
+  useEffect(() => {
+    debugLog("prospects updated", { count: prospects?.length ?? 0 })
+  }, [prospects])
 
   useEffect(() => {
     /* eslint-disable no-console */
@@ -286,11 +324,12 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
     // Skip if we're using schoolId - athletes for school portals come from prospects API
     // The starred-athletes API requires a school_id on the profile, which admins don't have
     if (schoolId && typeof schoolId === "string" && schoolId.trim().length > 0) {
-      console.log("[v0] Skipping starred-athletes fetch - using schoolId, athletes will come from prospects")
+      debugLog("Skipping starred-athletes fetch (schoolId provided)")
       return
     }
     
     try {
+      debugLog("Fetching starred athletes for dashboard context")
       const response = await fetch("/api/coaches/starred-athletes")
       if (response.ok) {
         const data = await response.json()
@@ -299,13 +338,13 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
           name: a.name,
         }))
         setAvailableAthletes(athletes)
+        debugLog("Starred athletes fetched", { count: athletes.length })
       } else {
-        // Silently fail - this is OK for admins or when schoolId is used
-        console.log("[v0] starred-athletes fetch failed (this is OK for admins or school portals):", response.status)
+        debugLog("Starred athletes fetch failed", { status: response.status })
       }
     } catch (error) {
-      // Silently fail - this is OK for admins or when schoolId is used
-      console.log("[v0] Error fetching athletes (this is OK for admins or school portals):", error)
+      console.error("[portal-activity] Error fetching starred athletes", error)
+      debugLog("Starred athletes fetch error", { error })
     }
   }
 
@@ -314,30 +353,30 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
       let url = ""
       // Only use schoolId if it's a non-empty string
       if (schoolId && typeof schoolId === "string" && schoolId.trim().length > 0) {
-        console.log("[v0] Fetching actions for schoolId:", schoolId)
+        debugLog("Fetching actions for school portal", { schoolId })
         url = `/api/coach-portal/activities?schoolId=${encodeURIComponent(schoolId)}`
       } else {
-        console.log("[v0] Fetching actions for current coach")
+        debugLog("Fetching actions for current coach context")
         url = `/api/coaches/all-actions`
       }
       
       const response = await fetch(url)
-      console.log("[v0] Fetch response status:", response.status)
+      debugLog("Activities API response", { status: response.status, url })
 
       if (response.ok) {
         const data = await response.json()
-        console.log("[v0] Received data:", data)
         // Handle both response formats: { activities: [] } and { actions: [] }
         const activities = data.activities || data.actions || []
-        console.log("[v0] Activities count:", activities.length)
+        debugLog("Activities data parsed", { count: activities.length })
         setActions(activities)
       } else {
-        console.error("[v0] Fetch failed with status:", response.status)
         const errorText = await response.text()
-        console.error("[v0] Error response:", errorText)
+        console.error("[portal-activity] Fetch actions failed", response.status, errorText)
+        debugLog("Fetch actions failed", { status: response.status, body: errorText })
       }
     } catch (error) {
-      console.error("[v0] Error fetching actions:", error)
+      console.error("[portal-activity] Error fetching actions:", error)
+      debugLog("Fetch actions error", { error })
     } finally {
       setIsLoading(false)
     }
@@ -965,6 +1004,7 @@ const activityTrendData = useMemo(() => {
   }
 
   const handlePriorityCardClick = (type: "overdue" | "stale" | "priority" | "active") => {
+    debugLog("Priority card clicked", { type })
     resetEngagementFilters()
     switch (type) {
       case "overdue":
@@ -991,6 +1031,7 @@ const activityTrendData = useMemo(() => {
   }
 
   const toggleRowSelection = (id: string) => {
+    debugLog("Toggle row selection", { id })
     setSelectedEngagementIds((previous) => {
       const next = new Set(previous)
       if (next.has(id)) {
@@ -1003,6 +1044,7 @@ const activityTrendData = useMemo(() => {
   }
 
   const toggleSelectAllRows = () => {
+    debugLog("Toggle select all rows", { current: selectedEngagementIds.size, total: sortedEngagementRows.length })
     setSelectedEngagementIds((previous) => {
       if (previous.size === sortedEngagementRows.length) {
         return new Set()
@@ -1015,6 +1057,7 @@ const activityTrendData = useMemo(() => {
   const isAllRowsSelected = sortedEngagementRows.length > 0 && bulkSelectionCount === sortedEngagementRows.length
 
   const handleBulkAction = (actionType: "log" | "followup" | "message" | "export") => {
+    debugLog("Bulk action triggered", { actionType, selected: Array.from(selectedEngagementIds) })
     if (selectedEngagementIds.size === 0) return
     const [firstId] = Array.from(selectedEngagementIds)
     if (!firstId) return
@@ -2522,12 +2565,12 @@ const activityTrendData = useMemo(() => {
               {[
                 {
                   label: "Browse NC Rankings",
-                  action: () => window.open("https://app.ncwrestlingunited.com/public-rankings", "_blank"),
+                  action: () => openExternal("https://app.ncwrestlingunited.com/public-rankings", "_blank"),
                   variant: "destructive" as const,
                 },
                 {
                   label: "Create New Prospect",
-                  action: () => window.open("/create-prospect", "_blank"),
+                  action: () => openExternal("/create-prospect", "_blank"),
                   variant: "destructive" as const,
                 },
                 {
