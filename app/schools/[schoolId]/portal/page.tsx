@@ -3293,11 +3293,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     </div>
                   )}
                 </div>
-
-                </>
               )}
             </>
-          </div>
+          )}
         </div>
         {/* End Main Content Area */}
       </div>
