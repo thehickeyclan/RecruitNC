@@ -758,11 +758,29 @@ function buildLegacyTournamentEntry(
   year?: number,
 ): TournamentResult | null {
   if (!placement && !record) return null
+  
+  const placementNum = parsePlacement(placement ?? null)
   const parts = []
-  if (placement) parts.push(String(placement))
+  
+  // Add placement text with ordinal suffix
+  if (placementNum) {
+    let ordinalPlacement: string
+    if (placementNum === 1) ordinalPlacement = "1st"
+    else if (placementNum === 2) ordinalPlacement = "2nd"
+    else if (placementNum === 3) ordinalPlacement = "3rd"
+    else if (placementNum <= 8) ordinalPlacement = `${placementNum}th Place (AA)`
+    else ordinalPlacement = `${placementNum}th Place`
+    
+    parts.push(ordinalPlacement)
+  } else if (placement && typeof placement === "string") {
+    // If placement exists as string but couldn't parse as number, include it
+    parts.push(String(placement))
+  }
+  
   if (record) parts.push(`Record: ${record}`)
+  
   return {
-    placement: parsePlacement(placement ?? null),
+    placement: placementNum,
     text: `${label}${parts.length > 0 ? " – " + parts.join(" • ") : ""}`,
     year,
   }
