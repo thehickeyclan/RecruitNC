@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { Search, GraduationCap, Plus, Phone, Mail, MapPin, Award, Users, Bell, Target, Star, ExternalLink, Video, Edit2, Trash2, Clock, FileText, AlertCircle, LayoutGrid, Table, X, ChevronDown, Moon, Sun, Loader2, ActivityIcon, Calendar, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, GraduationCap, Plus, Phone, Mail, MapPin, Award, Users, Bell, Target, Star, ExternalLink, Video, Edit2, Trash2, Clock, FileText, AlertCircle, LayoutGrid, Table, X, ChevronDown, Moon, Sun, Loader2, ActivityIcon, Calendar } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -227,7 +227,7 @@ const getStageColor = (stageId: string, schoolPrimaryColor?: string | null): str
   const fallbackColors = [
     "#c76e7f", // Light pink (Prospect)
     "#a95463", // Lighter maroon (Contacted)
-    "#9a0755", // Light maroon (Recruiting)
+    "#9a4755", // Light maroon (Recruiting)
     "#8f424e", // Mid-tone maroon (Visited)
     "#8b3a47", // Medium maroon (Offered)
     "#7c2d3a", // Dark maroon (Committed)
@@ -349,9 +349,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [isRosterHistoryOpen, setIsRosterHistoryOpen] = useState(false)
   const [academicNotes, setAcademicNotes] = useState("")
   const [isSavingAcademicNotes, setIsSavingAcademicNotes] = useState(false)
-
-  const [commandCenterOpen, setCommandCenterOpen] = useState(true)
-  const [commandCenterView, setCommandCenterView] = useState<'pipeline' | 'dashboard' | 'activity' | 'calendar'>('pipeline')
 
 
   // Removed redundant fetchSchool - using useSchoolBranding hook instead
@@ -2146,1161 +2143,2668 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         )}
       </div>
 
-      <div 
-        className="grid transition-[grid-template-columns] duration-200 ease-in-out"
-        style={{
-          gridTemplateColumns: commandCenterOpen ? '280px 1fr' : '64px 1fr'
-        }}
-      >
-        {/* Command Center Sidebar */}
-        <div className="border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-6">
-              {commandCenterOpen && (
-                <h2 className="text-sm font-bold uppercase tracking-wide text-foreground">
-                  Command Center
-                </h2>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCommandCenterOpen(!commandCenterOpen)}
-                className="ml-auto"
-              >
-                {commandCenterOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-              </Button>
-            </div>
+      <div className="container mx-auto px-4 pb-4" data-recruiting-dashboard>
+        <RecruitingActionsDashboard
+          ref={dashboardRef}
+          schoolId={params.schoolId}
+          athletes={prospects.map((prospect) => ({ id: prospect.id, name: prospect.name }))}
+          prospects={(() => {
+            const prospectsWithBirthdays = prospects.map((prospect) => ({
+              id: prospect.id,
+              name: prospect.name,
+              birthdate: prospect.birthdate,
+              photourl: prospect.photourl,
+              graduationyear: prospect.graduationyear,
+              weightclass: prospect.weightclass,
+              pipeline_stage: prospect.pipeline_stage,
+              star_rating: prospect.star_rating,
+            }))
+            console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
+            console.log(
+              "[v0] Portal - Prospects with birthdates:",
+              prospectsWithBirthdays
+                .filter((prospect) => prospect.birthdate)
+                .map((prospect) => ({ name: prospect.name, birthdate: prospect.birthdate })),
+            )
+            return prospectsWithBirthdays
+          })()}
+          onViewChange={(view) => setActivePortalView(view)}
+          brandColor={schoolBranding?.primary_color || "#0b1728"}
+        />
+      </div>
 
-            <nav className="space-y-2">
-              <Button
-                variant={commandCenterView === 'dashboard' ? 'default' : 'ghost'}
-                className={`w-full justify-start ${!commandCenterOpen && 'px-2'}`}
-                onClick={() => setCommandCenterView('dashboard')}
-              >
-                <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
-                {commandCenterOpen && <span className="ml-3">Dashboard</span>}
-              </Button>
-
-              <Button
-                variant={commandCenterView === 'pipeline' ? 'default' : 'ghost'}
-                className={`w-full justify-start ${!commandCenterOpen && 'px-2'}`}
-                onClick={() => setCommandCenterView('pipeline')}
-              >
-                <Users className="h-4 w-4 flex-shrink-0" />
-                {commandCenterOpen && <span className="ml-3">Pipeline</span>}
-              </Button>
-
-              <Button
-                variant={commandCenterView === 'activity' ? 'default' : 'ghost'}
-                className={`w-full justify-start ${!commandCenterOpen && 'px-2'}`}
-                onClick={() => setCommandCenterView('activity')}
-              >
-                <ActivityIcon className="h-4 w-4 flex-shrink-0" />
-                {commandCenterOpen && <span className="ml-3">Activity</span>}
-              </Button>
-
-              <Button
-                variant={commandCenterView === 'calendar' ? 'default' : 'ghost'}
-                className={`w-full justify-start ${!commandCenterOpen && 'px-2'}`}
-                onClick={() => setCommandCenterView('calendar')}
-              >
-                <Calendar className="h-4 w-4 flex-shrink-0" />
-                {commandCenterOpen && <span className="ml-3">Calendar</span>}
-              </Button>
-            </nav>
+      {profile?.is_admin && (
+        <div
+          className={
+            viewAsCoachId
+              ? "bg-orange-100 border-b border-orange-200 dark:bg-orange-500/20 dark:border-orange-600/40"
+              : "bg-blue-50 border-b border-blue-100 dark:bg-blue-500/10 dark:border-blue-400/30"
+          }
+        >
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            {viewAsCoachId ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-orange-600 text-white text-sm px-3 py-1">
+                    👁️ VIEWING AS COACH
+                  </Badge>
+                  <span className="text-sm font-medium text-orange-900">
+                    {viewAsCoachEmail || "Coach View"}
+                  </span>
+                  <span className="text-xs text-orange-700">
+                    ({filteredProspects.length} athletes in their pipeline)
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => router.push("/admin/schools")}
+                  className="border-orange-300 text-orange-700 hover:bg-orange-200"
+                >
+                  Exit Coach View
+                </Button>
+              </>
+            ) : (
+              <Badge variant="secondary" className="bg-blue-600 text-white">
+                ADMIN PREVIEW MODE
+              </Badge>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Main Content Area - min-width: 0 prevents grid blowout */}
-        <div className="min-w-0 overflow-x-auto">
-          {/* RecruitingActionsDashboard moved outside command center views */}
-          <div className="container mx-auto px-4 py-3" data-recruiting-dashboard>
-            <RecruitingActionsDashboard
-              ref={dashboardRef}
-              schoolId={params.schoolId}
-              athletes={prospects.map((prospect) => ({ id: prospect.id, name: prospect.name }))}
-              prospects={(() => {
-                const prospectsWithBirthdays = prospects.map((prospect) => ({
-                  id: prospect.id,
-                  name: prospect.name,
-                  birthdate: prospect.birthdate,
-                  photourl: prospect.photourl,
-                  graduationyear: prospect.graduationyear,
-                  weightclass: prospect.weightclass,
-                  pipeline_stage: prospect.pipeline_stage,
-                  star_rating: prospect.star_rating,
-                }))
-                console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
-                console.log(
-                  "[v0] Portal - Prospects with birthdates:",
-                  prospectsWithBirthdays
-                    .filter((prospect) => prospect.birthdate)
-                    .map((prospect) => ({ name: prospect.name, birthdate: prospect.birthdate })),
-                )
-                return prospectsWithBirthdays
-              })()}
-              onViewChange={(view) => setActivePortalView(view)}
-              brandColor={schoolBranding?.primary_color || "#0b1728"}
+      {/* Mobile-only Quick Actions Bar */}
+      <div className="md:hidden sticky top-0 z-30 bg-background border-b-2 border-border shadow-sm transition-colors">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                dashboardRef.current?.openCreateActivity()
+              }}
+              className="flex-1 h-12 px-4 rounded-lg font-semibold bg-gray-900 text-white shadow-sm hover:shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all touch-manipulation"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Create Activity
+            </Button>
+            <div className="flex-1 flex gap-2">
+              <Button
+                onClick={() => {
+                  console.log("[v0] Browse NC Rankings button clicked")
+                  window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
+                }}
+                className="flex-1 h-12 px-3 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              >
+                <Search className="h-4 w-4 mr-1" />
+                Rankings
+              </Button>
+              <Button
+                onClick={() => setShowCreateProspectModal(true)}
+                className="flex-1 h-12 px-3 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Create
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {isDashboardView &&
+        activities.filter((a) => {
+          if (!a.follow_up_date) return false
+          const followUpDate = new Date(a.follow_up_date)
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          return followUpDate < today
+        }).length > 0 && (
+        <div className="container mx-auto px-4 pb-4">
+          <Card className="border-2 border-red-300 bg-red-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-5 w-5" />
+                Overdue Follow-ups
+                <Badge variant="destructive" className="ml-auto">
+                  {
+                    activities.filter((a) => {
+                      if (!a.follow_up_date) return false
+                      const followUpDate = new Date(a.follow_up_date)
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      return followUpDate < today
+                    }).length
+                  }
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {activities
+                  .filter((a) => {
+                    if (!a.follow_up_date) return false
+                    const followUpDate = new Date(a.follow_up_date)
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+                    return followUpDate < today
+                  })
+                  .map((activity) => (
+                    <div key={activity.id} className="bg-card p-3 rounded-lg border border-red-200 dark:border-red-400/50">
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={activity.athlete_photo || "/placeholder.svg?height=40&width=40"}
+                          alt={activity.athlete_name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-foreground">{activity.athlete_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {activity.action_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                          </p>
+                          <p className="text-xs text-red-600 font-medium mt-1">
+                            Due:{" "}
+                            {new Date(activity.follow_up_date!).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {isDashboardView && (
+        <div className="container mx-auto px-4 py-6">
+          <RecruitingFunnelChart stageCounts={stageCounts} schoolBranding={schoolBranding} />
+        </div>
+      )}
+
+      {isDashboardView && (
+        <div className="container mx-auto px-4 pb-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+          {/* Total Pipeline - Primary metric with school branding */}
+          <div
+            className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-card dark:bg-slate-900/70 rounded-xl border-2 dark:border-slate-700 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            style={{
+              borderColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
+            }}
+          >
+            <Users
+              className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0"
+              style={{ color: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
             />
+            <div className="min-w-0">
+              <div className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</div>
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Total Pipeline
+              </div>
+            </div>
           </div>
 
-          {/* Command Center Views */}
-          {commandCenterView === 'dashboard' && (
-            <div className="container mx-auto px-4 pb-8">
-              <div className="bg-card rounded-xl border border-border p-6">
-                <h3 className="text-xl font-bold mb-4">Dashboard Overview</h3>
-                <p className="text-muted-foreground">Dashboard content coming soon...</p>
+          {/* Lost to Others - Negative metric */}
+          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-red-50 dark:bg-red-900/40 rounded-xl border-2 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
+            <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-red-600 dark:text-red-300" />
+            <div className="min-w-0">
+              <div className="text-2xl md:text-3xl font-bold text-red-600 dark:text-red-200">{stats.lost}</div>
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground dark:text-red-100/70 uppercase tracking-wide">
+                Lost to Others
               </div>
             </div>
-          )}
+          </div>
 
-          {commandCenterView === 'activity' && (
-            <div className="container mx-auto px-4 pb-8">
-              <div className="bg-card rounded-xl border border-border p-6">
-                <h3 className="text-xl font-bold mb-4">Activity Log</h3>
-                <p className="text-muted-foreground">Activity log coming soon...</p>
+          {/* Offers Out - Informational */}
+          <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
+            <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-blue-600 dark:text-blue-300" />
+            <div className="min-w-0">
+              <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-200">{stats.offersOut}</div>
+              <div className="text-[10px] md:text-xs font-semibold text-muted-foreground dark:text-blue-100/70 uppercase tracking-wide">
+                Offers Out
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      </div>
+      )}
 
-          {commandCenterView === 'calendar' && (
-            <div className="container mx-auto px-4 pb-8">
-              <div className="bg-card rounded-xl border border-border p-6">
-                <h3 className="text-xl font-bold mb-4">Calendar</h3>
-                <p className="text-muted-foreground">Calendar coming soon...</p>
+      {/* North Carolina Recruits Section */}
+      {isDashboardView && (
+        <div className="container mx-auto px-4 pt-4 pb-6">
+        <Card className="border border-border shadow-sm bg-card transition-colors">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-2xl font-bold text-foreground">Committed Recruits</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              North Carolina athletes committed or signed to {schoolBranding?.name || "this school"}
+            </p>
+          </CardHeader>
+          <CardContent className="p-6">
+            {loadingNcRecruits ? (
+              <div className="text-center py-8">
+                <div className="animate-pulse text-muted-foreground/70">Loading recruits...</div>
               </div>
-            </div>
-          )}
-
-          {commandCenterView === 'pipeline' && (
-            <>
-              {profile?.is_admin && (
-                <div
-                  className={
-                    viewAsCoachId
-                      ? "bg-orange-100 border-b border-orange-200 dark:bg-orange-500/20 dark:border-orange-600/40"
-                      : "bg-blue-50 border-b border-blue-100 dark:bg-blue-500/10 dark:border-blue-400/30"
-                  }
-                >
-                  <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-                    {viewAsCoachId ? (
-                      <>
-                        <div className="flex items-center gap-3">
-                          <Badge className="bg-orange-600 text-white text-sm px-3 py-1">
-                            👁️ VIEWING AS COACH
+            ) : ncRecruits.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">No committed/signed recruits found</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full caption-bottom text-sm">
+                  <thead className="[&_tr]:border-b bg-muted">
+                    <tr className="border-b transition-colors">
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Year</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">College</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Division</th>
+                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="[&_tr:last-child]:border-0">
+                    {ncRecruits.map((recruit) => (
+                      <tr
+                        key={recruit.id}
+                        className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
+                      >
+                        <td className="p-4 align-middle font-medium">{recruit.year || "-"}</td>
+                        <td className="p-4 align-middle font-medium">{recruit.name || "-"}</td>
+                        <td className="p-4 align-middle">{recruit.weight ? `${recruit.weight}lbs` : "-"}</td>
+                        <td className="p-4 align-middle">{recruit.highschool || "-"}</td>
+                        <td className="p-4 align-middle">{recruit.college || "-"}</td>
+                        <td className="p-4 align-middle">
+                          {recruit.division ? (
+                            <Badge variant="outline" className="text-xs">
+                              {recruit.division}
+                            </Badge>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <Badge
+                            variant="outline"
+                            className={
+                              recruit.status?.toLowerCase() === "signed"
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-blue-50 text-blue-700 border-blue-200"
+                            }
+                          >
+                            {recruit.status || "Committed"}
                           </Badge>
-                          <span className="text-sm font-medium text-orange-900">
-                            {viewAsCoachEmail || "Coach View"}
-                          </span>
-                          <span className="text-xs text-orange-700">
-                            ({filteredProspects.length} athletes in their pipeline)
-                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+      )}
+
+      {isDashboardView && (
+        <>
+      <div className="container mx-auto px-4 pb-5">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-3 md:p-4 transition-colors">
+          <div className="flex flex-col md:flex-row md:flex-wrap gap-3">
+            <div className="relative flex-1 min-w-full md:min-w-[250px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-[18px] w-[18px]" />
+              <Input
+                placeholder="Search athletes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-2 border-border focus:border-primary bg-background text-foreground placeholder:text-muted-foreground h-11 rounded-lg transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex gap-3">
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border border-border text-foreground">
+                  <SelectItem value="all">All Years</SelectItem>
+                  {graduationYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      Class of {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger className="flex-1 md:w-[150px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border border-border text-foreground">
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="male">Men's</SelectItem>
+                  <SelectItem value="female">Women's</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedState} onValueChange={setSelectedState}>
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All States" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border border-border text-foreground">
+                  <SelectItem value="all">All States</SelectItem>
+                  {states.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedRating} onValueChange={setSelectedRating}>
+                  <SelectTrigger className="flex-1 md:w-[140px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
+                  <SelectValue placeholder="All Ratings" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border border-border text-foreground">
+                  <SelectItem value="all">All Ratings</SelectItem>
+                  <SelectItem value="5">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <span className="ml-1 text-xs text-muted-foreground">Dream Recruit</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="4">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Excellent Fit</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="3">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Solid Prospect</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="2">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Backup Option</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="1">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Low Priority</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="unrated">
+                    <div className="flex items-center gap-2">
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
+                      <span className="ml-1 text-xs text-muted-foreground">Not Rated</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex gap-2 border border-border rounded-lg p-1 bg-background dark:bg-slate-900/70 w-full md:w-auto transition-colors">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("board")}
+                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation transition-colors ${viewMode === "board" ? "bg-muted" : ""}`}
+                >
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Board</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode("table")}
+                  className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation transition-colors ${viewMode === "table" ? "bg-muted" : ""}`}
+                >
+                  <Table className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Table</span>
+                </Button>
+              </div>
+            </div>
+
+            <div className="hidden md:flex gap-3">
+              <Button
+                onClick={() => {
+                  console.log("[v0] Browse NC Rankings button clicked")
+                  window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
+                }}
+                className="h-11 px-5 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              >
+                <Search className="h-[18px] w-[18px] mr-2" />
+                Browse NC Rankings
+              </Button>
+              <Button
+                onClick={() => setShowCreateProspectModal(true)}
+                className="h-11 px-5 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+              >
+                <Plus className="h-[18px] w-[18px] mr-2" />
+                Create New Prospect
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pb-8">
+        {viewMode === "board" ? (
+        <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
+          {PIPELINE_STAGES_BASE.map((stage) => {
+            const stageProspects = getProspectsByStage(stage.id)
+            return (
+              <div
+                key={stage.id}
+                className="md:flex-shrink-0 md:w-80"
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(stage.id)}
+              >
+                <div className="bg-card rounded-xl border border-border flex flex-col transition-all hover:border-primary/40 dark:hover:border-primary/60">
+                  <div className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-border/60 dark:border-border/40">
+                    <h3 className="text-xs md:text-sm font-bold text-foreground uppercase tracking-wide">
+                      {stage.label}
+                    </h3>
+                    <div
+                      className="flex items-center justify-center min-w-[24px] md:min-w-[28px] h-[24px] md:h-[28px] px-2 md:px-2.5 rounded-full text-xs md:text-sm font-bold text-white"
+                      style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
+                    >
+                      {stageProspects.length}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-3 md:p-4 space-y-3 min-h-[200px] md:min-h-[400px] max-h-[400px] md:max-h-[calc(100vh-400px)] overflow-y-auto">
+                    {stageProspects.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
+                        <div className="text-4xl md:text-5xl opacity-10 mb-2 md:mb-3">📋</div>
+                        <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">No athletes yet</div>
+                        <div className="text-[10px] md:text-xs text-muted-foreground/70">
+                          Drag athletes here or add new prospects
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => router.push("/admin/schools")}
-                          className="border-orange-300 text-orange-700 hover:bg-orange-200"
-                        >
-                          Exit Coach View
-                        </Button>
-                      </>
+                      </div>
                     ) : (
-                      <Badge variant="secondary" className="bg-blue-600 text-white">
-                        ADMIN PREVIEW MODE
-                      </Badge>
+                      stageProspects.map((prospect) => {
+                        const committedElsewhere = isCommittedElsewhere(prospect)
+                        
+                        return (
+                        <Card
+                          key={prospect.id}
+                          draggable
+                          onDragStart={() => handleDragStart(prospect)}
+                          onClick={() => {
+                            const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                            router.push(url)
+                          }}
+                          className={`border hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer transition-all rounded-lg touch-manipulation ${
+                            committedElsewhere 
+                              ? 'bg-muted border-border opacity-80 dark:bg-slate-800 dark:border-slate-700' 
+                              : 'bg-card border-border hover:border-primary/40 active:border-primary/60 dark:hover:border-primary/60'
+                          }`}
+                        >
+                          <CardContent className="p-3 md:p-4">
+                            {/* Committed Elsewhere Badge */}
+                            {committedElsewhere && (
+                              <div className="mb-2 bg-gray-700 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 dark:bg-slate-700">
+                                <span>⚠️ Committed to {prospect.college}</span>
+                              </div>
+                            )}
+                            
+                            <div className="flex gap-3 mb-3 relative">
+                              {/* CHANGE START */}
+                              {!prospect.prospect_id || !prospect.photourl ? (
+                                <div
+                                  className="flex h-12 w-12 md:h-14 md:w-14 flex-shrink-0 items-center justify-center rounded-lg border border-border text-sm md:text-base font-semibold uppercase text-white"
+                                  style={{ backgroundColor: getStageColor(prospect.pipeline_stage || "Prospect", schoolBranding?.primary_color) }}
+                                >
+                                  {getInitials(prospect.name)}
+                                </div>
+                              ) : (
+                                <img
+                                  src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
+                                  alt={prospect.name}
+                                  className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
+                                    committedElsewhere ? 'grayscale' : ''
+                                  }`}
+                                />
+                              )}
+                              {/* CHANGE END */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-muted-foreground' : 'text-foreground'}`}>
+                                  {prospect.name}
+                                </h4>
+                                <p className="text-xs md:text-sm text-muted-foreground font-semibold mb-1">
+                                  {prospect.graduationyear} • {prospect.weightclass}lbs
+                                </p>
+                                <p className="text-[10px] md:text-xs text-muted-foreground/80 truncate">{prospect.highschool}</p>
+                                {prospect.phone && (
+                                  <div className="mt-1 flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground">
+                                    <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground/70 flex-shrink-0" />
+                                    <a
+                                      href={`tel:${normalizePhoneForTel(prospect.phone)}`}
+                                      className="hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {formatPhoneNumber(prospect.phone)}
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                              {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && !committedElsewhere && (
+                                <div
+                                  className="absolute top-0 right-0 px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-xs md:text-sm font-bold text-white"
+                                  style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }}
+                                >
+                                  #{prospect.prospect_ranking}
+                                </div>
+                              )}
+                            </div>
+
+                            {prospect.academic_gpa && (
+                              <div className="flex gap-2 mb-3">
+                                <div className="flex items-center gap-1.5 bg-muted px-2 md:px-3 py-1.5 md:py-2 rounded-md">
+                                  <GraduationCap className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
+                                  <span className="text-xs md:text-sm font-bold text-foreground">
+                                    {prospect.academic_gpa.toFixed(1)}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-3 border-t border-border/60 dark:border-border/40">
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <StarRating
+                                  rating={prospect.star_rating ?? null}
+                                  onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
+                                  size="sm"
+                                />
+                              </div>
+                              <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
+                                {formatLastContactDate(getLastContactedDate(prospect.id))}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        )
+                      })
                     )}
                   </div>
                 </div>
-              )}
-
-              {/* Mobile-only Quick Actions Bar */}
-              <div className="md:hidden sticky top-0 z-30 bg-background border-b-2 border-border shadow-sm transition-colors">
-                <div className="container mx-auto px-4 py-3">
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        dashboardRef.current?.openCreateActivity()
-                      }}
-                      className="flex-1 h-12 px-4 rounded-lg font-semibold bg-gray-900 text-white shadow-sm hover:shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all touch-manipulation"
+              </div>
+            )
+          })}
+        </div>
+        ) : (
+          <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-colors">
+            {bulkSelectedCount > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-blue-50/70 px-4 py-3 text-sm dark:bg-slate-800/70">
+                <div className="font-medium text-foreground">
+                  {bulkSelectedCount} athlete{bulkSelectedCount === 1 ? "" : "s"} selected
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSelectedProspects}
+                    className="rounded-full"
+                    disabled={isBulkLogging}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="rounded-full bg-[#0b1728] text-white hover:bg-[#13294B]"
+                    onClick={handleOpenBulkActivityModal}
+                    disabled={!canLogActivities || isBulkLogging}
+                  >
+                    {isBulkLogging ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Logging...
+                      </>
+                    ) : !canLogActivities ? (
+                      "Admin Preview"
+                    ) : (
+                      <>
+                        <ActivityIcon className="mr-2 h-4 w-4" />
+                        Log Activity
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="md:hidden text-xs text-muted-foreground px-4 py-2 bg-muted border-b border-border/60">
+                ← Swipe to see more columns →
+              </div>
+              <table className="w-full caption-bottom text-sm min-w-[900px]">
+                <thead className="[&_tr]:border-b border-border/60 bg-muted">
+                  <tr className="border-b border-border/60 transition-colors">
+                    <th className="h-12 w-12 px-4 align-middle text-left font-semibold text-foreground">
+                      <Checkbox
+                        checked={headerCheckboxState}
+                        onCheckedChange={() => handleToggleAllVisible(sortedProspects)}
+                        aria-label="Select all prospects"
+                        disabled={sortedProspects.length === 0}
+                      />
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("name")}
                     >
-                      <Plus className="h-5 w-5 mr-2" />
-                      Create Activity
-                    </Button>
-                    <div className="flex-1 flex gap-2">
-                      <Button
-                        onClick={() => {
-                          console.log("[v0] Browse NC Rankings button clicked")
-                          window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
-                        }}
-                        className="flex-1 h-12 px-3 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
-                      >
-                        <Search className="h-4 w-4 mr-1" />
-                        Rankings
-                      </Button>
-                      <Button
-                        onClick={() => setShowCreateProspectModal(true)}
-                        className="flex-1 h-12 px-3 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Create
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        Name
+                        {sortColumn === "name" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("year")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Year
+                        {sortColumn === "year" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("weight")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Weight
+                        {sortColumn === "weight" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("state")}
+                    >
+                      <div className="flex items-center gap-1">
+                        State
+                        {sortColumn === "state" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("stage")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Stage
+                        {sortColumn === "stage" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Applied</th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("rating")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Rating
+                        {sortColumn === "rating" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("gpa")}
+                    >
+                      <div className="flex items-center gap-1">
+                        GPA
+                        {sortColumn === "gpa" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("ranking")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Ranking
+                        {sortColumn === "ranking" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
+                      onClick={() => handleSort("lastActivity")}
+                    >
+                      <div className="flex items-center gap-1">
+                        Last Activity
+                        {sortColumn === "lastActivity" && (
+                          <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
+                        )}
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="[&_tr:last-child]:border-0">
+                  {sortedProspects.length === 0 ? (
+                    <tr>
+                      <td colSpan={12} className="p-8 text-center text-muted-foreground">
+                        No prospects found
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedProspects.map((prospect) => {
+                      const stage =
+                        PIPELINE_STAGES_BASE.find((s) => s.id === prospect.pipeline_stage) ||
+                        PIPELINE_STAGES_BASE[0]
+                      const stageColor = getStageColor(stage.id, schoolBranding?.primary_color)
+                      const lastActivity = getLastActivityForAthlete(prospect.id)
+                      const lastActivityLabel = lastActivity
+                        ? ACTIVITY_LABELS[lastActivity.action_type] || lastActivity.action_type
+                        : null
+                      const isLoggingActivity = Boolean(loggingActivity[prospect.id])
+                      return (
+                        <tr
+                          key={prospect.id}
+                          className="border-b border-border/60 transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 active:bg-muted/80 group"
+                        >
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedProspectIds.has(prospect.id)}
+                              onCheckedChange={(checked) =>
+                                handleToggleProspectSelection(prospect.id, checked === true)
+                              }
+                              aria-label={`Select ${prospect.name}`}
+                            />
+                          </td>
+                          <td
+                            className="p-4 align-middle cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
+                                viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''
+                              }`
+                              router.push(url)
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              {/* CHANGE START */}
+                              {!prospect.prospect_id || !prospect.photourl ? (
+                                <div
+                                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-sm font-semibold uppercase text-white"
+                                  style={{ backgroundColor: stageColor || "#334155" }}
+                                >
+                                  {getInitials(prospect.name)}
+                                </div>
+                              ) : (
+                                <img
+                                  src={prospect.photourl || "/placeholder.svg"}
+                                  alt={prospect.name}
+                                  className="w-10 h-10 rounded-lg object-cover border border-border"
+                                />
+                              )}
+                              {/* CHANGE END */}
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium text-foreground truncate block">{prospect.name}</span>
+                                {prospect.phone && (
+                                  <span className="mt-0.5 block text-xs text-muted-foreground truncate">
+                                    {formatPhoneNumber(prospect.phone)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="ml-2 flex items-center gap-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                                {prospect.phone && (
+                                  <a
+                                    href={`tel:${normalizePhoneForTel(prospect.phone)}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    aria-label={`Call ${prospect.name}`}
+                                  >
+                                    <Phone className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                                {prospect.contactEmail && (
+                                  <a
+                                    href={`mailto:${prospect.contactEmail}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    aria-label={`Email ${prospect.name}`}
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.graduationyear}
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.weightclass}lbs
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.location || "NC"}
+                          </td>
+                          <td 
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                          <Select
+                            value={prospect.pipeline_stage || "Prospect"}
+                            onValueChange={(value) => handleStageChange(prospect.id, value)}
+                          >
+                            <SelectTrigger className="h-auto w-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:ring-offset-0">
+                              <Badge
+                                className="text-xs cursor-pointer hover:opacity-90 transition-opacity"
+                                style={{
+                                  backgroundColor: stageColor,
+                                  color: "white",
+                                }}
+                              >
+                                {stage.label}
+                                <ChevronDown className="ml-1 h-3 w-3 inline" />
+                              </Badge>
+                            </SelectTrigger>
+                            <SelectContent className="min-w-[180px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100">
+                              {PIPELINE_STAGES_BASE.map((s) => (
+                                <SelectItem key={s.id} value={s.id} className="text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-3 h-3 rounded-full"
+                                      style={{ backgroundColor: getStageColor(s.id, schoolBranding?.primary_color) }}
+                                    />
+                                    <span>{s.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          </td>
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={prospect.has_applied ?? false}
+                                disabled={appliedUpdating[prospect.id] || !canLogActivities}
+                                onCheckedChange={(checked) =>
+                                  handleAppliedToggle(prospect.id, Boolean(checked))
+                                }
+                              />
+                              {prospect.applied_date && (
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(prospect.applied_date).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td 
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <StarRating
+                              rating={prospect.star_rating ?? null}
+                              onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
+                              size="sm"
+                            />
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.academic_gpa ? prospect.academic_gpa.toFixed(1) : "-"}
+                          </td>
+                          <td 
+                            className="p-4 align-middle text-muted-foreground cursor-pointer"
+                            onClick={() => {
+                              const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
+                              router.push(url)
+                            }}
+                          >
+                            {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
+                          </td>
+                          <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                {lastActivity ? (
+                                  <div className="flex items-center gap-2 text-sm text-foreground">
+                                    <span className="font-medium">
+                                      {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                    <span className="text-lg" aria-label={lastActivityLabel ?? "Activity"}>
+                                      {ACTIVITY_EMOJI_MAP[lastActivity.action_type] ?? ACTIVITY_EMOJI_MAP.other}
+                                    </span>
+                                    {lastActivity.coach_name && (
+                                      <span className="rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-muted-foreground dark:bg-slate-800 dark:text-slate-200">
+                                        {getInitials(lastActivity.coach_name)}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-sm text-muted-foreground">No activity yet</span>
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    disabled={isLoggingActivity || !canLogActivities}
+                                    className="h-8 w-8 rounded-full border border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200"
+                                    aria-label="Log activity"
+                                  >
+                                    {isLoggingActivity ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <span className="text-lg leading-none">+</span>
+                                    )}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="min-w-[220px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100"
+                                >
+                                  <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground dark:text-slate-300">
+                                    {canLogActivities ? "Log Activity" : "Impersonate a coach to log"}
+                                  </DropdownMenuLabel>
+                                  {ACTIVITY_OPTIONS.map((option) => (
+                                    <DropdownMenuItem
+                                      key={option.value}
+                                      disabled={isLoggingActivity || !canLogActivities}
+                                      onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
+                                      className="text-sm text-foreground dark:text-slate-100 dark:focus:bg-slate-800 focus:bg-muted"
+                                    >
+                                      <span className="mr-2 text-lg">
+                                        {ACTIVITY_EMOJI_MAP[option.value] ?? ACTIVITY_EMOJI_MAP.other}
+                                      </span>
+                                      {option.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+        </>
+      )}
+
+      {/* NC Roster History Section */}
+      {isDashboardView && (
+      <div className="container mx-auto px-4 pt-6 pb-10">
+        <Collapsible open={isRosterHistoryOpen} onOpenChange={setIsRosterHistoryOpen}>
+          <Card className="border border-border shadow-sm bg-card transition-colors">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-4 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-foreground">NC Roster History</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      North Carolina athletes who were recruited and are now enrolled at {schoolBranding?.name || "this school"}
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`h-6 w-6 text-muted-foreground transition-transform ${isRosterHistoryOpen ? "rotate-180" : ""}`}
+                  />
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6">
+                {loadingHistory ? (
+                  <div className="text-center py-8">
+                    <div className="animate-pulse text-muted-foreground/70">Loading roster history...</div>
+                  </div>
+                ) : pipelineHistory.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No historical NC athletes found. Athletes with "College Athlete" status will appear here.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full caption-bottom text-sm">
+                      <thead className="[&_tr]:border-b bg-muted">
+                        <tr className="border-b transition-colors">
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Class Year</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Current Status</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Roster Status</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Years on Team</th>
+                          <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="[&_tr:last-child]:border-0">
+                        {pipelineHistory.map((athlete) => (
+                          <tr
+                            key={athlete.id}
+                            className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
+                          >
+                            <td className="p-4 align-middle font-medium">{athlete.year || "-"}</td>
+                            <td className="p-4 align-middle font-medium">{athlete.name || "-"}</td>
+                            <td className="p-4 align-middle">{athlete.weight ? `${athlete.weight}lbs` : "-"}</td>
+                            <td className="p-4 align-middle">{athlete.highschool || "-"}</td>
+                            <td className="p-4 align-middle">
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                {athlete.status || "Enrolled"}
+                              </Badge>
+                            </td>
+                            <td className="p-4 align-middle">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  athlete.roster_status === "Active"
+                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    : "bg-muted text-muted-foreground border-border"
+                                }
+                              >
+                                {athlete.roster_status || "Active"}
+                              </Badge>
+                            </td>
+                            <td className="p-4 align-middle text-muted-foreground">{athlete.years_on_team || "Current"}</td>
+                            <td className="p-4 align-middle">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingRosterEntry(athlete)
+                                    setRosterEditForm({
+                                      roster_status: athlete.roster_status || "Active",
+                                      roster_notes: athlete.roster_notes || "",
+                                    })
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (confirm(`Remove ${athlete.name} from roster history?`)) {
+                                      handleDeleteRosterEntry(athlete.id)
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      </div>
+      )}
+
+      <Dialog
+        open={isBulkActivityOpen}
+        onOpenChange={(open) => {
+          if (isBulkLogging && !open) return
+          setIsBulkActivityOpen(open)
+          if (!open) {
+            resetBulkActivityForm()
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl bg-background text-foreground dark:bg-slate-900 dark:text-slate-100">
+          <DialogHeader>
+            <DialogTitle>
+              Log Activity for {bulkSelectedCount} {bulkSelectedCount === 1 ? "Athlete" : "Athletes"}
+            </DialogTitle>
+            <DialogDescription>
+              Bulk logging will add this activity to each selected athlete and update timelines automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedProspectList.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/60 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Selected Athletes
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {previewSelectedProspects.map((prospect) => (
+                  <Badge
+                      key={prospect.id}
+                    variant="secondary"
+                    className="bg-background text-foreground border border-border dark:bg-slate-800 dark:text-slate-100"
+                    >
+                      {prospect.name}
+                    </Badge>
+                  ))}
+                </div>
+                {remainingSelectedCount > 0 && (
+                  <p className="mt-2 text-xs text-muted-foreground">+ {remainingSelectedCount} more</p>
+                )}
+              </div>
+            )}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="bulk-activity-type">Activity Type</Label>
+                <Select
+                  value={bulkActivityForm.actionType}
+                  onValueChange={(value) =>
+                    setBulkActivityForm((previous) => ({
+                      ...previous,
+                      actionType: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="bulk-activity-type" className="bg-background dark:bg-slate-950">
+                    <SelectValue placeholder="Select activity" />
+                  </SelectTrigger>
+                  <SelectContent className="dark:bg-slate-900">
+                    {ACTIVITY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bulk-activity-date">Activity Date</Label>
+                <Input
+                  id="bulk-activity-date"
+                  type="date"
+                  value={bulkActivityForm.actionDate}
+                  onChange={(event) =>
+                    setBulkActivityForm((previous) => ({
+                      ...previous,
+                      actionDate: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-activity-description">Description (optional)</Label>
+              <Textarea
+                id="bulk-activity-description"
+                rows={3}
+                value={bulkActivityForm.description}
+                onChange={(event) =>
+                  setBulkActivityForm((previous) => ({
+                    ...previous,
+                    description: event.target.value,
+                  }))
+                }
+                placeholder="Add context for this touchpoint"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-activity-outcome">Outcome (optional)</Label>
+              <Input
+                id="bulk-activity-outcome"
+                value={bulkActivityForm.outcome}
+                onChange={(event) =>
+                  setBulkActivityForm((previous) => ({
+                    ...previous,
+                    outcome: event.target.value,
+                  }))
+                }
+                placeholder="e.g., Scheduled next call"
+              />
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="bulk-activity-follow-up"
+                  checked={bulkActivityForm.isScheduled}
+                  onCheckedChange={(checked) =>
+                    setBulkActivityForm((previous) => ({
+                      ...previous,
+                      isScheduled: checked === true,
+                      followUpDate: checked === true ? previous.followUpDate : "",
+                    }))
+                  }
+                />
+                <Label htmlFor="bulk-activity-follow-up" className="text-sm font-medium">
+                  Schedule follow-up
+                </Label>
+              </div>
+              {bulkActivityForm.isScheduled && (
+                <div className="mt-3 space-y-2">
+                  <Label htmlFor="bulk-activity-follow-up-date" className="text-sm">
+                    Follow-up Date
+                  </Label>
+                  <Input
+                    id="bulk-activity-follow-up-date"
+                    type="date"
+                    value={bulkActivityForm.followUpDate}
+                    onChange={(event) =>
+                      setBulkActivityForm((previous) => ({
+                        ...previous,
+                        followUpDate: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                if (isBulkLogging) return
+                setIsBulkActivityOpen(false)
+                resetBulkActivityForm()
+              }}
+              disabled={isBulkLogging}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleBulkActivitySubmit}
+              disabled={isBulkLogging}
+              className="bg-[#0b1728] text-white hover:bg-[#13294B]"
+            >
+              {isBulkLogging ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Log Activities"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedAthlete} onOpenChange={() => setSelectedAthlete(null)}>
+        <DialogContent className="max-w-full md:max-w-4xl h-full md:h-auto md:max-h-[90vh] p-0 bg-background border-0 md:border border-border text-foreground md:rounded-lg flex flex-col [&>button]:hidden transition-colors">
+          {selectedAthlete && (
+            <>
+              <DialogHeader className="pb-4 p-4 md:p-6 sticky top-0 bg-background z-10 border-b border-border relative">
+                {/* Close button - prominent on mobile */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-2 z-20 h-10 w-10 md:h-8 md:w-8 rounded-full bg-card shadow-lg border border-border hover:bg-muted transition-all md:right-4 md:top-4 touch-manipulation"
+                  onClick={() => setSelectedAthlete(null)}
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground" />
+                </Button>
+                <div className="flex items-start gap-4 pr-12 md:pr-0">
+                  <img
+                    src={selectedAthlete.photourl || "/placeholder.svg?height=80&width=80&query=wrestler"}
+                    alt={selectedAthlete.name}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-xl md:text-2xl text-foreground mb-1">{selectedAthlete.name}</DialogTitle>
+                    <DialogDescription className="text-sm md:text-base text-muted-foreground mb-2">
+                      {selectedAthlete.highschool} • {selectedAthlete.wrestlingClub}
+                    </DialogDescription>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="bg-blue-600 text-xs md:text-sm">
+                        Class of {selectedAthlete.graduationyear}
+                      </Badge>
+                      <Badge className="bg-purple-600 text-xs md:text-sm">{selectedAthlete.weightclass}lbs</Badge>
+                      {selectedAthlete.prospect_ranking && (
+                        <Badge className="bg-yellow-500 text-black text-xs md:text-sm">
+                          Ranked #{selectedAthlete.prospect_ranking}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </DialogHeader>
 
-              {isDashboardView &&
-                activities.filter((a) => {
-                  if (!a.follow_up_date) return false
-                  const followUpDate = new Date(a.follow_up_date)
-                  const today = new Date()
-                  today.setHours(0, 0, 0, 0)
-                  return followUpDate < today
-                }).length > 0 && (
-                <div className="container mx-auto px-4 pb-4">
-                  <Card className="border-2 border-red-300 bg-red-50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center gap-2 text-red-700">
-                        <AlertCircle className="h-5 w-5" />
-                        Overdue Follow-ups
-                        <Badge variant="destructive" className="ml-auto">
-                          {
-                            activities.filter((a) => {
-                              if (!a.follow_up_date) return false
-                              const followUpDate = new Date(a.follow_up_date)
-                              const today = new Date()
-                              today.setHours(0, 0, 0, 0)
-                              return followUpDate < today
-                            }).length
-                          }
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {activities
-                          .filter((a) => {
-                            if (!a.follow_up_date) return false
-                            const followUpDate = new Date(a.follow_up_date)
-                            const today = new Date()
-                            today.setHours(0, 0, 0, 0)
-                            return followUpDate < today
-                          })
-                          .map((activity) => (
-                            <div key={activity.id} className="bg-card p-3 rounded-lg border border-red-200 dark:border-red-400/50">
-                              <div className="flex items-start gap-3">
-                                <img
-                                  src={activity.athlete_photo || "/placeholder.svg?height=40&width=40"}
-                                  alt={activity.athlete_name}
-                                  className="w-10 h-10 rounded-full object-cover"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm text-foreground">{activity.athlete_name}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {activity.action_type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                                  </p>
-                                  <p className="text-xs text-red-600 font-medium mt-1">
-                                    Due:{" "}
-                                    {new Date(activity.follow_up_date!).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                    })}
-                                  </p>
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-muted" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <Tabs defaultValue="overview" className="mt-0">
+                  <div className="-mx-4 px-4 md:mx-0 md:px-0">
+                    <TabsList className="bg-card border border-border grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto">
+                      <TabsTrigger
+                        value="overview"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Overview
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="performance"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Performance
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="academics"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Academics
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="documents"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Documents
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="family"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Family
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="notes"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Notes ({notes.length})
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="financials"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Financials
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="activity"
+                        className="flex-shrink-0 whitespace-nowrap data-[state=active]:bg-muted touch-manipulation min-h-[44px]"
+                        style={{ fontSize: '0.75rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
+                      >
+                        Activity
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+
+                  <TabsContent value="overview" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Contact Information</h3>
+                      <div className="space-y-2 md:space-3 text-sm">
+                        {/* Email */}
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          {editingField === "contactEmail" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="email"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("contactEmail", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("contactEmail", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => startEditing("contactEmail", selectedAthlete.contactEmail)}
+                            >
+                              {selectedAthlete.contactEmail ? (
+                                <a
+                                  href={`mailto:${selectedAthlete.contactEmail}`}
+                                  className="hover:text-blue-600 break-all flex-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {selectedAthlete.contactEmail}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground/70 italic">Click to add email</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Phone */}
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          {editingField === "phone" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="tel"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("phone", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("phone", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => startEditing("phone", selectedAthlete.phone)}
+                            >
+                              {selectedAthlete.phone ? (
+                                <a
+                                  href={`tel:${selectedAthlete.phone}`}
+                                  className="hover:text-blue-600 flex-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {selectedAthlete.phone}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground/70 italic">Click to add phone</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Location */}
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          {editingField === "location" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="text"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("location", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("location", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                placeholder="State (e.g., NC, VA)"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => startEditing("location", selectedAthlete.location)}
+                            >
+                              {selectedAthlete.location ? (
+                                <span className="flex-1">{selectedAthlete.location}</span>
+                              ) : (
+                                <span className="text-muted-foreground/70 italic">Click to add location</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Birthdate */}
+                        <div className="flex items-center gap-2 text-muted-foreground group">
+                          <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          {editingField === "birthdate" ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <Input
+                                type="date"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onBlur={() => handleFieldUpdate("birthdate", editingValue)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    handleFieldUpdate("birthdate", editingValue)
+                                  } else if (e.key === "Escape") {
+                                    setEditingField(null)
+                                    setEditingValue("")
+                                  }
+                                }}
+                                className="flex-1 h-8 text-sm"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded px-2 py-1 -mx-2 -my-1"
+                              onClick={() => {
+                                if (selectedAthlete.birthdate) {
+                                  const dateStr = selectedAthlete.birthdate.includes('T') 
+                                    ? selectedAthlete.birthdate.split('T')[0] 
+                                    : selectedAthlete.birthdate
+                                  startEditing("birthdate", dateStr)
+                                } else {
+                                  startEditing("birthdate", "")
+                                }
+                              }}
+                            >
+                              {selectedAthlete.birthdate ? (
+                                <span className="flex-1">
+                                  {(() => {
+                                    const dateStr = selectedAthlete.birthdate.includes('T') 
+                                      ? selectedAthlete.birthdate.split('T')[0] 
+                                      : selectedAthlete.birthdate
+                                    const [year, month, day] = dateStr.split('-').map(Number)
+                                    const date = new Date(year, month - 1, day)
+                                    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                                  })()}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/70 italic">Click to add birthdate</span>
+                              )}
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {selectedAthlete.bio && (
+                      <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                        <h3 className="font-semibold text-foreground mb-2 md:mb-3">Bio</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{selectedAthlete.bio}</p>
+                      </div>
+                    )}
+
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Recruiting Stage</h3>
+                      <Select
+                        value={(selectedAthlete.pipeline_stage || "Prospect").toLowerCase()}
+                        onValueChange={(value) => handleStageChange(selectedAthlete.id, value)}
+                      >
+                        <SelectTrigger className="bg-background border-border text-foreground hover:bg-muted/60 dark:hover:bg-muted/40">
+                          <SelectValue placeholder="Select stage" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card border border-border text-foreground">
+                          <SelectItem value="prospect" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-gray-400" />
+                              Prospect
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="contacted" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-500" />
+                              Contacted
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="recruiting" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-orange-500" />
+                              Recruiting
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="offered" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500" />
+                              Offered
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="committed" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-emerald-600" />
+                              Committed
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="signed" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-600" />
+                              Signed
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="lost" className="text-foreground hover:bg-gray-100">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-red-500" />
+                              Lost
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Public Profile</h3>
+                      <a
+                        href={`/unified-profile/${selectedAthlete.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+                      >
+                        View Full RecruitNC Profile
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="performance" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+                    {/* Career Record */}
+                    {selectedAthlete.careerRecord && (
+                      <div className="bg-gradient-to-r from-[#002147] to-[#13294B] rounded-lg p-6 text-white mb-4">
+                        <div className="text-sm font-semibold mb-2">Career Record</div>
+                        <div className="text-4xl font-bold">{selectedAthlete.careerRecord}</div>
+                      </div>
+                    )}
+
+                    {/* Tournament Results Display (same as unified profile) */}
+                    <TournamentResultsDisplay
+                      nchsaaResults={nchsaaResults}
+                      nhscaResults={selectedAthlete.nhsca_results || []}
+                      super32Results={selectedAthlete.super32_results || []}
+                    />
+
+                    {/* Empty state */}
+                    {!selectedAthlete.careerRecord && 
+                     nchsaaResults.length === 0 &&
+                     (!selectedAthlete.nhsca_results || selectedAthlete.nhsca_results.length === 0) &&
+                     (!selectedAthlete.super32_results || selectedAthlete.super32_results.length === 0) &&
+                     !selectedAthlete.college_opens_experience && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Award className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p className="italic">No performance data available</p>
+                      </div>
+                    )}
+
+                    {selectedAthlete.achievements && selectedAthlete.achievements.length > 0 && (
+                      <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                        <h3 className="font-semibold text-foreground mb-2 md:mb-3">Achievements</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedAthlete.achievements.map((achievement, index) => (
+                            <Badge key={index} variant="secondary" className="bg-gray-100 text-muted-foreground text-xs">
+                              {achievement}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedAthlete.prospect_ranking && (
+                      <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                        <h3 className="font-semibold text-foreground mb-2 md:mb-3">Rankings</h3>
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                          <div className="text-sm text-yellow-500 mb-1">Prospect Ranking</div>
+                          <div className="text-3xl font-bold text-yellow-500">#{selectedAthlete.prospect_ranking}</div>
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="academics" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5" />
+                        Academic Profile
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* GPA */}
+                        <div className="bg-gray-100 rounded-lg p-4 group relative">
+                          <div className="text-xs text-muted-foreground mb-1">GPA</div>
+                          {editingField === "academic_gpa" ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              max="4"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onBlur={() => handleFieldUpdate("academic_gpa", editingValue)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleFieldUpdate("academic_gpa", editingValue)
+                                } else if (e.key === "Escape") {
+                                  setEditingField(null)
+                                  setEditingValue("")
+                                }
+                              }}
+                              className="text-3xl font-bold h-12 text-blue-600"
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-200 rounded p-1 -m-1"
+                              onClick={() => startEditing("academic_gpa", selectedAthlete.academic_gpa)}
+                            >
+                              {selectedAthlete.academic_gpa ? (
+                                <div className="text-3xl font-bold text-blue-600">
+                                  {selectedAthlete.academic_gpa.toFixed(2)}
                                 </div>
+                              ) : (
+                                <div className="text-3xl font-bold text-muted-foreground/70">-</div>
+                              )}
+                              <div className="text-xs text-muted-foreground mt-1">4.0 Scale</div>
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* SAT */}
+                        <div className="bg-gray-100 rounded-lg p-4 group relative">
+                          <div className="text-xs text-muted-foreground mb-1">SAT</div>
+                          {editingField === "academic_sat" ? (
+                            <Input
+                              type="number"
+                              min="0"
+                              max="1600"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onBlur={() => handleFieldUpdate("academic_sat", editingValue)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleFieldUpdate("academic_sat", editingValue)
+                                } else if (e.key === "Escape") {
+                                  setEditingField(null)
+                                  setEditingValue("")
+                                }
+                              }}
+                              className="text-3xl font-bold h-12 text-blue-600"
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-200 rounded p-1 -m-1"
+                              onClick={() => startEditing("academic_sat", selectedAthlete.academic_sat)}
+                            >
+                              {selectedAthlete.academic_sat ? (
+                                <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_sat}</div>
+                              ) : (
+                                <div className="text-3xl font-bold text-muted-foreground/70">-</div>
+                              )}
+                              <div className="text-xs text-muted-foreground mt-1">Out of 1600</div>
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ACT */}
+                        <div className="bg-gray-100 rounded-lg p-4 group relative">
+                          <div className="text-xs text-muted-foreground mb-1">ACT</div>
+                          {editingField === "academic_act" ? (
+                            <Input
+                              type="number"
+                              min="0"
+                              max="36"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onBlur={() => handleFieldUpdate("academic_act", editingValue)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleFieldUpdate("academic_act", editingValue)
+                                } else if (e.key === "Escape") {
+                                  setEditingField(null)
+                                  setEditingValue("")
+                                }
+                              }}
+                              className="text-3xl font-bold h-12 text-blue-600"
+                              autoFocus
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-200 rounded p-1 -m-1"
+                              onClick={() => startEditing("academic_act", selectedAthlete.academic_act)}
+                            >
+                              {selectedAthlete.academic_act ? (
+                                <div className="text-3xl font-bold text-blue-600">{selectedAthlete.academic_act}</div>
+                              ) : (
+                                <div className="text-3xl font-bold text-muted-foreground/70">-</div>
+                              )}
+                              <div className="text-xs text-muted-foreground mt-1">Out of 36</div>
+                              <Edit2 className="h-3 w-3 text-muted-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedAthlete.academic_summary && (
+                        <div className="mt-4 bg-gray-100 rounded-lg p-4">
+                          <div className="text-sm font-semibold text-foreground mb-2">Academic Summary</div>
+                          <p className="text-sm text-muted-foreground">{selectedAthlete.academic_summary}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Coach's Academic Notes Section */}
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Your Academic Notes
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Add your own academic information or notes that aren't in the public profile (e.g., GPA obtained during conversation, test scores, academic interests, etc.)
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <Textarea
+                          placeholder="Example: Spoke with athlete - current GPA is 3.8, planning to retake SAT in spring, interested in Engineering program..."
+                          value={academicNotes}
+                          onChange={(e) => setAcademicNotes(e.target.value)}
+                          rows={4}
+                          className="w-full"
+                        />
+                        <Button
+                          onClick={handleSaveAcademicNotes}
+                          disabled={isSavingAcademicNotes}
+                          className="w-full"
+                        >
+                          {isSavingAcademicNotes ? "Saving..." : "Save Academic Notes"}
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="documents" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-3 md:mb-4 flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Documents & Media
+                      </h3>
+
+                      <div className="mb-4">
+                        <label className="block">
+                          <div className="border-2 border-dashed border-border/70 rounded-lg p-6 text-center hover:border-blue-500 cursor-pointer transition-colors">
+                            <input
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) handleUploadDocument(file)
+                              }}
+                              disabled={uploadingDocument}
+                            />
+                            <Plus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                            <div className="text-sm text-muted-foreground">
+                              {uploadingDocument ? "Uploading..." : "Click to upload document"}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">PDF, DOC, or images</div>
+                          </div>
+                        </label>
+                      </div>
+
+                      {selectedAthlete.highlight_video_url && (
+                        <div className="bg-gray-100 rounded-lg p-4 mb-3">
+                          <div className="flex items-center gap-3 mb-2">
+                            <Video className="h-5 w-5 text-blue-600" />
+                            <div className="text-sm font-semibold text-foreground">Highlight Video</div>
+                          </div>
+                          <a
+                            href={selectedAthlete.highlight_video_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"
+                          >
+                            Watch Highlights
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
+                      )}
+
+                      {documents.length > 0 && (
+                        <div className="space-y-2">
+                          {documents.map((doc) => (
+                            <div key={doc.id} className="bg-gray-100 rounded-lg p-3 flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <FileText className="h-5 w-5 text-blue-600" />
+                                <div>
+                                  <div className="text-sm font-semibold text-foreground">{doc.file_name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {new Date(doc.uploaded_at).toLocaleDateString()}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={doc.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-700 p-1"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                                <button
+                                  onClick={() => handleDeleteDocument(doc.id)}
+                                  className="text-muted-foreground/70 hover:text-red-500 p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
                               </div>
                             </div>
                           ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-
-              {isDashboardView && (
-                <div className="container mx-auto px-4 py-6">
-                  <RecruitingFunnelChart stageCounts={stageCounts} schoolBranding={schoolBranding} />
-                </div>
-              )}
-
-              {isDashboardView && (
-                <div className="container mx-auto px-4 pb-5">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                  {/* Total Pipeline - Primary metric with school branding */}
-                  <div
-                    className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-card dark:bg-slate-900/70 rounded-xl border-2 dark:border-slate-700 transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
-                    style={{
-                      borderColor: schoolBranding?.primary_color || "#3B82F6", // Use schoolBranding
-                    }}
-                  >
-                    <Users
-                      className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0"
-                      style={{ color: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
-                    />
-                    <div className="min-w-0">
-                      <div className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</div>
-                      <div className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Total Pipeline
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Lost to Others - Negative metric */}
-                  <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-red-50 dark:bg-red-900/40 rounded-xl border-2 border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-500 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
-                    <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-red-600 dark:text-red-300" />
-                    <div className="min-w-0">
-                      <div className="text-2xl md:text-3xl font-bold text-red-600 dark:text-red-200">{stats.lost}</div>
-                      <div className="text-[10px] md:text-xs font-semibold text-muted-foreground dark:text-red-100/70 uppercase tracking-wide">
-                        Lost to Others
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Offers Out - Informational */}
-                  <div className="flex items-center gap-3 md:gap-4 px-4 md:px-6 py-4 md:py-5 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer">
-                    <Target className="h-6 w-6 md:h-7 md:w-7 flex-shrink-0 text-blue-600 dark:text-blue-300" />
-                    <div className="min-w-0">
-                      <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-200">{stats.offersOut}</div>
-                      <div className="text-[10px] md:text-xs font-semibold text-muted-foreground dark:text-blue-100/70 uppercase tracking-wide">
-                        Offers Out
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* North Carolina Recruits Section */}
-              {isDashboardView && (
-                <div className="container mx-auto px-4 pt-4 pb-6">
-                <Card className="border border-border shadow-sm bg-card transition-colors">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-2xl font-bold text-foreground">Committed Recruits</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      North Carolina athletes committed or signed to {schoolBranding?.name || "this school"}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    {loadingNcRecruits ? (
-                      <div className="text-center py-8">
-                        <div className="animate-pulse text-muted-foreground/70">Loading recruits...</div>
-                      </div>
-                    ) : ncRecruits.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">No committed/signed recruits found</div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full caption-bottom text-sm">
-                          <thead className="[&_tr]:border-b bg-muted">
-                            <tr className="border-b transition-colors">
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Year</th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Name</th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">College</th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Division</th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="[&_tr:last-child]:border-0">
-                            {ncRecruits.map((recruit) => (
-                              <tr
-                                key={recruit.id}
-                                className="border-b transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 data-[state=selected]:bg-muted"
-                              >
-                                <td className="p-4 align-middle font-medium">{recruit.year || "-"}</td>
-                                <td className="p-4 align-middle font-medium">{recruit.name || "-"}</td>
-                                <td className="p-4 align-middle">{recruit.weight ? `${recruit.weight}lbs` : "-"}</td>
-                                <td className="p-4 align-middle">{recruit.highschool || "-"}</td>
-                                <td className="p-4 align-middle">{recruit.college || "-"}</td>
-                                <td className="p-4 align-middle">
-                                  {recruit.division ? (
-                                    <Badge variant="outline" className="text-xs">
-                                      {recruit.division}
-                                    </Badge>
-                                  ) : (
-                                    "-"
-                                  )}
-                                </td>
-                                <td className="p-4 align-middle">
-                                  <Badge
-                                    variant="outline"
-                                    className={
-                                      recruit.status?.toLowerCase() === "signed"
-                                        ? "bg-green-50 text-green-700 border-green-200"
-                                        : "bg-blue-50 text-blue-700 border-blue-200"
-                                    }
-                                  >
-                                    {recruit.status || "Committed"}
-                                  </Badge>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-              )}
-
-              {isDashboardView && (
-                <div className="container mx-auto px-4 pb-5">
-                  <div className="bg-card rounded-xl shadow-sm border border-border p-3 md:p-4 transition-colors">
-                    <div className="flex flex-col md:flex-row md:flex-wrap gap-3">
-                      <div className="relative flex-1 min-w-full md:min-w-[250px]">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-[18px] w-[18px]" />
-                        <Input
-                          placeholder="Search athletes..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 border-2 border-border focus:border-primary bg-background text-foreground placeholder:text-muted-foreground h-11 rounded-lg transition-colors"
-                        />
-                      </div>
-
-                      <div className="flex flex-col md:flex-row gap-3">
-                      <div className="flex gap-3">
-                        <Select value={selectedYear} onValueChange={setSelectedYear}>
-                            <SelectTrigger className="flex-1 md:w-[150px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
-                            <SelectValue placeholder="All Years" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border border-border text-foreground">
-                            <SelectItem value="all">All Years</SelectItem>
-                            {graduationYears.map((year) => (
-                              <SelectItem key={year} value={year.toString()}>
-                                Class of {year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Select value={selectedGender} onValueChange={setSelectedGender}>
-                            <SelectTrigger className="flex-1 md:w-[150px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
-                            <SelectValue placeholder="All" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border border-border text-foreground">
-                            <SelectItem value="all">All Genders</SelectItem>
-                            <SelectItem value="male">Men's</SelectItem>
-                            <SelectItem value="female">Women's</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <Select value={selectedState} onValueChange={setSelectedState}>
-                            <SelectTrigger className="flex-1 md:w-[140px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
-                            <SelectValue placeholder="All States" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border border-border text-foreground">
-                            <SelectItem value="all">All States</SelectItem>
-                            {states.map((state) => (
-                              <SelectItem key={state} value={state}>
-                                {state}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Select value={selectedRating} onValueChange={setSelectedRating}>
-                            <SelectTrigger className="flex-1 md:w-[140px] border-2 border-border hover:border-primary/40 bg-background text-foreground h-11 rounded-lg font-medium touch-manipulation">
-                            <SelectValue placeholder="All Ratings" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border border-border text-foreground">
-                            <SelectItem value="all">All Ratings</SelectItem>
-                            <SelectItem value="5">
-                              <div className="flex items-center gap-2">
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <span className="ml-1 text-xs text-muted-foreground">Dream Recruit</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="4">
-                              <div className="flex items-center gap-2">
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <span className="ml-1 text-xs text-muted-foreground">Excellent Fit</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="3">
-                              <div className="flex items-center gap-2">
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <span className="ml-1 text-xs text-muted-foreground">Solid Prospect</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="2">
-                              <div className="flex items-center gap-2">
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <span className="ml-1 text-xs text-muted-foreground">Backup Option</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="1">
-                              <div className="flex items-center gap-2">
-                                <Star className="h-4 w-4 fill-[#FFD700] text-[#FFD700]" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <span className="ml-1 text-xs text-muted-foreground">Low Priority</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="unrated">
-                              <div className="flex items-center gap-2">
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <Star className="h-4 w-4 fill-none text-muted-foreground/40" />
-                                <span className="ml-1 text-xs text-muted-foreground">Not Rated</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
                         </div>
+                      )}
 
-                        {/* View Mode Toggle */}
-                        <div className="flex gap-2 border border-border rounded-lg p-1 bg-background dark:bg-slate-900/70 w-full md:w-auto transition-colors">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode("board")}
-                            className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation transition-colors ${viewMode === "board" ? "bg-muted" : ""}`}
-                          >
-                            <LayoutGrid className="h-4 w-4 mr-2" />
-                            <span className="text-sm">Board</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewMode("table")}
-                            className={`flex-1 md:flex-none h-11 md:h-9 px-3 touch-manipulation transition-colors ${viewMode === "table" ? "bg-muted" : ""}`}
-                          >
-                            <Table className="h-4 w-4 mr-2" />
-                            <span className="text-sm">Table</span>
-                          </Button>
-                        </div>
-                      </div>
+                      {!selectedAthlete.highlight_video_url && documents.length === 0 && (
+                        <p className="text-muted-foreground italic">No documents or media uploaded yet</p>
+                      )}
+                    </div>
+                  </TabsContent>
 
-                      <div className="hidden md:flex gap-3">
+                  <TabsContent value="family" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <div className="flex items-center justify-between mb-3 md:mb-4">
+                        <h3 className="font-semibold text-foreground flex items-center gap-2">
+                          <Users className="h-5 w-5" />
+                          Family Information
+                        </h3>
                         <Button
-                          onClick={() => {
-                            console.log("[v0] Browse NC Rankings button clicked")
-                            window.location.href = "https://app.ncwrestlingunited.com/public-rankings"
-                          }}
-                          className="h-11 px-5 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
+                          onClick={() => setShowFamilyForm(!showFamilyForm)}
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
-                          <Search className="h-[18px] w-[18px] mr-2" />
-                          Browse NC Rankings
-                        </Button>
-                        <Button
-                          onClick={() => setShowCreateProspectModal(true)}
-                          className="h-11 px-5 rounded-lg font-semibold bg-[#BC0B03] text-white shadow-sm hover:shadow-md hover:bg-[#9a0902] hover:-translate-y-0.5 active:scale-[0.98] transition-all touch-manipulation"
-                        >
-                          <Plus className="h-[18px] w-[18px] mr-2" />
-                          Create New Prospect
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Family Member
                         </Button>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
-                {viewMode === "board" ? (
-                  <div className="flex flex-col md:flex-row md:gap-4 md:overflow-x-auto md:pb-4 space-y-4 md:space-y-0">
-                    {PIPELINE_STAGES_BASE.map((stage) => {
-                      const stageProspects = getProspectsByStage(stage.id)
-                      return (
-                        <div
-                          key={stage.id}
-                          className="md:flex-shrink-0 md:w-80"
-                          onDragOver={handleDragOver}
-                          onDrop={() => handleDrop(stage.id)}
-                        >
-                          <div className="bg-card rounded-xl border border-border flex flex-col transition-all hover:border-primary/40 dark:hover:border-primary/60">
-                            <div className="flex items-center justify-between px-4 md:px-5 py-3 md:py-4 border-b border-border/60 dark:border-border/40">
-                              <h3 className="text-xs md:text-sm font-bold text-foreground uppercase tracking-wide">
-                                {stage.label}
-                              </h3>
-                              <div
-                                className="flex items-center justify-center min-w-[24px] md:min-w-[28px] h-[24px] md:h-[28px] px-2 md:px-2.5 rounded-full text-xs md:text-sm font-bold text-white"
-                                style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }} // Use schoolBranding
-                              >
-                                {stageProspects.length}
-                              </div>
-                            </div>
-
-                            <div className="flex-1 p-3 md:p-4 space-y-3 min-h-[200px] md:min-h-[400px] max-h-[400px] md:max-h-[calc(100vh-400px)] overflow-y-auto">
-                              {stageProspects.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-8 md:py-12 text-center">
-                                  <div className="text-4xl md:text-5xl opacity-10 mb-2 md:mb-3">📋</div>
-                                  <div className="text-xs md:text-sm font-semibold text-muted-foreground mb-1">No athletes yet</div>
-                                  <div className="text-[10px] md:text-xs text-muted-foreground/70">
-                                    Drag athletes here or add new prospects
-                                  </div>
-                                </div>
-                              ) : (
-                                stageProspects.map((prospect) => {
-                                  const committedElsewhere = isCommittedElsewhere(prospect)
-                                  
-                                  return (
-                                  <Card
-                                    key={prospect.id}
-                                    draggable
-                                    onDragStart={() => handleDragStart(prospect)}
-                                    onClick={() => {
-                                      const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                                      router.push(url)
-                                    }}
-                                    className={`border hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer transition-all rounded-lg touch-manipulation ${
-                                      committedElsewhere 
-                                        ? 'bg-muted border-border opacity-80 dark:bg-slate-800 dark:border-slate-700' 
-                                        : 'bg-card border-border hover:border-primary/40 active:border-primary/60 dark:hover:border-primary/60'
-                                    }`}
-                                  >
-                                    <CardContent className="p-3 md:p-4">
-                                      {/* Committed Elsewhere Badge */}
-                                      {committedElsewhere && (
-                                        <div className="mb-2 bg-gray-700 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 dark:bg-slate-700">
-                                          <span>⚠️ Committed to {prospect.college}</span>
-                                        </div>
-                                      )}
-                                      
-                                      <div className="flex gap-3 mb-3 relative">
-                                        {/* CHANGE START */}
-                                        {!prospect.prospect_id || !prospect.photourl ? (
-                                          <div
-                                            className="flex h-12 w-12 md:h-14 md:w-14 flex-shrink-0 items-center justify-center rounded-lg border border-border text-sm md:text-base font-semibold uppercase text-white"
-                                            style={{ backgroundColor: getStageColor(prospect.pipeline_stage || "Prospect", schoolBranding?.primary_color) }}
-                                          >
-                                            {getInitials(prospect.name)}
-                                          </div>
-                                        ) : (
-                                          <img
-                                            src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
-                                            alt={prospect.name}
-                                            className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
-                                              committedElsewhere ? 'grayscale' : ''
-                                            }`}
-                                          />
-                                        )}
-                                        {/* CHANGE END */}
-                                        <div className="flex-1 min-w-0">
-                                          <h4 className={`font-bold text-sm md:text-base truncate mb-1 ${committedElsewhere ? 'text-muted-foreground' : 'text-foreground'}`}>
-                                            {prospect.name}
-                                          </h4>
-                                          <p className="text-xs md:text-sm text-muted-foreground font-semibold mb-1">
-                                            {prospect.graduationyear} • {prospect.weightclass}lbs
-                                          </p>
-                                          <p className="text-[10px] md:text-xs text-muted-foreground/80 truncate">{prospect.highschool}</p>
-                                          {prospect.phone && (
-                                            <div className="mt-1 flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground">
-                                              <Phone className="h-3 w-3 md:h-3.5 md:w-3.5 text-muted-foreground/70 flex-shrink-0" />
-                                              <a
-                                                href={`tel:${normalizePhoneForTel(prospect.phone)}`}
-                                                className="hover:text-blue-600 dark:hover:text-blue-300 transition-colors"
-                                                onClick={(e) => e.stopPropagation()}
-                                              >
-                                                {formatPhoneNumber(prospect.phone)}
-                                              </a>
-                                            </div>
-                                          )}
-                                        </div>
-                                        {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && !committedElsewhere && (
-                                          <div
-                                            className="absolute top-0 right-0 px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-xs md:text-sm font-bold text-white"
-                                            style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }}
-                                          >
-                                            #{prospect.prospect_ranking}
-                                          </div>
-                                        )}
-                                      </div>
-
-                                      {prospect.academic_gpa && (
-                                        <div className="flex gap-2 mb-3">
-                                          <div className="flex items-center gap-1.5 bg-muted px-2 md:px-3 py-1.5 md:py-2 rounded-md">
-                                            <GraduationCap className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
-                                            <span className="text-xs md:text-sm font-bold text-foreground">
-                                              {prospect.academic_gpa.toFixed(1)}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      <div className="flex items-center justify-between pt-3 border-t border-border/60 dark:border-border/40">
-                                        <div onClick={(e) => e.stopPropagation()}>
-                                          <StarRating
-                                            rating={prospect.star_rating ?? null}
-                                            onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
-                                            size="sm"
-                                          />
-                                        </div>
-                                        <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
-                                          {formatLastContactDate(getLastContactedDate(prospect.id))}
-                                        </span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                  )
-                                })
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  ) : (
-                    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-colors">
-                      {bulkSelectedCount > 0 && (
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-blue-50/70 px-4 py-3 text-sm dark:bg-slate-800/70">
-                          <div className="font-medium text-foreground">
-                            {bulkSelectedCount} athlete{bulkSelectedCount === 1 ? "" : "s"} selected
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={clearSelectedProspects}
-                              className="rounded-full"
-                              disabled={isBulkLogging}
-                            >
-                              Clear
+                      {showFamilyForm && (
+                        <div className="bg-muted rounded-lg p-4 mb-4 space-y-3 border border-border transition-colors">
+                          <Input
+                            placeholder="Name *"
+                            value={newFamilyMember.name}
+                            onChange={(e) => setNewFamilyMember({ ...newFamilyMember, name: e.target.value })}
+                            className="bg-background border-border text-foreground"
+                          />
+                          <Select
+                            value={newFamilyMember.relationship}
+                            onValueChange={(value) => setNewFamilyMember({ ...newFamilyMember, relationship: value })}
+                          >
+                            <SelectTrigger className="bg-background border-border text-foreground">
+                              <SelectValue placeholder="Relationship *" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border border-border text-foreground">
+                              <SelectItem value="Father">Father</SelectItem>
+                              <SelectItem value="Mother">Mother</SelectItem>
+                              <SelectItem value="Guardian">Guardian</SelectItem>
+                              <SelectItem value="Sibling">Sibling</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder="Phone"
+                            value={newFamilyMember.phone}
+                            onChange={(e) => setNewFamilyMember({ ...newFamilyMember, phone: e.target.value })}
+                            className="bg-background border-border text-foreground"
+                          />
+                          <Input
+                            placeholder="Email"
+                            type="email"
+                            value={newFamilyMember.email}
+                            onChange={(e) => setNewFamilyMember({ ...newFamilyMember, email: e.target.value })}
+                            className="bg-background border-border text-foreground"
+                          />
+                          <div className="flex gap-2">
+                            <Button onClick={handleAddFamilyMember} className="bg-blue-600 hover:bg-blue-700">
+                              Save Family Member
                             </Button>
                             <Button
-                              size="sm"
-                              className="rounded-full bg-[#0b1728] text-white hover:bg-[#13294B]"
-                              onClick={handleOpenBulkActivityModal}
-                              disabled={!canLogActivities || isBulkLogging}
+                              onClick={() => setShowFamilyForm(false)}
+                              variant="outline"
+                              className="border-border text-muted-foreground hover:bg-muted/60 dark:hover:bg-muted/40"
                             >
-                              {isBulkLogging ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Logging...
-                                </>
-                              ) : !canLogActivities ? (
-                                "Admin Preview"
-                              ) : (
-                                <>
-                                  <ActivityIcon className="mr-2 h-4 w-4" />
-                                  Log Activity
-                                </>
-                              )}
+                              Cancel
                             </Button>
                           </div>
                         </div>
                       )}
-                      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-                        <div className="md:hidden text-xs text-muted-foreground px-4 py-2 bg-muted border-b border-border/60">
-                          ← Swipe to see more columns →
+
+                      {familyMembers.length > 0 ? (
+                        <div className="space-y-3">
+                          {familyMembers.map((member) => (
+                            <div key={member.id} className="bg-card border border-border rounded-lg p-4 transition-colors">
+                              <div className="flex items-start justify-between mb-2">
+                                <div>
+                                  <div className="text-sm font-semibold text-foreground">{member.name}</div>
+                                  <div className="text-xs text-muted-foreground">{member.relationship}</div>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteFamilyMember(member.id)}
+                                  className="text-muted-foreground/70 hover:text-red-500 p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                              {(member.phone || member.email) && (
+                                <div className="space-y-1 mt-2">
+                                  {member.phone && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <a href={`tel:${member.phone}`} className="hover:text-blue-600">
+                                        {member.phone}
+                                      </a>
+                                    </div>
+                                  )}
+                                  {member.email && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <a href={`mailto:${member.email}`} className="hover:text-blue-600">
+                                        {member.email}
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                        <table className="w-full caption-bottom text-sm min-w-[900px]">
-                          <thead className="[&_tr]:border-b border-border/60 bg-muted">
-                            <tr className="border-b border-border/60 transition-colors">
-                              <th className="h-12 w-12 px-4 align-middle text-left font-semibold text-foreground">
-                                <Checkbox
-                                  checked={headerCheckboxState}
-                                  onCheckedChange={() => handleToggleAllVisible(sortedProspects)}
-                                  aria-label="Select all prospects"
-                                  disabled={sortedProspects.length === 0}
-                                />
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("name")}
+                      ) : (
+                        <p className="text-muted-foreground italic">No family information available</p>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="notes" className="space-y-3 md:space-y-4 mt-4 md:mt-6">
+                    {/* Add Note */}
+                    <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
+                      <h3 className="font-semibold text-foreground mb-2 md:mb-3">Add Note</h3>
+                      <Textarea
+                        placeholder="Add recruiting notes, call summaries, or observations..."
+                        value={newNote}
+                        onChange={(e) => setNewNote(e.target.value)}
+                        className="bg-background border-border text-foreground placeholder:text-muted-foreground mb-3"
+                        rows={3}
+                      />
+                      <Button onClick={handleAddNote} className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Note
+                      </Button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {notes.map((note) => (
+                        <div key={note.id} className="bg-card border border-border rounded-lg p-3 md:p-4 transition-colors">
+                          <div className="flex items-start justify-between mb-2">
+                            <Badge variant="outline" className="text-xs">
+                              {note.note_type || "General"}
+                            </Badge>
+                            <div className="flex items-center gap-1 md:gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(note.created_at).toLocaleDateString()}
+                                {" at "}
+                                {new Date(note.created_at).toLocaleTimeString()}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setEditingNoteId(note.id)
+                                  setEditingNoteText(note.note)
+                                }}
+                                className="p-0.5 md:p-1 hover:bg-gray-100 rounded"
                               >
-                                <div className="flex items-center gap-1">
-                                  Name
-                                  {sortColumn === "name" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("year")}
+                                <Edit2 className="h-3.5 w-3.5 text-muted-foreground hover:text-blue-600" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteNote(note.id)}
+                                className="p-0.5 md:p-1 hover:bg-gray-100 rounded"
                               >
-                                <div className="flex items-center gap-1">
-                                  Year
-                                  {sortColumn === "year" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("weight")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  Weight
-                                  {sortColumn === "weight" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("state")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  State
-                                  {sortColumn === "state" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("stage")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  Stage
-                                  {sortColumn === "stage" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Applied</th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("rating")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  Rating
-                                  {sortColumn === "rating" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("gpa")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  GPA
-                                  {sortColumn === "gpa" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th 
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("ranking")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  Ranking
-                                  {sortColumn === "ranking" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                              <th
-                                className="h-12 px-4 text-left align-middle font-semibold text-foreground cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 select-none"
-                                onClick={() => handleSort("lastActivity")}
-                              >
-                                <div className="flex items-center gap-1">
-                                  Last Activity
-                                  {sortColumn === "lastActivity" && (
-                                    <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
-                                  )}
-                                </div>
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="[&_tr:last-child]:border-0">
-                            {sortedProspects.length === 0 ? (
-                              <tr>
-                                <td colSpan={12} className="p-8 text-center text-muted-foreground">
-                                  No prospects found
-                                </td>
-                              </tr>
-                            ) : (
-                              sortedProspects.map((prospect) => {
-                                const stage =
-                                  PIPELINE_STAGES_BASE.find((s) => s.id === prospect.pipeline_stage) ||
-                                  PIPELINE_STAGES_BASE[0]
-                                const stageColor = getStageColor(stage.id, schoolBranding?.primary_color)
-                                const lastActivity = getLastActivityForAthlete(prospect.id)
-                                const lastActivityLabel = lastActivity
-                                  ? ACTIVITY_LABELS[lastActivity.action_type] || lastActivity.action_type
-                                  : null
-                                const isLoggingActivity = Boolean(loggingActivity[prospect.id])
-                                return (
-                                  <tr
-                                    key={prospect.id}
-                                    className="border-b border-border/60 transition-colors hover:bg-muted/60 dark:hover:bg-muted/40 active:bg-muted/80 group"
-                                  >
-                                    <td
-                                      className="p-4 align-middle"
-                                      onClick={(event) => event.stopPropagation()}
-                                    >
-                                      <Checkbox
-                                        checked={selectedProspectIds.has(prospect.id)}
-                                        onCheckedChange={(checked) =>
-                                          handleToggleProspectSelection(prospect.id, checked === true)
-                                        }
-                                        aria-label={`Select ${prospect.name}`}
-                                      />
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle cursor-pointer"
-                                      onClick={() => {
-                                        const url = `/schools/${params.schoolId}/athlete/${prospect.id}${
-                                          viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''
-                                        }`
-                                        router.push(url)
-                                      }}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        {/* CHANGE START */}
-                                        {!prospect.prospect_id || !prospect.photourl ? (
-                                          <div
-                                            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-sm font-semibold uppercase text-white"
-                                            style={{ backgroundColor: stageColor || "#334155" }}
-                                          >
-                                            {getInitials(prospect.name)}
-                                          </div>
-                                        ) : (
-                                          <img
-                                            src={prospect.photourl || "/placeholder.svg"}
-                                            alt={prospect.name}
-                                            className="w-10 h-10 rounded-lg object-cover border border-border"
-                                          />
-                                        )}
-                                        {/* CHANGE END */}
-                                        <div className="flex-1 min-w-0">
-                                          <span className="font-medium text-foreground truncate block">{prospect.name}</span>
-                                          {prospect.phone && (
-                                            <span className="mt-0.5 block text-xs text-muted-foreground truncate">
-                                              {formatPhoneNumber(prospect.phone)}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="ml-2 flex items-center gap-2 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                                          {prospect.phone && (
-                                            <a
-                                              href={`tel:${normalizePhoneForTel(prospect.phone)}`}
-                                              onClick={(e) => e.stopPropagation()}
-                                              className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                                              aria-label={`Call ${prospect.name}`}
-                                            >
-                                              <Phone className="h-3.5 w-3.5" />
-                                            </a>
-                                          )}
-                                          {prospect.contactEmail && (
-                                            <a
-                                              href={`mailto:${prospect.contactEmail}`}
-                                              onClick={(e) => e.stopPropagation()}
-                                              className="rounded-full border border-border/60 bg-muted/40 p-2 hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-                                              aria-label={`Email ${prospect.name}`}
-                                            >
-                                              <Mail className="h-3.5 w-3.5" />
-                                            </a>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle text-muted-foreground cursor-pointer"
-                                      onClick={() => {
-                                        const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                                        router.push(url)
-                                      }}
-                                    >
-                                      {prospect.graduationyear}
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle text-muted-foreground cursor-pointer"
-                                      onClick={() => {
-                                        const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                                        router.push(url)
-                                      }}
-                                    >
-                                      {prospect.weightclass}lbs
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle text-muted-foreground cursor-pointer"
-                                      onClick={() => {
-                                        const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                                        router.push(url)
-                                      }}
-                                    >
-                                      {prospect.location || "NC"}
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                    <Select
-                                      value={prospect.pipeline_stage || "Prospect"}
-                                      onValueChange={(value) => handleStageChange(prospect.id, value)}
-                                    >
-                                      <SelectTrigger className="h-auto w-auto border-0 bg-transparent p-0 hover:bg-transparent focus:ring-0 focus:ring-offset-0">
-                                        <Badge
-                                          className="text-xs cursor-pointer hover:opacity-90 transition-opacity"
-                                          style={{
-                                            backgroundColor: stageColor,
-                                            color: "white",
-                                          }}
-                                        >
-                                          {stage.label}
-                                          <ChevronDown className="ml-1 h-3 w-3 inline" />
-                                        </Badge>
-                                      </SelectTrigger>
-                                      <SelectContent className="min-w-[180px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100">
-                                        {PIPELINE_STAGES_BASE.map((s) => (
-                                          <SelectItem key={s.id} value={s.id} className="text-sm">
-                                            <div className="flex items-center gap-2">
-                                              <div
-                                                className="w-3 h-3 rounded-full"
-                                                style={{ backgroundColor: getStageColor(s.id, schoolBranding?.primary_color) }}
-                                              />
-                                              <span>{s.label}</span>
-                                            </div>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <Checkbox
-                                          checked={prospect.has_applied ?? false}
-                                          disabled={appliedUpdating[prospect.id] || !canLogActivities}
-                                          onCheckedChange={(checked) =>
-                                            handleAppliedToggle(prospect.id, Boolean(checked))
-                                          }
-                                        />
-                                        {prospect.applied_date && (
-                                          <span className="text-xs text-muted-foreground">
-                                            {new Date(prospect.applied_date).toLocaleDateString("en-US", {
-                                              month: "short",
-                                              day: "numeric",
-                                            })}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <StarRating
-                                        rating={prospect.star_rating ?? null}
-                                        onRatingChange={(rating) => handleStarRatingChange(prospect.id, rating)}
-                                        size="sm"
-                                      />
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle text-muted-foreground cursor-pointer"
-                                      onClick={() => {
-                                        const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                                        router.push(url)
-                                      }}
-                                    >
-                                      {prospect.academic_gpa ? prospect.academic_gpa.toFixed(1) : "-"}
-                                    </td>
-                                    <td
-                                      className="p-4 align-middle text-muted-foreground cursor-pointer"
-                                      onClick={() => {
-                                        const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ''}`
-                                        router.push(url)
-                                      }}
-                                    >
-                                      {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
-                                    </td>
-                                    <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                                      <div className="flex items-center justify-between gap-3">
-                                        <div className="min-w-0">
-                                          {lastActivity ? (
-                                            <div className="flex items-center gap-2 text-sm text-foreground">
-                                              <span className="font-medium">
-                                                {new Date(lastActivity.action_date).toLocaleDateString("en-US", {
-                                                  month: "short",
-                                                  day: "numeric",
-                                                })}
-                                              </span>
-                                              <span className="text-lg" aria-label={lastActivityLabel ?? "Activity"}>
-                                                {ACTIVITY_EMOJI_MAP[lastActivity.action_type] ?? ACTIVITY_EMOJI_MAP.other}
-                                              </span>
-                                              {lastActivity.coach_name && (
-                                                <span className="rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-muted-foreground dark:bg-slate-800 dark:text-slate-200">
-                                                  {getInitials(lastActivity.coach_name)}
-                                                </span>
-                                              )}
-                                            </div>
-                                          ) : (
-                                            <span className="text-sm text-muted-foreground">No activity yet</span>
-                                          )}
-                                        </div>
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              disabled={isLoggingActivity || !canLogActivities}
-                                              className="h-8 w-8 rounded-full border border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-slate-800 dark:text-slate-200"
-                                              aria-label="Log activity"
-                                            >
-                                              {isLoggingActivity ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                              ) : (
-                                                <span className="text-lg leading-none">+</span>
-                                              )}
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent
-                                            align="end"
-                                            className="min-w-[220px] rounded-xl border border-border bg-card text-foreground shadow-lg dark:bg-slate-900 dark:text-slate-100"
-                                          >
-                                            <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground dark:text-slate-300">
-                                              {canLogActivities ? "Log Activity" : "Impersonate a coach to log"}
-                                            </DropdownMenuLabel>
-                                            {ACTIVITY_OPTIONS.map((option) => (
-                                              <DropdownMenuItem
-                                                key={option.value}
-                                                disabled={isLoggingActivity || !canLogActivities}
-                                                onSelect={() => handleInlineActivityLog(prospect.id, option.value)}
-                                                className="text-sm text-foreground dark:text-slate-100 dark:focus:bg-slate-800 focus:bg-muted"
-                                              >
-                                                <span className="mr-2 text-lg">
-                                                  {ACTIVITY_EMOJI_MAP[option.value] ?? ACTIVITY_EMOJI_MAP.other}
-                                                </span>
-                                                {option.label}
-                                              </DropdownMenuItem>
-                                            ))}
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )
-                              })
-                            )}
-                          </tbody>
-                        </table>
+                                <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
+                              </button>
+                            </div>
+                          </div>
+                          {editingNoteId === note.id ? (
+                            <div className="space-y-2">
+                              <Textarea
+                                value={editingNoteText}
+                                onChange={(e) => setEditingNoteText(e.target.value)}
+                                className="bg-background border-border text-foreground"
+                                rows={3}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => handleEditNote(note.id)}
+                                  size="sm"
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  onClick={() => {
+                                    setEditingNoteId(null)
+                                    setEditingNoteText("")
+                                  }}
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-border text-muted-foreground hover:bg-muted/60 dark:hover:bg-muted/40"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">{note.note}</p>
+                          )}
+                        </div>
+                      ))}
+
+                      {notes.length === 0 && (
+                        <div className="text-center py-4 md:py-8 text-muted-foreground">
+                          No notes yet. Add your first note above.
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="financials" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+                    <div className="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-lg p-4 md:p-6">
+                      <h3 className="font-bold text-lg md:text-xl mb-2 flex items-center gap-2">
+                        <span className="text-yellow-300">💰</span> Financial Information
+                      </h3>
+                      <p className="text-sm text-green-100">
+                        Track financial aid needs, scholarship requirements, and financial considerations for this recruit.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                      {/* EFC (Expected Family Contribution) */}
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                        <Label htmlFor="efc" className="text-base font-semibold mb-2 block">
+                          Expected Family Contribution (EFC)
+                        </Label>
+                        <Input
+                          id="efc"
+                          type="number"
+                          placeholder="Enter EFC amount"
+                          value={financialData.efc}
+                          onChange={(e) => setFinancialData({ ...financialData, efc: e.target.value })}
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          The amount the family is expected to contribute toward college costs
+                        </p>
+                      </div>
+
+                      {/* Ability to Pay */}
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                        <Label htmlFor="abilityToPay" className="text-base font-semibold mb-2 block">
+                          Ability to Pay
+                        </Label>
+                        <Select
+                          value={financialData.abilityToPay}
+                          onValueChange={(value) => setFinancialData({ ...financialData, abilityToPay: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select ability to pay" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="full">Full Pay</SelectItem>
+                            <SelectItem value="partial">Partial Need</SelectItem>
+                            <SelectItem value="significant">Significant Need</SelectItem>
+                            <SelectItem value="full_need">Full Need</SelectItem>
+                            <SelectItem value="unknown">Unknown</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Aid Application Status */}
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                        <Label htmlFor="aidApplicationStatus" className="text-base font-semibold mb-2 block">
+                          Aid Application Status
+                        </Label>
+                        <Select
+                          value={financialData.aidApplicationStatus}
+                          onValueChange={(value) => setFinancialData({ ...financialData, aidApplicationStatus: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="not_started">Not Started</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="fafsa_submitted">FAFSA Submitted</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="not_applying">Not Applying</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Merit Scholarship Eligible */}
+                      <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                        <Label className="text-base font-semibold mb-2 block">Eligibility</Label>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="meritEligible"
+                              checked={financialData.meritScholarshipEligible}
+                              onCheckedChange={(checked) =>
+                                setFinancialData({ ...financialData, meritScholarshipEligible: checked as boolean })
+                              }
+                            />
+                            <Label htmlFor="meritEligible" className="text-sm font-normal cursor-pointer">
+                              Merit Scholarship Eligible
+                            </Label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="needBasedEligible"
+                              checked={financialData.needBasedAidEligible}
+                              onCheckedChange={(checked) =>
+                                setFinancialData({ ...financialData, needBasedAidEligible: checked as boolean })
+                              }
+                            />
+                            <Label htmlFor="needBasedEligible" className="text-sm font-normal cursor-pointer">
+                              Need-Based Aid Eligible
+                            </Label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id="giBillEligible"
+                              checked={financialData.giBillEligible}
+                              onCheckedChange={(checked) =>
+                                setFinancialData({ ...financialData, giBillEligible: checked as boolean })
+                              }
+                            />
+                            <Label htmlFor="giBillEligible" className="text-sm font-normal cursor-pointer">
+                              Eligible for GI Bill Benefits
+                            </Label>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+
+                    {/* Financial Aid Needs */}
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                      <Label htmlFor="aidNeeds" className="text-base font-semibold mb-2 block">
+                        Financial Aid Needs
+                      </Label>
+                      <Textarea
+                        id="aidNeeds"
+                        placeholder="Describe the athlete's/family's financial aid needs and requirements..."
+                        value={financialData.aidNeeds}
+                        onChange={(e) => setFinancialData({ ...financialData, aidNeeds: e.target.value })}
+                        rows={4}
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Specific financial aid needs, amounts required, or special circumstances
+                      </p>
+                    </div>
+
+                    {/* Scholarship Requirements */}
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                      <Label htmlFor="scholarshipRequirements" className="text-base font-semibold mb-2 block">
+                        Scholarship Requirements / Needs
+                      </Label>
+                      <Textarea
+                        id="scholarshipRequirements"
+                        placeholder="Note any specific scholarship requirements or amounts needed..."
+                        value={financialData.scholarshipRequirements}
+                        onChange={(e) => setFinancialData({ ...financialData, scholarshipRequirements: e.target.value })}
+                        rows={4}
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Required scholarship amounts, athletic scholarship needs, or merit scholarship requirements
+                      </p>
+                    </div>
+
+                    {/* Financial Concerns */}
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                      <Label htmlFor="financialConcerns" className="text-base font-semibold mb-2 block">
+                        Financial Concerns
+                      </Label>
+                      <Textarea
+                        id="financialConcerns"
+                        placeholder="Any financial concerns, constraints, or considerations..."
+                        value={financialData.financialConcerns}
+                        onChange={(e) => setFinancialData({ ...financialData, financialConcerns: e.target.value })}
+                        rows={3}
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Any financial concerns that may affect enrollment decisions
+                      </p>
+                    </div>
+
+                    {/* Financial Notes */}
+                    <div className="bg-card rounded-lg p-4 md:p-6 border border-border transition-colors">
+                      <Label htmlFor="financialNotes" className="text-base font-semibold mb-2 block">
+                        Additional Financial Notes
+                      </Label>
+                      <Textarea
+                        id="financialNotes"
+                        placeholder="Any additional financial information or notes..."
+                        value={financialData.financialNotes}
+                        onChange={(e) => setFinancialData({ ...financialData, financialNotes: e.target.value })}
+                        rows={4}
+                        className="mb-2"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        General notes about financial situation, discussions with family, or important details
+                      </p>
+                    </div>
+
+                    {/* Save Button */}
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleSaveFinancials}
+                        disabled={isSavingFinancials}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isSavingFinancials ? "Saving..." : "Save Financial Information"}
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="activity" className="mt-4 md:mt-6">
+                    <div className="bg-card border border-border rounded-lg p-3 md:p-4 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-foreground">Log Activity</h3>
+                        <Button
+                          onClick={() => setShowActivityDialog(!showActivityDialog)}
+                          size="sm"
+                          disabled={!canLogActivities}
+                          className="bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          {showActivityDialog ? "Cancel" : "New Activity"}
+                        </Button>
+                      </div>
+
+                      {!canLogActivities && (
+                        <p className="text-xs text-muted-foreground mb-3">
+                          You&apos;re in admin preview mode. Impersonate a coach to log activities.
+                        </p>
+                      )}
+
+                      {showActivityDialog && (
+                        <div className="space-y-3 mt-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={newActivity.isScheduled}
+                                onChange={(e) =>
+                                  setNewActivity({
+                                    ...newActivity,
+                                    isScheduled: e.target.checked,
+                                    // If scheduling future, default date to tomorrow, else today
+                                    actionDate: e.target.checked
+                                      ? new Date(Date.now() + 86400000).toISOString().split("T")[0]
+                                      : new Date().toISOString().split("T")[0],
+                                  })
+                                }
+                                className="rounded"
+                              />
+                              <span className="text-sm text-muted-foreground">
+                                {newActivity.isScheduled ? "Schedule Future Activity" : "Log Past Activity"}
+                              </span>
+                            </label>
+                          </div>
+
+                          {/* Activity Type Select */}
+                          <Select
+                            value={newActivity.actionType}
+                            disabled={!canLogActivities}
+                            onValueChange={(value) =>
+                              setNewActivity({
+                                ...newActivity,
+                                actionType: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger className="bg-background border-border text-foreground">
+                              <SelectValue placeholder="Select activity type" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card border border-border text-foreground">
+                              {ACTIVITY_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          <Input
+                            type="date"
+                            value={newActivity.actionDate}
+                            disabled={!canLogActivities}
+                            onChange={(e) => setNewActivity({ ...newActivity, actionDate: e.target.value })}
+                            className="bg-background border-border text-foreground"
+                          />
+
+                          <Textarea
+                            placeholder="Description of activity... *"
+                            value={newActivity.description}
+                            disabled={!canLogActivities}
+                            onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
+                            className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                            rows={3}
+                          />
+
+                          <Input
+                            placeholder="Outcome (optional)"
+                            value={newActivity.outcome}
+                            disabled={!canLogActivities}
+                            onChange={(e) => setNewActivity({ ...newActivity, outcome: e.target.value })}
+                            className="bg-background border-border text-foreground"
+                          />
+
+                          {/* Only show Follow-up Date input if isScheduled is true */}
+                          {newActivity.isScheduled && (
+                            <Input
+                              type="date"
+                              placeholder="Follow-up Date"
+                              value={newActivity.followUpDate}
+                              disabled={!canLogActivities}
+                              onChange={(e) => setNewActivity({ ...newActivity, followUpDate: e.target.value })}
+                              className="bg-background border-border text-foreground"
+                            />
+                          )}
+
+                          <Button
+                            onClick={handleAddActivity}
+                            disabled={!canLogActivities}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-muted disabled:text-muted-foreground"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            {newActivity.isScheduled ? "Schedule Activity" : "Save Activity"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Activity List */}
+                    {selectedAthleteActivities.length > 0 ? (
+                      <div className="space-y-2 mt-4">
+                        {selectedAthleteActivities.map((activity) => (
+                          <div key={activity.id} className="bg-card border border-border rounded-lg p-3">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs uppercase">
+                                  {activity.action_type.replace("_", " ")}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(activity.action_date).toLocaleDateString()}
+                                </span>
+                              </div>
+                              {canLogActivities && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-red-500"
+                                  onClick={() => handleDeleteActivity(activity.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{activity.description}</p>
+                            {activity.outcome && (
+                              <p className="text-xs text-muted-foreground mt-1">Outcome: {activity.outcome}</p>
+                            )}
+                            {activity.follow_up_date && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Follow-up: {new Date(activity.follow_up_date).toLocaleDateString()}
+                              </p>
+                            )}
+                            {activity.coach_name && (
+                              <p className="text-xs text-muted-foreground mt-1">Logged by {activity.coach_name}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground mt-4">
+                        <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No activity yet. Interactions will appear here as you recruit this athlete.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
             </>
           )}
-        </div>
-        {/* End Main Content Area */}
-      </div>
-      {/* End Command Center Grid */}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Roster Entry Dialog */}
+      <Dialog open={!!editingRosterEntry} onOpenChange={(open) => !open && setEditingRosterEntry(null)}>
+        <DialogContent className="bg-background border border-border text-foreground transition-colors">
+          <DialogHeader>
+            <DialogTitle>Edit Roster Entry</DialogTitle>
+            <DialogDescription>
+              Update roster status for {editingRosterEntry?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="roster_status">Roster Status</Label>
+              <Select
+                value={rosterEditForm.roster_status}
+                onValueChange={(value) =>
+                  setRosterEditForm({ ...rosterEditForm, roster_status: value })
+                }
+              >
+                <SelectTrigger id="roster_status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Transferred">Transferred</SelectItem>
+                  <SelectItem value="Graduated">Graduated</SelectItem>
+                  <SelectItem value="Medical Redshirt">Medical Redshirt</SelectItem>
+                  <SelectItem value="Left Program">Left Program</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="roster_notes">Notes</Label>
+              <Textarea
+                id="roster_notes"
+                value={rosterEditForm.roster_notes}
+                onChange={(e) =>
+                  setRosterEditForm({ ...rosterEditForm, roster_notes: e.target.value })
+                }
+                placeholder="Optional notes about roster status..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setEditingRosterEntry(null)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveRosterEdit}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create New Prospect Modal */}
+      <CreateProspectModal
+        isOpen={showCreateProspectModal}
+        onClose={() => setShowCreateProspectModal(false)}
+        schoolId={params.schoolId}
+        onSuccess={() => {
+          fetchProspects() // Refresh the prospects list
+        }}
+      />
       </div>
     </div>
   )
