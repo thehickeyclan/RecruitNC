@@ -76,54 +76,53 @@ export default function AllProspectsPage() {
       setError(null)
 
       try {
-        const [prospectsRes, rankingsRes] = await Promise.all([
-          fetch("/api/prospects?limit=1000", {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }),
-          fetch("/api/admin/prospects/simple-ranking", {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          }),
-        ])
+        const yearPromises = [2026, 2027, 2028, 2029, 2030].flatMap(year =>
+          ['Male', 'Female'].map(gender =>
+            fetch(`/api/admin/prospects/simple-ranking?year=${year}&gender=${gender}`, {
+              method: 'GET',
+              headers: { Accept: 'application/json' },
+              cache: 'no-store',
+            })
+          )
+        )
 
-        if (!prospectsRes.ok) {
-          const text = await prospectsRes.text().catch(() => "")
+        const prospectsRes = fetch('/api/prospects?limit=1000', {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+        })
+
+        const [prospectsResponse, ...rankingsResponses] = await Promise.all([prospectsRes, ...yearPromises])
+
+        if (!prospectsResponse.ok) {
+          const text = await prospectsResponse.text().catch(() => '')
           throw new Error(
-            `Prospects API ${prospectsRes.status} ${prospectsRes.statusText}${text ? ` - ${text}` : ""}`,
+            `Prospects API ${prospectsResponse.status} ${prospectsResponse.statusText}${text ? ` - ${text}` : ''}`,
           )
         }
 
-        if (!rankingsRes.ok) {
-          const text = await rankingsRes.text().catch(() => "")
-          throw new Error(
-            `Rankings API ${rankingsRes.status} ${rankingsRes.statusText}${text ? ` - ${text}` : ""}`,
-          )
-        }
-
-        const prospectsPayload = await prospectsRes.json()
-        const rankingsPayload = await rankingsRes.json()
-
+        const prospectsPayload = await prospectsResponse.json()
         const rawProspects = Array.isArray(prospectsPayload?.prospects)
           ? prospectsPayload.prospects
           : Array.isArray(prospectsPayload)
             ? prospectsPayload
             : []
 
-        const rawRankings = Array.isArray(rankingsPayload?.athletes)
-          ? rankingsPayload.athletes
-          : Array.isArray(rankingsPayload?.rankings)
-            ? rankingsPayload.rankings
-            : Array.isArray(rankingsPayload)
-              ? rankingsPayload
+        const allRankings: any[] = []
+        for (const response of rankingsResponses) {
+          if (response.ok) {
+            const payload = await response.json()
+            const rankings = Array.isArray(payload?.athletes)
+              ? payload.athletes
               : []
+            allRankings.push(...rankings)
+          }
+        }
 
-        console.log("[v0] Rankings API response:", {
-          count: rawRankings.length,
-          sample: rawRankings.slice(0, 2),
-          hasStateResults: rawRankings.filter((r: any) => r.nchsaa_results && r.nchsaa_results.length > 0).length
+        console.log('[v0] Rankings API response:', {
+          count: allRankings.length,
+          sample: allRankings.slice(0, 2),
+          hasStateResults: allRankings.filter((r: any) => r.nchsaa_results && r.nchsaa_results.length > 0).length,
         })
 
         const filtered = rawProspects
@@ -131,8 +130,8 @@ export default function AllProspectsPage() {
           .filter(isNorthCarolinaProspect)
 
         const rankingMap = new Map<string, any>()
-        for (const ranking of rawRankings) {
-          if (ranking?.athlete_id) rankingMap.set(ranking.athlete_id, ranking)
+        for (const ranking of allRankings) {
+          if (ranking?.id) rankingMap.set(ranking.id, ranking)
         }
 
         const merged = filtered.map((prospect) => {
