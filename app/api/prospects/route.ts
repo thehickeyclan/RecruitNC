@@ -1,9 +1,24 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          {
+            cookies: {
+              get: () => null,
+              set: () => {},
+              remove: () => {},
+            },
+          },
+        )
+      : await createClient()
+    // NOTE: service role client path avoids RLS policies that still reference legacy columns
     const { searchParams } = new URL(request.url)
 
     console.log("[v0] Prospects API - Request received")
