@@ -112,11 +112,19 @@ export default function AllProspectsPage() {
             ? prospectsPayload
             : []
 
-        const rawRankings = Array.isArray(rankingsPayload?.rankings)
-          ? rankingsPayload.rankings
-          : Array.isArray(rankingsPayload)
-            ? rankingsPayload
-            : []
+        const rawRankings = Array.isArray(rankingsPayload?.athletes)
+          ? rankingsPayload.athletes
+          : Array.isArray(rankingsPayload?.rankings)
+            ? rankingsPayload.rankings
+            : Array.isArray(rankingsPayload)
+              ? rankingsPayload
+              : []
+
+        console.log("[v0] Rankings API response:", {
+          count: rawRankings.length,
+          sample: rawRankings.slice(0, 2),
+          hasStateResults: rawRankings.filter((r: any) => r.nchsaa_results && r.nchsaa_results.length > 0).length
+        })
 
         const filtered = rawProspects
           .filter((prospect: Prospect) => Number(prospect.graduationyear) !== 2025)
@@ -129,6 +137,38 @@ export default function AllProspectsPage() {
 
         const merged = filtered.map((prospect) => {
           const ranking = rankingMap.get(prospect.id)
+          
+          let stateResults = ranking?.nchsaa_results
+          if (stateResults && Array.isArray(stateResults) && stateResults.length > 0) {
+            stateResults = stateResults.map((result: any) => {
+              const year = result.year
+              const place = result.place
+              const classification = result.classification || ''
+              
+              let text = ''
+              let placement: number | null = place
+              
+              if (place === 1) {
+                text = `${year} ${classification} State Champion`
+              } else if (place && place <= 8) {
+                const ordinal = place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`
+                text = `${year} ${classification} State ${ordinal}`
+              } else if (place && place > 8) {
+                text = `${year} ${classification} State Qualifier`
+                placement = null
+              } else {
+                text = `${year} ${classification} State Participant`
+                placement = null
+              }
+              
+              return {
+                text,
+                placement,
+                year
+              }
+            }).sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
+          }
+          
           return {
             ...prospect,
             prospect_ranking: ranking?.prospect_ranking ?? ranking?.overall_rank ?? prospect.prospect_ranking ?? null,
@@ -146,8 +186,9 @@ export default function AllProspectsPage() {
               prospect.super_32_record_display ??
               prospect.super_32_2025_record ??
               prospect.super_32_2024_record,
-            state_results: ranking?.state_results ?? prospect.state_results,
+            state_results: stateResults ?? prospect.state_results,
             state_championship_summary:
+              stateResults?.[0]?.text ??
               ranking?.state_championship_summary ??
               prospect.state_championship_summary ??
               prospect.achievements?.find((achievement) => achievement.toLowerCase().includes("state")),
