@@ -1,7 +1,7 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ExternalLink, ChevronUp, ChevronDown, Star } from "lucide-react"
+import { ExternalLink, ChevronUp, ChevronDown, Star } from 'lucide-react'
 import Link from "next/link"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
@@ -30,12 +30,7 @@ interface Athlete {
   name: string
   highschool: string
   weight_display: string
-  nhsca_record_display: string | null
-  nhsca_results?: NHSCAResult[]
-  super_32_record_display: string | null
-  super_32_results?: Super32Result[]
-  state_championship_summary: string
-  state_results?: StateResult[]
+  achievement?: string
   has_ranked_win: boolean
   academic_gpa: number | null
   prospect_ranking?: number | null
@@ -275,6 +270,45 @@ export function RankingsTableView({
     return ""
   }
 
+  const getAchievementBadge = (achievement?: string) => {
+    if (!achievement || achievement === "dnq") {
+      return <span className="text-gray-400 text-sm">-</span>
+    }
+    
+    switch (achievement) {
+      case "all-american":
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-semibold">
+            <span>🏆</span>
+            <span>All-American</span>
+          </div>
+        )
+      case "state-champion":
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-900 text-xs font-semibold">
+            <span>🥇</span>
+            <span>State Champion</span>
+          </div>
+        )
+      case "state-placer":
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
+            <span>🎖️</span>
+            <span>State Placer</span>
+          </div>
+        )
+      case "state-qualifier":
+        return (
+          <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold">
+            <span>✅</span>
+            <span>State Qualifier</span>
+          </div>
+        )
+      default:
+        return <span className="text-gray-400 text-sm">-</span>
+    }
+  }
+
   if (loading) {
     return (
       <div className="w-full">
@@ -342,9 +376,7 @@ export function RankingsTableView({
                   Weight <SortIcon field="weight" />
                 </Button>
               </TableHead>
-              <TableHead className="min-w-[140px] text-white font-semibold">State Result</TableHead>
-              <TableHead className="min-w-[140px] text-white font-semibold">NHSCA Result</TableHead>
-              <TableHead className="min-w-[120px] text-white font-semibold">Super 32 Record</TableHead>
+              <TableHead className="min-w-[160px] text-white font-semibold">Achievement</TableHead>
               <TableHead className="w-24 text-white font-semibold">Ranked Wins</TableHead>
               <TableHead className="w-24 text-white font-semibold">Profile</TableHead>
             </TableRow>
@@ -377,190 +409,144 @@ export function RankingsTableView({
                       </TableCell>
                     </TableRow>
                   )}
-                <TableRow
-                  className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
-                >
-                {canSeeWatchList && (
-                  <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleStarToggle(athlete.id)}
-                      disabled={starringInProgress.has(athlete.id)}
-                      className="h-8 w-8 p-0 hover:bg-gray-100"
-                    >
-                      <Star
-                        className={`w-5 h-5 ${
-                          starredAthletes.has(athlete.id) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
-                        }`}
-                      />
-                    </Button>
-                  </TableCell>
-                )}
-                {!hideRankColumn && showRankColumn && (
-                  <TableCell className="font-medium pr-2">
-                    <div className="flex items-center gap-2 min-w-[82px]">
-                      {rankValue !== null && rankValue <= dividerAfterRank && (
-                        <div
-                          className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
-                          style={{ backgroundColor: "#B31B1B" }}
+                  <TableRow
+                    className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
+                  >
+                    {canSeeWatchList && (
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStarToggle(athlete.id)}
+                          disabled={starringInProgress.has(athlete.id)}
+                          className="h-8 w-8 p-0 hover:bg-gray-100"
                         >
-                          #{rankValue}
-                        </div>
-                      )}
-                      {rankValue !== null && rankValue > dividerAfterRank && (
-                        <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600">
-                          #{rankValue}
-                        </div>
-                      )}
-                      {rankValue === null && (
-                        <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-200 text-gray-400">
-                          —
-                        </div>
-                      )}
-                      {athlete.photourl && (
-                        <img
-                          src={athlete.photourl || "/placeholder.svg"}
-                          alt={athlete.name}
-                          className="w-8 h-8 rounded-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none"
-                          }}
-                        />
-                      )}
-                    </div>
-                  </TableCell>
-                )}
-                <TableCell className="text-center">
-                  {athlete.recruiting_status === "Committed" &&
-                  athlete.college &&
-                  athlete.college !== "Not specified" &&
-                  athlete.college !== "Undecided" ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center p-1">
-                        {collegeLogos[athlete.college] ? (
-                          <Image
-                            src={collegeLogos[athlete.college] || "/placeholder.svg"}
-                            alt={`${athlete.college} logo`}
-                            width={32}
-                            height={32}
-                            className="object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement
-                              target.src = "/generic-college-logo.png"
-                            }}
+                          <Star
+                            className={`w-5 h-5 ${
+                              starredAthletes.has(athlete.id) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
+                            }`}
                           />
-                        ) : (
-                          <span className="text-xs text-gray-500">{athlete.college.substring(0, 3)}</span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400 text-sm">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="pl-4">
-                  <div className="flex items-center gap-3 leading-tight">
-                    <Link
-                      href={`/unified-profile/${athlete.id}`}
-                      className="hover:text-[#D3B574] transition-colors underline"
-                    >
-                      <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
-                    </Link>
-                  </div>
-                </TableCell>
-                <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
-                <TableCell>
-                  <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
-                </TableCell>
-                <TableCell>
-                  {athlete.state_results && athlete.state_results.length > 0 ? (
-                    <div className="space-y-1">
-                      {athlete.state_results.map((result, index) => (
-                        <div key={index} className="text-sm font-medium text-gray-900 flex items-center gap-1">
-                          {getMedalEmoji(result.placement)}
-                          {result.text}
-                        </div>
-                      ))}
-                    </div>
-                  ) : athlete.state_championship_summary &&
-                    athlete.state_championship_summary !== "No State Placement" ? (
-                    <div className="text-sm font-medium text-gray-900">{athlete.state_championship_summary}</div>
-                  ) : (
-                    <span className="text-gray-400 text-sm">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {athlete.nhsca_results && athlete.nhsca_results.length > 0 ? (
-                    <div className="space-y-1">
-                      {athlete.nhsca_results.map((result, index) => (
-                        <div key={index} className="text-sm font-medium text-purple-700 flex items-center gap-1">
-                          {getMedalEmoji(result.placement)}
-                          {result.text}
-                        </div>
-                      ))}
-                    </div>
-                  ) : athlete.nhsca_record_display && athlete.nhsca_record_display !== "No Record" ? (
-                    <div className="text-sm font-medium text-purple-700">{athlete.nhsca_record_display}</div>
-                  ) : (
-                    <span className="text-gray-400 text-sm">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {athlete.super_32_results && athlete.super_32_results.length > 0 ? (
-                    <div className="space-y-1">
-                      {athlete.super_32_results.map((result, index) => (
-                        <div key={index} className="text-sm font-medium text-orange-700 flex items-center gap-1">
-                          {getMedalEmoji(result.placement)}
-                          {result.text}
-                        </div>
-                      ))}
-                    </div>
-                  ) : athlete.super_32_record_display && athlete.super_32_record_display !== "No Record" ? (
-                    <div className="text-sm font-medium text-orange-700">{athlete.super_32_record_display}</div>
-                  ) : (
-                    <span className="text-gray-400 text-sm">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {(() => {
-                    const knownRankedWinAthletes = ["Tye Johnson"]
-
-                    const hasRankedWins =
-                      athlete.has_ranked_win ||
-                      knownRankedWinAthletes.includes(athlete.name) ||
-                      (athlete.nationally_ranked_wins &&
-                        typeof athlete.nationally_ranked_wins === "string" &&
-                        athlete.nationally_ranked_wins.trim() !== "" &&
-                        athlete.nationally_ranked_wins.toLowerCase() !== "none" &&
-                        athlete.nationally_ranked_wins !== "0")
-
-                    return hasRankedWins ? (
-                      <div className="flex items-center gap-1">
-                        <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
+                        </Button>
+                      </TableCell>
+                    )}
+                    {!hideRankColumn && showRankColumn && (
+                      <TableCell className="font-medium pr-2">
+                        <div className="flex items-center gap-2 min-w-[82px]">
+                          {rankValue !== null && rankValue <= dividerAfterRank && (
+                            <div
+                              className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
+                              style={{ backgroundColor: "#B31B1B" }}
+                            >
+                              #{rankValue}
+                            </div>
+                          )}
+                          {rankValue !== null && rankValue > dividerAfterRank && (
+                            <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600">
+                              #{rankValue}
+                            </div>
+                          )}
+                          {rankValue === null && (
+                            <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-200 text-gray-400">
+                              —
+                            </div>
+                          )}
+                          {athlete.photourl && (
+                            <img
+                              src={athlete.photourl || "/placeholder.svg"}
+                              alt={athlete.name}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none"
+                              }}
                             />
-                          </svg>
+                          )}
                         </div>
-                        <span className="text-green-700 text-sm font-medium">Yes</span>
+                      </TableCell>
+                    )}
+                    <TableCell className="text-center">
+                      {athlete.recruiting_status === "Committed" &&
+                      athlete.college &&
+                      athlete.college !== "Not specified" &&
+                      athlete.college !== "Undecided" ? (
+                        <div className="flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center p-1">
+                            {collegeLogos[athlete.college] ? (
+                              <Image
+                                src={collegeLogos[athlete.college] || "/placeholder.svg"}
+                                alt={`${athlete.college} logo`}
+                                width={32}
+                                height={32}
+                                className="object-contain"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement
+                                  target.src = "/generic-college-logo.png"
+                                }}
+                              />
+                            ) : (
+                              <span className="text-xs text-gray-500">{athlete.college.substring(0, 3)}</span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="pl-4">
+                      <div className="flex items-center gap-3 leading-tight">
+                        <Link
+                          href={`/unified-profile/${athlete.id}`}
+                          className="hover:text-[#D3B574] transition-colors underline"
+                        >
+                          <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
+                        </Link>
                       </div>
-                    ) : (
-                      <span className="text-gray-400 text-sm">No</span>
-                    )
-                  })()}
-                </TableCell>
-                <TableCell>
-                  <Link href={`/unified-profile/${athlete.id}`}>
-                    <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
-                      <ExternalLink className="w-3 h-3 text-gray-700" />
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
+                    </TableCell>
+                    <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
+                    <TableCell>
+                      <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
+                    </TableCell>
+                    <TableCell>
+                      {getAchievementBadge(athlete.achievement)}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const knownRankedWinAthletes = ["Tye Johnson"]
+
+                        const hasRankedWins =
+                          athlete.has_ranked_win ||
+                          knownRankedWinAthletes.includes(athlete.name) ||
+                          (athlete.nationally_ranked_wins &&
+                            typeof athlete.nationally_ranked_wins === "string" &&
+                            athlete.nationally_ranked_wins.trim() !== "" &&
+                            athlete.nationally_ranked_wins.toLowerCase() !== "none" &&
+                            athlete.nationally_ranked_wins !== "0")
+
+                        return hasRankedWins ? (
+                          <div className="flex items-center gap-1">
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                            <span className="text-green-700 text-sm font-medium">Yes</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No</span>
+                        )
+                      })()}
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/unified-profile/${athlete.id}`}>
+                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
+                          <ExternalLink className="w-3 h-3 text-gray-700" />
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
                 </Fragment>
               )
             })}

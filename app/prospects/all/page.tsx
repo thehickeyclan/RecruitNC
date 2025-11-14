@@ -84,6 +84,7 @@ export default function AllProspectsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [rankFilter, setRankFilter] = useState<"all" | "ranked" | "unranked">("all")
   const [weightFilters, setWeightFilters] = useState<string[]>([])
+  const [achievementFilter, setAchievementFilter] = useState<string>("all")
 
   useEffect(() => {
     const run = async () => {
@@ -303,9 +304,14 @@ export default function AllProspectsPage() {
         if (!weightFilters.includes(normalizedWeight)) return false
       }
 
+      if (achievementFilter !== "all") {
+        const achievement = getAchievementLevel(prospect)
+        if (achievementFilter !== achievement) return false
+      }
+
       return true
     })
-  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters])
+  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilter])
 
   const sortedProspects = useMemo(() => {
     return [...filteredProspects].sort((a, b) => {
@@ -378,6 +384,8 @@ export default function AllProspectsPage() {
         buildLegacySuper32Results(prospect),
       )
 
+      const achievementLevel = getAchievementLevel(prospect)
+
       if (index < 5) {
         console.log(`[v0] Tournament data for ${prospect.name}:`, {
           raw_state_results: prospect.state_results,
@@ -428,6 +436,7 @@ export default function AllProspectsPage() {
         nationally_ranked_wins: prospect.nationally_ranked_wins ?? undefined,
         college: prospect.college ?? undefined,
         recruiting_status: prospect.recruiting_status ?? undefined,
+        achievement: achievementLevel,
       }
     })
     
@@ -452,6 +461,7 @@ export default function AllProspectsPage() {
     setStatusFilter("all")
     setRankFilter("all")
     setWeightFilters([])
+    setAchievementFilter("all")
   }
 
   return (
@@ -586,6 +596,25 @@ export default function AllProspectsPage() {
                     <SelectItem value="committed">Committed</SelectItem>
                     <SelectItem value="verbal">Verbal Commit</SelectItem>
                     <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">Achievement Level</label>
+                <Select value={achievementFilter} onValueChange={setAchievementFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Achievements" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Achievements</SelectItem>
+                    <SelectItem value="all-american">All-American (NHSCA/Super 32 Top 8)</SelectItem>
+                    <SelectItem value="state-champion">State Champion</SelectItem>
+                    <SelectItem value="state-placer">State Placer (2nd-6th)</SelectItem>
+                    <SelectItem value="state-qualifier">State Qualifier</SelectItem>
+                    <SelectItem value="dnq">Did Not Qualify</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -877,4 +906,32 @@ function buildLegacyStateResults(prospect: Prospect): TournamentResult[] {
       year: prospect.graduationyear ?? undefined,
     },
   ]
+}
+
+function getAchievementLevel(prospect: Prospect): string {
+  const nhscaResults = prospect.nhsca_results || []
+  const super32Results = prospect.super_32_results || prospect.super32_results || []
+  
+  const isAllAmerican = 
+    nhscaResults.some(result => result.placement && result.placement <= 8) ||
+    super32Results.some(result => result.placement && result.placement <= 8)
+  
+  if (isAllAmerican) return "all-american"
+  
+  const stateResults = prospect.state_results || []
+  const isStateChampion = stateResults.some(result => result.placement === 1)
+  if (isStateChampion) return "state-champion"
+  
+  const isStatePlacer = stateResults.some(result => result.placement && result.placement >= 2 && result.placement <= 6)
+  if (isStatePlacer) return "state-placer"
+  
+  const isStateQualifier = 
+    stateResults.some(result => result.text?.includes("Qualifier") || result.text?.includes("SQ")) ||
+    stateQualifiers2025.some(sq => 
+      sq.full_name.toLowerCase() === prospect.name.toLowerCase() &&
+      sq.graduation_year === prospect.graduationyear
+    )
+  if (isStateQualifier) return "state-qualifier"
+  
+  return "dnq"
 }
