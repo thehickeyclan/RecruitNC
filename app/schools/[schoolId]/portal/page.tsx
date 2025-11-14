@@ -341,7 +341,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   const [pipelineHistory, setPipelineHistory] = useState<any[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
   const [editingRosterEntry, setEditingRosterEntry] = useState<any | null>(null)
-  const [showCreateProspectModal, setShowCreateProspectModal] = useState(false)
+  const [showCreateProspectModal, setShowCreateProspectModal] = useState(false) // Changed from isCreateModalOpen
   const [rosterEditForm, setRosterEditForm] = useState({
     roster_status: "Active",
     roster_notes: "",
@@ -4801,17 +4801,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         isOpen={showCreateProspectModal}
         onClose={() => setShowCreateProspectModal(false)}
         schoolId={params.schoolId}
-        isDarkMode={isDarkMode}
-        onProspectCreated={() => {
-          setShowCreateProspectModal(false)
+        onSuccess={() => {
           fetchProspects() // Refresh the prospects list
-        }}
-      />
-      </div>
-    </div>
-  )
-}
- // Refresh the prospects list
         }}
       />
       </div>
