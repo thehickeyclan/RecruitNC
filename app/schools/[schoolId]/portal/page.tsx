@@ -2244,6 +2244,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
             />
           </div>
 
+          {/* Command Center Views */}
           {commandCenterView === 'dashboard' && (
             <div className="container mx-auto px-4 pb-8">
               <div className="bg-card rounded-xl border border-border p-6">
