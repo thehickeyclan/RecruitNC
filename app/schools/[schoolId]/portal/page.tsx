@@ -2158,57 +2158,57 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   return (
     <div className={isDarkMode ? "dark" : ""}>
       <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <SchoolBrandedHeader
-        schoolId={params.schoolId}
-        schoolName={schoolBranding?.name || ""}
-        subtitle={`${filteredProspects.length} Active Prospects`}
-      />
-
-      <div className="container mx-auto px-4 py-3 flex justify-end">
-        {isThemeMounted && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleThemeToggle}
-            className="flex items-center gap-2 rounded-full bg-white/80 text-slate-700 hover:bg-white dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-900 transition-colors"
-          >
-            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            <span className="hidden sm:inline text-xs font-semibold tracking-wide">
-              {isDarkMode ? "Light Mode" : "Dark Mode"}
-            </span>
-          </Button>
-        )}
-      </div>
-
-      <div className="container mx-auto px-4 pb-4" data-recruiting-dashboard>
-        <RecruitingActionsDashboard
-          ref={dashboardRef}
+        <SchoolBrandedHeader
           schoolId={params.schoolId}
-          athletes={prospects.map((prospect) => ({ id: prospect.id, name: prospect.name }))}
-          prospects={(() => {
-            const prospectsWithBirthdays = prospects.map((prospect) => ({
-              id: prospect.id,
-              name: prospect.name,
-              birthdate: prospect.birthdate,
-              photourl: prospect.photourl,
-              graduationyear: prospect.graduationyear,
-              weightclass: prospect.weightclass,
-              pipeline_stage: prospect.pipeline_stage,
-              star_rating: prospect.star_rating,
-            }))
-            console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
-            console.log(
-              "[v0] Portal - Prospects with birthdates:",
-              prospectsWithBirthdays
-                .filter((prospect) => prospect.birthdate)
-                .map((prospect) => ({ name: prospect.name, birthdate: prospect.birthdate })),
-            )
-            return prospectsWithBirthdays
-          })()}
-          onViewChange={(view) => setActivePortalView(view)}
-          brandColor={schoolBranding?.primary_color || "#0b1728"}
+          schoolName={schoolBranding?.name || ""}
+          subtitle={`${filteredProspects.length} Active Prospects`}
         />
-      </div>
+
+        <div className="container mx-auto px-4 py-3 flex justify-end">
+          {isThemeMounted && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleThemeToggle}
+              className="flex items-center gap-2 rounded-full bg-white/80 text-slate-700 hover:bg-white dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-900 transition-colors"
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <span className="hidden sm:inline text-xs font-semibold tracking-wide">
+                {isDarkMode ? "Light Mode" : "Dark Mode"}
+              </span>
+            </Button>
+          )}
+        </div>
+
+        <div className="container mx-auto px-4 pb-4" data-recruiting-dashboard>
+          <RecruitingActionsDashboard
+            ref={dashboardRef}
+            schoolId={params.schoolId}
+            athletes={prospects.map((prospect) => ({ id: prospect.id, name: prospect.name }))}
+            prospects={(() => {
+              const prospectsWithBirthdays = prospects.map((prospect) => ({
+                id: prospect.id,
+                name: prospect.name,
+                birthdate: prospect.birthdate,
+                photourl: prospect.photourl,
+                graduationyear: prospect.graduationyear,
+                weightclass: prospect.weightclass,
+                pipeline_stage: prospect.pipeline_stage,
+                star_rating: prospect.star_rating,
+              }))
+              console.log("[v0] Portal - Passing prospects to dashboard:", prospectsWithBirthdays.length)
+              console.log(
+                "[v0] Portal - Prospects with birthdates:",
+                prospectsWithBirthdays
+                  .filter((prospect) => prospect.birthdate)
+                  .map((prospect) => ({ name: prospect.name, birthdate: prospect.birthdate })),
+              )
+              return prospectsWithBirthdays
+            })()}
+            onViewChange={(view) => setActivePortalView(view)}
+            brandColor={schoolBranding?.primary_color || "#0b1728"}
+          />
+        </div>
 
       {profile?.is_admin && (
         <div
@@ -4285,15 +4285,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         </DialogContent>
       </Dialog>
 
-      {/* Create New Prospect Modal */}
-      <CreateProspectModal
-        isOpen={showCreateProspectModal}
-        onClose={() => setShowCreateProspectModal(false)}
-        schoolId={params.schoolId}
-        onSuccess={() => {
-          fetchProspects() // Refresh the prospects list
-        }}
-      />
+        {/* Create New Prospect Modal */}
+        <CreateProspectModal
+          isOpen={showCreateProspectModal}
+          onClose={() => setShowCreateProspectModal(false)}
+          schoolId={params.schoolId}
+          onSuccess={() => {
+            fetchProspects() // Refresh the prospects list
+          }}
+        />
       </div>
     </div>
   )
