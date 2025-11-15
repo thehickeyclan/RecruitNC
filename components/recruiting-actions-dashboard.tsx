@@ -36,6 +36,7 @@ import {
   Mail as MailIcon,
   FileText,
   ArrowRight,
+  ArrowUpRight,
   Calendar as CalendarEvent,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
