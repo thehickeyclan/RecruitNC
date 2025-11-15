@@ -16,7 +16,7 @@ export async function getAthletesAction() {
     }
 
     // Map database fields to frontend fields
-    const athletes = await Promise.all(data.map((athlete) => mapDbToAthlete(athlete)))
+    const athletes = await Promise.all(data.map((athlete: any) => mapDbToAthlete(athlete)))
 
     return { success: true, data: athletes }
   } catch (error) {
@@ -287,10 +287,27 @@ async function autoAlignCommittedAthleteToSchool({
     return
   }
 
-  const coachIds = schoolCoaches?.map((coach) => coach.user_id) || []
+  let coachIds =
+    schoolCoaches
+      ?.map((coach: { user_id: string | null }) => coach.user_id)
+      .filter((id: string | null): id is string => !!id) || []
   if (coachIds.length === 0) {
-    console.warn("[auto-commit] No coaches associated with school:", school.name)
-    return
+    console.warn("[auto-commit] No coaches associated with school:", school.name, "- falling back to admin coach.")
+    const { data: fallbackAdmin, error: fallbackError } = await adminSupabase
+      .from("user_profiles")
+      .select("user_id")
+      .or("is_admin.eq.true,role.eq.admin")
+      .limit(1)
+      .single()
+    if (fallbackError) {
+      console.error("[auto-commit] Failed to fetch fallback admin coach:", fallbackError)
+      return
+    }
+    if (!fallbackAdmin?.user_id) {
+      console.warn("[auto-commit] No fallback admin coach available; aborting auto-align.")
+      return
+    }
+    coachIds = [fallbackAdmin.user_id]
   }
 
   const { data: existingStars, error: existingStarsError } = await adminSupabase
@@ -311,7 +328,7 @@ async function autoAlignCommittedAthleteToSchool({
   }
 
   if (existingStars && existingStars.length > 0) {
-    const ids = existingStars.map((star) => star.id)
+    const ids = existingStars.map((star: { id: string }) => star.id)
     await adminSupabase.from("college_coach_stars").update(committedPayload).in("id", ids)
     console.log("[auto-commit] Updated existing star records to Committed for school:", school.name)
     return
@@ -321,6 +338,7 @@ async function autoAlignCommittedAthleteToSchool({
   await adminSupabase.from("college_coach_stars").insert({
     coach_user_id: targetCoachId,
     athlete_id: athleteRecord.id,
+    school_id: school.id,
     pipeline_stage: "Committed",
     interest_level: "high",
     notes: `Auto-added on ${new Date().toLocaleDateString()} – committed to ${collegeName}`,
