@@ -25,12 +25,18 @@ import {
   CheckCircle,
   Activity as ActivityIcon,
   Flame,
-  ArrowUpRight,
-  Target,
   Users as UsersIcon,
   MessageCircle,
   ClipboardList,
   TrendingUp,
+  Search,
+  List,
+  PhoneCall,
+  MessageSquare,
+  Mail as MailIcon,
+  FileText,
+  ArrowRight,
+  Calendar as CalendarEvent,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -168,6 +174,19 @@ export interface RecruitingActionsDashboardRef {
   openCreateActivity: () => void
 }
 
+interface ImmediateAttentionIssue {
+  athleteId: string
+  name: string
+  stage: string
+  starRating: number | null
+  reason: string
+  level: "critical" | "warning"
+  ctaLabel: string
+  ctaType: string
+  ctaOptions?: { followUpDate?: string }
+  priority: number
+}
+
 const ACTIVITY_EMOJI_MAP: Record<string, string> = {
   call: "📞",
   phone_call: "📞",
@@ -234,6 +253,8 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [availableAthletes, setAvailableAthletes] = useState<{ id: string; name: string }[]>([])
   const [tabValue, setTabValue] = useState<"dashboard" | "calendar" | "activity">("dashboard")
   const [showUntouchedOnly, setShowUntouchedOnly] = useState<boolean>(false)
+  const [athleteSearchTerm, setAthleteSearchTerm] = useState("")
+  const [activePriorityFilter, setActivePriorityFilter] = useState<"overdue" | "stale" | "priority" | "active" | null>(null)
   const [stageFilter, setStageFilter] = useState<string>("all")
   const [contactRangeFilter, setContactRangeFilter] = useState<"all" | "0-7" | "7-14" | "14-30" | "30+" | "never">("all")
   const [engagementFilter, setEngagementFilter] = useState<"all" | "high" | "medium" | "low" | "at-risk" | "none">("all")
@@ -241,6 +262,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [showHighPriorityOnly, setShowHighPriorityOnly] = useState(false)
   const [showStaleOnly, setShowStaleOnly] = useState(false)
   const [selectedEngagementIds, setSelectedEngagementIds] = useState<Set<string>>(new Set())
+  const [focusedAthleteId, setFocusedAthleteId] = useState<string | null>(null)
   const engagementTableRef = useRef<HTMLDivElement | null>(null)
   const openExternal = useCallback((href: string, target: "_blank" | "_self" = "_blank") => {
     if (typeof window === "undefined") {
@@ -656,6 +678,24 @@ const activityTrendData = useMemo(() => {
     return map
   }, [actions])
 
+  const pendingVisitsByAthlete = useMemo(() => {
+    const map = new Map<string, RecruitingAction>()
+    const now = new Date()
+    const soon = new Date()
+    soon.setDate(soon.getDate() + 7)
+    actions.forEach((action) => {
+      if (!action.follow_up_date) return
+      const type = action.action_type.toLowerCase()
+      if (!type.includes("visit")) return
+      const followDate = new Date(action.follow_up_date)
+      if (Number.isNaN(followDate.getTime())) return
+      if (followDate >= now && followDate <= soon) {
+        map.set(action.athlete_id, action)
+      }
+    })
+    return map
+  }, [actions])
+
   const engagementRows = useMemo(() => {
     const dayMs = 1000 * 60 * 60 * 24
     const now = new Date()
@@ -765,6 +805,99 @@ const activityTrendData = useMemo(() => {
     }
   }, [cadenceStats, actions])
 
+  const immediateAttentionIssues = useMemo<ImmediateAttentionIssue[]>(() => {
+    const issues: ImmediateAttentionIssue[] = []
+    const addIssue = (issue: ImmediateAttentionIssue) => {
+      issues.push(issue)
+    }
+
+    engagementRows.forEach((row) => {
+      const days = row.daysSince ?? null
+      const rating = row.starRating ?? 0
+      const lastActionLabel = row.lastAction
+        ? `Last: ${formatDate(row.lastAction.action_date)}`
+        : "No previous activity"
+      if (rating >= 4 && days !== null && days >= 30) {
+        addIssue({
+          athleteId: row.id,
+          name: row.name,
+          stage: row.stage,
+          starRating: row.starRating ?? null,
+          reason: `${days}d no contact • ${lastActionLabel}`,
+          level: "critical",
+          ctaLabel: "Contact now",
+          ctaType: "phone_call",
+          priority: 5,
+        })
+      }
+      if (row.followUpStatus === "overdue") {
+        addIssue({
+          athleteId: row.id,
+          name: row.name,
+          stage: row.stage,
+          starRating: row.starRating ?? null,
+          reason: `Follow-up overdue${row.nextFollowUp ? ` • Due ${formatDate(row.nextFollowUp.toISOString())}` : ""}`,
+          level: "critical",
+          ctaLabel: "Log follow-up",
+          ctaType: "phone_call",
+          ctaOptions: row.nextFollowUp
+            ? { followUpDate: row.nextFollowUp.toISOString().split("T")[0] }
+            : undefined,
+          priority: 4,
+        })
+      }
+      if (row.stage === "Offered" && (days ?? Infinity) >= 14) {
+        addIssue({
+          athleteId: row.id,
+          name: row.name,
+          stage: row.stage,
+          starRating: row.starRating ?? null,
+          reason: `${days ?? 0}d since offer — no response`,
+          level: "critical",
+          ctaLabel: "Send reminder",
+          ctaType: "email",
+          priority: 3,
+        })
+      }
+      if (rating >= 4 && days !== null && days >= 14 && days < 30) {
+        addIssue({
+          athleteId: row.id,
+          name: row.name,
+          stage: row.stage,
+          starRating: row.starRating ?? null,
+          reason: `${days}d since last touch • ${lastActionLabel}`,
+          level: "warning",
+          ctaLabel: "Schedule check-in",
+          ctaType: "phone_call",
+          priority: 2,
+        })
+      }
+      const pendingVisit = pendingVisitsByAthlete.get(row.id)
+      if (pendingVisit) {
+        addIssue({
+          athleteId: row.id,
+          name: row.name,
+          stage: row.stage,
+          starRating: row.starRating ?? null,
+          reason: `Visit on ${formatDate(pendingVisit.follow_up_date!)} needs confirmation`,
+          level: "warning",
+          ctaLabel: "Confirm visit",
+          ctaType: "phone_call",
+          ctaOptions: { followUpDate: pendingVisit.follow_up_date?.split("T")[0] },
+          priority: 1,
+        })
+      }
+    })
+
+    const sorted = issues.sort((a, b) => {
+      if (a.level === b.level) {
+        return b.priority - a.priority
+      }
+      return a.level === "critical" ? -1 : 1
+    })
+    return sorted.slice(0, 5)
+  }, [engagementRows, pendingVisitsByAthlete])
+
   const activityVolumeSummary = useMemo(() => {
     const days = 10
     const today = new Date()
@@ -837,7 +970,22 @@ const activityTrendData = useMemo(() => {
   }, [cadenceStats.details, touchesByAthlete])
 
   const filteredEngagementRows = useMemo(() => {
+    const search = athleteSearchTerm.trim().toLowerCase()
     return engagementRows.filter((row) => {
+      if (search) {
+        const haystack = [
+          row.name,
+          row.stage,
+          row.lastAction?.description,
+          row.lastAction?.action_type,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+        if (!haystack.includes(search)) {
+          return false
+        }
+      }
       if (stageFilter !== "all" && row.stage !== stageFilter) return false
       if (contactRangeFilter !== "all" && row.contactRange !== contactRangeFilter) return false
       if (engagementFilter !== "all" && row.engagementLevel !== engagementFilter) return false
@@ -849,6 +997,7 @@ const activityTrendData = useMemo(() => {
     })
   }, [
     engagementRows,
+    athleteSearchTerm,
     stageFilter,
     contactRangeFilter,
     engagementFilter,
@@ -865,6 +1014,22 @@ const activityTrendData = useMemo(() => {
       return daysB - daysA
     })
   }, [filteredEngagementRows])
+
+  const focusedAthlete = useMemo(() => {
+    if (!focusedAthleteId) return null
+    return engagementRows.find((row) => row.id === focusedAthleteId) ?? null
+  }, [focusedAthleteId, engagementRows])
+
+  const focusedAthleteActions = useMemo(() => {
+    if (!focusedAthleteId) return []
+    return [...actions]
+      .filter((action) => action.athlete_id === focusedAthleteId)
+      .sort((a, b) => {
+        const dateA = new Date(a.action_date)
+        const dateB = new Date(b.action_date)
+        return dateB.getTime() - dateA.getTime()
+      })
+  }, [actions, focusedAthleteId])
 
   const recentActivityTimeline = useMemo(() => {
     return [...actions]
@@ -930,42 +1095,6 @@ const activityTrendData = useMemo(() => {
     return [...lostProspects, ...sample.slice(0, Math.max(0, 3 - lostProspects.length))]
   }, [prospects])
 
-  const committedRecruits = useMemo(() => {
-    const committed =
-      prospects
-        ?.filter((prospect) => {
-          const stage = normalizeStage(prospect.pipeline_stage)
-          return stage === "Committed" || stage === "Signed"
-        })
-        .map((prospect) => ({
-          id: prospect.id,
-          year: prospect.graduationyear ?? "—",
-          name: prospect.name,
-          weight: prospect.weightclass || "—",
-          highSchool: prospect.wrestlingClub || "—",
-          college: prospect.college || "Pending",
-          division: prospect.division || "—",
-          status: normalizeStage(prospect.pipeline_stage),
-        })) || []
-
-    if (committed.length > 0) {
-      return committed.slice(0, 5)
-    }
-
-    return [
-      {
-        id: "placeholder-1",
-        year: "2025",
-        name: "Sample Commit",
-        weight: "157",
-        highSchool: "NC United",
-        college: "Example U",
-        division: "Division I",
-        status: "Committed",
-      },
-    ]
-  }, [prospects])
-
   const weeklyCallSummary = useMemo(() => {
     const now = new Date()
     const startCurrent = new Date(now)
@@ -1002,10 +1131,21 @@ const activityTrendData = useMemo(() => {
     setShowHighPriorityOnly(false)
     setShowStaleOnly(false)
     setShowUntouchedOnly(false)
+    setAthleteSearchTerm("")
   }
 
   const handlePriorityCardClick = (type: "overdue" | "stale" | "priority" | "active") => {
-    debugLog("Priority card clicked", { type })
+    // If clicking the same filter, clear it
+    if (activePriorityFilter === type) {
+      setActivePriorityFilter(null)
+      resetEngagementFilters()
+      requestAnimationFrame(() => {
+        engagementTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      })
+      return
+    }
+
+    setActivePriorityFilter(type)
     resetEngagementFilters()
     switch (type) {
       case "overdue":
@@ -1077,12 +1217,46 @@ const activityTrendData = useMemo(() => {
     openScheduleForAthlete(firstId)
   }
 
+  const handleBulkMoveStage = (stage: string) => {
+    if (selectedEngagementIds.size === 0) return
+    console.log("[bulk-stage] Moving athletes to stage:", stage, Array.from(selectedEngagementIds))
+  }
+
+  const handleBulkScheduleFollowUps = () => handleBulkAction("followup")
+  const handleBulkLogActivity = () => handleBulkAction("log")
+  const handleBulkSendMessage = () => handleBulkAction("message")
+  const handleBulkExport = () => handleBulkAction("export")
+  const handleBulkDeselect = () => setSelectedEngagementIds(new Set())
+
   const getDaysBadgeTone = (days: number | null) => {
-    if (days === null) return { label: "No touch", className: "bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-white" }
-    if (days <= 7) return { label: `${days}d`, className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300" }
-    if (days <= 14) return { label: `${days}d`, className: "bg-amber-500/10 text-amber-600 dark:text-amber-300" }
-    if (days <= 30) return { label: `${days}d`, className: "bg-orange-500/10 text-orange-600 dark:text-orange-300" }
-    return { label: `${days}d`, className: "bg-red-500/10 text-red-600 dark:text-red-300" }
+    if (days === null) {
+      return {
+        label: "No touch",
+        className: "bg-muted text-muted-foreground border-transparent",
+      }
+    }
+    if (days <= 7) {
+      return {
+        label: `${days}d`,
+        className: "bg-emerald-500 text-white border-transparent",
+      }
+    }
+    if (days <= 14) {
+      return {
+        label: `${days}d`,
+        className: "bg-amber-500 text-white border-transparent",
+      }
+    }
+    if (days <= 30) {
+      return {
+        label: `${days}d`,
+        className: "bg-orange-500 text-white border-transparent",
+      }
+    }
+    return {
+      label: `${days}d`,
+      className: "bg-red-500 text-white border-transparent",
+    }
   }
 
   const getEngagementBadgeClasses = (level: "high" | "medium" | "low" | "at-risk" | "none") => {
@@ -1283,6 +1457,31 @@ const activityTrendData = useMemo(() => {
 
   const formatActionType = (type: string) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  }
+
+  const getRecentActivityIcon = (type: string) => {
+    const normalized = normalizeActionType(type).toLowerCase()
+    switch (normalized) {
+      case "call":
+        return { icon: PhoneCall, className: "text-emerald-500" }
+      case "text":
+      case "text message":
+        return { icon: MessageSquare, className: "text-blue-500" }
+      case "email":
+      case "letter":
+        return { icon: MailIcon, className: "text-indigo-500" }
+      case "note":
+        return { icon: FileText, className: "text-amber-500" }
+      case "stage change":
+        return { icon: ArrowRight, className: "text-fuchsia-500" }
+      case "visit":
+      case "campus visit":
+      case "tournament visit":
+      case "home visit":
+        return { icon: CalendarEvent, className: "text-purple-500" }
+      default:
+        return { icon: ActivityIcon, className: "text-muted-foreground" }
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -1589,6 +1788,10 @@ const activityTrendData = useMemo(() => {
         </CardContent>
       </Card>
     )
+  }
+
+  const handleImmediateIssueAction = (issue: ImmediateAttentionIssue) => {
+    openScheduleForAthlete(issue.athleteId, issue.ctaType, issue.ctaOptions)
   }
 
   if (isLoading) {
@@ -1984,56 +2187,6 @@ const activityTrendData = useMemo(() => {
         {/* Activity Tab - Engagement intelligence */}
         <TabsContent value="activity">
           <div className="space-y-8">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  key: "overdue",
-                  label: "Overdue",
-                  sublabel: "Follow-ups past due",
-                  value: engagementSummary.overdue,
-                  accent: "border-red-500/40 bg-red-500/5",
-                  icon: AlertTriangle,
-                },
-                {
-                  key: "stale",
-                  label: "Stale",
-                  sublabel: "14+ days no touch",
-                  value: engagementSummary.stale,
-                  accent: "border-amber-500/40 bg-amber-500/5",
-                  icon: Clock,
-                },
-                {
-                  key: "priority",
-                  label: "High Priority",
-                  sublabel: "4-5★ no touch",
-                  value: engagementSummary.highPriorityUntouched,
-                  accent: "border-yellow-500/40 bg-yellow-500/5",
-                  icon: Star,
-                },
-                {
-                  key: "active",
-                  label: "Active This Week",
-                  sublabel: "Touches logged",
-                  value: engagementSummary.activeThisWeek,
-                  accent: "border-emerald-500/40 bg-emerald-500/5",
-                  icon: CheckCircle,
-                },
-              ].map((card) => (
-                <button
-                  key={card.key}
-                  onClick={() => handlePriorityCardClick(card.key as "overdue" | "stale" | "priority" | "active")}
-                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${card.accent} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary`}
-                >
-                  <div className="flex items-center justify-between text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                    {card.label}
-                    <card.icon className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="mt-2 text-3xl font-bold text-foreground">{card.value}</div>
-                  <p className="text-xs text-muted-foreground mt-1">{card.sublabel}</p>
-                </button>
-              ))}
-            </div>
-
             <Card className="border border-border/70 bg-gradient-to-br from-background to-card">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
@@ -2175,30 +2328,51 @@ const activityTrendData = useMemo(() => {
             <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
               <div className="space-y-6">
                 {renderTodayPlan()}
-                <Card className="border border-border/70">
+                <Card className="border border-amber-500/40 bg-amber-500/5">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Target className="h-4 w-4 text-primary" />
-                      Recently committed elsewhere
+                    <CardTitle className="text-base flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                      ⚠️ Athletes needing immediate attention
                     </CardTitle>
-                    <CardDescription>NC recruits lost from your pipeline.</CardDescription>
+                    <CardDescription>High-priority targets requiring urgent action.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {lostRecruitEntries.map((entry) => (
-                      <div key={entry.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{entry.name}</p>
-                            <p className="text-xs text-muted-foreground">{entry.school}</p>
+                    {immediateAttentionIssues.length === 0 ? (
+                      <div className="text-sm text-muted-foreground">All critical athletes are up to date.</div>
+                    ) : (
+                      immediateAttentionIssues.map((issue) => (
+                        <div
+                          key={issue.athleteId + issue.reason}
+                          className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-start justify-between gap-3"
+                        >
+                          <div className="flex gap-3">
+                            <span className="text-xl">{issue.level === "critical" ? "🔴" : "🟡"}</span>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                {issue.name}
+                                {issue.starRating ? ` (${issue.starRating}★, ${issue.stage})` : ` (${issue.stage})`}
+                              </p>
+                              <p className="text-xs text-muted-foreground">{issue.reason}</p>
+                            </div>
                           </div>
-                          <span className="text-xs text-muted-foreground">{entry.committedAgo}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="whitespace-nowrap"
+                            onClick={() => handleImmediateIssueAction(issue)}
+                          >
+                            {issue.ctaLabel} →
+                          </Button>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-1">(Was in {entry.previousStage})</p>
-                      </div>
-                    ))}
-                    <Button variant="ghost" className="w-full text-sm text-primary">
-                      View all lost recruits
-                      <ArrowUpRight className="h-4 w-4 ml-1" />
+                      ))
+                    )}
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-primary text-sm"
+                      onClick={() =>
+                        engagementTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                      }
+                    >
+                      View all issues →
                     </Button>
                   </CardContent>
                 </Card>
@@ -2214,14 +2388,16 @@ const activityTrendData = useMemo(() => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {recentActivityTimeline.slice(0, 7).map((activity) => {
-                    const normalized = normalizeActionType(activity.action_type)
-                    const emoji = ACTIVITY_EMOJI_MAP[normalized] ?? "📝"
+                    const { icon: IconComponent, className } = getRecentActivityIcon(activity.action_type)
                     return (
                       <div key={activity.id} className="flex gap-3 border-b border-border/40 pb-3 last:border-0 last:pb-0">
-                        <div className="text-xl">{emoji}</div>
+                        <div className={`mt-0.5 rounded-full bg-muted p-2 ${className}`}>
+                          <IconComponent className="h-4 w-4 text-white" />
+                        </div>
                         <div className="flex-1">
-                          <p className="text-sm font-semibold text-foreground">
-                            {activity.athlete_name} <span className="text-muted-foreground">({formatActionType(activity.action_type)})</span>
+                          <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            {activity.athlete_name}{" "}
+                            <span className="text-muted-foreground">({formatActionType(activity.action_type)})</span>
                           </p>
                           {activity.description && (
                             <p className="text-xs text-muted-foreground line-clamp-2">{activity.description}</p>
@@ -2238,6 +2414,83 @@ const activityTrendData = useMemo(() => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">🎯 Quick filters</p>
+              <p className="text-xs text-muted-foreground">
+                {activePriorityFilter
+                  ? `Showing ${filteredEngagementRows.length} athletes matching this filter`
+                  : "Click to focus the engagement table below"}
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  key: "overdue",
+                  label: "Overdue",
+                  sublabel: "Follow-ups past due",
+                  value: engagementSummary.overdue,
+                  accent: "border-red-500/40 bg-red-500/5",
+                  icon: AlertTriangle,
+                },
+                {
+                  key: "stale",
+                  label: "Stale",
+                  sublabel: "14+ days no touch",
+                  value: engagementSummary.stale,
+                  accent: "border-amber-500/40 bg-amber-500/5",
+                  icon: Clock,
+                },
+                {
+                  key: "priority",
+                  label: "High Priority",
+                  sublabel: "4-5★ no touch",
+                  value: engagementSummary.highPriorityUntouched,
+                  accent: "border-yellow-500/40 bg-yellow-500/5",
+                  icon: Star,
+                },
+                {
+                  key: "active",
+                  label: "Active This Week",
+                  sublabel: "Touches logged",
+                  value: engagementSummary.activeThisWeek,
+                  accent: "border-emerald-500/40 bg-emerald-500/5",
+                  icon: CheckCircle,
+                },
+              ].map((card) => (
+                <button
+                  key={card.key}
+                  onClick={() => handlePriorityCardClick(card.key as "overdue" | "stale" | "priority" | "active")}
+                  className={`rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                    activePriorityFilter === card.key
+                      ? `${card.accent} border-primary shadow-lg`
+                      : `${card.accent}`
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    {card.label}
+                    <card.icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="mt-2 text-3xl font-bold text-foreground">{card.value}</div>
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                    {card.sublabel}
+                    {activePriorityFilter === card.key && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
+                        ✓ Active
+                      </span>
+                    )}
+                  </p>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-muted-foreground pt-2">
+              <div className="flex-1 border-t border-border/60" />
+              <span className="flex items-center gap-2 whitespace-nowrap">
+                📋 Engagement table
+              </span>
+              <div className="flex-1 border-t border-border/60" />
             </div>
 
             <div ref={engagementTableRef} className="space-y-4">
@@ -2296,6 +2549,22 @@ const activityTrendData = useMemo(() => {
                   </Select>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center">
+                  <div className="relative flex-1 min-w-[220px] sm:max-w-xs">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={athleteSearchTerm}
+                      onChange={(event) => setAthleteSearchTerm(event.target.value)}
+                      placeholder="Search athletes..."
+                      className="pl-9"
+                    />
+                  </div>
+                  {athleteSearchTerm && (
+                    <Button variant="ghost" size="sm" onClick={() => setAthleteSearchTerm("")}>
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
                   <Button
                     variant={showHighPriorityOnly ? "default" : "outline"}
                     size="sm"
@@ -2333,21 +2602,38 @@ const activityTrendData = useMemo(() => {
               </div>
 
               {bulkSelectionCount > 0 && (
-                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-card/80 px-4 py-3">
-                  <span className="text-sm font-semibold">{bulkSelectionCount} athletes selected</span>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("log")}>
-                      Log activity
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("followup")}>
-                      Schedule follow-up
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("message")}>
-                      Send message
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleBulkAction("export")}>
-                      Export report
-                    </Button>
+                <div className="sticky top-20 z-30 rounded-xl border border-border/80 bg-background/95 px-4 py-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/80">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-sm font-semibold">{bulkSelectionCount} selected</span>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={handleBulkLogActivity} disabled={bulkSelectionCount === 0}>
+                        Log activity
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleBulkScheduleFollowUps} disabled={bulkSelectionCount === 0}>
+                        Schedule follow-ups
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleBulkSendMessage} disabled={bulkSelectionCount === 0}>
+                        Send message
+                      </Button>
+                      <Select onValueChange={handleBulkMoveStage} disabled={bulkSelectionCount === 0}>
+                        <SelectTrigger className="h-9 w-[150px] text-sm" disabled={bulkSelectionCount === 0}>
+                          <SelectValue placeholder="Move to stage" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STAGE_ORDER.map((stage) => (
+                            <SelectItem key={stage.id} value={stage.label}>
+                              {stage.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="outline" onClick={handleBulkExport} disabled={bulkSelectionCount === 0}>
+                        Export
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={handleBulkDeselect}>
+                        Deselect all ✕
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2413,7 +2699,7 @@ const activityTrendData = useMemo(() => {
                               )}
                             </td>
                             <td className="px-4 py-4">
-                              <Badge variant="outline" className={`text-[11px] ${daysBadge.className}`}>
+                              <Badge className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${daysBadge.className}`}>
                                 {daysBadge.label}
                               </Badge>
                             </td>
@@ -2445,6 +2731,15 @@ const activityTrendData = useMemo(() => {
                             </td>
                             <td className="px-4 py-4 text-right">
                               <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => setFocusedAthleteId(row.id)}
+                                  aria-label={`View ${row.name} activity`}
+                                >
+                                  <List className="h-4 w-4" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -2504,61 +2799,6 @@ const activityTrendData = useMemo(() => {
                     )}
                   </div>
                 ))}
-              </CardContent>
-            </Card>
-
-            <Card className="border border-border/70">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <UsersIcon className="h-4 w-4 text-primary" />
-                    Your committed recruits
-                  </CardTitle>
-                  <Button variant="ghost" size="sm">
-                    View all
-                    <ArrowUpRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-                <CardDescription>Recent commits and signees at your program.</CardDescription>
-              </CardHeader>
-              <CardContent className="overflow-x-auto">
-                <table className="min-w-[800px] w-full text-sm">
-                  <thead className="bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="px-4 py-2 text-left">Year</th>
-                      <th className="px-4 py-2 text-left">Name</th>
-                      <th className="px-4 py-2 text-left">Weight</th>
-                      <th className="px-4 py-2 text-left">Club / HS</th>
-                      <th className="px-4 py-2 text-left">College</th>
-                      <th className="px-4 py-2 text-left">Division</th>
-                      <th className="px-4 py-2 text-left">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {committedRecruits.map((commit) => (
-                      <tr key={commit.id} className="border-t border-border/40">
-                        <td className="px-4 py-3">{commit.year}</td>
-                        <td className="px-4 py-3 font-semibold text-foreground">{commit.name}</td>
-                        <td className="px-4 py-3">{commit.weight}</td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">{commit.highSchool}</td>
-                        <td className="px-4 py-3">{commit.college}</td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">{commit.division}</td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            variant="outline"
-                            className={
-                              commit.status === "Signed"
-                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/40"
-                                : "bg-blue-500/10 text-blue-500 border-blue-500/40"
-                            }
-                          >
-                            {commit.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </CardContent>
             </Card>
 
@@ -2787,6 +3027,72 @@ const activityTrendData = useMemo(() => {
               <Button onClick={handleSaveEdit}>Save Changes</Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!focusedAthleteId} onOpenChange={(open) => !open && setFocusedAthleteId(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              {focusedAthlete?.name || "Athlete activity"}
+            </DialogTitle>
+            {focusedAthlete && (
+              <p className="text-sm text-muted-foreground">
+                {focusedAthlete.stage} • {focusedAthlete.totalTouches} lifetime touches •{" "}
+                {focusedAthlete.daysSince === null ? "No touch logged" : `${focusedAthlete.daysSince} days since last touch`}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            {focusedAthleteActions.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                No activity has been logged for this athlete yet.
+              </div>
+            ) : (
+              focusedAthleteActions.map((activity) => (
+                <Card key={activity.id} className="border border-border/70">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{formatActionType(activity.action_type)}</Badge>
+                        <span className="text-muted-foreground">{activity.coach_name}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{formatDate(activity.action_date)}</span>
+                    </div>
+                    {activity.description && (
+                      <p className="text-sm text-foreground">{activity.description}</p>
+                    )}
+                    {activity.outcome && (
+                      <p className="text-xs text-muted-foreground">
+                        Outcome: {activity.outcome}
+                      </p>
+                    )}
+                    {activity.follow_up_date && (
+                      <p className="text-xs text-muted-foreground">
+                        Follow-up: {formatDate(activity.follow_up_date)}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+          {focusedAthleteId && (
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
+              <p className="text-sm text-muted-foreground">
+                Logged {focusedAthleteActions.length} touch{focusedAthleteActions.length === 1 ? "" : "es"} for{" "}
+                {focusedAthlete?.name ?? "this athlete"}.
+              </p>
+              <Button
+                onClick={() => {
+                  openScheduleForAthlete(focusedAthleteId)
+                  setFocusedAthleteId(null)
+                }}
+              >
+                Log new activity
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
