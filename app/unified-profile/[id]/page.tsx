@@ -6,12 +6,12 @@ import { AthleteDetail } from "@/components/athlete-detail"
 import { MatchDataSection } from "@/components/match-data-section-improved"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 
-const PUBLIC_PROFILE_IDS = new Set(
-  (process.env.PUBLIC_PROFILE_IDS || "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean),
-)
+const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean)
+
+const PUBLIC_PROFILE_IDS = new Set(rawPublicIds)
 
 interface UnifiedProfilePageProps {
   params: {
@@ -54,6 +54,10 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
 
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
   const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
+  console.log("[unified-profile] requested", params.id, {
+    rawPublicIds,
+    isPublicProfile,
+  })
   const supabase = isPublicProfile ? createAdminClient() : await createClient()
 
   let currentUserId: string | null = null
