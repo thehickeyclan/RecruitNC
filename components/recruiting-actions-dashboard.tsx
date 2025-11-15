@@ -1484,7 +1484,7 @@ const activityTrendData = useMemo(() => {
     }
   }
 
-  const formatDate = (dateString: string) => {
+  function formatDate(dateString: string) {
     // Parse date string as local date to avoid timezone issues
     const dateStr = dateString.includes('T') 
       ? dateString.split('T')[0] 
