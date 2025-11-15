@@ -1,8 +1,17 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { MatchDataSection } from "@/components/match-data-section-improved"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+
+const PUBLIC_PROFILE_IDS = new Set(
+  (process.env.PUBLIC_PROFILE_IDS || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
+)
 
 interface UnifiedProfilePageProps {
   params: {
@@ -10,9 +19,7 @@ interface UnifiedProfilePageProps {
   }
 }
 
-async function getAthlete(id: string) {
-  const supabase = await createClient()
-
+async function getAthlete(id: string, supabase: SupabaseClient) {
   const { data: athlete, error } = await supabase
     .from("athletes")
     .select(`
@@ -29,9 +36,7 @@ async function getAthlete(id: string) {
   return athlete
 }
 
-async function getNCHSAAResults(athleteName: string, graduationYear: number) {
-  const supabase = await createClient()
-
+async function getNCHSAAResults(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
   if (!graduationYear || isNaN(graduationYear)) {
     return []
   }
@@ -48,26 +53,31 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number) {
 }
 
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
-  const supabase = await createClient()
+  const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
+  const supabase = isPublicProfile ? createAdminClient() : await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let currentUserId: string | null = null
+  if (!isPublicProfile) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    currentUserId = user?.id ?? null
+  }
 
-  const athlete = await getAthlete(params.id)
+  const athlete = await getAthlete(params.id, supabase)
 
   if (!athlete) {
     notFound()
   }
 
-  const nchsaaResults = await getNCHSAAResults(athlete.name, athlete.graduationyear)
+  const nchsaaResults = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <AthleteDetail 
         athlete={athlete} 
         nchsaaResults={nchsaaResults} 
-        currentUserId={user?.id || null}
+        currentUserId={currentUserId}
         tournamentResultsComponent={
           <div className="container mx-auto px-4 py-8">
             <TournamentResultsDisplay
