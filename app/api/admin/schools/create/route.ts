@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { put } from "@vercel/blob"
-import { getAverageColor } from "fast-average-color-node"
+// Note: brand color inference is disabled here to avoid build-time dependency on image analyzers.
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -29,26 +29,9 @@ export async function POST(request: Request) {
       finalLogoUrl = blob.url
     }
 
-    // Infer brand colors from logo when not provided
-    let inferredPrimary: string | null = null
-    let inferredSecondary: string | null = null
-    try {
-      if (finalLogoUrl && (!primaryColor || !secondaryColor)) {
-        const avg = await getAverageColor(finalLogoUrl)
-        if (avg?.hex) {
-          inferredPrimary = avg.hex
-          // pick contrasting secondary black/white using luminance
-          const hex = avg.hex.replace("#", "")
-          const r = parseInt(hex.slice(0, 2), 16)
-          const g = parseInt(hex.slice(2, 4), 16)
-          const b = parseInt(hex.slice(4, 6), 16)
-          const yiq = (r * 299 + g * 587 + b * 114) / 1000
-          inferredSecondary = yiq >= 150 ? "#111111" : "#FFFFFF"
-        }
-      }
-    } catch (e) {
-      console.warn("Could not infer brand colors from logo:", e)
-    }
+    // Inference disabled: fallback to provided values or null.
+    const inferredPrimary: string | null = null
+    const inferredSecondary: string | null = null
 
     // Insert school into database
     const { data, error } = await supabase
@@ -56,7 +39,7 @@ export async function POST(request: Request) {
       .insert({
         name,
         logo_url: finalLogoUrl || null,
-        // prefer explicit form colors, otherwise inferred, else null
+        // prefer explicit form colors, otherwise inferred (currently null), else null
         primary_color: (primaryColor && primaryColor.length > 0 ? primaryColor : inferredPrimary) ?? null,
         secondary_color: (secondaryColor && secondaryColor.length > 0 ? secondaryColor : inferredSecondary) ?? null,
         is_test: false,
