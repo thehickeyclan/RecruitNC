@@ -512,19 +512,31 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsC
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
-                        {athlete.nchsaa_results.map((result, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                            <div>
-                              <p className="font-semibold">
-                                {result.year} - {result.classification}
-                              </p>
-                              <p className="text-sm text-muted-foreground">{result.weight_class} lbs</p>
+                        {athlete.nchsaa_results.map((result, idx) => {
+                          const placementDisplay = result.place === null || result.place === undefined 
+                            ? "SQ" 
+                            : result.place === 1 
+                              ? "Champion"
+                              : result.place === 2
+                                ? "2nd"
+                                : result.place === 3
+                                  ? "3rd"
+                                  : `${result.place}th`
+                          
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                              <div>
+                                <p className="font-semibold">
+                                  {result.year} - {result.classification}
+                                </p>
+                                <p className="text-sm text-muted-foreground">{result.weight_class} lbs</p>
+                              </div>
+                              <Badge variant="secondary" className="text-lg font-bold">
+                                {placementDisplay}
+                              </Badge>
                             </div>
-                            <Badge variant="secondary" className="text-lg font-bold">
-                              {result.place}
-                            </Badge>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </CardContent>
                   </Card>

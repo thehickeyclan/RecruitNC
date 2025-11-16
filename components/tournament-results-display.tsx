@@ -16,7 +16,7 @@ interface TournamentResult {
 
 interface NCHSAAResult {
   year: number
-  place: number
+  place: number | null | undefined
   classification: string
   weight_class: string
 }
@@ -138,13 +138,18 @@ export function TournamentResultsDisplay({
                 </TableHeader>
                 <TableBody>
                   {nchsaaResults.map((result, index) => {
-                    const placementText = result.place === 1 
-                      ? "Champion" 
-                      : result.place === 2 
-                        ? "2nd Place"
-                        : result.place === 3
-                          ? "3rd Place"
-                          : `${result.place}th Place`
+                    let placementText: string
+                    if (result.place === null || result.place === undefined) {
+                      placementText = "SQ"
+                    } else if (result.place === 1) {
+                      placementText = "Champion"
+                    } else if (result.place === 2) {
+                      placementText = "2nd Place"
+                    } else if (result.place === 3) {
+                      placementText = "3rd Place"
+                    } else {
+                      placementText = `${result.place}th Place`
+                    }
                     
                     return (
                       <TableRow key={index} className="hover:bg-gray-50 transition-colors">
