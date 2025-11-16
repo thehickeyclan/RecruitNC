@@ -16,38 +16,22 @@ export default function RequestEditPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">1. Sign in to your account</h3>
+            <h3 className="text-lg font-medium">1. Navigate to an athlete's profile</h3>
             <p className="text-gray-600">
-              You must be signed in to request edits to athlete profiles. If you don't have an account yet, please
-              create one.
-            </p>
-            <div className="flex gap-4 pt-2">
-              <Link href="/auth/signin">
-                <Button variant="outline">Sign In</Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button variant="outline">Create Account</Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-lg font-medium">2. Navigate to the athlete's profile</h3>
-            <p className="text-gray-600">
-              Find the athlete profile you want to update by browsing or using the search function.
+              Find the athlete profile you want to update by browsing our <Link href="/prospects/all" className="text-blue-600 hover:underline">prospects directory</Link> or using the search function.
             </p>
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">3. Click the "Request Edit" button</h3>
+            <h3 className="text-lg font-medium">2. Click the "Request Edit" button</h3>
             <p className="text-gray-600">
               On the athlete's profile page, you'll find a "Request Edit" button. Click this to open the edit request
-              form.
+              form. You don't need to be signed in to request edits.
             </p>
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">4. Submit your requested changes</h3>
+            <h3 className="text-lg font-medium">3. Submit your requested changes</h3>
             <p className="text-gray-600">
               Fill out the form with the information that needs to be updated. Be as specific as possible and provide
               any supporting evidence or links if available.
@@ -55,7 +39,7 @@ export default function RequestEditPage() {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-medium">5. Wait for review</h3>
+            <h3 className="text-lg font-medium">4. Wait for review</h3>
             <p className="text-gray-600">
               Our team will review your request and make the appropriate changes if approved. You'll receive a
               notification when your request has been processed.
