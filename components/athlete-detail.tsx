@@ -982,6 +982,29 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {/* Match Data Section */}
       <MatchDataSectionImproved athleteId={athlete.id} athleteName={athleteName} graduationYear={graduationYear} />
 
+      {/* Request Edit Button - Always visible at bottom */}
+      <div className="container mx-auto px-4 py-8">
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Help Keep This Profile Accurate</h3>
+                <p className="text-sm text-gray-600">
+                  Found an error or have updated information? Request an edit to this profile.
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowEditModal(true)}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
+                size="lg"
+              >
+                Request Profile Edit
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Request Profile Edit Modal */}
       <RequestProfileEditModal
         open={showEditModal}

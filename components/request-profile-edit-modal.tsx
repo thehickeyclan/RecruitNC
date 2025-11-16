@@ -49,6 +49,10 @@ export function RequestProfileEditModal({
   // Other
   const [other, setOther] = useState("")
 
+  // Contact info for validation (required if not logged in)
+  const [reporterName, setReporterName] = useState("")
+  const [reporterEmail, setReporterEmail] = useState(currentUserEmail || "")
+
   const handleSubmit = async () => {
     try {
       console.log("[v0] Edit request form submitted")
@@ -80,6 +84,28 @@ export function RequestProfileEditModal({
         return
       }
 
+      // Validate contact info if not logged in
+      if (!currentUserEmail) {
+        if (!reporterName || !reporterName.trim()) {
+          toast({
+            title: "Name Required",
+            description: "Please provide your name so we can track this request.",
+            variant: "destructive",
+          })
+          setSubmitting(false)
+          return
+        }
+        if (!reporterEmail || !reporterEmail.trim() || !reporterEmail.includes("@")) {
+          toast({
+            title: "Valid Email Required",
+            description: "Please provide a valid email address so we can contact you about this request.",
+            variant: "destructive",
+          })
+          setSubmitting(false)
+          return
+        }
+      }
+
       const requestData = {
         athleteId: athleteId, // ✓ Correct field name
         editType: "profile_update", // ✓ Correct field name
@@ -101,7 +127,8 @@ export function RequestProfileEditModal({
           },
           other: other || null,
         },
-        reporterEmail: currentUserEmail || null,
+        reporterName: reporterName || null,
+        reporterEmail: currentUserEmail || reporterEmail || null,
       }
 
       console.log("[v0] Submitting edit request:", requestData)
@@ -137,6 +164,8 @@ export function RequestProfileEditModal({
       setSat("")
       setAct("")
       setOther("")
+      setReporterName("")
+      setReporterEmail(currentUserEmail || "")
 
       onOpenChange(false)
     } catch (error) {
@@ -171,6 +200,53 @@ export function RequestProfileEditModal({
             </p>
           </div>
         </div>
+
+        {/* Contact Information - Required if not logged in */}
+        {!currentUserEmail && (
+          <div className="space-y-4 border-b pb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Your Contact Information</h3>
+              <p className="text-xs text-gray-600 mb-3">
+                We need your name and email to track this request and contact you if we have questions.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="reporterName">
+                  Your Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="reporterName"
+                  placeholder="John Doe"
+                  value={reporterName}
+                  onChange={(e) => setReporterName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="reporterEmail">
+                  Your Email <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="reporterEmail"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={reporterEmail}
+                  onChange={(e) => setReporterEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentUserEmail && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-green-900">
+              <span className="font-medium">Logged in as:</span> {currentUserEmail}
+            </p>
+          </div>
+        )}
 
         <Tabs defaultValue="bio" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
