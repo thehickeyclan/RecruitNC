@@ -2188,6 +2188,60 @@ const activityTrendData = useMemo(() => {
         {/* Activity Tab - Engagement intelligence */}
         <TabsContent value="activity">
           <div className="space-y-8">
+            {/* Top action row: Today's priorities + Immediate attention */}
+            <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
+              <div className="space-y-6">{renderTodayPlan()}</div>
+
+              <Card className="border border-amber-500/40 bg-amber-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                    ⚠️ Athletes needing immediate attention
+                  </CardTitle>
+                  <CardDescription>High-priority targets requiring urgent action.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {immediateAttentionIssues.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">All critical athletes are up to date.</div>
+                  ) : (
+                    immediateAttentionIssues.map((issue) => (
+                      <div
+                        key={issue.athleteId + issue.reason}
+                        className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-start justify-between gap-3"
+                      >
+                        <div className="flex gap-3">
+                          <span className="text-xl">{issue.level === "critical" ? "🔴" : "🟡"}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {issue.name}
+                              {issue.starRating ? ` (${issue.starRating}★, ${issue.stage})` : ` (${issue.stage})`}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{issue.reason}</p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="whitespace-nowrap"
+                          onClick={() => handleImmediateIssueAction(issue)}
+                        >
+                          {issue.ctaLabel} →
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-primary text-sm"
+                    onClick={() =>
+                      engagementTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }
+                  >
+                    View all issues →
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card className="border border-border/70 bg-gradient-to-br from-background to-card">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
@@ -2327,58 +2381,6 @@ const activityTrendData = useMemo(() => {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
-              <div className="space-y-6">
-                {renderTodayPlan()}
-                <Card className="border border-amber-500/40 bg-amber-500/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2 text-amber-900 dark:text-amber-200">
-                      ⚠️ Athletes needing immediate attention
-                    </CardTitle>
-                    <CardDescription>High-priority targets requiring urgent action.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {immediateAttentionIssues.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">All critical athletes are up to date.</div>
-                    ) : (
-                      immediateAttentionIssues.map((issue) => (
-                        <div
-                          key={issue.athleteId + issue.reason}
-                          className="rounded-lg border border-border/60 bg-card/80 p-3 flex items-start justify-between gap-3"
-                        >
-                          <div className="flex gap-3">
-                            <span className="text-xl">{issue.level === "critical" ? "🔴" : "🟡"}</span>
-                            <div>
-                              <p className="text-sm font-semibold text-foreground">
-                                {issue.name}
-                                {issue.starRating ? ` (${issue.starRating}★, ${issue.stage})` : ` (${issue.stage})`}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{issue.reason}</p>
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="whitespace-nowrap"
-                            onClick={() => handleImmediateIssueAction(issue)}
-                          >
-                            {issue.ctaLabel} →
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-primary text-sm"
-                      onClick={() =>
-                        engagementTableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                      }
-                    >
-                      View all issues →
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-
               <Card className="border border-border/70">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2">
