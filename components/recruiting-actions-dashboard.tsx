@@ -2196,7 +2196,7 @@ const activityTrendData = useMemo(() => {
 
         {/* Activity Tab - Engagement intelligence */}
         <TabsContent value="activity">
-          <div className="space-y-8">
+          <div className="container mx-auto px-4 space-y-8">
             {/* Top action row: Today's priorities + Immediate attention */}
             <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
               <div className="space-y-6">{renderTodayPlan()}</div>
@@ -2390,16 +2390,30 @@ const activityTrendData = useMemo(() => {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
-              <Card className="border border-border/70">
+              <Card className="border border-border/70 h-full">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-primary" />
-                    Recent activity
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-primary" />
+                      Team activity
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setSelectedDay({
+                          date: new Date(),
+                          activities: getActivitiesForDate(new Date().getDate()),
+                        })
+                      }
+                    >
+                      View calendar
+                    </Button>
+                  </div>
                   <CardDescription>Latest touches across the staff.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {recentActivityTimeline.slice(0, 7).map((activity) => {
+                  {recentActivityTimeline.slice(0, 5).map((activity) => {
                     const { icon: IconComponent, className } = getRecentActivityIcon(activity.action_type)
                     return (
                       <div key={activity.id} className="flex gap-3 border-b border-border/40 pb-3 last:border-0 last:pb-0">
