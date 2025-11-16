@@ -30,7 +30,8 @@ interface ContactInfoSectionProps {
 
 export function ContactInfoSection({ athlete }: ContactInfoSectionProps) {
   const { isAdmin, isVerifiedCoach, isCoach } = useAuth()
-  const [isExpanded, setIsExpanded] = useState(true)
+  // Default collapsed; coaches/admins can expand
+  const [isExpanded, setIsExpanded] = useState(false)
 
   if (!isAdmin && !isVerifiedCoach) {
     return null
