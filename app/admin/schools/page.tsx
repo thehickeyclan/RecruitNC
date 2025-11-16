@@ -43,6 +43,15 @@ export default function SchoolsManagementPage() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [searchingUsers, setSearchingUsers] = useState(false)
   const [assigningCoach, setAssigningCoach] = useState(false)
+  // Add Program (create new school) modal state
+  const [addProgramOpen, setAddProgramOpen] = useState(false)
+  const [creatingProgram, setCreatingProgram] = useState(false)
+  const [newProgram, setNewProgram] = useState({
+    name: "",
+    logoUrl: "",
+    primaryColor: "",
+    secondaryColor: "",
+  })
 
   useEffect(() => {
     console.log("[v0] SchoolsManagementPage mounted, fetching schools...")
@@ -174,8 +183,15 @@ export default function SchoolsManagementPage() {
       <AdminHeader />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Schools Management</h1>
-        <p className="text-gray-600">Manage college schools and their branding</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Schools Management</h1>
+            <p className="text-gray-600">Manage college programs and their portals</p>
+          </div>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setAddProgramOpen(true)}>
+            + Add Program
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -398,9 +414,112 @@ export default function SchoolsManagementPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-gray-600 mb-4">No schools configured yet</p>
-            <Button onClick={() => alert("Add school functionality coming soon!")}>Add First School</Button>
+            <Button onClick={() => setAddProgramOpen(true)}>Add First Program</Button>
           </CardContent>
         </Card>
+      )}
+      {/* Add Program Modal */}
+      {addProgramOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-lg">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Add Program</h2>
+              <button
+                className="text-gray-500 hover:text-gray-700"
+                onClick={() => setAddProgramOpen(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              className="p-6 space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!newProgram.name.trim()) {
+                  alert("Program name is required")
+                  return
+                }
+                try {
+                  setCreatingProgram(true)
+                  const fd = new FormData()
+                  fd.append("name", newProgram.name)
+                  if (newProgram.logoUrl) fd.append("logoUrl", newProgram.logoUrl)
+                  if (newProgram.primaryColor) fd.append("primaryColor", newProgram.primaryColor)
+                  if (newProgram.secondaryColor) fd.append("secondaryColor", newProgram.secondaryColor)
+                  const res = await fetch("/api/admin/schools/create", { method: "POST", body: fd })
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data?.error || "Failed to create program")
+                    return
+                  }
+                  setAddProgramOpen(false)
+                  setNewProgram({ name: "", logoUrl: "", primaryColor: "", secondaryColor: "" })
+                  await fetchSchools()
+                  if (data?.school?.id) {
+                    window.open(`/schools/${data.school.id}/portal`, "_blank")
+                  }
+                } catch (err) {
+                  console.error(err)
+                  alert("Failed to create program")
+                } finally {
+                  setCreatingProgram(false)
+                }
+              }}
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Program name</label>
+                <input
+                  className="mt-1 w-full border rounded px-3 py-2"
+                  placeholder="Rochester Institute of Technology (RIT)"
+                  value={newProgram.name}
+                  onChange={(e) => setNewProgram((p) => ({ ...p, name: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Logo URL (optional)</label>
+                <input
+                  className="mt-1 w-full border rounded px-3 py-2"
+                  placeholder="https://…/logo.png"
+                  value={newProgram.logoUrl}
+                  onChange={(e) => setNewProgram((p) => ({ ...p, logoUrl: e.target.value }))}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Paste a public logo URL. We can add file upload support if needed.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Primary color (optional)</label>
+                  <input
+                    className="mt-1 w-full border rounded px-3 py-2"
+                    placeholder="#F76902"
+                    value={newProgram.primaryColor}
+                    onChange={(e) => setNewProgram((p) => ({ ...p, primaryColor: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Secondary color (optional)</label>
+                  <input
+                    className="mt-1 w-full border rounded px-3 py-2"
+                    placeholder="#000000"
+                    value={newProgram.secondaryColor}
+                    onChange={(e) => setNewProgram((p) => ({ ...p, secondaryColor: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setAddProgramOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={creatingProgram}>
+                  {creatingProgram ? "Creating…" : "Create program"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )
