@@ -6,8 +6,21 @@ import { Button } from "@/components/ui/button"
 import { AdminHeader } from "@/components/admin-header"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ChevronDown, ChevronUp, BarChart3, TrendingUp, Users, Activity } from "lucide-react"
 import Image from "next/image"
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts"
 
 interface Coach {
   id: string
@@ -53,10 +66,43 @@ export default function SchoolsManagementPage() {
     secondaryColor: "",
   })
 
+  // Analytics state
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<"day" | "week" | "month">("week")
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null)
+  const [analyticsData, setAnalyticsData] = useState<any>(null)
+
   useEffect(() => {
     console.log("[v0] SchoolsManagementPage mounted, fetching schools...")
     fetchSchools()
   }, [])
+
+  useEffect(() => {
+    if (analyticsPeriod) {
+      fetchAnalytics()
+    }
+  }, [analyticsPeriod, selectedSchoolId])
+
+  const fetchAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true)
+      const params = new URLSearchParams({
+        period: analyticsPeriod,
+      })
+      if (selectedSchoolId) {
+        params.append("schoolId", selectedSchoolId)
+      }
+      const response = await fetch(`/api/admin/analytics?${params.toString()}`)
+      if (response.ok) {
+        const data = await response.json()
+        setAnalyticsData(data)
+      }
+    } catch (error) {
+      console.error("Error fetching analytics:", error)
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
 
   const fetchSchools = async () => {
     try {
@@ -193,6 +239,20 @@ export default function SchoolsManagementPage() {
           </Button>
         </div>
       </div>
+
+      <Tabs defaultValue="schools" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="schools">
+            <Users className="h-4 w-4 mr-2" />
+            Schools
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="schools" className="mt-6">
 
       {loading ? (
         <div className="text-center py-12">
@@ -542,6 +602,192 @@ export default function SchoolsManagementPage() {
           </div>
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="analytics" className="mt-6">
+          <div className="space-y-6">
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Analytics Filters</CardTitle>
+                <CardDescription>View platform-wide or school-specific analytics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
+                    <select
+                      value={analyticsPeriod}
+                      onChange={(e) => setAnalyticsPeriod(e.target.value as "day" | "week" | "month")}
+                      className="border rounded px-3 py-2"
+                    >
+                      <option value="day">Daily (Last 30 days)</option>
+                      <option value="week">Weekly (Last 12 weeks)</option>
+                      <option value="month">Monthly (Last 12 months)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">School (Optional)</label>
+                    <select
+                      value={selectedSchoolId || ""}
+                      onChange={(e) => setSelectedSchoolId(e.target.value || null)}
+                      className="border rounded px-3 py-2 min-w-[200px]"
+                    >
+                      <option value="">All Schools</option>
+                      {schools.map((school) => (
+                        <option key={school.id} value={school.id}>
+                          {school.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {analyticsLoading ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600">Loading analytics...</p>
+              </div>
+            ) : analyticsData ? (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Recruits</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{analyticsData.totals.recruits}</div>
+                      <p className="text-xs text-muted-foreground">
+                        New pipeline additions in selected period
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{analyticsData.totals.activities}</div>
+                      <p className="text-xs text-muted-foreground">
+                        All recruiting activities in selected period
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Recruits Timeline */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recruits Over Time</CardTitle>
+                    <CardDescription>New recruits added to pipelines</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={analyticsData.recruitsTimeline}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={2} name="Recruits" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Activities Timeline */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activities Over Time</CardTitle>
+                    <CardDescription>Recruiting activities completed</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={analyticsData.activitiesTimeline}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} name="Activities" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Top Schools & Activity Types */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Top Schools by Recruits</CardTitle>
+                      <CardDescription>Most active schools adding recruits</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={analyticsData.topSchoolsByRecruits}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#2563eb" name="Recruits" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Top Schools by Activities</CardTitle>
+                      <CardDescription>Most active schools completing activities</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={analyticsData.topSchoolsByActivities}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#10b981" name="Activities" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Activities by Type */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activities by Type</CardTitle>
+                    <CardDescription>Breakdown of activity types</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={analyticsData.activitiesByType}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="type" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#8b5cf6" name="Count" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-12 text-gray-500">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4" />
+                  <p>No analytics data available</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
