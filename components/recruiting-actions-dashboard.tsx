@@ -1172,8 +1172,8 @@ const activityTrendData = useMemo(() => {
         setContactRangeFilter("never")
         break
       case "active":
-        setContactRangeFilter("0-7")
-        setEngagementFilter("high")
+        // For "Active this week", rely solely on activePriorityFilter + activeThisWeekIds.
+        // Do NOT add extra filters that could exclude valid rows.
         break
     }
     requestAnimationFrame(() => {
@@ -2389,7 +2389,7 @@ const activityTrendData = useMemo(() => {
               </Card>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[0.38fr_0.62fr]">
+            <div className="grid gap-6">
               <Card className="border border-border/70 h-full">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
