@@ -325,6 +325,27 @@ export default function SchoolsManagementPage() {
                       variant="outline"
                       size="sm"
                       className="flex-1 bg-transparent"
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`/api/admin/schools/${school.id}/detect-branding`, { method: "POST" })
+                          const data = await res.json()
+                          if (!res.ok) {
+                            alert(data?.error || "Failed to detect branding")
+                            return
+                          }
+                          alert("Branding updated from logo")
+                          fetchSchools()
+                        } catch (e) {
+                          alert("Failed to detect branding")
+                        }
+                      }}
+                    >
+                      Detect Colors
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 bg-transparent"
                       onClick={() => {
                         window.open(`/schools/${school.id}/portal`, "_blank")
                       }}
