@@ -537,14 +537,14 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             {careerStats && careerStats.seasons.length > 0 && (
               <div className="rounded-lg p-2.5 mb-3 shadow-sm text-white" style={{ backgroundColor: "#B31B1B" }}>
                 <h4 className="font-bold text-center mb-1.5 text-xs">HS CAREER STATS</h4>
-                <div className="bg-white/10 rounded overflow-hidden">
-                  <table className="w-full text-[10px]">
+                <div className="bg-white/10 rounded overflow-hidden w-full">
+                  <table className="stats-table w-full table-fixed text-[10px]">
                     <thead>
                       <tr className="border-b border-white/20">
-                        <th className="text-left py-0.5 px-1.5 font-semibold">Year</th>
-                        <th className="text-center py-0.5 px-1 font-semibold">W</th>
-                        <th className="text-center py-0.5 px-1 font-semibold">L</th>
-                        <th className="text-center py-0.5 px-1 font-semibold">Win%</th>
+                        <th className="text-left py-0.5 px-1.5 font-semibold w-2/5">Year</th>
+                        <th className="text-center py-0.5 px-1 font-semibold w-1/5">W</th>
+                        <th className="text-center py-0.5 px-1 font-semibold w-1/5">L</th>
+                        <th className="text-center py-0.5 px-1 font-semibold w-1/5">Win%</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -719,6 +719,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
             -webkit-font-smoothing: antialiased;
+          }
+          .stats-table {
+            width: 100% !important;
+            table-layout: fixed;
           }
           .preserve-3d {
             transform-style: preserve-3d;
