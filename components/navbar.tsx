@@ -209,8 +209,28 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Mobile menu button and auth buttons */}
+          <div className="md:hidden flex items-center gap-2">
+            {/* Sign In and Sign Up buttons - only show when not logged in */}
+            {!isLoading && !user && (
+              <div className="flex items-center gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px] px-3"
+                >
+                  <Link href="/auth/signin">Sign In</Link>
+                </Button>
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-red-600 text-white hover:bg-red-700 mobile-optimized min-h-[44px] px-3"
+                >
+                  <Link href="/auth/signup">Sign Up</Link>
+                </Button>
+              </div>
+            )}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button
