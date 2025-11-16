@@ -537,7 +537,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             {careerStats && careerStats.seasons.length > 0 && (
               <div className="rounded-lg p-2.5 mb-3 shadow-sm text-white" style={{ backgroundColor: "#B31B1B" }}>
                 <h4 className="font-bold text-center mb-1.5 text-xs">HS CAREER STATS</h4>
-                <div className="bg-white/10 rounded overflow-hidden w-full">
+                <div className="bg-white/10 rounded overflow-hidden w-full -mx-2.5 sm:mx-0">
                   <table className="stats-table w-full table-fixed text-[10px]">
                     <thead>
                       <tr className="border-b border-white/20">
