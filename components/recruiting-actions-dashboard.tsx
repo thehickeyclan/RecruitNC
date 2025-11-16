@@ -780,23 +780,26 @@ const activityTrendData = useMemo(() => {
     })
   }, [cadenceStats.details, touchesByAthlete, nextFollowUpByAthlete, lastActionByAthlete])
 
-  const engagementSummary = useMemo(() => {
-    const highPriorityUntouched = cadenceStats.details.filter(
-      (detail) => detail.status === "noActivity" && (detail.starRating ?? 0) >= 4,
-    ).length
-    const activeThisWeek = new Set(
+  const activeThisWeekIds = useMemo(() => {
+    const seven = new Date()
+    seven.setDate(seven.getDate() - 7)
+    return new Set(
       actions
         .filter((action) => {
           if (!action.action_date) return false
           const date = new Date(action.action_date)
           if (Number.isNaN(date.getTime())) return false
-          const now = new Date()
-          const seven = new Date()
-          seven.setDate(now.getDate() - 7)
           return date >= seven
         })
         .map((action) => action.athlete_id),
-    ).size
+    )
+  }, [actions])
+
+  const engagementSummary = useMemo(() => {
+    const highPriorityUntouched = cadenceStats.details.filter(
+      (detail) => detail.status === "noActivity" && (detail.starRating ?? 0) >= 4,
+    ).length
+    const activeThisWeek = activeThisWeekIds.size
 
     return {
       overdue: cadenceStats.summary.overdue,
@@ -804,7 +807,7 @@ const activityTrendData = useMemo(() => {
       highPriorityUntouched,
       activeThisWeek,
     }
-  }, [cadenceStats, actions])
+  }, [cadenceStats, activeThisWeekIds])
 
   const immediateAttentionIssues = useMemo<ImmediateAttentionIssue[]>(() => {
     const issues: ImmediateAttentionIssue[] = []
@@ -973,6 +976,10 @@ const activityTrendData = useMemo(() => {
   const filteredEngagementRows = useMemo(() => {
     const search = athleteSearchTerm.trim().toLowerCase()
     return engagementRows.filter((row) => {
+      // When a quick filter card is active, enforce its semantics first
+      if (activePriorityFilter === "active" && !activeThisWeekIds.has(row.id)) {
+        return false
+      }
       if (search) {
         const haystack = [
           row.name,
@@ -999,6 +1006,8 @@ const activityTrendData = useMemo(() => {
   }, [
     engagementRows,
     athleteSearchTerm,
+    activePriorityFilter,
+    activeThisWeekIds,
     stageFilter,
     contactRangeFilter,
     engagementFilter,
