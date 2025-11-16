@@ -264,6 +264,7 @@ export const RecruitingActionsDashboard = forwardRef<RecruitingActionsDashboardR
   const [showStaleOnly, setShowStaleOnly] = useState(false)
   const [selectedEngagementIds, setSelectedEngagementIds] = useState<Set<string>>(new Set())
   const [focusedAthleteId, setFocusedAthleteId] = useState<string | null>(null)
+  const [showAllTeamActivity, setShowAllTeamActivity] = useState(false)
   const engagementTableRef = useRef<HTMLDivElement | null>(null)
   const openExternal = useCallback((href: string, target: "_blank" | "_self" = "_blank") => {
     if (typeof window === "undefined") {
@@ -2287,7 +2288,7 @@ const activityTrendData = useMemo(() => {
                   })}
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
+                <div className="grid gap-4 lg:grid-cols-4">
                   {[
                     {
                       label: "Total Pipeline",
@@ -2307,6 +2308,14 @@ const activityTrendData = useMemo(() => {
                       subtext: "Awaiting decisions",
                       accent: "text-amber-500",
                     },
+                    {
+                      label: "Committed & Signed",
+                      value:
+                        (stageFunnelData.rows.find((s) => s.label === "Committed")?.count ?? 0) +
+                        (stageFunnelData.rows.find((s) => s.label === "Signed")?.count ?? 0),
+                      subtext: "Closed wins",
+                      accent: "text-emerald-500",
+                    }
                   ].map((stat) => (
                     <div key={stat.label} className="rounded-lg border border-border/60 bg-card/60 p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -2397,23 +2406,14 @@ const activityTrendData = useMemo(() => {
                       <MessageCircle className="h-4 w-4 text-primary" />
                       Team activity
                     </CardTitle>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setSelectedDay({
-                          date: new Date(),
-                          activities: getActivitiesForDate(new Date().getDate()),
-                        })
-                      }
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setTabValue("calendar")}>
                       View calendar
                     </Button>
                   </div>
                   <CardDescription>Latest touches across the staff.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {recentActivityTimeline.slice(0, 5).map((activity) => {
+                  {(showAllTeamActivity ? recentActivityTimeline.slice(0, 25) : recentActivityTimeline.slice(0, 5)).map((activity) => {
                     const { icon: IconComponent, className } = getRecentActivityIcon(activity.action_type)
                     return (
                       <div key={activity.id} className="flex gap-3 border-b border-border/40 pb-3 last:border-0 last:pb-0">
@@ -2435,9 +2435,15 @@ const activityTrendData = useMemo(() => {
                       </div>
                     )
                   })}
-                  <Button variant="outline" className="w-full">
-                    View all activity
-                  </Button>
+                  {!showAllTeamActivity ? (
+                    <Button variant="outline" className="w-full" onClick={() => setShowAllTeamActivity(true)}>
+                      View all activity
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="w-full" onClick={() => setShowAllTeamActivity(false)}>
+                      Show less
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -2680,6 +2686,7 @@ const activityTrendData = useMemo(() => {
                       <th className="text-left px-4 py-3">Frequency</th>
                       <th className="text-left px-4 py-3">Engagement</th>
                       <th className="text-left px-4 py-3">Next follow-up</th>
+                      <th className="text-left px-4 py-3">Coach</th>
                       <th className="text-right px-4 py-3">Actions</th>
                     </tr>
                   </thead>
@@ -2755,6 +2762,9 @@ const activityTrendData = useMemo(() => {
                                 <span className="text-xs text-muted-foreground">Not scheduled</span>
                               )}
                             </td>
+                            <td className="px-4 py-4 text-sm text-muted-foreground">
+                              {row.lastAction?.coach_name || "—"}
+                            </td>
                             <td className="px-4 py-4 text-right">
                               <div className="flex justify-end gap-1">
                                 <Button
@@ -2801,66 +2811,7 @@ const activityTrendData = useMemo(() => {
               </div>
             </div>
 
-            <Card className="border border-border/70">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <ActivityIcon className="h-4 w-4 text-primary" />
-                  Activity timeline
-                </CardTitle>
-                <CardDescription>Last 50 activities logged across the staff.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {recentActivityTimeline.slice(0, 10).map((activity) => (
-                  <div key={activity.id} className="border-l-2 border-border/80 pl-4">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="font-semibold text-foreground">{activity.athlete_name}</span>
-                      <span>{formatRelativeTimeFromNow(new Date(activity.action_date))}</span>
-                    </div>
-                    <p className="text-sm">
-                      {formatActionType(activity.action_type)}
-                      {activity.outcome ? ` • ${activity.outcome}` : ""}
-                    </p>
-                    {activity.description && (
-                      <p className="text-xs text-muted-foreground mt-1">{activity.description}</p>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  label: "Browse NC Rankings",
-                  action: () => openExternal("https://app.ncwrestlingunited.com/public-rankings", "_blank"),
-                  variant: "destructive" as const,
-                },
-                {
-                  label: "Create New Prospect",
-                  action: () => openExternal("/create-prospect", "_blank"),
-                  variant: "destructive" as const,
-                },
-                {
-                  label: "View Full Pipeline",
-                  action: () => setTabValue("dashboard"),
-                  variant: "outline" as const,
-                },
-                {
-                  label: "Log Activity",
-                  action: () => setCreatingActivity(true),
-                  variant: "outline" as const,
-                },
-              ].map((quick) => (
-                <Button
-                  key={quick.label}
-                  variant={quick.variant}
-                  className="w-full h-12 text-sm font-semibold"
-                  onClick={quick.action}
-                >
-                  {quick.label}
-                </Button>
-              ))}
-            </div>
+            {/* Activity timeline and quick action buttons removed per design consolidation */}
           </div>
         </TabsContent>
       </Tabs>
