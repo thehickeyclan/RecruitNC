@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     // Build query for recruits (college_coach_stars)
     let recruitsQuery = adminSupabase
       .from("college_coach_stars")
-      .select("starred_at, school_id, schools(name)")
+      .select("starred_at, school_id")
       .gte("starred_at", startDate.toISOString())
       .order("starred_at", { ascending: true })
 
@@ -41,7 +41,23 @@ export async function GET(request: Request) {
 
     if (recruitsError) {
       console.error("Error fetching recruits:", recruitsError)
-      return NextResponse.json({ error: "Failed to fetch recruits data" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Failed to fetch recruits data", details: recruitsError.message },
+        { status: 500 },
+      )
+    }
+
+    // Fetch school names separately if we have school_ids
+    const schoolIds = [...new Set(recruitsData?.map((r: any) => r.school_id).filter(Boolean) || [])]
+    const schoolNamesMap: { [key: string]: string } = {}
+    if (schoolIds.length > 0) {
+      const { data: schoolsData } = await adminSupabase
+        .from("schools")
+        .select("id, name")
+        .in("id", schoolIds)
+      schoolsData?.forEach((school: any) => {
+        schoolNamesMap[school.id] = school.name
+      })
     }
 
     // Build query for activities (recruiting_actions)
@@ -61,7 +77,7 @@ export async function GET(request: Request) {
 
     let activitiesQuery = adminSupabase
       .from("recruiting_actions")
-      .select("action_date, action_type, coach_user_id, user_profiles(school_id, schools(name))")
+      .select("action_date, action_type, coach_user_id")
       .gte("action_date", startDate.toISOString())
       .order("action_date", { ascending: true })
 
@@ -76,7 +92,38 @@ export async function GET(request: Request) {
 
     if (activitiesError) {
       console.error("Error fetching activities:", activitiesError)
-      return NextResponse.json({ error: "Failed to fetch activities data" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Failed to fetch activities data", details: activitiesError.message },
+        { status: 500 },
+      )
+    }
+
+    // Fetch coach school mappings for activities
+    const activityCoachIds = [...new Set(activitiesData?.map((a: any) => a.coach_user_id).filter(Boolean) || [])]
+    const coachSchoolMap: { [key: string]: string } = {}
+    if (activityCoachIds.length > 0) {
+      const { data: coachesData } = await adminSupabase
+        .from("user_profiles")
+        .select("user_id, school_id")
+        .in("user_id", activityCoachIds)
+      coachesData?.forEach((coach: any) => {
+        if (coach.school_id) {
+          coachSchoolMap[coach.user_id] = coach.school_id
+        }
+      })
+    }
+
+    // Get school names for activities
+    const activitySchoolIds = [...new Set(Object.values(coachSchoolMap).filter(Boolean))]
+    const activitySchoolNamesMap: { [key: string]: string } = {}
+    if (activitySchoolIds.length > 0) {
+      const { data: activitySchoolsData } = await adminSupabase
+        .from("schools")
+        .select("id, name")
+        .in("id", activitySchoolIds)
+      activitySchoolsData?.forEach((school: any) => {
+        activitySchoolNamesMap[school.id] = school.name
+      })
     }
 
     // Aggregate recruits by time period
@@ -106,7 +153,7 @@ export async function GET(request: Request) {
       recruitsByPeriod[periodKey] = (recruitsByPeriod[periodKey] || 0) + 1
 
       // Aggregate by school
-      const schoolName = recruit.schools?.name || "Unknown"
+      const schoolName = recruit.school_id ? schoolNamesMap[recruit.school_id] || "Unknown" : "Unknown"
       if (!recruitsBySchool[schoolName]) {
         recruitsBySchool[schoolName] = { name: schoolName, count: 0 }
       }
@@ -145,7 +192,8 @@ export async function GET(request: Request) {
       activitiesByType[actionType] = (activitiesByType[actionType] || 0) + 1
 
       // Aggregate by school
-      const schoolName = activity.user_profiles?.schools?.name || "Unknown"
+      const coachSchoolId = activity.coach_user_id ? coachSchoolMap[activity.coach_user_id] : null
+      const schoolName = coachSchoolId ? activitySchoolNamesMap[coachSchoolId] || "Unknown" : "Unknown"
       if (!activitiesBySchool[schoolName]) {
         activitiesBySchool[schoolName] = { name: schoolName, count: 0 }
       }
