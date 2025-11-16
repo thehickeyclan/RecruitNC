@@ -27,14 +27,31 @@ export async function GET(request: Request) {
     }
 
     // Build query for recruits (college_coach_stars)
+    // First, get coach user IDs for the school if filtering
+    let recruitCoachUserIds: string[] | null = null
+    if (schoolId) {
+      const { data: coaches } = await adminSupabase
+        .from("user_profiles")
+        .select("user_id")
+        .eq("school_id", schoolId)
+      recruitCoachUserIds = coaches?.map((c) => c.user_id) || []
+      if (recruitCoachUserIds.length === 0) {
+        // No coaches for this school, return empty recruits
+        recruitCoachUserIds = []
+      }
+    }
+
     let recruitsQuery = adminSupabase
       .from("college_coach_stars")
-      .select("starred_at, school_id")
+      .select("starred_at, coach_user_id")
       .gte("starred_at", startDate.toISOString())
       .order("starred_at", { ascending: true })
 
-    if (schoolId) {
-      recruitsQuery = recruitsQuery.eq("school_id", schoolId)
+    if (schoolId && recruitCoachUserIds && recruitCoachUserIds.length > 0) {
+      recruitsQuery = recruitsQuery.in("coach_user_id", recruitCoachUserIds)
+    } else if (schoolId && recruitCoachUserIds && recruitCoachUserIds.length === 0) {
+      // No coaches, return empty result
+      recruitsQuery = recruitsQuery.eq("coach_user_id", "00000000-0000-0000-0000-000000000000") // Impossible ID
     }
 
     const { data: recruitsData, error: recruitsError } = await recruitsQuery
@@ -47,8 +64,23 @@ export async function GET(request: Request) {
       )
     }
 
+    // Fetch coach school mappings for recruits
+    const recruitCoachIds = [...new Set(recruitsData?.map((r: any) => r.coach_user_id).filter(Boolean) || [])]
+    const recruitCoachSchoolMap: { [key: string]: string } = {}
+    if (recruitCoachIds.length > 0) {
+      const { data: recruitCoachesData } = await adminSupabase
+        .from("user_profiles")
+        .select("user_id, school_id")
+        .in("user_id", recruitCoachIds)
+      recruitCoachesData?.forEach((coach: any) => {
+        if (coach.school_id) {
+          recruitCoachSchoolMap[coach.user_id] = coach.school_id
+        }
+      })
+    }
+
     // Fetch school names separately if we have school_ids
-    const schoolIds = [...new Set(recruitsData?.map((r: any) => r.school_id).filter(Boolean) || [])]
+    const schoolIds = [...new Set(Object.values(recruitCoachSchoolMap).filter(Boolean))]
     const schoolNamesMap: { [key: string]: string } = {}
     if (schoolIds.length > 0) {
       const { data: schoolsData } = await adminSupabase
@@ -153,7 +185,8 @@ export async function GET(request: Request) {
       recruitsByPeriod[periodKey] = (recruitsByPeriod[periodKey] || 0) + 1
 
       // Aggregate by school
-      const schoolName = recruit.school_id ? schoolNamesMap[recruit.school_id] || "Unknown" : "Unknown"
+      const coachSchoolId = recruit.coach_user_id ? recruitCoachSchoolMap[recruit.coach_user_id] : null
+      const schoolName = coachSchoolId ? schoolNamesMap[coachSchoolId] || "Unknown" : "Unknown"
       if (!recruitsBySchool[schoolName]) {
         recruitsBySchool[schoolName] = { name: schoolName, count: 0 }
       }
