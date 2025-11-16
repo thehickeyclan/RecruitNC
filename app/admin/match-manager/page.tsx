@@ -450,72 +450,187 @@ export default function MatchManagerPage() {
 
     if (lines.length === 0) return matches
 
-    // Check if this is the new format (has "Summary" column)
-    const headerLine = lines[0].toLowerCase()
-    const isNewFormat = headerLine.includes("summary")
+    // Check if this is the multi-line format (starts with Win/Loss)
+    const firstLine = lines[0].trim().toLowerCase()
+    const isMultiLineFormat = firstLine === "win" || firstLine === "loss"
 
-    if (isNewFormat) {
-      // New format: Date | Event | Weight | Summary
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (!line) continue
+    if (isMultiLineFormat) {
+      // Multi-line format: Each match spans multiple lines
+      // Format:
+      // Win/Loss
+      // Date
+      // Percentage (or "Forfeit")
+      // Opponent Name (or "Forfeit")
+      // • Opponent School (may be missing for forfeits)
+      // Weight
+      // • (separator)
+      // Tournament/Event
+      // • (separator)
+      // Method (Dec, Fall, TF, SV-1, MD, DQ, For.)
+      
+      let i = 0
+      while (i < lines.length) {
+        const resultLine = lines[i]?.trim()
+        if (!resultLine || (resultLine.toLowerCase() !== "win" && resultLine.toLowerCase() !== "loss")) {
+          i++
+          continue
+        }
 
-        const parts = line.split("\t")
+        const isWin = resultLine.toLowerCase() === "win"
+        const date = lines[i + 1]?.trim() || ""
+        const percentageOrForfeit = lines[i + 2]?.trim() || ""
+        const opponentOrForfeit = lines[i + 3]?.trim() || ""
+        
+        // Check if this is a forfeit
+        const isForfeit = opponentOrForfeit.toLowerCase() === "forfeit" || percentageOrForfeit.toLowerCase() === "forfeit"
+        
+        let opponent = ""
+        let opponentSchool = ""
+        let weight = ""
+        let venue = ""
+        let method = ""
+        let oppPercent: number | null = null
+        let lineOffset = 3
 
-        if (parts.length < 4) continue
+        if (isForfeit) {
+          // For forfeits, the structure is:
+          // Win/Loss
+          // Date
+          // Forfeit (opponent name)
+          // Weight (with "lbs")
+          // • (separator)
+          // Tournament
+          // • (separator)
+          // For. (method)
+          opponent = "Forfeit"
+          opponentSchool = ""
+          weight = (lines[i + 3]?.trim() || "").replace(" lbs", "").trim()
+          venue = lines[i + 5]?.trim() || ""
+          method = lines[i + 7]?.trim() || "For."
+          lineOffset = 7
+        } else {
+          // Normal match structure
+          opponent = opponentOrForfeit
+          const schoolLine = lines[i + 4]?.trim() || ""
+          opponentSchool = schoolLine.startsWith("•") ? schoolLine.substring(1).trim() : ""
+          weight = (lines[i + 5]?.trim() || "").replace(" lbs", "").trim()
+          venue = lines[i + 7]?.trim() || ""
+          method = lines[i + 9]?.trim() || ""
+          
+          // Try to parse percentage
+          const percentMatch = percentageOrForfeit.match(/^[\d.]+$/)
+          if (percentMatch) {
+            oppPercent = parseFloat(percentageOrForfeit)
+          }
+          
+          lineOffset = 9
+        }
 
-        const [date, event, weight, summary] = parts
+        // Skip if we don't have essential data
+        if (!date || !venue) {
+          i++
+          continue
+        }
 
-        // Skip "Bye" entries
-        if (summary.toLowerCase().includes("bye")) continue
+        // Determine winner and loser based on result
+        if (isWin) {
+          // Athlete won, opponent lost
+          matches.push({
+            date: date,
+            winner: "", // Will be filled in later based on selected athlete
+            winner_school: "", // Will be filled in later
+            loser: opponent,
+            loser_school: opponentSchool,
+            result: method,
+            venue: venue,
+            weight: weight,
+            opp_percent: oppPercent,
+          })
+        } else {
+          // Athlete lost, opponent won
+          matches.push({
+            date: date,
+            winner: opponent,
+            winner_school: opponentSchool,
+            loser: "", // Will be filled in later based on selected athlete
+            loser_school: "", // Will be filled in later
+            result: method,
+            venue: venue,
+            weight: weight,
+            opp_percent: oppPercent,
+          })
+        }
 
-        // Parse the summary to extract match details
-        // Format: "Athlete1 (School1) over Athlete2 (School2) (Result)"
-        const overMatch = summary.match(/^(.+?)\s*\(([^)]+)\)\s+over\s+(.+?)\s*\(([^)]+)\)\s*(\([^)]+\))?$/)
+        i += lineOffset + 1
+      }
+    } else {
+      // Check if this is the new format (has "Summary" column)
+      const headerLine = lines[0].toLowerCase()
+      const isNewFormat = headerLine.includes("summary")
 
-        if (overMatch) {
-          const [, winner, winnerSchool, loser, loserSchool, resultRaw] = overMatch
-          const result = resultRaw ? resultRaw.replace(/[()]/g, "").trim() : ""
+      if (isNewFormat) {
+        // New format: Date | Event | Weight | Summary
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim()
+          if (!line) continue
 
-          // Skip matches against "Unknown" opponents
-          if (loser.trim().toLowerCase() === "unknown") continue
+          const parts = line.split("\t")
+
+          if (parts.length < 4) continue
+
+          const [date, event, weight, summary] = parts
+
+          // Skip "Bye" entries
+          if (summary.toLowerCase().includes("bye")) continue
+
+          // Parse the summary to extract match details
+          // Format: "Athlete1 (School1) over Athlete2 (School2) (Result)"
+          const overMatch = summary.match(/^(.+?)\s*\(([^)]+)\)\s+over\s+(.+?)\s*\(([^)]+)\)\s*(\([^)]+\))?$/)
+
+          if (overMatch) {
+            const [, winner, winnerSchool, loser, loserSchool, resultRaw] = overMatch
+            const result = resultRaw ? resultRaw.replace(/[()]/g, "").trim() : ""
+
+            // Skip matches against "Unknown" opponents
+            if (loser.trim().toLowerCase() === "unknown") continue
+
+            matches.push({
+              date: date.trim(),
+              winner: winner.trim(),
+              winner_school: winnerSchool.trim(),
+              loser: loser.trim(),
+              loser_school: loserSchool.trim(),
+              result: result,
+              venue: event.trim(),
+              weight: weight.trim(),
+              opp_percent: null,
+            })
+          }
+        }
+      } else {
+        // Old format: Date | Winner | Winner School | Loser | Loser School | Result | Venue | Weight | Opp%
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim()
+          if (!line) continue
+
+          const parts = line.split("\t")
+
+          if (parts.length < 8) continue
+
+          const [date, winner, winner_school, loser, loser_school, result, venue, weight, opp_percent] = parts
 
           matches.push({
             date: date.trim(),
             winner: winner.trim(),
-            winner_school: winnerSchool.trim(),
+            winner_school: winner_school.trim(),
             loser: loser.trim(),
-            loser_school: loserSchool.trim(),
-            result: result,
-            venue: event.trim(),
+            loser_school: loser_school.trim(),
+            result: result.trim(),
+            venue: venue.trim(),
             weight: weight.trim(),
-            opp_percent: null,
+            opp_percent: opp_percent ? parseFloat(opp_percent.trim()) : null,
           })
         }
-      }
-    } else {
-      // Old format: Date | Winner | Winner School | Loser | Loser School | Result | Venue | Weight | Opp%
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (!line) continue
-
-        const parts = line.split("\t")
-
-        if (parts.length < 8) continue
-
-        const [date, winner, winner_school, loser, loser_school, result, venue, weight, opp_percent] = parts
-
-        matches.push({
-          date: date.trim(),
-          winner: winner.trim(),
-          winner_school: winner_school.trim(),
-          loser: loser.trim(),
-          loser_school: loser_school.trim(),
-          result: result.trim(),
-          venue: venue.trim(),
-          weight: weight.trim(),
-          opp_percent: opp_percent ? parseFloat(opp_percent.trim()) : null,
-        })
       }
     }
 
@@ -560,33 +675,57 @@ export default function MatchManagerPage() {
     let athleteSchool = ""
 
     parsedMatches.forEach((match) => {
-      const winnerLower = match.winner.toLowerCase()
-      const loserLower = match.loser.toLowerCase()
+      // Check if this is the new multi-line format where winner/loser might be empty
+      // (indicating the selected athlete)
+      const isNewFormat = match.winner === "" || match.loser === ""
+      
+      let isWin = false
+      let opponent = ""
+      let opponentSchool = ""
+      
+      if (isNewFormat) {
+        // In new format: empty winner means athlete won, empty loser means athlete lost
+        if (match.winner === "") {
+          // Athlete won
+          isWin = true
+          opponent = match.loser
+          opponentSchool = match.loser_school
+        } else {
+          // Athlete lost
+          isWin = false
+          opponent = match.winner
+          opponentSchool = match.winner_school
+        }
+      } else {
+        // Old format: match athlete name against winner/loser
+        const winnerLower = match.winner.toLowerCase()
+        const loserLower = match.loser.toLowerCase()
 
-      const winnerParts = winnerLower.split(" ")
-      const winnerFirstInitial = winnerParts[0]?.[0] || ""
-      const winnerLastName = winnerParts[winnerParts.length - 1] || ""
+        const winnerParts = winnerLower.split(" ")
+        const winnerFirstInitial = winnerParts[0]?.[0] || ""
+        const winnerLastName = winnerParts[winnerParts.length - 1] || ""
 
-      const loserParts = loserLower.split(" ")
-      const loserFirstInitial = loserParts[0]?.[0] || ""
-      const loserLastName = loserParts[loserParts.length - 1] || ""
+        const loserParts = loserLower.split(" ")
+        const loserFirstInitial = loserParts[0]?.[0] || ""
+        const loserLastName = loserParts[loserParts.length - 1] || ""
 
-      const isWinnerMatch =
-        winnerLower === athleteNameLower ||
-        (winnerFirstInitial === athleteFirstInitial && winnerLastName === athleteLastName)
-      const isLoserMatch =
-        loserLower === athleteNameLower || (loserFirstInitial === athleteFirstInitial && loserLastName === athleteLastName)
+        const isWinnerMatch =
+          winnerLower === athleteNameLower ||
+          (winnerFirstInitial === athleteFirstInitial && winnerLastName === athleteLastName)
+        const isLoserMatch =
+          loserLower === athleteNameLower || (loserFirstInitial === athleteFirstInitial && loserLastName === athleteLastName)
 
-      if (!isWinnerMatch && !isLoserMatch) {
-        return
-      }
+        if (!isWinnerMatch && !isLoserMatch) {
+          return
+        }
 
-      const isWin = isWinnerMatch && !isLoserMatch
-      const opponent = isWin ? match.loser : match.winner
-      const opponentSchool = isWin ? match.loser_school : match.winner_school
+        isWin = isWinnerMatch && !isLoserMatch
+        opponent = isWin ? match.loser : match.winner
+        opponentSchool = isWin ? match.loser_school : match.winner_school
 
-      if (!athleteSchool) {
-        athleteSchool = isWin ? match.winner_school : match.loser_school
+        if (!athleteSchool) {
+          athleteSchool = isWin ? match.winner_school : match.loser_school
+        }
       }
 
       convertedMatches.push({
@@ -673,13 +812,22 @@ export default function MatchManagerPage() {
     const finishingPercentage =
       totalMatches > 0 ? Number((((pins + techFalls) / totalMatches) * 100).toFixed(1)) : 0
 
+    // Use selected high school as fallback if athlete school not found in matches
+    let finalAthleteSchool = athleteSchool
+    if (!finalAthleteSchool && selectedHighSchool) {
+      const selectedSchoolData = highSchools.find((hs) => hs.id === selectedHighSchool)
+      if (selectedSchoolData) {
+        finalAthleteSchool = selectedSchoolData.name
+      }
+    }
+
     const jsonPayload = {
       wrestler_info: {
         first_name: firstName,
         last_name: lastName,
         season: season || "Unknown",
         grade: inferredGrade,
-        high_school: athleteSchool || "Unknown",
+        high_school: finalAthleteSchool || "Unknown",
       },
       season_summary: {
         total_matches: totalMatches,
