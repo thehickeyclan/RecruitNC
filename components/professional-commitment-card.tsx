@@ -441,7 +441,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         </Card>
 
         <Card
-          className={`absolute h-full w-full overflow-auto rounded-xl border-0 shadow-lg backface-hidden ${
+          className={`absolute h-full w-full overflow-auto rounded-xl border-0 shadow-lg backface-hidden card-back ${
             isFlipped ? "z-20" : "z-10"
           }`}
           style={{
@@ -709,6 +709,17 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         }
         
         @media (max-width: 640px) {
+          /* iOS/Safari fix: prevent 3D backface scaling */
+          .card-back {
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: transform;
+          }
+          .card-back * {
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            -webkit-font-smoothing: antialiased;
+          }
           .preserve-3d {
             transform-style: preserve-3d;
             -webkit-transform-style: preserve-3d;
