@@ -138,6 +138,7 @@ export default function SubmissionsManagerPage() {
   // Processing states
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({})
+  const [athleteData, setAthleteData] = useState<{ [key: string]: any }>({})
 
   useEffect(() => {
     fetchAllData()
@@ -164,6 +165,29 @@ export default function SubmissionsManagerPage() {
       setCommitments(commitmentsData.submissions || [])
       setEditRequests(editsData.requests || [])
       setProfileSubmissions(profilesData.submissions || [])
+
+      // Fetch current athlete data for edit requests
+      const athleteIds = (editsData.requests || [])
+        .filter((r: ProfileEditRequest) => r.status === "pending")
+        .map((r: ProfileEditRequest) => r.athlete_id)
+      
+      if (athleteIds.length > 0) {
+        const athleteDataMap: { [key: string]: any } = {}
+        await Promise.all(
+          athleteIds.map(async (id: string) => {
+            try {
+              const res = await fetch(`/api/athletes/${id}`)
+              if (res.ok) {
+                const athlete = await res.json()
+                athleteDataMap[id] = athlete
+              }
+            } catch (err) {
+              console.error(`Error fetching athlete ${id}:`, err)
+            }
+          })
+        )
+        setAthleteData(athleteDataMap)
+      }
 
       // Calculate stats
       const pendingCommitments = (commitmentsData.submissions || []).filter(
@@ -291,6 +315,133 @@ export default function SubmissionsManagerPage() {
     } finally {
       setProcessingId(null)
     }
+  }
+
+  const renderEditChanges = (request: ProfileEditRequest) => {
+    const current = athleteData[request.athlete_id] || {}
+    const requested = request.request_data?.currentData || {}
+    const changes: Array<{ field: string; current: string; requested: string }> = []
+
+    // Bio fields
+    if (requested.bio) {
+      const bio = requested.bio
+      if (bio.highSchool) {
+        changes.push({
+          field: "High School",
+          current: current.highschool || current.high_school || "Not set",
+          requested: bio.highSchool,
+        })
+      }
+      if (bio.club) {
+        changes.push({
+          field: "Wrestling Club",
+          current: current.wrestlingClub || current.wrestling_club || "Not set",
+          requested: bio.club,
+        })
+      }
+      if (bio.weight) {
+        changes.push({
+          field: "Weight Class",
+          current: current.weightclass || current.weight_class || "Not set",
+          requested: bio.weight,
+        })
+      }
+      if (bio.cellNumber) {
+        changes.push({
+          field: "Cell Phone",
+          current: current.phone || "Not set",
+          requested: bio.cellNumber,
+        })
+      }
+      if (bio.highlightVideo) {
+        changes.push({
+          field: "Highlight Video",
+          current: current.highlight_video_url || "Not set",
+          requested: bio.highlightVideo,
+        })
+      }
+      if (bio.other) {
+        changes.push({
+          field: "Other Bio Info",
+          current: "—",
+          requested: bio.other,
+        })
+      }
+    }
+
+    // Achievements
+    if (requested.achievements) {
+      changes.push({
+        field: "Achievements",
+        current: current.achievements || "Not set",
+        requested: requested.achievements,
+      })
+    }
+
+    // Academics
+    if (requested.academics) {
+      const academics = requested.academics
+      if (academics.gpa) {
+        changes.push({
+          field: "GPA",
+          current: current.academic_gpa ? current.academic_gpa.toString() : "Not set",
+          requested: academics.gpa,
+        })
+      }
+      if (academics.sat) {
+        changes.push({
+          field: "SAT Score",
+          current: current.academic_sat ? current.academic_sat.toString() : "Not set",
+          requested: academics.sat,
+        })
+      }
+      if (academics.act) {
+        changes.push({
+          field: "ACT Score",
+          current: current.academic_act ? current.academic_act.toString() : "Not set",
+          requested: academics.act,
+        })
+      }
+    }
+
+    // Other
+    if (requested.other) {
+      changes.push({
+        field: "Additional Information",
+        current: "—",
+        requested: requested.other,
+      })
+    }
+
+    if (changes.length === 0) {
+      return (
+        <div className="text-sm text-gray-500 italic">No specific changes identified</div>
+      )
+    }
+
+    return (
+      <div className="space-y-3">
+        {changes.map((change, idx) => (
+          <div key={idx} className="border-b border-gray-200 pb-3 last:border-0 last:pb-0">
+            <div className="font-semibold text-gray-900 mb-2">{change.field}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Current Value</div>
+                <div className="text-sm bg-gray-100 p-2 rounded border border-gray-300">
+                  {change.current || <span className="text-gray-400 italic">Not set</span>}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Requested Value</div>
+                <div className="text-sm bg-blue-50 p-2 rounded border border-blue-300 text-blue-900 font-medium">
+                  {change.requested}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const getStatusBadge = (status: string) => {
@@ -670,11 +821,9 @@ export default function SubmissionsManagerPage() {
                       </div>
 
                       <div>
-                        <p className="text-sm text-gray-600 mb-2">Requested Changes</p>
-                        <div className="bg-gray-50 p-4 rounded">
-                          <pre className="text-sm whitespace-pre-wrap">
-                            {JSON.stringify(request.request_data, null, 2)}
-                          </pre>
+                        <p className="text-sm font-semibold text-gray-900 mb-3">Requested Changes</p>
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                          {renderEditChanges(request)}
                         </div>
                       </div>
 
