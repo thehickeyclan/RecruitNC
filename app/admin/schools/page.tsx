@@ -776,6 +776,41 @@ export default function SchoolsManagementPage() {
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
+
+                {/* Debug: Unknown Coaches */}
+                {analyticsData.debug?.unknownCount > 0 && (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader>
+                      <CardTitle className="text-orange-900">⚠️ Unknown School Entries</CardTitle>
+                      <CardDescription>
+                        {analyticsData.debug.unknownCount} recruit{analyticsData.debug.unknownCount !== 1 ? "s" : ""} from coaches without assigned schools
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {analyticsData.debug.unknownCoaches?.slice(0, 10).map((coach: any, idx: number) => (
+                          <div key={idx} className="text-sm bg-white p-2 rounded border border-orange-200">
+                            <div className="font-medium">
+                              {coach.full_name || coach.email || "Unknown Coach"}
+                            </div>
+                            {coach.email && (
+                              <div className="text-xs text-gray-600">{coach.email}</div>
+                            )}
+                            {coach.note && (
+                              <div className="text-xs text-orange-600">{coach.note}</div>
+                            )}
+                            <div className="text-xs text-gray-500">User ID: {coach.user_id}</div>
+                          </div>
+                        ))}
+                        {analyticsData.debug.unknownCoaches?.length > 10 && (
+                          <div className="text-xs text-gray-500 italic">
+                            ... and {analyticsData.debug.unknownCoaches.length - 10} more
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             ) : (
               <Card>

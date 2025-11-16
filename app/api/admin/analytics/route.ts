@@ -67,14 +67,30 @@ export async function GET(request: Request) {
     // Fetch coach school mappings for recruits
     const recruitCoachIds = [...new Set(recruitsData?.map((r: any) => r.coach_user_id).filter(Boolean) || [])]
     const recruitCoachSchoolMap: { [key: string]: string } = {}
+    const unknownCoachIds: string[] = []
     if (recruitCoachIds.length > 0) {
       const { data: recruitCoachesData } = await adminSupabase
         .from("user_profiles")
-        .select("user_id, school_id")
+        .select("user_id, school_id, email, full_name")
         .in("user_id", recruitCoachIds)
+      
+      const foundCoachIds = new Set(recruitCoachesData?.map((c: any) => c.user_id) || [])
+      
       recruitCoachesData?.forEach((coach: any) => {
         if (coach.school_id) {
           recruitCoachSchoolMap[coach.user_id] = coach.school_id
+        } else {
+          // Coach exists but has no school_id
+          unknownCoachIds.push(coach.user_id)
+          console.log(`[analytics] Coach without school_id: ${coach.email || coach.full_name || coach.user_id}`)
+        }
+      })
+      
+      // Find coaches that don't exist in user_profiles at all
+      recruitCoachIds.forEach((coachId) => {
+        if (!foundCoachIds.has(coachId)) {
+          unknownCoachIds.push(coachId)
+          console.log(`[analytics] Coach user_id not found in user_profiles: ${coachId}`)
         }
       })
     }
@@ -259,6 +275,24 @@ export async function GET(request: Request) {
     const totalRecruits = recruitsData?.length || 0
     const totalActivities = activitiesData?.length || 0
 
+    // Get details about unknown coaches for debugging
+    const unknownCoachDetails: any[] = []
+    if (unknownCoachIds.length > 0) {
+      const { data: unknownCoaches } = await adminSupabase
+        .from("user_profiles")
+        .select("user_id, email, full_name, school_id")
+        .in("user_id", unknownCoachIds)
+      unknownCoachDetails.push(...(unknownCoaches || []))
+      
+      // Also check for coaches that don't exist at all
+      const foundUnknownIds = new Set(unknownCoaches?.map((c: any) => c.user_id) || [])
+      unknownCoachIds.forEach((id) => {
+        if (!foundUnknownIds.has(id)) {
+          unknownCoachDetails.push({ user_id: id, email: null, full_name: null, school_id: null, note: "User not found in user_profiles" })
+        }
+      })
+    }
+
     return NextResponse.json({
       success: true,
       period,
@@ -271,6 +305,10 @@ export async function GET(request: Request) {
       topSchoolsByRecruits,
       topSchoolsByActivities,
       activitiesByType: activitiesByTypeArray,
+      debug: {
+        unknownCoaches: unknownCoachDetails,
+        unknownCount: unknownCoachIds.length,
+      },
     })
   } catch (error) {
     console.error("Error in analytics API:", error)
