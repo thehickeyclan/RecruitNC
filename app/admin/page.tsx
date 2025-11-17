@@ -264,11 +264,6 @@ export default function AdminDashboard() {
                     🏫 Schools & Coaches
                   </Button>
                 </Link>
-                <Link href="/admin/coach-analytics">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    📊 Coach Analytics
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
 

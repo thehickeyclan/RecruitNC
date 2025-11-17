@@ -144,12 +144,6 @@ export default function CollegeCoachesDashboard() {
             <CardDescription>Monitor coach activity and recruiting trends</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link href="/admin/coach-analytics">
-              <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
-                <TrendingUp className="w-4 h-4 mr-2" />
-                View Coach Analytics
-              </Button>
-            </Link>
             <Link href="/admin/users?filter=coach">
               <Button variant="outline" className="w-full justify-start bg-transparent">
                 <Users className="w-4 h-4 mr-2" />
