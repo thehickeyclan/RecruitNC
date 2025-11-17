@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap
+  TrendingUp, Zap, Plus
 } from "lucide-react"
 
 interface AdminStats {
@@ -195,150 +195,111 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Management Categories */}
+        {/* Management Tools - Individual Tiles */}
         <div>
           <h2 className="text-2xl font-bold text-[#13294B] mb-4 flex items-center gap-2">
             <Settings className="h-6 w-6 text-[#C8102E]" />
             Management Tools
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Athletes & Data */}
-            <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <Users className="h-5 w-5" />
-                  Athletes & Data
-                </CardTitle>
-                <CardDescription>Manage athlete profiles, records, and data</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/athletes">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    👥 View All Athletes
-                  </Button>
-                </Link>
-                <Link href="/admin/athletes/add">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    ➕ Add New Athlete
-                  </Button>
-                </Link>
-                <Link href="/admin/match-manager">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    🤼 Match Manager
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* View All Athletes */}
+            <Link href="/admin/athletes">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Users className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">View All Athletes</h3>
+                  <p className="text-xs text-gray-600">Manage athlete profiles</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-            {/* Submissions & Requests */}
-            <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="bg-gradient-to-r from-red-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <FileText className="h-5 w-5" />
-                  Submissions & Requests
-                </CardTitle>
-                <CardDescription>Review commitments, edits, and new profiles</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/submissions-manager">
-                  <Button variant="outline" className="w-full justify-start hover:bg-red-50">
-                    📋 Submissions Manager
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {/* Add New Athlete */}
+            <Link href="/admin/athletes/add">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Plus className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Add New Athlete</h3>
+                  <p className="text-xs text-gray-600">Create new profile</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Match Manager */}
+            <Link href="/admin/match-manager">
+              <Card className="border-t-4 border-t-[#FFC72C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Trophy className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Match Manager</h3>
+                  <p className="text-xs text-gray-600">Manage match records</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Submissions Manager */}
+            <Link href="/admin/submissions-manager">
+              <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <FileText className="h-10 w-10 text-[#C8102E] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Submissions Manager</h3>
+                  <p className="text-xs text-gray-600">Review submissions</p>
+                </CardContent>
+              </Card>
+            </Link>
 
             {/* Schools & Coaches */}
-            <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <School className="h-5 w-5" />
-                  Schools & Coaches
-                </CardTitle>
-                <CardDescription>Manage schools, coaches, and recruiting</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/schools">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    🏫 Schools & Coaches
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+            <Link href="/admin/schools">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <School className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Schools & Coaches</h3>
+                  <p className="text-xs text-gray-600">Manage schools</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-            {/* Rankings */}
-            <Card className="border-t-4 border-t-[#FFC72C] shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="bg-gradient-to-r from-yellow-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <Trophy className="h-5 w-5" />
-                  Rankings Manager
-                </CardTitle>
-                <CardDescription>Manage and publish prospect rankings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/prospects/simple-ranking">
-                  <Button variant="outline" className="w-full justify-start hover:bg-yellow-50">
-                    🏆 Prospect Rankings
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {/* Prospect Rankings */}
+            <Link href="/admin/prospects/simple-ranking">
+              <Card className="border-t-4 border-t-[#FFC72C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Trophy className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Prospect Rankings</h3>
+                  <p className="text-xs text-gray-600">Manage rankings</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-            {/* Users & Permissions */}
-            <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <UserCheck className="h-5 w-5" />
-                  Users & Permissions
-                </CardTitle>
-                <CardDescription>Manage user accounts and permissions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/users-dashboard">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    👥 Users Dashboard
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {/* Users Dashboard */}
+            <Link href="/admin/users-dashboard">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <UserCheck className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Users Dashboard</h3>
+                  <p className="text-xs text-gray-600">Manage users</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-            {/* Media & Design */}
-            <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <Pencil className="h-5 w-5" />
-                  Media & Design
-                </CardTitle>
-                <CardDescription>Manage logos and media assets</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/enhanced-logo-manager">
-                  <Button variant="outline" className="w-full justify-start hover:bg-blue-50">
-                    🎨 Enhanced Logo Manager
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {/* Enhanced Logo Manager */}
+            <Link href="/admin/enhanced-logo-manager">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Pencil className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Enhanced Logo Manager</h3>
+                  <p className="text-xs text-gray-600">Manage logos</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-            {/* Analytics & Reports */}
-            <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-shadow md:col-span-2 lg:col-span-1">
-              <CardHeader className="bg-gradient-to-r from-red-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-[#13294B]">
-                  <BarChart3 className="h-5 w-5" />
-                  Analytics & Reports
-                </CardTitle>
-                <CardDescription>View statistics and analytics</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-6">
-                <Link href="/admin/commitment-stats">
-                  <Button variant="outline" className="w-full justify-start hover:bg-red-50">
-                    📊 Commitment Statistics
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
+            {/* Commitment Statistics */}
+            <Link href="/admin/commitment-stats">
+              <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <BarChart3 className="h-10 w-10 text-[#C8102E] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Commitment Statistics</h3>
+                  <p className="text-xs text-gray-600">View analytics</p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
