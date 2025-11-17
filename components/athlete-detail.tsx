@@ -729,35 +729,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </div>
       </Card>
 
-      {/* Highlight Video Section */}
-      {athlete?.highlight_video_url && (() => {
-        const videoId = getYouTubeVideoId(athlete.highlight_video_url)
-        if (!videoId) return null
-        
-        return (
-          <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
-            <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
-              <div className="flex items-center gap-3">
-                <Video className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Highlight Reel</h2>
-              </div>
-            </div>
-            <div className="p-8">
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}`}
-                  title="Wrestling Highlight Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-                  style={{ border: 'none' }}
-                />
-              </div>
-            </div>
-          </Card>
-        )
-      })()}
-
       {/* Contact Info Section */}
       <ContactInfoSection athlete={athlete} />
 
@@ -929,6 +900,35 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           </div>
         </Card>
       )}
+
+      {/* Highlight Video Section */}
+      {athlete?.highlight_video_url && (() => {
+        const videoId = getYouTubeVideoId(athlete.highlight_video_url)
+        if (!videoId) return null
+        
+        return (
+          <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
+            <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
+              <div className="flex items-center gap-3">
+                <Video className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Highlight Reel</h2>
+              </div>
+            </div>
+            <div className="p-8">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title="Wrestling Highlight Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                  style={{ border: 'none' }}
+                />
+              </div>
+            </div>
+          </Card>
+        )
+      })()}
 
       {/* Additional Achievements will be rendered after College Opens Experience */}
 
