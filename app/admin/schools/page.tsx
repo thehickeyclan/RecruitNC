@@ -7,8 +7,9 @@ import { AdminHeader } from "@/components/admin-header"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChevronDown, ChevronUp, BarChart3, TrendingUp, Users, Activity } from "lucide-react"
+import { ChevronDown, ChevronUp, BarChart3, TrendingUp, Users, Activity, Sparkles } from "lucide-react"
 import Image from "next/image"
+import { extractColorsFromImage, formatHexColor, isValidHexColor } from "@/lib/color-extraction"
 import {
   LineChart,
   Line,
@@ -59,9 +60,20 @@ export default function SchoolsManagementPage() {
   // Add Program (create new school) modal state
   const [addProgramOpen, setAddProgramOpen] = useState(false)
   const [creatingProgram, setCreatingProgram] = useState(false)
+  const [extractingColors, setExtractingColors] = useState(false)
   const [newProgram, setNewProgram] = useState({
     name: "",
     logoUrl: "",
+    primaryColor: "",
+    secondaryColor: "",
+  })
+
+  // Edit School modal state
+  const [editSchoolOpen, setEditSchoolOpen] = useState(false)
+  const [editingSchool, setEditingSchool] = useState(false)
+  const [extractingEditColors, setExtractingEditColors] = useState(false)
+  const [editSchool, setEditSchool] = useState<School | null>(null)
+  const [editColors, setEditColors] = useState({
     primaryColor: "",
     secondaryColor: "",
   })
@@ -376,7 +388,12 @@ export default function SchoolsManagementPage() {
                       size="sm"
                       className="flex-1 bg-transparent"
                       onClick={() => {
-                        alert("Edit functionality coming soon!")
+                        setEditSchool(school)
+                        setEditColors({
+                          primaryColor: school.primary_color || "",
+                          secondaryColor: school.secondary_color || "",
+                        })
+                        setEditSchoolOpen(true)
                       }}
                     >
                       Edit
@@ -386,21 +403,37 @@ export default function SchoolsManagementPage() {
                       size="sm"
                       className="flex-1 bg-transparent"
                       onClick={async () => {
+                        if (!school.logo_url) {
+                          alert("School needs a logo URL to detect colors")
+                          return
+                        }
                         try {
-                          const res = await fetch(`/api/admin/schools/${school.id}/detect-branding`, { method: "POST" })
+                          setExtractingEditColors(true)
+                          const colors = await extractColorsFromImage(school.logo_url)
+                          const res = await fetch(`/api/admin/schools/${school.id}/update-colors`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              primaryColor: colors.primary,
+                              secondaryColor: colors.secondary,
+                            }),
+                          })
                           const data = await res.json()
                           if (!res.ok) {
-                            alert(data?.error || "Failed to detect branding")
+                            alert(data?.error || "Failed to update colors")
                             return
                           }
-                          alert("Branding updated from logo")
+                          alert("Colors detected and updated from logo!")
                           fetchSchools()
-                        } catch (e) {
-                          alert("Failed to detect branding")
+                        } catch (e: any) {
+                          alert(e?.message || "Failed to detect colors")
+                        } finally {
+                          setExtractingEditColors(false)
                         }
                       }}
+                      disabled={extractingEditColors || !school.logo_url}
                     >
-                      Detect Colors
+                      {extractingEditColors ? "Detecting..." : "Detect Colors"}
                     </Button>
                     <Button
                       variant="outline"
@@ -560,36 +593,124 @@ export default function SchoolsManagementPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Logo URL (optional)</label>
-                <input
-                  className="mt-1 w-full border rounded px-3 py-2"
-                  placeholder="https://…/logo.png"
-                  value={newProgram.logoUrl}
-                  onChange={(e) => setNewProgram((p) => ({ ...p, logoUrl: e.target.value }))}
-                />
+                <div className="flex gap-2 mt-1">
+                  <input
+                    className="flex-1 border rounded px-3 py-2"
+                    placeholder="https://…/logo.png"
+                    value={newProgram.logoUrl}
+                    onChange={(e) => setNewProgram((p) => ({ ...p, logoUrl: e.target.value }))}
+                  />
+                  {newProgram.logoUrl && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!newProgram.logoUrl) return
+                        try {
+                          setExtractingColors(true)
+                          const colors = await extractColorsFromImage(newProgram.logoUrl)
+                          setNewProgram((p) => ({
+                            ...p,
+                            primaryColor: colors.primary,
+                            secondaryColor: colors.secondary,
+                          }))
+                        } catch (e: any) {
+                          alert(e?.message || "Failed to extract colors from logo")
+                        } finally {
+                          setExtractingColors(false)
+                        }
+                      }}
+                      disabled={extractingColors}
+                    >
+                      <Sparkles className="h-4 w-4 mr-1" />
+                      {extractingColors ? "Extracting..." : "Auto-detect"}
+                    </Button>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Paste a public logo URL. We can add file upload support if needed.
+                  Paste a public logo URL. Click "Auto-detect" to extract brand colors automatically.
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Primary color (optional)</label>
-                  <input
-                    className="mt-1 w-full border rounded px-3 py-2"
-                    placeholder="#F76902"
-                    value={newProgram.primaryColor}
-                    onChange={(e) => setNewProgram((p) => ({ ...p, primaryColor: e.target.value }))}
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Primary color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      className="h-10 w-16 border rounded cursor-pointer"
+                      value={newProgram.primaryColor || "#3B82F6"}
+                      onChange={(e) => setNewProgram((p) => ({ ...p, primaryColor: formatHexColor(e.target.value) }))}
+                    />
+                    <input
+                      className="flex-1 border rounded px-3 py-2 font-mono text-sm"
+                      placeholder="#F76902"
+                      value={newProgram.primaryColor}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val === "" || isValidHexColor(val) || val.length < 7) {
+                          setNewProgram((p) => ({ ...p, primaryColor: val }))
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Secondary color (optional)</label>
-                  <input
-                    className="mt-1 w-full border rounded px-3 py-2"
-                    placeholder="#000000"
-                    value={newProgram.secondaryColor}
-                    onChange={(e) => setNewProgram((p) => ({ ...p, secondaryColor: e.target.value }))}
-                  />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Secondary color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      className="h-10 w-16 border rounded cursor-pointer"
+                      value={newProgram.secondaryColor || "#000000"}
+                      onChange={(e) => setNewProgram((p) => ({ ...p, secondaryColor: formatHexColor(e.target.value) }))}
+                    />
+                    <input
+                      className="flex-1 border rounded px-3 py-2 font-mono text-sm"
+                      placeholder="#000000"
+                      value={newProgram.secondaryColor}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val === "" || isValidHexColor(val) || val.length < 7) {
+                          setNewProgram((p) => ({ ...p, secondaryColor: val }))
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
+              {/* Preview */}
+              {(newProgram.primaryColor || newProgram.secondaryColor) && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Preview</p>
+                  <div
+                    className="rounded-lg p-4 text-white"
+                    style={{
+                      background: newProgram.primaryColor
+                        ? `linear-gradient(135deg, ${newProgram.primaryColor} 0%, ${newProgram.secondaryColor || newProgram.primaryColor} 100%)`
+                        : "#1f2937",
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      {newProgram.logoUrl && (
+                        <div className="relative w-12 h-12 bg-white rounded-lg p-2 flex-shrink-0">
+                          <img
+                            src={newProgram.logoUrl}
+                            alt="Logo preview"
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none"
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-lg">{newProgram.name || "School Name"}</div>
+                        <div className="text-white/90 text-sm">Recruiting Portal</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setAddProgramOpen(false)}>
                   Cancel
@@ -599,6 +720,188 @@ export default function SchoolsManagementPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit School Modal */}
+      {editSchoolOpen && editSchool && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Edit Branding: {editSchool.name}</h2>
+              <button
+                className="text-gray-500 hover:text-gray-700"
+                onClick={() => {
+                  setEditSchoolOpen(false)
+                  setEditSchool(null)
+                }}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {editSchool.logo_url && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-16 h-16 bg-gray-100 rounded-lg p-2">
+                      <img
+                        src={editSchool.logo_url}
+                        alt={`${editSchool.name} logo`}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!editSchool.logo_url) return
+                        try {
+                          setExtractingEditColors(true)
+                          const colors = await extractColorsFromImage(editSchool.logo_url!)
+                          setEditColors({
+                            primaryColor: colors.primary,
+                            secondaryColor: colors.secondary,
+                          })
+                        } catch (e: any) {
+                          alert(e?.message || "Failed to extract colors from logo")
+                        } finally {
+                          setExtractingEditColors(false)
+                        }
+                      }}
+                      disabled={extractingEditColors}
+                    >
+                      <Sparkles className="h-4 w-4 mr-1" />
+                      {extractingEditColors ? "Extracting..." : "Auto-detect from Logo"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Primary color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      className="h-10 w-16 border rounded cursor-pointer"
+                      value={editColors.primaryColor || "#3B82F6"}
+                      onChange={(e) => setEditColors((c) => ({ ...c, primaryColor: formatHexColor(e.target.value) }))}
+                    />
+                    <input
+                      className="flex-1 border rounded px-3 py-2 font-mono text-sm"
+                      placeholder="#F76902"
+                      value={editColors.primaryColor}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val === "" || isValidHexColor(val) || val.length < 7) {
+                          setEditColors((c) => ({ ...c, primaryColor: val }))
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Secondary color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      className="h-10 w-16 border rounded cursor-pointer"
+                      value={editColors.secondaryColor || "#000000"}
+                      onChange={(e) => setEditColors((c) => ({ ...c, secondaryColor: formatHexColor(e.target.value) }))}
+                    />
+                    <input
+                      className="flex-1 border rounded px-3 py-2 font-mono text-sm"
+                      placeholder="#000000"
+                      value={editColors.secondaryColor}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val === "" || isValidHexColor(val) || val.length < 7) {
+                          setEditColors((c) => ({ ...c, secondaryColor: val }))
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* Preview */}
+              {(editColors.primaryColor || editColors.secondaryColor) && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <p className="text-sm font-medium text-gray-700 mb-3">Preview</p>
+                  <div
+                    className="rounded-lg p-4 text-white"
+                    style={{
+                      background: editColors.primaryColor
+                        ? `linear-gradient(135deg, ${editColors.primaryColor} 0%, ${editColors.secondaryColor || editColors.primaryColor} 100%)`
+                        : "#1f2937",
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      {editSchool.logo_url && (
+                        <div className="relative w-12 h-12 bg-white rounded-lg p-2 flex-shrink-0">
+                          <img
+                            src={editSchool.logo_url}
+                            alt={`${editSchool.name} logo`}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold text-lg">{editSchool.name}</div>
+                        <div className="text-white/90 text-sm">Recruiting Portal</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setEditSchoolOpen(false)
+                    setEditSchool(null)
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={editingSchool}
+                  onClick={async () => {
+                    try {
+                      setEditingSchool(true)
+                      const res = await fetch(`/api/admin/schools/${editSchool.id}/update-colors`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          primaryColor: editColors.primaryColor || null,
+                          secondaryColor: editColors.secondaryColor || null,
+                        }),
+                      })
+                      const data = await res.json()
+                      if (!res.ok) {
+                        alert(data?.error || "Failed to update colors")
+                        return
+                      }
+                      setEditSchoolOpen(false)
+                      setEditSchool(null)
+                      await fetchSchools()
+                      alert("Branding updated successfully!")
+                    } catch (err) {
+                      console.error(err)
+                      alert("Failed to update branding")
+                    } finally {
+                      setEditingSchool(false)
+                    }
+                  }}
+                >
+                  {editingSchool ? "Saving…" : "Save Changes"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
