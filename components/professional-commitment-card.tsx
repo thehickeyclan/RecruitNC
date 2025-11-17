@@ -535,9 +535,9 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             </div>
 
             {careerStats && careerStats.seasons.length > 0 && (
-              <div className="rounded-lg p-2.5 mb-3 shadow-sm text-white sm:mx-0 -mx-4" style={{ backgroundColor: "#B31B1B" }}>
+              <div className="hs-stats-container rounded-lg p-2.5 mb-3 shadow-sm text-white sm:mx-0 -mx-4 px-4 sm:px-2.5" style={{ backgroundColor: "#B31B1B" }}>
                 <h4 className="font-bold text-center mb-1.5 text-xs">HS CAREER STATS</h4>
-                <div className="bg-white/10 rounded overflow-hidden w-full -mx-2.5 sm:mx-0">
+                <div className="bg-white/10 rounded overflow-hidden w-full">
                   <table className="stats-table w-full table-fixed text-[10px]">
                     <thead>
                       <tr className="border-b border-white/20">
@@ -720,9 +720,18 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             -webkit-transform: translateZ(0);
             -webkit-font-smoothing: antialiased;
           }
+          /* HS Stats container - ensure full width on mobile */
+          .hs-stats-container {
+            width: calc(100% + 2rem) !important;
+            margin-left: -1rem !important;
+            margin-right: -1rem !important;
+            max-width: none !important;
+          }
           .stats-table {
             width: 100% !important;
             table-layout: fixed;
+            min-width: 100%;
+            max-width: 100%;
           }
           .preserve-3d {
             transform-style: preserve-3d;
