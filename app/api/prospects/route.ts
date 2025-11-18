@@ -76,8 +76,9 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1)
 
     // Filter to North Carolina athletes only
-    // Check state field for NC or North Carolina, or location field contains NC/North Carolina
-    query = query.or("state.eq.NC,state.eq.North Carolina,state.ilike.*North Carolina*,location.ilike.*North Carolina*,location.ilike.*NC*")
+    // First try exact state matches, then check location field
+    query = query.or("state.eq.NC,state.eq.North Carolina")
+    // Also filter by location containing NC (handled in post-processing if needed)
     console.log("[v0] Prospects API - Filtering to NC athletes only")
 
     // Apply filters - match admin prospects API pattern
@@ -108,6 +109,26 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Prospects API - Query executed, results:", prospects?.length || 0)
 
+    // Post-filter to ensure only NC athletes (check location field for those without state set)
+    const ncProspects = (prospects || []).filter((prospect: any) => {
+      const state = (prospect.state || "").trim().toLowerCase()
+      if (state === "nc" || state === "north carolina") return true
+      
+      const location = (prospect.location || "").trim().toLowerCase()
+      if (location.includes("north carolina") || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
+        return true
+      }
+      
+      // Exclude known non-NC states
+      const nonNcStates = ["sc", "south carolina", "ga", "georgia", "va", "virginia", "tn", "tennessee", "fl", "florida", "oh", "ohio", "pa", "pennsylvania", "ny", "new york", "tx", "texas", "ca", "california"]
+      if (nonNcStates.some((s) => state === s || location.includes(s))) {
+        return false
+      }
+      
+      // If we can't determine, include it (default to including)
+      return true
+    })
+
     if (error) {
       console.error("[v0] Prospects API - Supabase error:", error)
       return NextResponse.json(
@@ -127,7 +148,7 @@ export async function GET(request: NextRequest) {
     let countQuery = supabase
       .from("athletes")
       .select("*", { count: "exact", head: true })
-      .or("state.eq.NC,state.eq.North Carolina,state.ilike.*North Carolina*,location.ilike.*North Carolina*,location.ilike.*NC*")
+      .or("state.eq.NC,state.eq.North Carolina")
 
     if (graduationYear && graduationYear !== "all") {
       countQuery = countQuery.eq("graduationyear", Number.parseInt(graduationYear))
@@ -143,12 +164,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        prospects: prospects || [],
+        prospects: ncProspects,
         pagination: {
-          total: count || 0,
+          total: ncProspects.length, // Use filtered count
           limit,
           offset,
-          hasMore: (count || 0) > offset + limit,
+          hasMore: ncProspects.length >= limit,
         },
       },
       {
