@@ -199,7 +199,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           }
         }
 
-        // Load social media logos from logo manager
+        // Load social media logos from logo manager with fallbacks
         const instagramResponse = await fetch(`/api/logo-mappings/by-entity/other/Instagram`)
         if (instagramResponse.ok) {
           const instagramData = await instagramResponse.json()
@@ -213,7 +213,13 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           const floData = await floResponse.json()
           if (floData.success && floData.logo_url) {
             setFloLogo(floData.logo_url)
+          } else {
+            // Fallback to provided URL
+            setFloLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/tSowJ6H6xqarm-EN8yomh-Flo.png")
           }
+        } else {
+          // Fallback to provided URL
+          setFloLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/tSowJ6H6xqarm-EN8yomh-Flo.png")
         }
 
         const trackResponse = await fetch(`/api/logo-mappings/by-entity/other/Track Wrestling`)
@@ -221,7 +227,13 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           const trackData = await trackResponse.json()
           if (trackData.success && trackData.logo_url) {
             setTrackWrestlingLogo(trackData.logo_url)
+          } else {
+            // Fallback to provided URL
+            setTrackWrestlingLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/yr63Q1zyRJ9lUKClT1Xy7-Track.png")
           }
+        } else {
+          // Fallback to provided URL
+          setTrackWrestlingLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/yr63Q1zyRJ9lUKClT1Xy7-Track.png")
         }
       } catch (error) {
         console.error("Error loading logos:", error)
