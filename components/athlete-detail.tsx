@@ -542,58 +542,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-              {/* Social Media Icons - Bottom Left of Photo */}
-              <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-                {instagramUrl && (
-                  <a
-                    href={instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
-                  >
-                    <Image
-                      src="/instagram-logo.png"
-                      alt="Instagram"
-                      width={20}
-                      height={20}
-                      className="w-5 h-5"
-                    />
-                  </a>
-                )}
-                {athlete?.flo_profile_url && (
-                  <a
-                    href={athlete.flo_profile_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
-                  >
-                    <Image
-                      src="/flo-logo.png"
-                      alt="Flo Wrestling"
-                      width={20}
-                      height={20}
-                      className="w-5 h-5"
-                    />
-                  </a>
-                )}
-                {athlete?.track_wrestling_profile_url && (
-                  <a
-                    href={athlete.track_wrestling_profile_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
-                  >
-                    <Image
-                      src="/track-wrestling-logo.png"
-                      alt="Track Wrestling"
-                      width={20}
-                      height={20}
-                      className="w-5 h-5"
-                    />
-                  </a>
-                )}
-              </div>
-
               {/* Edit Button - Bottom Right of Photo */}
               {currentUserId && (
                 <Button
@@ -661,6 +609,63 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <p className="text-xl font-bold">{weightClass}</p>
                 </div>
               </div>
+
+              {/* Social Media Icons - Below Stats */}
+              {(instagramUrl || athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
+                <div className="flex items-center gap-2 mt-4">
+                  {instagramUrl && (
+                    <a
+                      href={instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                      aria-label="Instagram"
+                    >
+                      <Image
+                        src="/instagram-logo.png"
+                        alt="Instagram"
+                        width={20}
+                        height={20}
+                        className="w-5 h-5 object-contain"
+                      />
+                    </a>
+                  )}
+                  {athlete?.flo_profile_url && (
+                    <a
+                      href={athlete.flo_profile_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                      aria-label="Flo Wrestling"
+                    >
+                      <Image
+                        src="/flo-logo.png"
+                        alt="Flo Wrestling"
+                        width={20}
+                        height={20}
+                        className="w-5 h-5 object-contain"
+                      />
+                    </a>
+                  )}
+                  {athlete?.track_wrestling_profile_url && (
+                    <a
+                      href={athlete.track_wrestling_profile_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                      aria-label="Track Wrestling"
+                    >
+                      <Image
+                        src="/track-wrestling-logo.png"
+                        alt="Track Wrestling"
+                        width={20}
+                        height={20}
+                        className="w-5 h-5 object-contain"
+                      />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -677,58 +682,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               <div className="relative z-10 flex items-start gap-8 p-8">
                 <div className="flex-shrink-0 w-80">
                   <div className="relative h-96 w-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl">
-                    {/* Social Media Icons - Bottom Left */}
-                    <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-                      {instagramUrl && (
-                        <a
-                          href={instagramUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
-                        >
-                          <Image
-                            src="/instagram-logo.png"
-                            alt="Instagram"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5"
-                          />
-                        </a>
-                      )}
-                      {athlete?.flo_profile_url && (
-                        <a
-                          href={athlete.flo_profile_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
-                        >
-                          <Image
-                            src="/flo-logo.png"
-                            alt="Flo Wrestling"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5"
-                          />
-                        </a>
-                      )}
-                      {athlete?.track_wrestling_profile_url && (
-                        <a
-                          href={athlete.track_wrestling_profile_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white p-2.5 rounded-full shadow-lg transition-all"
-                        >
-                          <Image
-                            src="/track-wrestling-logo.png"
-                            alt="Track Wrestling"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5"
-                          />
-                        </a>
-                      )}
-                    </div>
-
                     {/* Edit Button - Bottom Right */}
                     {currentUserId && (
                       <Button
@@ -800,6 +753,63 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       <p className="text-2xl font-bold text-white">{weightClass}</p>
                     </div>
                   </div>
+
+                  {/* Social Media Icons - Below Stats */}
+                  {(instagramUrl || athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
+                    <div className="flex items-center gap-2 mt-4">
+                      {instagramUrl && (
+                        <a
+                          href={instagramUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          aria-label="Instagram"
+                        >
+                          <Image
+                            src="/instagram-logo.png"
+                            alt="Instagram"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5 object-contain"
+                          />
+                        </a>
+                      )}
+                      {athlete?.flo_profile_url && (
+                        <a
+                          href={athlete.flo_profile_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          aria-label="Flo Wrestling"
+                        >
+                          <Image
+                            src="/flo-logo.png"
+                            alt="Flo Wrestling"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5 object-contain"
+                          />
+                        </a>
+                      )}
+                      {athlete?.track_wrestling_profile_url && (
+                        <a
+                          href={athlete.track_wrestling_profile_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          aria-label="Track Wrestling"
+                        >
+                          <Image
+                            src="/track-wrestling-logo.png"
+                            alt="Track Wrestling"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5 object-contain"
+                          />
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
