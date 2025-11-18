@@ -44,22 +44,34 @@ export async function GET() {
     // Fetch recruiter counts for each coach
     const coachUserIds = coaches.map((coach) => coach.user_id).filter(Boolean)
     const coachAthleteMap = new Map<string, Set<string>>()
+    
+    // Calculate minimum active graduation year (current recruiting class and beyond)
+    // This dynamically adjusts: in 2025 it counts class of 2026+, in 2026 it counts class of 2027+, etc.
+    const currentYear = new Date().getFullYear()
+    const minActiveYear = currentYear + 1
+    console.log(`[v0] Active recruits filter: currentYear=${currentYear}, minActiveYear=${minActiveYear} (counting class of ${minActiveYear} and beyond)`)
 
     if (coachUserIds.length > 0) {
+      // Fetch stars with athlete graduation years
       const { data: coachStars, error: starError } = await supabase
         .from("college_coach_stars")
-        .select("coach_user_id, athlete_id")
+        .select("coach_user_id, athlete_id, athletes!inner(graduationyear)")
         .in("coach_user_id", coachUserIds as string[])
 
       if (starError) {
         console.error("[v0] Error fetching coach stars:", starError)
       } else if (coachStars) {
-        coachStars.forEach((star) => {
+        coachStars.forEach((star: any) => {
           if (!star.coach_user_id || !star.athlete_id) return
-          if (!coachAthleteMap.has(star.coach_user_id)) {
-            coachAthleteMap.set(star.coach_user_id, new Set<string>())
+          
+          // Only count athletes with graduation year >= minActiveYear (active recruits)
+          const graduationYear = star.athletes?.graduationyear
+          if (graduationYear && graduationYear >= minActiveYear) {
+            if (!coachAthleteMap.has(star.coach_user_id)) {
+              coachAthleteMap.set(star.coach_user_id, new Set<string>())
+            }
+            coachAthleteMap.get(star.coach_user_id)!.add(star.athlete_id)
           }
-          coachAthleteMap.get(star.coach_user_id)!.add(star.athlete_id)
         })
       }
     }

@@ -516,10 +516,25 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
         const data = await response.json()
         console.log("[v0] NC Recruits API response data:", data)
         console.log("[v0] Number of recruits received:", data.recruits?.length || 0)
-        if (data.recruits && data.recruits.length > 0) {
-          console.log("[v0] Recruit names:", data.recruits.map((r: any) => r.name))
+        
+        // CLIENT-SIDE SAFETY FILTER: Exclude 2025 and earlier (only show active recruits)
+        const currentYear = new Date().getFullYear()
+        const minActiveYear = currentYear + 1
+        const filteredRecruits = (data.recruits || []).filter((recruit: any) => {
+          const gradYear = typeof recruit.year === 'string' ? parseInt(recruit.year, 10) : recruit.year
+          const isActive = gradYear && !isNaN(gradYear) && gradYear >= minActiveYear
+          if (!isActive && recruit.year) {
+            console.log(`[v0] 🚨 CLIENT FILTER: Excluding ${recruit.name} (class of ${recruit.year}) - not an active recruit`)
+          }
+          return isActive
+        })
+        
+        console.log(`[v0] Filtered from ${data.recruits?.length || 0} to ${filteredRecruits.length} active recruits (minActiveYear=${minActiveYear})`)
+        if (filteredRecruits.length > 0) {
+          console.log("[v0] Active recruit names:", filteredRecruits.map((r: any) => `${r.name} (${r.year})`))
+          console.log("[v0] Years in filtered results:", [...new Set(filteredRecruits.map((r: any) => r.year))].sort())
         }
-        setNcRecruits(data.recruits || [])
+        setNcRecruits(filteredRecruits)
       } else {
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
         console.error("[v0] NC Recruits API error:", response.status, errorData)
