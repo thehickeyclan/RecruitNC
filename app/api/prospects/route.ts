@@ -75,6 +75,10 @@ export async function GET(request: NextRequest) {
       .order("name", { ascending: true })
       .range(offset, offset + limit - 1)
 
+    // Filter to North Carolina athletes only
+    query = query.or("state.eq.NC,state.eq.North Carolina,state.ilike.%North Carolina%,location.ilike.%North Carolina%,location.ilike.%NC%")
+    console.log("[v0] Prospects API - Filtering to NC athletes only")
+
     // Apply filters - match admin prospects API pattern
     if (graduationYear && graduationYear !== "all") {
       query = query.eq("graduationyear", Number.parseInt(graduationYear))
@@ -118,8 +122,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get total count for pagination
-    let countQuery = supabase.from("athletes").select("*", { count: "exact", head: true })
+    // Get total count for pagination (also filtered to NC only)
+    let countQuery = supabase
+      .from("athletes")
+      .select("*", { count: "exact", head: true })
+      .or("state.eq.NC,state.eq.North Carolina,state.ilike.%North Carolina%,location.ilike.%North Carolina%,location.ilike.%NC%")
 
     if (graduationYear && graduationYear !== "all") {
       countQuery = countQuery.eq("graduationyear", Number.parseInt(graduationYear))
