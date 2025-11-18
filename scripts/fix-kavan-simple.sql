@@ -1,21 +1,19 @@
 -- Simple fix: Just add Kavan to Reinhardt portal
 -- Run this in Supabase SQL Editor
 
--- Step 1: Get Kavan's ID and a Reinhardt coach ID
-WITH kavan AS (
-  SELECT id, name, college 
-  FROM athletes 
-  WHERE name ILIKE '%Kavan Wilson%' 
-  LIMIT 1
-),
-reinhardt_coach AS (
-  SELECT up.user_id
-  FROM user_profiles up
-  JOIN schools s ON s.id = up.school_id
-  WHERE s.name ILIKE '%Reinhardt%'
-  LIMIT 1
-)
--- Step 2: Insert or update the star entry
+-- Delete any existing entries for Kavan that aren't with Reinhardt coaches
+DELETE FROM college_coach_stars ccs
+USING athletes a
+WHERE ccs.athlete_id = a.id
+  AND a.name ILIKE '%Kavan Wilson%'
+  AND ccs.coach_user_id NOT IN (
+    SELECT up.user_id 
+    FROM user_profiles up
+    JOIN schools s ON s.id = up.school_id
+    WHERE s.name ILIKE '%Reinhardt%'
+  );
+
+-- Insert new entry with a Reinhardt coach
 INSERT INTO college_coach_stars (
   coach_user_id,
   athlete_id,
@@ -26,28 +24,24 @@ INSERT INTO college_coach_stars (
   committed_date
 )
 SELECT 
-  rc.user_id,
-  k.id,
+  up.user_id,
+  a.id,
   'Committed',
   'high',
   'Committed to Reinhardt University',
   NOW(),
   NOW()
-FROM kavan k, reinhardt_coach rc
-ON CONFLICT DO NOTHING;
-
--- If that didn't work (no conflict), try update
-UPDATE college_coach_stars ccs
-SET 
-  pipeline_stage = 'Committed',
-  interest_level = 'high',
-  committed_date = NOW()
 FROM athletes a
-JOIN user_profiles up ON up.user_id = ccs.coach_user_id
+CROSS JOIN user_profiles up
 JOIN schools s ON s.id = up.school_id
 WHERE a.name ILIKE '%Kavan Wilson%'
-  AND ccs.athlete_id = a.id
-  AND s.name ILIKE '%Reinhardt%';
+  AND s.name ILIKE '%Reinhardt%'
+  AND NOT EXISTS (
+    SELECT 1 FROM college_coach_stars ccs2
+    WHERE ccs2.athlete_id = a.id
+      AND ccs2.coach_user_id = up.user_id
+  )
+LIMIT 1;
 
 -- Verify it worked
 SELECT 
