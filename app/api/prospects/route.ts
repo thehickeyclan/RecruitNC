@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
         weightclass,
         weight,
         highschool,
-        city,
         state,
         wrestlingClub,
         college,
