@@ -93,3 +93,6 @@ JOIN user_profiles up ON up.user_id = ccs.coach_user_id
 LEFT JOIN schools s ON s.id = up.school_id
 WHERE a.name ILIKE '%Kavan%Wilson%';
 
+
+
+

@@ -23,3 +23,5 @@ WHERE table_name = 'athletes'
   AND column_name IN ('flo_profile_url', 'track_wrestling_profile_url')
 ORDER BY column_name;
 
+
+

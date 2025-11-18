@@ -42,3 +42,6 @@ JOIN schools s ON s.id = up.school_id
 WHERE s.name ILIKE '%Reinhardt%'
   AND a.name ILIKE '%Kavan%Wilson%';
 
+
+
+

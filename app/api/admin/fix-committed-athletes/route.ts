@@ -180,7 +180,6 @@ export async function POST(request: NextRequest) {
         .insert({
           coach_user_id: targetCoachId,
           athlete_id: athlete.id,
-          school_id: school.id,
           pipeline_stage: "Committed",
           interest_level: "high",
           notes: `Auto-added on ${new Date().toLocaleDateString()} – committed to ${athlete.college}`,

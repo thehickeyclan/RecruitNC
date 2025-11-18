@@ -338,7 +338,6 @@ async function autoAlignCommittedAthleteToSchool({
   await adminSupabase.from("college_coach_stars").insert({
     coach_user_id: targetCoachId,
     athlete_id: athleteRecord.id,
-    school_id: school.id,
     pipeline_stage: "Committed",
     interest_level: "high",
     notes: `Auto-added on ${new Date().toLocaleDateString()} – committed to ${collegeName}`,

@@ -62,20 +62,41 @@ function isCommittedStatus(status?: string | null) {
 async function fixAthlete(athleteName: string, collegeName: string) {
   console.log(`\n🔍 Searching for athlete: "${athleteName}" committed to "${collegeName}"...`)
 
-  // Find athlete
-  const { data: athletes, error: athleteError } = await adminSupabase
+  // First, try to find by name only to see what we have
+  const { data: athletesByName, error: nameError } = await adminSupabase
     .from("athletes")
     .select("id, name, college, recruiting_status")
     .ilike("name", `%${athleteName}%`)
-    .ilike("college", `%${collegeName}%`)
+    .limit(10)
 
-  if (athleteError) {
-    console.error("❌ Error searching for athlete:", athleteError)
+  if (nameError) {
+    console.error("❌ Error searching for athlete by name:", nameError)
     return
   }
 
-  if (!athletes || athletes.length === 0) {
-    console.error(`❌ No athlete found matching "${athleteName}" committed to "${collegeName}"`)
+  if (!athletesByName || athletesByName.length === 0) {
+    console.error(`❌ No athlete found with name matching "${athleteName}"`)
+    console.log("\n💡 Try searching with a partial name or check the spelling.")
+    return
+  }
+
+  console.log(`\n📋 Found ${athletesByName.length} athlete(s) with matching name:`)
+  athletesByName.forEach((a, i) => {
+    console.log(`   ${i + 1}. ${a.name} - College: "${a.college || 'N/A'}" - Status: ${a.recruiting_status || 'N/A'}`)
+  })
+
+  // Now filter by college
+  const athletes = athletesByName.filter(a => {
+    if (!a.college) return false
+    const athleteCollege = a.college.toLowerCase()
+    const searchCollege = collegeName.toLowerCase()
+    return athleteCollege.includes(searchCollege) || searchCollege.includes(athleteCollege)
+  })
+
+  if (athletes.length === 0) {
+    console.error(`\n❌ No athlete found matching "${athleteName}" committed to "${collegeName}"`)
+    console.log(`\n💡 Found athletes with that name, but none with college matching "${collegeName}"`)
+    console.log(`   Available colleges for this name: ${[...new Set(athletesByName.map(a => a.college).filter(Boolean))].join(", ")}`)
     return
   }
 
