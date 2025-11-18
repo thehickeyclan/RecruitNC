@@ -81,8 +81,7 @@ BEGIN
                 UPDATE college_coach_stars
                 SET pipeline_stage = 'Committed',
                     interest_level = 'high',
-                    committed_date = COALESCE(committed_date, NOW()),
-                    updated_at = NOW()
+                    committed_date = COALESCE(committed_date, NOW())
                 WHERE id = existing_star_id
                   AND pipeline_stage NOT IN ('Committed', 'Signed');
 
@@ -96,17 +95,13 @@ BEGIN
                     interest_level,
                     notes,
                     starred_at,
-                    committed_date,
-                    created_at,
-                    updated_at
+                    committed_date
                 ) VALUES (
                     coach_user_id_var,
                     athlete_record.id,
                     'Committed',
                     'high',
                     'Auto-added via SQL script on ' || CURRENT_DATE || ' – committed to ' || athlete_record.college,
-                    NOW(),
-                    NOW(),
                     NOW(),
                     NOW()
                 );

@@ -78,12 +78,11 @@ BEGIN
 
     IF existing_star_id IS NOT NULL THEN
         -- Update existing entry
-        UPDATE college_coach_stars
-        SET pipeline_stage = 'Committed',
-            interest_level = 'high',
-            committed_date = NOW(),
-            updated_at = NOW()
-        WHERE id = existing_star_id;
+                UPDATE college_coach_stars
+                SET pipeline_stage = 'Committed',
+                    interest_level = 'high',
+                    committed_date = NOW()
+                WHERE id = existing_star_id;
 
         RAISE NOTICE 'Updated existing star entry (ID: %) to Committed', existing_star_id;
     ELSE
@@ -95,17 +94,13 @@ BEGIN
                     interest_level,
                     notes,
                     starred_at,
-                    committed_date,
-                    created_at,
-                    updated_at
+                    committed_date
                 ) VALUES (
                     coach_user_id_var,
                     athlete_record.id,
                     'Committed',
                     'high',
                     'Auto-added via SQL script on ' || CURRENT_DATE || ' – committed to ' || athlete_record.college,
-                    NOW(),
-                    NOW(),
                     NOW(),
                     NOW()
                 );
@@ -123,12 +118,12 @@ SELECT
     a.recruiting_status,
     s.name as school_name,
     ccs.pipeline_stage,
-    ccs.created_at as star_created_at
+    ccs.starred_at as star_created_at
 FROM athletes a
 JOIN college_coach_stars ccs ON ccs.athlete_id = a.id
 JOIN user_profiles up ON up.user_id = ccs.coach_user_id
 JOIN schools s ON s.id = up.school_id
 WHERE a.name ILIKE '%Kavan Wilson%'
   AND s.name ILIKE '%Reinhardt%'
-ORDER BY ccs.created_at DESC;
+ORDER BY ccs.starred_at DESC;
 
