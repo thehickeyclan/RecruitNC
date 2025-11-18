@@ -11,7 +11,6 @@ import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 import { Search, Filter, ArrowLeft, Trophy, Users } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
 
 interface PublicRanking {
   id: string
