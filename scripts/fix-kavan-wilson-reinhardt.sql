@@ -126,7 +126,8 @@ SELECT
     ccs.created_at as star_created_at
 FROM athletes a
 JOIN college_coach_stars ccs ON ccs.athlete_id = a.id
-JOIN schools s ON s.id = ccs.school_id
+JOIN user_profiles up ON up.user_id = ccs.coach_user_id
+JOIN schools s ON s.id = up.school_id
 WHERE a.name ILIKE '%Kavan Wilson%'
   AND s.name ILIKE '%Reinhardt%'
 ORDER BY ccs.created_at DESC;

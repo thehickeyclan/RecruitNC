@@ -139,7 +139,8 @@ SELECT
 FROM athletes a
 LEFT JOIN college_coach_stars ccs ON ccs.athlete_id = a.id 
     AND ccs.pipeline_stage IN ('Committed', 'Signed')
-LEFT JOIN schools s ON s.id = ccs.school_id
+LEFT JOIN user_profiles up ON up.user_id = ccs.coach_user_id
+LEFT JOIN schools s ON s.id = up.school_id
 WHERE a.recruiting_status IN ('Committed', 'Signed', 'College Athlete')
   AND a.college IS NOT NULL
   AND a.college != ''
