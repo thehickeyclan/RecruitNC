@@ -4,9 +4,13 @@
 -- Option 1: Assign an existing admin user to Reinhardt
 UPDATE user_profiles
 SET school_id = 'f0962bcc-6db5-4210-8447-a541dd18cb72'
-WHERE (is_admin = true OR role = 'admin')
-  AND (school_id IS NULL OR school_id != 'f0962bcc-6db5-4210-8447-a541dd18cb72')
-LIMIT 1;
+WHERE user_id = (
+    SELECT user_id
+    FROM user_profiles
+    WHERE (is_admin = true OR role = 'admin')
+      AND (school_id IS NULL OR school_id != 'f0962bcc-6db5-4210-8447-a541dd18cb72')
+    LIMIT 1
+);
 
 -- Verify the assignment
 SELECT 
