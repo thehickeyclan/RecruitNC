@@ -75,11 +75,8 @@ export async function GET(request: NextRequest) {
       .order("name", { ascending: true })
       .range(offset, offset + limit - 1)
 
-    // Filter to North Carolina athletes only
-    // First try exact state matches, then check location field
-    query = query.or("state.eq.NC,state.eq.North Carolina")
-    // Also filter by location containing NC (handled in post-processing if needed)
-    console.log("[v0] Prospects API - Filtering to NC athletes only")
+    // Note: NC filtering is done in post-processing to handle location field
+    console.log("[v0] Prospects API - Will filter to NC athletes in post-processing")
 
     // Apply filters - match admin prospects API pattern
     if (graduationYear && graduationYear !== "all") {
@@ -107,6 +104,21 @@ export async function GET(request: NextRequest) {
 
     const { data: prospects, error } = await query
 
+    if (error) {
+      console.error("[v0] Prospects API - Supabase error:", error)
+      return NextResponse.json(
+        { error: "Failed to fetch prospects", details: error.message },
+        {
+          status: 500,
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        },
+      )
+    }
+
     console.log("[v0] Prospects API - Query executed, results:", prospects?.length || 0)
 
     // Post-filter to ensure only NC athletes (check location field for those without state set)
@@ -129,26 +141,12 @@ export async function GET(request: NextRequest) {
       return true
     })
 
-    if (error) {
-      console.error("[v0] Prospects API - Supabase error:", error)
-      return NextResponse.json(
-        { error: "Failed to fetch prospects", details: error.message },
-        {
-          status: 500,
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        },
-      )
-    }
+    console.log("[v0] Prospects API - After NC filter:", ncProspects.length)
 
-    // Get total count for pagination (also filtered to NC only)
+    // Get total count for pagination (will be adjusted after NC filtering)
     let countQuery = supabase
       .from("athletes")
       .select("*", { count: "exact", head: true })
-      .or("state.eq.NC,state.eq.North Carolina")
 
     if (graduationYear && graduationYear !== "all") {
       countQuery = countQuery.eq("graduationyear", Number.parseInt(graduationYear))
@@ -159,8 +157,8 @@ export async function GET(request: NextRequest) {
 
     const { count } = await countQuery
 
-    console.log("[v0] Prospects API - Total count:", count)
-    console.log("[v0] Prospects API - Returning prospects:", prospects?.length || 0)
+    console.log("[v0] Prospects API - Total count before NC filter:", count)
+    console.log("[v0] Prospects API - Returning prospects:", ncProspects.length)
 
     return NextResponse.json(
       {
