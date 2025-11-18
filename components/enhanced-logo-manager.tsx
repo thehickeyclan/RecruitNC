@@ -442,6 +442,7 @@ export default function EnhancedLogoManager() {
                       <SelectItem value="club">Wrestling Clubs</SelectItem>
                       <SelectItem value="highschool">High Schools</SelectItem>
                       <SelectItem value="college">Colleges</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -489,6 +490,7 @@ export default function EnhancedLogoManager() {
                       <SelectItem value="club">Wrestling Club</SelectItem>
                       <SelectItem value="highschool">High School</SelectItem>
                       <SelectItem value="college">College</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -726,6 +728,7 @@ export default function EnhancedLogoManager() {
                       <SelectItem value="club">Wrestling Club</SelectItem>
                       <SelectItem value="highschool">High School</SelectItem>
                       <SelectItem value="college">College</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

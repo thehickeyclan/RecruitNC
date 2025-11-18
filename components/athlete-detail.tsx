@@ -105,6 +105,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
   const [collegeLogo, setCollegeLogo] = useState<string | null>(null)
   const [clubLogo, setClubLogo] = useState<string | null>(null)
+  const [instagramLogo, setInstagramLogo] = useState<string | null>(null)
+  const [floLogo, setFloLogo] = useState<string | null>(null)
+  const [trackWrestlingLogo, setTrackWrestlingLogo] = useState<string | null>(null)
   const [fetchedNchsaaResults, setFetchedNchsaaResults] = useState<
     Array<{
       year: number
@@ -193,6 +196,31 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             if (data.success && data.logo_url) {
               setClubLogo(data.logo_url)
             }
+          }
+        }
+
+        // Load social media logos from logo manager
+        const instagramResponse = await fetch(`/api/logo-mappings/by-entity/other/Instagram`)
+        if (instagramResponse.ok) {
+          const instagramData = await instagramResponse.json()
+          if (instagramData.success && instagramData.logo_url) {
+            setInstagramLogo(instagramData.logo_url)
+          }
+        }
+
+        const floResponse = await fetch(`/api/logo-mappings/by-entity/other/Flo Wrestling`)
+        if (floResponse.ok) {
+          const floData = await floResponse.json()
+          if (floData.success && floData.logo_url) {
+            setFloLogo(floData.logo_url)
+          }
+        }
+
+        const trackResponse = await fetch(`/api/logo-mappings/by-entity/other/Track Wrestling`)
+        if (trackResponse.ok) {
+          const trackData = await trackResponse.json()
+          if (trackData.success && trackData.logo_url) {
+            setTrackWrestlingLogo(trackData.logo_url)
           }
         }
       } catch (error) {
@@ -613,7 +641,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               {/* Social Media Icons - Below Stats */}
               {(instagramUrl || athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
                 <div className="flex items-center gap-2 mt-4">
-                  {instagramUrl && (
+                  {instagramUrl && instagramLogo && (
                     <a
                       href={instagramUrl}
                       target="_blank"
@@ -622,7 +650,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       aria-label="Instagram"
                     >
                       <Image
-                        src="/instagram-logo.png"
+                        src={instagramLogo}
                         alt="Instagram"
                         width={20}
                         height={20}
@@ -630,7 +658,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       />
                     </a>
                   )}
-                  {athlete?.flo_profile_url && (
+                  {athlete?.flo_profile_url && floLogo && (
                     <a
                       href={athlete.flo_profile_url}
                       target="_blank"
@@ -639,7 +667,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       aria-label="Flo Wrestling"
                     >
                       <Image
-                        src="/flo-logo.png"
+                        src={floLogo}
                         alt="Flo Wrestling"
                         width={20}
                         height={20}
@@ -647,7 +675,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       />
                     </a>
                   )}
-                  {athlete?.track_wrestling_profile_url && (
+                  {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
                     <a
                       href={athlete.track_wrestling_profile_url}
                       target="_blank"
@@ -656,7 +684,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       aria-label="Track Wrestling"
                     >
                       <Image
-                        src="/track-wrestling-logo.png"
+                        src={trackWrestlingLogo}
                         alt="Track Wrestling"
                         width={20}
                         height={20}
@@ -757,7 +785,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   {/* Social Media Icons - Below Stats */}
                   {(instagramUrl || athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
                     <div className="flex items-center gap-2 mt-4">
-                      {instagramUrl && (
+                      {instagramUrl && instagramLogo && (
                         <a
                           href={instagramUrl}
                           target="_blank"
@@ -766,7 +794,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           aria-label="Instagram"
                         >
                           <Image
-                            src="/instagram-logo.png"
+                            src={instagramLogo}
                             alt="Instagram"
                             width={20}
                             height={20}
@@ -774,7 +802,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           />
                         </a>
                       )}
-                      {athlete?.flo_profile_url && (
+                      {athlete?.flo_profile_url && floLogo && (
                         <a
                           href={athlete.flo_profile_url}
                           target="_blank"
@@ -783,7 +811,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           aria-label="Flo Wrestling"
                         >
                           <Image
-                            src="/flo-logo.png"
+                            src={floLogo}
                             alt="Flo Wrestling"
                             width={20}
                             height={20}
@@ -791,7 +819,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           />
                         </a>
                       )}
-                      {athlete?.track_wrestling_profile_url && (
+                      {athlete?.track_wrestling_profile_url && trackWrestlingLogo && (
                         <a
                           href={athlete.track_wrestling_profile_url}
                           target="_blank"
@@ -800,7 +828,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           aria-label="Track Wrestling"
                         >
                           <Image
-                            src="/track-wrestling-logo.png"
+                            src={trackWrestlingLogo}
                             alt="Track Wrestling"
                             width={20}
                             height={20}
