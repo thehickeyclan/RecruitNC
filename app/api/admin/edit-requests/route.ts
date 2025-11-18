@@ -110,16 +110,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    // Load existing request_data to merge admin notes
+    // Load existing request with user and athlete info for email
     const { data: existing, error: loadErr } = await svc
       .from("edit_requests")
-      .select("request_data")
+      .select("request_data, user_id, athlete_id")
       .eq("id", requestId)
       .maybeSingle()
 
     if (loadErr) {
       console.error("Failed to load existing request_data:", loadErr)
       return NextResponse.json({ error: "Failed to load request" }, { status: 500 })
+    }
+
+    if (!existing) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 })
     }
 
     const mergedRequestData =
@@ -153,6 +157,41 @@ export async function PUT(request: NextRequest) {
     if (updErr) {
       console.error("Failed to update edit request:", updErr)
       return NextResponse.json({ error: "Failed to update request" }, { status: 500 })
+    }
+
+    // Send email notification if status is approved or rejected
+    if ((status === "approved" || status === "rejected") && existing.user_id && existing.athlete_id) {
+      try {
+        // Fetch user and athlete info for email
+        const [{ data: userProfile }, { data: athlete }] = await Promise.all([
+          svc
+            .from("user_profiles")
+            .select("email, first_name, last_name")
+            .eq("user_id", existing.user_id)
+            .maybeSingle(),
+          svc.from("athletes").select("name").eq("id", existing.athlete_id).maybeSingle(),
+        ])
+
+        if (userProfile?.email && athlete?.name) {
+          const userName = `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim() || "User"
+          const { sendEditRequestNotification } = await import("@/lib/email")
+          
+          // Send email asynchronously (don't block the response)
+          sendEditRequestNotification({
+            to: userProfile.email,
+            userName,
+            athleteName: athlete.name,
+            status,
+            adminNotes: adminNotes || undefined,
+          }).catch((emailError) => {
+            // Log but don't fail the request if email fails
+            console.error("Failed to send email notification:", emailError)
+          })
+        }
+      } catch (emailError) {
+        // Log but don't fail the request if email fails
+        console.error("Error preparing email notification:", emailError)
+      }
     }
 
     return NextResponse.json({ success: true, data: updated })

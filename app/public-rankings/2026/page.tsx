@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
-import { Users, Target, ExternalLink, Instagram } from "lucide-react"
+import { Users, Target, ExternalLink, Instagram, Trophy } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
 
 interface Athlete {
@@ -281,23 +281,7 @@ export default function ClassOf2026RankingsPage() {
             />
           </div>
 
-          {/* North Carolina Prospects Section */}
-          {athletes.filter(a => !a.prospect_ranking || a.prospect_ranking > 30).length > 0 && (
-            <div className="mb-8 sm:mb-12">
-              <div className="mb-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
-                  North Carolina Prospects
-                </h2>
-              </div>
-              <RankingsTableView 
-                athletes={athletes.filter(a => !a.prospect_ranking || a.prospect_ranking > 30)} 
-                loading={loadingAthletes}
-                hideRankColumn={true}
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <Card className="bg-gradient-to-r from-[#03154C] to-[#1e3a8a] text-white">
               <CardContent className="p-6 sm:p-8 text-center">
                 <Instagram className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-90" />
@@ -333,6 +317,43 @@ export default function ClassOf2026RankingsPage() {
                 </Button>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Navigation to Other Rankings and Prospects */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <Link href="/public-rankings/2027">
+              <Card className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
+                  <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2027 Rankings</h3>
+                  <p className="text-blue-100 mb-4">View the Top 30 ranked prospects for 2027</p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
+                  >
+                    View 2027 Rankings
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/prospects/all">
+              <Card className="bg-gradient-to-br from-[#B31B1B] to-[#8B1515] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
+                  <Users className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">All Prospects</h3>
+                  <p className="text-red-100 mb-4">Browse the complete database of North Carolina prospects</p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
+                  >
+                    View All Prospects
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>

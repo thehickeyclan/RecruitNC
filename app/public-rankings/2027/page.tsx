@@ -6,12 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
-import { Search, Filter, ArrowLeft, Lock, Trophy, Users } from "lucide-react"
+import { Search, Filter, ArrowLeft, Trophy, Users } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 
 interface PublicRanking {
@@ -33,30 +32,20 @@ interface PublicRanking {
 }
 
 export default function Class2027RankingsPage() {
-  const { isVerifiedCoach, isAdmin } = useAuth()
   const [isLaunched, setIsLaunched] = useState(true)
   const [rankings, setRankings] = useState<PublicRanking[]>([])
-  const [allProspects, setAllProspects] = useState<PublicRanking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<string>("rankings")
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedGender, setSelectedGender] = useState<string>("Male")
   const [viewMode, setViewMode] = useState<"grid" | "table">("table")
 
-  // Advanced filters for "All Prospects" tab
-  const [filterWeightClass, setFilterWeightClass] = useState<string>("all")
-  const [filterMinGPA, setFilterMinGPA] = useState<number>(0)
-  const [filterCommitmentStatus, setFilterCommitmentStatus] = useState<string>("all")
 
   useEffect(() => {
     fetchRankings()
-    if (isVerifiedCoach || isAdmin) {
-      fetchAllProspects()
-    }
-  }, [selectedGender, isVerifiedCoach, isAdmin])
+  }, [selectedGender])
 
   const fetchRankings = async () => {
     setIsLoading(true)
@@ -84,26 +73,6 @@ export default function Class2027RankingsPage() {
     }
   }
 
-  const fetchAllProspects = async () => {
-    try {
-      const params = new URLSearchParams({
-        year: "2027",
-        gender: selectedGender,
-        mode: "all", // All prospects
-      })
-
-      const response = await fetch(`/api/public-rankings?${params}`)
-      if (!response.ok) {
-        throw new Error("Failed to fetch all prospects")
-      }
-
-      const data = await response.json()
-      setAllProspects(data.rankings || [])
-    } catch (err) {
-      console.error("Error fetching all prospects:", err)
-    }
-  }
-
   const filteredRankings = rankings.filter((ranking) => {
     if (!searchTerm) return true
 
@@ -115,54 +84,7 @@ export default function Class2027RankingsPage() {
     )
   })
 
-  // Advanced filtering for "All Prospects" tab
-  const filteredAllProspects = allProspects.filter((prospect) => {
-    // Search term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      const matchesSearch = (
-        (prospect.name?.toLowerCase() || "").includes(term) ||
-        (prospect.highschool?.toLowerCase() || "").includes(term) ||
-        (prospect.weight_display?.toLowerCase() || "").includes(term)
-      )
-      if (!matchesSearch) return false
-    }
-
-    // Weight class filter
-    if (filterWeightClass !== "all") {
-      const prospectWeight = prospect.weight_display?.replace(" lbs", "").trim()
-      if (prospectWeight !== filterWeightClass) return false
-    }
-
-    // Minimum GPA filter
-    if (filterMinGPA > 0) {
-      const gpa = prospect.academic_gpa || 0
-      if (gpa < filterMinGPA) return false
-    }
-
-    // Commitment status filter
-    if (filterCommitmentStatus === "uncommitted") {
-      if (prospect.college || prospect.recruiting_status !== "Prospect") return false
-    }
-
-    return true
-  })
-
-  const clearFilters = () => {
-    setSearchTerm("")
-    setFilterWeightClass("all")
-    setFilterMinGPA(0)
-    setFilterCommitmentStatus("all")
-  }
-
-  const hasActiveFilters = searchTerm !== "" || filterWeightClass !== "all" || filterMinGPA > 0 || filterCommitmentStatus !== "all"
-
-  // Get unique weight classes for filter dropdown
-  const weightClasses = [...new Set(allProspects.map(p => p.weight_display?.replace(" lbs", "").trim()).filter(Boolean))].sort((a, b) => {
-    const numA = parseInt(a!)
-    const numB = parseInt(b!)
-    return numA - numB
-  })
+  const hasActiveFilters = searchTerm !== ""
 
   const topRankedAthletes = rankings.slice(0, 3)
   const heroAthlete = topRankedAthletes[0]
@@ -463,7 +385,7 @@ export default function Class2027RankingsPage() {
                     </Select>
 
                     {hasActiveFilters && (
-                      <Button variant="outline" onClick={clearFilters} size="sm">
+                      <Button variant="outline" onClick={() => setSearchTerm("")} size="sm">
                         <Filter className="h-4 w-4 mr-2" />
                         Clear Search
                       </Button>
@@ -491,165 +413,79 @@ export default function Class2027RankingsPage() {
           <div className="container mx-auto px-4 py-8">
             {error && <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>}
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              {/* Tab Navigation */}
-              <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8 bg-white/10 p-1">
-                <TabsTrigger 
-                  value="rankings" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#03154C] text-white font-semibold"
-                >
-                  <Trophy className="w-4 h-4 mr-2" />
-                  Top 30 Rankings
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="all" 
-                  className="data-[state=active]:bg-white data-[state=active]:text-[#03154C] text-white font-semibold"
-                  disabled={!isVerifiedCoach && !isAdmin}
-                >
-                  <Users className="w-4 h-4 mr-2" />
-                  All Prospects
-                  {(!isVerifiedCoach && !isAdmin) && <Lock className="w-3 h-3 ml-2" />}
-                </TabsTrigger>
-              </TabsList>
+            {/* Rankings Display */}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-white" />
+              </div>
+            ) : (
+              <>
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-white">Top 30 Wrestling Prospects</h2>
+                  <div className="text-sm text-white">Showing {filteredRankings.length} ranked prospects</div>
+                </div>
 
-              {/* Rankings Tab */}
-              <TabsContent value="rankings">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-16">
-                    <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-white" />
+                {viewMode === "table" && (
+                  <div className="md:hidden mb-4 text-center">
+                    <p className="text-sm text-gray-300 italic">Scroll right to see more data and profile links →</p>
                   </div>
-                ) : (
-                  <>
-                    <div className="mb-6 flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-white">Top 30 Wrestling Prospects</h2>
-                      <div className="text-sm text-white">Showing {filteredRankings.length} ranked prospects</div>
-                    </div>
-
-                    {viewMode === "table" && (
-                      <div className="md:hidden mb-4 text-center">
-                        <p className="text-sm text-gray-300 italic">Scroll right to see more data and profile links →</p>
-                      </div>
-                    )}
-
-                    {viewMode === "table" ? (
-                      <RankingsTableView athletes={filteredRankings} />
-                    ) : (
-                      <RankingsCardView athletes={filteredRankings} />
-                    )}
-
-                    {filteredRankings.length === 0 && !isLoading && (
-                      <div className="text-center py-16">
-                        <h3 className="text-xl font-semibold text-white mb-2">No rankings found</h3>
-                        <p className="text-gray-300">
-                          {hasActiveFilters
-                            ? "Try adjusting your search or filters"
-                            : "Rankings for this class and gender are not yet available"}
-                        </p>
-                      </div>
-                    )}
-                  </>
                 )}
-              </TabsContent>
 
-              {/* All Prospects Tab (Coaches Only) */}
-              <TabsContent value="all">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-16">
-                    <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-white" />
+                {viewMode === "table" ? (
+                  <RankingsTableView athletes={filteredRankings} />
+                ) : (
+                  <RankingsCardView athletes={filteredRankings} />
+                )}
+
+                {filteredRankings.length === 0 && !isLoading && (
+                  <div className="text-center py-16">
+                    <h3 className="text-xl font-semibold text-white mb-2">No rankings found</h3>
+                    <p className="text-gray-300">
+                      {hasActiveFilters
+                        ? "Try adjusting your search or filters"
+                        : "Rankings for this class and gender are not yet available"}
+                    </p>
                   </div>
-                ) : (
-                  <>
-                    {/* Advanced Filters */}
-                    <div className="mb-6 bg-white/10 backdrop-blur-sm rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">Advanced Filters</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Weight Class Filter */}
-                        <div>
-                          <label className="text-sm text-gray-200 mb-2 block">Weight Class</label>
-                          <Select value={filterWeightClass} onValueChange={setFilterWeightClass}>
-                            <SelectTrigger className="bg-white/20 text-white border-white/30">
-                              <SelectValue placeholder="All Weights" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Weight Classes</SelectItem>
-                              {weightClasses.map((weight) => (
-                                <SelectItem key={weight} value={weight!}>
-                                  {weight} lbs
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Minimum GPA Filter */}
-                        <div>
-                          <label className="text-sm text-gray-200 mb-2 block">Minimum GPA</label>
-                          <Select value={filterMinGPA.toString()} onValueChange={(v) => setFilterMinGPA(parseFloat(v))}>
-                            <SelectTrigger className="bg-white/20 text-white border-white/30">
-                              <SelectValue placeholder="Any GPA" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="0">Any GPA</SelectItem>
-                              <SelectItem value="2.5">2.5+</SelectItem>
-                              <SelectItem value="3.0">3.0+</SelectItem>
-                              <SelectItem value="3.5">3.5+</SelectItem>
-                              <SelectItem value="4.0">4.0</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Commitment Status Filter */}
-                        <div>
-                          <label className="text-sm text-gray-200 mb-2 block">Commitment Status</label>
-                          <Select value={filterCommitmentStatus} onValueChange={setFilterCommitmentStatus}>
-                            <SelectTrigger className="bg-white/20 text-white border-white/30">
-                              <SelectValue placeholder="All Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Prospects</SelectItem>
-                              <SelectItem value="uncommitted">Uncommitted Only</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {hasActiveFilters && (
-                        <div className="mt-4">
-                          <Button variant="outline" onClick={clearFilters} size="sm" className="text-white border-white/30 hover:bg-white/20">
-                            <Filter className="h-4 w-4 mr-2" />
-                            Clear All Filters
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mb-6 flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-white">All Class of 2027 Prospects</h2>
-                      <div className="text-sm text-white">Showing {filteredAllProspects.length} prospects</div>
-                    </div>
-
-                    {viewMode === "table" && (
-                      <div className="md:hidden mb-4 text-center">
-                        <p className="text-sm text-gray-300 italic">Scroll right to see more data and profile links →</p>
-                      </div>
-                    )}
-
-                    {viewMode === "table" ? (
-                      <RankingsTableView athletes={filteredAllProspects} />
-                    ) : (
-                      <RankingsCardView athletes={filteredAllProspects} />
-                    )}
-
-                    {filteredAllProspects.length === 0 && (
-                      <div className="text-center py-16">
-                        <h3 className="text-xl font-semibold text-white mb-2">No prospects found</h3>
-                        <p className="text-gray-300">Try adjusting your filters</p>
-                      </div>
-                    )}
-                  </>
                 )}
-              </TabsContent>
-            </Tabs>
+              </>
+            )}
+          </div>
+
+          {/* Navigation to Other Rankings and Prospects */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
+            <Link href="/public-rankings/2026">
+              <Card className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
+                  <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2026 Rankings</h3>
+                  <p className="text-blue-100 mb-4">View the Top 30 ranked prospects for 2026</p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
+                  >
+                    View 2026 Rankings
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/prospects/all">
+              <Card className="bg-gradient-to-br from-[#B31B1B] to-[#8B1515] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
+                  <Users className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">All Prospects</h3>
+                  <p className="text-red-100 mb-4">Browse the complete database of North Carolina prospects</p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
+                  >
+                    View All Prospects
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
 
           <div className="bg-[#03154C] text-white py-16">
