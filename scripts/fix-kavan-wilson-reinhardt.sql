@@ -87,30 +87,28 @@ BEGIN
 
         RAISE NOTICE 'Updated existing star entry (ID: %) to Committed', existing_star_id;
     ELSE
-        -- Create new entry
-        INSERT INTO college_coach_stars (
-            coach_user_id,
-            athlete_id,
-            school_id,
-            pipeline_stage,
-            interest_level,
-            notes,
-            starred_at,
-            committed_date,
-            created_at,
-            updated_at
-        ) VALUES (
-            coach_user_id_var,
-            athlete_record.id,
-            school_record.id,
-            'Committed',
-            'high',
-            'Auto-added via SQL script on ' || CURRENT_DATE || ' – committed to ' || athlete_record.college,
-            NOW(),
-            NOW(),
-            NOW(),
-            NOW()
-        );
+                -- Create new entry
+                INSERT INTO college_coach_stars (
+                    coach_user_id,
+                    athlete_id,
+                    pipeline_stage,
+                    interest_level,
+                    notes,
+                    starred_at,
+                    committed_date,
+                    created_at,
+                    updated_at
+                ) VALUES (
+                    coach_user_id_var,
+                    athlete_record.id,
+                    'Committed',
+                    'high',
+                    'Auto-added via SQL script on ' || CURRENT_DATE || ' – committed to ' || athlete_record.college,
+                    NOW(),
+                    NOW(),
+                    NOW(),
+                    NOW()
+                );
 
         RAISE NOTICE 'Created new star entry for athlete in school portal';
     END IF;

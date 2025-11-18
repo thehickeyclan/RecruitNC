@@ -92,7 +92,6 @@ BEGIN
                 INSERT INTO college_coach_stars (
                     coach_user_id,
                     athlete_id,
-                    school_id,
                     pipeline_stage,
                     interest_level,
                     notes,
@@ -103,7 +102,6 @@ BEGIN
                 ) VALUES (
                     coach_user_id_var,
                     athlete_record.id,
-                    school_record.id,
                     'Committed',
                     'high',
                     'Auto-added via SQL script on ' || CURRENT_DATE || ' – committed to ' || athlete_record.college,
