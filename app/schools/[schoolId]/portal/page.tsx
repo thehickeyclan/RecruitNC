@@ -80,6 +80,7 @@ interface Prospect {
   academic_act?: number
   academic_summary?: string
   location?: string
+  state?: string
   phone?: string
   contactEmail?: string
   bio?: string
@@ -1916,6 +1917,39 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     fetchFamilyMembers(prospect.id)
   }
 
+  // Helper function to check if prospect is from North Carolina
+  const isNCProspect = (prospect: any): boolean => {
+    const state = (prospect.state || "").trim().toLowerCase()
+    if (state === "nc" || state === "north carolina") return true
+    
+    const location = (prospect.location || "").trim().toLowerCase()
+    if (location) {
+      if (/\bnorth carolina\b/.test(location) || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
+        return true
+      }
+      // Check for non-NC states
+      const nonNcStates = ["sc", "south carolina", "ga", "georgia", "va", "virginia", "tn", "tennessee", 
+                          "fl", "florida", "oh", "ohio", "pa", "pennsylvania", "ny", "new york", 
+                          "tx", "texas", "ca", "california", "al", "alabama", "nj", "new jersey",
+                          "wv", "west virginia"]
+      if (nonNcStates.some((stateToken) => location.includes(stateToken))) {
+        return false
+      }
+    }
+    
+    // Default to true if we can't determine (assume NC for existing data)
+    return true
+  }
+
+  // Helper function to check if ranking should be displayed
+  const shouldShowRanking = (prospect: any): boolean => {
+    // Only show rankings for NC athletes
+    if (!isNCProspect(prospect)) return false
+    // Only show rankings 1-30
+    if (!prospect.prospect_ranking || prospect.prospect_ranking > 30) return false
+    return true
+  }
+
   const filteredProspects = prospects.filter((prospect) => {
     const matchesSearch =
       !searchTerm ||
@@ -2744,7 +2778,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                   </div>
                                 )}
                               </div>
-                              {prospect.prospect_ranking && prospect.prospect_ranking <= 25 && !committedElsewhere && (
+                              {shouldShowRanking(prospect) && !committedElsewhere && (
                                 <div
                                   className="absolute top-0 right-0 px-2 md:px-3 py-1 md:py-1.5 rounded-xl text-xs md:text-sm font-bold text-white"
                                   style={{ backgroundColor: schoolBranding?.primary_color || "#3B82F6" }}
@@ -3146,7 +3180,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               router.push(url)
                             }}
                           >
-                            {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
+                            {shouldShowRanking(prospect) ? `#${prospect.prospect_ranking}` : "-"}
                           </td>
                           <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-between gap-3">
@@ -3549,7 +3583,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         Class of {selectedAthlete.graduationyear}
                       </Badge>
                       <Badge className="bg-purple-600 text-xs md:text-sm">{selectedAthlete.weightclass}lbs</Badge>
-                      {selectedAthlete.prospect_ranking && (
+                      {shouldShowRanking(selectedAthlete) && (
                         <Badge className="bg-yellow-500 text-black text-xs md:text-sm">
                           Ranked #{selectedAthlete.prospect_ranking}
                         </Badge>
@@ -3925,7 +3959,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     )}
 
-                    {selectedAthlete.prospect_ranking && (
+                    {shouldShowRanking(selectedAthlete) && (
                       <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
                         <h3 className="font-semibold text-foreground mb-2 md:mb-3">Rankings</h3>
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
