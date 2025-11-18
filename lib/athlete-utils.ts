@@ -114,6 +114,8 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     super32_results: data.super32_results || [],
     nationally_ranked_wins: data.nationally_ranked_wins || null,
     college_opens_experience: data.college_opens_experience || null,
+    flo_profile_url: data.flo_profile_url || null,
+    track_wrestling_profile_url: data.track_wrestling_profile_url || null,
   }
 
   return athlete
@@ -197,6 +199,8 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       nhsca_2025_placement: athlete.nhsca_2025_placement || null,
       nationally_ranked_wins: athlete.nationally_ranked_wins || null,
       college_opens_experience: athlete.college_opens_experience || null,
+      flo_profile_url: athlete.floProfileUrl || athlete.flo_profile_url || null,
+      track_wrestling_profile_url: athlete.trackWrestlingProfileUrl || athlete.track_wrestling_profile_url || null,
     }
 
     console.log("[v0] mapAthleteToDb - Super 32 fields being mapped:", {

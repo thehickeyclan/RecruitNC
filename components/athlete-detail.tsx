@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video } from "lucide-react"
+import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
@@ -86,6 +86,8 @@ interface AthleteDetailProps {
     social_media?: any
     claimed_by_user_id?: string
     additional_achievements?: string | null
+    flo_profile_url?: string
+    track_wrestling_profile_url?: string
   }
   nchsaaResults?: Array<{
     year: number
@@ -892,6 +894,62 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         NC United Team
                       </p>
                       <p className="text-xl font-bold text-gray-900 leading-tight">{ncUnitedTeam}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Wrestling Profiles Section */}
+      {(athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+            <div className="flex items-center gap-3">
+              <Award className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Wrestling Profiles</h2>
+            </div>
+          </div>
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {athlete?.flo_profile_url && (
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                        Flo Wrestling
+                      </p>
+                      <a
+                        href={athlete.flo_profile_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-lg font-bold text-[#002147] hover:text-[#003366] transition-colors flex items-center gap-2"
+                      >
+                        View Profile
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {athlete?.track_wrestling_profile_url && (
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                        Track Wrestling
+                      </p>
+                      <a
+                        href={athlete.track_wrestling_profile_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-lg font-bold text-[#002147] hover:text-[#003366] transition-colors flex items-center gap-2"
+                      >
+                        View Profile
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
                     </div>
                   </div>
                 </div>

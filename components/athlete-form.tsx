@@ -180,6 +180,8 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
     twitterUrl: initialData?.socialMedia?.twitter || "",
     instagramUrl: initialData?.socialMedia?.instagram || "",
     facebookUrl: initialData?.socialMedia?.facebook || "",
+    floProfileUrl: initialData?.flo_profile_url || "",
+    trackWrestlingProfileUrl: initialData?.track_wrestling_profile_url || "",
     ncUnitedTeam: initialData?.ncUnitedTeam || "none",
     contactEmail: initialData?.contactEmail || "",
     phone: initialData?.phone || "",
@@ -414,6 +416,8 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
         twitterUrl: safeTrim(formData.twitterUrl, initialData?.twitterUrl),
         instagramUrl: safeTrim(formData.instagramUrl, initialData?.instagramUrl),
         facebookUrl: safeTrim(formData.facebookUrl, initialData?.facebookUrl),
+        floProfileUrl: safeTrim(formData.floProfileUrl, initialData?.flo_profile_url),
+        trackWrestlingProfileUrl: safeTrim(formData.trackWrestlingProfileUrl, initialData?.track_wrestling_profile_url),
         ncUnitedTeam: safeTrim(formData.ncUnitedTeam, initialData?.ncUnitedTeam),
         contactEmail: safeTrim(formData.contactEmail, initialData?.contactEmail),
         phone: safeTrim(formData.phone, initialData?.phone),
@@ -1355,6 +1359,35 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
               </div>
 
               <div className="space-y-2">
+                <Label>Wrestling Profiles</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-32 text-sm">Flo Wrestling:</span>
+                    <Input
+                      id="floProfileUrl"
+                      name="floProfileUrl"
+                      type="url"
+                      value={formData.floProfileUrl}
+                      onChange={handleChange}
+                      placeholder="https://www.flowrestling.org/..."
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="w-32 text-sm">Track Wrestling:</span>
+                    <Input
+                      id="trackWrestlingProfileUrl"
+                      name="trackWrestlingProfileUrl"
+                      type="url"
+                      value={formData.trackWrestlingProfileUrl}
+                      onChange={handleChange}
+                      placeholder="https://www.trackwrestling.com/..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="contactEmail">Contact Email</Label>
                 <Input
                   id="contactEmail"
@@ -1440,6 +1473,8 @@ interface AthleteFormData {
   twitterUrl: string
   instagramUrl: string
   facebookUrl: string
+  floProfileUrl: string
+  trackWrestlingProfileUrl: string
   ncUnitedTeam: string
   contactEmail: string
   phone: string
