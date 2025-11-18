@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
       .order("name", { ascending: true })
       .range(offset, offset + limit - 1)
 
-    // Note: NC filtering is done in post-processing to handle location field
-    console.log("[v0] Prospects API - Will filter to NC athletes in post-processing")
+    // Note: NC filtering is handled client-side in the prospects page
+    console.log("[v0] Prospects API - Returning all prospects (NC filtering handled client-side)")
 
     // Apply filters - match admin prospects API pattern
     if (graduationYear && graduationYear !== "all") {
@@ -121,27 +121,8 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Prospects API - Query executed, results:", prospects?.length || 0)
 
-    // Post-filter to ensure only NC athletes (check location field for those without state set)
-    const ncProspects = (prospects || []).filter((prospect: any) => {
-      const state = (prospect.state || "").trim().toLowerCase()
-      if (state === "nc" || state === "north carolina") return true
-      
-      const location = (prospect.location || "").trim().toLowerCase()
-      if (location.includes("north carolina") || /\bnc\b/.test(location.replace(/[.,]/g, " "))) {
-        return true
-      }
-      
-      // Exclude known non-NC states
-      const nonNcStates = ["sc", "south carolina", "ga", "georgia", "va", "virginia", "tn", "tennessee", "fl", "florida", "oh", "ohio", "pa", "pennsylvania", "ny", "new york", "tx", "texas", "ca", "california"]
-      if (nonNcStates.some((s) => state === s || location.includes(s))) {
-        return false
-      }
-      
-      // If we can't determine, include it (default to including)
-      return true
-    })
-
-    console.log("[v0] Prospects API - After NC filter:", ncProspects.length)
+    // Note: NC filtering is handled client-side in the prospects page
+    // This allows the client to have full control over the filtering logic
 
     // Get total count for pagination (will be adjusted after NC filtering)
     let countQuery = supabase
@@ -157,17 +138,17 @@ export async function GET(request: NextRequest) {
 
     const { count } = await countQuery
 
-    console.log("[v0] Prospects API - Total count before NC filter:", count)
-    console.log("[v0] Prospects API - Returning prospects:", ncProspects.length)
+    console.log("[v0] Prospects API - Total count:", count)
+    console.log("[v0] Prospects API - Returning prospects:", prospects?.length || 0)
 
     return NextResponse.json(
       {
-        prospects: ncProspects,
+        prospects: prospects || [],
         pagination: {
-          total: ncProspects.length, // Use filtered count
+          total: count || 0,
           limit,
           offset,
-          hasMore: ncProspects.length >= limit,
+          hasMore: (prospects?.length || 0) >= limit,
         },
       },
       {
