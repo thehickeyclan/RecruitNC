@@ -667,15 +667,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                      className="hover:opacity-80 transition-opacity"
                       aria-label="Instagram"
                     >
                       <Image
                         src={instagramLogo}
                         alt="Instagram"
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 object-contain"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 object-contain"
                       />
                     </a>
                   )}
@@ -684,15 +684,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.flo_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                      className="hover:opacity-80 transition-opacity"
                       aria-label="Flo Wrestling"
                     >
                       <Image
                         src={floLogo}
                         alt="Flo Wrestling"
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 object-contain"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 object-contain"
                       />
                     </a>
                   )}
@@ -701,15 +701,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.track_wrestling_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                      className="hover:opacity-80 transition-opacity"
                       aria-label="Track Wrestling"
                     >
                       <Image
                         src={trackWrestlingLogo}
                         alt="Track Wrestling"
-                        width={20}
-                        height={20}
-                        className="w-5 h-5 object-contain"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6 object-contain"
                       />
                     </a>
                   )}
@@ -811,15 +811,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={instagramUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          className="hover:opacity-80 transition-opacity"
                           aria-label="Instagram"
                         >
                           <Image
                             src={instagramLogo}
                             alt="Instagram"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5 object-contain"
+                            width={24}
+                            height={24}
+                            className="w-6 h-6 object-contain"
                           />
                         </a>
                       )}
@@ -828,15 +828,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.flo_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          className="hover:opacity-80 transition-opacity"
                           aria-label="Flo Wrestling"
                         >
                           <Image
                             src={floLogo}
                             alt="Flo Wrestling"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5 object-contain"
+                            width={24}
+                            height={24}
+                            className="w-6 h-6 object-contain"
                           />
                         </a>
                       )}
@@ -845,15 +845,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.track_wrestling_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+                          className="hover:opacity-80 transition-opacity"
                           aria-label="Track Wrestling"
                         >
                           <Image
                             src={trackWrestlingLogo}
                             alt="Track Wrestling"
-                            width={20}
-                            height={20}
-                            className="w-5 h-5 object-contain"
+                            width={24}
+                            height={24}
+                            className="w-6 h-6 object-contain"
                           />
                         </a>
                       )}
