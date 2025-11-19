@@ -684,7 +684,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.flo_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity"
+                      className="hover:opacity-80 transition-opacity inline-block overflow-hidden"
                       aria-label="Flo Wrestling"
                     >
                       <Image
@@ -692,7 +692,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         alt="Flo Wrestling"
                         width={24}
                         height={24}
-                        className="w-6 h-6 object-contain"
+                        className="w-6 h-6 object-contain border-0 outline-none"
+                        style={{ border: 'none', outline: 'none', imageRendering: 'crisp-edges' }}
                       />
                     </a>
                   )}
@@ -828,7 +829,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.flo_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity"
+                          className="hover:opacity-80 transition-opacity inline-block overflow-hidden"
                           aria-label="Flo Wrestling"
                         >
                           <Image
@@ -836,7 +837,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                             alt="Flo Wrestling"
                             width={24}
                             height={24}
-                            className="w-6 h-6 object-contain"
+                            className="w-6 h-6 object-contain border-0 outline-none"
+                            style={{ border: 'none', outline: 'none', imageRendering: 'crisp-edges' }}
                           />
                         </a>
                       )}
