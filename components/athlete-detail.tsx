@@ -204,6 +204,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         if (instagramResponse.ok) {
           const instagramData = await instagramResponse.json()
           if (instagramData.success && instagramData.logo_url) {
+            console.log("✅ Instagram logo from logo manager:", instagramData.logo_url)
             setInstagramLogo(instagramData.logo_url)
           }
         }
@@ -211,28 +212,36 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         const floResponse = await fetch(`/api/logo-mappings/by-entity/other/Flo Wrestling`)
         if (floResponse.ok) {
           const floData = await floResponse.json()
+          console.log("🔍 Flo Wrestling API response:", floData)
           if (floData.success && floData.logo_url) {
+            console.log("✅ Flo logo from logo manager:", floData.logo_url)
             setFloLogo(floData.logo_url)
           } else {
-            // Fallback to provided URL
+            console.log("⚠️ Flo logo not found in logo manager, using fallback")
+            // Fallback to provided URL only if not found in logo manager
             setFloLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/tSowJ6H6xqarm-EN8yomh-Flo.png")
           }
         } else {
-          // Fallback to provided URL
+          console.log("⚠️ Flo API call failed, using fallback")
+          // Fallback to provided URL only if API call fails
           setFloLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/tSowJ6H6xqarm-EN8yomh-Flo.png")
         }
 
         const trackResponse = await fetch(`/api/logo-mappings/by-entity/other/Track Wrestling`)
         if (trackResponse.ok) {
           const trackData = await trackResponse.json()
+          console.log("🔍 Track Wrestling API response:", trackData)
           if (trackData.success && trackData.logo_url) {
+            console.log("✅ Track logo from logo manager:", trackData.logo_url)
             setTrackWrestlingLogo(trackData.logo_url)
           } else {
-            // Fallback to provided URL
+            console.log("⚠️ Track logo not found in logo manager, using fallback")
+            // Fallback to provided URL only if not found in logo manager
             setTrackWrestlingLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/yr63Q1zyRJ9lUKClT1Xy7-Track.png")
           }
         } else {
-          // Fallback to provided URL
+          console.log("⚠️ Track API call failed, using fallback")
+          // Fallback to provided URL only if API call fails
           setTrackWrestlingLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/yr63Q1zyRJ9lUKClT1Xy7-Track.png")
         }
       } catch (error) {
