@@ -209,10 +209,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           }
         }
 
-        const floResponse = await fetch(`/api/logo-mappings/by-entity/other/Flo Wrestling`)
+        const floResponse = await fetch(`/api/logo-mappings/by-entity/other/Flo`)
         if (floResponse.ok) {
           const floData = await floResponse.json()
-          console.log("🔍 Flo Wrestling API response:", floData)
+          console.log("🔍 Flo API response:", floData)
           if (floData.success && floData.logo_url) {
             console.log("✅ Flo logo from logo manager:", floData.logo_url)
             setFloLogo(floData.logo_url)
@@ -227,10 +227,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           setFloLogo("https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/tSowJ6H6xqarm-EN8yomh-Flo.png")
         }
 
-        const trackResponse = await fetch(`/api/logo-mappings/by-entity/other/Track Wrestling`)
+        const trackResponse = await fetch(`/api/logo-mappings/by-entity/other/Track`)
         if (trackResponse.ok) {
           const trackData = await trackResponse.json()
-          console.log("🔍 Track Wrestling API response:", trackData)
+          console.log("🔍 Track API response:", trackData)
           if (trackData.success && trackData.logo_url) {
             console.log("✅ Track logo from logo manager:", trackData.logo_url)
             setTrackWrestlingLogo(trackData.logo_url)
