@@ -143,8 +143,12 @@ export default function AllProspectsPage() {
           hasStateResults: allRankings.filter((r: any) => r.nchsaa_results && r.nchsaa_results.length > 0).length,
         })
 
+        // Filter to only include 2026 and 2027 (exclude 2025 and earlier, and 2028+)
         const filtered = rawProspects
-          .filter((prospect: Prospect) => Number(prospect.graduationyear) !== 2025)
+          .filter((prospect: Prospect) => {
+            const gradYear = Number(prospect.graduationyear)
+            return gradYear >= 2026 && gradYear <= 2027
+          })
           .filter(isNorthCarolinaProspect)
 
         const rankingMap = new Map<string, any>()
@@ -359,7 +363,16 @@ export default function AllProspectsPage() {
   }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
 
   const sortedProspects = useMemo(() => {
-    return [...filteredProspects].sort((a, b) => {
+    // Filter to only include 2026 and 2027 (exclude 2025 and earlier)
+    const currentYear = new Date().getFullYear()
+    const minActiveYear = currentYear + 1 // 2026 and beyond
+    
+    const activeProspects = filteredProspects.filter((prospect) => {
+      const gradYear = prospect.graduationyear
+      return gradYear && gradYear >= minActiveYear && gradYear <= 2027
+    })
+    
+    return [...activeProspects].sort((a, b) => {
       const rankA = a.prospect_ranking ?? Number.POSITIVE_INFINITY
       const rankB = b.prospect_ranking ?? Number.POSITIVE_INFINITY
 
