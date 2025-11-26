@@ -441,7 +441,7 @@ export default function AllProspectsPage() {
                 <Users className="mr-2 h-4 w-4" />
                 Prospect Directory
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">All North Carolina Prospects</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">All NC College Prospects</h1>
               <p className="text-lg md:text-xl text-white/90">
                 View every NC United athlete in one place – ranked prospects plus the extended college recruiting pool,
                 with filters for class year, gender, division, and recruiting status.
