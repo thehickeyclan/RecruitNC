@@ -949,7 +949,8 @@ export default function AllProspectsPage() {
                 </div>
               )}
             </div>
-          </div>
+            </div>
+          )}
 
           <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center justify-between border-b px-6 py-4">
