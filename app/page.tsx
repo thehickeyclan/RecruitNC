@@ -349,10 +349,10 @@ export default function HomePage() {
                   </Button>
                 </Link>
                 {/* Prospects Button */}
-                <Link href="/prospects">
+                <Link href="/prospects/all">
                   <Button
-                    variant="outline"
-                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/15 hover:text-white hover:border-white/80 transition-all hover:scale-105"
+                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg"
+                    style={{ backgroundColor: "#002147" }}
                   >
                     Prospects
                   </Button>
