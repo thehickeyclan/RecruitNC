@@ -13,7 +13,7 @@ export default function ProspectsPage() {
       <div className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">NC Wrestling Prospects</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">NC College Prospects</h1>
             <p className="text-xl text-gray-200 mb-8">
               Connecting North Carolina&apos;s top wrestling talent with college programs
             </p>
