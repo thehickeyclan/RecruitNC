@@ -48,6 +48,35 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [athletesLoading, setAthletesLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isThemeMounted, setIsThemeMounted] = useState(false)
+
+  // Dark mode toggle handler
+  useEffect(() => {
+    setIsThemeMounted(true)
+    if (typeof window !== "undefined") {
+      const storedTheme = window.localStorage.getItem("recruitnc-theme")
+      if (storedTheme === "dark") {
+        setIsDarkMode(true)
+        document.documentElement.classList.add("dark")
+      }
+    }
+  }, [])
+
+  const handleThemeToggle = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("recruitnc-theme", next ? "dark" : "light")
+        if (next) {
+          document.documentElement.classList.add("dark")
+        } else {
+          document.documentElement.classList.remove("dark")
+        }
+      }
+      return next
+    })
+  }
 
   useEffect(() => {
     const fetchFeaturedAthletes = async () => {
@@ -171,9 +200,27 @@ export default function HomePage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <section className="relative mb-12 overflow-hidden rounded-lg">
+    <main className={`container mx-auto px-4 py-8 ${isDarkMode ? "dark" : ""}`}>
+      {/* Dark Mode Toggle - Top Right */}
+      {isThemeMounted && (
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleThemeToggle}
+            className="flex items-center gap-2 rounded-full bg-white text-slate-700 hover:bg-slate-50 dark:bg-[#0a1e50] dark:text-white dark:hover:bg-[#13294B] border-slate-200 dark:border-[#13294B] transition-colors"
+          >
+            {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <span className="hidden sm:inline text-xs font-semibold">
+              {isDarkMode ? "Light Mode" : "Dark Mode"}
+            </span>
+          </Button>
+        </div>
+      )}
+
+      {/* Hero Section - Modern Two-Column Layout */}
+      <section className="relative mb-16 overflow-hidden rounded-xl shadow-2xl">
+        {/* Background Image Layer */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/hero-banner-nc-wrestling-arena.png"
@@ -183,44 +230,64 @@ export default function HomePage() {
             priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
-          {/* Brand-aligned navy + gold overlay to improve readability - lighter so image shows through */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1e50]/50 via-[#03154C]/60 to-[#03154C]/50" />
-          <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/15 via-transparent to-transparent pointer-events-none" />
+          {/* Brand-aligned navy + gold overlay - balanced for image visibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1e50]/60 via-[#03154C]/65 to-[#03154C]/55 dark:from-[#0a1e50]/80 dark:via-[#03154C]/85 dark:to-[#03154C]/75 transition-opacity duration-300" />
+          <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/20 via-transparent to-transparent pointer-events-none" />
         </div>
 
-        <div className="relative z-10 p-6 md:p-12 min-h-[320px] md:min-h-[420px] flex flex-col justify-center">
-          <div className="mx-auto max-w-4xl">
-            <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-              Recruit
-              <span className="underline decoration-4 underline-offset-4" style={{ color: "#D3B574" }}>
-                NC
-              </span>{" "}
-              Portal
-            </h1>
-            <p className="mb-6 text-base md:text-lg text-white/90">
-              Tracking North Carolina's top wrestling prospects and their college commitments. Stay updated with the
-              latest rankings and explore where NC wrestlers are heading for their collegiate careers.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              {/* Primary CTA: commitments */}
-              <Link href="/athletes">
-                <Button className="min-h-[44px] px-6 text-white hover:opacity-90" style={{ backgroundColor: "#BC0B03" }}>
-                  View Commitments
-                </Button>
-              </Link>
-              {/* Secondary CTA: rankings */}
-              <Link href="/public-rankings">
-                <Button
-                  variant="outline"
-                  className="min-h-[44px] px-6 bg-transparent border-white text-white hover:bg-white/10 hover:text-white"
-                >
-                  View Top Prospects
-                </Button>
-              </Link>
+        {/* Content Layer - Two Column Layout on Desktop */}
+        <div className="relative z-10 min-h-[400px] md:min-h-[500px] flex flex-col md:flex-row">
+          {/* Left Column: Text Content */}
+          <div className="flex-1 flex flex-col justify-center p-8 md:p-12 lg:p-16">
+            <div className="max-w-2xl">
+              <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
+                Recruit
+                <span className="block md:inline">
+                  <span className="underline decoration-4 underline-offset-4" style={{ color: "#D3B574" }}>
+                    NC
+                  </span>{" "}
+                  Portal
+                </span>
+              </h1>
+              <p className="mb-8 text-lg md:text-xl text-white/95 leading-relaxed max-w-xl">
+                Tracking North Carolina's top wrestling prospects and their college commitments. Stay updated with the
+                latest rankings and explore where NC wrestlers are heading for their collegiate careers.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Primary CTA: commitments */}
+                <Link href="/athletes">
+                  <Button 
+                    className="min-h-[52px] px-8 text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg" 
+                    style={{ backgroundColor: "#BC0B03" }}
+                  >
+                    View Commitments
+                  </Button>
+                </Link>
+                {/* Secondary CTA: rankings */}
+                <Link href="/public-rankings">
+                  <Button
+                    variant="outline"
+                    className="min-h-[52px] px-8 text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/15 hover:text-white hover:border-white/80 transition-all"
+                  >
+                    View Top Prospects
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden animate-bounce">
+          {/* Right Column: Image Showcase (Desktop Only) */}
+          <div className="hidden lg:block flex-1 relative">
+            <div className="absolute inset-0 flex items-center justify-center p-8">
+              <div className="relative w-full h-full max-w-md">
+                {/* Subtle decorative element or additional visual */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#D3B574]/10 to-transparent rounded-2xl"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Scroll Indicator */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 md:hidden animate-bounce">
             <div className="flex flex-col items-center text-white/80">
               <span className="text-xs mb-1">Scroll for more</span>
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
