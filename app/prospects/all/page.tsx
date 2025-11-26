@@ -390,7 +390,11 @@ export default function AllProspectsPage() {
   }, [filteredProspects])
 
   const committedCount = useMemo(
-    () => sortedProspects.filter((prospect) => summarizeStatus(prospect.recruiting_status) === "committed").length,
+    () => sortedProspects.filter((prospect) => {
+      const status = summarizeStatus(prospect.recruiting_status)
+      // Must have "committed" status AND have a college assigned
+      return status === "committed" && prospect.college && prospect.college.trim() !== ""
+    }).length,
     [sortedProspects],
   )
 
