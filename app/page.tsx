@@ -327,7 +327,7 @@ export default function HomePage() {
               </h1>
               <p className="mb-8 text-lg md:text-xl text-white/95 leading-relaxed max-w-xl">
                 Tracking North Carolina's top wrestling prospects and their college commitments. Stay updated with the
-                latest rankings and explore where NC wrestlers are heading for their collegiate careers.
+                latest prospect rankings and explore where NC wrestlers are heading for their collegiate careers.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Commitments Button */}
@@ -461,18 +461,19 @@ export default function HomePage() {
 
       {/* Stats Overview - Moved to appear after Features */}
       <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
             Commitment Statistics
           </h2>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {(["All", "2025", "2026"] as YearFilter[]).map((year) => (
               <Button
                 key={year}
                 variant={yearFilter === year ? "default" : "outline"}
                 size="sm"
                 onClick={() => setYearFilter(year)}
+                className="text-xs sm:text-sm"
                 style={{
                   backgroundColor: yearFilter === year ? "#002147" : "transparent",
                   borderColor: "#002147",
