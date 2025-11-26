@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
-import { Filter, LayoutGrid, List, Loader2, Search, Users } from 'lucide-react'
+import { Filter, LayoutGrid, List, Loader2, Search, Users, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
 
@@ -79,6 +80,8 @@ export default function AllProspectsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
+  const [showFilters, setShowFilters] = useState(false)
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState("")
   const [yearFilter, setYearFilter] = useState<string>("all")
@@ -479,49 +482,313 @@ export default function AllProspectsPage() {
             </div>
           </div>
 
+          {/* Compact Filter Bar */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="rounded-lg border bg-card p-4 shadow-sm md:max-w-xl">
-              <p className="text-sm text-muted-foreground">
-                Showing North Carolina prospects across all classes. Apply filters to refine the list, or switch layouts
-                for a quick card-style scan.
-              </p>
+            {/* Search Bar */}
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search by name, school, club, or college..."
+                  className="pl-10"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="inline-flex items-center rounded-md border bg-background p-1 shadow-sm self-start md:self-center">
+
+            {/* Filter Button & View Toggle */}
+            <div className="flex items-center gap-2">
+              {/* Mobile Filter Button */}
+              <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="md:hidden gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    {hasActiveFilters && (
+                      <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+                        {[yearFilter !== "all", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[85vw] max-w-md overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Filter Prospects</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-6">
+                    {/* Achievement Level */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Achievement Level</label>
+                      <div className="grid gap-2 grid-cols-2">
+                        {[
+                          { value: "all-american" as AchievementLevel, label: "All-American", color: "bg-purple-600" },
+                          { value: "state-champion" as AchievementLevel, label: "State Champion", color: "bg-yellow-500" },
+                          { value: "state-placer" as AchievementLevel, label: "State Placer", color: "bg-blue-600" },
+                          { value: "state-qualifier" as AchievementLevel, label: "State Qualifier", color: "bg-green-600" },
+                          { value: "dnq" as AchievementLevel, label: "DNQ", color: "bg-gray-400" },
+                        ].map(({ value, label, color }) => {
+                          const isChecked = achievementFilters.includes(value)
+                          return (
+                            <label
+                              key={value}
+                              className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium cursor-pointer"
+                            >
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  setAchievementFilters((prev) =>
+                                    checked ? [...prev, value] : prev.filter((a) => a !== value),
+                                  )
+                                }}
+                              />
+                              <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${color}`}></div>
+                                <span>{label}</span>
+                              </div>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Quick Filters */}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Graduation Year</label>
+                        <Select value={yearFilter} onValueChange={setYearFilter}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Years" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Years</SelectItem>
+                            {availableYears.map((year) => (
+                              <SelectItem key={year} value={String(year)}>
+                                Class of {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Gender</label>
+                        <Select value={genderFilter} onValueChange={setGenderFilter}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Genders" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Genders</SelectItem>
+                            <SelectItem value="male">Men&apos;s Wrestling</SelectItem>
+                            <SelectItem value="female">Women&apos;s Wrestling</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Recruiting Status</label>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Statuses" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="committed">Committed</SelectItem>
+                            <SelectItem value="verbal">Verbal Commit</SelectItem>
+                            <SelectItem value="uncommitted">Uncommitted</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium">Ranking Status</label>
+                        <Select value={rankFilter} onValueChange={(value) => setRankFilter(value as typeof rankFilter)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="All Prospects" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Prospects</SelectItem>
+                            <SelectItem value="ranked">Ranked</SelectItem>
+                            <SelectItem value="unranked">Unranked</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Weight Classes */}
+                    {availableWeightClasses.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium">Weight Classes</label>
+                          {weightFilters.length > 0 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => setWeightFilters([])}
+                            >
+                              Clear
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid gap-2 grid-cols-3 max-h-48 overflow-y-auto">
+                          {availableWeightClasses.map((weight) => {
+                            const normalized = weight
+                            const isChecked = weightFilters.includes(normalized)
+                            return (
+                              <label
+                                key={normalized}
+                                className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium cursor-pointer"
+                              >
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) => {
+                                    setWeightFilters((prev) =>
+                                      checked ? [...prev, normalized] : prev.filter((w) => w !== normalized),
+                                    )
+                                  }}
+                                />
+                                <span>{normalized.match(/^\d+$/) ? `${normalized} lbs` : normalized}</span>
+                              </label>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 pt-4 border-t">
+                      <Button variant="outline" onClick={resetFilters} className="flex-1">
+                        Reset All
+                      </Button>
+                      <Button onClick={() => setMobileFiltersOpen(false)} className="flex-1">
+                        Apply Filters
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Desktop Filter Toggle */}
               <Button
-                type="button"
-                variant={viewMode === "table" ? "default" : "ghost"}
-                size="sm"
-                className="gap-2"
-                onClick={() => setViewMode("table")}
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="hidden md:flex gap-2"
               >
-                <List className="h-4 w-4" />
-                Table
+                <Filter className="h-4 w-4" />
+                {showFilters ? "Hide Filters" : "Show Filters"}
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
+                    {[yearFilter !== "all", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
+                  </Badge>
+                )}
               </Button>
-              <Button
-                type="button"
-                variant={viewMode === "cards" ? "default" : "ghost"}
-                size="sm"
-                className="gap-2"
-                onClick={() => setViewMode("cards")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-                Cards
-              </Button>
+
+              {/* View Toggle */}
+              <div className="inline-flex items-center rounded-md border bg-background p-1 shadow-sm">
+                <Button
+                  type="button"
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setViewMode("table")}
+                >
+                  <List className="h-4 w-4" />
+                  <span className="hidden sm:inline">Table</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant={viewMode === "cards" ? "default" : "ghost"}
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setViewMode("cards")}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cards</span>
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="rounded-lg border bg-card p-6 shadow-sm space-y-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold text-[#03154C]">Prospect Filters</h2>
-                <p className="text-sm text-muted-foreground">
-                  Narrow the list by class year, recruiting status, division, club, or search by name/school.
-                </p>
-              </div>
-              <Button variant="outline" onClick={resetFilters} className="self-start lg:self-center">
-                Reset Filters
+          {/* Active Filters Badges */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2">
+              {searchTerm && (
+                <Badge variant="secondary" className="gap-1">
+                  Search: {searchTerm}
+                  <button onClick={() => setSearchTerm("")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {yearFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  {yearFilter === "all" ? "All Years" : `Class of ${yearFilter}`}
+                  <button onClick={() => setYearFilter("all")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {genderFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  {genderFilter === "male" ? "Men's" : "Women's"}
+                  <button onClick={() => setGenderFilter("all")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {statusFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  {statusFilter}
+                  <button onClick={() => setStatusFilter("all")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {rankFilter !== "all" && (
+                <Badge variant="secondary" className="gap-1">
+                  {rankFilter === "ranked" ? "Ranked" : "Unranked"}
+                  <button onClick={() => setRankFilter("all")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {weightFilters.length > 0 && (
+                <Badge variant="secondary" className="gap-1">
+                  {weightFilters.length} weight{weightFilters.length > 1 ? "s" : ""}
+                  <button onClick={() => setWeightFilters([])} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {achievementFilters.length > 0 && (
+                <Badge variant="secondary" className="gap-1">
+                  {achievementFilters.length} achievement{achievementFilters.length > 1 ? "s" : ""}
+                  <button onClick={() => setAchievementFilters([])} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 text-xs">
+                Clear All
               </Button>
             </div>
+          )}
+
+          {/* Desktop Collapsible Filters */}
+          {showFilters && (
+            <div className="rounded-lg border bg-card p-6 shadow-sm space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[#03154C]">Filter Options</h3>
+                <Button variant="ghost" size="sm" onClick={resetFilters}>
+                  Reset All
+                </Button>
+              </div>
 
             <div className="space-y-3">
               <label className="text-sm font-medium text-muted-foreground">Achievement Level</label>
