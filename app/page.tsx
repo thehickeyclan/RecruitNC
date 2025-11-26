@@ -410,34 +410,34 @@ export default function HomePage() {
 
         {loading ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading statistics...</p>
+            <p className={isDarkMode ? "text-white/70" : "text-gray-500"}>Loading statistics...</p>
           </div>
         ) : (
           <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
             {/* Total Commitments Card */}
             <Card
-              className="border-blue-200 overflow-hidden lg:col-span-2"
+              className={`border-blue-200 overflow-hidden lg:col-span-2 ${isDarkMode ? "bg-[#13294B] border-[#1e3a5f]" : ""}`}
               style={{ borderColor: "#13294B", borderOpacity: 0.3 }}
             >
               <div className="h-2" style={{ backgroundColor: "#13294B" }}></div>
               <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-1" style={{ color: "#13294B" }}>
+                <h3 className={`text-lg font-medium mb-1 ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#13294B" }}>
                   Total Commitments
                 </h3>
-                <p className="text-xs mb-2" style={{ color: "#13294B", opacity: 0.7 }}>
+                <p className={`text-xs mb-2 ${isDarkMode ? "text-white/70" : ""}`} style={{ color: isDarkMode ? undefined : "#13294B", opacity: isDarkMode ? 0.7 : 0.7 }}>
                   Tracking Class of 2025 and beyond
                 </p>
                 <div className="flex justify-between items-center py-2">
                   <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#13294B" }}>
+                    <span className={`text-xl font-semibold ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#13294B" }}>
                       {stats.male}
                     </span>
-                    <span className="text-xs" style={{ color: "#13294B", opacity: 0.7 }}>
+                    <span className={`text-xs ${isDarkMode ? "text-white/70" : ""}`} style={{ color: isDarkMode ? undefined : "#13294B", opacity: 0.7 }}>
                       Male
                     </span>
                   </div>
 
-                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#03154C" }}>
+                  <span className={`text-4xl lg:text-5xl font-bold text-center ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#03154C" }}>
                     {stats.total}
                   </span>
 
@@ -455,7 +455,7 @@ export default function HomePage() {
 
             {/* Division Breakdown Card */}
             <Card
-              className="border-yellow-200 overflow-hidden lg:col-span-5"
+              className={`border-yellow-200 overflow-hidden lg:col-span-5 ${isDarkMode ? "bg-[#13294B] border-[#1e3a5f]" : ""}`}
               style={{ borderColor: "#D3B574", borderOpacity: 0.3 }}
             >
               <div className="h-2" style={{ backgroundColor: "#D3B574" }}></div>
@@ -465,7 +465,7 @@ export default function HomePage() {
                 </h3>
                 <div className="grid grid-cols-5 gap-2 lg:gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                    <div className={`w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -486,7 +486,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                    <div className={`w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -507,7 +507,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                    <div className={`w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -528,7 +528,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                    <div className={`w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -549,7 +549,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                    <div className={`w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}>
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -578,7 +578,7 @@ export default function HomePage() {
       {/* Featured Athletes Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold" style={{ color: "#03154C" }}>
+          <h2 className={`text-2xl font-bold ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#03154C" }}>
             Featured Commitments
           </h2>
           <Link href="/athletes">
@@ -595,7 +595,7 @@ export default function HomePage() {
 
         {athletesLoading ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading featured athletes...</p>
+            <p className={isDarkMode ? "text-white/70" : "text-gray-500"}>Loading featured athletes...</p>
           </div>
         ) : featuredAthletes.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -605,7 +605,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No featured athletes available at this time.</p>
+            <p className={isDarkMode ? "text-white/70" : "text-gray-500"}>No featured athletes available at this time.</p>
             {error && (
               <p className="text-sm mt-2" style={{ color: "#BC0B03" }}>
                 {error}
