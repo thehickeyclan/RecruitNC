@@ -9,9 +9,7 @@ import "./athletes/flip-card.css"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 
-type YearFilter = "All" | "2025" | "2026" | "2027"
-type RankingsYearFilter = "2026" | "2027"
-type GenderFilter = "Male" | "Female"
+type YearFilter = "All" | "2025" | "2026"
 
 interface Athlete {
   id: string
@@ -51,10 +49,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [athletesLoading, setAthletesLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [rankingsYear, setRankingsYear] = useState<RankingsYearFilter>("2026")
-  const [rankingsGender, setRankingsGender] = useState<GenderFilter>("Male")
   const [featuredRankings, setFeaturedRankings] = useState<Athlete[]>([])
   const [rankingsLoading, setRankingsLoading] = useState(true)
+  const [latestCommits, setLatestCommits] = useState<Athlete[]>([])
+  const [commitsLoading, setCommitsLoading] = useState(true)
 
   useEffect(() => {
     const fetchFeaturedAthletes = async () => {
@@ -178,32 +176,28 @@ export default function HomePage() {
         setRankingsLoading(true)
         setError(null)
 
-        const response = await fetch(
-          `/api/prospects?graduationYear=${rankingsYear}&gender=${rankingsGender.toLowerCase()}&limit=3`,
-          {
+        // Fetch from both 2026 and 2027, get top 3 from each
+        const [response2026, response2027] = await Promise.all([
+          fetch(`/api/prospects?graduationYear=2026&limit=50`, {
             method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             cache: "no-store",
-          }
-        )
+          }),
+          fetch(`/api/prospects?graduationYear=2027&limit=50`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+          }),
+        ])
 
-        if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`API error: ${response.status} - ${errorText}`)
-        }
+        const data2026 = response2026.ok ? await response2026.json() : { prospects: [] }
+        const data2027 = response2027.ok ? await response2027.json() : { prospects: [] }
 
-        const data = await response.json()
-
-        if (!data.success && !Array.isArray(data.prospects)) {
-          throw new Error(data.error || "API returned unsuccessful response")
-        }
-
-        const prospects = Array.isArray(data.prospects) ? data.prospects : []
+        const prospects2026 = Array.isArray(data2026.prospects) ? data2026.prospects : []
+        const prospects2027 = Array.isArray(data2027.prospects) ? data2027.prospects : []
         
-        // Filter to only those with rankings and sort by ranking
-        const rankedProspects = prospects
+        // Get top 3 from each year, sorted by ranking
+        const top2026 = prospects2026
           .filter((p: Athlete) => p.prospect_ranking != null)
           .sort((a: Athlete, b: Athlete) => {
             const rankA = typeof a.prospect_ranking === 'string' ? parseInt(a.prospect_ranking) : (a.prospect_ranking || 999)
@@ -212,7 +206,17 @@ export default function HomePage() {
           })
           .slice(0, 3)
 
-        setFeaturedRankings(rankedProspects)
+        const top2027 = prospects2027
+          .filter((p: Athlete) => p.prospect_ranking != null)
+          .sort((a: Athlete, b: Athlete) => {
+            const rankA = typeof a.prospect_ranking === 'string' ? parseInt(a.prospect_ranking) : (a.prospect_ranking || 999)
+            const rankB = typeof b.prospect_ranking === 'string' ? parseInt(b.prospect_ranking) : (b.prospect_ranking || 999)
+            return rankA - rankB
+          })
+          .slice(0, 3)
+
+        // Combine: 2026 first, then 2027
+        setFeaturedRankings([...top2026, ...top2027])
         setError(null)
       } catch (err) {
         console.error("Error fetching featured rankings:", err)
@@ -224,7 +228,63 @@ export default function HomePage() {
     }
 
     fetchFeaturedRankings()
-  }, [rankingsYear, rankingsGender])
+  }, [])
+
+  useEffect(() => {
+    const fetchLatestCommits = async () => {
+      try {
+        setCommitsLoading(true)
+        setError(null)
+
+        const response = await fetch(`/api/featured-athletes?limit=10`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          cache: "no-store",
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API error: ${response.status} - ${errorText}`)
+        }
+
+        const data = await response.json()
+
+        if (!data.success) {
+          throw new Error(data.error || "API returned unsuccessful response")
+        }
+
+        const athletes = Array.isArray(data.athletes) ? data.athletes : []
+        
+        // Filter out 2025 and earlier, then take the 3 most recent by commitment date
+        const currentYear = new Date().getFullYear()
+        const minActiveYear = currentYear + 1 // 2026 and beyond
+        
+        const recentCommits = athletes
+          .filter((a: Athlete) => {
+            const gradYear = a.graduationyear || 0
+            return gradYear >= minActiveYear
+          })
+          .sort((a: Athlete, b: Athlete) => {
+            // Sort by commitment date (most recent first)
+            const dateA = (a as any).commitment_date || (a as any).commitmentdate || 0
+            const dateB = (b as any).commitment_date || (b as any).commitmentdate || 0
+            return new Date(dateB).getTime() - new Date(dateA).getTime()
+          })
+          .slice(0, 3)
+
+        setLatestCommits(normalizeAthleteList(recentCommits))
+        setError(null)
+      } catch (err) {
+        console.error("Error fetching latest commits:", err)
+        setError(`Latest commits error: ${err instanceof Error ? err.message : String(err)}`)
+        setLatestCommits([])
+      } finally {
+        setCommitsLoading(false)
+      }
+    }
+
+    fetchLatestCommits()
+  }, [])
 
   const getDisplayAthletes = () => {
     if (!Array.isArray(featuredAthletes)) return []
@@ -390,7 +450,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Overview */}
+      {/* Stats Overview - Moved to appear after Features */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
@@ -398,7 +458,7 @@ export default function HomePage() {
           </h2>
 
           <div className="flex gap-2">
-            {(["All", "2025", "2026", "2027"] as YearFilter[]).map((year) => (
+            {(["All", "2025", "2026"] as YearFilter[]).map((year) => (
               <Button
                 key={year}
                 variant={yearFilter === year ? "default" : "outline"}
@@ -600,63 +660,131 @@ export default function HomePage() {
             <p className="text-gray-500">Loading featured rankings...</p>
           </div>
         ) : featuredRankings.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {featuredRankings.map((athlete) => (
-              <Link key={athlete.id} href={`/athletes/${athlete.id}`}>
-                <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      {athlete.photourl && (
-                        <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden">
-                          <Image
-                            src={athlete.photourl}
-                            alt={athlete.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-lg" style={{ color: "#002147" }}>
-                            {athlete.name}
-                          </h3>
-                          {athlete.prospect_ranking && (
-                            <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: "#D3B574" }}>
-                              #{athlete.prospect_ranking}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600 mb-1">{athlete.highschool}</p>
-                        <p className="text-xs text-gray-500">
-                          Class of {athlete.graduationyear} • {athlete.weightclass} lbs
-                        </p>
-                        {athlete.achievements && athlete.achievements.length > 0 && (
-                          <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                            {Array.isArray(athlete.achievements) 
-                              ? athlete.achievements.slice(0, 2).join(", ")
-                              : athlete.achievements}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+          <div className="space-y-8">
+            {/* Class of 2026 Section */}
+            {featuredRankings.filter((a) => a.graduationyear === 2026).length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: "#002147" }}>
+                  Class of 2026
+                </h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  {featuredRankings
+                    .filter((athlete) => athlete.graduationyear === 2026)
+                    .map((athlete) => (
+                      <Link key={athlete.id} href={`/athletes/${athlete.id}`}>
+                        <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              {athlete.photourl && (
+                                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden">
+                                  <Image
+                                    src={athlete.photourl}
+                                    alt={athlete.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-bold text-lg" style={{ color: "#002147" }}>
+                                    {athlete.name}
+                                  </h3>
+                                  {athlete.prospect_ranking && (
+                                    <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: "#D3B574" }}>
+                                      #{athlete.prospect_ranking}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-1">{athlete.highschool}</p>
+                                <p className="text-xs text-gray-500">
+                                  {athlete.weightclass} lbs
+                                </p>
+                                {athlete.achievements && athlete.achievements.length > 0 && (
+                                  <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                                    {Array.isArray(athlete.achievements) 
+                                      ? athlete.achievements.slice(0, 2).join(", ")
+                                      : athlete.achievements}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            {/* Class of 2027 Section */}
+            {featuredRankings.filter((a) => a.graduationyear === 2027).length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: "#002147" }}>
+                  Class of 2027
+                </h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  {featuredRankings
+                    .filter((athlete) => athlete.graduationyear === 2027)
+                    .map((athlete) => (
+                      <Link key={athlete.id} href={`/athletes/${athlete.id}`}>
+                        <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                          <CardContent className="p-6">
+                            <div className="flex items-start gap-4">
+                              {athlete.photourl && (
+                                <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden">
+                                  <Image
+                                    src={athlete.photourl}
+                                    alt={athlete.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-bold text-lg" style={{ color: "#002147" }}>
+                                    {athlete.name}
+                                  </h3>
+                                  {athlete.prospect_ranking && (
+                                    <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: "#D3B574" }}>
+                                      #{athlete.prospect_ranking}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 mb-1">{athlete.highschool}</p>
+                                <p className="text-xs text-gray-500">
+                                  {athlete.weightclass} lbs
+                                </p>
+                                {athlete.achievements && athlete.achievements.length > 0 && (
+                                  <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                                    {Array.isArray(athlete.achievements) 
+                                      ? athlete.achievements.slice(0, 2).join(", ")
+                                      : athlete.achievements}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No ranked prospects available for Class of {rankingsYear} {rankingsGender}.</p>
+            <p className="text-gray-500">No ranked prospects available for Class of 2026 or 2027.</p>
           </div>
         )}
       </section>
 
-      {/* Featured Athletes Section */}
+      {/* Latest Commits Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
-            Featured Commitments
+            Latest Commits
           </h2>
           <Link href="/athletes">
             <Button
@@ -670,19 +798,19 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {athletesLoading ? (
+        {commitsLoading ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading featured athletes...</p>
+            <p className="text-gray-500">Loading latest commits...</p>
           </div>
-        ) : featuredAthletes.length > 0 ? (
+        ) : latestCommits.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {getDisplayAthletes().map((athlete) => (
+            {latestCommits.map((athlete) => (
               <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
             ))}
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No featured athletes available at this time.</p>
+            <p className="text-gray-500">No recent commits available at this time.</p>
             {error && (
               <p className="text-sm mt-2" style={{ color: "#BC0B03" }}>
                 {error}
