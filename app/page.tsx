@@ -183,10 +183,12 @@ export default function HomePage() {
             priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
-          <div className="absolute inset-0 bg-black/40"></div>
+          {/* Brand-aligned navy + gold overlay to improve readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1e50] via-[#03154C]/95 to-[#03154C]/70" />
+          <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/25 via-transparent to-transparent pointer-events-none" />
         </div>
 
-        <div className="relative z-10 p-6 md:p-12 min-h-[300px] md:min-h-[400px] flex flex-col justify-center">
+        <div className="relative z-10 p-6 md:p-12 min-h-[320px] md:min-h-[420px] flex flex-col justify-center">
           <div className="mx-auto max-w-4xl">
             <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold text-white">
               Recruit
@@ -200,17 +202,19 @@ export default function HomePage() {
               latest rankings and explore where NC wrestlers are heading for their collegiate careers.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link href="/public-rankings">
-                <Button className="text-white hover:opacity-90 min-h-[44px]" style={{ backgroundColor: "#BC0B03" }}>
-                  View Top Prospects
+              {/* Primary CTA: commitments */}
+              <Link href="/athletes">
+                <Button className="min-h-[44px] px-6 text-white hover:opacity-90" style={{ backgroundColor: "#BC0B03" }}>
+                  View Commitments
                 </Button>
               </Link>
-              <Link href="/athletes">
+              {/* Secondary CTA: rankings */}
+              <Link href="/public-rankings">
                 <Button
-                  className="text-white hover:opacity-90 min-h-[44px]"
-                  style={{ backgroundColor: "#D3B574", color: "#03154C" }}
+                  variant="outline"
+                  className="min-h-[44px] px-6 bg-transparent border-white text-white hover:bg-white/10 hover:text-white"
                 >
-                  View Commitments
+                  View Top Prospects
                 </Button>
               </Link>
             </div>
