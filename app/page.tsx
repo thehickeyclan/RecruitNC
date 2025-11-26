@@ -201,7 +201,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className={`container mx-auto px-4 py-8 ${isDarkMode ? "dark" : ""}`}>
+    <main className={`container mx-auto px-4 py-8 ${isDarkMode ? "dark bg-[#0a1e50]" : "bg-white"}`}>
       {/* Dark Mode Toggle - Top Right */}
       {isThemeMounted && (
         <div className="flex justify-end mb-4">
@@ -301,17 +301,17 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="mb-12">
-        <h2 className="mb-6 text-2xl font-bold" style={{ color: "#03154C" }}>
+        <h2 className={`mb-6 text-2xl font-bold ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#03154C" }}>
           Features
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card
-            className="overflow-hidden border-t-4 transition-all hover:shadow-md"
+            className={`overflow-hidden border-t-4 transition-all hover:shadow-md ${isDarkMode ? "bg-[#13294B] border-[#13294B]" : ""}`}
             style={{ borderTopColor: "#BC0B03" }}
           >
             <CardContent className="p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDarkMode ? "bg-red-900/30" : "bg-red-50"}`}>
+                <svg className={`h-6 w-6 ${isDarkMode ? "text-red-400" : "text-red-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -323,7 +323,7 @@ export default function HomePage() {
               <h3 className="mb-2 text-xl font-semibold" style={{ color: "#BC0B03" }}>
                 Athlete Profiles
               </h3>
-              <p className="text-gray-600">
+              <p className={isDarkMode ? "text-white/80" : "text-gray-600"}>
                 Detailed profiles of NC wrestlers including their high school, graduation year, college commitment, and
                 achievements.
               </p>
@@ -331,12 +331,12 @@ export default function HomePage() {
           </Card>
 
           <Card
-            className="overflow-hidden border-t-4 transition-all hover:shadow-md"
+            className={`overflow-hidden border-t-4 transition-all hover:shadow-md ${isDarkMode ? "bg-[#13294B] border-[#13294B]" : ""}`}
             style={{ borderTopColor: "#13294B" }}
           >
             <CardContent className="p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDarkMode ? "bg-blue-900/30" : "bg-blue-50"}`}>
+                <svg className={`h-6 w-6 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -345,10 +345,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold" style={{ color: "#13294B" }}>
+              <h3 className={`mb-2 text-xl font-semibold ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#13294B" }}>
                 College Insights
               </h3>
-              <p className="text-gray-600">
+              <p className={isDarkMode ? "text-white/80" : "text-gray-600"}>
                 Explore which colleges are recruiting NC wrestlers and see the breakdown by division and conference.
               </p>
             </CardContent>
@@ -356,12 +356,12 @@ export default function HomePage() {
 
           <Link href="/public-rankings" className="block">
             <Card
-              className="overflow-hidden border-t-4 transition-all hover:shadow-md cursor-pointer"
+              className={`overflow-hidden border-t-4 transition-all hover:shadow-md cursor-pointer ${isDarkMode ? "bg-[#13294B] border-[#13294B]" : ""}`}
               style={{ borderTopColor: "#D3B574" }}
             >
               <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-50">
-                  <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-full ${isDarkMode ? "bg-yellow-900/30" : "bg-yellow-50"}`}>
+                  <svg className={`h-6 w-6 ${isDarkMode ? "text-[#D3B574]" : "text-yellow-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -373,7 +373,7 @@ export default function HomePage() {
                 <h3 className="mb-2 text-xl font-semibold" style={{ color: "#D3B574" }}>
                   Prospect Rankings
                 </h3>
-                <p className="text-gray-600">
+                <p className={isDarkMode ? "text-white/80" : "text-gray-600"}>
                   View comprehensive rankings of top wrestling prospects by graduation year, weight class, and style.
                 </p>
               </CardContent>
@@ -385,7 +385,7 @@ export default function HomePage() {
       {/* Stats Overview */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold" style={{ color: "#03154C" }}>
+          <h2 className={`text-2xl font-bold ${isDarkMode ? "text-white" : ""}`} style={{ color: isDarkMode ? "#FFFFFF" : "#03154C" }}>
             Commitment Statistics
           </h2>
 
