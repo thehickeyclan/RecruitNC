@@ -48,35 +48,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [athletesLoading, setAthletesLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDarkMode, setIsDarkMode] = useState(false)
-  const [isThemeMounted, setIsThemeMounted] = useState(false)
-
-  // Dark mode toggle handler
-  useEffect(() => {
-    setIsThemeMounted(true)
-    if (typeof window !== "undefined") {
-      const storedTheme = window.localStorage.getItem("recruitnc-theme")
-      if (storedTheme === "dark") {
-        setIsDarkMode(true)
-        document.documentElement.classList.add("dark")
-      }
-    }
-  }, [])
-
-  const handleThemeToggle = () => {
-    setIsDarkMode((prev) => {
-      const next = !prev
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("recruitnc-theme", next ? "dark" : "light")
-        if (next) {
-          document.documentElement.classList.add("dark")
-        } else {
-          document.documentElement.classList.remove("dark")
-        }
-      }
-      return next
-    })
-  }
 
   useEffect(() => {
     const fetchFeaturedAthletes = async () => {
