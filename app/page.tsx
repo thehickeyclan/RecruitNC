@@ -577,6 +577,113 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* Featured Rankings Section */}
+      <section className="mb-12">
+        <div className="mb-4 flex items-center justify-between flex-wrap gap-4">
+          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
+            Featured Rankings
+          </h2>
+          <div className="flex gap-2 flex-wrap">
+            {(["2026", "2027"] as RankingsYearFilter[]).map((year) => (
+              <Button
+                key={year}
+                variant={rankingsYear === year ? "default" : "outline"}
+                size="sm"
+                onClick={() => setRankingsYear(year)}
+                style={{
+                  backgroundColor: rankingsYear === year ? "#002147" : "transparent",
+                  borderColor: "#002147",
+                  color: rankingsYear === year ? "white" : "#002147",
+                }}
+              >
+                Class of {year}
+              </Button>
+            ))}
+            {(["Male", "Female"] as GenderFilter[]).map((gender) => (
+              <Button
+                key={gender}
+                variant={rankingsGender === gender ? "default" : "outline"}
+                size="sm"
+                onClick={() => setRankingsGender(gender)}
+                style={{
+                  backgroundColor: rankingsGender === gender ? "#002147" : "transparent",
+                  borderColor: "#002147",
+                  color: rankingsGender === gender ? "white" : "#002147",
+                }}
+              >
+                {gender}
+              </Button>
+            ))}
+            <Link href="/public-rankings">
+              <Button
+                variant="outline"
+                size="sm"
+                className="hover:opacity-80 bg-transparent"
+                style={{ borderColor: "#002147", color: "#002147" }}
+              >
+                View All Rankings
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {rankingsLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading featured rankings...</p>
+          </div>
+        ) : featuredRankings.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {featuredRankings.map((athlete) => (
+              <Link key={athlete.id} href={`/athletes/${athlete.id}`}>
+                <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      {athlete.photourl && (
+                        <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden">
+                          <Image
+                            src={athlete.photourl}
+                            alt={athlete.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-lg" style={{ color: "#002147" }}>
+                            {athlete.name}
+                          </h3>
+                          {athlete.prospect_ranking && (
+                            <span className="px-2 py-0.5 rounded text-xs font-bold text-white" style={{ backgroundColor: "#D3B574" }}>
+                              #{athlete.prospect_ranking}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1">{athlete.highschool}</p>
+                        <p className="text-xs text-gray-500">
+                          Class of {athlete.graduationyear} • {athlete.weightclass} lbs
+                        </p>
+                        {athlete.achievements && athlete.achievements.length > 0 && (
+                          <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                            {Array.isArray(athlete.achievements) 
+                              ? athlete.achievements.slice(0, 2).join(", ")
+                              : athlete.achievements}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No ranked prospects available for Class of {rankingsYear} {rankingsGender}.</p>
+          </div>
+        )}
+      </section>
+
       {/* Featured Athletes Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
