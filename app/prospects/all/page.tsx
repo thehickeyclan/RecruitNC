@@ -447,6 +447,18 @@ export default function AllProspectsPage() {
     setAchievementFilters([])
   }
 
+  const hasActiveFilters = useMemo(() => {
+    return (
+      searchTerm.trim() !== "" ||
+      yearFilter !== "all" ||
+      genderFilter !== "all" ||
+      statusFilter !== "all" ||
+      rankFilter !== "all" ||
+      weightFilters.length > 0 ||
+      achievementFilters.length > 0
+    )
+  }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-background">
