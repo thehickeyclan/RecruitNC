@@ -183,9 +183,9 @@ export default function HomePage() {
             priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
-          {/* Brand-aligned navy + gold overlay to improve readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1e50] via-[#03154C]/95 to-[#03154C]/70" />
-          <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/25 via-transparent to-transparent pointer-events-none" />
+          {/* Brand-aligned navy + gold overlay to improve readability - lighter so image shows through */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a1e50]/50 via-[#03154C]/60 to-[#03154C]/50" />
+          <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/15 via-transparent to-transparent pointer-events-none" />
         </div>
 
         <div className="relative z-10 p-6 md:p-12 min-h-[320px] md:min-h-[420px] flex flex-col justify-center">
