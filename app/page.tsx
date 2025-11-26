@@ -4,7 +4,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Moon, Sun } from "lucide-react"
 import { useState, useEffect } from "react"
 import "./athletes/flip-card.css"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
@@ -201,25 +200,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className={isDarkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-        <main className="container mx-auto px-4 py-8">
-          {/* Dark Mode Toggle - Top Right */}
-          {isThemeMounted && (
-            <div className="flex justify-end mb-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleThemeToggle}
-                className="flex items-center gap-2 rounded-full bg-white/80 text-slate-700 hover:bg-white dark:bg-slate-900/80 dark:text-slate-100 dark:hover:bg-slate-900 transition-colors"
-              >
-                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                <span className="hidden sm:inline text-xs font-semibold tracking-wide">
-                  {isDarkMode ? "Light Mode" : "Dark Mode"}
-                </span>
-              </Button>
-            </div>
-          )}
+    <main className="container mx-auto px-4 py-8 bg-white">
 
       {/* Hero Section - Modern Two-Column Layout */}
       <section className="relative mb-16 overflow-hidden rounded-xl shadow-2xl">
@@ -234,7 +215,7 @@ export default function HomePage() {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
           {/* Brand-aligned navy + gold overlay - balanced for image visibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#002147]/60 via-[#002147]/70 to-[#002147]/60 dark:from-[#002147]/85 dark:via-[#002147]/90 dark:to-[#002147]/85 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#002147]/60 via-[#002147]/70 to-[#002147]/60 transition-opacity duration-300" />
           <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/20 via-transparent to-transparent pointer-events-none" />
         </div>
 
@@ -303,14 +284,14 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="mb-12">
-        <h2 className="mb-6 text-2xl font-bold text-foreground">
+        <h2 className="mb-6 text-2xl font-bold" style={{ color: "#002147" }}>
           Features
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1" style={{ borderTopColor: "#BC0B03" }}>
             <CardContent className="p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/20">
-                <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -319,10 +300,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-foreground" style={{ color: "#BC0B03" }}>
+              <h3 className="mb-2 text-xl font-semibold" style={{ color: "#BC0B03" }}>
                 Athlete Profiles
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-600">
                 Detailed profiles of NC wrestlers including their high school, graduation year, college commitment, and
                 achievements.
               </p>
@@ -331,8 +312,8 @@ export default function HomePage() {
 
           <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1" style={{ borderTopColor: "#002147" }}>
             <CardContent className="p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20">
-                <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -341,10 +322,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mb-2 text-xl font-semibold text-foreground" style={{ color: "#002147" }}>
+              <h3 className="mb-2 text-xl font-semibold" style={{ color: "#002147" }}>
                 College Insights
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-gray-600">
                 Explore which colleges are recruiting NC wrestlers and see the breakdown by division and conference.
               </p>
             </CardContent>
@@ -353,8 +334,8 @@ export default function HomePage() {
           <Link href="/public-rankings" className="block">
             <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#D3B574" }}>
               <CardContent className="p-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-50 dark:bg-yellow-900/20">
-                  <svg className="h-6 w-6 text-yellow-600 dark:text-[#D3B574]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-50">
+                  <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -363,10 +344,10 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-2 text-xl font-semibold text-foreground" style={{ color: "#D3B574" }}>
+                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#D3B574" }}>
                   Prospect Rankings
                 </h3>
-                <p className="text-muted-foreground">
+                <p className="text-gray-600">
                   View comprehensive rankings of top wrestling prospects by graduation year, weight class, and style.
                 </p>
               </CardContent>
@@ -378,7 +359,7 @@ export default function HomePage() {
       {/* Stats Overview */}
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
             Commitment Statistics
           </h2>
 
@@ -403,31 +384,31 @@ export default function HomePage() {
 
         {loading ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading statistics...</p>
+            <p className="text-gray-500">Loading statistics...</p>
           </div>
         ) : (
           <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
             {/* Total Commitments Card */}
-            <Card className="border overflow-hidden lg:col-span-2 border-border">
+            <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
               <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
               <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-1 text-foreground" style={{ color: "#002147" }}>
+                <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
                   Total Commitments
                 </h3>
-                <p className="text-xs mb-2 text-muted-foreground">
+                <p className="text-xs mb-2" style={{ color: "#002147", opacity: 0.7 }}>
                   Tracking Class of 2025 and beyond
                 </p>
                 <div className="flex justify-between items-center py-2">
                   <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold text-foreground" style={{ color: "#002147" }}>
+                    <span className="text-xl font-semibold" style={{ color: "#002147" }}>
                       {stats.male}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs" style={{ color: "#002147", opacity: 0.7 }}>
                       Male
                     </span>
                   </div>
 
-                  <span className="text-4xl lg:text-5xl font-bold text-center text-foreground" style={{ color: "#002147" }}>
+                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#002147" }}>
                     {stats.total}
                   </span>
 
@@ -435,7 +416,7 @@ export default function HomePage() {
                     <span className="text-xl font-semibold" style={{ color: "#BC0B03" }}>
                       {stats.female}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs" style={{ color: "#BC0B03", opacity: 0.7 }}>
                       Female
                     </span>
                   </div>
@@ -444,15 +425,15 @@ export default function HomePage() {
             </Card>
 
             {/* Division Breakdown Card */}
-            <Card className="border overflow-hidden lg:col-span-5 border-border">
+            <Card className="border overflow-hidden lg:col-span-5 border-yellow-200" style={{ borderColor: "#D3B574", borderOpacity: 0.3 }}>
               <div className="h-2" style={{ backgroundColor: "#D3B574" }}></div>
               <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-2 text-foreground" style={{ color: "#D3B574" }}>
+                <h3 className="text-lg font-medium mb-2" style={{ color: "#D3B574" }}>
                   Division Breakdown
                 </h3>
                 <div className="grid grid-cols-5 gap-2 lg:gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-muted">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -467,13 +448,13 @@ export default function HomePage() {
                     >
                       {stats.divisions.D1}
                     </div>
-                    <span className="text-xs font-medium mt-1 text-foreground" style={{ color: "#002147" }}>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
                       D1
                     </span>
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-muted">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -494,7 +475,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-muted">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -509,13 +490,13 @@ export default function HomePage() {
                     >
                       {stats.divisions.D3}
                     </div>
-                    <span className="text-xs font-medium mt-1 text-foreground" style={{ color: "#002147" }}>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
                       D3
                     </span>
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-muted">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -530,13 +511,13 @@ export default function HomePage() {
                     >
                       {stats.divisions.NAIA}
                     </div>
-                    <span className="text-xs font-medium mt-1 text-foreground" style={{ color: "#D3B574" }}>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#D3B574" }}>
                       NAIA
                     </span>
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-muted">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
                       <div
                         className="w-full transition-all duration-300"
                         style={{
@@ -565,7 +546,7 @@ export default function HomePage() {
       {/* Featured Athletes Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">
+          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
             Featured Commitments
           </h2>
           <Link href="/athletes">
@@ -582,7 +563,7 @@ export default function HomePage() {
 
         {athletesLoading ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">Loading featured athletes...</p>
+            <p className="text-gray-500">Loading featured athletes...</p>
           </div>
         ) : featuredAthletes.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -592,7 +573,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No featured athletes available at this time.</p>
+            <p className="text-gray-500">No featured athletes available at this time.</p>
             {error && (
               <p className="text-sm mt-2" style={{ color: "#BC0B03" }}>
                 {error}
@@ -645,8 +626,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }
