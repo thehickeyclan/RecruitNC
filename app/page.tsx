@@ -10,6 +10,8 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 
 type YearFilter = "All" | "2025" | "2026" | "2027"
+type RankingsYearFilter = "2026" | "2027"
+type GenderFilter = "Male" | "Female"
 
 interface Athlete {
   id: string
@@ -28,6 +30,7 @@ interface Athlete {
   wrestlingClub?: string
   club?: string
   gender?: string
+  prospect_ranking?: number | string | null
 }
 
 export default function HomePage() {
@@ -48,6 +51,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [athletesLoading, setAthletesLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [rankingsYear, setRankingsYear] = useState<RankingsYearFilter>("2026")
+  const [rankingsGender, setRankingsGender] = useState<GenderFilter>("Male")
+  const [featuredRankings, setFeaturedRankings] = useState<Athlete[]>([])
+  const [rankingsLoading, setRankingsLoading] = useState(true)
 
   useEffect(() => {
     const fetchFeaturedAthletes = async () => {
@@ -164,6 +171,60 @@ export default function HomePage() {
 
     fetchStats()
   }, [yearFilter])
+
+  useEffect(() => {
+    const fetchFeaturedRankings = async () => {
+      try {
+        setRankingsLoading(true)
+        setError(null)
+
+        const response = await fetch(
+          `/api/prospects?graduationYear=${rankingsYear}&gender=${rankingsGender.toLowerCase()}&limit=3`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            cache: "no-store",
+          }
+        )
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API error: ${response.status} - ${errorText}`)
+        }
+
+        const data = await response.json()
+
+        if (!data.success && !Array.isArray(data.prospects)) {
+          throw new Error(data.error || "API returned unsuccessful response")
+        }
+
+        const prospects = Array.isArray(data.prospects) ? data.prospects : []
+        
+        // Filter to only those with rankings and sort by ranking
+        const rankedProspects = prospects
+          .filter((p: Athlete) => p.prospect_ranking != null)
+          .sort((a: Athlete, b: Athlete) => {
+            const rankA = typeof a.prospect_ranking === 'string' ? parseInt(a.prospect_ranking) : (a.prospect_ranking || 999)
+            const rankB = typeof b.prospect_ranking === 'string' ? parseInt(b.prospect_ranking) : (b.prospect_ranking || 999)
+            return rankA - rankB
+          })
+          .slice(0, 3)
+
+        setFeaturedRankings(rankedProspects)
+        setError(null)
+      } catch (err) {
+        console.error("Error fetching featured rankings:", err)
+        setError(`Rankings error: ${err instanceof Error ? err.message : String(err)}`)
+        setFeaturedRankings([])
+      } finally {
+        setRankingsLoading(false)
+      }
+    }
+
+    fetchFeaturedRankings()
+  }, [rankingsYear, rankingsGender])
 
   const getDisplayAthletes = () => {
     if (!Array.isArray(featuredAthletes)) return []
