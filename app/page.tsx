@@ -579,52 +579,20 @@ export default function HomePage() {
 
       {/* Featured Rankings Section */}
       <section className="mb-12">
-        <div className="mb-4 flex items-center justify-between flex-wrap gap-4">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
             Featured Rankings
           </h2>
-          <div className="flex gap-2 flex-wrap">
-            {(["2026", "2027"] as RankingsYearFilter[]).map((year) => (
-              <Button
-                key={year}
-                variant={rankingsYear === year ? "default" : "outline"}
-                size="sm"
-                onClick={() => setRankingsYear(year)}
-                style={{
-                  backgroundColor: rankingsYear === year ? "#002147" : "transparent",
-                  borderColor: "#002147",
-                  color: rankingsYear === year ? "white" : "#002147",
-                }}
-              >
-                Class of {year}
-              </Button>
-            ))}
-            {(["Male", "Female"] as GenderFilter[]).map((gender) => (
-              <Button
-                key={gender}
-                variant={rankingsGender === gender ? "default" : "outline"}
-                size="sm"
-                onClick={() => setRankingsGender(gender)}
-                style={{
-                  backgroundColor: rankingsGender === gender ? "#002147" : "transparent",
-                  borderColor: "#002147",
-                  color: rankingsGender === gender ? "white" : "#002147",
-                }}
-              >
-                {gender}
-              </Button>
-            ))}
-            <Link href="/public-rankings">
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:opacity-80 bg-transparent"
-                style={{ borderColor: "#002147", color: "#002147" }}
-              >
-                View All Rankings
-              </Button>
-            </Link>
-          </div>
+          <Link href="/public-rankings">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hover:opacity-80 bg-transparent"
+              style={{ borderColor: "#002147", color: "#002147" }}
+            >
+              View All Rankings
+            </Button>
+          </Link>
         </div>
 
         {rankingsLoading ? (
