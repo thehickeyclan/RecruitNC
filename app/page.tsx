@@ -330,22 +330,31 @@ export default function HomePage() {
                 latest rankings and explore where NC wrestlers are heading for their collegiate careers.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                {/* Primary CTA: commitments */}
+                {/* Commitments Button */}
                 <Link href="/athletes">
                   <Button 
-                    className="min-h-[52px] px-8 text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg" 
+                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg" 
                     style={{ backgroundColor: "#BC0B03" }}
                   >
-                    View Commitments
+                    Commitments
                   </Button>
                 </Link>
-                {/* Secondary CTA: rankings */}
+                {/* Rankings Button */}
                 <Link href="/public-rankings">
                   <Button
                     variant="outline"
-                    className="min-h-[52px] px-8 text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/15 hover:text-white hover:border-white/80 transition-all"
+                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/15 hover:text-white hover:border-white/80 transition-all hover:scale-105"
                   >
-                    View Top Prospects
+                    Rankings
+                  </Button>
+                </Link>
+                {/* Prospects Button */}
+                <Link href="/prospects">
+                  <Button
+                    variant="outline"
+                    className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold bg-transparent border-2 border-white text-white hover:bg-white/15 hover:text-white hover:border-white/80 transition-all hover:scale-105"
+                  >
+                    Prospects
                   </Button>
                 </Link>
               </div>
