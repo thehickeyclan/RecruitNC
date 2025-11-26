@@ -399,7 +399,15 @@ export default function AllProspectsPage() {
   )
 
   const uncommittedCount = useMemo(
-    () => sortedProspects.filter((prospect) => summarizeStatus(prospect.recruiting_status) === "uncommitted").length,
+    () => {
+      // Uncommitted = all prospects that are NOT committed (don't have both committed status AND college)
+      return sortedProspects.filter((prospect) => {
+        const status = summarizeStatus(prospect.recruiting_status)
+        const hasCollege = prospect.college && prospect.college.trim() !== ""
+        // Not committed if: status is not "committed" OR no college assigned
+        return !(status === "committed" && hasCollege)
+      }).length
+    },
     [sortedProspects],
   )
 
