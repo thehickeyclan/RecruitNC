@@ -30,7 +30,6 @@ export async function POST() {
       },
       { status: 500 },
     )
-    */
   } catch (error: any) {
     console.error("Script execution error:", error)
     return NextResponse.json(
