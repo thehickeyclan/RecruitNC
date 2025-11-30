@@ -18,21 +18,22 @@ export async function GET(request: Request) {
 
     console.log("Authenticated user:", user.email)
 
-    // First check if the user_profiles table exists
-    const { data: tableExists, error: tableError } = await supabase
-      .from("information_schema.tables")
-      .select("table_name")
-      .eq("table_schema", "public")
-      .eq("table_name", "user_profiles")
+    // First check if the user_profiles table exists by trying to query it
+    const { data: testQuery, error: tableError } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .limit(1)
 
-    if (tableError || !tableExists || tableExists.length === 0) {
+    if (tableError && tableError.code === "42P01") {
+      // Table doesn't exist (PostgreSQL error code for undefined table)
       console.log("user_profiles table does not exist")
       return NextResponse.json(
         {
           error: "user_profiles table does not exist",
           needsSetup: true,
+          users: [],
         },
-        { status: 404 },
+        { status: 200 }, // Return 200 with empty array instead of 404
       )
     }
 
