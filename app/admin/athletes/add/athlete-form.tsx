@@ -44,7 +44,9 @@ export default function AthleteForm() {
 
   const getMensCollegeWeightClasses = () => ["125", "133", "141", "149", "157", "165", "174", "184", "197", "285"]
 
-  const getWomensWeightClasses = () => ["101", "109", "116", "123", "130", "136", "143", "155", "170", "191"]
+  const getWomensHSWeightClasses = () => ["100", "105", "110", "115", "120", "125", "130", "135", "140", "145", "160", "235"]
+  
+  const getWomensCollegeWeightClasses = () => ["103", "110", "117", "124", "131", "138", "145", "160", "180", "207"]
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -193,7 +195,7 @@ export default function AthleteForm() {
                   </>
                 ) : (
                   <>
-                    {getWomensWeightClasses().map((weight) => (
+                    {getWomensHSWeightClasses().map((weight) => (
                       <SelectItem key={weight} value={weight}>
                         {weight} lbs
                       </SelectItem>
@@ -221,7 +223,7 @@ export default function AthleteForm() {
                   </>
                 ) : (
                   <>
-                    {getWomensWeightClasses().map((weight) => (
+                    {getWomensCollegeWeightClasses().map((weight) => (
                       <SelectItem key={weight} value={weight}>
                         {weight} lbs
                       </SelectItem>
