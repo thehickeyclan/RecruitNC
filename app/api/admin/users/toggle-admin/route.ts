@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createServiceRoleClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 export async function PUT(request: Request) {
@@ -32,8 +33,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
+    // Use service role client to bypass RLS for admin operations
+    const supabaseAdmin = createServiceRoleClient()
+
     // Update admin status
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from("user_profiles")
       .update({
         is_admin,
@@ -49,6 +53,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error("Toggle admin error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
   }
 }
