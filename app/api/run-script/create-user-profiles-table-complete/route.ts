@@ -115,24 +115,7 @@ ALTER TABLE user_profiles ADD CONSTRAINT valid_role
 GRANT ALL ON user_profiles TO authenticated;
 GRANT ALL ON user_profiles TO anon;
     `
-
-    const { error } = await supabase.rpc("exec_sql", { sql_query: sql })
-
-    if (error) {
-      console.error("SQL execution error:", error)
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.message,
-        },
-        { status: 500 },
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "User profiles table created successfully with all columns including last_login_at",
-    })
+    */
   } catch (error: any) {
     console.error("Script execution error:", error)
     return NextResponse.json(
