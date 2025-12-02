@@ -51,6 +51,27 @@ const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => 
   ])
 }
 
+// Emergency safety: clear any stale Supabase auth cookies that can cause
+// endless refresh loops (400/429 on token?grant_type=refresh_token).
+const clearSupabaseCookies = () => {
+  if (typeof document === "undefined") return
+
+  const cookies = document.cookie.split("; ")
+  const supabaseCookies = cookies.filter((c) => c.startsWith("sb-"))
+
+  if (supabaseCookies.length === 0) return
+
+  console.warn(
+    "[v0] Detected Supabase cookies with no valid session. Clearing sb-* cookies to break auth refresh loop.",
+  )
+
+  supabaseCookies.forEach((cookie) => {
+    const [name] = cookie.split("=")
+    // Match the settings used in lib/supabase/client.ts, but expire immediately
+    document.cookie = `${name}=; path=/; SameSite=None; Secure; max-age=0`
+  })
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState(() => createClient())
   const [user, setUser] = useState<User | null>(null)
@@ -107,9 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const getSessionWithTimeout = async () => {
       try {
+        let hasSupabaseCookies = false
+
         if (typeof document !== "undefined") {
           const cookies = document.cookie
           const hasCookies = cookies && cookies.includes("sb-")
+          hasSupabaseCookies = !!hasCookies
           console.log(
             "[v0] Browser cookies:",
             hasCookies ? "present" : "none",
@@ -137,6 +161,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setSession(session)
         setUser(session?.user ?? null)
+
+        // If we had Supabase cookies but there is no session, this usually means
+        // the refresh token is invalid/stale and causing repeated 400/429 errors.
+        // Proactively clear those cookies so the browser stops hammering refresh.
+        if (hasSupabaseCookies && !session) {
+          clearSupabaseCookies()
+        }
 
         if (session?.user) {
           // Fetch profile in background, don't block rendering

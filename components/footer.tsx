@@ -7,7 +7,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
-            <div className="flex items-center">
+            <Link href="https://www.ncwrestlingunited.com" className="flex items-center">
               <Image
                 src="/nc-united-main-logo.png"
                 alt="NC United Wrestling"
@@ -17,7 +17,7 @@ export function Footer() {
                 priority
               />
               <h3 className="text-lg font-semibold">NC United Wrestling</h3>
-            </div>
+            </Link>
             <p className="mt-2 text-sm text-gray-300">
               Tracking North Carolina's wrestling talent and college commitments.
             </p>

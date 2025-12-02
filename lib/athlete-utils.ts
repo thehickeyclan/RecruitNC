@@ -109,9 +109,33 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     nhsca_2024_placement: data.nhsca_2024_placement || null,
     nhsca_2025_record: data.nhsca_2025_record || null,
     nhsca_2025_placement: data.nhsca_2025_placement || null,
-    // New JSON tournament results
-    nhsca_results: data.nhsca_results || [],
-    super32_results: data.super32_results || [],
+    // New JSON tournament results - handle JSONB properly (may be string, array, or null)
+    nhsca_results: (() => {
+      if (!data.nhsca_results) return []
+      if (Array.isArray(data.nhsca_results)) return data.nhsca_results
+      if (typeof data.nhsca_results === 'string') {
+        try {
+          const parsed = JSON.parse(data.nhsca_results)
+          return Array.isArray(parsed) ? parsed : []
+        } catch {
+          return []
+        }
+      }
+      return []
+    })(),
+    super32_results: (() => {
+      if (!data.super32_results) return []
+      if (Array.isArray(data.super32_results)) return data.super32_results
+      if (typeof data.super32_results === 'string') {
+        try {
+          const parsed = JSON.parse(data.super32_results)
+          return Array.isArray(parsed) ? parsed : []
+        } catch {
+          return []
+        }
+      }
+      return []
+    })(),
     nationally_ranked_wins: data.nationally_ranked_wins || null,
     college_opens_experience: data.college_opens_experience || null,
     flo_profile_url: data.flo_profile_url || null,

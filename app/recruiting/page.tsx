@@ -90,28 +90,36 @@ export default function RecruitingPage() {
 
   const currentData = ncData[selectedGender]
 
-  // Calculate percentages for comparison
+  // Estimated total NC high school wrestlers (Class of 2025)
+  // Based on: National ~245,000 HS wrestlers total, ~61,250 per class (4 grades)
+  // NC is ~3.2% of US population, so ~1,960 NC wrestlers per graduating class
+  // This is an estimate - update with actual NC NCHSAA participation data when available
+  const NC_CLASS_OF_2025_WRESTLERS = 1960 // Estimate for Class of 2025 specifically
+
+  // Calculate percentages based on NC high school wrestler total (not just those who went to college)
+  // This matches the national calculation: % of HS wrestlers, not % of college wrestlers
   const calculateNCPercentages = (data: NCStats) => {
-    const total = data.d1 + data.d2 + data.d3 + data.naia + data.njcaa
-    if (total === 0) return { d1: 0, d2: 0, d3: 0, naia: 0, njcaa: 0 }
+    if (NC_CLASS_OF_2025_WRESTLERS === 0) return { d1: 0, d2: 0, d3: 0, naia: 0, njcaa: 0 }
     return {
-      d1: (data.d1 / total) * 100,
-      d2: (data.d2 / total) * 100,
-      d3: (data.d3 / total) * 100,
-      naia: (data.naia / total) * 100,
-      njcaa: (data.njcaa / total) * 100,
+      d1: (data.d1 / NC_CLASS_OF_2025_WRESTLERS) * 100,
+      d2: (data.d2 / NC_CLASS_OF_2025_WRESTLERS) * 100,
+      d3: (data.d3 / NC_CLASS_OF_2025_WRESTLERS) * 100,
+      naia: (data.naia / NC_CLASS_OF_2025_WRESTLERS) * 100,
+      njcaa: (data.njcaa / NC_CLASS_OF_2025_WRESTLERS) * 100,
     }
   }
 
   const ncPercentages = calculateNCPercentages(currentData)
 
-  // National percentages (approximate from the data)
+  // National percentages (based on ~245,000 total high school wrestlers, ~61,250 per class)
+  // These match the "% of HS Wrestlers" column in the stats table
+  const NATIONAL_CLASS_SIZE = 61250 // ~245,000 / 4 grades
   const nationalPercentages = {
-    d1: ((nationalData.d1OptedIn.wrestlers + nationalData.d1NotOptedIn.wrestlers) / 11550) * 100, // ~21.2%
-    d2: (nationalData.d2.wrestlers / 11550) * 100, // ~15.6%
-    d3: (nationalData.d3.wrestlers / 11550) * 100, // ~26.0%
-    naia: (nationalData.naia.wrestlers / 11550) * 100, // ~15.6%
-    njcaa: (nationalData.njcaa.wrestlers / 11550) * 100, // ~21.6%
+    d1: ((nationalData.d1OptedIn.wrestlers + nationalData.d1NotOptedIn.wrestlers) / NATIONAL_CLASS_SIZE) * 100, // ~4.0%
+    d2: (nationalData.d2.wrestlers / NATIONAL_CLASS_SIZE) * 100, // ~2.9%
+    d3: (nationalData.d3.wrestlers / NATIONAL_CLASS_SIZE) * 100, // ~4.9%
+    naia: (nationalData.naia.wrestlers / NATIONAL_CLASS_SIZE) * 100, // ~2.9%
+    njcaa: (nationalData.njcaa.wrestlers / NATIONAL_CLASS_SIZE) * 100, // ~4.1%
   }
 
   return (
@@ -314,20 +322,20 @@ export default function RecruitingPage() {
                   <thead>
                     <tr className="bg-white/10 border-b-2 border-white/20">
                       <th className="text-left p-4 text-white font-bold">Division</th>
-                      <th className="text-center p-4 text-white font-bold">National %</th>
+                      <th className="text-center p-4 text-white font-bold">National % of HS Wrestlers</th>
                       <th className="text-center p-4 text-white font-bold">NC Class of 2025</th>
-                      <th className="text-center p-4 text-white font-bold">NC %</th>
+                      <th className="text-center p-4 text-white font-bold">NC % of HS Wrestlers</th>
                       <th className="text-center p-4 text-white font-bold">Comparison</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b border-white/10 hover:bg-white/5">
                       <td className="p-4 text-white font-semibold">Division I</td>
-                      <td className="p-4 text-white/90 text-center">~21%</td>
+                      <td className="p-4 text-white/90 text-center">{nationalPercentages.d1.toFixed(2)}%</td>
                       <td className="p-4 text-white/90 text-center font-semibold">{currentData.d1}</td>
-                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.d1.toFixed(1)}%</td>
+                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.d1.toFixed(2)}%</td>
                       <td className="p-4 text-center">
-                        {Math.abs(ncPercentages.d1 - nationalPercentages.d1) < 5 ? (
+                        {Math.abs(ncPercentages.d1 - nationalPercentages.d1) < 0.1 ? (
                           <Badge className="bg-green-600">Similar</Badge>
                         ) : ncPercentages.d1 > nationalPercentages.d1 ? (
                           <Badge className="bg-blue-600">Higher</Badge>
@@ -338,11 +346,11 @@ export default function RecruitingPage() {
                     </tr>
                     <tr className="border-b border-white/10 hover:bg-white/5 bg-white/5">
                       <td className="p-4 text-white font-semibold">Division II</td>
-                      <td className="p-4 text-white/90 text-center">~16%</td>
+                      <td className="p-4 text-white/90 text-center">{nationalPercentages.d2.toFixed(2)}%</td>
                       <td className="p-4 text-white/90 text-center font-semibold">{currentData.d2}</td>
-                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.d2.toFixed(1)}%</td>
+                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.d2.toFixed(2)}%</td>
                       <td className="p-4 text-center">
-                        {Math.abs(ncPercentages.d2 - nationalPercentages.d2) < 5 ? (
+                        {Math.abs(ncPercentages.d2 - nationalPercentages.d2) < 0.1 ? (
                           <Badge className="bg-green-600">Similar</Badge>
                         ) : ncPercentages.d2 > nationalPercentages.d2 ? (
                           <Badge className="bg-blue-600">Higher</Badge>
@@ -353,11 +361,11 @@ export default function RecruitingPage() {
                     </tr>
                     <tr className="border-b border-white/10 hover:bg-white/5">
                       <td className="p-4 text-white font-semibold">Division III</td>
-                      <td className="p-4 text-white/90 text-center">~26%</td>
+                      <td className="p-4 text-white/90 text-center">{nationalPercentages.d3.toFixed(2)}%</td>
                       <td className="p-4 text-white/90 text-center font-semibold">{currentData.d3}</td>
-                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.d3.toFixed(1)}%</td>
+                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.d3.toFixed(2)}%</td>
                       <td className="p-4 text-center">
-                        {Math.abs(ncPercentages.d3 - nationalPercentages.d3) < 5 ? (
+                        {Math.abs(ncPercentages.d3 - nationalPercentages.d3) < 0.1 ? (
                           <Badge className="bg-green-600">Similar</Badge>
                         ) : ncPercentages.d3 > nationalPercentages.d3 ? (
                           <Badge className="bg-blue-600">Higher</Badge>
@@ -368,11 +376,11 @@ export default function RecruitingPage() {
                     </tr>
                     <tr className="border-b border-white/10 hover:bg-white/5 bg-white/5">
                       <td className="p-4 text-white font-semibold">NAIA</td>
-                      <td className="p-4 text-white/90 text-center">~16%</td>
+                      <td className="p-4 text-white/90 text-center">{nationalPercentages.naia.toFixed(2)}%</td>
                       <td className="p-4 text-white/90 text-center font-semibold">{currentData.naia}</td>
-                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.naia.toFixed(1)}%</td>
+                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.naia.toFixed(2)}%</td>
                       <td className="p-4 text-center">
-                        {Math.abs(ncPercentages.naia - nationalPercentages.naia) < 5 ? (
+                        {Math.abs(ncPercentages.naia - nationalPercentages.naia) < 0.1 ? (
                           <Badge className="bg-green-600">Similar</Badge>
                         ) : ncPercentages.naia > nationalPercentages.naia ? (
                           <Badge className="bg-blue-600">Higher</Badge>
@@ -383,11 +391,11 @@ export default function RecruitingPage() {
                     </tr>
                     <tr className="border-b border-white/10 hover:bg-white/5">
                       <td className="p-4 text-white font-semibold">JUCO</td>
-                      <td className="p-4 text-white/90 text-center">~22%</td>
+                      <td className="p-4 text-white/90 text-center">{nationalPercentages.njcaa.toFixed(2)}%</td>
                       <td className="p-4 text-white/90 text-center font-semibold">{currentData.njcaa}</td>
-                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.njcaa.toFixed(1)}%</td>
+                      <td className="p-4 text-white/90 text-center font-semibold">{ncPercentages.njcaa.toFixed(2)}%</td>
                       <td className="p-4 text-center">
-                        {Math.abs(ncPercentages.njcaa - nationalPercentages.njcaa) < 5 ? (
+                        {Math.abs(ncPercentages.njcaa - nationalPercentages.njcaa) < 0.1 ? (
                           <Badge className="bg-green-600">Similar</Badge>
                         ) : ncPercentages.njcaa > nationalPercentages.njcaa ? (
                           <Badge className="bg-blue-600">Higher</Badge>
@@ -410,22 +418,24 @@ export default function RecruitingPage() {
                 <li className="flex items-start gap-2">
                   <span className="text-[#D3B574] mt-1">•</span>
                   <span>
-                    <strong>NC matches national trends:</strong> North Carolina&apos;s Class of 2025 distribution 
-                    closely aligns with national percentages, showing realistic expectations for where you might compete.
+                    <strong>NC vs. National:</strong> Comparing NC&apos;s {currentData.total} Class of 2025 commitments 
+                    to national trends shows how our state compares. The percentages represent what % of NC high school 
+                    wrestlers go to each division level.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#D3B574] mt-1">•</span>
                   <span>
-                    <strong>Division II is most common:</strong> {ncPercentages.d2.toFixed(1)}% of NC wrestlers 
-                    chose D2, making it the most popular path in our state.
+                    <strong>Division II is most common:</strong> {ncPercentages.d2.toFixed(2)}% of NC high school 
+                    wrestlers go D2, compared to {nationalPercentages.d2.toFixed(2)}% nationally.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#D3B574] mt-1">•</span>
                   <span>
-                    <strong>Division I is competitive:</strong> Only {ncPercentages.d1.toFixed(1)}% went D1, 
-                    reinforcing that it&apos;s the most selective level.
+                    <strong>Division I is competitive:</strong> Only {ncPercentages.d1.toFixed(2)}% of NC high school 
+                    wrestlers go D1 (vs. {nationalPercentages.d1.toFixed(2)}% nationally), reinforcing that it&apos;s 
+                    the most selective level.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -436,6 +446,12 @@ export default function RecruitingPage() {
                   </span>
                 </li>
               </ul>
+              <div className="mt-4 p-3 bg-white/5 rounded-lg">
+                <p className="text-white/70 text-sm">
+                  <strong>Note:</strong> Percentages are calculated based on estimated {NC_CLASS_OF_2025_WRESTLERS.toLocaleString()} NC high school wrestlers in the Class of 2025 
+                  NC high school wrestlers (estimated from national data). Update with actual NC participation numbers when available.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </section>

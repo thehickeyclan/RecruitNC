@@ -76,6 +76,30 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
 
   const nchsaaResults = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
 
+  // Parse JSONB fields properly - they may come as strings from the database
+  const parseJsonField = (field: any): any[] => {
+    if (!field) return []
+    if (Array.isArray(field)) return field
+    if (typeof field === 'string') {
+      try {
+        const parsed = JSON.parse(field)
+        return Array.isArray(parsed) ? parsed : []
+      } catch {
+        return []
+      }
+    }
+    return []
+  }
+
+  const nhscaResults = parseJsonField(athlete.nhsca_results)
+  const super32Results = parseJsonField(athlete.super32_results)
+
+  console.log('[unified-profile] NHSCA data for', athlete.name, {
+    raw: athlete.nhsca_results,
+    parsed: nhscaResults,
+    count: nhscaResults.length
+  })
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AthleteDetail 
@@ -86,8 +110,8 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
           <div className="container mx-auto px-4 py-8">
             <TournamentResultsDisplay
               nchsaaResults={nchsaaResults}
-              nhscaResults={athlete.nhsca_results || []}
-              super32Results={athlete.super32_results || []}
+              nhscaResults={nhscaResults}
+              super32Results={super32Results}
             />
           </div>
         }

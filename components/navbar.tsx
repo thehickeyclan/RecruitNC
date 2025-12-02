@@ -63,7 +63,7 @@ export function Navbar() {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/commits", label: "Commits" },
-    { href: "/prospects", label: "Prospects" },
+    { href: "/prospects", label: "Rankings" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ]
@@ -83,7 +83,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center space-x-2 mobile-optimized">
+            <Link href="https://www.ncwrestlingunited.com" className="flex items-center space-x-2 mobile-optimized">
               <Image
                 src="/images/nc-united-logo.png"
                 alt="NC United"
