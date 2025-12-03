@@ -37,15 +37,16 @@ export async function GET(request: Request) {
     console.log(`🔍 Featured Athletes API: Starting fetch for year ${targetYear}`)
 
     // First attempt: latest commitments across all classes
+    // Use updated_at as fallback when commitment_date is not set
     const recentCommitmentsResult = await safeSupabaseQuery(
       () =>
         supabase
           .from("athletes")
           .select("*")
-          .or("not.commitmentdate.is.null,not.commitment_date.is.null")
-          .order("commitment_date", { ascending: false })
-          .order("commitmentdate", { ascending: false })
-          .limit(25),
+          .not("college", "is", null)
+          .neq("college", "")
+          .order("updated_at", { ascending: false })
+          .limit(50),
       "Featured Athletes API - Recent Commitments",
     )
 
@@ -54,12 +55,15 @@ export async function GET(request: Request) {
     if (recentCommitmentsResult.success && Array.isArray(recentCommitmentsResult.data) && recentCommitmentsResult.data.length > 0) {
       const sortedCommitments = recentCommitmentsResult.data
         .filter((athlete: any) => {
-          const dateStr = athlete.commitment_date || athlete.commitmentdate || athlete.commitmentDate
-          return Boolean(dateStr && !Number.isNaN(new Date(dateStr).getTime()))
+          // Filter out 2025 and earlier
+          const gradYear = athlete.graduationyear || 0
+          const currentYear = new Date().getFullYear()
+          return gradYear >= currentYear + 1
         })
         .sort((a: any, b: any) => {
-          const dateA = new Date(a.commitment_date || a.commitmentdate || a.commitmentDate || 0).getTime()
-          const dateB = new Date(b.commitment_date || b.commitmentdate || b.commitmentDate || 0).getTime()
+          // Sort by commitment_date if available, otherwise by updated_at
+          const dateA = new Date(a.commitment_date || a.commitmentdate || a.updated_at || 0).getTime()
+          const dateB = new Date(b.commitment_date || b.commitmentdate || b.updated_at || 0).getTime()
           return dateB - dateA
         })
         .slice(0, 3)
@@ -89,11 +93,11 @@ export async function GET(request: Request) {
             : [],
         team: athlete.team || "",
         gender: athlete.gender || "Male",
-        commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
+        commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
       }))
 
-      if (recentCommitmentAthletes.length >= 3) {
-        console.log(`✅ Featured Athletes API: Returning ${recentCommitmentAthletes.length} recent commitments`)
+      if (recentCommitmentAthletes.length >= 1) {
+        console.log(`✅ Featured Athletes API: Returning ${recentCommitmentAthletes.length} recent commitments (latest commits by updated_at)`)
 
         return NextResponse.json(
           {
@@ -102,9 +106,9 @@ export async function GET(request: Request) {
           },
           {
             headers: {
-              "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
-              "CDN-Cache-Control": "public, s-maxage=600",
-              "Vercel-CDN-Cache-Control": "public, s-maxage=600",
+              "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+              "CDN-Cache-Control": "public, s-maxage=60",
+              "Vercel-CDN-Cache-Control": "public, s-maxage=60",
             },
           },
         )
@@ -156,20 +160,21 @@ export async function GET(request: Request) {
           gender: athlete.gender || "Male",
         }))
 
-        const combinedAthletes = [...recentCommitmentAthletes, ...mappedAthletes]
-          .filter((athlete, index, self) => self.findIndex((a) => a.id === athlete.id) === index)
-          .slice(0, 3)
+        // Prioritize recent commitments over specific athletes for 2025
+        const finalAthletes2025 = recentCommitmentAthletes.length > 0 
+          ? recentCommitmentAthletes 
+          : mappedAthletes
 
         return NextResponse.json(
           {
             success: true,
-            athletes: combinedAthletes,
+            athletes: finalAthletes2025.slice(0, 3),
           },
           {
             headers: {
-              "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
-              "CDN-Cache-Control": "public, s-maxage=600",
-              "Vercel-CDN-Cache-Control": "public, s-maxage=600",
+              "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+              "CDN-Cache-Control": "public, s-maxage=60",
+              "Vercel-CDN-Cache-Control": "public, s-maxage=60",
             },
           },
         )
@@ -262,20 +267,22 @@ export async function GET(request: Request) {
     console.log("[v0] First athlete in response:", JSON.stringify(mappedAthletes[0], null, 2))
     console.log("[v0] ===== API RESPONSE DEBUG END =====")
 
-    const combinedFallback = [...recentCommitmentAthletes, ...mappedAthletes]
-      .filter((athlete, index, self) => self.findIndex((a) => a.id === athlete.id) === index)
-      .slice(0, 3)
+    // Only use rankings as fallback if no recent commitments are available
+    // This prevents mixing ranked prospects with actual latest commitments
+    const finalAthletes = recentCommitmentAthletes.length > 0 
+      ? recentCommitmentAthletes 
+      : mappedAthletes
 
     return NextResponse.json(
       {
         success: true,
-        athletes: combinedFallback,
+        athletes: finalAthletes.slice(0, 3),
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
-          "CDN-Cache-Control": "public, s-maxage=600",
-          "Vercel-CDN-Cache-Control": "public, s-maxage=600",
+          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+          "CDN-Cache-Control": "public, s-maxage=60",
+          "Vercel-CDN-Cache-Control": "public, s-maxage=60",
         },
       },
     )
