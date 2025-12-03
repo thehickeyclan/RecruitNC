@@ -153,7 +153,8 @@ export default function AthletesPage() {
                 <p className="text-gray-500">Loading statistics...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Total Commitments */}
                 <Card className="border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{ borderColor: "#002147" }}>
                   <div className="h-1" style={{ backgroundColor: "#002147" }}></div>
@@ -263,6 +264,7 @@ export default function AthletesPage() {
                   </CardContent>
                 </Card>
               </div>
+              </>
             )}
           </div>
         </div>
