@@ -155,9 +155,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Only try to get session if we have cookies
         const {
           data: { session },
+          error: sessionError,
         } = await supabase.auth.getSession()
 
-        console.log("[v0] Initial session:", { hasSession: !!session, hasUser: !!session?.user })
+        console.log("[v0] Initial session:", { 
+          hasSession: !!session, 
+          hasUser: !!session?.user,
+          error: sessionError?.message 
+        })
+
+        // Check for rate limit errors
+        if (sessionError && (
+          sessionError.message?.includes("rate limit") ||
+          sessionError.message?.includes("429") ||
+          sessionError.message?.includes("Too many")
+        )) {
+          console.warn("[v0] Rate limit detected on session load, clearing cookies")
+          clearSupabaseCookies()
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          setIsLoading(false)
+          return
+        }
 
         setSession(session)
         setUser(session?.user ?? null)
@@ -166,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // the refresh token is invalid/stale and causing repeated 400/429 errors.
         // Proactively clear those cookies so the browser stops hammering refresh.
         if (hasSupabaseCookies && !session) {
+          console.log("[v0] Clearing stale cookies (no valid session)")
           clearSupabaseCookies()
         }
 
@@ -178,6 +199,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       } catch (error: any) {
         console.error("[v0] getSession error:", error.message)
+        
+        // If it's a rate limit error, clear cookies
+        const errorMsg = error.message || error.toString() || ""
+        if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
+          console.warn("[v0] Rate limit exception on session load, clearing cookies")
+          clearSupabaseCookies()
+        }
+        
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -246,15 +275,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log("[v0] Signing in:", email)
+      
+      // Clear any existing stale cookies BEFORE attempting sign in
+      // This prevents rate limiting issues from expired refresh tokens
+      clearSupabaseCookies()
+      
       const res = await supabase.auth.signInWithPassword({ email, password })
 
       if (!res.error) {
         console.log("[v0] Sign in successful")
+      } else if (res.error.message?.includes("rate limit") || res.error.message?.includes("429") || res.error.message?.includes("Too many")) {
+        console.error("[v0] Rate limit detected on sign in:", res.error)
+        return { 
+          error: { 
+            message: "Too many login attempts. Please wait 60 seconds and try again."
+          } 
+        }
       }
 
       return res
     } catch (err: any) {
       console.error("[v0] Sign in error:", err)
+      
+      // Check if it's a rate limit error
+      const errorMsg = err.message || err.toString() || ""
+      if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
+        return { 
+          error: { 
+            message: "Too many login attempts. Please wait 60 seconds and try again."
+          } 
+        }
+      }
+      
       return { error: { message: err.message || "Sign in failed" } }
     }
   }
@@ -278,7 +330,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     console.log("[v0] Signing out")
-    await supabase.auth.signOut()
+    
+    // Clear cookies first to prevent any refresh attempts
+    clearSupabaseCookies()
+    
+    try {
+      await supabase.auth.signOut()
+    } catch (error) {
+      // Ignore errors on signout - we're clearing everything anyway
+      console.warn("[v0] Sign out error (ignoring):", error)
+    }
+    
     setSession(null)
     setUser(null)
     setProfile(null)

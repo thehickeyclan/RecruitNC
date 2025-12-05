@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
-import { Search, Users, Trophy, TrendingUp, Target } from "lucide-react"
+import { Search, Users, Trophy } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 
@@ -145,126 +145,167 @@ export default function AthletesPage() {
           </div>
         </div>
 
-        {/* Stats Overview Section */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-b">
+        {/* Stats Overview Section - Matches Home Page Style */}
+        <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-8">
             {statsLoading ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">Loading statistics...</p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Total Commitments */}
-                <Card className="border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{ borderColor: "#002147" }}>
-                  <div className="h-1" style={{ backgroundColor: "#002147" }}></div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <Target className="h-8 w-8" style={{ color: "#002147" }} />
-                      <span className="text-3xl font-bold" style={{ color: "#002147" }}>
-                        {stats.total}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-semibold" style={{ color: "#002147" }}>Total Commitments</h3>
-                    <p className="text-xs text-gray-500 mt-1">
+              <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
+                {/* Total Commitments Card */}
+                <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
+                  <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
+                      Total Commitments
+                    </h3>
+                    <p className="text-xs mb-2" style={{ color: "#002147", opacity: 0.7 }}>
                       {selectedYear !== "all" ? `Class of ${selectedYear}` : "All Classes"}
                     </p>
-                  </CardContent>
-                </Card>
+                    <div className="flex justify-between items-center py-2">
+                      <div className="flex flex-col items-center">
+                        <span className="text-xl font-semibold" style={{ color: "#002147" }}>
+                          {stats.male}
+                        </span>
+                        <span className="text-xs" style={{ color: "#002147", opacity: 0.7 }}>
+                          Male
+                        </span>
+                      </div>
 
-                {/* Men's Wrestling */}
-                <Card className="border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{ borderColor: "#002147" }}>
-                  <div className="h-1" style={{ backgroundColor: "#002147" }}></div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <Users className="h-8 w-8" style={{ color: "#002147" }} />
-                      <span className="text-3xl font-bold" style={{ color: "#002147" }}>
-                        {stats.male}
+                      <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#002147" }}>
+                        {stats.total}
                       </span>
+
+                      <div className="flex flex-col items-center">
+                        <span className="text-xl font-semibold" style={{ color: "#BC0B03" }}>
+                          {stats.female}
+                        </span>
+                        <span className="text-xs" style={{ color: "#BC0B03", opacity: 0.7 }}>
+                          Female
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="text-sm font-semibold" style={{ color: "#002147" }}>Men's Wrestling</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {stats.total > 0 ? `${Math.round((stats.male / stats.total) * 100)}%` : "0%"} of total
-                    </p>
                   </CardContent>
                 </Card>
 
-                {/* Women's Wrestling */}
-                <Card className="border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{ borderColor: "#BC0B03" }}>
-                  <div className="h-1" style={{ backgroundColor: "#BC0B03" }}></div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <Users className="h-8 w-8" style={{ color: "#BC0B03" }} />
-                      <span className="text-3xl font-bold" style={{ color: "#BC0B03" }}>
-                        {stats.female}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-semibold" style={{ color: "#BC0B03" }}>Women's Wrestling</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {stats.total > 0 ? `${Math.round((stats.female / stats.total) * 100)}%` : "0%"} of total
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Division I Leaders */}
-                <Card className="border-2 overflow-hidden hover:shadow-lg transition-shadow" style={{ borderColor: "#D3B574" }}>
-                  <div className="h-1" style={{ backgroundColor: "#D3B574" }}></div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <Trophy className="h-8 w-8" style={{ color: "#D3B574" }} />
-                      <span className="text-3xl font-bold" style={{ color: "#D3B574" }}>
-                        {stats.divisions.D1}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-semibold" style={{ color: "#D3B574" }}>Division I</h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      D2: {stats.divisions.D2} | D3: {stats.divisions.D3}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Division Breakdown Bar */}
-              <div className="mt-6">
-                <Card className="border overflow-hidden">
-                  <CardContent className="p-6">
-                    <h3 className="text-sm font-semibold mb-4" style={{ color: "#002147" }}>
+                {/* Division Breakdown Card */}
+                <Card className="border overflow-hidden lg:col-span-5 border-yellow-200" style={{ borderColor: "#D3B574", borderOpacity: 0.3 }}>
+                  <div className="h-2" style={{ backgroundColor: "#D3B574" }}></div>
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-medium mb-2" style={{ color: "#D3B574" }}>
                       Division Breakdown
                     </h3>
-                    <div className="grid grid-cols-5 gap-3">
-                      {[
-                        { label: "D1", count: stats.divisions.D1, color: "#002147" },
-                        { label: "D2", count: stats.divisions.D2, color: "#012ECD" },
-                        { label: "D3", count: stats.divisions.D3, color: "#002147" },
-                        { label: "NAIA", count: stats.divisions.NAIA, color: "#D3B574" },
-                        { label: "NJCAA", count: stats.divisions.NJCAA, color: "#BC0B03" },
-                      ].map((div) => (
-                        <div key={div.label} className="flex flex-col items-center">
-                          <div className="w-full h-20 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                            <div
-                              className="w-full transition-all duration-300"
-                              style={{
-                                backgroundColor: div.color,
-                                height: `${stats.total ? Math.max((div.count / stats.total) * 100, 8) : 0}%`,
-                              }}
-                            ></div>
-                          </div>
+                    <div className="grid grid-cols-5 gap-2 lg:gap-4">
+                      <div className="flex flex-col items-center">
+                        <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
                           <div
-                            className="text-white font-bold py-1 px-2 rounded-b-md text-center w-full"
-                            style={{ backgroundColor: div.color }}
-                          >
-                            {div.count}
-                          </div>
-                          <span className="text-xs font-medium mt-1" style={{ color: div.color }}>
-                            {div.label}
-                          </span>
+                            className="w-full transition-all duration-300"
+                            style={{
+                              backgroundColor: "#002147",
+                              height: `${stats.total ? Math.max((stats.divisions.D1 / stats.total) * 100, 8) : 0}%`,
+                            }}
+                          ></div>
                         </div>
-                      ))}
+                        <div
+                          className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                          style={{ backgroundColor: "#002147" }}
+                        >
+                          {stats.divisions.D1}
+                        </div>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
+                          D1
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                          <div
+                            className="w-full transition-all duration-300"
+                            style={{
+                              backgroundColor: "#012ECD",
+                              height: `${stats.total ? Math.max((stats.divisions.D2 / stats.total) * 100, 8) : 0}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <div
+                          className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                          style={{ backgroundColor: "#012ECD" }}
+                        >
+                          {stats.divisions.D2}
+                        </div>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#012ECD" }}>
+                          D2
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                          <div
+                            className="w-full transition-all duration-300"
+                            style={{
+                              backgroundColor: "#002147",
+                              height: `${stats.total ? Math.max((stats.divisions.D3 / stats.total) * 100, 8) : 0}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <div
+                          className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                          style={{ backgroundColor: "#002147" }}
+                        >
+                          {stats.divisions.D3}
+                        </div>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
+                          D3
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                          <div
+                            className="w-full transition-all duration-300"
+                            style={{
+                              backgroundColor: "#D3B574",
+                              height: `${stats.total ? Math.max((stats.divisions.NAIA / stats.total) * 100, 8) : 0}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <div
+                          className="font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                          style={{ backgroundColor: "#D3B574", color: "#002147" }}
+                        >
+                          {stats.divisions.NAIA}
+                        </div>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#D3B574" }}>
+                          NAIA
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                          <div
+                            className="w-full transition-all duration-300"
+                            style={{
+                              backgroundColor: "#BC0B03",
+                              height: `${stats.total ? Math.max((stats.divisions.NJCAA / stats.total) * 100, 8) : 0}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <div
+                          className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                          style={{ backgroundColor: "#BC0B03" }}
+                        >
+                          {stats.divisions.NJCAA}
+                        </div>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#BC0B03" }}>
+                          NJCAA
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-              </>
             )}
           </div>
         </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
 export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const revalidate = 60 // Cache for 60 seconds
 
 async function safeSupabaseQuery(queryFn: () => Promise<any>, context: string) {
   try {

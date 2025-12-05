@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const revalidate = 30 // Cache for 30 seconds to reduce API calls
 
 export async function GET(request: Request) {
   try {
@@ -46,39 +46,6 @@ export async function GET(request: Request) {
 
     let data, error, count
     try {
-      console.log("🤼 Athletes API: Checking for athletes marked as prospects...")
-
-      // First, get all athletes including prospects to see who's being filtered
-      const allAthletesResult = await supabase
-        .from("athletes")
-        .select("id, name, is_prospect, college, recruiting_status")
-        .order("name")
-
-      if (allAthletesResult.data) {
-        const prospects = allAthletesResult.data.filter((athlete) => athlete.is_prospect === true)
-        const committed = allAthletesResult.data.filter((athlete) => athlete.college && athlete.college.trim() !== "")
-
-        console.log(
-          "🤼 Athletes API: Found prospects:",
-          prospects.map((p) => `${p.name} (college: ${p.college}, recruiting_status: ${p.recruiting_status})`),
-        )
-        console.log(
-          "🤼 Athletes API: Found committed athletes:",
-          committed.map((c) => `${c.name} -> ${c.college}`),
-        )
-
-        // Check specifically for Kenneth Pritz
-        const kenneth = allAthletesResult.data.find((athlete) => athlete.name?.toLowerCase().includes("kenneth"))
-        if (kenneth) {
-          console.log("🤼 Athletes API: Kenneth Pritz status:", {
-            name: kenneth.name,
-            is_prospect: kenneth.is_prospect,
-            college: kenneth.college,
-            recruiting_status: kenneth.recruiting_status,
-          })
-        }
-      }
-
       // PostgreSQL .neq() doesn't match NULL values, so we need to explicitly handle them
       let query = supabase
         .from("athletes")
