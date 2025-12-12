@@ -114,8 +114,8 @@ export default function UsersDashboardPage() {
     try {
       setLoading(true)
       const [profilesRes, schoolsRes] = await Promise.all([
-        fetch("/api/admin/users/profiles", { cache: "no-store" }),
-        fetch("/api/admin/schools", { cache: "no-store" })
+        fetch("/api/admin/users/profiles", { cache: "no-store", credentials: "include" }),
+        fetch("/api/admin/schools", { cache: "no-store", credentials: "include" })
       ])
 
       if (!profilesRes.ok) throw new Error("Failed to load profiles")
@@ -161,7 +161,8 @@ export default function UsersDashboardPage() {
       const res = await fetch(`/api/admin/users/${editingUser.user_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        credentials: "include"
       })
 
       if (!res.ok) throw new Error("Failed to update user")
@@ -200,7 +201,8 @@ export default function UsersDashboardPage() {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verified_coach: approved })
+        body: JSON.stringify({ verified_coach: approved }),
+        credentials: "include"
       })
 
       if (!res.ok) throw new Error("Failed to update approval status")
