@@ -231,7 +231,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Only try to get session if we have cookies
+        // CRITICAL: Check for rate limit cooldown cookie from middleware BEFORE attempting getSession
+        // This prevents repeated auth attempts that trigger rate limits
+        if (typeof document !== "undefined") {
+          const rateLimitCookie = document.cookie
+            .split("; ")
+            .find((c) => c.startsWith("rate_limit_cooldown="))
+          if (rateLimitCookie) {
+            const cooldownValue = rateLimitCookie.split("=")[1]
+            const cooldownTime = parseInt(cooldownValue, 10)
+            const now = Date.now()
+            // Check if cooldown is still active (5 minutes = 300000ms)
+            if (cooldownTime && now < cooldownTime + 300000) {
+              const remainingMinutes = Math.ceil((cooldownTime + 300000 - now) / 60000)
+              console.warn(
+                `[v0] Rate limit cooldown cookie detected (${remainingMinutes} min remaining), skipping getSession`,
+              )
+              clearSupabaseCookies()
+              setSession(null)
+              setUser(null)
+              setProfile(null)
+              setIsLoading(false)
+              return
+            } else {
+              // Cooldown expired, clear the cookie
+              document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            }
+          }
+        }
+
+        // Only try to get session if we have cookies AND not in cooldown
         const {
           data: { session },
           error: sessionError,
@@ -310,9 +339,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     getSessionWithTimeout()
 
+    // Check for rate limit cooldown before setting up auth state change listener
+    // If we're in cooldown, don't set up the listener at all to prevent automatic auth attempts
+    let shouldSetupAuthListener = true
+    if (typeof window !== "undefined") {
+      const rateLimitCooldown = sessionStorage.getItem("rate_limit_cooldown")
+      if (rateLimitCooldown) {
+        const cooldownTime = parseInt(rateLimitCooldown, 10)
+        const now = Date.now()
+        if (now < cooldownTime + 60000) {
+          console.warn("[v0] Rate limit cooldown active, disabling auth state change listener")
+          shouldSetupAuthListener = false
+        }
+      }
+    }
+
+    // Only set up auth state change listener if not in cooldown
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = shouldSetupAuthListener ? supabase.auth.onAuthStateChange(async (event, session) => {
       const now = Date.now()
       const timeSinceLastChange = now - lastAuthStateChange.current
 
@@ -351,11 +396,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null)
         isRefreshing.current = false
       }
-    })
+    }) : { data: { subscription: null } }
 
     return () => {
       clearTimeout(timeoutId)
-      subscription.unsubscribe()
+      if (subscription) {
+        subscription.unsubscribe()
+      }
     }
   }, [supabase])
 

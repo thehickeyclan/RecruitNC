@@ -87,8 +87,9 @@ export async function middleware(request: NextRequest) {
       })
       
       // Set cooldown cookie (5 minutes) to prevent further attempts
+      // NOT httpOnly so client-side code can also check it
       supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-        httpOnly: true,
+        httpOnly: false, // Must be readable by client to prevent auth attempts
         secure: true,
         sameSite: "lax",
         maxAge: 300, // 5 minutes
@@ -138,8 +139,9 @@ export async function middleware(request: NextRequest) {
       })
       
       // Set cooldown cookie (5 minutes) to prevent further attempts
+      // NOT httpOnly so client-side code can also check it
       supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-        httpOnly: true,
+        httpOnly: false, // Must be readable by client to prevent auth attempts
         secure: true,
         sameSite: "lax",
         maxAge: 300, // 5 minutes
