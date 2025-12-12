@@ -13,14 +13,20 @@ export default function ClearSessionPage() {
   const clearAuthState = () => {
     if (typeof document === "undefined") return
 
-    // Clear all Supabase cookies
+    // Clear all Supabase cookies and rate limit cooldown
     const cookies = document.cookie.split("; ")
-    const supabaseCookies = cookies.filter((c) => c.startsWith("sb-"))
+    const supabaseCookies = cookies.filter((c) => c.startsWith("sb-") || c.includes("rate_limit_cooldown"))
 
     supabaseCookies.forEach((cookie) => {
       const [name] = cookie.split("=")
-      document.cookie = `${name}=; path=/; SameSite=None; Secure; max-age=0`
+      // Clear with multiple combinations to ensure deletion
+      document.cookie = `${name}=; path=/; SameSite=None; Secure; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+      document.cookie = `${name}=; path=/; SameSite=Lax; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+      document.cookie = `${name}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
     })
+    
+    // Explicitly clear rate limit cooldown
+    document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
 
     // Clear localStorage
     const localStorageKeys = Object.keys(localStorage)

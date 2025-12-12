@@ -367,6 +367,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // This prevents rate limiting issues from expired refresh tokens
       clearSupabaseCookies()
       
+      // Clear rate limit cooldown when user explicitly attempts to sign in
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("rate_limit_cooldown")
+        // Also try to clear the cookie (though it's httpOnly, we try)
+        document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      }
+      
       const res = await supabase.auth.signInWithPassword({ email, password })
 
       if (!res.error) {
