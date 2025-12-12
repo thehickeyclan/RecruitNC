@@ -280,9 +280,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         )) {
           console.warn("[v0] Rate limit detected on session load, clearing cookies and setting cooldown")
           clearSupabaseCookies()
-          // Set cooldown period to prevent further attempts
+          // Set cooldown period to prevent further attempts (both cookie and sessionStorage)
           if (typeof window !== "undefined") {
             sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+            // Also set a cookie that middleware can read (5 minutes)
+            document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=300`
           }
           setSession(null)
           setUser(null)
@@ -317,9 +319,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
           console.warn("[v0] Rate limit exception on session load, clearing cookies and setting cooldown")
           clearSupabaseCookies()
-          // Set cooldown period to prevent further attempts
+          // Set cooldown period to prevent further attempts (both cookie and sessionStorage)
           if (typeof window !== "undefined") {
             sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+            // Also set a cookie that middleware can read (5 minutes)
+            document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=300`
           }
         }
         
@@ -427,14 +431,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("[v0] Sign in successful")
       } else if (res.error.message?.includes("rate limit") || res.error.message?.includes("429") || res.error.message?.includes("Too many")) {
         console.error("[v0] Rate limit detected on sign in:", res.error)
-        // Clear cookies and set cooldown
+        // Clear cookies and set cooldown (both cookie and sessionStorage)
         clearSupabaseCookies()
         if (typeof window !== "undefined") {
           sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+          // Also set a cookie that middleware can read (5 minutes)
+          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=300`
         }
         return { 
           error: { 
-            message: "Too many login attempts. Please wait 60 seconds and try again."
+            message: "Too many login attempts. Please wait 5 minutes and try again."
           } 
         }
       }
@@ -446,14 +452,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if it's a rate limit error
       const errorMsg = err.message || err.toString() || ""
       if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
-        // Clear cookies and set cooldown
+        // Clear cookies and set cooldown (both cookie and sessionStorage)
         clearSupabaseCookies()
         if (typeof window !== "undefined") {
           sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+          // Also set a cookie that middleware can read (5 minutes)
+          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=300`
         }
         return { 
           error: { 
-            message: "Too many login attempts. Please wait 60 seconds and try again."
+            message: "Too many login attempts. Please wait 5 minutes and try again."
           } 
         }
       }
