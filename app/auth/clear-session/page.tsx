@@ -33,10 +33,13 @@ export default function ClearSessionPage() {
     // Clear sessionStorage
     const sessionStorageKeys = Object.keys(sessionStorage)
     sessionStorageKeys.forEach((key) => {
-      if (key.includes("supabase") || key.includes("sb-")) {
+      if (key.includes("supabase") || key.includes("sb-") || key === "rate_limit_cooldown") {
         sessionStorage.removeItem(key)
       }
     })
+
+    // Also clear the rate limit cooldown flag
+    sessionStorage.removeItem("rate_limit_cooldown")
 
     setCleared(true)
 

@@ -57,19 +57,72 @@ const clearSupabaseCookies = () => {
   if (typeof document === "undefined") return
 
   const cookies = document.cookie.split("; ")
-  const supabaseCookies = cookies.filter((c) => c.startsWith("sb-"))
+  const supabaseCookies = cookies.filter((c) => c.startsWith("sb-") || c.includes("supabase"))
 
   if (supabaseCookies.length === 0) return
 
   console.warn(
-    "[v0] Detected Supabase cookies with no valid session. Clearing sb-* cookies to break auth refresh loop.",
+    "[v0] Clearing Supabase cookies to break auth refresh loop and prevent rate limiting.",
   )
 
+  // Get all possible cookie names (including those that might be in the cookie string)
+  const cookieNames = new Set<string>()
   supabaseCookies.forEach((cookie) => {
     const [name] = cookie.split("=")
-    // Match the settings used in lib/supabase/client.ts, but expire immediately
-    document.cookie = `${name}=; path=/; SameSite=None; Secure; max-age=0`
+    cookieNames.add(name.trim())
   })
+
+  // Also check for common Supabase cookie patterns
+  const allCookies = document.cookie.split("; ")
+  allCookies.forEach((cookie) => {
+    const [name] = cookie.split("=")
+    if (name.trim().startsWith("sb-") || name.trim().includes("supabase")) {
+      cookieNames.add(name.trim())
+    }
+  })
+
+  // Clear cookies with multiple path/domain combinations to ensure they're deleted
+  const paths = ["/", ""]
+  const domains = [window.location.hostname, `.${window.location.hostname}`, ""]
+  const sameSiteOptions = ["None", "Lax", "Strict", ""]
+
+  cookieNames.forEach((name) => {
+    // Try all combinations to ensure cookie is deleted
+    paths.forEach((path) => {
+      domains.forEach((domain) => {
+        sameSiteOptions.forEach((sameSite) => {
+          const domainPart = domain ? `; domain=${domain}` : ""
+          const pathPart = path ? `; path=${path}` : ""
+          const sameSitePart = sameSite ? `; SameSite=${sameSite}` : ""
+          document.cookie = `${name}=;${domainPart}${pathPart}${sameSitePart}; Secure; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          document.cookie = `${name}=;${domainPart}${pathPart}${sameSitePart}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+        })
+      })
+    })
+  })
+
+  // Also clear localStorage and sessionStorage
+  try {
+    const localStorageKeys = Object.keys(localStorage)
+    localStorageKeys.forEach((key) => {
+      if (key.includes("supabase") || key.includes("sb-") || key.startsWith("sb-")) {
+        localStorage.removeItem(key)
+      }
+    })
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+
+  try {
+    const sessionStorageKeys = Object.keys(sessionStorage)
+    sessionStorageKeys.forEach((key) => {
+      if (key.includes("supabase") || key.includes("sb-") || key.startsWith("sb-")) {
+        sessionStorage.removeItem(key)
+      }
+    })
+  } catch (e) {
+    // Ignore sessionStorage errors
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -128,6 +181,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const getSessionWithTimeout = async () => {
       try {
+        // Check if we're in a rate limit cooldown period
+        if (typeof window !== "undefined") {
+          const rateLimitCooldown = sessionStorage.getItem("rate_limit_cooldown")
+          if (rateLimitCooldown) {
+            const cooldownTime = parseInt(rateLimitCooldown, 10)
+            const now = Date.now()
+            // Cooldown is 60 seconds (60000ms)
+            if (now < cooldownTime + 60000) {
+              const remainingSeconds = Math.ceil((cooldownTime + 60000 - now) / 1000)
+              console.warn(
+                `[v0] Rate limit cooldown active. Waiting ${remainingSeconds} more seconds before attempting auth.`,
+              )
+              // Clear cookies during cooldown to prevent automatic refresh attempts
+              clearSupabaseCookies()
+              setSession(null)
+              setUser(null)
+              setProfile(null)
+              setIsLoading(false)
+              return
+            } else {
+              // Cooldown expired, clear it
+              sessionStorage.removeItem("rate_limit_cooldown")
+            }
+          }
+        }
+
         let hasSupabaseCookies = false
 
         if (typeof document !== "undefined") {
@@ -170,8 +249,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionError.message?.includes("429") ||
           sessionError.message?.includes("Too many")
         )) {
-          console.warn("[v0] Rate limit detected on session load, clearing cookies")
+          console.warn("[v0] Rate limit detected on session load, clearing cookies and setting cooldown")
           clearSupabaseCookies()
+          // Set cooldown period to prevent further attempts
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+          }
           setSession(null)
           setUser(null)
           setProfile(null)
@@ -200,11 +283,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error: any) {
         console.error("[v0] getSession error:", error.message)
         
-        // If it's a rate limit error, clear cookies
+        // If it's a rate limit error, clear cookies and set cooldown
         const errorMsg = error.message || error.toString() || ""
         if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
-          console.warn("[v0] Rate limit exception on session load, clearing cookies")
+          console.warn("[v0] Rate limit exception on session load, clearing cookies and setting cooldown")
           clearSupabaseCookies()
+          // Set cooldown period to prevent further attempts
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+          }
         }
         
         setSession(null)
@@ -286,6 +373,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("[v0] Sign in successful")
       } else if (res.error.message?.includes("rate limit") || res.error.message?.includes("429") || res.error.message?.includes("Too many")) {
         console.error("[v0] Rate limit detected on sign in:", res.error)
+        // Clear cookies and set cooldown
+        clearSupabaseCookies()
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+        }
         return { 
           error: { 
             message: "Too many login attempts. Please wait 60 seconds and try again."
@@ -300,6 +392,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if it's a rate limit error
       const errorMsg = err.message || err.toString() || ""
       if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
+        // Clear cookies and set cooldown
+        clearSupabaseCookies()
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
+        }
         return { 
           error: { 
             message: "Too many login attempts. Please wait 60 seconds and try again."
