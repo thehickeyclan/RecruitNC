@@ -17,8 +17,8 @@ export async function isRateLimited(): Promise<boolean> {
     const cooldownTime = parseInt(rateLimitCooldown, 10)
     const now = Date.now()
     
-    // Cooldown is 10 minutes (600000ms)
-    if (cooldownTime && now < cooldownTime + 600000) {
+    // Cooldown is 2 minutes (120000ms) - reduced from 10 minutes
+    if (cooldownTime && now < cooldownTime + 120000) {
       return true
     }
     
@@ -39,7 +39,7 @@ export async function checkRateLimitBeforeAuth(): Promise<NextResponse | null> {
     console.warn("[Rate Limit Check] Cooldown active, blocking auth call")
     return NextResponse.json(
       { 
-        error: "Rate limit cooldown active. Please wait 10 minutes before trying again.",
+        error: "Rate limit cooldown active. Please wait 2 minutes before trying again.",
         rateLimited: true
       },
       { status: 429 }

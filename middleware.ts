@@ -14,10 +14,12 @@ export async function middleware(request: NextRequest) {
     '/auth/signup',
     '/auth/reset-password',
     '/auth/clear-session',
+    '/auth/clear-cooldown',
     '/auth/callback',
     '/api/auth/signin',
     '/api/auth/signup',
     '/api/auth/reset-password',
+    '/api/auth/clear-cooldown',
     '/api/debug',
   ]
   
@@ -31,8 +33,8 @@ export async function middleware(request: NextRequest) {
   if (rateLimitCooldown) {
     const cooldownTime = parseInt(rateLimitCooldown, 10)
     const now = Date.now()
-    // Cooldown is 10 minutes (600000ms) - much longer than Supabase's 60 second limit
-    if (now < cooldownTime + 600000) {
+    // Cooldown is 2 minutes (120000ms) - reduced from 10 minutes
+    if (now < cooldownTime + 120000) {
       // Still in cooldown - skip ALL auth attempts and clear cookies
       console.warn("[Middleware] Rate limit cooldown active, skipping ALL auth checks")
       

@@ -196,10 +196,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (cooldownValue) {
             const cooldownTime = parseInt(cooldownValue, 10)
             const now = Date.now()
-            if (cooldownTime && now < cooldownTime + 600000) {
-              const remainingMinutes = Math.ceil((cooldownTime + 600000 - now) / 60000)
+            // Reduced cooldown to 2 minutes (120000ms) instead of 10 minutes
+            if (cooldownTime && now < cooldownTime + 120000) {
+              const remainingSeconds = Math.ceil((cooldownTime + 120000 - now) / 1000)
+              const remainingMinutes = Math.ceil(remainingSeconds / 60)
               console.warn(
-                `[v0] Rate limit cooldown active. Waiting ${remainingMinutes} more minutes. NO AUTH CALLS.`,
+                `[v0] Rate limit cooldown active. Waiting ${remainingSeconds} more seconds (${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}). NO AUTH CALLS.`,
               )
               clearSupabaseCookies()
               setSession(null)
@@ -279,12 +281,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cooldownValue) {
           const cooldownTime = parseInt(cooldownValue, 10)
           const now = Date.now()
-          if (cooldownTime && now < cooldownTime + 600000) {
-            const remainingMinutes = Math.ceil((cooldownTime + 600000 - now) / 60000)
+          // Reduced cooldown to 2 minutes (120000ms) instead of 10 minutes
+          // This allows faster recovery from rate limits
+          if (cooldownTime && now < cooldownTime + 120000) {
+            const remainingSeconds = Math.ceil((cooldownTime + 120000 - now) / 1000)
+            const remainingMinutes = Math.ceil(remainingSeconds / 60)
             console.warn(`[v0] Cooldown still active. ${remainingMinutes} minutes remaining. NOT calling Supabase.`)
             return { 
               error: { 
-                message: `Too many login attempts. Please wait ${remainingMinutes} minutes and try again.`
+                message: `Too many login attempts. Please wait ${remainingSeconds} seconds (${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}) and try again.`
               } 
             }
           } else {
@@ -326,12 +331,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearSupabaseCookies()
         if (typeof window !== "undefined") {
           sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
-          // Also set a cookie that middleware can read (10 minutes)
-          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=600`
+          // Also set a cookie that middleware can read (2 minutes = 120 seconds)
+          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=120`
         }
         return { 
           error: { 
-            message: "Too many login attempts. Please wait 10 minutes and try again."
+            message: "Too many login attempts. Please wait 2 minutes and try again."
           } 
         }
       }
@@ -347,12 +352,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearSupabaseCookies()
         if (typeof window !== "undefined") {
           sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
-          // Also set a cookie that middleware can read (10 minutes)
-          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=600`
+          // Also set a cookie that middleware can read (2 minutes = 120 seconds)
+          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=120`
         }
         return { 
           error: { 
-            message: "Too many login attempts. Please wait 10 minutes and try again."
+            message: "Too many login attempts. Please wait 2 minutes and try again."
           } 
         }
       }
