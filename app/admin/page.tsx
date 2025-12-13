@@ -33,11 +33,33 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      // CRITICAL: Check for rate limit cooldown BEFORE making API calls
+      // This prevents API routes from calling getUser() during cooldown
+      if (typeof window !== "undefined") {
+        const rateLimitCookie = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("rate_limit_cooldown="))
+        if (rateLimitCookie) {
+          const cooldownValue = rateLimitCookie.split("=")[1]
+          const cooldownTime = parseInt(cooldownValue, 10)
+          if (cooldownTime && Date.now() < cooldownTime + 600000) {
+            const remainingMinutes = Math.ceil((cooldownTime + 600000 - Date.now()) / 60000)
+            console.warn(`[Admin] Rate limit cooldown active (${remainingMinutes} min remaining), skipping API calls`)
+            setLoading(false)
+            return // Don't make API calls during cooldown
+          }
+        }
+      }
+
       try {
-        const response = await fetch("/api/admin/stats/overview")
+        const response = await fetch("/api/admin/stats/overview", {
+          credentials: "include"
+        })
         if (response.ok) {
           const data = await response.json()
           setStats(data)
+        } else if (response.status === 429) {
+          console.warn("[Admin] Rate limited on stats API")
         }
       } catch (error) {
         console.error("Error fetching admin stats:", error)

@@ -1,11 +1,22 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
+import { isRateLimited } from "@/lib/rate-limit-check"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
+    // CRITICAL: Check rate limit cooldown BEFORE any auth calls
+    if (await isRateLimited()) {
+      console.warn("[v0] Rate limit cooldown active, skipping auth check")
+      return NextResponse.json({ 
+        error: "Rate limit cooldown active. Please wait 10 minutes.",
+        profiles: [],
+        count: 0
+      }, { status: 429 })
+    }
+
     console.log("[v0] Fetching user profiles...")
     const supabase = await createClient()
 

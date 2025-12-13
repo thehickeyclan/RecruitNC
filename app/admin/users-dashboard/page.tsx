@@ -112,6 +112,24 @@ export default function UsersDashboardPage() {
 
   const loadData = async () => {
     try {
+      // CRITICAL: Check for rate limit cooldown BEFORE making API calls
+      if (typeof window !== "undefined") {
+        const rateLimitCookie = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("rate_limit_cooldown="))
+        if (rateLimitCookie) {
+          const cooldownValue = rateLimitCookie.split("=")[1]
+          const cooldownTime = parseInt(cooldownValue, 10)
+          if (cooldownTime && Date.now() < cooldownTime + 600000) {
+            const remainingMinutes = Math.ceil((cooldownTime + 600000 - Date.now()) / 60000)
+            console.warn(`[UsersDashboard] Rate limit cooldown active (${remainingMinutes} min remaining), skipping API calls`)
+            setError(`Rate limit cooldown active. Please wait ${remainingMinutes} more minutes.`)
+            setLoading(false)
+            return // Don't make API calls during cooldown
+          }
+        }
+      }
+
       setLoading(true)
       const [profilesRes, schoolsRes] = await Promise.all([
         fetch("/api/admin/users/profiles", { cache: "no-store", credentials: "include" }),
