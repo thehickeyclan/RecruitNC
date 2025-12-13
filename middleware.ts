@@ -52,6 +52,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ROOT CAUSE FIX: Only check auth on routes that actually need it
+  // Don't call getUser/getSession on every single request!
+  const protectedRoutes = ['/admin', '/profile', '/coach-portal']
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  
+  // If not a protected route, skip auth entirely
+  if (!isProtectedRoute) {
+    return supabaseResponse
+  }
+
   // Check if we have any Supabase cookies - if not, skip auth entirely
   const hasSupabaseCookies = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
   if (!hasSupabaseCookies) {
@@ -59,6 +69,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // ONLY create Supabase client if we're on a protected route AND have cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -84,9 +95,8 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // IMPORTANT: Only call getUser/getSession on protected routes
+  // This is the ROOT CAUSE - we were calling this on EVERY request!
 
   try {
     const {
@@ -109,24 +119,23 @@ export async function middleware(request: NextRequest) {
       })
       
       // Set cooldown cookie (10 minutes) to prevent further attempts
-      // NOT httpOnly so client-side code can also check it
       supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-        httpOnly: false, // Must be readable by client to prevent auth attempts
+        httpOnly: false,
         secure: true,
         sameSite: "lax",
-        maxAge: 600, // 10 minutes - longer cooldown
+        maxAge: 600,
         path: "/",
       })
       
       return supabaseResponse
     }
 
-    // Only refresh session if we have a user or no error
-    // Skip session refresh if we're rate limited to prevent further attempts
-    if (user || !userError) {
+    // Only refresh session if we have a user - don't refresh on every request!
+    // This was causing the rate limit - we were refreshing sessions unnecessarily
+    if (user) {
       const { error: sessionError } = await supabase.auth.getSession()
       
-      // If session refresh also hits rate limit, clear cookies and set cooldown
+      // If session refresh hits rate limit, clear cookies and set cooldown
       if (sessionError && (
         sessionError.message?.includes("rate limit") || 
         sessionError.message?.includes("429") ||
@@ -139,16 +148,16 @@ export async function middleware(request: NextRequest) {
           supabaseResponse.cookies.delete(cookie.name)
         })
         
-        // Set cooldown cookie (10 minutes) to prevent further attempts
         supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-          httpOnly: false, // Must be readable by client
+          httpOnly: false,
           secure: true,
           sameSite: "lax",
-          maxAge: 600, // 10 minutes - longer cooldown
+          maxAge: 600,
           path: "/",
         })
       }
     }
+    // If no user, don't call getSession() - this was the problem!
   } catch (error: any) {
     // If we catch a rate limit error, clear cookies, set cooldown, and continue
     const errorMsg = error?.message || error?.toString() || ""
@@ -160,13 +169,11 @@ export async function middleware(request: NextRequest) {
         supabaseResponse.cookies.delete(cookie.name)
       })
       
-      // Set cooldown cookie (10 minutes) to prevent further attempts
-      // NOT httpOnly so client-side code can also check it
       supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-        httpOnly: false, // Must be readable by client to prevent auth attempts
+        httpOnly: false,
         secure: true,
         sameSite: "lax",
-        maxAge: 600, // 10 minutes - longer cooldown
+        maxAge: 600,
         path: "/",
       })
     }
