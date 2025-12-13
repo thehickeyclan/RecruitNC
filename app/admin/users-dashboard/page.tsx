@@ -120,10 +120,12 @@ export default function UsersDashboardPage() {
         if (rateLimitCookie) {
           const cooldownValue = rateLimitCookie.split("=")[1]
           const cooldownTime = parseInt(cooldownValue, 10)
-          if (cooldownTime && Date.now() < cooldownTime + 600000) {
-            const remainingMinutes = Math.ceil((cooldownTime + 600000 - Date.now()) / 60000)
-            console.warn(`[UsersDashboard] Rate limit cooldown active (${remainingMinutes} min remaining), skipping API calls`)
-            setError(`Rate limit cooldown active. Please wait ${remainingMinutes} more minutes.`)
+          // Cooldown is 2 minutes (120000ms) - reduced from 10 minutes
+          if (cooldownTime && Date.now() < cooldownTime + 120000) {
+            const remainingSeconds = Math.ceil((cooldownTime + 120000 - Date.now()) / 1000)
+            const remainingMinutes = Math.ceil(remainingSeconds / 60)
+            console.warn(`[UsersDashboard] Rate limit cooldown active (${remainingSeconds}s / ${remainingMinutes}m remaining), skipping API calls`)
+            setError(`Rate limit cooldown active. Please wait ${remainingSeconds} seconds (${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}) more.`)
             setLoading(false)
             return // Don't make API calls during cooldown
           }
