@@ -266,14 +266,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("[v0] Explicit sign-in attempt:", email)
       
+      // CRITICAL: Check cooldown BEFORE attempting sign in
+      // If cooldown is active, return error immediately without calling Supabase
+      if (typeof window !== "undefined") {
+        const rateLimitCooldown = sessionStorage.getItem("rate_limit_cooldown")
+        const rateLimitCookie = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("rate_limit_cooldown="))
+        
+        const cooldownValue = rateLimitCooldown || (rateLimitCookie?.split("=")[1])
+        
+        if (cooldownValue) {
+          const cooldownTime = parseInt(cooldownValue, 10)
+          const now = Date.now()
+          if (cooldownTime && now < cooldownTime + 600000) {
+            const remainingMinutes = Math.ceil((cooldownTime + 600000 - now) / 60000)
+            console.warn(`[v0] Cooldown still active. ${remainingMinutes} minutes remaining. NOT calling Supabase.`)
+            return { 
+              error: { 
+                message: `Too many login attempts. Please wait ${remainingMinutes} minutes and try again.`
+              } 
+            }
+          } else {
+            // Cooldown expired, clear it
+            console.log("[v0] Cooldown expired, clearing it")
+            sessionStorage.removeItem("rate_limit_cooldown")
+            document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+          }
+        }
+      }
+      
       // Clear any existing stale cookies BEFORE attempting sign in
       clearSupabaseCookies()
-      
-      // Clear rate limit cooldown when user explicitly attempts to sign in
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("rate_limit_cooldown")
-        document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-      }
       
       // This is the ONLY place we make auth calls - explicit user login
       const res = await supabase.auth.signInWithPassword({ email, password })
@@ -284,6 +308,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(res.data.user)
         if (res.data.user) {
           fetchUserProfile(res.data.user.id).then(setProfile)
+        }
+        
+        // CRITICAL: Clear cooldown on successful login
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("rate_limit_cooldown")
+          document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+          console.log("[v0] Successful login - cooldown cleared")
         }
       }
 
