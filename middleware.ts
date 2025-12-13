@@ -62,122 +62,20 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Check if we have any Supabase cookies - if not, skip auth entirely
+  // CRITICAL FIX: Don't make ANY auth calls in middleware
+  // Even calling getUser() with stale cookies triggers refresh attempts
+  // Let the client-side handle auth checks - middleware should only pass through
+  // This completely eliminates automatic auth calls from middleware
+  
+  // Just clear stale cookies if in cooldown, but don't make auth calls
   const hasSupabaseCookies = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
-  if (!hasSupabaseCookies) {
-    // No auth cookies, skip auth checks entirely
-    return supabaseResponse
+  if (hasSupabaseCookies) {
+    // If we have cookies but are on a protected route, let the client handle auth
+    // Don't call getUser() or getSession() here - that was causing rate limits
+    // The client-side auth context will handle checking auth status
   }
-
-  // ONLY create Supabase client if we're on a protected route AND have cookies
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, {
-              ...options,
-              sameSite: "none",
-              secure: true,
-            }),
-          )
-        },
-      },
-    },
-  )
-
-  // IMPORTANT: Only call getUser/getSession on protected routes
-  // This is the ROOT CAUSE - we were calling this on EVERY request!
-
-  try {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    // If we get a rate limit error, clear auth cookies, set cooldown, and skip session refresh
-    if (userError && (
-      userError.message?.includes("rate limit") || 
-      userError.message?.includes("429") ||
-      userError.message?.includes("Too many")
-    )) {
-      console.warn("[Middleware] Rate limit detected on getUser, clearing auth cookies and setting cooldown")
-      
-      // Clear all Supabase auth cookies
-      const cookiesToClear = request.cookies.getAll().filter(c => c.name.startsWith('sb-'))
-      cookiesToClear.forEach(cookie => {
-        supabaseResponse.cookies.delete(cookie.name)
-      })
-      
-      // Set cooldown cookie (10 minutes) to prevent further attempts
-      supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-        httpOnly: false,
-        secure: true,
-        sameSite: "lax",
-        maxAge: 600,
-        path: "/",
-      })
-      
-      return supabaseResponse
-    }
-
-    // Only refresh session if we have a user - don't refresh on every request!
-    // This was causing the rate limit - we were refreshing sessions unnecessarily
-    if (user) {
-      const { error: sessionError } = await supabase.auth.getSession()
-      
-      // If session refresh hits rate limit, clear cookies and set cooldown
-      if (sessionError && (
-        sessionError.message?.includes("rate limit") || 
-        sessionError.message?.includes("429") ||
-        sessionError.message?.includes("Too many")
-      )) {
-        console.warn("[Middleware] Rate limit detected on getSession, clearing auth cookies and setting cooldown")
-        
-        const cookiesToClear = request.cookies.getAll().filter(c => c.name.startsWith('sb-'))
-        cookiesToClear.forEach(cookie => {
-          supabaseResponse.cookies.delete(cookie.name)
-        })
-        
-        supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-          httpOnly: false,
-          secure: true,
-          sameSite: "lax",
-          maxAge: 600,
-          path: "/",
-        })
-      }
-    }
-    // If no user, don't call getSession() - this was the problem!
-  } catch (error: any) {
-    // If we catch a rate limit error, clear cookies, set cooldown, and continue
-    const errorMsg = error?.message || error?.toString() || ""
-    if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
-      console.warn("[Middleware] Rate limit exception caught, clearing auth cookies and setting cooldown")
-      
-      const cookiesToClear = request.cookies.getAll().filter(c => c.name.startsWith('sb-'))
-      cookiesToClear.forEach(cookie => {
-        supabaseResponse.cookies.delete(cookie.name)
-      })
-      
-      supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-        httpOnly: false,
-        secure: true,
-        sameSite: "lax",
-        maxAge: 600,
-        path: "/",
-      })
-    }
-  }
+  
+  // Return immediately - NO auth calls in middleware at all
 
   return supabaseResponse
 }

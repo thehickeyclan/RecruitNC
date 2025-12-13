@@ -289,8 +289,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Only try to get session if we have cookies AND not in cooldown
-        // This is the ONLY place we call getSession - and only if not rate limited
+        // CRITICAL: Only call getSession if we're NOT in cooldown AND have cookies
+        // Even with auto-refresh disabled, calling getSession with stale cookies can trigger validation
+        // So we only call it when we're sure we're not rate limited
+        
+        // Final check - if we're here, we have cookies and no cooldown
+        // This is the ONLY place we call getSession - and only when safe to do so
         const {
           data: { session },
           error: sessionError,
