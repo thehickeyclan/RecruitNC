@@ -7,6 +7,11 @@ export async function createClient() {
   const cookieStore = await cookies()
 
   return createSupabaseServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    auth: {
+      autoRefreshToken: false, // DISABLE auto-refresh on server too
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
     cookies: {
       getAll() {
         return cookieStore.getAll()
