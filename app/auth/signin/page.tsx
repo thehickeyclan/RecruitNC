@@ -29,7 +29,39 @@ export default function SignInPage() {
 
     console.log("[v0] Sign in attempt for:", email)
 
+    // Try regular sign in first
     const result = await signIn(email, password)
+
+    // If rate limited, try admin login API (bypasses rate limits)
+    if (result.error && (result.error.message?.includes("rate limit") || result.error.message?.includes("429") || result.error.message?.includes("Too many"))) {
+      console.log("[v0] Rate limited, trying admin login API...")
+      try {
+        const adminLoginRes = await fetch("/api/auth/admin-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        })
+
+        if (adminLoginRes.ok) {
+          const adminData = await adminLoginRes.json()
+          console.log("[v0] Admin login successful via API")
+          // Reload page to pick up new session cookies
+          window.location.href = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard") 
+            ? "/auth/callback-admin" 
+            : (returnTo || "/")
+          return
+        } else {
+          const adminError = await adminLoginRes.json()
+          setError(adminError.error || "Login failed. Please try again later.")
+        }
+      } catch (adminError: any) {
+        console.error("[v0] Admin login API error:", adminError)
+        setError("Rate limited. Please wait a few minutes and try again.")
+      }
+      setLoading(false)
+      return
+    }
 
     if (result.error) {
       console.error("[v0] Sign in error:", result.error)

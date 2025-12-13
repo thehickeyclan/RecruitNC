@@ -268,41 +268,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("[v0] Explicit sign-in attempt:", email)
       
-      // CRITICAL: Check cooldown BEFORE attempting sign in
-      // If cooldown is active, return error immediately without calling Supabase
-      if (typeof window !== "undefined") {
-        const rateLimitCooldown = sessionStorage.getItem("rate_limit_cooldown")
-        const rateLimitCookie = document.cookie
-          .split("; ")
-          .find((c) => c.startsWith("rate_limit_cooldown="))
-        
-        const cooldownValue = rateLimitCooldown || (rateLimitCookie?.split("=")[1])
-        
-        if (cooldownValue) {
-          const cooldownTime = parseInt(cooldownValue, 10)
-          const now = Date.now()
-          // Reduced cooldown to 2 minutes (120000ms) instead of 10 minutes
-          // This allows faster recovery from rate limits
-          if (cooldownTime && now < cooldownTime + 120000) {
-            const remainingSeconds = Math.ceil((cooldownTime + 120000 - now) / 1000)
-            const remainingMinutes = Math.ceil(remainingSeconds / 60)
-            console.warn(`[v0] Cooldown still active. ${remainingMinutes} minutes remaining. NOT calling Supabase.`)
-            return { 
-              error: { 
-                message: `Too many login attempts. Please wait ${remainingSeconds} seconds (${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}) and try again.`
-              } 
-            }
-          } else {
-            // Cooldown expired, clear it
-            console.log("[v0] Cooldown expired, clearing it")
-            sessionStorage.removeItem("rate_limit_cooldown")
-            document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-          }
-        }
-      }
+      // REMOVED: Cooldown check - let Supabase handle rate limiting
+      // We'll use admin login API as fallback if rate limited
       
       // Clear any existing stale cookies BEFORE attempting sign in
       clearSupabaseCookies()
+      
+      // Clear any old cooldown flags
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("rate_limit_cooldown")
+        document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      }
       
       // This is the ONLY place we make auth calls - explicit user login
       const res = await supabase.auth.signInWithPassword({ email, password })
