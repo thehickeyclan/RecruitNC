@@ -320,24 +320,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return res
     } catch (err: any) {
       console.error("[v0] Sign in error:", err)
-      
-      // Check if it's a rate limit error
-      const errorMsg = err.message || err.toString() || ""
-      if (errorMsg.includes("rate limit") || errorMsg.includes("429") || errorMsg.includes("Too many")) {
-        // Clear cookies and set cooldown (both cookie and sessionStorage)
-        clearSupabaseCookies()
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
-          // Also set a cookie that middleware can read (2 minutes = 120 seconds)
-          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=120`
-        }
-        return { 
-          error: { 
-            message: "Too many login attempts. Please wait 2 minutes and try again."
-          } 
-        }
-      }
-      
       return { error: { message: err.message || "Sign in failed" } }
     }
   }

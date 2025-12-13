@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 
 /**
  * Server-side admin login that bypasses Supabase rate limits
- * Uses service role key to authenticate, then creates a session
+ * Uses service role key to authenticate, then sets session via SSR client
  */
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       password,
     })
 
-    if (authError || !authData?.user) {
+    if (authError || !authData?.user || !authData?.session) {
       return NextResponse.json(
         { error: authError?.message || "Invalid credentials" },
         { status: 401 }
@@ -47,35 +48,50 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create a session using the regular client (with cookies)
-    // We need to set the session cookie so the client can use it
+    // Now use SSR client to set the session cookies properly
+    const cookieStore = await cookies()
     const response = NextResponse.json({
       success: true,
       user: {
         id: authData.user.id,
         email: authData.user.email,
       },
-      session: authData.session,
     })
 
-    // Set the session cookies manually
-    if (authData.session) {
-      // Set access token cookie
-      response.cookies.set(`sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`, JSON.stringify({
-        access_token: authData.session.access_token,
-        refresh_token: authData.session.refresh_token,
-        expires_at: authData.session.expires_at,
-        expires_in: authData.session.expires_in,
-        token_type: authData.session.token_type,
-        user: authData.session.user,
-      }), {
-        httpOnly: true,
-        secure: true,
-        sameSite: "lax",
-        maxAge: authData.session.expires_in || 3600,
-        path: "/",
-      })
-    }
+    // Create SSR client that will set cookies properly
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, {
+                ...options,
+                sameSite: "lax",
+                secure: process.env.NODE_ENV === "production",
+                path: "/",
+              })
+              response.cookies.set(name, value, {
+                ...options,
+                sameSite: "lax",
+                secure: process.env.NODE_ENV === "production",
+                path: "/",
+              })
+            })
+          },
+        },
+      },
+    )
+
+    // Set the session using SSR client (this will set cookies properly)
+    await supabase.auth.setSession({
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token,
+    })
 
     return response
   } catch (error: any) {
