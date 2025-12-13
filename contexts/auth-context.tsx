@@ -301,22 +301,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!res.error) {
         console.log("[v0] Sign in successful")
-      } else if (res.error.message?.includes("rate limit") || res.error.message?.includes("429") || res.error.message?.includes("Too many")) {
-        console.error("[v0] Rate limit detected on sign in:", res.error)
-        // Clear cookies and set cooldown (both cookie and sessionStorage)
-        clearSupabaseCookies()
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
-          // Also set a cookie that middleware can read (2 minutes = 120 seconds)
-          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=120`
-        }
-        return { 
-          error: { 
-            message: "Too many login attempts. Please wait 2 minutes and try again."
-          } 
-        }
       }
 
+      // Return the result - let the sign-in page handle rate limits
+      // (it will try admin API if rate limited)
       return res
     } catch (err: any) {
       console.error("[v0] Sign in error:", err)
