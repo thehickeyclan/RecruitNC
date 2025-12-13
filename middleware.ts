@@ -6,23 +6,45 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
+  const pathname = request.nextUrl.pathname
+
+  // Skip middleware entirely for public routes that don't need auth
+  const publicRoutes = [
+    '/auth/signin',
+    '/auth/signup',
+    '/auth/reset-password',
+    '/auth/clear-session',
+    '/auth/callback',
+    '/api/auth/signin',
+    '/api/auth/signup',
+    '/api/auth/reset-password',
+    '/api/debug',
+  ]
+  
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return supabaseResponse
+  }
+
   // CRITICAL: Check for rate limit cooldown BEFORE attempting any auth
   // This prevents repeated auth attempts that trigger rate limits
   const rateLimitCooldown = request.cookies.get("rate_limit_cooldown")?.value
   if (rateLimitCooldown) {
     const cooldownTime = parseInt(rateLimitCooldown, 10)
     const now = Date.now()
-    // Cooldown is 5 minutes (300000ms) - longer than Supabase's 60 second limit
-    if (now < cooldownTime + 300000) {
-      // Still in cooldown - skip ALL auth attempts
-      console.warn("[Middleware] Rate limit cooldown active, skipping auth checks")
+    // Cooldown is 10 minutes (600000ms) - much longer than Supabase's 60 second limit
+    if (now < cooldownTime + 600000) {
+      // Still in cooldown - skip ALL auth attempts and clear cookies
+      console.warn("[Middleware] Rate limit cooldown active, skipping ALL auth checks")
       
-      // Clear any stale Supabase cookies to prevent refresh attempts
+      // Aggressively clear ALL Supabase cookies to prevent ANY refresh attempts
       const cookiesToClear = request.cookies.getAll().filter(c => c.name.startsWith('sb-'))
       cookiesToClear.forEach(cookie => {
         supabaseResponse.cookies.delete(cookie.name)
+        // Delete with all possible path/domain combinations
+        supabaseResponse.cookies.set(cookie.name, '', { maxAge: 0, path: '/' })
       })
       
+      // Return immediately - NO auth calls at all
       return supabaseResponse
     } else {
       // Cooldown expired, clear the flag
@@ -86,13 +108,13 @@ export async function middleware(request: NextRequest) {
         supabaseResponse.cookies.delete(cookie.name)
       })
       
-      // Set cooldown cookie (5 minutes) to prevent further attempts
+      // Set cooldown cookie (10 minutes) to prevent further attempts
       // NOT httpOnly so client-side code can also check it
       supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
         httpOnly: false, // Must be readable by client to prevent auth attempts
         secure: true,
         sameSite: "lax",
-        maxAge: 300, // 5 minutes
+        maxAge: 600, // 10 minutes - longer cooldown
         path: "/",
       })
       
@@ -117,12 +139,12 @@ export async function middleware(request: NextRequest) {
           supabaseResponse.cookies.delete(cookie.name)
         })
         
-        // Set cooldown cookie (5 minutes) to prevent further attempts
+        // Set cooldown cookie (10 minutes) to prevent further attempts
         supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
-          httpOnly: true,
+          httpOnly: false, // Must be readable by client
           secure: true,
           sameSite: "lax",
-          maxAge: 300, // 5 minutes
+          maxAge: 600, // 10 minutes - longer cooldown
           path: "/",
         })
       }
@@ -138,13 +160,13 @@ export async function middleware(request: NextRequest) {
         supabaseResponse.cookies.delete(cookie.name)
       })
       
-      // Set cooldown cookie (5 minutes) to prevent further attempts
+      // Set cooldown cookie (10 minutes) to prevent further attempts
       // NOT httpOnly so client-side code can also check it
       supabaseResponse.cookies.set("rate_limit_cooldown", Date.now().toString(), {
         httpOnly: false, // Must be readable by client to prevent auth attempts
         secure: true,
         sameSite: "lax",
-        maxAge: 300, // 5 minutes
+        maxAge: 600, // 10 minutes - longer cooldown
         path: "/",
       })
     }

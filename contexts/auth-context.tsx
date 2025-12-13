@@ -241,9 +241,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const cooldownValue = rateLimitCookie.split("=")[1]
             const cooldownTime = parseInt(cooldownValue, 10)
             const now = Date.now()
-            // Check if cooldown is still active (5 minutes = 300000ms)
-            if (cooldownTime && now < cooldownTime + 300000) {
-              const remainingMinutes = Math.ceil((cooldownTime + 300000 - now) / 60000)
+            // Check if cooldown is still active (10 minutes = 600000ms)
+            if (cooldownTime && now < cooldownTime + 600000) {
+              const remainingMinutes = Math.ceil((cooldownTime + 600000 - now) / 60000)
               console.warn(
                 `[v0] Rate limit cooldown cookie detected (${remainingMinutes} min remaining), skipping getSession`,
               )
@@ -435,8 +435,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearSupabaseCookies()
         if (typeof window !== "undefined") {
           sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
-          // Also set a cookie that middleware can read (5 minutes)
-          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=300`
+          // Also set a cookie that middleware can read (10 minutes)
+          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=600`
         }
         return { 
           error: { 
@@ -456,8 +456,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearSupabaseCookies()
         if (typeof window !== "undefined") {
           sessionStorage.setItem("rate_limit_cooldown", Date.now().toString())
-          // Also set a cookie that middleware can read (5 minutes)
-          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=300`
+          // Also set a cookie that middleware can read (10 minutes)
+          document.cookie = `rate_limit_cooldown=${Date.now()}; path=/; SameSite=Lax; Secure; max-age=600`
         }
         return { 
           error: { 
