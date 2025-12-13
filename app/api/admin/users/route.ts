@@ -1,8 +1,18 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { isRateLimited } from "@/lib/rate-limit-check"
 
 export async function GET(request: Request) {
   try {
+    // CRITICAL: Check rate limit cooldown BEFORE any auth calls
+    if (await isRateLimited()) {
+      console.warn("[Admin Users API] Rate limit cooldown active, skipping auth check")
+      return NextResponse.json({ 
+        error: "Rate limit cooldown active. Please wait 10 minutes.",
+        users: []
+      }, { status: 429 })
+    }
+
     const supabase = await createClient()
 
     // Check if user is authenticated
