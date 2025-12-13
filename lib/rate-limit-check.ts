@@ -1,4 +1,5 @@
 import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
 
 /**
  * Check if we're in a rate limit cooldown period
@@ -26,5 +27,24 @@ export async function isRateLimited(): Promise<boolean> {
     // If we can't check, assume not rate limited to avoid blocking
     return false
   }
+}
+
+/**
+ * Wrapper for API routes that need auth
+ * Checks rate limit cooldown BEFORE making any auth calls
+ * Returns null if not rate limited, or a NextResponse with 429 if rate limited
+ */
+export async function checkRateLimitBeforeAuth(): Promise<NextResponse | null> {
+  if (await isRateLimited()) {
+    console.warn("[Rate Limit Check] Cooldown active, blocking auth call")
+    return NextResponse.json(
+      { 
+        error: "Rate limit cooldown active. Please wait 10 minutes before trying again.",
+        rateLimited: true
+      },
+      { status: 429 }
+    )
+  }
+  return null
 }
 

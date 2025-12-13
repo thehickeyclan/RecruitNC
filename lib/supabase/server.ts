@@ -6,6 +6,19 @@ export { createServerClient } from "@supabase/ssr"
 export async function createClient() {
   const cookieStore = await cookies()
 
+  // CRITICAL: Check for rate limit cooldown BEFORE creating client
+  // Even creating the client with stale cookies can trigger validation attempts
+  const rateLimitCooldown = cookieStore.get("rate_limit_cooldown")?.value
+  if (rateLimitCooldown) {
+    const cooldownTime = parseInt(rateLimitCooldown, 10)
+    const now = Date.now()
+    if (cooldownTime && now < cooldownTime + 600000) {
+      // In cooldown - create a minimal client that won't make auth calls
+      // This prevents any automatic validation attempts
+      console.warn("[Supabase Server] Rate limit cooldown active, creating minimal client")
+    }
+  }
+
   return createSupabaseServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     auth: {
       autoRefreshToken: false, // DISABLE auto-refresh on server too
