@@ -453,7 +453,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) : { data: { subscription: null } }
 
     return () => {
-      clearTimeout(timeoutId)
       if (subscription) {
         subscription.unsubscribe()
       }
@@ -462,20 +461,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log("[v0] Signing in:", email)
+      console.log("[v0] Explicit sign-in attempt:", email)
       
       // Clear any existing stale cookies BEFORE attempting sign in
-      // This prevents rate limiting issues from expired refresh tokens
       clearSupabaseCookies()
       
       // Clear rate limit cooldown when user explicitly attempts to sign in
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("rate_limit_cooldown")
-        // Also try to clear the cookie (though it's httpOnly, we try)
         document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
       }
       
+      // This is the ONLY place we make auth calls - explicit user login
       const res = await supabase.auth.signInWithPassword({ email, password })
+      
+      // After successful login, NOW we can safely get the session
+      if (!res.error && res.data?.session) {
+        setSession(res.data.session)
+        setUser(res.data.user)
+        if (res.data.user) {
+          fetchUserProfile(res.data.user.id).then(setProfile)
+        }
+      }
 
       if (!res.error) {
         console.log("[v0] Sign in successful")
