@@ -440,7 +440,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return { 
           error: { 
-            message: "Too many login attempts. Please wait 5 minutes and try again."
+            message: "Too many login attempts. Please wait 10 minutes and try again."
           } 
         }
       }
@@ -461,7 +461,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return { 
           error: { 
-            message: "Too many login attempts. Please wait 5 minutes and try again."
+            message: "Too many login attempts. Please wait 10 minutes and try again."
           } 
         }
       }
