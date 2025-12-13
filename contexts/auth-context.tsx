@@ -184,80 +184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Only make auth calls when user explicitly logs in
     initializeAuth()
 
-    // Check for rate limit cooldown before setting up auth state change listener
-    // If we're in cooldown, don't set up the listener at all to prevent automatic auth attempts
-    let shouldSetupAuthListener = true
-    if (typeof window !== "undefined") {
-      const rateLimitCooldown = sessionStorage.getItem("rate_limit_cooldown")
-      if (rateLimitCooldown) {
-        const cooldownTime = parseInt(rateLimitCooldown, 10)
-        const now = Date.now()
-        if (now < cooldownTime + 60000) {
-          console.warn("[v0] Rate limit cooldown active, disabling auth state change listener")
-          shouldSetupAuthListener = false
-        }
-      }
-    }
-
-    // CRITICAL: Only set up auth state change listener if not in cooldown
-    // onAuthStateChange can trigger on token refresh, which causes rate limits
-    // We completely disable it during cooldown
-    const {
-      data: { subscription },
-    } = shouldSetupAuthListener ? supabase.auth.onAuthStateChange(async (event, session) => {
-      // Double-check cooldown in the listener itself
-      if (typeof window !== "undefined") {
-        const rateLimitCookie = document.cookie
-          .split("; ")
-          .find((c) => c.startsWith("rate_limit_cooldown="))
-        if (rateLimitCookie) {
-          const cooldownValue = rateLimitCookie.split("=")[1]
-          const cooldownTime = parseInt(cooldownValue, 10)
-          if (cooldownTime && Date.now() < cooldownTime + 600000) {
-            console.warn("[v0] Cooldown active in onAuthStateChange, ignoring event:", event)
-            return // Ignore all auth state changes during cooldown
-          }
-        }
-      }
-      const now = Date.now()
-      const timeSinceLastChange = now - lastAuthStateChange.current
-
-      // If we're getting auth state changes too frequently (more than 5 per second), ignore them
-      if (timeSinceLastChange < 200) {
-        authStateChangeCount.current++
-        if (authStateChangeCount.current > 5) {
-          console.warn("[v0] Auth state changing too frequently, ignoring to prevent loop")
-          return
-        }
-      } else {
-        // Reset counter if enough time has passed
-        authStateChangeCount.current = 0
-      }
-
-      lastAuthStateChange.current = now
-
-      console.log("[v0] Auth state changed:", event, { hasSession: !!session })
-
-      if (event === "SIGNED_OUT" && !user && !session) {
-        console.log("[v0] Already signed out, ignoring duplicate SIGNED_OUT event")
-        return
-      }
-
-      setSession(session)
-      setUser(session?.user ?? null)
-
-      if (session?.user && !isRefreshing.current) {
-        isRefreshing.current = true
-        fetchUserProfile(session.user.id)
-          .then(setProfile)
-          .finally(() => {
-            isRefreshing.current = false
-          })
-      } else if (!session?.user) {
-        setProfile(null)
-        isRefreshing.current = false
-      }
-    }) : { data: { subscription: null } }
+    // CRITICAL: Completely disable onAuthStateChange listener
+    // This listener triggers automatic auth calls even when user isn't logging in
+    // It's the root cause of rate limits - disable it completely
+    console.log("[v0] NOT setting up onAuthStateChange - it causes automatic auth calls")
+    const { data: { subscription } } = { data: { subscription: null } }
 
     return () => {
       if (subscription) {
