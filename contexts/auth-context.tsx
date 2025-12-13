@@ -182,6 +182,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // CRITICAL: Don't call getSession() on mount - this triggers auth calls
     // Even with all checks, calling getSession with stale cookies causes rate limits
     // Only make auth calls when user explicitly logs in
+    const initializeAuth = () => {
+      try {
+        // Check for rate limit cooldown FIRST
+        if (typeof window !== "undefined") {
+          const rateLimitCooldown = sessionStorage.getItem("rate_limit_cooldown")
+          const rateLimitCookie = document.cookie
+            .split("; ")
+            .find((c) => c.startsWith("rate_limit_cooldown="))
+          
+          const cooldownValue = rateLimitCooldown || (rateLimitCookie?.split("=")[1])
+          
+          if (cooldownValue) {
+            const cooldownTime = parseInt(cooldownValue, 10)
+            const now = Date.now()
+            if (cooldownTime && now < cooldownTime + 600000) {
+              const remainingMinutes = Math.ceil((cooldownTime + 600000 - now) / 60000)
+              console.warn(
+                `[v0] Rate limit cooldown active. Waiting ${remainingMinutes} more minutes. NO AUTH CALLS.`,
+              )
+              clearSupabaseCookies()
+              setSession(null)
+              setUser(null)
+              setProfile(null)
+              setIsLoading(false)
+              return
+            } else {
+              sessionStorage.removeItem("rate_limit_cooldown")
+              document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+            }
+          }
+        }
+
+        // Check for cookies but DON'T call getSession() - that triggers auth calls
+        // Just set loading to false and let explicit login handle auth
+        if (typeof document !== "undefined") {
+          const hasCookies = document.cookie.includes("sb-")
+          if (!hasCookies) {
+            console.log("[v0] No Supabase cookies, no auth calls needed")
+            setSession(null)
+            setUser(null)
+            setProfile(null)
+            setIsLoading(false)
+            return
+          }
+        }
+
+        // If we have cookies but are in cooldown or have stale cookies,
+        // DON'T call getSession() - it will trigger rate limits
+        // Just clear cookies and wait for explicit login
+        console.log("[v0] Cookies present but NOT calling getSession() to avoid rate limits")
+        console.log("[v0] Auth will only be checked on explicit login")
+        clearSupabaseCookies() // Clear stale cookies to prevent any automatic refresh
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setIsLoading(false)
+      } catch (error: any) {
+        console.error("[v0] Auth init error:", error.message)
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setIsLoading(false)
+      }
+    }
+
     initializeAuth()
 
     // CRITICAL: Completely disable onAuthStateChange listener
