@@ -45,11 +45,15 @@ export default function SignInPage() {
 
         if (adminLoginRes.ok) {
           const adminData = await adminLoginRes.json()
-          console.log("[v0] Admin login successful via API")
-          // Reload page to pick up new session cookies
-          window.location.href = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard") 
-            ? "/auth/callback-admin" 
-            : (returnTo || "/")
+          console.log("[v0] Admin login successful via API, waiting for cookies...")
+          // Wait for cookies to be set, then reload
+          setTimeout(() => {
+            const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard") 
+              ? "/auth/callback-admin" 
+              : (returnTo || "/")
+            console.log("[v0] Admin login redirecting to:", redirectUrl)
+            window.location.href = redirectUrl
+          }, 1000)
           return
         } else {
           const adminError = await adminLoginRes.json()
@@ -68,16 +72,17 @@ export default function SignInPage() {
       setError(result.error.message || "Invalid email or password. Please try again.")
       setLoading(false)
     } else {
-      console.log("[v0] Sign in successful, waiting for session to be set...")
-      // Wait a moment for session to be set in auth context, then force full page reload
-      // This ensures cookies are picked up properly
+      console.log("[v0] Sign in successful, waiting for session to be fully set...")
+      // Wait longer for session cookies to be fully set by Supabase
+      // Then force full page reload to ensure cookies are picked up
       setTimeout(() => {
         const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
           ? "/auth/callback-admin"
           : (returnTo || "/")
-        console.log("[v0] Redirecting to:", redirectUrl)
+        console.log("[v0] Redirecting to:", redirectUrl, "- cookies should be set now")
+        // Force full page reload to pick up session cookies
         window.location.href = redirectUrl
-      }, 500)
+      }, 1000)
     }
   }
 
