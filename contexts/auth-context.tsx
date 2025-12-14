@@ -216,8 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Check for cookies but DON'T call getSession() - that triggers auth calls
-        // Just set loading to false and let explicit login handle auth
+        // If we have cookies, try to get the session (but only once on mount)
+        // This is necessary to restore session after login/refresh
         if (typeof document !== "undefined") {
           const hasCookies = document.cookie.includes("sb-")
           if (!hasCookies) {
@@ -230,16 +230,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // If we have cookies but are in cooldown or have stale cookies,
-        // DON'T call getSession() - it will trigger rate limits
-        // Just clear cookies and wait for explicit login
-        console.log("[v0] Cookies present but NOT calling getSession() to avoid rate limits")
-        console.log("[v0] Auth will only be checked on explicit login")
-        clearSupabaseCookies() // Clear stale cookies to prevent any automatic refresh
-        setSession(null)
-        setUser(null)
-        setProfile(null)
-        setIsLoading(false)
+        // We have cookies - try to get the session ONCE on mount
+        // This is safe because it's only called once, not repeatedly
+        console.log("[v0] Cookies present, checking session ONCE on mount")
+        const getSessionOnce = async () => {
+          try {
+            const { data: { session }, error } = await supabase.auth.getSession()
+            if (error) {
+              console.warn("[v0] getSession error (non-fatal):", error.message)
+              setSession(null)
+              setUser(null)
+              setProfile(null)
+            } else if (session) {
+              console.log("[v0] Session found on mount:", session.user.email)
+              setSession(session)
+              setUser(session.user)
+              if (session.user) {
+                fetchUserProfile(session.user.id).then(setProfile)
+              }
+            } else {
+              console.log("[v0] No session found in cookies")
+              setSession(null)
+              setUser(null)
+              setProfile(null)
+            }
+          } catch (err: any) {
+            console.error("[v0] getSession exception:", err.message)
+            setSession(null)
+            setUser(null)
+            setProfile(null)
+          } finally {
+            setIsLoading(false)
+          }
+        }
+        
+        getSessionOnce()
+        return // Don't set loading to false here - getSessionOnce will do it
       } catch (error: any) {
         console.error("[v0] Auth init error:", error.message)
         setSession(null)
