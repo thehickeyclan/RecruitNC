@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -45,8 +46,16 @@ export function AdminHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-8">
-            <Link href="/admin" className="text-xl font-bold text-gray-900">
-              NC Wrestling Admin
+            <Link href="https://www.ncwrestlingunited.com" className="flex items-center space-x-2">
+              <Image
+                src="/nc-united-main-logo.png"
+                alt="NC United"
+                width={32}
+                height={32}
+                className="h-8 w-auto"
+                priority
+              />
+              <span className="text-xl font-bold text-gray-900">NC Wrestling Admin</span>
             </Link>
 
             <nav className="hidden md:flex space-x-6">

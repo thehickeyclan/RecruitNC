@@ -33,7 +33,7 @@ export function SimpleNavbar() {
     <nav className="border-b bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="https://www.ncwrestlingunited.com" className="flex items-center space-x-2">
             <Image src="/nc-united-main-logo.png" alt="NC Recruiting Portal" width={40} height={40} priority />
             <span className="text-xl font-bold text-gray-900">NC Recruiting Portal</span>
           </Link>
