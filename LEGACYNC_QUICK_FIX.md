@@ -65,5 +65,48 @@ After changes:
 
 ---
 
-**See `LEGACYNC_FIX_GUIDE.md` for complete details.**
+---
+
+## ⚠️ Server-Side Rate Limiting
+
+Even after fixing client-side issues, **Supabase's servers may still rate limit**. This requires retry logic with exponential backoff.
+
+### Quick Retry Fix
+
+Add this to your admin login API:
+
+```typescript
+async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      const isRateLimit = 
+        error?.message?.includes("rate limit") ||
+        error?.status === 429
+      
+      if (isRateLimit && attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt) // 1s, 2s, 4s
+        await new Promise(resolve => setTimeout(resolve, delay))
+        continue
+      }
+      throw error
+    }
+  }
+}
+
+// Use it:
+const authData = await retryWithBackoff(async () => {
+  const { data, error } = await adminClient.auth.signInWithPassword({ email, password })
+  if (error && (error.message?.includes("rate limit") || error.status === 429)) {
+    const rateLimitError = new Error(error.message)
+    rateLimitError.status = 429
+    throw rateLimitError
+  }
+  if (error) throw error
+  return data
+}, 3, 1000)
+```
+
+**See `LEGACYNC_FIX_GUIDE.md` for complete details and full code examples.**
 
