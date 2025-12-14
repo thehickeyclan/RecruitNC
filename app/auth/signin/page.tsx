@@ -68,12 +68,16 @@ export default function SignInPage() {
       setError(result.error.message || "Invalid email or password. Please try again.")
       setLoading(false)
     } else {
-      console.log("[v0] Sign in successful, redirecting to:", returnTo || "/")
-      if (returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")) {
-        router.replace("/auth/callback-admin")
-      } else {
-        router.replace(returnTo || "/")
-      }
+      console.log("[v0] Sign in successful, waiting for session to be set...")
+      // Wait a moment for session to be set in auth context, then force full page reload
+      // This ensures cookies are picked up properly
+      setTimeout(() => {
+        const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
+          ? "/auth/callback-admin"
+          : (returnTo || "/")
+        console.log("[v0] Redirecting to:", redirectUrl)
+        window.location.href = redirectUrl
+      }, 500)
     }
   }
 

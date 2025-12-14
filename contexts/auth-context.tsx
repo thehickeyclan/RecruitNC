@@ -311,6 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // After successful login, NOW we can safely get the session
       if (!res.error && res.data?.session) {
+        console.log("[v0] Login successful, setting session in context")
         setSession(res.data.session)
         setUser(res.data.user)
         if (res.data.user) {
@@ -323,10 +324,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
           console.log("[v0] Successful login - cooldown cleared")
         }
-      }
-
-      if (!res.error) {
-        console.log("[v0] Sign in successful")
+        
+        // Verify session is actually set in Supabase client
+        const { data: { session: verifySession } } = await supabase.auth.getSession()
+        if (verifySession) {
+          console.log("[v0] Session verified in Supabase client")
+        } else {
+          console.warn("[v0] WARNING: Session not found in Supabase client after login")
+        }
+      } else if (res.error) {
+        console.error("[v0] Sign in error:", res.error)
       }
 
       // Return the result - let the sign-in page handle rate limits
