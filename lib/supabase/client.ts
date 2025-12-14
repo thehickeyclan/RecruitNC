@@ -2,15 +2,33 @@
 
 import { createBrowserClient } from "@supabase/ssr"
 
+/**
+ * ⚠️ LOCKED CONFIGURATION - DO NOT MODIFY ⚠️
+ * 
+ * This configuration prevents Supabase rate limiting issues.
+ * Changing autoRefreshToken to true will cause users to be locked out.
+ * 
+ * See AUTH_CONFIG_LOCKED.md for full documentation.
+ */
 export function createClient() {
-  // CRITICAL: Disable auto-refresh to prevent automatic token refresh attempts
-  // This was causing rate limits - Supabase was trying to refresh tokens automatically
+  // ⚠️ CRITICAL: autoRefreshToken MUST be false
+  // When true, Supabase automatically refreshes tokens on every request,
+  // causing rate limits even when users aren't actively logging in.
+  // This was the root cause of the 2-day lockout issue.
+  const AUTO_REFRESH_TOKEN = false // ⚠️ DO NOT CHANGE - LOCKED CONFIG
+  
+  // Validate critical setting at runtime
+  if (AUTO_REFRESH_TOKEN !== false) {
+    console.error("🚨 CRITICAL ERROR: autoRefreshToken must be false to prevent rate limits!")
+    throw new Error("Invalid auth configuration - autoRefreshToken must be false")
+  }
+  
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        autoRefreshToken: false, // DISABLE auto-refresh - this was the root cause
+        autoRefreshToken: AUTO_REFRESH_TOKEN, // ⚠️ LOCKED - DO NOT CHANGE
         persistSession: true,
         detectSessionInUrl: false,
       },

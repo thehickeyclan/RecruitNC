@@ -1,6 +1,14 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+/**
+ * ⚠️ LOCKED MIDDLEWARE CONFIGURATION - DO NOT MODIFY ⚠️
+ * 
+ * This middleware MUST NOT call getUser() or getSession().
+ * Making auth calls here causes rate limits on every request.
+ * 
+ * See AUTH_CONFIG_LOCKED.md for full documentation.
+ */
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -64,10 +72,15 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // CRITICAL FIX: Don't make ANY auth calls in middleware
-  // Even calling getUser() with stale cookies triggers refresh attempts
+  // ⚠️ CRITICAL: DO NOT MAKE ANY AUTH CALLS IN MIDDLEWARE
+  // Even calling getUser() or getSession() with stale cookies triggers refresh attempts
+  // This was causing rate limits on EVERY request, including static assets
   // Let the client-side handle auth checks - middleware should only pass through
-  // This completely eliminates automatic auth calls from middleware
+  
+  // ⚠️ DO NOT UNCOMMENT OR ADD THESE LINES:
+  // const supabase = createServerClient(...)
+  // const { data: { user } } = await supabase.auth.getUser()  // ❌ NEVER DO THIS
+  // const { data: { session } } = await supabase.auth.getSession()  // ❌ NEVER DO THIS
   
   // Just clear stale cookies if in cooldown, but don't make auth calls
   const hasSupabaseCookies = request.cookies.getAll().some(c => c.name.startsWith('sb-'))
@@ -78,6 +91,7 @@ export async function middleware(request: NextRequest) {
   }
   
   // Return immediately - NO auth calls in middleware at all
+  // This completely eliminates automatic auth calls from middleware
 
   return supabaseResponse
 }

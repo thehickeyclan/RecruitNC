@@ -277,9 +277,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth()
 
-    // CRITICAL: Completely disable onAuthStateChange listener
+    // ⚠️ CRITICAL: DO NOT ENABLE onAuthStateChange listener
     // This listener triggers automatic auth calls even when user isn't logging in
-    // It's the root cause of rate limits - disable it completely
+    // It was the root cause of rate limits - MUST remain disabled
+    // 
+    // ⚠️ DO NOT UNCOMMENT OR ADD:
+    // const { data: { subscription } } = supabase.auth.onAuthStateChange(...)  // ❌ NEVER DO THIS
+    //
+    // See AUTH_CONFIG_LOCKED.md for full documentation
     console.log("[v0] NOT setting up onAuthStateChange - it causes automatic auth calls")
     const { data: { subscription } } = { data: { subscription: null } }
 

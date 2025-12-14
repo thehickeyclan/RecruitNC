@@ -1,0 +1,7 @@
+# Lock critical auth configuration files
+AUTH_CONFIG_LOCKED.md linguist-documentation
+lib/supabase/client.ts linguist-language=TypeScript
+lib/supabase/server.ts linguist-language=TypeScript
+middleware.ts linguist-language=TypeScript
+contexts/auth-context.tsx linguist-language=TypeScript
+
