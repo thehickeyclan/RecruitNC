@@ -27,7 +27,8 @@ import {
   ArrowUp,
   ArrowDown,
   TrendingUp,
-  Activity
+  Activity,
+  Download
 } from "lucide-react"
 import { 
   LineChart, 
@@ -239,6 +240,41 @@ export default function UsersDashboardPage() {
       toast({
         title: "Error",
         description: e?.message || "Failed to update approval",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleExportCSV = async () => {
+    try {
+      const res = await fetch("/api/admin/users/export-csv", {
+        method: "GET",
+        credentials: "include"
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to export" }))
+        throw new Error(errorData.error || "Failed to export users")
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Success",
+        description: "Users exported successfully"
+      })
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to export users",
         variant: "destructive"
       })
     }
@@ -501,9 +537,15 @@ export default function UsersDashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-        <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign schools</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+          <p className="text-gray-600 mt-1">Manage user profiles, approve coaches, and assign schools</p>
+        </div>
+        <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Stats Cards */}

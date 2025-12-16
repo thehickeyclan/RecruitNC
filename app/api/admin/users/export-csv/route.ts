@@ -18,9 +18,9 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
     }
 
-    console.log("[v0] Fetching user profiles... (cached auth:", authCheck.user?.email, ")")
+    console.log("[Export CSV] Fetching user profiles for export... (cached auth:", authCheck.user?.email, ")")
 
-    console.log("[v0] Admin verified, fetching all users with service role...")
+    console.log("[Export CSV] Admin verified, fetching all users with service role...")
 
     const supabaseAdmin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,7 +46,7 @@ export async function GET() {
       })
 
       if (authError) {
-        console.error("[v0] Error fetching auth users:", authError)
+        console.error("[Export CSV] Error fetching auth users:", authError)
         return NextResponse.json(
           {
             error: "Failed to fetch users",
@@ -58,7 +58,7 @@ export async function GET() {
 
       if (authUsers.users && authUsers.users.length > 0) {
         allAuthUsers.push(...authUsers.users)
-        console.log(`[v0] Fetched page ${page}: ${authUsers.users.length} users`)
+        console.log(`[Export CSV] Fetched page ${page}: ${authUsers.users.length} users`)
         
         // Check if there are more pages
         if (authUsers.users.length < perPage) {
@@ -71,69 +71,62 @@ export async function GET() {
       }
     }
 
-    console.log(`[v0] Total auth users fetched: ${allAuthUsers.length}`)
+    console.log(`[Export CSV] Total auth users fetched: ${allAuthUsers.length}`)
 
     const { data: userProfiles, error: profileError } = await supabaseAdmin
       .from("user_profiles")
       .select(`
         user_id, 
-        full_name, 
-        role, 
-        profile_type, 
-        cell_phone, 
-        is_admin,
-        verified_coach,
-        verification_status,
-        school_id,
-        schools:school_id (
-          name
-        )
+        cell_phone
       `)
 
     if (profileError) {
-      console.error("[v0] Error fetching user profiles:", profileError)
+      console.error("[Export CSV] Error fetching user profiles:", profileError)
     }
 
     // Create a map of user profiles for quick lookup
     const profileMap = new Map(userProfiles?.map((p) => [p.user_id, p]) || [])
 
     // Combine auth users with profile data
-    const combinedProfiles = allAuthUsers.map((user) => {
+    const combinedData = allAuthUsers.map((user) => {
       const profile = profileMap.get(user.id)
       return {
-        user_id: user.id,
         email: user.email || "",
-        name: profile?.full_name || user.email?.split("@")[0] || "Unknown",
-        full_name: profile?.full_name || user.email?.split("@")[0] || "Unknown",
-        role: profile?.role || profile?.profile_type || "fan",
-        cell_phone: profile?.cell_phone || null,
-        is_admin: profile?.is_admin || false,
-        verified_coach: profile?.verified_coach || false,
-        verification_status: profile?.verification_status || null,
-        school_id: profile?.school_id || null,
-        school_name: profile?.schools?.name || null,
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at || null,
+        cell_phone: profile?.cell_phone || "",
       }
     })
 
-    console.log(`[v0] Successfully fetched ${combinedProfiles.length} user profiles`)
-    console.log(`[v0] Sample profile:`, combinedProfiles[0])
+    // Generate CSV
+    const headers = ["Email", "Cell Phone"]
+    const csvRows = [
+      headers.join(","),
+      ...combinedData.map(row => 
+        [
+          `"${(row.email || "").replace(/"/g, '""')}"`,
+          `"${(row.cell_phone || "").replace(/"/g, '""')}"`
+        ].join(",")
+      )
+    ]
 
-    return NextResponse.json({
-      success: true,
-      profiles: combinedProfiles,
-      count: combinedProfiles.length,
+    const csv = csvRows.join("\n")
+
+    // Return CSV file
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv",
+        "Content-Disposition": `attachment; filename="users-export-${new Date().toISOString().split('T')[0]}.csv"`,
+      },
     })
   } catch (error: any) {
-    console.error("[v0] Exception in profiles API:", error)
+    console.error("[Export CSV] Exception:", error)
     return NextResponse.json(
       {
         error: "Internal server error",
         message: error.message,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 },
     )
   }
 }
+

@@ -96,7 +96,7 @@ const clearSupabaseCookies = () => {
           const sameSitePart = sameSite ? `; SameSite=${sameSite}` : ""
           document.cookie = `${name}=;${domainPart}${pathPart}${sameSitePart}; Secure; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
           document.cookie = `${name}=;${domainPart}${pathPart}${sameSitePart}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT`
-        })
+  })
       })
     })
   })
@@ -238,16 +238,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const { data: { session }, error } = await supabase.auth.getSession()
             if (error) {
               console.warn("[v0] getSession error (non-fatal):", error.message)
-              setSession(null)
-              setUser(null)
-              setProfile(null)
+          setSession(null)
+          setUser(null)
+          setProfile(null)
             } else if (session) {
               console.log("[v0] Session found on mount:", session.user.email)
-              setSession(session)
+        setSession(session)
               setUser(session.user)
               if (session.user) {
-                fetchUserProfile(session.user.id).then(setProfile)
-              }
+          fetchUserProfile(session.user.id).then(setProfile)
+        }
             } else {
               console.log("[v0] No session found in cookies")
               setSession(null)
@@ -260,7 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null)
             setProfile(null)
           } finally {
-            setIsLoading(false)
+        setIsLoading(false)
           }
         }
         
@@ -290,7 +290,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       if (subscription) {
-        subscription.unsubscribe()
+      subscription.unsubscribe()
       }
     }
   }, [supabase])
@@ -313,7 +313,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // This is the ONLY place we make auth calls - explicit user login
       const res = await supabase.auth.signInWithPassword({ email, password })
-      
+
       // After successful login, NOW we can safely get the session
       if (!res.error && res.data?.session) {
         console.log("[v0] Login successful, setting session in context")

@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Users, Shield, ShieldCheck, AlertCircle, Database, Settings, Loader2, RefreshCw } from "lucide-react"
+import { Users, Shield, ShieldCheck, AlertCircle, Database, Settings, Loader2, RefreshCw, Download } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 
 interface User {
   id: number
@@ -28,6 +29,7 @@ interface User {
 
 export default function UsersPage() {
   const { user: currentUser, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -160,6 +162,41 @@ export default function UsersPage() {
     }
   }
 
+  const handleExportCSV = async () => {
+    try {
+      const res = await fetch("/api/admin/users/export-csv", {
+        method: "GET",
+        credentials: "include"
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: "Failed to export" }))
+        throw new Error(errorData.error || "Failed to export users")
+      }
+
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Success",
+        description: "Users exported successfully"
+      })
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to export users",
+        variant: "destructive"
+      })
+    }
+  }
+
   const filteredUsers = users.filter(
     (user) =>
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -274,13 +311,21 @@ export default function UsersPage() {
     <div className="container mx-auto py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            User Management ({filteredUsers.length} users)
-          </CardTitle>
-          <CardDescription>
-            Manage user accounts, roles, and permissions. Currently logged in as: {currentUser?.email}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-6 w-6" />
+                User Management ({filteredUsers.length} users)
+              </CardTitle>
+              <CardDescription>
+                Manage user accounts, roles, and permissions. Currently logged in as: {currentUser?.email}
+              </CardDescription>
+            </div>
+            <Button onClick={handleExportCSV} variant="outline" className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {error && (

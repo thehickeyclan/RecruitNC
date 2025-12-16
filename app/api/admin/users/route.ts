@@ -1,32 +1,23 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { isRateLimited } from "@/lib/rate-limit-check"
+import { getCachedAdminCheck } from "@/lib/cached-auth-check"
 
 export async function GET(request: Request) {
   try {
-    // CRITICAL: Check rate limit cooldown BEFORE any auth calls
-    if (await isRateLimited()) {
-      console.warn("[Admin Users API] Rate limit cooldown active, skipping auth check")
-      return NextResponse.json({ 
-        error: "Rate limit cooldown active. Please wait 10 minutes.",
-        users: []
-      }, { status: 429 })
+    // Use cached auth check to reduce Supabase API calls
+    const authCheck = await getCachedAdminCheck()
+    
+    if (authCheck.response) {
+      return authCheck.response
     }
+
+    if (!authCheck.isAdmin) {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 })
+    }
+
+    console.log("Authenticated user:", authCheck.user?.email, "(cached auth check)")
 
     const supabase = await createClient()
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      console.log("Authentication failed:", userError?.message)
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-    }
-
-    console.log("Authenticated user:", user.email)
 
     // First check if the user_profiles table exists by trying to query it
     const { data: testQuery, error: tableError } = await supabase
@@ -46,20 +37,6 @@ export async function GET(request: Request) {
         { status: 200 }, // Return 200 with empty array instead of 404
       )
     }
-
-    // Check if user profile exists and get admin status
-    const { data: userProfile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("is_admin, full_name, email")
-      .eq("user_id", user.id)
-      .single()
-
-    if (profileError) {
-      console.log("User profile not found:", profileError.message)
-      return NextResponse.json({ error: "User profile not found" }, { status: 403 })
-    }
-
-    console.log("User profile found:", userProfile)
 
     const { searchParams } = new URL(request.url)
     const signedUpToday = searchParams.get("signedUpToday") === "true"
