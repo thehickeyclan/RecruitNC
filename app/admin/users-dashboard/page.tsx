@@ -366,6 +366,56 @@ export default function UsersDashboardPage() {
     }).length
   }), [profiles])
 
+  // Cumulative user growth over time
+  const cumulativeGrowthData = useMemo(() => {
+    if (!profiles.length) return []
+
+    const countsByDay: { [key: string]: number } = {}
+    let earliestDate: Date | null = null
+    const now = new Date()
+
+    profiles.forEach(p => {
+      const created = new Date(p.created_at)
+      // Ignore obviously bad dates
+      if (Number.isNaN(created.getTime()) || created > now) return
+
+      const day = new Date(created.toISOString().split("T")[0])
+      const dateKey = day.toISOString().split("T")[0]
+      countsByDay[dateKey] = (countsByDay[dateKey] || 0) + 1
+
+      if (!earliestDate || day < earliestDate) {
+        earliestDate = day
+      }
+    })
+
+    if (!earliestDate) return []
+
+    // Limit to the last 365 days to keep the chart readable
+    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+    if (earliestDate < oneYearAgo) {
+      earliestDate = oneYearAgo
+    }
+
+    const data: { date: string; totalUsers: number }[] = []
+    let runningTotal = 0
+    const cursor = new Date(earliestDate)
+
+    while (cursor <= now) {
+      const dateKey = cursor.toISOString().split("T")[0]
+      runningTotal += countsByDay[dateKey] || 0
+
+      data.push({
+        date: cursor.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" }),
+        totalUsers: runningTotal,
+      })
+
+      // Move to next day
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return data
+  }, [profiles])
+
   // Activity charts data
   const activityData = useMemo(() => {
     const now = new Date()
@@ -657,6 +707,41 @@ export default function UsersDashboardPage() {
                 <Tooltip />
                 <Bar dataKey="users" fill="#8B5CF6" name="Active Users" />
               </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Cumulative User Growth */}
+      <div className="mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              Cumulative User Growth
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={cumulativeGrowthData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="totalUsers"
+                  stroke="#22C55E"
+                  strokeWidth={2}
+                  name="Total Users"
+                />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
