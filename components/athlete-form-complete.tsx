@@ -257,19 +257,34 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
                       <SelectItem value="197">197 lbs (College)</SelectItem>
                       <SelectItem value="285">285 lbs (College)</SelectItem>
 
-                      <SelectItem value="women-header" disabled className="font-bold mt-2">
-                        Women's Weight Classes
+                      <SelectItem value="women-hs-header" disabled className="font-bold mt-2">
+                        Women's High School
                       </SelectItem>
-                      <SelectItem value="101">101 lbs</SelectItem>
-                      <SelectItem value="109">109 lbs</SelectItem>
-                      <SelectItem value="116">116 lbs</SelectItem>
-                      <SelectItem value="123">123 lbs</SelectItem>
+                      <SelectItem value="100">100 lbs</SelectItem>
+                      <SelectItem value="105">105 lbs</SelectItem>
+                      <SelectItem value="110">110 lbs</SelectItem>
+                      <SelectItem value="115">115 lbs</SelectItem>
+                      <SelectItem value="120">120 lbs</SelectItem>
+                      <SelectItem value="125">125 lbs</SelectItem>
                       <SelectItem value="130">130 lbs</SelectItem>
-                      <SelectItem value="136">136 lbs</SelectItem>
-                      <SelectItem value="143">143 lbs</SelectItem>
-                      <SelectItem value="155">155 lbs</SelectItem>
-                      <SelectItem value="170">170 lbs</SelectItem>
-                      <SelectItem value="191">191 lbs</SelectItem>
+                      <SelectItem value="135">135 lbs</SelectItem>
+                      <SelectItem value="140">140 lbs</SelectItem>
+                      <SelectItem value="145">145 lbs</SelectItem>
+                      <SelectItem value="160">160 lbs</SelectItem>
+                      <SelectItem value="235">235 lbs</SelectItem>
+                      <SelectItem value="women-college-header" disabled className="font-bold mt-2">
+                        Women's College
+                      </SelectItem>
+                      <SelectItem value="103">103 lbs (College)</SelectItem>
+                      <SelectItem value="110">110 lbs (College)</SelectItem>
+                      <SelectItem value="117">117 lbs (College)</SelectItem>
+                      <SelectItem value="124">124 lbs (College)</SelectItem>
+                      <SelectItem value="131">131 lbs (College)</SelectItem>
+                      <SelectItem value="138">138 lbs (College)</SelectItem>
+                      <SelectItem value="145">145 lbs (College)</SelectItem>
+                      <SelectItem value="160">160 lbs (College)</SelectItem>
+                      <SelectItem value="180">180 lbs (College)</SelectItem>
+                      <SelectItem value="207">207 lbs (College)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
