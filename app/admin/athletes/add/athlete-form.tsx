@@ -44,7 +44,7 @@ export default function AthleteForm() {
 
   const getMensCollegeWeightClasses = () => ["125", "133", "141", "149", "157", "165", "174", "184", "197", "285"]
 
-  const getWomensHSWeightClasses = () => ["100", "105", "110", "115", "120", "125", "130", "135", "140", "145", "160", "235"]
+  const getWomensHSWeightClasses = () => ["100", "107", "114", "120", "126", "132", "138", "145", "152", "165", "185", "235"]
   
   const getWomensCollegeWeightClasses = () => ["103", "110", "117", "124", "131", "138", "145", "160", "180", "207"]
 

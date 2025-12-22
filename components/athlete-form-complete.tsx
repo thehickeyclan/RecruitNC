@@ -261,16 +261,16 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
                         Women's High School
                       </SelectItem>
                       <SelectItem value="100">100 lbs</SelectItem>
-                      <SelectItem value="105">105 lbs</SelectItem>
-                      <SelectItem value="110">110 lbs</SelectItem>
-                      <SelectItem value="115">115 lbs</SelectItem>
+                      <SelectItem value="107">107 lbs</SelectItem>
+                      <SelectItem value="114">114 lbs</SelectItem>
                       <SelectItem value="120">120 lbs</SelectItem>
-                      <SelectItem value="125">125 lbs</SelectItem>
-                      <SelectItem value="130">130 lbs</SelectItem>
-                      <SelectItem value="135">135 lbs</SelectItem>
-                      <SelectItem value="140">140 lbs</SelectItem>
+                      <SelectItem value="126">126 lbs</SelectItem>
+                      <SelectItem value="132">132 lbs</SelectItem>
+                      <SelectItem value="138">138 lbs</SelectItem>
                       <SelectItem value="145">145 lbs</SelectItem>
-                      <SelectItem value="160">160 lbs</SelectItem>
+                      <SelectItem value="152">152 lbs</SelectItem>
+                      <SelectItem value="165">165 lbs</SelectItem>
+                      <SelectItem value="185">185 lbs</SelectItem>
                       <SelectItem value="235">235 lbs</SelectItem>
                       <SelectItem value="women-college-header" disabled className="font-bold mt-2">
                         Women's College
