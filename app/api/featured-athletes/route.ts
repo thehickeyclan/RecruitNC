@@ -34,9 +34,158 @@ export async function GET(request: Request) {
     const yearParam = searchParams.get("year")
     const targetYear = yearParam ? Number.parseInt(yearParam) : 2026
 
+    if (targetYear === 2025) {
+      console.log("🔍 Featured Athletes API: Fetching specific 2025 athletes (Liam Hickey, Anna Ockerman, Colt Campbell)")
+
+      // For 2025, skip recent commitments and go straight to specific athletes
+      const specificNamesResult = await safeSupabaseQuery(
+        () =>
+          supabase
+            .from("athletes")
+            .select("*")
+            .eq("graduationyear", 2025)
+            .in("name", ["Liam Hickey", "Colt Campbell", "Anna Ockerman"])
+            .order("name", { ascending: true }),
+        "Featured Athletes API - Specific 2025 Athletes",
+      )
+
+      if (specificNamesResult.success && specificNamesResult.data && specificNamesResult.data.length > 0) {
+        const athletes = specificNamesResult.data
+        console.log(`✅ Featured Athletes API: Found ${athletes.length} specific 2025 athletes`)
+
+        const mappedAthletes = athletes.map((athlete) => ({
+          id: athlete.id?.toString() || "",
+          name: athlete.name || "Unknown",
+          highschool: athlete.highschool || "Unknown High School",
+          college: athlete.college || "Unknown College",
+          division: athlete.division || "Unknown Division",
+          graduationyear: athlete.graduationyear || 2025,
+          photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
+          weightclass: athlete.weightclass || "Unknown",
+          college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
+          projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
+          hs_weight_class: athlete.weightclass || "Unknown",
+          wrestlingclub: athlete.wrestlingClub || "",
+          club: athlete.wrestlingClub || "",
+          wrestlingClub: athlete.wrestlingClub || "",
+          achievements: Array.isArray(athlete.achievements)
+            ? athlete.achievements
+            : typeof athlete.achievements === "string"
+              ? athlete.achievements
+                  .split(",")
+                  .map((a) => a.trim())
+                  .filter(Boolean)
+              : [],
+          team: athlete.team || "",
+          gender: athlete.gender || "Male",
+          commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
+        }))
+
+        // Ensure we have all 3 athletes, fill with fallbacks if needed
+        const athleteNames = mappedAthletes.map(a => a.name.toLowerCase())
+        const requiredNames = ["liam hickey", "anna ockerman", "colt campbell"]
+        const missingNames = requiredNames.filter(name => !athleteNames.includes(name))
+        
+        if (missingNames.length > 0) {
+          console.log(`⚠️ Featured Athletes API: Missing athletes: ${missingNames.join(", ")}`)
+        }
+
+        // Return the mapped athletes (up to 3)
+        return NextResponse.json(
+          {
+            success: true,
+            athletes: mappedAthletes.slice(0, 3),
+          },
+          {
+            headers: {
+              "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+              "CDN-Cache-Control": "public, s-maxage=60",
+              "Vercel-CDN-Cache-Control": "public, s-maxage=60",
+            },
+          },
+        )
+      }
+      // If we didn't find them in the database, fall back to hardcoded data
+      console.log("⚠️ Featured Athletes API: No specific 2025 athletes found in DB, using hardcoded fallbacks")
+
+      const fallback2025Athletes = [
+        {
+          id: "liam-hickey-fallback",
+          name: "Liam Hickey",
+          highschool: "Cardinal Gibbons",
+          college: "UNC Chapel Hill",
+          division: "NCAA Division I",
+          graduationyear: 2025,
+          photourl: "/wrestler-liam-hickey.png",
+          weightclass: "165",
+          college_weight_class: "165",
+          projected_weight: "165",
+          hs_weight_class: "165",
+          wrestlingclub: "NC United",
+          club: "NC United",
+          wrestlingClub: "NC United",
+          achievements: ["State Champion", "NHSCA All-American"],
+          team: "",
+          gender: "Male",
+        },
+        {
+          id: "anna-ockerman-fallback",
+          name: "Anna Ockerman",
+          highschool: "Laney High School",
+          college: "Appalachian State",
+          division: "NCAA Division I",
+          graduationyear: 2025,
+          photourl: "/wrestler-anna-ockerman.png",
+          weightclass: "120",
+          college_weight_class: "120",
+          projected_weight: "120",
+          hs_weight_class: "120",
+          wrestlingclub: "NC United",
+          club: "NC United",
+          wrestlingClub: "NC United",
+          achievements: ["State Champion", "National Placer"],
+          team: "",
+          gender: "Female",
+        },
+        {
+          id: "colt-campbell-fallback",
+          name: "Colt Campbell",
+          highschool: "Hough High School",
+          college: "Campbell University",
+          division: "NCAA Division I",
+          graduationyear: 2025,
+          photourl: "/wrestler-Colt-Campbell.png",
+          weightclass: "165",
+          college_weight_class: "165",
+          projected_weight: "165",
+          hs_weight_class: "165",
+          wrestlingclub: "NC United",
+          club: "NC United",
+          wrestlingClub: "NC United",
+          achievements: ["State Placer", "Regional Champion"],
+          team: "",
+          gender: "Male",
+        },
+      ]
+
+      return NextResponse.json(
+        {
+          success: true,
+          athletes: fallback2025Athletes,
+        },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+            "CDN-Cache-Control": "public, s-maxage=60",
+            "Vercel-CDN-Cache-Control": "public, s-maxage=60",
+          },
+        },
+      )
+    }
+
     console.log(`🔍 Featured Athletes API: Starting fetch for year ${targetYear}`)
 
-    // First attempt: latest commitments across all classes
+    // For 2026+ first attempt: latest commitments across all classes
     // Use updated_at as fallback when commitment_date is not set
     const recentCommitmentsResult = await safeSupabaseQuery(
       () =>
@@ -103,72 +252,6 @@ export async function GET(request: Request) {
           {
             success: true,
             athletes: recentCommitmentAthletes.slice(0, 3),
-          },
-          {
-            headers: {
-              "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
-              "CDN-Cache-Control": "public, s-maxage=60",
-              "Vercel-CDN-Cache-Control": "public, s-maxage=60",
-            },
-          },
-        )
-      }
-    }
-
-    if (targetYear === 2025) {
-      console.log("🔍 Featured Athletes API: Fetching specific 2025 athletes")
-
-      const specificNamesResult = await safeSupabaseQuery(
-        () =>
-          supabase
-            .from("athletes")
-            .select("*")
-            .eq("graduationyear", 2025)
-            .in("name", ["Liam Hickey", "Colt Campbell", "Anna Ockerman"])
-            .order("name", { ascending: true }),
-        "Featured Athletes API - Specific 2025 Athletes",
-      )
-
-      if (specificNamesResult.success && specificNamesResult.data && specificNamesResult.data.length > 0) {
-        const athletes = specificNamesResult.data
-        console.log(`✅ Featured Athletes API: Found ${athletes.length} specific 2025 athletes`)
-
-        const mappedAthletes = athletes.map((athlete) => ({
-          id: athlete.id?.toString() || "",
-          name: athlete.name || "Unknown",
-          highschool: athlete.highschool || "Unknown High School",
-          college: athlete.college || "Unknown College",
-          division: athlete.division || "Unknown Division",
-          graduationyear: athlete.graduationyear || 2025,
-          photourl: athlete.photourl || "/wrestler-silhouette.png",
-          weightclass: athlete.weightclass || "Unknown",
-        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
-        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
-          hs_weight_class: athlete.weightclass || "Unknown",
-          wrestlingclub: athlete.wrestlingClub || "",
-          club: athlete.wrestlingClub || "",
-          wrestlingClub: athlete.wrestlingClub || "",
-          achievements: Array.isArray(athlete.achievements)
-            ? athlete.achievements
-            : typeof athlete.achievements === "string"
-              ? athlete.achievements
-                  .split(",")
-                  .map((a) => a.trim())
-                  .filter(Boolean)
-              : [],
-          team: athlete.team || "",
-          gender: athlete.gender || "Male",
-        }))
-
-        // Prioritize recent commitments over specific athletes for 2025
-        const finalAthletes2025 = recentCommitmentAthletes.length > 0 
-          ? recentCommitmentAthletes 
-          : mappedAthletes
-
-        return NextResponse.json(
-          {
-            success: true,
-            athletes: finalAthletes2025.slice(0, 3),
           },
           {
             headers: {

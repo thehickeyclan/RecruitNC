@@ -459,194 +459,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Overview - Moved to appear after Features */}
-      <section className="mb-12">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
-            Commitment Statistics
-          </h2>
-
-          <div className="flex flex-wrap gap-2">
-            {(["All", "2025", "2026"] as YearFilter[]).map((year) => (
-              <Button
-                key={year}
-                variant={yearFilter === year ? "default" : "outline"}
-                size="sm"
-                onClick={() => setYearFilter(year)}
-                className="text-xs sm:text-sm"
-                style={{
-                  backgroundColor: yearFilter === year ? "#002147" : "transparent",
-                  borderColor: "#002147",
-                  color: yearFilter === year ? "white" : "#002147",
-                }}
-              >
-                {year === "All" ? "All Years" : `Class of ${year}`}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading statistics...</p>
-          </div>
-        ) : (
-          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
-            {/* Total Commitments Card */}
-            <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
-              <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
-              <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
-                  Total Commitments
-                </h3>
-                <p className="text-xs mb-2" style={{ color: "#002147", opacity: 0.7 }}>
-                  Tracking Class of 2025 and beyond
-                </p>
-                <div className="flex justify-between items-center py-2">
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#002147" }}>
-                      {stats.male}
-                    </span>
-                    <span className="text-xs" style={{ color: "#002147", opacity: 0.7 }}>
-                      Male
-                    </span>
-                  </div>
-
-                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#002147" }}>
-                    {stats.total}
-                  </span>
-
-                  <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#BC0B03" }}>
-                      {stats.female}
-                    </span>
-                    <span className="text-xs" style={{ color: "#BC0B03", opacity: 0.7 }}>
-                      Female
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Division Breakdown Card */}
-            <Card className="border overflow-hidden lg:col-span-5 border-yellow-200" style={{ borderColor: "#D3B574", borderOpacity: 0.3 }}>
-              <div className="h-2" style={{ backgroundColor: "#D3B574" }}></div>
-              <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-2" style={{ color: "#D3B574" }}>
-                  Division Breakdown
-                </h3>
-                <div className="grid grid-cols-5 gap-2 lg:gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#002147",
-                          height: `${stats.total ? Math.max((stats.divisions.D1 / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#002147" }}
-                    >
-                      {stats.divisions.D1}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
-                      D1
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#012ECD",
-                          height: `${stats.total ? Math.max((stats.divisions.D2 / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#012ECD" }}
-                    >
-                      {stats.divisions.D2}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#012ECD" }}>
-                      D2
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#002147",
-                          height: `${stats.total ? Math.max((stats.divisions.D3 / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#002147" }}
-                    >
-                      {stats.divisions.D3}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
-                      D3
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#D3B574",
-                          height: `${stats.total ? Math.max((stats.divisions.NAIA / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#D3B574", color: "#002147" }}
-                    >
-                      {stats.divisions.NAIA}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#D3B574" }}>
-                      NAIA
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#BC0B03",
-                          height: `${stats.total ? Math.max((stats.divisions.NJCAA / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#BC0B03" }}
-                    >
-                      {stats.divisions.NJCAA}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#BC0B03" }}>
-                      NJCAA
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </section>
-
       {/* Featured Rankings Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
@@ -836,6 +648,194 @@ export default function HomePage() {
             </Button>
           </Link>
         </div>
+      </section>
+
+      {/* Commitment Statistics - moved below Latest Commits */}
+      <section className="mb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
+            Commitment Statistics
+          </h2>
+
+          <div className="flex flex-wrap gap-2">
+            {(["All", "2025", "2026"] as YearFilter[]).map((year) => (
+              <Button
+                key={year}
+                variant={yearFilter === year ? "default" : "outline"}
+                size="sm"
+                onClick={() => setYearFilter(year)}
+                className="text-xs sm:text-sm"
+                style={{
+                  backgroundColor: yearFilter === year ? "#002147" : "transparent",
+                  borderColor: "#002147",
+                  color: yearFilter === year ? "white" : "#002147",
+                }}
+              >
+                {year === "All" ? "All Years" : `Class of ${year}`}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading statistics...</p>
+          </div>
+        ) : (
+          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
+            {/* Total Commitments Card */}
+            <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
+              <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
+              <CardContent className="p-4">
+                <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
+                  Total Commitments
+                </h3>
+                <p className="text-xs mb-2" style={{ color: "#002147", opacity: 0.7 }}>
+                  Tracking Class of 2025 and beyond
+                </p>
+                <div className="flex justify-between items-center py-2">
+                  <div className="flex flex-col items-center">
+                    <span className="text-xl font-semibold" style={{ color: "#002147" }}>
+                      {stats.male}
+                    </span>
+                    <span className="text-xs" style={{ color: "#002147", opacity: 0.7 }}>
+                      Male
+                    </span>
+                  </div>
+
+                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#002147" }}>
+                    {stats.total}
+                  </span>
+
+                  <div className="flex flex-col items-center">
+                    <span className="text-xl font-semibold" style={{ color: "#BC0B03" }}>
+                      {stats.female}
+                    </span>
+                    <span className="text-xs" style={{ color: "#BC0B03", opacity: 0.7 }}>
+                      Female
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Division Breakdown Card */}
+            <Card className="border overflow-hidden lg:col-span-5 border-yellow-200" style={{ borderColor: "#D3B574", borderOpacity: 0.3 }}>
+              <div className="h-2" style={{ backgroundColor: "#D3B574" }}></div>
+              <CardContent className="p-4">
+                <h3 className="text-lg font-medium mb-2" style={{ color: "#D3B574" }}>
+                  Division Breakdown
+                </h3>
+                <div className="grid grid-cols-5 gap-2 lg:gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                      <div
+                        className="w-full transition-all duration-300"
+                        style={{
+                          backgroundColor: "#002147",
+                          height: `${stats.total ? Math.max((stats.divisions.D1 / stats.total) * 100, 8) : 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div
+                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                      style={{ backgroundColor: "#002147" }}
+                    >
+                      {stats.divisions.D1}
+                    </div>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
+                      D1
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                      <div
+                        className="w-full transition-all duration-300"
+                        style={{
+                          backgroundColor: "#012ECD",
+                          height: `${stats.total ? Math.max((stats.divisions.D2 / stats.total) * 100, 8) : 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div
+                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                      style={{ backgroundColor: "#012ECD" }}
+                    >
+                      {stats.divisions.D2}
+                    </div>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#012ECD" }}>
+                      D2
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                      <div
+                        className="w-full transition-all duration-300"
+                        style={{
+                          backgroundColor: "#002147",
+                          height: `${stats.total ? Math.max((stats.divisions.D3 / stats.total) * 100, 8) : 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div
+                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                      style={{ backgroundColor: "#002147" }}
+                    >
+                      {stats.divisions.D3}
+                    </div>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
+                      D3
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                      <div
+                        className="w-full transition-all duration-300"
+                        style={{
+                          backgroundColor: "#D3B574",
+                          height: `${stats.total ? Math.max((stats.divisions.NAIA / stats.total) * 100, 8) : 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div
+                      className="font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                      style={{ backgroundColor: "#D3B574", color: "#002147" }}
+                    >
+                      {stats.divisions.NAIA}
+                    </div>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#D3B574" }}>
+                      NAIA
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center">
+                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
+                      <div
+                        className="w-full transition-all duration-300"
+                        style={{
+                          backgroundColor: "#BC0B03",
+                          height: `${stats.total ? Math.max((stats.divisions.NJCAA / stats.total) * 100, 8) : 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div
+                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
+                      style={{ backgroundColor: "#BC0B03" }}
+                    >
+                      {stats.divisions.NJCAA}
+                    </div>
+                    <span className="text-xs font-medium mt-1" style={{ color: "#BC0B03" }}>
+                      NJCAA
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </section>
 
       {/* Information Banner */}
