@@ -62,18 +62,10 @@ export function Navbar() {
 
   const navItems = [
     { href: "/", label: "Home" },
+    { href: "/commits", label: "Commits" },
     { href: "/prospects", label: "Rankings" },
-    { href: "/national-team", label: "National Team" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
-  ]
-
-  const legacyNCSubmenu = [
-    { href: "/athletes", label: "Athletes" },
-    { href: "/high-schools", label: "Schools" },
-    { href: "/awards", label: "Awards" },
-    { href: "/states", label: "States (NCHSAA)" },
-    { href: "/nationals", label: "Nationals (NHSCA)" },
   ]
 
   const highlightNavItems = showMyRecruits
@@ -117,20 +109,28 @@ export function Navbar() {
               ))}
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
-                  LegacyNC
+                  Commits
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  {legacyNCSubmenu.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="cursor-pointer">
-                        {item.label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
+                  <DropdownMenuItem asChild>
+                    <Link href="/athletes" className="cursor-pointer">
+                      Athletes
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/high-schools" className="cursor-pointer">
+                      High Schools
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/colleges" className="cursor-pointer">
+                      Colleges
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {navItems.slice(1).map((item) => (
+              {navItems.slice(2).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -269,21 +269,32 @@ export function Navbar() {
                     </Link>
                   ))}
                   <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">LegacyNC</div>
+                    <div className="text-gray-600 font-medium text-sm mb-2">Commits</div>
                     <div className="pl-4 space-y-2">
-                      {legacyNCSubmenu.map((item) => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
+                      <Link
+                        href="/athletes"
+                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Athletes
+                      </Link>
+                      <Link
+                        href="/high-schools"
+                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        High Schools
+                      </Link>
+                      <Link
+                        href="/colleges"
+                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Colleges
+                      </Link>
                     </div>
                   </div>
-                  {navItems.slice(1).map((item) => (
+                  {navItems.slice(2).map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
