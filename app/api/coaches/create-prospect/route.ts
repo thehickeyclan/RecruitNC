@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
       schoolLogo = schoolData?.logo_url
     }
 
+    // Auto-fetch NHSCA placements (last 4 years)
+    const { autoFetchNHSCAForProfile } = await import("@/lib/nhsca-auto-fetch")
+    const nhscaResults = await autoFetchNHSCAForProfile(
+      supabase,
+      name.trim(),
+      graduationyear
+    )
+
     // Create the athlete record
     const { data: athlete, error: athleteError } = await supabase
       .from("athletes")
@@ -88,6 +96,8 @@ export async function POST(request: NextRequest) {
         added_by_coach_id: session.user.id,
         bio: notes || null, // Store notes in bio field for now
         photourl: photoUrl || schoolLogo || "/wrestler-silhouette.png",
+        // Auto-fetched NHSCA results (JSONB format)
+        nhsca_results: nhscaResults.length > 0 ? nhscaResults : null,
         created_at: new Date().toISOString(),
       })
       .select()

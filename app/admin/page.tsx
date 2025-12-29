@@ -204,6 +204,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Match Manager</span>
               </Button>
             </Link>
+            <Link href="/admin/nhsca-analytics">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#002147] shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
+                <Trophy className="h-6 w-6" />
+                <span className="text-sm font-semibold">NHSCA Analytics</span>
+              </Button>
+            </Link>
             <Link href="/admin/users-dashboard">
               <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <UserCheck className="h-6 w-6" />

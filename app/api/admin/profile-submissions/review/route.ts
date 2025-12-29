@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { autoFetchNHSCAForProfile } from "@/lib/nhsca-auto-fetch"
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,11 +62,20 @@ export async function POST(request: NextRequest) {
 
     // If approved, create athlete profile
     if (action === "approve") {
+      const athleteName = `${submission.firstname} ${submission.lastname}`
+      
+      // Auto-fetch NHSCA placements (last 4 years)
+      const nhscaResults = await autoFetchNHSCAForProfile(
+        supabase,
+        athleteName,
+        submission.graduationyear
+      )
+
       const { error: createError } = await supabase.from("athletes").insert({
         // Basic info
         firstName: submission.firstname,
         lastName: submission.lastname,
-        name: `${submission.firstname} ${submission.lastname}`,
+        name: athleteName,
         gender: submission.gender,
         graduationyear: submission.graduationyear,
         weightclass: submission.weightclass,
@@ -98,7 +108,7 @@ export async function POST(request: NextRequest) {
         academic_summary: submission.academic_summary,
         academic_interest: submission.academic_interest,
         
-        // Tournament records
+        // Tournament records (legacy columns for backwards compatibility)
         super_32_2023_record: submission.super_32_2023_record,
         super_32_2023_placement: submission.super_32_2023_placement,
         super_32_2024_record: submission.super_32_2024_record,
@@ -111,6 +121,10 @@ export async function POST(request: NextRequest) {
         nhsca_2024_placement: submission.nhsca_2024_placement,
         nhsca_2025_record: submission.nhsca_2025_record,
         nhsca_2025_placement: submission.nhsca_2025_placement,
+        
+        // Auto-fetched NHSCA results (JSONB format - preferred)
+        nhsca_results: nhscaResults.length > 0 ? nhscaResults : null,
+        
         nationally_ranked_wins: submission.nationally_ranked_wins,
         college_opens_experience: submission.college_opens_experience,
         

@@ -32,6 +32,16 @@ const adminNavItems = [
     icon: "📊",
   },
   {
+    title: "NHSCA Analytics",
+    href: "/admin/nhsca-analytics",
+    icon: "🏆",
+  },
+  {
+    title: "NHSCA Placements",
+    href: "/admin/nhsca-placements",
+    icon: "📋",
+  },
+  {
     title: "Logo Manager",
     href: "/admin/enhanced-logo-manager",
     icon: "🎨",
