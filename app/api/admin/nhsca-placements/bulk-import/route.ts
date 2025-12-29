@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { placements, year = 2025 } = await request.json()
 
     if (!Array.isArray(placements) || placements.length === 0) {
-      return NextResponse.json({ error: "Placements array is required" }, { status: 400 })
+      return NextResponse.json({ error: "Participants array is required" }, { status: 400 })
     }
 
     // Validate and format data
@@ -57,13 +57,19 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Error importing NHSCA placements:", error)
-      return NextResponse.json({ error: "Failed to import placements", details: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Failed to import participants", details: error.message }, { status: 500 })
     }
 
+    // Count placers vs non-placers for better messaging
+    const placersCount = data?.filter((p: any) => p.placement !== null && p.placement !== undefined).length || 0
+    const participantsCount = data?.length || 0
+    
     return NextResponse.json({
       success: true,
-      imported: data?.length || 0,
-      message: `Successfully imported ${data?.length || 0} NHSCA placements`,
+      imported: participantsCount,
+      placers: placersCount,
+      nonPlacers: participantsCount - placersCount,
+      message: `Successfully imported ${participantsCount} NHSCA participants (${placersCount} placers, ${participantsCount - placersCount} non-placers)`,
     })
   } catch (error: any) {
     console.error("Bulk import error:", error)

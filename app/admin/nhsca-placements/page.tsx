@@ -97,7 +97,7 @@ export default function NHSCAPlacementsPage() {
       }
 
       if (!Array.isArray(placementsData)) {
-        setImportMessage({ type: "error", text: "JSON must be an array of placements" })
+        setImportMessage({ type: "error", text: "JSON must be an array of participants (placers and non-placers)" })
         return
       }
 
@@ -114,7 +114,9 @@ export default function NHSCAPlacementsPage() {
       const result = await response.json()
 
       if (response.ok) {
-        setImportMessage({ type: "success", text: `Successfully imported ${result.imported} placements` })
+        // Use the detailed message from API if available, otherwise create one
+        const message = result.message || `Successfully imported ${result.imported} participants${result.placers ? ` (${result.placers} placers, ${result.nonPlacers || result.imported - result.placers} non-placers)` : ''}`
+        setImportMessage({ type: "success", text: message })
         setJsonInput("")
         fetchPlacements()
       } else {
@@ -214,8 +216,8 @@ export default function NHSCAPlacementsPage() {
       <AdminHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA Placements Management</h1>
-          <p className="text-gray-600">Import, match, and merge NHSCA tournament data</p>
+          <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA Participants Management</h1>
+          <p className="text-gray-600">Import, match, and merge NHSCA tournament data (placers and non-placers)</p>
         </div>
 
         {/* Stats Cards */}
@@ -278,7 +280,7 @@ export default function NHSCAPlacementsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">JSON Data (Array of placements)</label>
+                <label className="block text-sm font-medium mb-2">JSON Data (Array of participants - placers and non-placers)</label>
                 <textarea
                   value={jsonInput}
                   onChange={(e) => setJsonInput(e.target.value)}
@@ -388,7 +390,7 @@ export default function NHSCAPlacementsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Placements ({filteredPlacements.length} of {placements.length})
+              Participants ({filteredPlacements.length} of {placements.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
