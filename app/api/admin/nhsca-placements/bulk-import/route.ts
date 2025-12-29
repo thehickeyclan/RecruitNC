@@ -52,22 +52,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // OVERWRITE: Delete existing records for this year before importing new ones
-    // This ensures that re-importing the same year overwrites instead of creating duplicates
-    // Only delete unmatched records (not yet merged) to preserve data that's already linked to athletes
+    // OVERWRITE: Delete ALL existing records for this year before importing new ones
+    // This ensures that re-importing the same year completely overwrites instead of creating duplicates
+    // Delete all records for this year and state, regardless of match status
     const { error: deleteError } = await supabase
       .from("nhsca_placements")
       .delete()
       .eq("year", year)
       .eq("state", "NC")
-      .eq("match_status", "unmatched")
-      .like("source", `bulk_import_${year}%`)
 
     if (deleteError) {
       console.error("Error deleting existing placements:", deleteError)
-      // Continue anyway - might be first import or no matches
+      // Continue anyway - might be first import
     } else {
-      console.log(`Deleted existing unmatched placements for year ${year} before re-import`)
+      console.log(`Deleted all existing placements for year ${year} before re-import`)
     }
 
     // Insert into database

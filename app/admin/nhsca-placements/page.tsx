@@ -41,6 +41,7 @@ export default function NHSCAPlacementsPage() {
   const [importing, setImporting] = useState(false)
   const [matching, setMatching] = useState(false)
   const [merging, setMerging] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [stats, setStats] = useState<ImportStats>({
     total: 0,
     placers: 0,
@@ -154,6 +155,38 @@ export default function NHSCAPlacementsPage() {
       setImportMessage({ type: "error", text: error.message || "Matching failed" })
     } finally {
       setMatching(false)
+    }
+  }
+
+  const handleDeleteYear = async () => {
+    if (!yearFilter) {
+      setImportMessage({ type: "error", text: "Please set a year filter first" })
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete ALL ${yearFilter} NHSCA data? This cannot be undone.`)) {
+      return
+    }
+
+    try {
+      setDeleting(true)
+      const response = await fetch(`/api/admin/nhsca-placements/delete-year?year=${yearFilter}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setImportMessage({ type: "success", text: `Deleted ${result.deleted} placements for ${yearFilter}` })
+        fetchPlacements()
+      } else {
+        const result = await response.json()
+        setImportMessage({ type: "error", text: result.error || "Delete failed" })
+      }
+    } catch (error: any) {
+      setImportMessage({ type: "error", text: error.message || "Delete failed" })
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -316,6 +349,19 @@ export default function NHSCAPlacementsPage() {
 
         {/* Actions */}
         <div className="flex gap-4 mb-6">
+          <Button onClick={handleDeleteYear} disabled={deleting || !yearFilter} variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
+            {deleting ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Delete {yearFilter || "Year"} Data
+              </>
+            )}
+          </Button>
           <Button onClick={handleMatch} disabled={matching} variant="outline">
             {matching ? (
               <>
