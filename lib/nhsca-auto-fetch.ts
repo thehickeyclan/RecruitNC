@@ -110,8 +110,47 @@ export function formatNHSCAForProfile(placements: NHSCAPlacement[]): any[] {
 }
 
 /**
+ * Merge NHSCA results, overwriting existing entries for the same year
+ * This ensures that if data is submitted multiple times for the same year, it overwrites instead of duplicating
+ */
+export function mergeNHSCAResults(
+  existingResults: any[] | null | undefined,
+  newResults: any[]
+): any[] {
+  if (!existingResults || !Array.isArray(existingResults)) {
+    return newResults
+  }
+
+  if (!newResults || newResults.length === 0) {
+    return existingResults
+  }
+
+  // Create a map of new results by year (for overwriting)
+  const newResultsByYear = new Map<number, any>()
+  newResults.forEach((result) => {
+    if (result.year) {
+      newResultsByYear.set(result.year, result)
+    }
+  })
+
+  // Filter out existing results for years that are being updated
+  const filteredExisting = existingResults.filter((existing) => {
+    if (!existing.year) return true
+    return !newResultsByYear.has(existing.year)
+  })
+
+  // Combine: existing (filtered) + new (overwrites)
+  const merged = [...filteredExisting, ...newResults]
+
+  // Sort by year descending
+  return merged.sort((a, b) => (b.year || 0) - (a.year || 0))
+}
+
+/**
  * Auto-fetch and format NHSCA data for profile creation
  * Returns data ready to insert into athletes.nhsca_results
+ * 
+ * If merging with existing data, use mergeNHSCAResults() to ensure overwriting by year
  */
 export async function autoFetchNHSCAForProfile(
   supabase: SupabaseClient,

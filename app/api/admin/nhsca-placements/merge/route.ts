@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { getAdminAuth } from "@/lib/cached-auth-check"
+import { mergeNHSCAResults } from "@/lib/nhsca-auto-fetch"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -105,9 +106,8 @@ export async function POST(request: NextRequest) {
           placed: p.placement !== null && p.placement !== undefined, // Flag for filtering
         }))
 
-        // Merge: Remove existing results for this year, then add new ones
-        const filteredResults = existingResults.filter((r) => r.year !== year)
-        const mergedResults = [...filteredResults, ...newResults].sort((a, b) => b.year - a.year)
+        // Merge: Use helper function to overwrite existing results for this year
+        const mergedResults = mergeNHSCAResults(existingResults, newResults)
 
         // Update athlete
         const { error: updateError } = await supabase
