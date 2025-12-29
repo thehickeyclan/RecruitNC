@@ -157,6 +157,107 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Calculate statistics by division and year (for All-American queries)
+    const statsByDivisionAndYear = new Map<string, Map<number, {
+      year: number
+      division: string
+      participants: number
+      allAmericans: number // Placers (1-8)
+      champions: number
+      finalists: number
+      top4: number
+      top8: number
+    }>>()
+
+    placements.forEach((placement) => {
+      const division = placement.division || "Unknown"
+      
+      if (!statsByDivisionAndYear.has(division)) {
+        statsByDivisionAndYear.set(division, new Map())
+      }
+      
+      const divisionMap = statsByDivisionAndYear.get(division)!
+      
+      if (!divisionMap.has(placement.year)) {
+        divisionMap.set(placement.year, {
+          year: placement.year,
+          division,
+          participants: 0,
+          allAmericans: 0,
+          champions: 0,
+          finalists: 0,
+          top4: 0,
+          top8: 0,
+        })
+      }
+      
+      const yearDivStats = divisionMap.get(placement.year)!
+      yearDivStats.participants++
+      
+      // Count All-Americans (placers 1-8)
+      if (placement.placement !== null && placement.placement !== undefined) {
+        yearDivStats.allAmericans++
+        
+        if (placement.placement === 1) {
+          yearDivStats.champions++
+        }
+        if (placement.placement <= 2) {
+          yearDivStats.finalists++
+        }
+        if (placement.placement <= 4) {
+          yearDivStats.top4++
+        }
+        if (placement.placement <= 8) {
+          yearDivStats.top8++
+        }
+      }
+    })
+
+    // Convert division stats to arrays
+    const byDivisionAndYear: Record<string, Array<{
+      year: number
+      division: string
+      participants: number
+      allAmericans: number
+      champions: number
+      finalists: number
+      top4: number
+      top8: number
+    }>> = {}
+    
+    statsByDivisionAndYear.forEach((yearMap, division) => {
+      byDivisionAndYear[division] = Array.from(yearMap.values()).sort((a, b) => a.year - b.year)
+    })
+
+    // Find best year for each division (most All-Americans)
+    const bestYearByDivision: Record<string, {
+      year: number
+      allAmericans: number
+      participants: number
+    }> = {}
+    
+    statsByDivisionAndYear.forEach((yearMap, division) => {
+      let bestYear = 0
+      let maxAllAmericans = 0
+      let participants = 0
+      
+      yearMap.forEach((stats, year) => {
+        if (stats.allAmericans > maxAllAmericans) {
+          maxAllAmericans = stats.allAmericans
+          bestYear = year
+          participants = stats.participants
+        }
+      })
+      
+      if (bestYear > 0) {
+        bestYearByDivision[division] = {
+          year: bestYear,
+          allAmericans: maxAllAmericans,
+          participants,
+        }
+      }
+    })
+
     // Convert maps to arrays and sort
     const byYear = Array.from(statsByYear.values()).sort((a, b) => a.year - b.year)
     const byClass = Array.from(statsByClass.values()).sort((a, b) => a.class - b.class)
@@ -175,6 +276,8 @@ export async function GET(request: NextRequest) {
       stats: {
         byYear,
         byClass,
+        byDivisionAndYear, // New: breakdown by division and year
+        bestYearByDivision, // New: best year for each division
         bestYears,
         overall: {
           totalParticipants: placements.length,

@@ -23,9 +23,22 @@ interface ClassStats {
   winPercentage: number
 }
 
+interface DivisionYearStats {
+  year: number
+  division: string
+  participants: number
+  allAmericans: number
+  champions: number
+  finalists: number
+  top4: number
+  top8: number
+}
+
 interface AnalyticsData {
   byYear: YearStats[]
   byClass: ClassStats[]
+  byDivisionAndYear?: Record<string, DivisionYearStats[]>
+  bestYearByDivision?: Record<string, { year: number; allAmericans: number; participants: number }>
   bestYears: YearStats[]
   overall: {
     totalParticipants: number
@@ -221,6 +234,86 @@ export default function NHSCAAnalyticsPage() {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* Best Year by Division - Answers questions like "What year did we have the most senior NHSCA All-Americans?" */}
+      {data.bestYearByDivision && Object.keys(data.bestYearByDivision).length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Best Year by Division (Most All-Americans)</CardTitle>
+            <p className="text-sm text-gray-600 mt-2">
+              Answers questions like: "What year did we have the most senior NHSCA All-Americans?"
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Object.entries(data.bestYearByDivision)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([division, stats]) => (
+                  <div key={division} className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-white">
+                    <div className="text-sm font-medium text-gray-600 mb-1">{division}</div>
+                    <div className="text-2xl font-bold text-[#13294B]">{stats.year}</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {stats.allAmericans} All-American{stats.allAmericans !== 1 ? "s" : ""}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {stats.participants} participant{stats.participants !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* All-Americans by Division and Year */}
+      {data.byDivisionAndYear && Object.keys(data.byDivisionAndYear).length > 0 && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>All-Americans by Division and Year</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {Object.entries(data.byDivisionAndYear)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([division, years]) => (
+                  <div key={division}>
+                    <h3 className="font-semibold text-lg mb-3">{division} Division</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b bg-gray-50">
+                            <th className="text-left p-2">Year</th>
+                            <th className="text-right p-2">Participants</th>
+                            <th className="text-right p-2">All-Americans</th>
+                            <th className="text-right p-2">Champions</th>
+                            <th className="text-right p-2">Finalists</th>
+                            <th className="text-right p-2">Top 4</th>
+                            <th className="text-right p-2">Top 8</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {years.map((yearStat) => (
+                            <tr key={yearStat.year} className="border-b hover:bg-gray-50">
+                              <td className="p-2 font-semibold">{yearStat.year}</td>
+                              <td className="p-2 text-right">{yearStat.participants}</td>
+                              <td className="p-2 text-right font-semibold text-[#13294B]">
+                                {yearStat.allAmericans}
+                              </td>
+                              <td className="p-2 text-right">{yearStat.champions}</td>
+                              <td className="p-2 text-right">{yearStat.finalists}</td>
+                              <td className="p-2 text-right">{yearStat.top4}</td>
+                              <td className="p-2 text-right">{yearStat.top8}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Best Years Table */}
       <Card className="mb-8">
