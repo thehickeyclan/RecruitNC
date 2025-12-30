@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const division = searchParams.get("division") // Freshman, Sophomore, Junior, Senior
     const year = searchParams.get("year") ? parseInt(searchParams.get("year")!) : null
+    const athleteName = searchParams.get("athlete") // Search by athlete name
     const queryType = searchParams.get("type") || "allAmericans" // allAmericans, champions, finalists, participants
 
     // Build query
@@ -28,6 +29,10 @@ export async function GET(request: NextRequest) {
       .from("nhsca_placements")
       .select("*")
       .eq("state", "NC")
+
+    if (athleteName) {
+      query = query.ilike("athlete_name", `%${athleteName.trim()}%`)
+    }
 
     if (division) {
       query = query.eq("division", division)
@@ -118,6 +123,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       query: {
+        athlete: athleteName || "All",
         division: division || "All",
         year: year || "All",
         type: queryType,
