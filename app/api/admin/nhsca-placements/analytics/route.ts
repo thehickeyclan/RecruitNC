@@ -35,17 +35,9 @@ export async function GET(request: NextRequest) {
     const startYear = parseInt(searchParams.get("startYear") || "2020")
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
-    // Get all placements for the state and year range
-    // Use RPC to get exact count first, then fetch all records
-    const { count: totalCount } = await supabase
-      .from("nhsca_placements")
-      .select("*", { count: "exact", head: true })
-      .eq("state", state)
-      .gte("year", startYear)
-      .lte("year", endYear)
-
-    // Fetch all records - use multiple queries if needed to bypass any limits
-    let placements: any[] = []
+    // Get ALL placements for the year range - NO FILTERS in query, filter everything in JavaScript
+    // This ensures we get every single record, then filter by state/division in code
+    let allPlacements: any[] = []
     let offset = 0
     const pageSize = 1000
     
@@ -53,7 +45,6 @@ export async function GET(request: NextRequest) {
       const { data: page, error: fetchError } = await supabase
         .from("nhsca_placements")
         .select("*")
-        .eq("state", state)
         .gte("year", startYear)
         .lte("year", endYear)
         .order("year", { ascending: true })
@@ -66,15 +57,19 @@ export async function GET(request: NextRequest) {
 
       if (!page || page.length === 0) break
       
-      placements = placements.concat(page)
+      allPlacements = allPlacements.concat(page)
       offset += pageSize
       
-      // Safety check - if we got fewer records than pageSize, we're done
       if (page.length < pageSize) break
-      
-      // Also stop if we've fetched more than the total count (shouldn't happen)
-      if (totalCount && placements.length >= totalCount) break
     }
+
+    // Filter by state in JavaScript (case-insensitive, handle nulls)
+    const placements = allPlacements.filter(p => {
+      if (!p.state) return false
+      const pState = String(p.state).trim().toUpperCase()
+      const targetState = String(state).trim().toUpperCase()
+      return pState === targetState
+    })
 
     if (!placements || placements.length === 0) {
       return NextResponse.json({
@@ -196,15 +191,18 @@ export async function GET(request: NextRequest) {
       top8: number
     }>>()
 
-    // Helper function to normalize division names robustly
+    // Helper function to normalize division names robustly - handle ALL variations
     const normalizeDivision = (div: string | null | undefined): string => {
       if (!div) return "Unknown"
-      // Remove all whitespace, convert to lowercase, then capitalize first letter
-      const cleaned = div.trim().replace(/\s+/g, " ").toLowerCase()
-      if (cleaned === "senior") return "Senior"
-      if (cleaned === "junior") return "Junior"
-      if (cleaned === "sophomore") return "Sophomore"
-      if (cleaned === "freshman") return "Freshman"
+      // Remove all whitespace, convert to lowercase
+      const cleaned = String(div).trim().replace(/\s+/g, " ").toLowerCase()
+      
+      // Match any variation of division names
+      if (cleaned === "senior" || cleaned.startsWith("senior")) return "Senior"
+      if (cleaned === "junior" || cleaned.startsWith("junior")) return "Junior"
+      if (cleaned === "sophomore" || cleaned.startsWith("sophomore")) return "Sophomore"
+      if (cleaned === "freshman" || cleaned.startsWith("freshman")) return "Freshman"
+      
       // Fallback: capitalize first letter
       return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
     }
