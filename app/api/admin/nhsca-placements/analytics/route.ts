@@ -49,6 +49,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
     }
 
+    // Debug: Log 2025 Senior data
+    if (endYear >= 2025) {
+      const senior2025 = placements?.filter(
+        (p) => p.year === 2025 && p.division?.toLowerCase().trim() === "senior"
+      ) || []
+      console.log(`[NHSCA Analytics] 2025 Senior: ${senior2025.length} total, ${senior2025.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
+    }
+
     if (!placements || placements.length === 0) {
       return NextResponse.json({
         success: true,
