@@ -49,12 +49,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
     }
 
-    // Debug: Log 2025 Senior data
+    // Debug: Log 2025 Senior data with detailed breakdown
     if (endYear >= 2025) {
-      const senior2025 = placements?.filter(
-        (p) => p.year === 2025 && p.division?.toLowerCase().trim() === "senior"
-      ) || []
-      console.log(`[NHSCA Analytics] 2025 Senior: ${senior2025.length} total, ${senior2025.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
+      const all2025 = placements?.filter((p) => p.year === 2025) || []
+      const senior2025 = all2025.filter(
+        (p) => p.division?.toLowerCase().trim() === "senior"
+      )
+      const senior2025ByState = all2025.filter(
+        (p) => p.division?.toLowerCase().trim() === "senior" && p.state === "NC"
+      )
+      const divisionVariations = new Set(all2025.map(p => p.division?.toLowerCase().trim()).filter(Boolean))
+      const stateVariations = new Set(all2025.map(p => p.state).filter(Boolean))
+      
+      console.log(`[NHSCA Analytics] 2025 Total: ${all2025.length} records`)
+      console.log(`[NHSCA Analytics] 2025 Senior (all states): ${senior2025.length} total, ${senior2025.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
+      console.log(`[NHSCA Analytics] 2025 Senior (NC only): ${senior2025ByState.length} total, ${senior2025ByState.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
+      console.log(`[NHSCA Analytics] 2025 Division variations:`, Array.from(divisionVariations))
+      console.log(`[NHSCA Analytics] 2025 State variations:`, Array.from(stateVariations))
     }
 
     if (!placements || placements.length === 0) {
