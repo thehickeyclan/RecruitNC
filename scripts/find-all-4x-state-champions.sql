@@ -2,8 +2,9 @@
 -- This query checks both the wrestling_nchsaa_results table AND athletes.nchsaa_results JSONB
 
 -- PRIMARY METHOD: Query wrestling_nchsaa_results table (most complete data)
+-- Note: Column is 'wrestler_name', not 'athlete_name'
 SELECT 
-  athlete_name,
+  wrestler_name,
   high_school,
   COUNT(*) as championship_count,
   array_agg(year ORDER BY year) as championship_years,
@@ -12,9 +13,9 @@ SELECT
 FROM wrestling_nchsaa_results
 WHERE placement = 1
   AND state = 'NC'
-GROUP BY athlete_name, high_school
+GROUP BY wrestler_name, high_school
 HAVING COUNT(*) = 4
-ORDER BY athlete_name;
+ORDER BY wrestler_name;
 
 -- ALTERNATIVE: Check athletes.nchsaa_results JSONB field (if table doesn't have all data)
 SELECT 
@@ -59,7 +60,7 @@ ORDER BY a.name;
 -- DETAILED BREAKDOWN: Show all 4 championships for each 4x champion
 -- From wrestling_nchsaa_results table
 SELECT 
-  athlete_name,
+  wrestler_name,
   high_school,
   year,
   weight_class,
@@ -68,13 +69,13 @@ SELECT
 FROM wrestling_nchsaa_results
 WHERE placement = 1
   AND state = 'NC'
-  AND athlete_name IN (
-    SELECT athlete_name
+  AND wrestler_name IN (
+    SELECT wrestler_name
     FROM wrestling_nchsaa_results
     WHERE placement = 1
       AND state = 'NC'
-    GROUP BY athlete_name, high_school
+    GROUP BY wrestler_name, high_school
     HAVING COUNT(*) = 4
   )
-ORDER BY athlete_name, year;
+ORDER BY wrestler_name, year;
 
