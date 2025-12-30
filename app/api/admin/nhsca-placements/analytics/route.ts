@@ -36,6 +36,30 @@ export async function GET(request: NextRequest) {
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
     // Get all placements for the state and year range
+    // First, get total count for debugging
+    const { count: totalCount } = await supabase
+      .from("nhsca_placements")
+      .select("*", { count: "exact", head: true })
+      .eq("state", state)
+      .gte("year", startYear)
+      .lte("year", endYear)
+    
+    const { count: year2025Count } = await supabase
+      .from("nhsca_placements")
+      .select("*", { count: "exact", head: true })
+      .eq("state", state)
+      .eq("year", 2025)
+    
+    const { count: senior2025Count } = await supabase
+      .from("nhsca_placements")
+      .select("*", { count: "exact", head: true })
+      .eq("state", state)
+      .eq("year", 2025)
+      .ilike("division", "senior")
+    
+    console.log(`[NHSCA Analytics] Query params: state=${state}, startYear=${startYear}, endYear=${endYear}`)
+    console.log(`[NHSCA Analytics] Supabase counts - Total in range: ${totalCount}, 2025 total: ${year2025Count}, 2025 Senior: ${senior2025Count}`)
+
     const { data: placements, error } = await supabase
       .from("nhsca_placements")
       .select("*")
@@ -48,6 +72,8 @@ export async function GET(request: NextRequest) {
       console.error("Error fetching placements:", error)
       return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
     }
+    
+    console.log(`[NHSCA Analytics] Actual placements returned: ${placements?.length || 0} records`)
 
     // Debug: Log 2025 Senior data with detailed breakdown
     if (endYear >= 2025) {
