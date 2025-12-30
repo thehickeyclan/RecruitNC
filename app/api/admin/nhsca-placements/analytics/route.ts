@@ -36,30 +36,7 @@ export async function GET(request: NextRequest) {
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
     // Get all placements for the state and year range
-    // First, get total count for debugging
-    const { count: totalCount } = await supabase
-      .from("nhsca_placements")
-      .select("*", { count: "exact", head: true })
-      .eq("state", state)
-      .gte("year", startYear)
-      .lte("year", endYear)
-    
-    const { count: year2025Count } = await supabase
-      .from("nhsca_placements")
-      .select("*", { count: "exact", head: true })
-      .eq("state", state)
-      .eq("year", 2025)
-    
-    const { count: senior2025Count } = await supabase
-      .from("nhsca_placements")
-      .select("*", { count: "exact", head: true })
-      .eq("state", state)
-      .eq("year", 2025)
-      .ilike("division", "senior")
-    
-    console.log(`[NHSCA Analytics] Query params: state=${state}, startYear=${startYear}, endYear=${endYear}`)
-    console.log(`[NHSCA Analytics] Supabase counts - Total in range: ${totalCount}, 2025 total: ${year2025Count}, 2025 Senior: ${senior2025Count}`)
-
+    // Remove any limit - fetch ALL records
     const { data: placements, error } = await supabase
       .from("nhsca_placements")
       .select("*")
@@ -67,31 +44,11 @@ export async function GET(request: NextRequest) {
       .gte("year", startYear)
       .lte("year", endYear)
       .order("year", { ascending: true })
+      .limit(10000) // Explicit high limit to ensure we get all records
 
     if (error) {
       console.error("Error fetching placements:", error)
       return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
-    }
-    
-    console.log(`[NHSCA Analytics] Actual placements returned: ${placements?.length || 0} records`)
-
-    // Debug: Log 2025 Senior data with detailed breakdown
-    if (endYear >= 2025) {
-      const all2025 = placements?.filter((p) => p.year === 2025) || []
-      const senior2025 = all2025.filter(
-        (p) => p.division?.toLowerCase().trim() === "senior"
-      )
-      const senior2025ByState = all2025.filter(
-        (p) => p.division?.toLowerCase().trim() === "senior" && p.state === "NC"
-      )
-      const divisionVariations = new Set(all2025.map(p => p.division?.toLowerCase().trim()).filter(Boolean))
-      const stateVariations = new Set(all2025.map(p => p.state).filter(Boolean))
-      
-      console.log(`[NHSCA Analytics] 2025 Total: ${all2025.length} records`)
-      console.log(`[NHSCA Analytics] 2025 Senior (all states): ${senior2025.length} total, ${senior2025.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
-      console.log(`[NHSCA Analytics] 2025 Senior (NC only): ${senior2025ByState.length} total, ${senior2025ByState.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
-      console.log(`[NHSCA Analytics] 2025 Division variations:`, Array.from(divisionVariations))
-      console.log(`[NHSCA Analytics] 2025 State variations:`, Array.from(stateVariations))
     }
 
     if (!placements || placements.length === 0) {
@@ -214,14 +171,22 @@ export async function GET(request: NextRequest) {
       top8: number
     }>>()
 
+    // Helper function to normalize division names robustly
+    const normalizeDivision = (div: string | null | undefined): string => {
+      if (!div) return "Unknown"
+      // Remove all whitespace, convert to lowercase, then capitalize first letter
+      const cleaned = div.trim().replace(/\s+/g, " ").toLowerCase()
+      if (cleaned === "senior") return "Senior"
+      if (cleaned === "junior") return "Junior"
+      if (cleaned === "sophomore") return "Sophomore"
+      if (cleaned === "freshman") return "Freshman"
+      // Fallback: capitalize first letter
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    }
+
     placements.forEach((placement) => {
-      // Normalize division name (handle case variations and whitespace)
-      let division = "Unknown"
-      if (placement.division) {
-        const normalized = placement.division.trim()
-        // Capitalize first letter, lowercase rest
-        division = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase()
-      }
+      // Normalize division name (handle all case variations and whitespace)
+      const division = normalizeDivision(placement.division)
       
       if (!statsByDivisionAndYear.has(division)) {
         statsByDivisionAndYear.set(division, new Map())
