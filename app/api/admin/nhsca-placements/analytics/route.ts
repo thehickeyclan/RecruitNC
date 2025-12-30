@@ -35,6 +35,12 @@ export async function GET(request: NextRequest) {
     const startYear = parseInt(searchParams.get("startYear") || "2020")
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
+    // FIRST: Verify exact count from database using direct SQL query
+    const { data: dbCount, error: countError } = await supabase.rpc('get_nhsca_2025_senior_count').single()
+    if (!countError && dbCount) {
+      console.log(`[NHSCA Analytics] Database says 2025 Senior: ${dbCount.total_participants} participants, ${dbCount.all_americans} All-Americans`)
+    }
+
     // Get ALL placements for the year range - NO FILTERS in query, filter everything in JavaScript
     // This ensures we get every single record, then filter by state/division in code
     let allPlacements: any[] = []
@@ -70,6 +76,27 @@ export async function GET(request: NextRequest) {
       const targetState = String(state).trim().toUpperCase()
       return pState === targetState
     })
+
+    // DEBUG: Log exact counts for 2025 Senior
+    if (endYear >= 2025) {
+      const all2025 = placements.filter(p => p.year === 2025)
+      const senior2025Raw = all2025.filter(p => {
+        const div = p.division ? String(p.division).trim().toLowerCase() : ''
+        return div === 'senior' || div.includes('senior')
+      })
+      const senior2025Normalized = all2025.filter(p => {
+        const normalized = normalizeDivision(p.division)
+        return normalized === 'Senior'
+      })
+      
+      console.log(`[NHSCA Analytics] Total 2025 records fetched: ${all2025.length}`)
+      console.log(`[NHSCA Analytics] 2025 Senior (raw match): ${senior2025Raw.length} participants, ${senior2025Raw.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
+      console.log(`[NHSCA Analytics] 2025 Senior (normalized): ${senior2025Normalized.length} participants, ${senior2025Normalized.filter(p => p.placement !== null && p.placement !== undefined).length} All-Americans`)
+      
+      // Show division value variations
+      const divVariations = new Set(all2025.map(p => p.division).filter(Boolean))
+      console.log(`[NHSCA Analytics] 2025 Division values found:`, Array.from(divVariations))
+    }
 
     if (!placements || placements.length === 0) {
       return NextResponse.json({
@@ -194,14 +221,14 @@ export async function GET(request: NextRequest) {
     // Helper function to normalize division names robustly - handle ALL variations
     const normalizeDivision = (div: string | null | undefined): string => {
       if (!div) return "Unknown"
-      // Remove all whitespace, convert to lowercase
+      // Convert to string, trim, normalize whitespace, lowercase
       const cleaned = String(div).trim().replace(/\s+/g, " ").toLowerCase()
       
-      // Match any variation of division names
-      if (cleaned === "senior" || cleaned.startsWith("senior")) return "Senior"
-      if (cleaned === "junior" || cleaned.startsWith("junior")) return "Junior"
-      if (cleaned === "sophomore" || cleaned.startsWith("sophomore")) return "Sophomore"
-      if (cleaned === "freshman" || cleaned.startsWith("freshman")) return "Freshman"
+      // Match ANY variation - be extremely permissive
+      if (cleaned.includes("senior")) return "Senior"
+      if (cleaned.includes("junior")) return "Junior"
+      if (cleaned.includes("sophomore")) return "Sophomore"
+      if (cleaned.includes("freshman")) return "Freshman"
       
       // Fallback: capitalize first letter
       return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
@@ -210,6 +237,14 @@ export async function GET(request: NextRequest) {
     placements.forEach((placement) => {
       // Normalize division name (handle all case variations and whitespace)
       const division = normalizeDivision(placement.division)
+      
+      // DEBUG: Log if we're missing Senior records
+      if (placement.year === 2025 && placement.state === 'NC') {
+        const rawDiv = placement.division ? String(placement.division).trim().toLowerCase() : ''
+        if (rawDiv.includes('senior') && division !== 'Senior') {
+          console.warn(`[NHSCA Analytics] Division normalization issue: "${placement.division}" -> "${division}"`)
+        }
+      }
       
       if (!statsByDivisionAndYear.has(division)) {
         statsByDivisionAndYear.set(division, new Map())
