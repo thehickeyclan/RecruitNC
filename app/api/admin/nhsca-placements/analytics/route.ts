@@ -36,24 +36,45 @@ export async function GET(request: NextRequest) {
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
     // Get all placements for the state and year range
-    // Query without state filter first to ensure we get all records, then filter in code
-    const { data: allPlacements, error: fetchError } = await supabase
+    // Use RPC to get exact count first, then fetch all records
+    const { count: totalCount } = await supabase
       .from("nhsca_placements")
-      .select("*")
+      .select("*", { count: "exact", head: true })
+      .eq("state", state)
       .gte("year", startYear)
       .lte("year", endYear)
-      .order("year", { ascending: true })
-      .limit(10000) // Explicit high limit to ensure we get all records
 
-    if (fetchError) {
-      console.error("Error fetching placements:", fetchError)
-      return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
+    // Fetch all records - use multiple queries if needed to bypass any limits
+    let placements: any[] = []
+    let offset = 0
+    const pageSize = 1000
+    
+    while (true) {
+      const { data: page, error: fetchError } = await supabase
+        .from("nhsca_placements")
+        .select("*")
+        .eq("state", state)
+        .gte("year", startYear)
+        .lte("year", endYear)
+        .order("year", { ascending: true })
+        .range(offset, offset + pageSize - 1)
+
+      if (fetchError) {
+        console.error("Error fetching placements:", fetchError)
+        return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
+      }
+
+      if (!page || page.length === 0) break
+      
+      placements = placements.concat(page)
+      offset += pageSize
+      
+      // Safety check - if we got fewer records than pageSize, we're done
+      if (page.length < pageSize) break
+      
+      // Also stop if we've fetched more than the total count (shouldn't happen)
+      if (totalCount && placements.length >= totalCount) break
     }
-
-    // Filter by state in code to ensure we get all matching records
-    const placements = (allPlacements || []).filter(p => 
-      !p.state || p.state === state || p.state.toUpperCase() === state.toUpperCase()
-    )
 
     if (!placements || placements.length === 0) {
       return NextResponse.json({
