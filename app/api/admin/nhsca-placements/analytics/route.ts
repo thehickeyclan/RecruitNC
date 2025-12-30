@@ -76,6 +76,23 @@ export async function GET(request: NextRequest) {
       if (page.length < pageSize) break
     }
 
+    // Helper function to normalize division names robustly - handle ALL variations
+    // MUST be defined before it's used
+    const normalizeDivision = (div: string | null | undefined): string => {
+      if (!div) return "Unknown"
+      // Convert to string, trim, normalize whitespace, lowercase
+      const cleaned = String(div).trim().replace(/\s+/g, " ").toLowerCase()
+      
+      // Match ANY variation - be extremely permissive
+      if (cleaned.includes("senior")) return "Senior"
+      if (cleaned.includes("junior")) return "Junior"
+      if (cleaned.includes("sophomore")) return "Sophomore"
+      if (cleaned.includes("freshman")) return "Freshman"
+      
+      // Fallback: capitalize first letter
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    }
+
     // Filter by state in JavaScript (case-insensitive, handle nulls)
     const placements = allPlacements.filter(p => {
       if (!p.state) return false
@@ -224,22 +241,6 @@ export async function GET(request: NextRequest) {
       top4: number
       top8: number
     }>>()
-
-    // Helper function to normalize division names robustly - handle ALL variations
-    const normalizeDivision = (div: string | null | undefined): string => {
-      if (!div) return "Unknown"
-      // Convert to string, trim, normalize whitespace, lowercase
-      const cleaned = String(div).trim().replace(/\s+/g, " ").toLowerCase()
-      
-      // Match ANY variation - be extremely permissive
-      if (cleaned.includes("senior")) return "Senior"
-      if (cleaned.includes("junior")) return "Junior"
-      if (cleaned.includes("sophomore")) return "Sophomore"
-      if (cleaned.includes("freshman")) return "Freshman"
-      
-      // Fallback: capitalize first letter
-      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
-    }
 
     placements.forEach((placement) => {
       // Normalize division name (handle all case variations and whitespace)
