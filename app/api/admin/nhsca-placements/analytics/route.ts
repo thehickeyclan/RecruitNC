@@ -345,6 +345,18 @@ export async function GET(request: NextRequest) {
     // Overall statistics
     const overallWinPercentage = calculateWinPercentage(totalWins, totalLosses)
 
+    // FINAL VERIFICATION: If we have 2025 data, verify Senior count matches database
+    if (endYear >= 2025 && byDivisionAndYear["Senior"]) {
+      const senior2025 = byDivisionAndYear["Senior"].find(s => s.year === 2025)
+      if (senior2025) {
+        console.log(`[NHSCA Analytics] FINAL: 2025 Senior = ${senior2025.participants} participants, ${senior2025.allAmericans} All-Americans`)
+        // If database count exists and doesn't match, log warning
+        if (dbCount && dbCount.total_participants && dbCount.total_participants !== senior2025.participants) {
+          console.error(`[NHSCA Analytics] MISMATCH: Database says ${dbCount.total_participants}, we calculated ${senior2025.participants}`)
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       stats: {
