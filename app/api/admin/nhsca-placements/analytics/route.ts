@@ -170,10 +170,13 @@ export async function GET(request: NextRequest) {
     }>>()
 
     placements.forEach((placement) => {
-      // Normalize division name (handle case variations)
-      const division = placement.division 
-        ? placement.division.trim().charAt(0).toUpperCase() + placement.division.trim().slice(1).toLowerCase()
-        : "Unknown"
+      // Normalize division name (handle case variations and whitespace)
+      let division = "Unknown"
+      if (placement.division) {
+        const normalized = placement.division.trim()
+        // Capitalize first letter, lowercase rest
+        division = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase()
+      }
       
       if (!statsByDivisionAndYear.has(division)) {
         statsByDivisionAndYear.set(division, new Map())
