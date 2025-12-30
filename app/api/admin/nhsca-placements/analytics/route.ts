@@ -36,20 +36,24 @@ export async function GET(request: NextRequest) {
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
     // Get all placements for the state and year range
-    // Remove any limit - fetch ALL records
-    const { data: placements, error } = await supabase
+    // Query without state filter first to ensure we get all records, then filter in code
+    const { data: allPlacements, error: fetchError } = await supabase
       .from("nhsca_placements")
       .select("*")
-      .eq("state", state)
       .gte("year", startYear)
       .lte("year", endYear)
       .order("year", { ascending: true })
       .limit(10000) // Explicit high limit to ensure we get all records
 
-    if (error) {
-      console.error("Error fetching placements:", error)
+    if (fetchError) {
+      console.error("Error fetching placements:", fetchError)
       return NextResponse.json({ error: "Failed to fetch placements" }, { status: 500 })
     }
+
+    // Filter by state in code to ensure we get all matching records
+    const placements = (allPlacements || []).filter(p => 
+      !p.state || p.state === state || p.state.toUpperCase() === state.toUpperCase()
+    )
 
     if (!placements || placements.length === 0) {
       return NextResponse.json({
