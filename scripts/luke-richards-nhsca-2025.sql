@@ -63,7 +63,7 @@ SELECT
   np.match_status,
   np.athlete_id,
   a.name as athlete_profile_name,
-  a.high_school as athlete_profile_school,
+  a.highschool as athlete_profile_school,
   np.notes,
   np.source,
   np.imported_at
@@ -81,7 +81,7 @@ ORDER BY np.division, np.weight_class;
 SELECT 
   a.id,
   a.name,
-  a.high_school,
+  a.highschool,
   a.graduation_year,
   jsonb_array_elements(a.nhsca_results) as nhsca_result
 FROM athletes a,
