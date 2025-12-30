@@ -82,7 +82,7 @@ SELECT
   a.id,
   a.name,
   a.highschool,
-  a.graduation_year,
+  a.graduationyear,
   jsonb_array_elements(a.nhsca_results) as nhsca_result
 FROM athletes a,
   jsonb_array_elements(a.nhsca_results) AS nhsca_result
