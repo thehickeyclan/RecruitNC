@@ -35,10 +35,17 @@ export async function GET(request: NextRequest) {
     const startYear = parseInt(searchParams.get("startYear") || "2020")
     const endYear = parseInt(searchParams.get("endYear") || new Date().getFullYear().toString())
 
-    // FIRST: Verify exact count from database using direct SQL query
-    const { data: dbCount, error: countError } = await supabase.rpc('get_nhsca_2025_senior_count').single()
-    if (!countError && dbCount) {
-      console.log(`[NHSCA Analytics] Database says 2025 Senior: ${dbCount.total_participants} participants, ${dbCount.all_americans} All-Americans`)
+    // FIRST: Verify exact count from database using direct SQL query (optional - function may not exist)
+    let dbCount: any = null
+    try {
+      const { data, error: countError } = await supabase.rpc('get_nhsca_2025_senior_count').single()
+      if (!countError && data) {
+        dbCount = data
+        console.log(`[NHSCA Analytics] Database says 2025 Senior: ${dbCount.total_participants} participants, ${dbCount.all_americans} All-Americans`)
+      }
+    } catch (e) {
+      // SQL function doesn't exist yet, that's okay - we'll calculate it
+      console.log(`[NHSCA Analytics] SQL function not available, calculating from fetched data`)
     }
 
     // Get ALL placements for the year range - NO FILTERS in query, filter everything in JavaScript
