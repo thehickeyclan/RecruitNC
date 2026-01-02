@@ -91,12 +91,41 @@ export async function PATCH(
       keys: Object.keys(updateData)
     })
 
+    // First check if the profile exists
+    const { data: existingProfile, error: checkError } = await supabaseAdmin
+      .from("user_profiles")
+      .select("user_id")
+      .eq("user_id", params.userId)
+      .maybeSingle()
+
+    if (checkError) {
+      console.error("[API] Error checking user profile:", checkError)
+      return NextResponse.json(
+        { 
+          error: "Failed to check user profile",
+          details: checkError.message
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!existingProfile) {
+      return NextResponse.json(
+        { 
+          error: "User profile not found",
+          details: `No profile found for user_id: ${params.userId}`
+        },
+        { status: 404 }
+      )
+    }
+
+    // Perform the update
     const { data, error } = await supabaseAdmin
       .from("user_profiles")
       .update(updateData)
       .eq("user_id", params.userId)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error("[API] Error updating user profile:", {
