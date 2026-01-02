@@ -98,6 +98,7 @@ export default function UsersDashboardPage() {
   const [sortField, setSortField] = useState<string>("created_at")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
+  const [saving, setSaving] = useState(false)
   const [editForm, setEditForm] = useState({
     name: "",
     cell_phone: "",
@@ -167,7 +168,17 @@ export default function UsersDashboardPage() {
   }
 
   const handleSaveUser = async () => {
-    if (!editingUser) return
+    if (!editingUser) {
+      console.error("[Users Dashboard] No user selected for editing")
+      return
+    }
+
+    if (saving) {
+      console.log("[Users Dashboard] Save already in progress, ignoring click")
+      return
+    }
+
+    setSaving(true)
 
     try {
       // Prepare the update payload
@@ -179,6 +190,11 @@ export default function UsersDashboardPage() {
         school_id: editForm.school_id === "unassigned" ? null : editForm.school_id
       }
 
+      console.log("[Users Dashboard] Saving user:", {
+        userId: editingUser.user_id,
+        payload
+      })
+
       const res = await fetch(`/api/admin/users/${editingUser.user_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -186,7 +202,19 @@ export default function UsersDashboardPage() {
         credentials: "include"
       })
 
-      if (!res.ok) throw new Error("Failed to update user")
+      const responseData = await res.json().catch(() => ({}))
+      
+      console.log("[Users Dashboard] Response:", {
+        status: res.status,
+        ok: res.ok,
+        data: responseData
+      })
+
+      if (!res.ok) {
+        const errorMessage = responseData.error || responseData.details || "Failed to update user"
+        console.error("[Users Dashboard] Update failed:", errorMessage)
+        throw new Error(errorMessage)
+      }
 
       toast({
         title: "Success",
@@ -209,11 +237,14 @@ export default function UsersDashboardPage() {
       ))
       setEditingUser(null)
     } catch (e: any) {
+      console.error("[Users Dashboard] Error saving user:", e)
       toast({
         title: "Error",
         description: e?.message || "Failed to update user",
         variant: "destructive"
       })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -1097,11 +1128,23 @@ export default function UsersDashboardPage() {
                 </>
               )}
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setEditingUser(null)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditingUser(null)}
+                  disabled={saving}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSaveUser}>
-                  Save Changes
+                <Button 
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleSaveUser()
+                  }}
+                  disabled={saving}
+                  type="button"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>
