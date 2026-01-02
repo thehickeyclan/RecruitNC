@@ -10,6 +10,7 @@ import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context"
 import { CoachApprovalNotification } from "@/components/coach-approval-notification"
 import { IframeResizer } from "@/components/iframe-resizer"
+import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 
 export const metadata = {
   title: "NC Wrestling Commits | Prospect Rankings",
@@ -74,6 +75,7 @@ export default function RootLayout({
               <Footer />
             </div>
             <Toaster />
+            <AIChatWidget />
           </AuthProvider>
         </ThemeProvider>
         <Script
