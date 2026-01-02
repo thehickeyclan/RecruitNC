@@ -56,11 +56,20 @@ export async function PATCH(
 
     // Build update object
     const updateData: any = {}
-    if (name !== undefined) updateData.full_name = name
+    if (name !== undefined) {
+      // Update both name and full_name to ensure compatibility with different schema versions
+      updateData.name = name
+      updateData.full_name = name
+    }
     if (formattedPhone !== undefined) updateData.cell_phone = formattedPhone
     if (role !== undefined) updateData.role = role
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
+
+    // Check if updateData is empty
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 })
+    }
 
     const { data, error } = await supabaseAdmin
       .from("user_profiles")
@@ -71,7 +80,16 @@ export async function PATCH(
 
     if (error) {
       console.error("Error updating user profile:", error)
-      return NextResponse.json({ error: "Failed to update user profile" }, { status: 500 })
+      console.error("Update data:", updateData)
+      console.error("User ID:", params.userId)
+      return NextResponse.json(
+        { 
+          error: "Failed to update user profile",
+          details: error.message,
+          code: error.code
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ success: true, profile: data })
