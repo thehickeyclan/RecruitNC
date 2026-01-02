@@ -62,53 +62,64 @@ export async function PATCH(
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
 
-    // First verify the profile exists - check both user_id formats
-    console.log("[API] Looking for profile with user_id:", params.userId, "type:", typeof params.userId)
-    
-    const { data: existingProfile, error: checkError } = await supabaseAdmin
+    // Check if profile exists, if not create it
+    let existingProfile = await supabaseAdmin
       .from("user_profiles")
       .select("user_id, email, full_name")
       .eq("user_id", params.userId)
       .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[API] Error checking profile:", error)
+          return null
+        }
+        return data
+      })
 
-    if (checkError) {
-      console.error("[API] Error checking user profile:", checkError)
-      // Try to find any profile with similar ID
-      const { data: allProfiles } = await supabaseAdmin
-        .from("user_profiles")
-        .select("user_id, email")
-        .limit(5)
-      console.log("[API] Sample user_ids in database:", allProfiles?.map(p => ({ id: p.user_id, type: typeof p.user_id })))
-      
-      return NextResponse.json(
-        { 
-          error: "Failed to check user profile",
-          details: checkError.message
-        },
-        { status: 500 }
-      )
-    }
-
+    // If profile doesn't exist, get user from auth and create profile
     if (!existingProfile) {
-      console.error("[API] Profile not found for user_id:", params.userId)
-      // Try to find any profile to see what format user_id is
-      const { data: sampleProfile } = await supabaseAdmin
-        .from("user_profiles")
-        .select("user_id, email")
-        .limit(1)
-        .maybeSingle()
-      console.log("[API] Sample profile user_id format:", sampleProfile?.user_id, "type:", typeof sampleProfile?.user_id)
+      console.log("[API] Profile not found, checking auth.users and creating profile...")
       
-      return NextResponse.json(
-        { 
-          error: "User profile not found",
-          details: `No profile found for user_id: ${params.userId}. The user may need to sign in first to create their profile.`
-        },
-        { status: 404 }
-      )
-    }
+      // Get user from auth
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(params.userId)
+      
+      if (authError || !authUser?.user) {
+        console.error("[API] User not found in auth.users:", authError)
+        return NextResponse.json(
+          { 
+            error: "User not found",
+            details: `No user found for user_id: ${params.userId}`
+          },
+          { status: 404 }
+        )
+      }
 
-    console.log("[API] Found existing profile:", existingProfile.email)
+      // Create the profile
+      const { data: newProfile, error: createError } = await supabaseAdmin
+        .from("user_profiles")
+        .insert({
+          user_id: params.userId,
+          email: authUser.user.email || "",
+          full_name: name || authUser.user.email?.split("@")[0] || "Unknown",
+          role: role || "other"
+        })
+        .select()
+        .single()
+
+      if (createError) {
+        console.error("[API] Error creating profile:", createError)
+        return NextResponse.json(
+          { 
+            error: "Failed to create user profile",
+            details: createError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      existingProfile = newProfile
+      console.log("[API] Created new profile for user:", authUser.user.email)
+    }
 
     // Update the profile
     const { data, error } = await supabaseAdmin
