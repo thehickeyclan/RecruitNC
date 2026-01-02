@@ -54,101 +54,26 @@ export async function PATCH(
       }
     }
 
-    // Build update object
+    // Build update object - match original working pattern
     const updateData: any = {}
-    if (name !== undefined) {
-      // The actual column in the database is 'full_name', not 'name'
-      updateData.full_name = name
-    }
+    if (name !== undefined) updateData.full_name = name
     if (formattedPhone !== undefined) updateData.cell_phone = formattedPhone
     if (role !== undefined) updateData.role = role
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
-    if (school_id !== undefined) {
-      // Validate school_id is a valid UUID or null/empty
-      if (school_id && school_id !== "unassigned" && school_id !== "") {
-        // Validate UUID format
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-        if (!uuidRegex.test(school_id)) {
-          return NextResponse.json(
-            { error: "Invalid school_id format. Must be a valid UUID." },
-            { status: 400 }
-          )
-        }
-        updateData.school_id = school_id
-      } else {
-        updateData.school_id = null
-      }
-    }
+    if (school_id !== undefined) updateData.school_id = school_id || null
 
-    // Check if updateData is empty
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: "No fields to update" }, { status: 400 })
-    }
-
-    console.log("[API] Updating user profile:", {
-      userId: params.userId,
-      updateData,
-      keys: Object.keys(updateData)
-    })
-
-    // First check if the profile exists
-    const { data: existingProfile, error: checkError } = await supabaseAdmin
-      .from("user_profiles")
-      .select("user_id")
-      .eq("user_id", params.userId)
-      .maybeSingle()
-
-    if (checkError) {
-      console.error("[API] Error checking user profile:", checkError)
-      return NextResponse.json(
-        { 
-          error: "Failed to check user profile",
-          details: checkError.message
-        },
-        { status: 500 }
-      )
-    }
-
-    if (!existingProfile) {
-      return NextResponse.json(
-        { 
-          error: "User profile not found",
-          details: `No profile found for user_id: ${params.userId}`
-        },
-        { status: 404 }
-      )
-    }
-
-    // Perform the update
+    // Use the original working pattern - simple update with .single()
     const { data, error } = await supabaseAdmin
       .from("user_profiles")
       .update(updateData)
       .eq("user_id", params.userId)
       .select()
-      .maybeSingle()
+      .single()
 
     if (error) {
-      console.error("[API] Error updating user profile:", {
-        error,
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        updateData,
-        userId: params.userId
-      })
-      return NextResponse.json(
-        { 
-          error: "Failed to update user profile",
-          details: error.message || error.details || "Unknown database error",
-          code: error.code,
-          hint: error.hint
-        },
-        { status: 500 }
-      )
+      console.error("Error updating user profile:", error)
+      return NextResponse.json({ error: "Failed to update user profile" }, { status: 500 })
     }
-
-    console.log("[API] Successfully updated user profile:", data)
 
     return NextResponse.json({ success: true, profile: data })
   } catch (error: any) {
