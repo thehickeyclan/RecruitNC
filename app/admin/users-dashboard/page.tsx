@@ -202,17 +202,31 @@ export default function UsersDashboardPage() {
         credentials: "include"
       })
 
-      const responseData = await res.json().catch(() => ({}))
+      let responseData: any = {}
+      try {
+        const text = await res.text()
+        responseData = text ? JSON.parse(text) : {}
+      } catch (e) {
+        console.error("[Users Dashboard] Failed to parse response:", e)
+      }
       
       console.log("[Users Dashboard] Response:", {
         status: res.status,
         ok: res.ok,
-        data: responseData
+        statusText: res.statusText,
+        data: responseData,
+        error: responseData.error,
+        details: responseData.details,
+        code: responseData.code
       })
 
       if (!res.ok) {
-        const errorMessage = responseData.error || responseData.details || "Failed to update user"
-        console.error("[Users Dashboard] Update failed:", errorMessage)
+        const errorMessage = responseData.details || responseData.error || responseData.message || `Failed to update user (${res.status})`
+        console.error("[Users Dashboard] Update failed:", {
+          message: errorMessage,
+          fullResponse: responseData,
+          status: res.status
+        })
         throw new Error(errorMessage)
       }
 
