@@ -62,36 +62,37 @@ export async function PATCH(
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
 
-    // Update the profile
-    const { error: updateError, count } = await supabaseAdmin
+    // Update the profile - use maybeSingle to handle 0 rows gracefully
+    const { data, error } = await supabaseAdmin
       .from("user_profiles")
       .update(updateData)
       .eq("user_id", params.userId)
-      .select("*", { count: "exact", head: false })
+      .select()
+      .maybeSingle()
 
-    if (updateError) {
+    if (error) {
       console.error("Error updating user profile:", {
-        error: updateError,
-        message: updateError.message,
-        code: updateError.code,
-        details: updateError.details,
-        hint: updateError.hint,
+        error,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
         updateData,
         userId: params.userId
       })
       return NextResponse.json(
         { 
           error: "Failed to update user profile",
-          details: updateError.message || updateError.details || "Unknown error",
-          code: updateError.code,
-          hint: updateError.hint
+          details: error.message || error.details || "Unknown error",
+          code: error.code,
+          hint: error.hint
         },
         { status: 500 }
       )
     }
 
     // If no rows were updated, the user doesn't exist
-    if (count === 0) {
+    if (!data) {
       return NextResponse.json(
         { 
           error: "User profile not found",
@@ -99,19 +100,6 @@ export async function PATCH(
         },
         { status: 404 }
       )
-    }
-
-    // Fetch the updated profile
-    const { data, error: selectError } = await supabaseAdmin
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", params.userId)
-      .single()
-
-    if (selectError) {
-      console.error("Error fetching updated profile:", selectError)
-      // Still return success since the update worked
-      return NextResponse.json({ success: true, message: "Profile updated successfully" })
     }
 
     return NextResponse.json({ success: true, profile: data })
