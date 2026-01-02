@@ -57,9 +57,9 @@ export async function PATCH(
     // Build update object
     const updateData: any = {}
     if (name !== undefined) {
-      // Update both name and full_name to ensure compatibility with different schema versions
       updateData.name = name
-      updateData.full_name = name
+      // Note: full_name column may not exist in all schema versions
+      // If needed, add it via migration: ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
     }
     if (formattedPhone !== undefined) updateData.cell_phone = formattedPhone
     if (role !== undefined) updateData.role = role
