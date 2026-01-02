@@ -62,13 +62,42 @@ export async function PATCH(
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
 
-    // Update the profile - use maybeSingle to handle 0 rows gracefully
+    // First verify the profile exists
+    const { data: existingProfile, error: checkError } = await supabaseAdmin
+      .from("user_profiles")
+      .select("user_id")
+      .eq("user_id", params.userId)
+      .maybeSingle()
+
+    if (checkError) {
+      console.error("Error checking user profile:", checkError)
+      return NextResponse.json(
+        { 
+          error: "Failed to check user profile",
+          details: checkError.message
+        },
+        { status: 500 }
+      )
+    }
+
+    if (!existingProfile) {
+      console.error("Profile not found for user_id:", params.userId)
+      return NextResponse.json(
+        { 
+          error: "User profile not found",
+          details: `No profile found for user_id: ${params.userId}. The user may need to sign in first to create their profile.`
+        },
+        { status: 404 }
+      )
+    }
+
+    // Update the profile
     const { data, error } = await supabaseAdmin
       .from("user_profiles")
       .update(updateData)
       .eq("user_id", params.userId)
       .select()
-      .maybeSingle()
+      .single()
 
     if (error) {
       console.error("Error updating user profile:", {
@@ -88,17 +117,6 @@ export async function PATCH(
           hint: error.hint
         },
         { status: 500 }
-      )
-    }
-
-    // If no rows were updated, the user doesn't exist
-    if (!data) {
-      return NextResponse.json(
-        { 
-          error: "User profile not found",
-          details: `No profile found for user_id: ${params.userId}`
-        },
-        { status: 404 }
       )
     }
 
