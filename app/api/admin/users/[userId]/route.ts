@@ -71,8 +71,24 @@ export async function PATCH(
       .single()
 
     if (error) {
-      console.error("Error updating user profile:", error)
-      return NextResponse.json({ error: "Failed to update user profile" }, { status: 500 })
+      console.error("Error updating user profile:", {
+        error,
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        updateData,
+        userId: params.userId
+      })
+      return NextResponse.json(
+        { 
+          error: "Failed to update user profile",
+          details: error.message || error.details || "Unknown error",
+          code: error.code,
+          hint: error.hint
+        },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ success: true, profile: data })

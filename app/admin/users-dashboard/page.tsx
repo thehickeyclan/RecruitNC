@@ -210,22 +210,21 @@ export default function UsersDashboardPage() {
         console.error("[Users Dashboard] Failed to parse response:", e)
       }
       
-      console.log("[Users Dashboard] Response:", {
+      console.log("[Users Dashboard] FULL Response:", {
         status: res.status,
         ok: res.ok,
         statusText: res.statusText,
-        data: responseData,
-        error: responseData.error,
-        details: responseData.details,
-        code: responseData.code
+        fullData: responseData
       })
 
       if (!res.ok) {
         const errorMessage = responseData.details || responseData.error || responseData.message || `Failed to update user (${res.status})`
-        console.error("[Users Dashboard] Update failed:", {
+        console.error("[Users Dashboard] Update failed - FULL ERROR:", {
           message: errorMessage,
-          fullResponse: responseData,
-          status: res.status
+          fullResponse: JSON.stringify(responseData, null, 2),
+          status: res.status,
+          code: responseData.code,
+          hint: responseData.hint
         })
         throw new Error(errorMessage)
       }
