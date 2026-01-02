@@ -62,15 +62,24 @@ export async function PATCH(
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
     if (school_id !== undefined) updateData.school_id = school_id || null
 
-    // First verify the profile exists
+    // First verify the profile exists - check both user_id formats
+    console.log("[API] Looking for profile with user_id:", params.userId, "type:", typeof params.userId)
+    
     const { data: existingProfile, error: checkError } = await supabaseAdmin
       .from("user_profiles")
-      .select("user_id")
+      .select("user_id, email, full_name")
       .eq("user_id", params.userId)
       .maybeSingle()
 
     if (checkError) {
-      console.error("Error checking user profile:", checkError)
+      console.error("[API] Error checking user profile:", checkError)
+      // Try to find any profile with similar ID
+      const { data: allProfiles } = await supabaseAdmin
+        .from("user_profiles")
+        .select("user_id, email")
+        .limit(5)
+      console.log("[API] Sample user_ids in database:", allProfiles?.map(p => ({ id: p.user_id, type: typeof p.user_id })))
+      
       return NextResponse.json(
         { 
           error: "Failed to check user profile",
@@ -81,7 +90,15 @@ export async function PATCH(
     }
 
     if (!existingProfile) {
-      console.error("Profile not found for user_id:", params.userId)
+      console.error("[API] Profile not found for user_id:", params.userId)
+      // Try to find any profile to see what format user_id is
+      const { data: sampleProfile } = await supabaseAdmin
+        .from("user_profiles")
+        .select("user_id, email")
+        .limit(1)
+        .maybeSingle()
+      console.log("[API] Sample profile user_id format:", sampleProfile?.user_id, "type:", typeof sampleProfile?.user_id)
+      
       return NextResponse.json(
         { 
           error: "User profile not found",
@@ -90,6 +107,8 @@ export async function PATCH(
         { status: 404 }
       )
     }
+
+    console.log("[API] Found existing profile:", existingProfile.email)
 
     // Update the profile
     const { data, error } = await supabaseAdmin
