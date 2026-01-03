@@ -25,55 +25,15 @@ interface Message {
 }
 
 // RecruitNC-specific suggested prompts based on current page
+// These questions are aligned with LegacyNC and can actually be answered
 const getSuggestedPrompts = (pathname: string): string[] => {
-  // Athletes / Prospects pages
-  if (pathname.includes("/athletes") || pathname.includes("/prospects")) {
-    return [
-      "What college does Liam Hickey wrestle for?",
-      "What was Tobin McNair's record as a freshman?",
-      "What losses did Liam Hickey have in his high school career?",
-      "What was Colt Campbell's HS career record?",
-      "Show me all 2025 D1 commitments",
-    ]
-  }
-
-  // Schools / Portal pages
-  if (pathname.includes("/schools") || pathname.includes("/portal")) {
-    return [
-      "What college does Liam Hickey wrestle for?",
-      "Which athletes are committed to NC State?",
-      "Show me all uncommitted 2026 prospects",
-      "What are the top recruiting classes by division?",
-    ]
-  }
-
-  // Colleges page
-  if (pathname.includes("/colleges")) {
-    return [
-      "Which colleges have the most NC commitments?",
-      "Show me all D1 commitments",
-      "What athletes are committed to Appalachian State?",
-      "Which division has the most commitments?",
-    ]
-  }
-
-  // Rankings page
-  if (pathname.includes("/rankings") || pathname.includes("/public-rankings")) {
-    return [
-      "Who are the top ranked 2026 prospects?",
-      "What was Tobin McNair's record as a freshman?",
-      "Show me all 4x state champions",
-      "Who has the best career record?",
-    ]
-  }
-
-  // Default prompts for home page and other pages
+  // Use the same prompts as LegacyNC - questions we can actually answer
   return [
-    "What college does Liam Hickey wrestle for?",
-    "What was Tobin McNair's record as a freshman?",
-    "Show me all 2025 D1 commitments",
-    "What losses did Liam Hickey have in his high school career?",
-    "Which colleges have the most NC commitments?",
+    "What was our best year for NHSCA All-Americans?",
+    "When are NHSCA's?",
+    "Who is the all time winningest wrestler?",
+    "Who won the Dave Schultz Award in 2025?",
+    "Who are our 4x state champions?",
   ]
 }
 
