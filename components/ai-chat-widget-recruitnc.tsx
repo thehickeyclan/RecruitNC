@@ -78,7 +78,7 @@ const getSuggestedPrompts = (pathname: string): string[] => {
 }
 
 const DATA_DAWG_IMAGE_URL =
-  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/RK_HuFHUNERbbjg9_a01T-Data%20Dawg.png"
+  "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/mrF_BS_MLNADT9HWhny2B-Data%20Dawg%203.png"
 
 export function AIChatWidget() {
   const pathname = usePathname()
@@ -385,7 +385,7 @@ export function AIChatWidget() {
             <CardHeader className="bg-gradient-to-br from-[#001f3f] to-[#001633] text-white p-6 text-center border-b-2 border-[#f4c542]">
               <div className="flex justify-center mb-4">
                 <div className={cn(
-                  "relative h-32 w-32 rounded-full overflow-hidden border-4 border-[#f4c542] bg-black shadow-lg",
+                  "relative h-40 w-40 overflow-hidden shadow-lg",
                   avatarState === "greeting" && "avatar-greeting",
                   avatarState === "thinking" && "avatar-thinking",
                   avatarState === "success" && "avatar-success"
@@ -394,8 +394,7 @@ export function AIChatWidget() {
                     src={DATA_DAWG_IMAGE_URL}
                     alt="Data Dawg"
                     fill
-                    className="object-contain brightness-110 contrast-105"
-                    style={{ objectPosition: "center 30%" }}
+                    className="object-contain"
                   />
                 </div>
               </div>
@@ -459,15 +458,15 @@ export function AIChatWidget() {
         <Button
           onClick={() => setIsOpen(true)}
           className={cn(
-            "h-16 w-16 rounded-full shadow-xl border-2 border-[#f4c542]/50",
-            "bg-[#001f3f] hover:bg-[#001633] text-white",
-            "flex items-center justify-center p-0 overflow-hidden"
+            "h-20 w-20 shadow-xl",
+            "bg-transparent hover:bg-transparent",
+            "flex items-center justify-center p-0 overflow-visible"
           )}
           size="icon"
           aria-label="Open Data Dawg chat"
         >
           <div className={cn(
-            "relative h-full w-full rounded-full",
+            "relative h-full w-full",
             avatarState === "greeting" && "avatar-greeting",
             avatarState === "thinking" && "avatar-thinking",
             avatarState === "success" && "avatar-success"
@@ -476,8 +475,7 @@ export function AIChatWidget() {
               src={DATA_DAWG_IMAGE_URL}
               alt="Data Dawg"
               fill
-              className="object-contain brightness-110 contrast-105"
-              style={{ objectPosition: "center 30%" }}
+              className="object-contain"
             />
           </div>
         </Button>
@@ -550,7 +548,7 @@ export function AIChatWidget() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={cn(
-                    "h-10 w-10 sm:h-10 sm:w-10 rounded-full overflow-hidden border-2 border-[#f4c542]/70 bg-black flex-shrink-0",
+                    "h-12 w-12 sm:h-12 sm:w-12 overflow-hidden flex-shrink-0",
                     avatarState === "greeting" && "avatar-greeting",
                     avatarState === "thinking" && "avatar-thinking",
                     avatarState === "success" && "avatar-success"
@@ -558,10 +556,9 @@ export function AIChatWidget() {
                     <Image
                       src={DATA_DAWG_IMAGE_URL}
                       alt="Data Dawg"
-                      width={40}
-                      height={40}
-                      className="object-contain brightness-110 contrast-105"
-                      style={{ objectPosition: "center 30%" }}
+                      width={48}
+                      height={48}
+                      className="object-contain"
                     />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -606,7 +603,7 @@ export function AIChatWidget() {
                   <div className="text-sm text-slate-600 space-y-4">
                     <div className="flex items-start gap-3">
                       <div className={cn(
-                        "h-8 w-8 rounded-full overflow-hidden border-2 border-[#f4c542]/70 bg-black flex-shrink-0",
+                        "h-10 w-10 overflow-hidden flex-shrink-0",
                         avatarState === "greeting" && "avatar-greeting",
                         avatarState === "thinking" && "avatar-thinking",
                         avatarState === "success" && "avatar-success"
@@ -614,10 +611,9 @@ export function AIChatWidget() {
                         <Image
                           src={DATA_DAWG_IMAGE_URL}
                           alt="Data Dawg"
-                          width={32}
-                          height={32}
-                          className="object-contain brightness-110 contrast-105"
-                          style={{ objectPosition: "center 30%" }}
+                          width={40}
+                          height={40}
+                          className="object-contain"
                         />
                       </div>
                       <div className="bg-slate-100 rounded-2xl px-3 py-2">
@@ -653,16 +649,15 @@ export function AIChatWidget() {
                         >
                           {!isUser && (
                             <div className={cn(
-                              "mr-2 mt-1 h-7 w-7 rounded-full overflow-hidden border-2 border-[#f4c542]/70 bg-black flex-shrink-0",
+                              "mr-2 mt-1 h-9 w-9 overflow-hidden flex-shrink-0",
                               isLoading && index === messages.length - 1 && "avatar-thinking"
                             )}>
                               <Image
                                 src={DATA_DAWG_IMAGE_URL}
                                 alt="Data Dawg"
-                                width={28}
-                                height={28}
-                                className="object-contain brightness-110 contrast-105"
-                                style={{ objectPosition: "center 30%" }}
+                                width={36}
+                                height={36}
+                                className="object-contain"
                               />
                             </div>
                           )}
@@ -718,14 +713,13 @@ export function AIChatWidget() {
                     })}
                     {isLoading && (
                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <div className="h-5 w-5 rounded-full border border-[#f4c542]/70 bg-black flex items-center justify-center avatar-thinking">
+                        <div className="h-6 w-6 flex items-center justify-center avatar-thinking">
                           <Image
                             src={DATA_DAWG_IMAGE_URL}
                             alt="Data Dawg thinking"
-                            width={20}
-                            height={20}
-                            className="object-contain brightness-110 contrast-105"
-                            style={{ objectPosition: "center 30%" }}
+                            width={24}
+                            height={24}
+                            className="object-contain"
                           />
                         </div>
                         <span>Data Dawg is thinking…</span>
