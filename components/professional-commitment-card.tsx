@@ -212,14 +212,29 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             Senior: `Senior (${gradYear - 1}-${String(gradYear).slice(-2)})`,
           }
 
-          const seasons: SeasonRecord[] = data.matches
-            .map((season: any) => {
-              const wins = Number(season.wins) || 0
-              const losses = Number(season.losses) || 0
+          // Group by grade to handle multiple records per season
+          const gradeGroups: { [key: string]: { wins: number; losses: number } } = {}
+          
+          data.matches.forEach((season: any) => {
+            const grade = (season.grade || season.year || "Unknown").trim()
+            if (!grade || grade === "Unknown") return
+            
+            if (!gradeGroups[grade]) {
+              gradeGroups[grade] = { wins: 0, losses: 0 }
+            }
+            
+            gradeGroups[grade].wins += Number(season.wins) || 0
+            gradeGroups[grade].losses += Number(season.losses) || 0
+          })
+
+          // Convert to array and sort by grade order
+          const gradeOrder = ["Freshman", "Sophomore", "Junior", "Senior"]
+          const seasons: SeasonRecord[] = Object.entries(gradeGroups)
+            .map(([grade, stats]) => {
+              const wins = stats.wins
+              const losses = stats.losses
               const total = wins + losses
               const winPercentage = total > 0 ? (wins / total) * 100 : 0
-
-              const grade = season.grade || season.year || "Unknown"
               const displayYear = gradeMap[grade] || grade
 
               return {
@@ -228,9 +243,11 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 wins,
                 losses,
                 winPercentage: Math.round(winPercentage * 10) / 10,
+                sortOrder: gradeOrder.indexOf(grade) >= 0 ? gradeOrder.indexOf(grade) : 999,
               }
             })
             .filter((s: SeasonRecord) => s.wins > 0 || s.losses > 0)
+            .sort((a: any, b: any) => (a.sortOrder || 999) - (b.sortOrder || 999))
 
           const totalWins = seasons.reduce((sum, s) => sum + s.wins, 0)
           const totalLosses = seasons.reduce((sum, s) => sum + s.losses, 0)
