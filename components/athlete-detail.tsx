@@ -18,6 +18,7 @@ import { ImageUploadEditor } from "./image-upload-editor"
 import { InlineBioEditor } from "./inline-bio-editor"
 import { InlineContactEditor } from "./inline-contact-editor"
 import { InlineAcademicsEditor } from "./inline-academics-editor"
+import { InlineAchievementsEditor } from "./inline-achievements-editor"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -313,10 +314,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   const achievements = (() => {
     try {
-      return Array.isArray(athlete?.achievements)
-        ? athlete.achievements
-        : typeof athlete?.achievements === "string"
-          ? athlete.achievements
+      return Array.isArray(athleteData?.achievements)
+        ? athleteData.achievements
+        : typeof athleteData?.achievements === "string"
+          ? athleteData.achievements
               .split(",")
               .map((a) => a.trim())
               .filter(Boolean)
@@ -329,8 +330,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   const additionalAchievements = (() => {
     try {
-      if (!athlete?.additional_achievements) return []
-      return athlete.additional_achievements
+      if (!athleteData?.additional_achievements) return []
+      return athleteData.additional_achievements
         .split(/\r?\n|;/)
         .map((entry) => entry.trim())
         .filter(Boolean)
@@ -1274,23 +1275,65 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         ) : null
       })()}
 
-      {additionalAchievements.length > 0 && (
+      {(additionalAchievements.length > 0 || achievements.length > 0 || editingSection === "achievements") && (
         <div className="container mx-auto px-4 py-8">
           <Card className="border-t-4 border-t-[#1D4ED8] shadow-md">
             <div className="bg-gradient-to-r from-[#1D4ED8] to-[#1E3A8A] p-6">
-              <div className="flex items-center gap-3">
-                <Award className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Additional Achievements</h2>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Award className="h-6 w-6 text-white" />
+                  <h2 className="text-2xl font-bold text-white">Achievements</h2>
+                </div>
+                {canEdit && !editingSection && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white hover:bg-white/20"
+                    onClick={() => setEditingSection("achievements")}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
               </div>
             </div>
             <div className="p-8">
-              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                {additionalAchievements.map((achievement, index) => (
-                  <li key={`additional-achievement-${index}`} className="text-base leading-relaxed">
-                    {achievement}
-                  </li>
-                ))}
-              </ul>
+              {editingSection === "achievements" ? (
+                <InlineAchievementsEditor
+                  athleteId={athlete.id}
+                  achievements={athleteData.achievements}
+                  additionalAchievements={athleteData.additional_achievements}
+                  onSave={handleInlineSave}
+                  onCancel={() => setEditingSection(null)}
+                />
+              ) : (
+                <>
+                  {achievements.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Achievements</h3>
+                      <ul className="list-disc list-inside space-y-2 text-gray-700">
+                        {achievements.map((achievement, index) => (
+                          <li key={`achievement-${index}`} className="text-base leading-relaxed">
+                            {achievement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {additionalAchievements.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Additional Achievements</h3>
+                      <ul className="list-disc list-inside space-y-2 text-gray-700">
+                        {additionalAchievements.map((achievement, index) => (
+                          <li key={`additional-achievement-${index}`} className="text-base leading-relaxed">
+                            {achievement}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </Card>
         </div>
