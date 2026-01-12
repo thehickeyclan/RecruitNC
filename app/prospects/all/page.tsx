@@ -193,6 +193,18 @@ export default function AllProspectsPage() {
             }).sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
           }
           
+          // Calculate state championship summary - check for 2x, 3x, or 4x state champion
+          let stateChampionshipSummary = null
+          if (stateResults && Array.isArray(stateResults) && stateResults.length > 0) {
+            const stateChampionships = stateResults.filter((r: any) => r.placement === 1)
+            const championshipCount = stateChampionships.length
+            if (championshipCount >= 2 && championshipCount <= 4) {
+              stateChampionshipSummary = `${championshipCount}x State Champion`
+            } else {
+              stateChampionshipSummary = stateResults[0]?.text
+            }
+          }
+          
           return {
             ...prospect,
             prospect_ranking: ranking?.prospect_ranking ?? ranking?.overall_rank ?? prospect.prospect_ranking ?? null,
@@ -212,7 +224,7 @@ export default function AllProspectsPage() {
               prospect.super_32_2024_record,
             state_results: stateResults ?? prospect.state_results,
             state_championship_summary:
-              stateResults?.[0]?.text ??
+              stateChampionshipSummary ??
               ranking?.state_championship_summary ??
               prospect.state_championship_summary ??
               prospect.achievements?.find((achievement) => achievement.toLowerCase().includes("state")),

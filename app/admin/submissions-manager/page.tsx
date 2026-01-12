@@ -140,6 +140,7 @@ export default function SubmissionsManagerPage() {
   const [commitments, setCommitments] = useState<CommitmentSubmission[]>([])
   const [editRequests, setEditRequests] = useState<ProfileEditRequest[]>([])
   const [profileSubmissions, setProfileSubmissions] = useState<ProfileSubmission[]>([])
+  const [athleteSelfEdits, setAthleteSelfEdits] = useState<any[]>([])
   const [stats, setStats] = useState<Stats>({
     newCommitments: 0,
     profileEdits: 0,
@@ -167,21 +168,24 @@ export default function SubmissionsManagerPage() {
       setError(null)
 
       // Fetch all submission types in parallel
-      const [commitmentsRes, editsRes, profilesRes] = await Promise.all([
+      const [commitmentsRes, editsRes, profilesRes, selfEditsRes] = await Promise.all([
         fetch("/api/admin/commitment-submissions"),
         fetch("/api/admin/edit-requests"),
         fetch("/api/admin/profile-submissions"),
+        fetch("/api/admin/athlete-edits"),
       ])
 
-      const [commitmentsData, editsData, profilesData] = await Promise.all([
+      const [commitmentsData, editsData, profilesData, selfEditsData] = await Promise.all([
         commitmentsRes.json(),
         editsRes.json(),
         profilesRes.json(),
+        selfEditsRes.json(),
       ])
 
       setCommitments(commitmentsData.submissions || [])
       setEditRequests(editsData.requests || [])
       setProfileSubmissions(profilesData.submissions || [])
+      setAthleteSelfEdits(selfEditsData.edits || [])
 
       // Fetch current athlete data for edit requests
       const athleteIds = (editsData.requests || [])
@@ -310,6 +314,46 @@ export default function SubmissionsManagerPage() {
       toast({
         title: "Error",
         description: "Failed to update edit request",
+        variant: "destructive",
+      })
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleRejectSelfEdit = async (edit: any) => {
+    try {
+      setProcessingId(edit.id)
+      const response = await fetch("/api/admin/athlete-edits/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          athleteId: edit.athlete_id,
+          auditLogIds: [edit.id],
+          revertChanges: true,
+          adminNotes: adminNotes[edit.id] || "Rejected by admin",
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Edit rejected and changes reverted",
+        })
+        await fetchAllData()
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "Error",
+          description: errorData.error || "Failed to reject edit",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      console.error("Error rejecting self-edit:", err)
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to reject edit",
         variant: "destructive",
       })
     } finally {
@@ -636,7 +680,7 @@ export default function SubmissionsManagerPage() {
 
         {/* Tabs for different submission types */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-[#13294B] p-1 rounded-lg shadow-md">
+          <TabsList className="grid w-full grid-cols-6 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-[#13294B] p-1 rounded-lg shadow-md">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#13294B] data-[state=active]:to-[#1a3a5c] data-[state=active]:text-white data-[state=active]:shadow-lg font-semibold transition-all"
@@ -666,6 +710,12 @@ export default function SubmissionsManagerPage() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#13294B] data-[state=active]:to-[#1a3a5c] data-[state=active]:text-white data-[state=active]:shadow-lg font-semibold transition-all"
             >
               📜 History <Badge className="ml-1 bg-green-600">{stats.totalApproved}</Badge>
+            </TabsTrigger>
+            <TabsTrigger
+              value="self-edits"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#13294B] data-[state=active]:to-[#1a3a5c] data-[state=active]:text-white data-[state=active]:shadow-lg font-semibold transition-all"
+            >
+              ✏️ Self-Edits <Badge className="ml-1 bg-blue-600">{athleteSelfEdits.length}</Badge>
             </TabsTrigger>
           </TabsList>
 
@@ -1546,6 +1596,90 @@ export default function SubmissionsManagerPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Athlete Self-Edits Tab */}
+          <TabsContent value="self-edits" className="space-y-6">
+            <Card className="border-t-4 border-t-blue-600">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+                <CardTitle className="text-[#002147] flex items-center gap-2">
+                  <Edit className="h-6 w-6 text-blue-600" />
+                  Athlete Self-Edits
+                </CardTitle>
+                <CardDescription>
+                  Recent profile edits made by athletes. Changes are auto-approved but can be rejected and reverted.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {athleteSelfEdits.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Edit className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-lg font-medium">No athlete self-edits yet</p>
+                    <p className="text-sm">Athlete profile edits will appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {athleteSelfEdits.map((edit) => (
+                      <Card key={edit.id} className="border-l-4 border-l-blue-600">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold text-[#002147]">
+                                  {edit.athlete?.name || "Unknown Athlete"}
+                                </h4>
+                                <Badge variant="outline" className="bg-blue-50">
+                                  {edit.field_name}
+                                </Badge>
+                              </div>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <p>
+                                  <span className="font-medium">Editor:</span>{" "}
+                                  {edit.editor
+                                    ? `${edit.editor.first_name || ""} ${edit.editor.last_name || ""} (${edit.editor.email || edit.user_id})`.trim()
+                                    : edit.user_id}
+                                </p>
+                                <p>
+                                  <span className="font-medium">Changed:</span>{" "}
+                                  {new Date(edit.created_at).toLocaleString()}
+                                </p>
+                                <div className="mt-2 p-2 bg-gray-50 rounded border">
+                                  <p className="text-xs text-gray-500 mb-1">Old Value:</p>
+                                  <p className="text-sm">{edit.old_value || "(empty)"}</p>
+                                  <p className="text-xs text-gray-500 mb-1 mt-2">New Value:</p>
+                                  <p className="text-sm font-medium">{edit.new_value || "(empty)"}</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2 ml-4">
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRejectSelfEdit(edit)}
+                                disabled={processingId === edit.id}
+                              >
+                                {processingId === edit.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                )}
+                                Reject & Revert
+                              </Button>
+                              <Link href={`/unified-profile/${edit.athlete_id}`} target="_blank">
+                                <Button variant="outline" size="sm">
+                                  <ExternalLink className="h-4 w-4 mr-1" />
+                                  View Profile
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 )}
               </CardContent>

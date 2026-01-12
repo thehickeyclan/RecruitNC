@@ -88,6 +88,8 @@ interface AthleteDetailProps {
     additional_achievements?: string | null
     flo_profile_url?: string
     track_wrestling_profile_url?: string
+    last_edited_by?: string
+    last_edited_at?: string
   }
   nchsaaResults?: Array<{
     year: number
@@ -1121,24 +1123,60 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {/* Match Data Section */}
       <MatchDataSectionImproved athleteId={athlete.id} athleteName={athleteName} graduationYear={graduationYear} />
 
-      {/* Request Edit Button - Always visible at bottom */}
+      {/* Last Edited By - Footer */}
+      {(athlete.last_edited_by || athlete.last_edited_at) && (
+        <div className="container mx-auto px-4 py-4">
+          <p className="text-xs text-gray-500 text-center">
+            {athlete.last_edited_at && (
+              <>
+                Last edited{" "}
+                {athlete.last_edited_by && (
+                  <>
+                    by <span className="font-medium">{athlete.last_edited_by}</span>{" "}
+                  </>
+                )}
+                on {new Date(athlete.last_edited_at).toLocaleDateString()} at{" "}
+                {new Date(athlete.last_edited_at).toLocaleTimeString()}
+              </>
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Edit My Profile / Request Edit Button - Always visible at bottom */}
       <div className="container mx-auto px-4 py-8">
         <Card className="border-2 border-blue-200 bg-blue-50">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">Help Keep This Profile Accurate</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  {currentUserId ? "Edit Your Profile" : "Help Keep This Profile Accurate"}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  Found an error or have updated information? Request an edit to this profile.
+                  {currentUserId
+                    ? "Update your profile information directly. Changes are saved immediately."
+                    : "Found an error or have updated information? Request an edit to this profile."}
                 </p>
               </div>
-              <Button
-                onClick={() => setShowEditModal(true)}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
-                size="lg"
-              >
-                Request Profile Edit
-              </Button>
+              <div className="flex gap-2">
+                {currentUserId && (
+                  <Button
+                    onClick={() => window.location.href = `/athletes/${athlete.id}/edit`}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
+                    size="lg"
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit My Profile
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setShowEditModal(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
+                  size="lg"
+                >
+                  Request Profile Edit
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

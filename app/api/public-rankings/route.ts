@@ -115,6 +115,15 @@ export async function GET(request: Request) {
 
       stateResults.sort((a, b) => b.year - a.year)
 
+      // Calculate state championship summary - check for 2x, 3x, or 4x state champion
+      const stateChampionships = stateResults.filter((r) => r.placement === 1)
+      const championshipCount = stateChampionships.length
+      const stateChampionshipSummary = championshipCount >= 2 && championshipCount <= 4
+        ? `${championshipCount}x State Champion`
+        : stateResults.length > 0
+        ? stateResults.map((r) => r.text).join(", ")
+        : "No State Placement"
+
       const nhscaResults_processed = []
 
       const nhscaFields = [
@@ -225,8 +234,7 @@ export async function GET(request: Request) {
         super_32_results: super32Results,
         super_32_record_display: super32Results.length > 0 ? super32Results.map((r) => r.text).join(", ") : "No Record",
         state_results: stateResults,
-        state_championship_summary:
-          stateResults.length > 0 ? stateResults.map((r) => r.text).join(", ") : "No State Placement",
+        state_championship_summary: stateChampionshipSummary,
       })
     }
 
