@@ -178,8 +178,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
     return data.url
   }
 
-  const canEdit = !!currentUserId
-
   const isKayne =
     athlete?.id === "9064f44a-2166-45a2-a8c6-690ae8d439db" ||
     (athlete?.name?.toLowerCase?.().includes("kayne") && athlete?.name?.toLowerCase?.().includes("bryson"))
