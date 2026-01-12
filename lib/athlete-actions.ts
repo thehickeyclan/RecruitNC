@@ -99,13 +99,33 @@ export async function updateAthleteAction(id: string, athleteData: any) {
     // Map frontend fields to database fields (including phone)
     const dbData = await mapAthleteToDb(athleteData)
     console.log("[v0] Updating athlete with data:", dbData)
-    console.log("[v0] Bio fields in dbData:", { bio: dbData.bio, bio_headline: dbData.bio_headline })
+    console.log("[v0] Bio fields in dbData:", { 
+      bio: dbData.bio, 
+      bio_length: dbData.bio?.length || 0,
+      bio_headline: dbData.bio_headline,
+      bio_headline_length: dbData.bio_headline?.length || 0
+    })
+
+    // Ensure bio fields are explicitly included even if empty
+    const updatePayload = {
+      ...dbData,
+      bio: dbData.bio !== undefined ? String(dbData.bio) : "",
+      bio_headline: dbData.bio_headline !== undefined ? String(dbData.bio_headline) : "",
+    }
+
+    console.log("[v0] Update payload bio fields:", {
+      bio: updatePayload.bio,
+      bio_length: updatePayload.bio?.length || 0,
+      bio_headline: updatePayload.bio_headline,
+      bio_headline_length: updatePayload.bio_headline?.length || 0
+    })
 
     // Perform the update with error handling
-    const { data, error } = await supabase.from("athletes").update(dbData).eq("id", id).select().single()
+    const { data, error } = await supabase.from("athletes").update(updatePayload).eq("id", id).select().single()
 
     if (error) {
       console.error("Error updating athlete:", error)
+      console.error("Error details:", JSON.stringify(error, null, 2))
       return { success: false, error: error.message }
     }
 
@@ -114,6 +134,12 @@ export async function updateAthleteAction(id: string, athleteData: any) {
     }
 
     console.log("[v0] Athlete updated successfully")
+    console.log("[v0] Updated athlete bio fields from DB:", {
+      bio: data.bio,
+      bio_length: data.bio?.length || 0,
+      bio_headline: data.bio_headline,
+      bio_headline_length: data.bio_headline?.length || 0
+    })
 
     try {
       await autoAlignCommittedAthleteToSchool({
