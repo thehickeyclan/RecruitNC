@@ -5,13 +5,19 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink } from "lucide-react"
+import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { ContactInfoSection } from "./contact-info-section"
 import { useAuth } from "@/contexts/auth-context"
+import { InlineEditSection } from "./inline-edit-section"
+import { InlineEditHeader } from "./inline-edit-header"
+import { ImageUploadEditor } from "./image-upload-editor"
+import { InlineBioEditor } from "./inline-bio-editor"
+import { InlineContactEditor } from "./inline-contact-editor"
+import { InlineAcademicsEditor } from "./inline-academics-editor"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -121,6 +127,57 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   const [showEditModal, setShowEditModal] = useState(false)
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
+  const [athleteData, setAthleteData] = useState(athlete)
+  const [editingSection, setEditingSection] = useState<string | null>(null)
+  
+  // Check if current user can edit (owns profile or is admin)
+  const canEdit = currentUserId !== null // TODO: Add ownership check if needed
+
+  // Handler for inline edits
+  const handleInlineSave = async (updates: Record<string, any>) => {
+    const response = await fetch(`/api/athletes/${athlete.id}/self-edit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updates }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || "Failed to save")
+    }
+
+    const data = await response.json()
+    // Update local state
+    setAthleteData((prev) => ({ ...prev, ...updates }))
+    setEditingSection(null)
+    // Refresh page data
+    window.location.reload()
+  }
+
+  // Handler for image upload
+  const handleImageUpload = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("athleteId", athlete.id)
+    formData.append("category", "profile")
+
+    const response = await fetch("/api/athletes/upload-image", {
+      method: "POST",
+      body: formData,
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || "Failed to upload image")
+    }
+
+    const data = await response.json()
+    // Update local state
+    setAthleteData((prev) => ({ ...prev, photourl: data.url }))
+    return data.url
+  }
+
+  const canEdit = !!currentUserId
 
   const isKayne =
     athlete?.id === "9064f44a-2166-45a2-a8c6-690ae8d439db" ||
@@ -734,28 +791,27 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               <div className="relative z-10 flex items-start gap-8 p-8">
                 <div className="flex-shrink-0 w-80">
                   <div className="relative h-96 w-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl">
-                    {/* Edit Button - Bottom Right */}
-                    {currentUserId && (
-                      <Button
-                        size="sm"
-                        className="absolute bottom-4 right-4 z-20 bg-white/90 hover:bg-white text-[#13294B] shadow-lg p-2 h-auto"
-                        onClick={() => setShowEditModal(true)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                    {canEdit ? (
+                      <ImageUploadEditor
+                        athleteId={athlete.id}
+                        currentImageUrl={athletePhoto || undefined}
+                        onUpload={handleImageUpload}
+                        canEdit={canEdit}
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <Image
+                        src={athletePhoto || "/placeholder.svg"}
+                        alt={athleteName}
+                        fill
+                        className={cn("object-cover origin-center", isKayne ? "scale-[.65]" : "scale-75")}
+                        style={{
+                          objectPosition: "center 35%",
+                        }}
+                        onError={() => setImageError(true)}
+                        priority
+                      />
                     )}
-
-                    <Image
-                      src={athletePhoto || "/placeholder.svg"}
-                      alt={athleteName}
-                      fill
-                      className={cn("object-cover origin-center", isKayne ? "scale-[.65]" : "scale-75")}
-                      style={{
-                        objectPosition: "center 35%",
-                      }}
-                      onError={() => setImageError(true)}
-                      priority
-                    />
                   </div>
                 </div>
 
@@ -870,44 +926,151 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </div>
       </Card>
 
-      {/* Contact Info Section */}
-      <ContactInfoSection athlete={athlete} />
-
-      {/* AI Bio Section - Athlete Profile */}
-      {(athlete?.bio_headline || athlete?.bio) && (
-        <Card className="border-t-4 border-t-[#002147] shadow-md">
-          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Athlete Profile</h2>
+      {/* Contact Info Section - Replace with inline editable version */}
+      {canEdit && (editingSection === "contact" || highSchool || wrestlingClub || athleteData.cell || athleteData.instagram) && (
+        <Card className="border-t-4 border-t-blue-600 shadow-md">
+          <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Contact Information</h2>
+              </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("contact")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
             </div>
           </div>
           <div className="p-8">
-            <div className="mb-4">
-              <div className="flex-1">
-                {athlete?.bio_headline && (
-                  <h3 className="text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athlete.bio_headline}</h3>
+            {editingSection === "contact" ? (
+              <InlineContactEditor
+                athleteId={athlete.id}
+                highSchool={athleteData.highschool || athleteData.high_school}
+                wrestlingClub={athleteData.wrestlingclub || athleteData.wrestlingClub}
+                cell={athleteData.cell || athleteData.cell_number || athleteData.phone}
+                instagram={athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <div className="space-y-4">
+                {highSchool && highSchool !== "Not specified" && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">High School</p>
+                    <p className="font-semibold text-gray-900">{highSchool}</p>
+                  </div>
+                )}
+                {wrestlingClub && wrestlingClub !== "Not specified" && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Wrestling Club</p>
+                    <p className="font-semibold text-gray-900">{wrestlingClub}</p>
+                  </div>
+                )}
+                {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
+                    <p className="font-semibold text-gray-900">
+                      {athleteData.cell || athleteData.cell_number || athleteData.phone}
+                    </p>
+                  </div>
+                )}
+                {(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Instagram</p>
+                    <p className="font-semibold text-gray-900">
+                      {athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
+                    </p>
+                  </div>
                 )}
               </div>
-            </div>
-      {athlete?.bio && (
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-          <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athlete.bio}</p>
-        </div>
+            )}
+          </div>
+        </Card>
       )}
-      </div>
-    </Card>
-  )}
+      
+      {/* Contact Info Section - For coaches/admins (keep original) */}
+      {!canEdit && <ContactInfoSection athlete={athlete} />}
+
+      {/* AI Bio Section - Athlete Profile */}
+      {(athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Athlete Profile</h2>
+              </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("bio")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="p-8">
+            {editingSection === "bio" ? (
+              <InlineBioEditor
+                athleteId={athlete.id}
+                bio={athleteData.bio}
+                bioHeadline={athleteData.bio_headline}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <>
+                <div className="mb-4">
+                  <div className="flex-1">
+                    {athleteData?.bio_headline && (
+                      <h3 className="text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
+                    )}
+                  </div>
+                </div>
+                {athleteData?.bio && (
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Card>
+      )}
 
   {/* Removed duplicate Additional Achievements block (will render once after College Opens) */}
 
       {/* Academics Section */}
-      {(highSchool !== "Not specified" || athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
+      {(highSchool !== "Not specified" || athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act || editingSection === "academics") && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
-            <div className="flex items-center gap-3">
-              <GraduationCap className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Academics</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <GraduationCap className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Academics</h2>
+              </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("academics")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
             </div>
           </div>
           <div className="p-8">
@@ -937,37 +1100,50 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               </div>
             )}
 
-            {/* Academic Stats - Only visible to coaches and admins */}
-            {(isAdmin || isVerifiedCoach) && (athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {athlete.academic_gpa && (
-                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">GPA</p>
-                    <p className="text-4xl font-bold text-[#002147]">
-                      {athlete.academic_gpa.toFixed(2)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Grade Point Average</p>
+            {editingSection === "academics" ? (
+              <InlineAcademicsEditor
+                athleteId={athlete.id}
+                gpa={athleteData.academic_gpa}
+                sat={athleteData.academic_sat}
+                act={athleteData.academic_act}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <>
+                {/* Academic Stats - Only visible to coaches and admins */}
+                {(isAdmin || isVerifiedCoach) && (athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act) && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {athleteData.academic_gpa && (
+                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">GPA</p>
+                        <p className="text-4xl font-bold text-[#002147]">
+                          {athleteData.academic_gpa.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">Grade Point Average</p>
+                      </div>
+                    )}
+                    {athleteData.academic_sat && (
+                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">SAT</p>
+                        <p className="text-4xl font-bold text-[#002147]">
+                          {athleteData.academic_sat}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
+                      </div>
+                    )}
+                    {athleteData.academic_act && (
+                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">ACT</p>
+                        <p className="text-4xl font-bold text-[#002147]">
+                          {athleteData.academic_act}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
+                      </div>
+                    )}
                   </div>
                 )}
-                {athlete.academic_sat && (
-                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">SAT</p>
-                    <p className="text-4xl font-bold text-[#002147]">
-                      {athlete.academic_sat}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
-                  </div>
-                )}
-                {athlete.academic_act && (
-                  <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                    <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">ACT</p>
-                    <p className="text-4xl font-bold text-[#002147]">
-                      {athlete.academic_act}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
-                  </div>
-                )}
-              </div>
+              </>
             )}
             
             {/* Message for non-coaches */}
