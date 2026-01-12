@@ -22,6 +22,8 @@ import {
   Loader2,
   ExternalLink,
   AlertCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -59,6 +61,8 @@ interface ProfileEditRequest {
   status: string
   request_data: any
   created_at: string
+  reviewed_at?: string | null
+  admin_notes?: string | null
 }
 
 interface ProfileSubmission {
@@ -151,6 +155,7 @@ export default function SubmissionsManagerPage() {
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [adminNotes, setAdminNotes] = useState<{ [key: string]: string }>({})
   const [athleteData, setAthleteData] = useState<{ [key: string]: any }>({})
+  const [expandedRequests, setExpandedRequests] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchAllData()
@@ -1356,19 +1361,124 @@ export default function SubmissionsManagerPage() {
                                           </span>
                                         )}
                                       </div>
-                                      {request.admin_notes && (
-                                        <div className="mt-2 text-xs bg-white p-2 rounded border border-gray-200">
-                                          <span className="font-medium">Admin Notes: </span>
-                                          <span className="text-gray-600">{request.admin_notes}</span>
+                                      {/* Show Requested Changes - Always Visible */}
+                                      {request.request_data && (
+                                        <div className="mt-4 pt-4 border-t border-gray-300">
+                                          <div className="text-sm font-semibold text-[#002147] mb-3">
+                                            Requested Changes:
+                                          </div>
+                                          {request.request_data?.description && (
+                                            <div className="mb-3 p-3 bg-blue-50 rounded border border-blue-200">
+                                              <div className="text-xs font-medium text-blue-800 mb-1">Description:</div>
+                                              <div className="text-sm text-blue-900">{request.request_data.description}</div>
+                                            </div>
+                                          )}
+                                          {request.request_data?.currentData && (
+                                            <div className="space-y-3">
+                                              {request.request_data.currentData.bio && (
+                                                <div className="p-3 bg-gray-50 rounded border">
+                                                  <div className="text-xs font-semibold text-gray-700 mb-2">Bio Updates:</div>
+                                                  <div className="space-y-1 text-sm">
+                                                    {request.request_data.currentData.bio.highSchool && (
+                                                      <div><span className="font-medium">High School:</span> {request.request_data.currentData.bio.highSchool}</div>
+                                                    )}
+                                                    {request.request_data.currentData.bio.club && (
+                                                      <div><span className="font-medium">Wrestling Club:</span> {request.request_data.currentData.bio.club}</div>
+                                                    )}
+                                                    {request.request_data.currentData.bio.weight && (
+                                                      <div><span className="font-medium">Weight Class:</span> {request.request_data.currentData.bio.weight}</div>
+                                                    )}
+                                                    {request.request_data.currentData.bio.cellNumber && (
+                                                      <div><span className="font-medium">Cell Phone:</span> {request.request_data.currentData.bio.cellNumber}</div>
+                                                    )}
+                                                    {request.request_data.currentData.bio.highlightVideo && (
+                                                      <div><span className="font-medium">Highlight Video:</span> {request.request_data.currentData.bio.highlightVideo}</div>
+                                                    )}
+                                                    {request.request_data.currentData.bio.other && (
+                                                      <div><span className="font-medium">Other:</span> {request.request_data.currentData.bio.other}</div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )}
+                                              {request.request_data.currentData.achievements && (
+                                                <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
+                                                  <div className="text-xs font-semibold text-gray-700 mb-1">Achievements:</div>
+                                                  <div className="text-sm whitespace-pre-wrap">{request.request_data.currentData.achievements}</div>
+                                                </div>
+                                              )}
+                                              {request.request_data.currentData.academics && (
+                                                <div className="p-3 bg-green-50 rounded border border-green-200">
+                                                  <div className="text-xs font-semibold text-gray-700 mb-2">Academic Updates:</div>
+                                                  <div className="space-y-1 text-sm">
+                                                    {request.request_data.currentData.academics.gpa && (
+                                                      <div><span className="font-medium">GPA:</span> {request.request_data.currentData.academics.gpa}</div>
+                                                    )}
+                                                    {request.request_data.currentData.academics.sat && (
+                                                      <div><span className="font-medium">SAT:</span> {request.request_data.currentData.academics.sat}</div>
+                                                    )}
+                                                    {request.request_data.currentData.academics.act && (
+                                                      <div><span className="font-medium">ACT:</span> {request.request_data.currentData.academics.act}</div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              )}
+                                              {request.request_data.currentData.other && (
+                                                <div className="p-3 bg-purple-50 rounded border border-purple-200">
+                                                  <div className="text-xs font-semibold text-gray-700 mb-1">Other Information:</div>
+                                                  <div className="text-sm whitespace-pre-wrap">{request.request_data.currentData.other}</div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                          {/* Expandable full JSON view */}
+                                          <div className="mt-3">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => {
+                                                setExpandedRequests((prev) => {
+                                                  const newSet = new Set(prev)
+                                                  if (newSet.has(request.id)) {
+                                                    newSet.delete(request.id)
+                                                  } else {
+                                                    newSet.add(request.id)
+                                                  }
+                                                  return newSet
+                                                })
+                                              }}
+                                              className="text-xs text-gray-600 hover:text-gray-900"
+                                            >
+                                              {expandedRequests.has(request.id) ? (
+                                                <>
+                                                  <ChevronUp className="h-3 w-3 mr-1" />
+                                                  Hide Full JSON
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <ChevronDown className="h-3 w-3 mr-1" />
+                                                  Show Full JSON Data
+                                                </>
+                                              )}
+                                            </Button>
+                                            {expandedRequests.has(request.id) && (
+                                              <div className="mt-2 p-3 bg-gray-50 rounded border border-gray-300">
+                                                <pre className="text-xs overflow-auto max-h-96">
+                                                  {JSON.stringify(request.request_data, null, 2)}
+                                                </pre>
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
                                       )}
                                     </div>
-                                    <Link href={`/unified-profile/${request.athlete_id}`} target="_blank">
-                                      <Button variant="outline" size="sm">
-                                        <ExternalLink className="h-3 w-3 mr-1" />
-                                        View
-                                      </Button>
-                                    </Link>
+                                    <div className="flex flex-col gap-2">
+                                      <Link href={`/unified-profile/${request.athlete_id}`} target="_blank">
+                                        <Button variant="outline" size="sm">
+                                          <ExternalLink className="h-3 w-3 mr-1" />
+                                          View
+                                        </Button>
+                                      </Link>
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>
