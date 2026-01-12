@@ -186,10 +186,7 @@ export async function GET(request: Request) {
       )
     }
 
-    console.log(`🔍 Featured Athletes API: Starting fetch for year ${targetYear}`)
-
-    // For 2026+ first attempt: latest commitments across all classes
-    // Fetch ALL matching athletes, then sort in JavaScript to ensure we get top 3
+    // Latest commitments: Get ALL athletes with colleges, sort by most recent commitment/update
     const recentCommitmentsResult = await safeSupabaseQuery(
       () =>
         supabase
@@ -197,35 +194,20 @@ export async function GET(request: Request) {
           .select("*")
           .not("college", "is", null)
           .neq("college", "")
-          .gte("graduationyear", new Date().getFullYear() + 1) // Filter 2026+ at query level
-          .limit(500), // Fetch a large number to ensure we have enough to sort
+          .limit(500),
       "Featured Athletes API - Recent Commitments",
     )
 
-    let recentCommitmentAthletes: any[] = []
-
     if (recentCommitmentsResult.success && Array.isArray(recentCommitmentsResult.data) && recentCommitmentsResult.data.length > 0) {
-      console.log(`📊 Featured Athletes API: Raw query returned ${recentCommitmentsResult.data.length} athletes`)
-      
       const sortedCommitments = recentCommitmentsResult.data
-        .filter((athlete: any) => {
-          // Filter out 2025 and earlier (double-check even though we filtered in query)
-          const gradYear = athlete.graduationyear || 0
-          const currentYear = new Date().getFullYear()
-          return gradYear >= currentYear + 1
-        })
         .sort((a: any, b: any) => {
-          // Sort by commitment_date if available, otherwise by updated_at
           const dateA = new Date(a.commitment_date || a.commitmentdate || a.updated_at || 0).getTime()
           const dateB = new Date(b.commitment_date || b.commitmentdate || b.updated_at || 0).getTime()
           return dateB - dateA
         })
-        .slice(0, 3) // Take top 3 most recent
+        .slice(0, 3)
 
-      console.log(`📊 Featured Athletes API: After filtering and sorting, found ${sortedCommitments.length} recent commits`)
-      console.log(`📊 Featured Athletes API: Athlete names: ${sortedCommitments.map((a: any) => a.name).join(", ")}`)
-
-      recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
+      const recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
         id: athlete.id?.toString() || "",
         name: athlete.name || "Unknown",
         highschool: athlete.highschool || "Unknown High School",
@@ -253,21 +235,11 @@ export async function GET(request: Request) {
         commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
       }))
 
-      console.log(`📊 Featured Athletes API: Processed ${recentCommitmentAthletes.length} commits, returning up to 3`)
-      
       if (recentCommitmentAthletes.length > 0) {
-        // If we have fewer than 3, log it for debugging
-        if (recentCommitmentAthletes.length < 3) {
-          console.log(`⚠️ Featured Athletes API: Only found ${recentCommitmentAthletes.length} recent commits (expected 3)`)
-        }
-        
-        console.log(`✅ Featured Athletes API: Returning ${recentCommitmentAthletes.length} recent commitments`)
-
-        // Always return what we have (up to 3)
         return NextResponse.json(
           {
             success: true,
-            athletes: recentCommitmentAthletes, // Already sliced to 3 above
+            athletes: recentCommitmentAthletes,
           },
           {
             headers: {
