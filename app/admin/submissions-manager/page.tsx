@@ -1428,7 +1428,6 @@ export default function SubmissionsManagerPage() {
                                           <span className="text-gray-600">{submission.admin_notes}</span>
                                         </div>
                                       )}
-                                      </div>
                                     </div>
                                   </div>
                                 </CardContent>
