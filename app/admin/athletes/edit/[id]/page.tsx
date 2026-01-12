@@ -220,8 +220,19 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
           .filter(Boolean)
       }
 
+      // Preserve bio fields from editable state (they might have been edited but not saved yet)
+      // This prevents the form save from overwriting unsaved bio changes
+      if (editableBio !== undefined) {
+        data.bio = editableBio
+      }
+      if (editableHeadline !== undefined) {
+        data.bio_headline = editableHeadline
+      }
+
       console.log("[v0] About to call updateAthleteAction with data:", {
         id,
+        bio: data.bio,
+        bio_headline: data.bio_headline,
         newFields: {
           super_32_2024_record: data.super_32_2024_record,
           super_32_2024_placement: data.super_32_2024_placement,
@@ -245,6 +256,12 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
       setSaveTimestamp(new Date().toLocaleString())
       setAthlete(result.data)
       setOriginalAthlete(JSON.parse(JSON.stringify(result.data)))
+      
+      // Update editable bio fields to match saved data
+      if (result.data) {
+        setEditableBio(result.data.bio || "")
+        setEditableHeadline(result.data.bio_headline || "")
+      }
 
       toast({
         title: "Success",
@@ -532,7 +549,21 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
           athleteId={id}
           nhscaResults={athlete.nhsca_results || []}
           super32Results={athlete.super32_results || []}
-          onSave={() => {
+          onSave={async () => {
+            // Refresh athlete data after tournament results save to get latest values
+            // But preserve the current editable bio fields
+            const refreshResult = await getAthleteByIdAction(id)
+            if (refreshResult.success && refreshResult.data) {
+              setAthlete(refreshResult.data)
+              // Only update bio fields if they haven't been manually edited
+              // This prevents overwriting unsaved bio changes
+              if (editableBio === athlete.bio || !editableBio) {
+                setEditableBio(refreshResult.data.bio || "")
+              }
+              if (editableHeadline === athlete.bio_headline || !editableHeadline) {
+                setEditableHeadline(refreshResult.data.bio_headline || "")
+              }
+            }
             toast({
               title: "Success",
               description: "Tournament results saved successfully!",
