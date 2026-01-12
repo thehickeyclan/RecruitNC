@@ -185,8 +185,8 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
         return []
       })(),
       additional_achievements: athlete.additional_achievements || "",
-      bio: athlete.bio || "",
-      bio_headline: athlete.bio_headline || "",
+      bio: athlete.bio !== undefined && athlete.bio !== null ? String(athlete.bio) : "",
+      bio_headline: athlete.bio_headline !== undefined && athlete.bio_headline !== null ? String(athlete.bio_headline) : "",
       gender: athlete.gender || "Male",
       weight: athlete.weight === "" ? null : athlete.weight,
       highSchoolLogoUrl: athlete.highSchoolLogoUrl || "",

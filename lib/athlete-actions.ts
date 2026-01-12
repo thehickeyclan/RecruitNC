@@ -99,6 +99,7 @@ export async function updateAthleteAction(id: string, athleteData: any) {
     // Map frontend fields to database fields (including phone)
     const dbData = await mapAthleteToDb(athleteData)
     console.log("[v0] Updating athlete with data:", dbData)
+    console.log("[v0] Bio fields in dbData:", { bio: dbData.bio, bio_headline: dbData.bio_headline })
 
     // Perform the update with error handling
     const { data, error } = await supabase.from("athletes").update(dbData).eq("id", id).select().single()
