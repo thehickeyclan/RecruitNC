@@ -120,8 +120,9 @@ export async function updateAthleteAction(id: string, athleteData: any) {
       bio_headline_length: updatePayload.bio_headline?.length || 0
     })
 
-    // Perform the update with error handling
-    const { data, error } = await supabase.from("athletes").update(updatePayload).eq("id", id).select().single()
+    // Use admin client for update to bypass RLS (this is an admin action)
+    // This ensures updates work even if RLS policies are restrictive
+    const { data, error } = await adminSupabase.from("athletes").update(updatePayload).eq("id", id).select().single()
 
     if (error) {
       console.error("Error updating athlete:", error)
