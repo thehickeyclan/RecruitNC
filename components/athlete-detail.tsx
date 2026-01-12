@@ -1294,7 +1294,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </div>
       )}
 
-      {(canEdit || additionalAchievements.length > 0 || achievements.length > 0 || editingSection === "achievements") && (
+      {(canEdit || additionalAchievements.length > 0 || achievements.length > 0) && (
         <div className="container mx-auto px-4 py-8">
           <Card className="border-t-4 border-t-[#1D4ED8] shadow-md">
             <div className="bg-gradient-to-r from-[#1D4ED8] to-[#1E3A8A] p-6">
