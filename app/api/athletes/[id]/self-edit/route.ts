@@ -16,6 +16,7 @@ const EDITABLE_FIELDS = [
   "instagram",
   "instagram_handle",
   "instagram_username",
+  "highlight_video_url",
   "academic_gpa",
   "academic_sat",
   "academic_act",
