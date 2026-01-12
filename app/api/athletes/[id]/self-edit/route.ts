@@ -104,6 +104,10 @@ export async function POST(
       instagram_handle: "instagram",
       instagram_username: "instagram",
       highlight_video_url: "highlight_video_url",
+      highlightVideoUrl: "highlight_video_url",
+      achievements: "achievements",
+      additional_achievements: "additional_achievements",
+      additionalAchievements: "additional_achievements",
     }
 
     // Validate and filter updates - only allow editable fields
@@ -145,22 +149,41 @@ export async function POST(
       const dbFieldName = fieldMapping[field] || field
 
       // Get old value - try multiple possible field names
-      const oldValue = athlete[dbFieldName] || athlete[field] || athlete[field.toLowerCase()] || null
+      let oldValue = athlete[dbFieldName] || athlete[field] || athlete[field.toLowerCase()] || null
+      
+      // For achievements, ensure it's an array if it exists
+      if (dbFieldName === "achievements" && oldValue && !Array.isArray(oldValue)) {
+        if (typeof oldValue === "string") {
+          try {
+            oldValue = JSON.parse(oldValue)
+          } catch {
+            // If not JSON, treat as comma-separated string
+            oldValue = oldValue.split(",").map((a: string) => a.trim()).filter(Boolean)
+          }
+        }
+      }
       
       // Handle different value types
       let normalizedNewValue: any = null
       if (newValue !== null && newValue !== undefined) {
         if (Array.isArray(newValue)) {
-          normalizedNewValue = newValue
+          // Keep arrays as-is for achievements
+          normalizedNewValue = newValue.length > 0 ? newValue : null
         } else if (typeof newValue === "number") {
           normalizedNewValue = newValue
+        } else if (typeof newValue === "boolean") {
+          normalizedNewValue = newValue
         } else {
-          normalizedNewValue = String(newValue).trim() || null
+          const trimmed = String(newValue).trim()
+          normalizedNewValue = trimmed.length > 0 ? trimmed : null
         }
       }
 
       // Only log if value actually changed
-      const oldValueStr = oldValue !== null && oldValue !== undefined ? String(oldValue) : null
+      // For arrays, compare JSON strings
+      const oldValueStr = oldValue !== null && oldValue !== undefined 
+        ? (Array.isArray(oldValue) ? JSON.stringify(oldValue) : String(oldValue))
+        : null
       const newValueStr = normalizedNewValue !== null && normalizedNewValue !== undefined 
         ? (Array.isArray(normalizedNewValue) ? JSON.stringify(normalizedNewValue) : String(normalizedNewValue))
         : null
