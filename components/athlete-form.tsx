@@ -102,6 +102,7 @@ const WRESTLING_CLUBS = [
   "Dynamic Elite",
   "East Carolina Wrestling Academy",
   "Elite 252",
+  "Fayettenam Brawlers",
   "Fear This",
   "Forge",
   "Freeco",

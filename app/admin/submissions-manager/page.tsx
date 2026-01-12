@@ -43,6 +43,7 @@ interface CommitmentSubmission {
   instagram_handle: string
   status: string
   created_at: string
+  updated_at?: string
   submitter_email: string
 }
 
@@ -109,6 +110,9 @@ interface ProfileSubmission {
   college_opens_experience: string | null
   status: "pending" | "approved" | "rejected"
   submitted_at: string
+  reviewed_at?: string | null
+  reviewed_by?: string | null
+  admin_notes?: string | null
 }
 
 interface Stats {
@@ -116,6 +120,10 @@ interface Stats {
   profileEdits: number
   newProfiles: number
   totalPending: number
+  approvedCommitments: number
+  approvedEdits: number
+  approvedProfiles: number
+  totalApproved: number
 }
 
 export default function SubmissionsManagerPage() {
@@ -133,6 +141,10 @@ export default function SubmissionsManagerPage() {
     profileEdits: 0,
     newProfiles: 0,
     totalPending: 0,
+    approvedCommitments: 0,
+    approvedEdits: 0,
+    approvedProfiles: 0,
+    totalApproved: 0,
   })
 
   // Processing states
@@ -200,11 +212,25 @@ export default function SubmissionsManagerPage() {
         (p: ProfileSubmission) => p.status === "pending"
       ).length
 
+      const approvedCommitments = (commitmentsData.submissions || []).filter(
+        (s: CommitmentSubmission) => s.status === "approved"
+      ).length
+      const approvedEdits = (editsData.requests || []).filter(
+        (r: ProfileEditRequest) => r.status === "approved"
+      ).length
+      const approvedProfiles = (profilesData.submissions || []).filter(
+        (p: ProfileSubmission) => p.status === "approved"
+      ).length
+
       setStats({
         newCommitments: pendingCommitments,
         profileEdits: pendingEdits,
         newProfiles: pendingProfiles,
         totalPending: pendingCommitments + pendingEdits + pendingProfiles,
+        approvedCommitments,
+        approvedEdits,
+        approvedProfiles,
+        totalApproved: approvedCommitments + approvedEdits + approvedProfiles,
       })
     } catch (err) {
       console.error("Error fetching submissions:", err)
@@ -605,7 +631,7 @@ export default function SubmissionsManagerPage() {
 
         {/* Tabs for different submission types */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-[#13294B] p-1 rounded-lg shadow-md">
+          <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-[#13294B] p-1 rounded-lg shadow-md">
             <TabsTrigger
               value="overview"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#13294B] data-[state=active]:to-[#1a3a5c] data-[state=active]:text-white data-[state=active]:shadow-lg font-semibold transition-all"
@@ -629,6 +655,12 @@ export default function SubmissionsManagerPage() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#13294B] data-[state=active]:to-[#1a3a5c] data-[state=active]:text-white data-[state=active]:shadow-lg font-semibold transition-all"
             >
               👤 New Profiles <Badge className="ml-1 bg-[#FFC72C] text-[#13294B]">{stats.newProfiles}</Badge>
+            </TabsTrigger>
+            <TabsTrigger
+              value="history"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#13294B] data-[state=active]:to-[#1a3a5c] data-[state=active]:text-white data-[state=active]:shadow-lg font-semibold transition-all"
+            >
+              📜 History <Badge className="ml-1 bg-green-600">{stats.totalApproved}</Badge>
             </TabsTrigger>
           </TabsList>
 
@@ -1202,6 +1234,213 @@ export default function SubmissionsManagerPage() {
                   </Card>
                 ))
             )}
+          </TabsContent>
+
+          {/* History Tab - Approved Submissions */}
+          <TabsContent value="history" className="space-y-6">
+            <Card className="border-t-4 border-t-green-600">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-white">
+                <CardTitle className="text-[#002147] flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  Approved Submissions History
+                </CardTitle>
+                <CardDescription>
+                  View all previously approved commitments, profile edits, and new profile submissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {stats.totalApproved === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-lg font-medium">No approved submissions yet</p>
+                    <p className="text-sm">Approved submissions will appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Approved Commitments */}
+                    {stats.approvedCommitments > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-[#002147] mb-4 flex items-center gap-2">
+                          <Trophy className="h-5 w-5" />
+                          Approved Commitments ({stats.approvedCommitments})
+                        </h3>
+                        <div className="space-y-3">
+                          {commitments
+                            .filter((c) => c.status === "approved")
+                            .sort((a, b) => {
+                              const dateA = a.updated_at && a.updated_at !== a.created_at 
+                                ? new Date(a.updated_at).getTime() 
+                                : new Date(a.created_at).getTime()
+                              const dateB = b.updated_at && b.updated_at !== b.created_at 
+                                ? new Date(b.updated_at).getTime() 
+                                : new Date(b.created_at).getTime()
+                              return dateB - dateA
+                            })
+                            .map((submission) => (
+                              <Card key={submission.id} className="border-l-4 border-l-green-600 bg-green-50/30">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h4 className="font-semibold text-[#002147]">
+                                          {submission.first_name} {submission.last_name}
+                                        </h4>
+                                        {getStatusBadge(submission.status)}
+                                      </div>
+                                      <p className="text-sm text-gray-600 mb-1">
+                                        {submission.high_school} → {submission.college}
+                                      </p>
+                                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                                        <span>Class: {submission.graduation_year}</span>
+                                        <span>Weight: {submission.weight_class}</span>
+                                        <span>
+                                          Approved:{" "}
+                                          {submission.updated_at && submission.updated_at !== submission.created_at
+                                            ? new Date(submission.updated_at).toLocaleDateString()
+                                            : new Date(submission.created_at).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Approved Edit Requests */}
+                    {stats.approvedEdits > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-[#002147] mb-4 flex items-center gap-2">
+                          <Edit className="h-5 w-5" />
+                          Approved Profile Edits ({stats.approvedEdits})
+                        </h3>
+                        <div className="space-y-3">
+                          {editRequests
+                            .filter((r) => r.status === "approved")
+                            .sort((a, b) => {
+                              const dateA = a.reviewed_at 
+                                ? new Date(a.reviewed_at).getTime() 
+                                : new Date(a.created_at).getTime()
+                              const dateB = b.reviewed_at 
+                                ? new Date(b.reviewed_at).getTime() 
+                                : new Date(b.created_at).getTime()
+                              return dateB - dateA
+                            })
+                            .map((request) => (
+                              <Card key={request.id} className="border-l-4 border-l-green-600 bg-green-50/30">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h4 className="font-semibold text-[#002147]">
+                                          {getRequestTypeLabel(request.request_type)}
+                                        </h4>
+                                        {getStatusBadge(request.status)}
+                                      </div>
+                                      <p className="text-sm text-gray-600 mb-1">
+                                        {request.athlete_name} • {request.athlete_high_school}
+                                        {request.athlete_college && ` → ${request.athlete_college}`}
+                                      </p>
+                                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                                        <span>Requested by: {request.user_name}</span>
+                                        {request.reviewed_at && (
+                                          <span>
+                                            Approved: {new Date(request.reviewed_at).toLocaleDateString()}
+                                          </span>
+                                        )}
+                                        {!request.reviewed_at && request.created_at && (
+                                          <span>
+                                            Approved: {new Date(request.created_at).toLocaleDateString()}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {request.admin_notes && (
+                                        <div className="mt-2 text-xs bg-white p-2 rounded border border-gray-200">
+                                          <span className="font-medium">Admin Notes: </span>
+                                          <span className="text-gray-600">{request.admin_notes}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <Link href={`/unified-profile/${request.athlete_id}`} target="_blank">
+                                      <Button variant="outline" size="sm">
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        View
+                                      </Button>
+                                    </Link>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Approved Profile Submissions */}
+                    {stats.approvedProfiles > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-[#002147] mb-4 flex items-center gap-2">
+                          <User className="h-5 w-5" />
+                          Approved New Profiles ({stats.approvedProfiles})
+                        </h3>
+                        <div className="space-y-3">
+                          {profileSubmissions
+                            .filter((p) => p.status === "approved")
+                            .sort((a, b) => {
+                              const dateA = a.reviewed_at 
+                                ? new Date(a.reviewed_at).getTime() 
+                                : new Date(a.submitted_at).getTime()
+                              const dateB = b.reviewed_at 
+                                ? new Date(b.reviewed_at).getTime() 
+                                : new Date(b.submitted_at).getTime()
+                              return dateB - dateA
+                            })
+                            .map((submission) => (
+                              <Card key={submission.id} className="border-l-4 border-l-green-600 bg-green-50/30">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <h4 className="font-semibold text-[#002147]">
+                                          {submission.firstName} {submission.lastName}
+                                        </h4>
+                                        {getStatusBadge(submission.status)}
+                                      </div>
+                                      <p className="text-sm text-gray-600 mb-1">
+                                        {submission.highSchool}
+                                        {submission.location && ` • ${submission.location}`}
+                                      </p>
+                                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                                        <span>Class: {submission.graduationYear}</span>
+                                        {submission.weightClass && <span>Weight: {submission.weightClass}</span>}
+                                        {submission.wrestling_club && <span>Club: {submission.wrestling_club}</span>}
+                                        <span>
+                                          Approved:{" "}
+                                          {submission.reviewed_at
+                                            ? new Date(submission.reviewed_at).toLocaleDateString()
+                                            : new Date(submission.submitted_at).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                      {submission.admin_notes && (
+                                        <div className="mt-2 text-xs bg-white p-2 rounded border border-gray-200">
+                                          <span className="font-medium">Admin Notes: </span>
+                                          <span className="text-gray-600">{submission.admin_notes}</span>
+                                        </div>
+                                      )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
