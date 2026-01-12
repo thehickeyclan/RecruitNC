@@ -13,6 +13,9 @@ const EDITABLE_FIELDS = [
   "cell",
   "cell_number",
   "phone",
+  "email",
+  "contact_email",
+  "email_address",
   "instagram",
   "instagram_handle",
   "instagram_username",
@@ -85,6 +88,24 @@ export async function POST(
     // For now, allow any logged-in user to edit (you may want to add ownership verification)
     // TODO: Add ownership verification if you have a claimed_by_user_id field
 
+    // Map frontend field names to database column names
+    const fieldMapping: Record<string, string> = {
+      highschool: "highschool",
+      high_school: "highschool",
+      wrestlingclub: "wrestlingclub",
+      wrestlingClub: "wrestlingclub",
+      cell: "cell",
+      cell_number: "cell",
+      phone: "cell",
+      email: "contact_email",
+      contact_email: "contact_email",
+      email_address: "contact_email",
+      instagram: "instagram",
+      instagram_handle: "instagram",
+      instagram_username: "instagram",
+      highlight_video_url: "highlight_video_url",
+    }
+
     // Validate and filter updates - only allow editable fields
     const allowedUpdates: Record<string, any> = {}
     const auditLogEntries: Array<{
@@ -94,7 +115,7 @@ export async function POST(
     }> = []
 
     for (const [field, newValue] of Object.entries(updates)) {
-      // Normalize field names
+      // Normalize field names for comparison
       const normalizedField = field.toLowerCase().replace(/_/g, "")
 
       // Check if field is restricted
@@ -116,20 +137,40 @@ export async function POST(
 
       if (!isEditable) {
         // Skip unknown fields
+        console.log(`Skipping unknown field: ${field}`)
         continue
       }
 
-      // Get old value
-      const oldValue = athlete[field] || athlete[field.toLowerCase()] || null
-      const normalizedNewValue = newValue !== null && newValue !== undefined ? String(newValue) : null
+      // Map to database column name
+      const dbFieldName = fieldMapping[field] || field
+
+      // Get old value - try multiple possible field names
+      const oldValue = athlete[dbFieldName] || athlete[field] || athlete[field.toLowerCase()] || null
+      
+      // Handle different value types
+      let normalizedNewValue: any = null
+      if (newValue !== null && newValue !== undefined) {
+        if (Array.isArray(newValue)) {
+          normalizedNewValue = newValue
+        } else if (typeof newValue === "number") {
+          normalizedNewValue = newValue
+        } else {
+          normalizedNewValue = String(newValue).trim() || null
+        }
+      }
 
       // Only log if value actually changed
-      if (oldValue !== normalizedNewValue) {
-        allowedUpdates[field] = normalizedNewValue
+      const oldValueStr = oldValue !== null && oldValue !== undefined ? String(oldValue) : null
+      const newValueStr = normalizedNewValue !== null && normalizedNewValue !== undefined 
+        ? (Array.isArray(normalizedNewValue) ? JSON.stringify(normalizedNewValue) : String(normalizedNewValue))
+        : null
+
+      if (oldValueStr !== newValueStr) {
+        allowedUpdates[dbFieldName] = normalizedNewValue
         auditLogEntries.push({
-          field_name: field,
-          old_value: oldValue ? String(oldValue) : null,
-          new_value: normalizedNewValue,
+          field_name: dbFieldName,
+          old_value: oldValueStr,
+          new_value: newValueStr,
         })
       }
     }

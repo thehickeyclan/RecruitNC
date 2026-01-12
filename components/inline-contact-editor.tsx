@@ -4,22 +4,19 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Save, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { WRESTLING_CLUBS_LIST } from "@/lib/mock-data"
 
 interface InlineContactEditorProps {
   athleteId: string
-  highSchool?: string
-  wrestlingClub?: string
   cell?: string
+  email?: string
   instagram?: string
   highlightVideoUrl?: string
   onSave: (updates: {
-    highschool?: string
-    wrestlingclub?: string
     cell?: string
+    email?: string
+    contact_email?: string
     instagram?: string
     highlight_video_url?: string
   }) => Promise<void>
@@ -28,46 +25,27 @@ interface InlineContactEditorProps {
 
 export function InlineContactEditor({
   athleteId,
-  highSchool,
-  wrestlingClub,
   cell,
+  email,
   instagram,
   highlightVideoUrl,
   onSave,
   onCancel,
 }: InlineContactEditorProps) {
-  const [highSchoolValue, setHighSchoolValue] = useState(highSchool || "")
-  const [clubValue, setClubValue] = useState(wrestlingClub || "")
-  const [customClub, setCustomClub] = useState("")
-  const [showCustomClub, setShowCustomClub] = useState(false)
   const [cellValue, setCellValue] = useState(cell || "")
+  const [emailValue, setEmailValue] = useState(email || "")
   const [instagramValue, setInstagramValue] = useState(instagram || "")
   const [highlightVideoValue, setHighlightVideoValue] = useState(highlightVideoUrl || "")
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
 
-  // Check if current club is in the list
-  const isCustomClub = clubValue && !WRESTLING_CLUBS_LIST.includes(clubValue) && clubValue !== "CLUB IS NOT LISTED"
-
-  const handleClubChange = (value: string) => {
-    if (value === "CLUB IS NOT LISTED" || value === "CUSTOM") {
-      setShowCustomClub(true)
-      setClubValue("")
-    } else {
-      setShowCustomClub(false)
-      setClubValue(value)
-      setCustomClub("")
-    }
-  }
-
   const handleSave = async () => {
     try {
       setSaving(true)
-      const finalClubValue = showCustomClub || isCustomClub ? customClub || clubValue : clubValue
       await onSave({
-        highschool: highSchoolValue,
-        wrestlingclub: finalClubValue,
         cell: cellValue,
+        email: emailValue,
+        contact_email: emailValue,
         instagram: instagramValue,
         highlight_video_url: highlightVideoValue,
       })
@@ -89,50 +67,6 @@ export function InlineContactEditor({
   return (
     <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
       <div>
-        <Label htmlFor="highSchool">High School</Label>
-        <Input
-          id="highSchool"
-          value={highSchoolValue}
-          onChange={(e) => setHighSchoolValue(e.target.value)}
-          placeholder="Enter your high school"
-          className="mt-1"
-        />
-      </div>
-      <div>
-        <Label htmlFor="wrestlingClub">Wrestling Club</Label>
-        <Select
-          value={isCustomClub ? "CUSTOM" : clubValue || ""}
-          onValueChange={handleClubChange}
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select or enter wrestling club" />
-          </SelectTrigger>
-          <SelectContent>
-            {WRESTLING_CLUBS_LIST.filter(club => club !== "CLUB IS NOT LISTED").map((club) => (
-              <SelectItem key={club} value={club}>
-                {club}
-              </SelectItem>
-            ))}
-            <SelectItem value="CLUB IS NOT LISTED">+ Add New Club</SelectItem>
-          </SelectContent>
-        </Select>
-        {(showCustomClub || isCustomClub) && (
-          <Input
-            id="customClub"
-            value={isCustomClub ? clubValue : customClub}
-            onChange={(e) => {
-              if (isCustomClub) {
-                setClubValue(e.target.value)
-              } else {
-                setCustomClub(e.target.value)
-              }
-            }}
-            placeholder="Enter wrestling club name"
-            className="mt-2"
-          />
-        )}
-      </div>
-      <div>
         <Label htmlFor="cell">Cell Phone</Label>
         <Input
           id="cell"
@@ -140,6 +74,17 @@ export function InlineContactEditor({
           onChange={(e) => setCellValue(e.target.value)}
           placeholder="Enter your cell phone number"
           type="tel"
+          className="mt-1"
+        />
+      </div>
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          value={emailValue}
+          onChange={(e) => setEmailValue(e.target.value)}
+          placeholder="your.email@example.com"
+          type="email"
           className="mt-1"
         />
       </div>

@@ -20,6 +20,7 @@ import { InlineContactEditor } from "./inline-contact-editor"
 import { InlineAcademicsEditor } from "./inline-academics-editor"
 import { InlineAchievementsEditor } from "./inline-achievements-editor"
 import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
+import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -926,8 +927,59 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </div>
       </Card>
 
-      {/* Contact Info Section - Replace with inline editable version */}
-      {canEdit && (editingSection === "contact" || highSchool || wrestlingClub || athleteData.cell || athleteData.instagram) && (
+      {/* School & Club Section */}
+      {(canEdit || highSchool !== "Not specified" || wrestlingClub !== "Not specified") && (
+        <Card className="border-t-4 border-t-green-600 shadow-md">
+          <div className="bg-gradient-to-r from-green-700 to-green-800 p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <GraduationCap className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">School & Club</h2>
+              </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("school-club")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="p-8">
+            {editingSection === "school-club" ? (
+              <InlineSchoolClubEditor
+                athleteId={athlete.id}
+                highSchool={athleteData.highschool || athleteData.high_school}
+                wrestlingClub={athleteData.wrestlingclub || athleteData.wrestlingClub}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <div className="space-y-4">
+                {highSchool && highSchool !== "Not specified" && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">High School</p>
+                    <p className="font-semibold text-gray-900">{highSchool}</p>
+                  </div>
+                )}
+                {wrestlingClub && wrestlingClub !== "Not specified" && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Wrestling Club</p>
+                    <p className="font-semibold text-gray-900">{wrestlingClub}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* Contact Info Section */}
+      {canEdit && (editingSection === "contact" || athleteData.cell || athleteData.email || athleteData.contact_email || athleteData.instagram || athleteData.highlight_video_url) && (
         <Card className="border-t-4 border-t-blue-600 shadow-md">
           <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-6">
             <div className="flex items-center justify-between">
@@ -952,9 +1004,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             {editingSection === "contact" ? (
               <InlineContactEditor
                 athleteId={athlete.id}
-                highSchool={athleteData.highschool || athleteData.high_school}
-                wrestlingClub={athleteData.wrestlingclub || athleteData.wrestlingClub}
                 cell={athleteData.cell || athleteData.cell_number || athleteData.phone}
+                email={athleteData.email || athleteData.contact_email || athleteData.email_address}
                 instagram={athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
                 highlightVideoUrl={athleteData.highlight_video_url}
                 onSave={handleInlineSave}
@@ -962,23 +1013,19 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               />
             ) : (
               <div className="space-y-4">
-                {highSchool && highSchool !== "Not specified" && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">High School</p>
-                    <p className="font-semibold text-gray-900">{highSchool}</p>
-                  </div>
-                )}
-                {wrestlingClub && wrestlingClub !== "Not specified" && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Wrestling Club</p>
-                    <p className="font-semibold text-gray-900">{wrestlingClub}</p>
-                  </div>
-                )}
                 {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
                   <div className="bg-white rounded-lg p-4 border border-gray-200">
                     <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
                     <p className="font-semibold text-gray-900">
                       {athleteData.cell || athleteData.cell_number || athleteData.phone}
+                    </p>
+                  </div>
+                )}
+                {(athleteData.email || athleteData.contact_email || athleteData.email_address) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Email</p>
+                    <p className="font-semibold text-gray-900">
+                      {athleteData.email || athleteData.contact_email || athleteData.email_address}
                     </p>
                   </div>
                 )}
@@ -988,6 +1035,19 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     <p className="font-semibold text-gray-900">
                       {athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
                     </p>
+                  </div>
+                )}
+                {athleteData.highlight_video_url && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Highlight Video</p>
+                    <a 
+                      href={athleteData.highlight_video_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="font-semibold text-blue-600 hover:underline"
+                    >
+                      Watch Video
+                    </a>
                   </div>
                 )}
               </div>
@@ -1053,7 +1113,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   {/* Removed duplicate Additional Achievements block (will render once after College Opens) */}
 
       {/* Academics Section */}
-      {(highSchool !== "Not specified" || athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act || editingSection === "academics") && (
+      {(athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act || editingSection === "academics") && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
             <div className="flex items-center justify-between">
@@ -1075,31 +1135,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             </div>
           </div>
           <div className="p-8">
-
-            {/* High School */}
-            {highSchool !== "Not specified" && (
-              <div className="mb-6">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center gap-4">
-                    {highSchoolLogo && (
-                      <div className="w-16 h-16 rounded-xl bg-gray-50 p-3 flex items-center justify-center shadow-sm flex-shrink-0 border border-gray-200">
-                        <Image
-                          src={highSchoolLogo || "/placeholder.svg"}
-                          alt={`${highSchool} logo`}
-                          width={48}
-                          height={48}
-                          className="object-contain"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">High School</p>
-                      <p className="text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {editingSection === "academics" ? (
               <InlineAcademicsEditor
