@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 60 // Cache for 60 seconds
@@ -30,6 +30,9 @@ async function safeSupabaseQuery(queryFn: () => Promise<any>, context: string) {
 
 export async function GET(request: Request) {
   try {
+    // Use admin client to bypass RLS for public featured athletes endpoint
+    const supabase = createAdminClient()
+    
     const { searchParams } = new URL(request.url)
     const yearParam = searchParams.get("year")
     const targetYear = yearParam ? Number.parseInt(yearParam) : 2026
