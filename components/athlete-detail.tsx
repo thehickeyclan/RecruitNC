@@ -19,6 +19,7 @@ import { InlineBioEditor } from "./inline-bio-editor"
 import { InlineContactEditor } from "./inline-contact-editor"
 import { InlineAcademicsEditor } from "./inline-academics-editor"
 import { InlineAchievementsEditor } from "./inline-achievements-editor"
+import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -955,6 +956,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 wrestlingClub={athleteData.wrestlingclub || athleteData.wrestlingClub}
                 cell={athleteData.cell || athleteData.cell_number || athleteData.phone}
                 instagram={athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}
+                highlightVideoUrl={athleteData.highlight_video_url}
                 onSave={handleInlineSave}
                 onCancel={() => setEditingSection(null)}
               />
@@ -1252,28 +1254,47 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {tournamentResultsComponent}
 
       {/* College Opens Experience */}
-      {(() => {
-        console.log("[v0] College Opens data:", athlete.college_opens_experience)
-        return athlete.college_opens_experience ? (
-          <div className="container mx-auto px-4 py-8">
-            <Card className="shadow-lg border-l-4 border-l-blue-600">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+      {(athleteData.college_opens_experience || editingSection === "college-opens" || canEdit) && (
+        <div className="container mx-auto px-4 py-8">
+          <Card className="shadow-lg border-l-4 border-l-blue-600">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+              <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-[#13294B]">
                   <Trophy className="h-6 w-6 text-blue-600" />
                   College Opens Experience
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
+                {canEdit && !editingSection && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-[#13294B] hover:bg-blue-100"
+                    onClick={() => setEditingSection("college-opens")}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {editingSection === "college-opens" ? (
+                <InlineCollegeOpensEditor
+                  athleteId={athlete.id}
+                  collegeOpens={athleteData.college_opens_experience}
+                  onSave={handleInlineSave}
+                  onCancel={() => setEditingSection(null)}
+                />
+              ) : (
                 <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                  {athlete.college_opens_experience}
+                  {athleteData.college_opens_experience || "No college opens experience listed. Click Edit to add."}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : null
-      })()}
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {(additionalAchievements.length > 0 || achievements.length > 0 || editingSection === "achievements") && (
+      {(canEdit || additionalAchievements.length > 0 || achievements.length > 0 || editingSection === "achievements") && (
         <div className="container mx-auto px-4 py-8">
           <Card className="border-t-4 border-t-[#1D4ED8] shadow-md">
             <div className="bg-gradient-to-r from-[#1D4ED8] to-[#1E3A8A] p-6">
