@@ -255,6 +255,8 @@ export default function HomePage() {
 
         const athletes = Array.isArray(data.athletes) ? data.athletes : []
         
+        console.log(`[Home Page] Received ${athletes.length} athletes from API`)
+        
         // Filter out 2025 and earlier, then take the 3 most recent by commitment date
         const currentYear = new Date().getFullYear()
         const minActiveYear = currentYear + 1 // 2026 and beyond
@@ -266,11 +268,13 @@ export default function HomePage() {
           })
           .sort((a: Athlete, b: Athlete) => {
             // Sort by commitment date (most recent first)
-            const dateA = (a as any).commitment_date || (a as any).commitmentdate || 0
-            const dateB = (b as any).commitment_date || (b as any).commitmentdate || 0
+            const dateA = (a as any).commitment_date || (a as any).commitmentdate || (a as any).updated_at || 0
+            const dateB = (b as any).commitment_date || (b as any).commitmentdate || (b as any).updated_at || 0
             return new Date(dateB).getTime() - new Date(dateA).getTime()
           })
-          .slice(0, 3)
+          .slice(0, 3) // Ensure we only take 3
+
+        console.log(`[Home Page] Filtered to ${recentCommits.length} recent commits`)
 
         setLatestCommits(normalizeAthleteList(recentCommits))
         setError(null)

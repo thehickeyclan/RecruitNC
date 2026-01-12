@@ -187,6 +187,7 @@ export async function GET(request: Request) {
 
     // For 2026+ first attempt: latest commitments across all classes
     // Use updated_at as fallback when commitment_date is not set
+    // Fetch more records to ensure we have enough after filtering
     const recentCommitmentsResult = await safeSupabaseQuery(
       () =>
         supabase
@@ -194,8 +195,9 @@ export async function GET(request: Request) {
           .select("*")
           .not("college", "is", null)
           .neq("college", "")
+          .gte("graduationyear", new Date().getFullYear() + 1) // Filter 2026+ at query level
           .order("updated_at", { ascending: false })
-          .limit(50),
+          .limit(100), // Increased limit to ensure we get enough after filtering
       "Featured Athletes API - Recent Commitments",
     )
 
@@ -204,7 +206,7 @@ export async function GET(request: Request) {
     if (recentCommitmentsResult.success && Array.isArray(recentCommitmentsResult.data) && recentCommitmentsResult.data.length > 0) {
       const sortedCommitments = recentCommitmentsResult.data
         .filter((athlete: any) => {
-          // Filter out 2025 and earlier
+          // Filter out 2025 and earlier (double-check even though we filtered in query)
           const gradYear = athlete.graduationyear || 0
           const currentYear = new Date().getFullYear()
           return gradYear >= currentYear + 1
@@ -215,7 +217,9 @@ export async function GET(request: Request) {
           const dateB = new Date(b.commitment_date || b.commitmentdate || b.updated_at || 0).getTime()
           return dateB - dateA
         })
-        .slice(0, 3)
+        .slice(0, 3) // Take top 3 most recent
+
+      console.log(`📊 Featured Athletes API: Found ${sortedCommitments.length} recent commits after filtering and sorting`)
 
       recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
         id: athlete.id?.toString() || "",
@@ -245,13 +249,14 @@ export async function GET(request: Request) {
         commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
       }))
 
-      if (recentCommitmentAthletes.length >= 1) {
+      if (recentCommitmentAthletes.length > 0) {
         console.log(`✅ Featured Athletes API: Returning ${recentCommitmentAthletes.length} recent commitments (latest commits by updated_at)`)
 
+        // Always return up to 3, even if we have fewer
         return NextResponse.json(
           {
             success: true,
-            athletes: recentCommitmentAthletes.slice(0, 3),
+            athletes: recentCommitmentAthletes, // Already sliced to 3 above
           },
           {
             headers: {
