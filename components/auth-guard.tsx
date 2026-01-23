@@ -19,6 +19,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
+  const [sessionCheckComplete, setSessionCheckComplete] = useState(false)
 
   useEffect(() => {
     console.log("[v0] AuthGuard state:", {
@@ -33,13 +34,25 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
 
   useEffect(() => {
     setMounted(true)
+    // Give auth context time to load session after page load/redirect
+    // This prevents redirect loops after successful login
+    const timer = setTimeout(() => {
+      setSessionCheckComplete(true)
+    }, 500) // Wait 500ms for session to load
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
-    if (!mounted || isLoading) return
+    // Wait for component to mount, loading to complete, AND session check to complete
+    if (!mounted || isLoading || !sessionCheckComplete) return
+
+    // Prevent redirect loop - don't redirect if already on signin page
+    if (pathname?.startsWith("/auth/signin")) {
+      return
+    }
 
     if (!user && !redirecting) {
-      console.log("[v0] No user, redirecting to signin")
+      console.log("[v0] No user after session check, redirecting to signin")
       setRedirecting(true)
       router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
     } else if (requireAdmin && !isAdmin && user) {
@@ -49,9 +62,9 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         profileIsAdmin: profile?.is_admin,
       })
     }
-  }, [mounted, isLoading, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
+  }, [mounted, isLoading, sessionCheckComplete, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
 
-  if (!mounted || isLoading) {
+  if (!mounted || isLoading || !sessionCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

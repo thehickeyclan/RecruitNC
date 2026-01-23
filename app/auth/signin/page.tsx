@@ -17,7 +17,7 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
@@ -73,16 +73,17 @@ export default function SignInPage() {
       setLoading(false)
     } else {
       console.log("[v0] Sign in successful, waiting for session to be fully set...")
-      // Wait longer for session cookies to be fully set by Supabase
-      // Then force full page reload to ensure cookies are picked up
+      // Wait longer for session cookies to be fully set by Supabase and auth context to update
+      // Increased delay to 1.5 seconds to ensure session is loaded before redirect
+      // This prevents redirect loops where AuthGuard checks before session is loaded
       setTimeout(() => {
         const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
           ? "/auth/callback-admin"
           : (returnTo || "/")
-        console.log("[v0] Redirecting to:", redirectUrl, "- cookies should be set now")
+        console.log("[v0] Redirecting to:", redirectUrl, "- session should be set now")
         // Force full page reload to pick up session cookies
         window.location.href = redirectUrl
-      }, 1000)
+      }, 1500)
     }
   }
 
