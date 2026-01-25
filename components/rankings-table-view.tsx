@@ -339,7 +339,6 @@ export function RankingsTableView({
                 </Button>
               </TableHead>
               <TableHead className="min-w-[160px] text-white font-semibold">Achievement</TableHead>
-              <TableHead className="w-24 text-white font-semibold">Ranked Wins</TableHead>
               <TableHead className="w-24 text-white font-semibold">Profile</TableHead>
             </TableRow>
           </TableHeader>
@@ -360,7 +359,7 @@ export function RankingsTableView({
                 <Fragment key={athlete.id}>
                   {shouldRenderDivider && (
                     <TableRow className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                      <TableCell colSpan={canSeeWatchList ? 10 : 9} className="py-2 text-center">
+                      <TableCell colSpan={canSeeWatchList ? 9 : 8} className="py-2 text-center">
                         <div className="flex items-center justify-center gap-3">
                           <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
                           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
@@ -477,37 +476,6 @@ export function RankingsTableView({
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const knownRankedWinAthletes = ["Tye Johnson"]
-
-                        const hasRankedWins =
-                          athlete.has_ranked_win ||
-                          knownRankedWinAthletes.includes(athlete.name) ||
-                          (athlete.nationally_ranked_wins &&
-                            typeof athlete.nationally_ranked_wins === "string" &&
-                            athlete.nationally_ranked_wins.trim() !== "" &&
-                            athlete.nationally_ranked_wins.toLowerCase() !== "none" &&
-                            athlete.nationally_ranked_wins !== "0")
-
-                        return hasRankedWins ? (
-                          <div className="flex items-center gap-1">
-                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                            <span className="text-green-700 text-sm font-medium">Yes</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-sm">No</span>
-                        )
-                      })()}
                     </TableCell>
                     <TableCell>
                       <Link href={`/unified-profile/${athlete.id}`}>

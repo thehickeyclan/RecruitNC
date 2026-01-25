@@ -483,6 +483,37 @@ export default function AllProspectsPage() {
     )
   }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
 
+  // TEMPORARY: Page temporarily shut down
+  const isShutDown = true // Set to false to re-enable the page
+
+  if (isShutDown) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+            <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-[#B31B1B]">
+              <h1 className="text-3xl font-bold text-[#002147] mb-4">Page Temporarily Unavailable</h1>
+              <p className="text-lg text-gray-700 mb-6">
+                The All Prospects page is temporarily unavailable for maintenance.
+              </p>
+              <p className="text-sm text-gray-600 mb-6">
+                Please check back soon or visit the <a href="/public-rankings/2026" className="text-[#B31B1B] hover:underline">rankings pages</a> for prospect information.
+              </p>
+              <div className="flex gap-4 justify-center">
+                <a href="/">
+                  <Button variant="outline">Return to Home</Button>
+                </a>
+                <a href="/public-rankings/2026">
+                  <Button className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">View Rankings</Button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </AuthGuard>
+    )
+  }
+
   return (
     <AuthGuard>
       <div className="min-h-screen bg-background">

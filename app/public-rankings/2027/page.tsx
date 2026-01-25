@@ -72,16 +72,19 @@ export default function Class2027RankingsPage() {
     }
   }
 
-  const filteredRankings = rankings.filter((ranking) => {
-    if (!searchTerm) return true
+  // Filter by search term and limit to top 30
+  const filteredRankings = rankings
+    .filter((ranking) => {
+      if (!searchTerm) return true
 
-    const term = searchTerm.toLowerCase()
-    return (
-      (ranking.name?.toLowerCase() || "").includes(term) ||
-      (ranking.highschool?.toLowerCase() || "").includes(term) ||
-      (ranking.weight_display?.toLowerCase() || "").includes(term)
-    )
-  })
+      const term = searchTerm.toLowerCase()
+      return (
+        (ranking.name?.toLowerCase() || "").includes(term) ||
+        (ranking.highschool?.toLowerCase() || "").includes(term) ||
+        (ranking.weight_display?.toLowerCase() || "").includes(term)
+      )
+    })
+    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 30)
 
   const hasActiveFilters = searchTerm !== ""
 
