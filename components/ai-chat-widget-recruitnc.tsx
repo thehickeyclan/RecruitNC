@@ -27,8 +27,21 @@ interface Message {
 // RecruitNC-specific suggested prompts based on current page
 // These questions are aligned with LegacyNC and can actually be answered
 const getSuggestedPrompts = (pathname: string): string[] => {
+  // Rankings-specific prompts when on rankings pages
+  if (pathname?.includes("/rankings") || pathname?.includes("/public-rankings")) {
+    return [
+      "Show me all Class of 2026 rankings",
+      "Show me all Class of 2027 rankings",
+      "Who are the top 10 ranked prospects?",
+      "What athletes are ranked in the top 30?",
+      "Show me rankings by weight class",
+    ]
+  }
+  
   // Use the same prompts as LegacyNC - questions we can actually answer
   return [
+    "Show me all Class of 2026 rankings",
+    "Show me all Class of 2027 rankings",
     "What was our best year for NHSCA All-Americans?",
     "When are NHSCA's?",
     "Who is the all time winningest wrestler?",
