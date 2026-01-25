@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle, Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { BlobImageUpload } from "@/components/blob-image-upload"
+import { AuthGuard } from "@/components/auth-guard"
 
 const HS_WEIGHT_CLASSES = {
   Male: ["106", "113", "120", "126", "132", "138", "144", "150", "157", "165", "175", "190", "215", "285"],
@@ -214,7 +215,8 @@ export default function SubmitProfilePage() {
     : []
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <AuthGuard>
+      <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
         <Link href="/">
           <Button variant="ghost" size="sm">
@@ -944,5 +946,6 @@ export default function SubmitProfilePage() {
         </form>
       </Card>
     </div>
+    </AuthGuard>
   )
 }

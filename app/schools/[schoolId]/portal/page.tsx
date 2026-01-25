@@ -48,6 +48,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { RecruitingFunnelChart } from "@/components/recruiting-funnel-chart"
 import { SchoolBrandedHeader } from "@/components/school-branded-header"
 import { useSchoolBranding } from "@/hooks/use-school-branding"
+import { AuthGuard } from "@/components/auth-guard"
 import { createClient } from "@/lib/supabase/client"
 import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/components/recruiting-actions-dashboard"
 import { CreateProspectModal } from "@/components/create-prospect-modal"
@@ -2192,7 +2193,8 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
   }
 
   return (
-    <div className={isDarkMode ? "dark" : ""}>
+    <AuthGuard>
+      <div className={isDarkMode ? "dark" : ""}>
       <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <SchoolBrandedHeader
         schoolId={params.schoolId}
@@ -4869,5 +4871,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
       />
       </div>
     </div>
+    </AuthGuard>
   )
 }

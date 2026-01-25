@@ -1,0 +1,53 @@
+# Cursor ignore file - files to exclude from Cursor analysis
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Generated files
+.next/types/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files
+.env*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary files
+MULTI_FILE_EDIT
+*.backup
+*.tmp
+*.temp
+
+# Large data files
+*.sql
+scripts/*.sql
+
+# Documentation that might confuse analysis
+LEGACYNC_FIX_GUIDE.md
+LEGACYNC_QUICK_FIX.md
+AUTH_CONFIG_LOCKED.md
+CLEAR_RATE_LIMIT.md
+RATE_LIMIT_FIX_EXPLANATION.md
+LOGO-MIGRATION-SUMMARY.md
+CRITICAL_CARD_PROTECTION_SYSTEM.md
+
+# Vercel
+.vercel/
+
+# IDE
+.vscode/
+.idea/

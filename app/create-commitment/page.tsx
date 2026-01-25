@@ -14,6 +14,7 @@ import { Upload, ImageIcon } from "lucide-react"
 import ModernMediaManager from "@/components/modern-media-manager"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { SmartWrestlingClubInput } from "@/components/smart-wrestling-club-input"
+import { AuthGuard } from "@/components/auth-guard"
 
 interface AthleteFormData {
   name: string
@@ -145,7 +146,8 @@ export default function CreateCommitmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-red-50 py-8">
+    <AuthGuard>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-red-50 py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
@@ -463,5 +465,6 @@ export default function CreateCommitmentPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }

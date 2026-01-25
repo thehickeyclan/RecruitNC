@@ -338,7 +338,6 @@ export function RankingsTableView({
                   Weight <SortIcon field="weight" />
                 </Button>
               </TableHead>
-              <TableHead className="min-w-[160px] text-white font-semibold">Achievement</TableHead>
               <TableHead className="w-24 text-white font-semibold">Profile</TableHead>
             </TableRow>
           </TableHeader>
@@ -359,7 +358,7 @@ export function RankingsTableView({
                 <Fragment key={athlete.id}>
                   {shouldRenderDivider && (
                     <TableRow className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                      <TableCell colSpan={canSeeWatchList ? 9 : 8} className="py-2 text-center">
+                      <TableCell colSpan={canSeeWatchList ? 8 : 7} className="py-2 text-center">
                         <div className="flex items-center justify-center gap-3">
                           <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
                           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
@@ -465,17 +464,6 @@ export function RankingsTableView({
                     <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
                     <TableCell>
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
-                    </TableCell>
-                    <TableCell>
-                      {athlete.achievement_badge ? (
-                        <div className="inline-flex">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${athlete.achievement_color}`}>
-                            {athlete.achievement_badge}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-sm">-</span>
-                      )}
                     </TableCell>
                     <TableCell>
                       <Link href={`/unified-profile/${athlete.id}`}>

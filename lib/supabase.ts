@@ -1,10 +1,25 @@
 import { createBrowserClient } from "@supabase/ssr"
 import type { LogoMapping } from "./database-schema"
 
+/**
+ * ⚠️ LOCKED CONFIGURATION - DO NOT MODIFY ⚠️
+ * 
+ * This configuration prevents Supabase rate limiting issues.
+ * Changing autoRefreshToken to true will cause users to be locked out.
+ * 
+ * See AUTH_CONFIG_LOCKED.md for full documentation.
+ */
 // Create a single instance of the supabase client
 export const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false, // ⚠️ CRITICAL: Must be false to prevent rate limits
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
 )
 
 // Re-export createClient for backwards compatibility

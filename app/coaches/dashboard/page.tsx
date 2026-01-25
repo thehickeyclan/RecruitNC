@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { redirect } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function CoachDashboard() {
   const { isVerifiedCoach, isLoading, profile, isAdmin } = useAuth()
@@ -20,11 +21,13 @@ export default function CoachDashboard() {
   }, [isLoading, isVerifiedCoach, isAdmin, profile])
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         <p>Redirecting to your recruiting portal...</p>
       </div>
     </div>
+    </AuthGuard>
   )
 }

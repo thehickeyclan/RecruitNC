@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlertCircle } from "lucide-react"
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function MyRecruitsRedirectPage() {
   const router = useRouter()
@@ -31,14 +32,17 @@ export default function MyRecruitsRedirectPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
-      </div>
+      <AuthGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </AuthGuard>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
         <CardHeader className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white">
           <CardTitle className="flex items-center gap-2">
@@ -67,5 +71,6 @@ export default function MyRecruitsRedirectPage() {
         </CardContent>
       </Card>
     </div>
+    </AuthGuard>
   )
 }

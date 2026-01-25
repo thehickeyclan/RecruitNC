@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Search, MapPin, Users, Trophy, Mail, ExternalLink } from "lucide-react"
 import Link from "next/link"
+import { AuthGuard } from "@/components/auth-guard"
 
 interface Coach {
   id: string
@@ -87,7 +88,8 @@ export default function CoachesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground py-12">
         <div className="max-w-6xl mx-auto px-4 text-center">
@@ -228,6 +230,7 @@ export default function CoachesPage() {
         )}
       </div>
     </div>
+    </AuthGuard>
   )
 }
 

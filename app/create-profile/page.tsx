@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { CheckCircle, Clock, User, Mail, Phone, Trophy, Camera, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { AuthGuard } from "@/components/auth-guard"
 
 const HS_WEIGHT_CLASSES = {
   Male: [
@@ -183,7 +184,8 @@ export default function CreateProfilePage() {
     : []
 
   return (
-    <div className="min-h-screen bg-background">
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-primary text-primary-foreground py-12">
         <div className="max-w-4xl mx-auto px-4 text-center">
@@ -403,5 +405,6 @@ export default function CreateProfilePage() {
         </Card>
       </div>
     </div>
+    </AuthGuard>
   )
 }

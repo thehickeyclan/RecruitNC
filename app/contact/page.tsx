@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { AuthGuard } from "@/components/auth-guard"
 
 export default function ContactPage() {
   return (
-    <div className="container mx-auto py-10">
+    <AuthGuard>
+      <div className="container mx-auto py-10">
       <h1 className="mb-6 text-3xl font-bold">Contact Us</h1>
 
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -74,5 +76,6 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   )
 }

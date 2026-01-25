@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { AuthGuard } from "@/components/auth-guard"
 
 /**
  * This page is deprecated. All coaches should use their custom school portal.
@@ -27,18 +28,21 @@ export default function CoachPortalPage() {
   // Show loading while redirecting
   if (profile?.school_id) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <AuthGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to your recruiting portal...</p>
         </div>
       </div>
+      </AuthGuard>
     )
   }
 
   // For coaches without a school_id, show access denied
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -83,5 +87,6 @@ export default function CoachPortalPage() {
         </CardContent>
       </Card>
     </div>
+    </AuthGuard>
   )
 }

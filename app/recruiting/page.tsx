@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { AuthGuard } from "@/components/auth-guard"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -123,7 +124,8 @@ export default function RecruitingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a1e50] via-[#13294B] to-[#1e3a5f]">
+    <AuthGuard>
+      <div className="min-h-screen bg-gradient-to-b from-[#0a1e50] via-[#13294B] to-[#1e3a5f]">
       {/* Hero Section */}
       <section className="relative w-full bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white py-20 md:py-32">
         <div className="absolute inset-0 bg-black/10" />
@@ -999,6 +1001,7 @@ export default function RecruitingPage() {
         </section>
       </div>
     </div>
+    </AuthGuard>
   )
 }
 
