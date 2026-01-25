@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 import "./athletes/flip-card.css"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
+import { StoreProductPromotion } from "@/components/store-product-promotion"
 
 type YearFilter = "All" | "2025" | "2026"
 
@@ -368,6 +369,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Store Product Promotion Banner */}
+      <StoreProductPromotion />
 
       {/* Features Section */}
       <section className="mb-12">
