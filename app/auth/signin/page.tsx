@@ -90,13 +90,13 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-8 pb-8 px-4">
-      <div className="w-full max-w-6xl mt-8">
-        <div className="grid lg:grid-cols-2 gap-6">
+    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-4 sm:pt-8 pb-8 px-4">
+      <div className="w-full max-w-6xl mt-4 sm:mt-8">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Prominent Registration Banner for New Users */}
-          <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-            <CardContent className="relative p-6 md:p-8">
+          <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden order-2 lg:order-1">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none"></div>
+            <CardContent className="relative p-4 sm:p-6 md:p-8">
               <div className="text-center mb-6">
                 <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
                   100% FREE
@@ -158,55 +158,67 @@ export default function SignInPage() {
           </Card>
 
           {/* Sign In Card */}
-          <Card className="w-full shadow-lg">
+          <Card className="w-full shadow-lg relative z-10 order-1 lg:order-2">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
-              <CardDescription>Enter your credentials to access your account</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl font-bold">Sign In</CardTitle>
+              <CardDescription className="text-sm sm:text-base">Enter your credentials to access your account</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="relative z-10">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
                     autoComplete="email"
                     required
                     disabled={loading}
                     placeholder="your@email.com"
+                    className="w-full text-base"
+                    style={{ WebkitAppearance: "none" }}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                   <Input
                     id="password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
                     autoComplete="current-password"
                     required
                     disabled={loading}
                     placeholder="Enter your password"
+                    className="w-full text-base"
+                    style={{ WebkitAppearance: "none" }}
                   />
                 </div>
 
                 {error && (
                   <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
                 )}
-                <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold" 
+                  disabled={loading}
+                >
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
               <div className="mt-4 text-center space-y-2">
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
                     Forgot your password?
                   </Link>
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {"Don't have an account? "}
                   <Link
                     href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
