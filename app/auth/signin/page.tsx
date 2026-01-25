@@ -91,132 +91,134 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-8 pb-8 px-4">
-      <div className="w-full max-w-2xl mt-8 space-y-6">
-        {/* Prominent Registration Banner for New Users */}
-        <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-          <CardContent className="relative p-8">
-            <div className="text-center mb-6">
-              <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
-                100% FREE
-              </Badge>
-              <h2 className="text-3xl font-bold mb-3">
-                Register for Free Access
-              </h2>
-              <p className="text-xl text-blue-100 mb-6">
-                Get instant access to all of North Carolina's College Prospect Rankings, College Commitments, and Athlete Profiles
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center">Prospect Rankings</h3>
-                <p className="text-sm text-blue-100 text-center">Access all NC college prospect rankings</p>
+      <div className="w-full max-w-6xl mt-8">
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Prominent Registration Banner for New Users */}
+          <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+            <CardContent className="relative p-6 md:p-8">
+              <div className="text-center mb-6">
+                <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
+                  100% FREE
+                </Badge>
+                <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                  Register for Free Access
+                </h2>
+                <p className="text-lg md:text-xl text-blue-100 mb-6">
+                  Get instant access to all of North Carolina's College Prospect Rankings, College Commitments, and Athlete Profiles
+                </p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <GraduationCap className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center">College Commitments</h3>
-                <p className="text-sm text-blue-100 text-center">Track all college commitments</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center">Athlete Profiles</h3>
-                <p className="text-sm text-blue-100 text-center">Browse complete athlete profiles</p>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-6">
-              <div className="flex items-start gap-3">
-                <Edit className="h-5 w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold mb-1">Real-Time Profile Updates</h3>
-                  <p className="text-sm text-blue-100">
-                    Athletes can update and edit their profiles in real time. Keep your information current and showcase your latest achievements.
-                  </p>
+              
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <Trophy className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
+                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Prospect Rankings</h3>
+                  <p className="text-xs text-blue-100 text-center hidden md:block">Access all NC rankings</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <GraduationCap className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
+                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">College Commitments</h3>
+                  <p className="text-xs text-blue-100 text-center hidden md:block">Track commitments</p>
+                </div>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                  <Users className="h-6 w-6 md:h-8 md:w-8 text-[#D3B574] mb-2 mx-auto" />
+                  <h3 className="font-semibold mb-1 text-center text-xs md:text-sm">Athlete Profiles</h3>
+                  <p className="text-xs text-blue-100 text-center hidden md:block">Browse profiles</p>
                 </div>
               </div>
-            </div>
 
-            <div className="text-center">
-              <Button
-                asChild
-                size="lg"
-                className="bg-[#D3B574] hover:bg-[#c4a151] text-[#03154C] font-bold text-lg px-8 py-6 h-auto"
-              >
-                <Link href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}>
-                  Create Free Account
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <p className="text-sm text-blue-200 mt-3">
-                No credit card required • Takes less than 2 minutes
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Existing Sign In Card */}
-        <Card className="w-full shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access your account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                  disabled={loading}
-                  placeholder="your@email.com"
-                />
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/20 mb-6">
+                <div className="flex items-start gap-2 md:gap-3">
+                  <Edit className="h-4 w-4 md:h-5 md:w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold mb-1 text-sm md:text-base">Real-Time Profile Updates</h3>
+                    <p className="text-xs md:text-sm text-blue-100">
+                      Athletes can update and edit their profiles in real time.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                  disabled={loading}
-                  placeholder="Enter your password"
-                />
-              </div>
-
-              {error && (
-                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
-              )}
-              <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={loading}>
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-            <div className="mt-4 text-center space-y-2">
-              <p className="text-sm text-gray-600">
-                <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
-                  Forgot your password?
-                </Link>
-              </p>
-              <p className="text-sm text-gray-600">
-                {"Don't have an account? "}
-                <Link
-                  href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
-                  className="text-blue-600 hover:underline"
+              <div className="text-center">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-[#D3B574] hover:bg-[#c4a151] text-[#03154C] font-bold text-base md:text-lg px-6 md:px-8 py-5 md:py-6 h-auto w-full"
                 >
-                  Sign up
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+                  <Link href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}>
+                    Create Free Account
+                    <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+                  </Link>
+                </Button>
+                <p className="text-xs md:text-sm text-blue-200 mt-3">
+                  No credit card required • Takes less than 2 minutes
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sign In Card */}
+          <Card className="w-full shadow-lg">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
+              <CardDescription>Enter your credentials to access your account</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                    disabled={loading}
+                    placeholder="your@email.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    disabled={loading}
+                    placeholder="Enter your password"
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
+                )}
+                <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
+              <div className="mt-4 text-center space-y-2">
+                <p className="text-sm text-gray-600">
+                  <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">
+                    Forgot your password?
+                  </Link>
+                </p>
+                <p className="text-sm text-gray-600">
+                  {"Don't have an account? "}
+                  <Link
+                    href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Sign up
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
