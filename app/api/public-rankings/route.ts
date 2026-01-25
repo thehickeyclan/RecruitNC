@@ -248,6 +248,12 @@ export async function GET(request: Request) {
         }, null as Date | null)
       : null
 
+    // Generate update post URL based on date and year
+    // Format: /rankings/updates?year=2026&date=2025-01-15
+    const updatePostUrl = lastUpdated
+      ? `/rankings/updates?year=${year}&date=${lastUpdated.toISOString().split("T")[0]}`
+      : null
+
     return NextResponse.json({
       rankings,
       metadata: {
@@ -255,6 +261,7 @@ export async function GET(request: Request) {
         gender,
         total_count: rankings.length,
         last_updated: lastUpdated ? lastUpdated.toISOString() : null,
+        update_post_url: updatePostUrl,
       },
     })
   } catch (error) {

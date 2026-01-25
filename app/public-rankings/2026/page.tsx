@@ -35,6 +35,7 @@ export default function ClassOf2026RankingsPage() {
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const [updatePostUrl, setUpdatePostUrl] = useState<string | null>(null)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function ClassOf2026RankingsPage() {
         console.log("[v0] Received data:", data)
         setAthletes(data.rankings || [])
         setLastUpdated(data.metadata?.last_updated || null)
+        setUpdatePostUrl(data.metadata?.update_post_url || null)
       } catch (error) {
         console.error("[v0] Error fetching athletes:", error)
       } finally {
@@ -278,18 +280,34 @@ export default function ClassOf2026RankingsPage() {
                 Top 30 Ranked Prospects
               </h2>
               {lastUpdated && (
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </span>
+                <div className="flex items-center justify-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-gray-600" />
+                  {updatePostUrl ? (
+                    <Link
+                      href={updatePostUrl}
+                      className="text-[#B31B1B] hover:text-[#8B1515] hover:underline font-medium transition-colors"
+                    >
+                      Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })} - View what changed
+                    </Link>
+                  ) : (
+                    <span className="text-gray-600">
+                      Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
