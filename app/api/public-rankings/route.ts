@@ -71,7 +71,8 @@ export async function GET(request: Request) {
         super_32_2025_placement,
         nationally_ranked_wins,
         recruiting_status,
-        college
+        college,
+        updated_at
       `)
       .eq("graduationyear", year)
       .eq("gender", gender)
@@ -238,12 +239,22 @@ export async function GET(request: Request) {
       })
     }
 
+    // Calculate the most recent updated_at timestamp from all athletes
+    const lastUpdated = athletes && athletes.length > 0
+      ? athletes.reduce((latest, athlete) => {
+          if (!athlete.updated_at) return latest
+          const athleteDate = new Date(athlete.updated_at)
+          return !latest || athleteDate > latest ? athleteDate : latest
+        }, null as Date | null)
+      : null
+
     return NextResponse.json({
       rankings,
       metadata: {
         year,
         gender,
         total_count: rankings.length,
+        last_updated: lastUpdated ? lastUpdated.toISOString() : null,
       },
     })
   } catch (error) {

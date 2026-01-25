@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
-import { Users, Target, ExternalLink, Instagram, Trophy } from "lucide-react"
+import { Users, Target, ExternalLink, Instagram, Trophy, Clock } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
 
 interface Athlete {
@@ -34,6 +34,7 @@ export default function ClassOf2026RankingsPage() {
   const router = useRouter()
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const hasFetched = useRef(false)
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function ClassOf2026RankingsPage() {
         const data = await response.json()
         console.log("[v0] Received data:", data)
         setAthletes(data.rankings || [])
+        setLastUpdated(data.metadata?.last_updated || null)
       } catch (error) {
         console.error("[v0] Error fetching athletes:", error)
       } finally {
@@ -272,9 +274,24 @@ export default function ClassOf2026RankingsPage() {
           {/* Top 30 Ranked Section */}
           <div className="mb-8 sm:mb-12">
             <div className="mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-2">
                 Top 30 Ranked Prospects
               </h2>
+              {lastUpdated && (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                  <Clock className="h-4 w-4" />
+                  <span>
+                    Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
             <RankingsTableView 
               athletes={athletes.filter(a => a.prospect_ranking && a.prospect_ranking <= 30)} 

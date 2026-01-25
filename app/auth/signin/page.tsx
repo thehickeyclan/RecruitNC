@@ -8,8 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Trophy, Users, GraduationCap, Edit, CheckCircle, ArrowRight } from "lucide-react"
 
 export default function SignInPage() {
   const [email, setEmail] = useState("")
@@ -88,8 +90,73 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gray-50 pt-8 pb-8 px-4">
-      <div className="w-full max-w-md mt-8">
+    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-8 pb-8 px-4">
+      <div className="w-full max-w-2xl mt-8 space-y-6">
+        {/* Prominent Registration Banner for New Users */}
+        <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+          <CardContent className="relative p-8">
+            <div className="text-center mb-6">
+              <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
+                100% FREE
+              </Badge>
+              <h2 className="text-3xl font-bold mb-3">
+                Register for Free Access
+              </h2>
+              <p className="text-xl text-blue-100 mb-6">
+                Get instant access to all of North Carolina's College Prospect Rankings, College Commitments, and Athlete Profiles
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center">Prospect Rankings</h3>
+                <p className="text-sm text-blue-100 text-center">Access all NC college prospect rankings</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <GraduationCap className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center">College Commitments</h3>
+                <p className="text-sm text-blue-100 text-center">Track all college commitments</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center">Athlete Profiles</h3>
+                <p className="text-sm text-blue-100 text-center">Browse complete athlete profiles</p>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 mb-6">
+              <div className="flex items-start gap-3">
+                <Edit className="h-5 w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Real-Time Profile Updates</h3>
+                  <p className="text-sm text-blue-100">
+                    Athletes can update and edit their profiles in real time. Keep your information current and showcase your latest achievements.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <Button
+                asChild
+                size="lg"
+                className="bg-[#D3B574] hover:bg-[#c4a151] text-[#03154C] font-bold text-lg px-8 py-6 h-auto"
+              >
+                <Link href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}>
+                  Create Free Account
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <p className="text-sm text-blue-200 mt-3">
+                No credit card required • Takes less than 2 minutes
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Existing Sign In Card */}
         <Card className="w-full shadow-lg">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold">Sign In</CardTitle>

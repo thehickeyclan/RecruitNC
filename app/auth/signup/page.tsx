@@ -2,7 +2,7 @@
 
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Trophy, Users, GraduationCap, Edit, CheckCircle } from "lucide-react"
 
 import type React from "react"
 
@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -111,12 +112,62 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start pt-20 md:items-center md:pt-0 justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create an account to get started</CardDescription>
-        </CardHeader>
+    <div className="min-h-screen flex items-start pt-8 md:items-center md:pt-0 justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 pb-8">
+      <div className="w-full max-w-2xl space-y-6">
+        {/* Prominent Benefits Banner */}
+        <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
+          <CardContent className="relative p-6 md:p-8">
+            <div className="text-center mb-6">
+              <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
+                100% FREE • NO CREDIT CARD REQUIRED
+              </Badge>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3">
+                Get Free Access to All North Carolina Wrestling Data
+              </h2>
+              <p className="text-lg md:text-xl text-blue-100 mb-6">
+                Register now and instantly access rankings, commitments, and athlete profiles
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Prospect Rankings</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">All NC college prospect rankings</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <GraduationCap className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">College Commitments</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">Track all commitments</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
+                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Athlete Profiles</h3>
+                <p className="text-xs md:text-sm text-blue-100 text-center">Complete athlete profiles</p>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div className="flex items-start gap-3">
+                <Edit className="h-5 w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1 text-sm md:text-base">Real-Time Profile Updates</h3>
+                  <p className="text-xs md:text-sm text-blue-100">
+                    Athletes can update and edit their profiles in real time. Keep your information current and showcase your latest achievements.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sign Up Form */}
+        <Card className="w-full shadow-lg">
+          <CardHeader>
+            <CardTitle>Create Your Free Account</CardTitle>
+            <CardDescription>Sign up takes less than 2 minutes</CardDescription>
+          </CardHeader>
         <CardContent>
           {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
 

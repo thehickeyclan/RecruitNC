@@ -10,7 +10,7 @@ import Link from "next/link"
 import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
-import { Search, Filter, ArrowLeft, Trophy, Users } from "lucide-react"
+import { Search, Filter, ArrowLeft, Trophy, Users, Clock } from "lucide-react"
 import { AuthGuard } from "@/components/auth-guard"
 
 interface PublicRanking {
@@ -36,6 +36,7 @@ export default function Class2027RankingsPage() {
   const [rankings, setRankings] = useState<PublicRanking[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("")
@@ -65,6 +66,7 @@ export default function Class2027RankingsPage() {
 
       const data = await response.json()
       setRankings(data.rankings || [])
+      setLastUpdated(data.metadata?.last_updated || null)
     } catch (err) {
       console.error("Error fetching 2027 rankings:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -424,9 +426,26 @@ export default function Class2027RankingsPage() {
               </div>
             ) : (
               <>
-                <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white">Top 30 Wrestling Prospects</h2>
-                  <div className="text-sm text-white">Showing {filteredRankings.length} ranked prospects</div>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-2xl font-bold text-white">Top 30 Wrestling Prospects</h2>
+                    <div className="text-sm text-white">Showing {filteredRankings.length} ranked prospects</div>
+                  </div>
+                  {lastUpdated && (
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
+                      <Clock className="h-4 w-4" />
+                      <span>
+                        Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {viewMode === "table" && (
