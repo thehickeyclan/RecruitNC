@@ -61,6 +61,35 @@ export async function POST(request: NextRequest) {
     
     console.log("[RecruitNC Proxy] Successfully proxied response from LegacyNC")
     
+    // Fix profile links in the answer to use RecruitNC domain and correct URL format
+    if (data.answer) {
+      // Get the current domain from the request
+      const origin = request.headers.get("origin") || request.nextUrl.origin
+      
+      // Replace incorrect athlete profile URLs with correct RecruitNC format
+      // Pattern: https://v0-new-college-commits.vercel.app/athletes/[id]
+      // Should be: /unified-profile/[id] (relative URL works best)
+      data.answer = data.answer.replace(
+        /https?:\/\/[^\s]+\/athletes\/([a-f0-9-]+)/gi,
+        (match: string, athleteId: string) => {
+          return `/unified-profile/${athleteId}`
+        }
+      )
+      
+      // Also fix any other legacy domain references
+      data.answer = data.answer.replace(
+        /https?:\/\/v0-new-college-commits\.vercel\.app\/[^\s)]+/gi,
+        (match: string) => {
+          // Extract the path and convert to RecruitNC format
+          const path = match.replace(/https?:\/\/[^\/]+/, "")
+          if (path.startsWith("/athletes/")) {
+            return path.replace("/athletes/", "/unified-profile/")
+          }
+          return path
+        }
+      )
+    }
+    
     // Return the response from LegacyNC (includes answer, messageId, results, etc.)
     return NextResponse.json(data)
     
