@@ -307,7 +307,6 @@ export function RankingsTableView({
                   </Button>
                 </TableHead>
               )}
-              <TableHead className="w-[110px] text-white font-semibold text-center">Committed</TableHead>
               <TableHead className="min-w-[220px] text-white font-semibold pl-4">
                 <Button
                   variant="ghost"
@@ -318,6 +317,7 @@ export function RankingsTableView({
                   Name <SortIcon field="name" />
                 </Button>
               </TableHead>
+              <TableHead className="w-[110px] text-white font-semibold text-center">Committed</TableHead>
               <TableHead className="min-w-[180px] text-white font-semibold">
                 <Button
                   variant="ghost"
@@ -423,6 +423,16 @@ export function RankingsTableView({
                         </div>
                       </TableCell>
                     )}
+                    <TableCell className="pl-4">
+                      <div className="flex items-center gap-3 leading-tight">
+                        <Link
+                          href={`/unified-profile/${athlete.id}`}
+                          className="hover:text-[#D3B574] transition-colors underline"
+                        >
+                          <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
+                        </Link>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center">
                       {athlete.recruiting_status === "Committed" &&
                       athlete.college &&
@@ -450,16 +460,6 @@ export function RankingsTableView({
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
-                    </TableCell>
-                    <TableCell className="pl-4">
-                      <div className="flex items-center gap-3 leading-tight">
-                        <Link
-                          href={`/unified-profile/${athlete.id}`}
-                          className="hover:text-[#D3B574] transition-colors underline"
-                        >
-                          <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
-                        </Link>
-                      </div>
                     </TableCell>
                     <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
                     <TableCell>
