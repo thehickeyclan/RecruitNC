@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -20,6 +21,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const [mounted, setMounted] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const [sessionCheckComplete, setSessionCheckComplete] = useState(false)
+  const [directSessionCheck, setDirectSessionCheck] = useState<boolean | null>(null)
 
   useEffect(() => {
     console.log("[v0] AuthGuard state:", {
@@ -34,27 +36,76 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
 
   useEffect(() => {
     setMounted(true)
+    
+    // On desktop, cookies can take longer to be available after redirect
+    // Directly check Supabase session to verify cookies are actually set
+    const checkDirectSession = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        setDirectSessionCheck(!!session)
+        console.log("[v0] Direct session check:", { hasSession: !!session, hasUser: !!user })
+      } catch (error) {
+        console.error("[v0] Direct session check error:", error)
+        setDirectSessionCheck(false)
+      }
+    }
+    
     // Give auth context time to load session after page load/redirect
     // This prevents redirect loops after successful login
-    const timer = setTimeout(() => {
+    // Increased delay for desktop browsers which may take longer to set cookies
+    const timer = setTimeout(async () => {
+      // Double-check session directly from Supabase (especially important on desktop)
+      await checkDirectSession()
       setSessionCheckComplete(true)
-    }, 500) // Wait 500ms for session to load
+    }, 1500) // Wait 1.5 seconds for session to load from cookies (longer for desktop)
     return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
     // Wait for component to mount, loading to complete, AND session check to complete
-    if (!mounted || isLoading || !sessionCheckComplete) return
+    if (!mounted || isLoading || !sessionCheckComplete || directSessionCheck === null) {
+      console.log("[v0] AuthGuard waiting:", { 
+        mounted, 
+        isLoading, 
+        sessionCheckComplete, 
+        directSessionCheck 
+      })
+      return
+    }
 
     // Prevent redirect loop - don't redirect if already on signin page
     if (pathname?.startsWith("/auth/signin")) {
       return
     }
 
-    if (!user && !redirecting) {
-      console.log("[v0] No user after session check, redirecting to signin")
-      setRedirecting(true)
-      router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
+    // On desktop, sometimes the auth context user is null but direct session check shows a session exists
+    // In this case, wait a bit more for the context to catch up
+    const hasSession = user || directSessionCheck
+
+    if (!hasSession && !redirecting) {
+      console.log("[v0] No user or session after checks, waiting 500ms more before redirect...")
+      const redirectTimer = setTimeout(async () => {
+        // Final check - verify session directly one more time
+        try {
+          const supabase = createClient()
+          const { data: { session } } = await supabase.auth.getSession()
+          if (!session && !redirecting) {
+            console.log("[v0] Still no session after delay, redirecting to signin")
+            setRedirecting(true)
+            router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
+          } else {
+            console.log("[v0] Session found after delay, no redirect needed")
+          }
+        } catch (error) {
+          console.error("[v0] Final session check error:", error)
+          if (!redirecting) {
+            setRedirecting(true)
+            router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
+          }
+        }
+      }, 500)
+      return () => clearTimeout(redirectTimer)
     } else if (requireAdmin && !isAdmin && user) {
       console.log("[v0] Admin access check:", {
         userEmail: user.email,
@@ -62,7 +113,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         profileIsAdmin: profile?.is_admin,
       })
     }
-  }, [mounted, isLoading, sessionCheckComplete, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
+  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
 
   if (!mounted || isLoading || !sessionCheckComplete) {
     return (
@@ -86,9 +137,23 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     )
   }
 
-  if (!user) {
+  // On desktop, sometimes directSessionCheck shows a session but user is null
+  // Give it a moment to sync - show loading instead of immediately redirecting
+  if (!user && directSessionCheck === false) {
     // Will redirect via useEffect
     return null
+  }
+  
+  // If we have a direct session but no user yet, show loading
+  if (!user && directSessionCheck === true) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading session...</p>
+        </div>
+      </div>
+    )
   }
 
   if (requireAdmin && !isAdmin) {
