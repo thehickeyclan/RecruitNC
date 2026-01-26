@@ -58,14 +58,18 @@ export default function SignUpPage() {
 
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError((data as any)?.error || "An error occurred during sign up")
+        const errorMessage = (data as any)?.error || data?.message || `An error occurred during sign up (${res.status})`
+        console.error("[Signup] API error:", res.status, errorMessage, data)
+        setError(errorMessage)
+        setLoading(false)
         return
       }
 
+      console.log("[Signup] Success:", data)
       setSuccess(true)
     } catch (err: any) {
-      setError(err?.message || "An unexpected error occurred during sign up")
-    } finally {
+      console.error("[Signup] Exception:", err)
+      setError(err?.message || "An unexpected error occurred during sign up. Please try again.")
       setLoading(false)
     }
   }
@@ -228,7 +232,7 @@ export default function SignUpPage() {
 
             {/* Optional, additive fields */}
             <div className="space-y-2">
-              <Label htmlFor="cellPhone">Cell Phone</Label>
+              <Label htmlFor="cellPhone">Cell Phone <span className="text-gray-400 text-xs">(optional)</span></Label>
               <Input
                 id="cellPhone"
                 type="tel"
@@ -238,15 +242,14 @@ export default function SignUpPage() {
                 value={cellPhone}
                 onChange={(e) => setCellPhone(e.target.value)}
                 disabled={loading}
-                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Profile Type</Label>
-              <Select value={profileType} onValueChange={setProfileType} disabled={loading} required>
+              <Label>Profile Type <span className="text-gray-400 text-xs">(optional)</span></Label>
+              <Select value={profileType} onValueChange={setProfileType} disabled={loading}>
                 <SelectTrigger aria-label="Profile type">
-                  <SelectValue placeholder="Select a profile type" />
+                  <SelectValue placeholder="Select a profile type (optional)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="athlete">Athlete</SelectItem>

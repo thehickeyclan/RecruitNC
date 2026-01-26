@@ -29,11 +29,18 @@ export async function POST(request: NextRequest) {
     }
 
     const finalFullName =
-      (typeof fullName === "string" && fullName.trim()) || [firstName, lastName].filter(Boolean).join(" ").trim()
+      (typeof fullName === "string" && fullName.trim()) || 
+      [firstName, lastName].filter(Boolean).join(" ").trim() ||
+      email?.split("@")[0] || // Fallback to email username if no name provided
+      "User"
 
-    if (!email || !password || !finalFullName) {
-      console.log("[v0] Validation failed:", { email: !!email, password: !!password, finalFullName: !!finalFullName })
-      return NextResponse.json({ error: "Email, password, and full name are required" }, { status: 400 })
+    if (!email || !password) {
+      console.log("[v0] Validation failed:", { email: !!email, password: !!password })
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json({ error: "Password must be at least 6 characters long" }, { status: 400 })
     }
 
     console.log("[v0] Creating Supabase client...")
