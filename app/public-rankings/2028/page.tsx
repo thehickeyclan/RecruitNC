@@ -71,6 +71,20 @@ export default function Class2028RankingsPage() {
     fetchRankings()
   }, [selectedGender])
 
+  // Set page metadata
+  useEffect(() => {
+    document.title = "Class of 2028 Rankings | NC United Wrestling"
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute("content", "Official Class of 2028 wrestling rankings for North Carolina. Featuring 6 NHSCA All-Americans and top college prospects.")
+    } else {
+      const meta = document.createElement("meta")
+      meta.name = "description"
+      meta.content = "Official Class of 2028 wrestling rankings for North Carolina. Featuring 6 NHSCA All-Americans and top college prospects."
+      document.getElementsByTagName("head")[0].appendChild(meta)
+    }
+  }, [])
+
   const fetchRankings = async () => {
     setIsLoading(true)
     setError(null)
