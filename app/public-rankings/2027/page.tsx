@@ -493,7 +493,7 @@ export default function Class2027RankingsPage() {
           </div>
 
           {/* Navigation to Other Rankings and Prospects */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <Link href="/public-rankings/2026">
               <Card className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
@@ -511,12 +511,29 @@ export default function Class2027RankingsPage() {
               </Card>
             </Link>
 
-            <Link href="/prospects/all">
+            <Link href="/public-rankings/2028">
               <Card className="bg-gradient-to-br from-[#B31B1B] to-[#8B1515] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
+                  <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
+                  <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2028 Rankings</h3>
+                  <p className="text-red-100 mb-4">View the Top 20 ranked prospects for 2028</p>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90"
+                  >
+                    View 2028 Rankings
+                  </Button>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/prospects/all">
+              <Card className="bg-gradient-to-br from-[#1e3a8a] to-[#0a2571] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
                   <Users className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
                   <h3 className="text-xl sm:text-2xl font-bold mb-2">All Prospects</h3>
-                  <p className="text-red-100 mb-4">Browse the complete database of North Carolina prospects</p>
+                  <p className="text-blue-100 mb-4">Browse the complete database of North Carolina prospects</p>
                   <Button
                     variant="secondary"
                     size="lg"
