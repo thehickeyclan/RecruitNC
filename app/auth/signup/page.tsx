@@ -119,7 +119,7 @@ export default function SignUpPage() {
     <div className="min-h-screen flex items-start pt-8 md:items-center md:pt-0 justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 pb-8">
       <div className="w-full max-w-2xl space-y-6">
         {/* Prominent Benefits Banner */}
-        <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden">
+        <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden pointer-events-none">
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
           <CardContent className="relative p-6 md:p-8">
             <div className="text-center mb-6">
@@ -167,23 +167,25 @@ export default function SignUpPage() {
         </Card>
 
         {/* Sign Up Form */}
-        <Card className="w-full shadow-lg">
+        <Card className="w-full shadow-lg relative z-10">
           <CardHeader>
             <CardTitle>Create Your Free Account</CardTitle>
             <CardDescription>Sign up takes less than 2 minutes</CardDescription>
           </CardHeader>
-        <CardContent>
+        <CardContent className="relative z-10">
           {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
                 <Input
                   id="firstName"
+                  name="firstName"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
+                  onInput={(e) => setFirstName((e.target as HTMLInputElement).value)}
                   autoComplete="given-name"
                   required
                   disabled={loading}
@@ -193,9 +195,11 @@ export default function SignUpPage() {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
+                  name="lastName"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  onInput={(e) => setLastName((e.target as HTMLInputElement).value)}
                   autoComplete="family-name"
                   required
                   disabled={loading}
@@ -207,9 +211,11 @@ export default function SignUpPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
                 autoComplete="email"
                 required
                 disabled={loading}
@@ -220,9 +226,11 @@ export default function SignUpPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
                 autoComplete="new-password"
                 required
                 disabled={loading}
@@ -235,12 +243,14 @@ export default function SignUpPage() {
               <Label htmlFor="cellPhone">Cell Phone <span className="text-gray-400 text-xs">(optional)</span></Label>
               <Input
                 id="cellPhone"
+                name="cellPhone"
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
                 placeholder="+1 555 555 5555"
                 value={cellPhone}
                 onChange={(e) => setCellPhone(e.target.value)}
+                onInput={(e) => setCellPhone((e.target as HTMLInputElement).value)}
                 disabled={loading}
               />
             </div>
