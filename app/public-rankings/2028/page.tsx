@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
+import Image from "next/image"
 import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
@@ -129,25 +130,50 @@ export default function Class2028RankingsPage() {
 
   const hasActiveFilters = searchTerm !== ""
 
-  // Top 3 spotlight data
-  const top3Spotlight = [
+  // Get Top 3 from actual rankings data
+  const top3Spotlight = rankings
+    .filter((r) => r.prospect_ranking && r.prospect_ranking <= 3)
+    .sort((a, b) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
+    .slice(0, 3)
+    .map((athlete) => {
+      // Build achievements string from available data
+      const achievements = []
+      if (athlete.nhsca_record_display) achievements.push(athlete.nhsca_record_display)
+      if (athlete.state_championship_summary) achievements.push(athlete.state_championship_summary)
+      if (athlete.super_32_record_display) achievements.push(athlete.super_32_record_display)
+      
+      return {
+        name: athlete.name,
+        school: athlete.highschool,
+        weight: athlete.weight_display || "N/A",
+        achievements: achievements.length > 0 ? achievements.join(" • ") : "Top ranked prospect",
+        photourl: athlete.photourl,
+        prospect_ranking: athlete.prospect_ranking,
+      }
+    })
+
+  // Fallback to static data if no rankings loaded yet
+  const displayTop3 = top3Spotlight.length > 0 ? top3Spotlight : [
     {
       name: "Aaron Ellison",
       school: "Lumberton",
       weight: "150 lbs",
       achievements: "NHSCA 4th Place + Fargo All-American • 45-0 Perfect Season",
+      photourl: undefined,
     },
     {
       name: "Connor Reece",
       school: "Northwest Guilford",
       weight: "144 lbs",
       achievements: "NHSCA 7th Place All-American • State 4th Place",
+      photourl: undefined,
     },
     {
       name: "Ryan Thompson",
       school: "Cardinal Gibbons",
       weight: "165 lbs",
       achievements: "NHSCA 6th Place All-American • 44-3 Record",
+      photourl: undefined,
     },
   ]
 
@@ -200,24 +226,51 @@ export default function Class2028RankingsPage() {
                 <div className="bg-white/95 rounded-2xl p-4 sm:p-8 shadow-xl">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2028</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                    {top3Spotlight.map((athlete, index) => (
-                      <div key={index} className="text-center">
-                        <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
-                          <div className="w-full h-full bg-gradient-to-br from-[#03154C] to-[#1e3a8a] flex items-center justify-center">
-                            <Trophy className="h-16 w-16 text-[#D3B574]" />
+                    {displayTop3.map((athlete, index) => {
+                      const photoUrl = athlete.photourl && athlete.photourl.trim() !== "" ? athlete.photourl : null
+                      const rank = athlete.prospect_ranking || index + 1
+                      
+                      return (
+                        <div key={`${athlete.name}-${index}`} className="text-center">
+                          <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
+                            {photoUrl ? (
+                              <Image
+                                src={photoUrl}
+                                alt={`${athlete.name} - ${athlete.school}`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                                onError={(e) => {
+                                  // Hide image on error and show trophy fallback
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const parent = target.parentElement
+                                  if (parent && !parent.querySelector('.trophy-fallback')) {
+                                    const fallback = document.createElement('div')
+                                    fallback.className = 'trophy-fallback w-full h-full bg-gradient-to-br from-[#03154C] to-[#1e3a8a] flex items-center justify-center absolute inset-0'
+                                    fallback.innerHTML = '<svg class="h-16 w-16 text-[#D3B574]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>'
+                                    parent.appendChild(fallback)
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-[#03154C] to-[#1e3a8a] flex items-center justify-center">
+                                <Trophy className="h-16 w-16 text-[#D3B574]" />
+                              </div>
+                            )}
+                            <div className="absolute top-3 left-3">
+                              <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1">#{rank}</Badge>
+                            </div>
                           </div>
-                          <div className="absolute top-3 left-3">
-                            <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1">#{index + 1}</Badge>
-                          </div>
+                          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{athlete.name}</h3>
+                          <p className="text-sm text-gray-600 mb-2">{athlete.school}</p>
+                          <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
+                            {athlete.weight}
+                          </Badge>
+                          <p className="text-xs sm:text-sm text-gray-600 mt-2">{athlete.achievements}</p>
                         </div>
-                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{athlete.name}</h3>
-                        <p className="text-sm text-gray-600 mb-2">{athlete.school}</p>
-                        <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
-                          {athlete.weight}
-                        </Badge>
-                        <p className="text-xs sm:text-sm text-gray-600 mt-2">{athlete.achievements}</p>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
