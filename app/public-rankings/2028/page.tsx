@@ -217,7 +217,7 @@ export default function Class2028RankingsPage() {
                     <div className="text-xs sm:text-sm text-white/90">High Schools Represented</div>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 sm:px-6 py-3 sm:py-4 border border-white/20">
-                    <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">[X/20]</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">13/20</div>
                     <div className="text-xs sm:text-sm text-white/90">Train with NC United Blue</div>
                   </div>
                 </div>
@@ -267,7 +267,6 @@ export default function Class2028RankingsPage() {
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
                             {athlete.weight}
                           </Badge>
-                          <p className="text-xs sm:text-sm text-gray-600 mt-2">{athlete.achievements}</p>
                         </div>
                       )
                     })}
@@ -284,17 +283,11 @@ export default function Class2028RankingsPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
                   A Class Built on National Performance
                 </h2>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
                   The Class of 2028 represents a new wave of North Carolina wrestling talent that has proven itself on
                   the national stage as freshmen. With 6 NHSCA All-Americans in the top 7 and consistent participation in
                   elite events like Super32 and Fargo, this class has demonstrated they can compete with the country's
                   best.
-                </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                  What distinguishes this group is their willingness to test themselves early and often. Led by Aaron
-                  Ellison's perfect 45-0 season and dual-sport All-American status (NHSCA 4th + Fargo AA), the
-                  top-ranked wrestlers have embraced high-level competition as freshmen — a mindset that sets them apart
-                  from previous classes at this stage.
                 </p>
               </CardContent>
             </Card>
@@ -325,14 +318,14 @@ export default function Class2028RankingsPage() {
               <CardContent className="p-6 sm:p-8">
                 <h3 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">The NC United Pipeline</h3>
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
-                  The success of the Class of 2028 reflects North Carolina's growing wrestling infrastructure. [X out of
-                  20] ranked wrestlers train with NC United Blue, giving them weekly exposure to elite competition and
+                  The success of the Class of 2028 reflects North Carolina's growing wrestling infrastructure. 13 out of
+                  20 ranked wrestlers train with NC United Blue, giving them weekly exposure to elite competition and
                   college-level coaching. This investment in high-level training is paying dividends, as evidenced by the
                   class's national tournament success.
                 </p>
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
                   From Lumberton to Charlotte Catholic to Northwest Guilford, the geographic diversity of this class
-                  shows wrestling's expansion across the state. Multiple training hubs are now producing nationally
+                  shows wrestling's expansion across the state. Multiple training hubs are producing nationally
                   competitive athletes, creating a pipeline that college coaches are starting to notice.
                 </p>
               </CardContent>
@@ -489,32 +482,40 @@ export default function Class2028RankingsPage() {
                         <tr className="bg-[#03154C] text-white">
                           <th className="px-4 py-3 text-left font-semibold">Rank</th>
                           <th className="px-4 py-3 text-left font-semibold">Name</th>
-                          <th className="px-4 py-3 text-left font-semibold">Committed</th>
                           <th className="px-4 py-3 text-left font-semibold">School</th>
                           <th className="px-4 py-3 text-left font-semibold">Weight</th>
                           <th className="px-4 py-3 text-left font-semibold">Profile</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {top20Data.map((athlete) => (
-                          <tr key={athlete.rank} className="border-b hover:bg-gray-50">
-                            <td className="px-4 py-3">
-                              <Badge className="bg-[#D3B574] text-gray-900">#{athlete.rank}</Badge>
-                            </td>
-                            <td className="px-4 py-3 font-medium">{athlete.name}</td>
-                            <td className="px-4 py-3 text-gray-500">—</td>
-                            <td className="px-4 py-3">{athlete.school}</td>
-                            <td className="px-4 py-3">{athlete.weight}</td>
-                            <td className="px-4 py-3">
-                              <Link
-                                href={`/unified-profile/${athlete.name.toLowerCase().replace(/\s+/g, "-")}`}
-                                className="text-[#03154C] hover:text-[#D3B574] hover:underline"
-                              >
-                                View Profile
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
+                        {top20Data.map((athlete) => {
+                          // Try to find matching athlete in rankings data to get ID
+                          const matchingAthlete = rankings.find(
+                            (r) => r.name.toLowerCase() === athlete.name.toLowerCase()
+                          )
+                          const profileUrl = matchingAthlete?.id 
+                            ? `/athletes/${matchingAthlete.id}`
+                            : `/unified-profile/${athlete.name.toLowerCase().replace(/\s+/g, "-")}`
+                          
+                          return (
+                            <tr key={athlete.rank} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3">
+                                <Badge className="bg-[#D3B574] text-gray-900">#{athlete.rank}</Badge>
+                              </td>
+                              <td className="px-4 py-3 font-medium">{athlete.name}</td>
+                              <td className="px-4 py-3">{athlete.school}</td>
+                              <td className="px-4 py-3">{athlete.weight}</td>
+                              <td className="px-4 py-3">
+                                <Link
+                                  href={profileUrl}
+                                  className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
+                                >
+                                  View Profile
+                                </Link>
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
