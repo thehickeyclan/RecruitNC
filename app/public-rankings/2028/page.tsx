@@ -168,14 +168,15 @@ export default function Class2028RankingsPage() {
       })
   }, [rankings])
 
-  // Fallback to static data if no rankings loaded yet
+  // Fallback to static data if no rankings loaded yet (with hardcoded photo URLs)
   const displayTop3 = top3Spotlight.length > 0 ? top3Spotlight : [
     {
       name: "Aaron Ellison",
       school: "Lumberton",
       weight: "150 lbs",
       achievements: "NHSCA 4th Place + Fargo All-American • 45-0 Perfect Season",
-      photourl: undefined,
+      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/V8uRmiV3jvkW1MHswu7L5-Aaron%20Ellison.png",
+      prospect_ranking: 1,
       id: undefined,
     },
     {
@@ -183,7 +184,8 @@ export default function Class2028RankingsPage() {
       school: "Northwest Guilford",
       weight: "144 lbs",
       achievements: "NHSCA 7th Place All-American • State 4th Place",
-      photourl: undefined,
+      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/t9NpTXJchAu90ghSHuimP-Connor%20Reese.png",
+      prospect_ranking: 2,
       id: undefined,
     },
     {
@@ -191,7 +193,8 @@ export default function Class2028RankingsPage() {
       school: "Cardinal Gibbons",
       weight: "165 lbs",
       achievements: "NHSCA 6th Place All-American • 44-3 Record",
-      photourl: undefined,
+      photourl: undefined, // Need to add Ryan's photo URL when available
+      prospect_ranking: 3,
       id: undefined,
     },
   ]
