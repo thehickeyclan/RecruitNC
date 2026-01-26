@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -106,6 +106,17 @@ export default function Class2028RankingsPage() {
       setRankings(data.rankings || [])
       setLastUpdated(data.metadata?.last_updated || null)
       setUpdatePostUrl(data.metadata?.update_post_url || null)
+      
+      // Debug: Log top 3 data to see photourl values
+      const top3 = (data.rankings || [])
+        .filter((r: PublicRanking) => r.prospect_ranking && r.prospect_ranking <= 3)
+        .sort((a: PublicRanking, b: PublicRanking) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
+        .slice(0, 3)
+      console.log("Top 3 athletes with photos:", top3.map((a: PublicRanking) => ({
+        name: a.name,
+        rank: a.prospect_ranking,
+        photourl: a.photourl
+      })))
     } catch (err) {
       console.error("Error fetching 2028 rankings:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -130,27 +141,32 @@ export default function Class2028RankingsPage() {
 
   const hasActiveFilters = searchTerm !== ""
 
-  // Get Top 3 from actual rankings data
-  const top3Spotlight = rankings
-    .filter((r) => r.prospect_ranking && r.prospect_ranking <= 3)
-    .sort((a, b) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
-    .slice(0, 3)
-    .map((athlete) => {
-      // Build achievements string from available data
-      const achievements = []
-      if (athlete.nhsca_record_display) achievements.push(athlete.nhsca_record_display)
-      if (athlete.state_championship_summary) achievements.push(athlete.state_championship_summary)
-      if (athlete.super_32_record_display) achievements.push(athlete.super_32_record_display)
-      
-      return {
-        name: athlete.name,
-        school: athlete.highschool,
-        weight: athlete.weight_display || "N/A",
-        achievements: achievements.length > 0 ? achievements.join(" • ") : "Top ranked prospect",
-        photourl: athlete.photourl,
-        prospect_ranking: athlete.prospect_ranking,
-      }
-    })
+  // Get Top 3 from actual rankings data - recompute when rankings change
+  const top3Spotlight = useMemo(() => {
+    if (!rankings || rankings.length === 0) return []
+    
+    return rankings
+      .filter((r) => r.prospect_ranking && r.prospect_ranking <= 3)
+      .sort((a, b) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
+      .slice(0, 3)
+      .map((athlete) => {
+        // Build achievements string from available data
+        const achievements = []
+        if (athlete.nhsca_record_display) achievements.push(athlete.nhsca_record_display)
+        if (athlete.state_championship_summary) achievements.push(athlete.state_championship_summary)
+        if (athlete.super_32_record_display) achievements.push(athlete.super_32_record_display)
+        
+        return {
+          name: athlete.name,
+          school: athlete.highschool,
+          weight: athlete.weight_display || "N/A",
+          achievements: achievements.length > 0 ? achievements.join(" • ") : "Top ranked prospect",
+          photourl: athlete.photourl,
+          prospect_ranking: athlete.prospect_ranking,
+          id: athlete.id, // Include ID for profile links
+        }
+      })
+  }, [rankings])
 
   // Fallback to static data if no rankings loaded yet
   const displayTop3 = top3Spotlight.length > 0 ? top3Spotlight : [
@@ -160,6 +176,7 @@ export default function Class2028RankingsPage() {
       weight: "150 lbs",
       achievements: "NHSCA 4th Place + Fargo All-American • 45-0 Perfect Season",
       photourl: undefined,
+      id: undefined,
     },
     {
       name: "Connor Reece",
@@ -167,6 +184,7 @@ export default function Class2028RankingsPage() {
       weight: "144 lbs",
       achievements: "NHSCA 7th Place All-American • State 4th Place",
       photourl: undefined,
+      id: undefined,
     },
     {
       name: "Ryan Thompson",
@@ -174,6 +192,7 @@ export default function Class2028RankingsPage() {
       weight: "165 lbs",
       achievements: "NHSCA 6th Place All-American • 44-3 Record",
       photourl: undefined,
+      id: undefined,
     },
   ]
 
@@ -227,8 +246,20 @@ export default function Class2028RankingsPage() {
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2028</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     {displayTop3.map((athlete, index) => {
-                      const photoUrl = athlete.photourl && athlete.photourl.trim() !== "" ? athlete.photourl : null
+                      // Check photourl - handle both string and null/undefined
+                      const photoUrl = athlete.photourl && 
+                                      typeof athlete.photourl === 'string' && 
+                                      athlete.photourl.trim() !== "" && 
+                                      athlete.photourl !== "null" && 
+                                      athlete.photourl !== "undefined"
+                                        ? athlete.photourl 
+                                        : null
                       const rank = athlete.prospect_ranking || index + 1
+                      
+                      // Debug log for each athlete
+                      if (index === 0) {
+                        console.log(`Athlete ${athlete.name} - photourl:`, athlete.photourl, "photoUrl:", photoUrl)
+                      }
                       
                       return (
                         <div key={`${athlete.name}-${index}`} className="text-center">
@@ -267,6 +298,16 @@ export default function Class2028RankingsPage() {
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
                             {athlete.weight}
                           </Badge>
+                          {athlete.id && (
+                            <div className="mt-2">
+                              <Link
+                                href={`/unified-profile/${athlete.id}`}
+                                className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
+                              >
+                                View Profile →
+                              </Link>
+                            </div>
+                          )}
                         </div>
                       )
                     })}
@@ -475,9 +516,11 @@ export default function Class2028RankingsPage() {
                           const matchingAthlete = rankings.find(
                             (r) => r.name.toLowerCase() === athlete.name.toLowerCase()
                           )
+                          // Use unified-profile route with ID if available
+                          // Note: Name-based slugs may 404 until profiles are created
                           const profileUrl = matchingAthlete?.id 
-                            ? `/athletes/${matchingAthlete.id}`
-                            : `/unified-profile/${athlete.name.toLowerCase().replace(/\s+/g, "-")}`
+                            ? `/unified-profile/${matchingAthlete.id}`
+                            : `#` // Disable link if no ID found to avoid 404
                           
                           return (
                             <tr key={athlete.rank} className="border-b hover:bg-gray-50">
@@ -488,12 +531,16 @@ export default function Class2028RankingsPage() {
                               <td className="px-4 py-3">{athlete.school}</td>
                               <td className="px-4 py-3">{athlete.weight}</td>
                               <td className="px-4 py-3">
-                                <Link
-                                  href={profileUrl}
-                                  className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
-                                >
-                                  View Profile
-                                </Link>
+                                {matchingAthlete?.id ? (
+                                  <Link
+                                    href={profileUrl}
+                                    className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
+                                  >
+                                    View Profile
+                                  </Link>
+                                ) : (
+                                  <span className="text-gray-400 text-sm">Profile coming soon</span>
+                                )}
                               </td>
                             </tr>
                           )
