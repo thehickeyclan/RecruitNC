@@ -331,24 +331,6 @@ export default function Class2028RankingsPage() {
               </CardContent>
             </Card>
 
-            {/* College Recruiting Outlook */}
-            <Card>
-              <CardContent className="p-6 sm:p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">College Recruiting Outlook</h3>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
-                  While the Class of 2028 is still early in the recruiting process, their freshman-year national
-                  credentials have already caught the attention of college programs. Wrestlers with NHSCA All-American
-                  placements and state championship performances are on the radar of both in-state programs (NC State,
-                  UNC, App State, Gardner-Webb) and national powers looking for early commits.
-                </p>
-                <p className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                  With two more years of development ahead, this class has the potential to become one of North
-                  Carolina's most heavily recruited groups — especially as they continue competing in college opens and
-                  national events.
-                </p>
-              </CardContent>
-            </Card>
-
             {/* Official Rankings */}
             <Card>
               <CardContent className="p-6 sm:p-8">
