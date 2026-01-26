@@ -118,8 +118,43 @@ export default function SubmitProfilePage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const validateForm = (): string | null => {
+    // Check required text fields
+    if (!formData.firstName.trim()) return "First Name is required"
+    if (!formData.lastName.trim()) return "Last Name is required"
+    if (!formData.email.trim()) return "Email is required"
+    if (!formData.highSchool.trim()) return "High School is required"
+    
+    // Check required select fields (these don't trigger HTML5 validation)
+    if (!formData.gender) return "Gender is required"
+    if (!formData.graduationYear) return "Graduation Year is required"
+    if (!formData.weightClass) return "Weight Class is required"
+    
+    // Check checkboxes
+    if (!agreedToPrivacy) return "You must agree to the Privacy & Data policy"
+    if (!confirmedAge) return "You must confirm the athlete is 13+ years old"
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) return "Please enter a valid email address"
+    
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate form before submitting
+    const validationError = validateForm()
+    if (validationError) {
+      toast({
+        title: "Validation Error",
+        description: validationError,
+        variant: "destructive",
+      })
+      return
+    }
+    
     setIsSubmitting(true)
 
     try {
@@ -235,7 +270,7 @@ export default function SubmitProfilePage() {
           </CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <CardContent className="space-y-6">
             <Alert className="bg-blue-50 border-blue-200">
               <AlertCircle className="h-4 w-4 text-blue-600" />
