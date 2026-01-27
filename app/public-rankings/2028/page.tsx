@@ -169,7 +169,8 @@ export default function Class2028RankingsPage() {
   }, [rankings])
 
   // Fallback to static data if no rankings loaded yet (with hardcoded photo URLs)
-  const displayTop3 = top3Spotlight.length > 0 ? top3Spotlight : [
+  // ALWAYS use fallback since API returns 0 athletes for 2028
+  const displayTop3 = [
     {
       name: "Aaron Ellison",
       school: "Lumberton",
@@ -198,6 +199,9 @@ export default function Class2028RankingsPage() {
       id: undefined,
     },
   ]
+  
+  // If API data exists, use it; otherwise use static fallback
+  const finalTop3 = top3Spotlight.length > 0 ? top3Spotlight : displayTop3
 
   return (
     <AuthGuard>
@@ -248,7 +252,7 @@ export default function Class2028RankingsPage() {
                 <div className="bg-white/95 rounded-2xl p-4 sm:p-8 shadow-xl">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2028</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-                    {displayTop3.map((athlete, index) => {
+                    {finalTop3.map((athlete, index) => {
                       // Simple check for photo URL - be more permissive
                       const photoUrl = athlete.photourl && 
                                       String(athlete.photourl).trim() !== "" && 
