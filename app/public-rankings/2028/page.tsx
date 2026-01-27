@@ -194,7 +194,7 @@ export default function Class2028RankingsPage() {
       school: "Cardinal Gibbons",
       weight: "165 lbs",
       achievements: "NHSCA 6th AA (2025) • State 5th (2025) • 44-3 record • Beat #29 in 2027",
-      photourl: undefined, // Need to add Ryan's photo URL when available
+      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Ryan%20Thompson.png",
       prospect_ranking: 3,
       id: undefined,
     },
@@ -236,14 +236,14 @@ export default function Class2028RankingsPage() {
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 sm:px-6 py-3 sm:py-4 border border-white/20">
                     <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">3</div>
-                    <div className="text-xs sm:text-sm text-white/90">State Champions/Runners-up in Top 10</div>
+                    <div className="text-xs sm:text-sm text-white/90">State Runnerups</div>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 sm:px-6 py-3 sm:py-4 border border-white/20">
-                    <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">20</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">17</div>
                     <div className="text-xs sm:text-sm text-white/90">High Schools Represented</div>
                   </div>
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 sm:px-6 py-3 sm:py-4 border border-white/20">
-                    <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">13/20</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-[#D3B574]">13/17</div>
                     <div className="text-xs sm:text-sm text-white/90">Train with NC United Blue</div>
                   </div>
                 </div>

@@ -1,5 +1,8 @@
 "use client"
 
+// NOTE: This homepage is intentionally PUBLIC and accessible without authentication.
+// Do NOT wrap this page with AuthGuard - it must be accessible to all users, including mobile.
+
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
