@@ -58,7 +58,7 @@ export default function CardAnalyticsPage() {
       setLoading(true)
       setError(null)
 
-      const response = await fetch("/api/admin/analytics/card-views")
+      const response = await fetch("/api/admin/analytics/card-views", { cache: "no-store" })
       const data = await response.json()
 
       if (!response.ok) {
