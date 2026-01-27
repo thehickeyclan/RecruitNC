@@ -249,32 +249,28 @@ export default function Class2028RankingsPage() {
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2028</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     {displayTop3.map((athlete, index) => {
-                      // Check photourl - handle both string and null/undefined
+                      // Simple check for photo URL - be more permissive
                       const photoUrl = athlete.photourl && 
-                                      typeof athlete.photourl === 'string' && 
-                                      athlete.photourl.trim() !== "" && 
-                                      athlete.photourl !== "null" && 
-                                      athlete.photourl !== "undefined"
-                                        ? athlete.photourl 
+                                      String(athlete.photourl).trim() !== "" && 
+                                      String(athlete.photourl) !== "null" && 
+                                      String(athlete.photourl) !== "undefined"
+                                        ? String(athlete.photourl).trim()
                                         : null
                       const rank = athlete.prospect_ranking || index + 1
                       
                       // Debug log for each athlete
-                      if (index === 0) {
-                        console.log(`Athlete ${athlete.name} - photourl:`, athlete.photourl, "photoUrl:", photoUrl)
-                      }
+                      console.log(`[Top 3] ${athlete.name} - photourl:`, athlete.photourl, "photoUrl:", photoUrl, "hasPhoto:", !!photoUrl)
                       
                       return (
                         <div key={`${athlete.name}-${index}`} className="text-center">
                           <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
                             {photoUrl ? (
-                              <Image
+                              <img
                                 src={photoUrl}
                                 alt={`${athlete.name} - ${athlete.school}`}
-                                fill
-                                className="object-cover"
-                                unoptimized
+                                className="w-full h-full object-cover"
                                 onError={(e) => {
+                                  console.error(`[Image Error] Failed to load image for ${athlete.name}:`, photoUrl)
                                   // Hide image on error and show trophy fallback
                                   const target = e.target as HTMLImageElement
                                   target.style.display = 'none'
@@ -285,6 +281,9 @@ export default function Class2028RankingsPage() {
                                     fallback.innerHTML = '<svg class="h-16 w-16 text-[#D3B574]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>'
                                     parent.appendChild(fallback)
                                   }
+                                }}
+                                onLoad={() => {
+                                  console.log(`[Image Success] Loaded image for ${athlete.name}`)
                                 }}
                               />
                             ) : (
