@@ -575,10 +575,6 @@ export default function Class2028RankingsPage() {
                     ))}
                   </div>
                 </div>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
 
                 {viewMode === "table" ? (
                   <RankingsTableView athletes={filteredRankings} />
