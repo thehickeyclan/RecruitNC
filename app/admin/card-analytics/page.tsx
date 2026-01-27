@@ -45,6 +45,7 @@ export default function CardAnalyticsPage() {
   const [cardViews, setCardViews] = useState<CardView[]>([])
   const [topAthletes, setTopAthletes] = useState<AthleteStats[]>([])
   const [profileClickRanking, setProfileClickRanking] = useState<ProfileClickRank[]>([])
+  const [profileViewRankingCoaches, setProfileViewRankingCoaches] = useState<ProfileClickRank[]>([])
   const [profileTypeStats, setProfileTypeStats] = useState<Record<string, number>>({})
   const [totalViews, setTotalViews] = useState(0)
 
@@ -67,6 +68,7 @@ export default function CardAnalyticsPage() {
       setCardViews(data.cardViews || [])
       setTopAthletes(data.topAthletes || [])
       setProfileClickRanking(data.profileClickRanking || [])
+      setProfileViewRankingCoaches(data.profileViewRankingCoaches || [])
       setProfileTypeStats(data.profileTypeStats || {})
       setTotalViews(data.totalViews || 0)
     } catch (err: any) {
@@ -189,21 +191,21 @@ export default function CardAnalyticsPage() {
         </Card>
       </div>
 
-      {/* Most viewed athlete profiles – when a coach/visitor opens a public profile */}
+      {/* Most viewed by everyone (anyone who clicks / opens a profile) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5" />
-            Most Viewed Athlete Profiles
+            Most Viewed by Everyone
           </CardTitle>
           <CardDescription>
-            Athletes whose public profile pages are viewed the most (e.g. when a coach opens a specific athlete&apos;s profile). Ranked by profile views and clicks through to the profile.
+            Athletes whose public profile pages are viewed or clicked the most, by anyone (coaches, parents, recruits, anonymous visitors).
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-[480px] overflow-y-auto">
             {profileClickRanking.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4">No profile-view data yet. Views will appear here when coaches or visitors open athlete public profiles.</p>
+              <p className="text-sm text-gray-500 py-4">No profile-view data yet. Views will appear when anyone opens athlete public profiles.</p>
             ) : (
               profileClickRanking.map((row, index) => (
                 <div
@@ -229,6 +231,54 @@ export default function CardAnalyticsPage() {
                   <div className="flex-shrink-0 text-right">
                     <span className="font-semibold text-gray-900">{row.clicks}</span>
                     <span className="text-sm text-gray-500 ml-1">views</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Most viewed by coaches only */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Most Viewed by Coaches
+          </CardTitle>
+          <CardDescription>
+            Same metric, but only when the viewer is logged in as a coach (college coach, HS/club coach, or admin).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 max-h-[480px] overflow-y-auto">
+            {profileViewRankingCoaches.length === 0 ? (
+              <p className="text-sm text-gray-500 py-4">No coach profile-view data yet. Views will appear when coaches open athlete public profiles.</p>
+            ) : (
+              profileViewRankingCoaches.map((row, index) => (
+                <div
+                  key={row.athlete_id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-green-100 text-green-800 rounded-full text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/unified-profile/${row.athlete_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-blue-600 hover:underline truncate block"
+                      >
+                        {row.athlete_name}
+                      </Link>
+                      <p className="text-xs text-gray-500 truncate">{row.athlete_id}</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <span className="font-semibold text-gray-900">{row.clicks}</span>
+                    <span className="text-sm text-gray-500 ml-1">coach views</span>
                   </div>
                 </div>
               ))

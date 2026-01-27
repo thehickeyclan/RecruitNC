@@ -108,25 +108,40 @@ export async function GET() {
       console.error("[v0] Profile-view ranking query error:", profileClickError)
     }
 
+    const COACH_PROFILE_TYPES = new Set([
+      "college_coach", "coach", "admin", "college-coach", "hs-club-coach",
+    ])
+
     const clickCounts: Record<string, { name: string; count: number }> = {}
+    const coachClickCounts: Record<string, { name: string; count: number }> = {}
     if (profileClickEvents) {
       for (const row of profileClickEvents) {
-        let ed = row.event_data as { athlete_id?: string; athlete_name?: string } | null
+        let ed = row.event_data as { athlete_id?: string; athlete_name?: string; profile_type?: string } | null
         if (typeof ed === "string") {
           try {
-            ed = JSON.parse(ed) as { athlete_id?: string; athlete_name?: string }
+            ed = JSON.parse(ed) as { athlete_id?: string; athlete_name?: string; profile_type?: string }
           } catch {
             ed = null
           }
         }
-        if (ed?.athlete_id) {
-          const id = ed.athlete_id
-          if (!clickCounts[id]) clickCounts[id] = { name: ed.athlete_name || "Unknown", count: 0 }
-          clickCounts[id].count++
+        if (!ed?.athlete_id) continue
+        const id = ed.athlete_id
+        const name = ed.athlete_name || "Unknown"
+        const isCoach = ed.profile_type != null && COACH_PROFILE_TYPES.has(ed.profile_type)
+
+        if (!clickCounts[id]) clickCounts[id] = { name, count: 0 }
+        clickCounts[id].count++
+        if (isCoach) {
+          if (!coachClickCounts[id]) coachClickCounts[id] = { name, count: 0 }
+          coachClickCounts[id].count++
         }
       }
     }
     const profileClickRanking = Object.entries(clickCounts)
+      .map(([athlete_id, { name: athlete_name, count: clicks }]) => ({ athlete_id, athlete_name, clicks }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 50)
+    const profileViewRankingCoaches = Object.entries(coachClickCounts)
       .map(([athlete_id, { name: athlete_name, count: clicks }]) => ({ athlete_id, athlete_name, clicks }))
       .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 50)
@@ -144,6 +159,7 @@ export async function GET() {
       cardViews: enrichedCardViews || [],
       topAthletes,
       profileClickRanking: profileClickRanking || [],
+      profileViewRankingCoaches: profileViewRankingCoaches || [],
       profileTypeStats,
       totalViews: cardViews?.length || 0,
     })
