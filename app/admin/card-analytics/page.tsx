@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Loader2, Eye, Users, TrendingUp, User, RefreshCw } from "lucide-react"
+import Link from "next/link"
+import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, MousePointer } from "lucide-react"
 
 interface CardView {
   id: number
@@ -32,11 +33,18 @@ interface AthleteStats {
   profile_types: Record<string, number>
 }
 
+interface ProfileClickRank {
+  athlete_id: string
+  athlete_name: string
+  clicks: number
+}
+
 export default function CardAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cardViews, setCardViews] = useState<CardView[]>([])
   const [topAthletes, setTopAthletes] = useState<AthleteStats[]>([])
+  const [profileClickRanking, setProfileClickRanking] = useState<ProfileClickRank[]>([])
   const [profileTypeStats, setProfileTypeStats] = useState<Record<string, number>>({})
   const [totalViews, setTotalViews] = useState(0)
 
@@ -58,6 +66,7 @@ export default function CardAnalyticsPage() {
 
       setCardViews(data.cardViews || [])
       setTopAthletes(data.topAthletes || [])
+      setProfileClickRanking(data.profileClickRanking || [])
       setProfileTypeStats(data.profileTypeStats || {})
       setTotalViews(data.totalViews || 0)
     } catch (err: any) {
@@ -180,12 +189,60 @@ export default function CardAnalyticsPage() {
         </Card>
       </div>
 
+      {/* Most Clicked Profiles – stack ranking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MousePointer className="h-5 w-5" />
+            Most Clicked Profiles
+          </CardTitle>
+          <CardDescription>
+            Profiles with the most clicks and profile-page opens (card_click + profile_view). Stack ranked by engagement.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 max-h-[480px] overflow-y-auto">
+            {profileClickRanking.length === 0 ? (
+              <p className="text-sm text-gray-500 py-4">No profile-click data yet. Clicks and profile views will appear here once users interact with athlete profiles.</p>
+            ) : (
+              profileClickRanking.map((row, index) => (
+                <div
+                  key={row.athlete_id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-amber-100 text-amber-800 rounded-full text-sm font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/unified-profile/${row.athlete_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-blue-600 hover:underline truncate block"
+                      >
+                        {row.athlete_name}
+                      </Link>
+                      <p className="text-xs text-gray-500 truncate">{row.athlete_id}</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <span className="font-semibold text-gray-900">{row.clicks}</span>
+                    <span className="text-sm text-gray-500 ml-1">clicks</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Athletes */}
         <Card>
           <CardHeader>
             <CardTitle>Most Popular Athletes</CardTitle>
-            <CardDescription>Athletes with the most card views</CardDescription>
+            <CardDescription>Athletes with the most card views (all event types)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

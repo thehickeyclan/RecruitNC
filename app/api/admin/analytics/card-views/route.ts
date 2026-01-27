@@ -93,6 +93,30 @@ export async function GET() {
       .sort((a: any, b: any) => b.total_views - a.total_views)
       .slice(0, 20)
 
+    // Profile-click stack ranking: card_click + profile_view only, aggregated over more rows
+    const { data: profileClickEvents } = await supabase
+      .from("user_analytics")
+      .select("event_data")
+      .in("event_type", ["card_click", "profile_view"])
+      .order("created_at", { ascending: false })
+      .limit(5000)
+
+    const clickCounts: Record<string, { name: string; count: number }> = {}
+    if (profileClickEvents) {
+      for (const row of profileClickEvents) {
+        const ed = row.event_data as { athlete_id?: string; athlete_name?: string } | null
+        if (ed?.athlete_id) {
+          const id = ed.athlete_id
+          if (!clickCounts[id]) clickCounts[id] = { name: ed.athlete_name || "Unknown", count: 0 }
+          clickCounts[id].count++
+        }
+      }
+    }
+    const profileClickRanking = Object.entries(clickCounts)
+      .map(([athlete_id, { name: athlete_name, count: clicks }]) => ({ athlete_id, athlete_name, clicks }))
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, 50)
+
     // Get profile type breakdown
     const profileTypeStats: any = {}
     if (enrichedCardViews) {
@@ -107,6 +131,7 @@ export async function GET() {
     return NextResponse.json({
       cardViews: enrichedCardViews || [],
       topAthletes,
+      profileClickRanking: profileClickRanking || [],
       profileTypeStats,
       totalViews: cardViews?.length || 0,
     })

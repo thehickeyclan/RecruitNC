@@ -1,4 +1,5 @@
 "use client"
+import { trackCardClick } from "@/lib/analytics-enhanced"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExternalLink, ChevronUp, ChevronDown, Star } from 'lucide-react'
@@ -428,6 +429,7 @@ export function RankingsTableView({
                         <Link
                           href={`/unified-profile/${athlete.id}`}
                           className="hover:text-[#D3B574] transition-colors underline"
+                          onClick={() => trackCardClick(athlete.id, athlete.name)}
                         >
                           <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
                         </Link>
@@ -466,7 +468,10 @@ export function RankingsTableView({
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/unified-profile/${athlete.id}`}>
+                      <Link
+                        href={`/unified-profile/${athlete.id}`}
+                        onClick={() => trackCardClick(athlete.id, athlete.name)}
+                      >
                         <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
                           <ExternalLink className="w-3 h-3 text-gray-700" />
                         </Button>

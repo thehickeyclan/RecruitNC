@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { MatchDataSection } from "@/components/match-data-section-improved"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+import { ProfileViewTracker } from "@/components/profile-view-tracker"
 
 const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
   .split(",")
@@ -102,6 +103,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <ProfileViewTracker athleteId={athlete.id} athleteName={athlete.name || "Unknown"} />
       <AthleteDetail 
         athlete={athlete} 
         nchsaaResults={nchsaaResults} 
