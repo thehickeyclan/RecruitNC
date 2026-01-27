@@ -282,32 +282,16 @@ export default function ClassOf2026RankingsPage() {
               {lastUpdated && (
                 <div className="flex items-center justify-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-gray-600" />
-                  {updatePostUrl ? (
-                    <Link
-                      href={updatePostUrl}
-                      className="text-[#B31B1B] hover:text-[#8B1515] hover:underline font-medium transition-colors"
-                    >
-                      Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      })} - View what changed
-                    </Link>
-                  ) : (
-                    <span className="text-gray-600">
-                      Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      })}
-                    </span>
-                  )}
+                  <span className="text-gray-600">
+                    Last updated: {new Date(lastUpdated).toLocaleString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </span>
                 </div>
               )}
             </div>
