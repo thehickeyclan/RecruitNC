@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
         college_weight_class: body.collegeWeightClass || null,
         highschool: body.highSchool || null,
         high_school_division: body.highSchoolDivision || null,
+        wrestling_club: body.wrestlingClub || null,
         location: body.location || null,
         email: body.email,
         phone: body.phone || null,
@@ -37,6 +38,9 @@ export async function POST(request: NextRequest) {
         bio: body.bio || null,
         achievements: body.achievements || null,
         additional_achievements: body.additionalAchievements || null,
+        state_qualifier: body.stateQualifier || null,
+        regional_placer: body.regionalPlacer || null,
+        conference_placer: body.conferencePlacer || null,
         career_record: body.careerRecord || null,
         
         // Social media
