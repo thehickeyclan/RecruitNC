@@ -151,6 +151,14 @@
 
   /* Mobile-specific optimizations for better touch interaction */
   @media (max-width: 768px) {
+    html,
+    body {
+      /* Reinforce vertical scroll + momentum on iOS/Android */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: auto;
+    }
+
     body {
       -webkit-text-size-adjust: 100%;
       -webkit-tap-highlight-color: transparent;
@@ -164,7 +172,7 @@
       min-width: 44px;
     }
 
-    /* Optimize scrollable areas */
+    /* Optimize scrollable areas (e.g. modals, drawers) */
     .scrollable {
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -178,8 +186,9 @@
       white-space: nowrap;
     }
 
-    /* Ensure all containers respect viewport width */
-    * {
+    /* Prevent horizontal overflow; scope to root so flex/grid children still work */
+    html,
+    body {
       max-width: 100vw;
     }
 
