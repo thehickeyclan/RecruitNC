@@ -59,8 +59,9 @@ export default function RootLayout({
         style={{
           touchAction: "pan-y",
           WebkitOverflowScrolling: "touch",
-          overscrollBehavior: "none",
+          overscrollBehavior: "auto",
           overflowX: "hidden",
+          overflowY: "auto",
           maxWidth: "100vw",
           scrollBehavior: "smooth",
         }}
