@@ -194,7 +194,7 @@ export default function Class2028RankingsPage() {
       school: "Cardinal Gibbons",
       weight: "165 lbs",
       achievements: "NHSCA 6th AA (2025) • State 5th (2025) • 44-3 record • Beat #29 in 2027",
-      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Ryan%20Thompson.png",
+      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Cgw26wOygo4xndja5nd5u-Ryan%20Thompson.png",
       prospect_ranking: 3,
       id: undefined,
     },
