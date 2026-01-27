@@ -3,21 +3,26 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    console.log("[v0] Card analytics API called")
-    const supabase = createClient()
+    const supabase = await createClient()
 
-    // Check if user is authenticated
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      console.log("[v0] Card analytics: Not authenticated")
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    console.log("[v0] Card analytics: User authenticated:", user.id)
+    const { data: adminRow } = await supabase
+      .from("user_profiles")
+      .select("is_admin")
+      .eq("user_id", user.id)
+      .single()
+
+    if (!adminRow?.is_admin) {
+      return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
+    }
 
     // Get card view analytics without the join first
     const { data: cardViews, error: cardViewsError } = await supabase
@@ -28,11 +33,9 @@ export async function GET() {
       .limit(100)
 
     if (cardViewsError) {
-      console.error("[v0] Error fetching card views:", cardViewsError)
-      return NextResponse.json({ error: "Failed to fetch analytics data", details: cardViewsError }, { status: 500 })
+      console.error("[v0] Profile-view analytics fetch error:", cardViewsError)
+      return NextResponse.json({ error: "Failed to fetch analytics data", details: cardViewsError?.message }, { status: 500 })
     }
-
-    console.log("[v0] Card analytics: Fetched", cardViews?.length || 0, "card views")
 
     // Get unique user IDs from the card views
     const userIds = [...new Set(cardViews?.map((v) => v.user_id).filter(Boolean) || [])]
@@ -93,18 +96,29 @@ export async function GET() {
       .sort((a: any, b: any) => b.total_views - a.total_views)
       .slice(0, 20)
 
-    // Profile-click stack ranking: card_click + profile_view only, aggregated over more rows
-    const { data: profileClickEvents } = await supabase
+    // Profile-view stack ranking: when a coach/visitor views an athlete's public profile (card_click + profile_view)
+    const { data: profileClickEvents, error: profileClickError } = await supabase
       .from("user_analytics")
       .select("event_data")
       .in("event_type", ["card_click", "profile_view"])
       .order("created_at", { ascending: false })
       .limit(5000)
 
+    if (profileClickError) {
+      console.error("[v0] Profile-view ranking query error:", profileClickError)
+    }
+
     const clickCounts: Record<string, { name: string; count: number }> = {}
     if (profileClickEvents) {
       for (const row of profileClickEvents) {
-        const ed = row.event_data as { athlete_id?: string; athlete_name?: string } | null
+        let ed = row.event_data as { athlete_id?: string; athlete_name?: string } | null
+        if (typeof ed === "string") {
+          try {
+            ed = JSON.parse(ed) as { athlete_id?: string; athlete_name?: string }
+          } catch {
+            ed = null
+          }
+        }
         if (ed?.athlete_id) {
           const id = ed.athlete_id
           if (!clickCounts[id]) clickCounts[id] = { name: ed.athlete_name || "Unknown", count: 0 }
@@ -125,8 +139,6 @@ export async function GET() {
         profileTypeStats[profileType] = (profileTypeStats[profileType] || 0) + 1
       })
     }
-
-    console.log("[v0] Card analytics: Returning data with", topAthletes.length, "top athletes")
 
     return NextResponse.json({
       cardViews: enrichedCardViews || [],

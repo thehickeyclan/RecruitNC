@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, MousePointer } from "lucide-react"
+import { Loader2, Eye, Users, TrendingUp, User, RefreshCw } from "lucide-react"
 
 interface CardView {
   id: number
@@ -123,8 +123,8 @@ export default function CardAnalyticsPage() {
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Card Analytics</h1>
-          <p className="text-gray-600">Track athlete card views and user engagement</p>
+          <h1 className="text-3xl font-bold">Profile View Analytics</h1>
+          <p className="text-gray-600">When coaches and visitors view athlete public profiles</p>
         </div>
         <Button onClick={fetchAnalytics} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -189,21 +189,21 @@ export default function CardAnalyticsPage() {
         </Card>
       </div>
 
-      {/* Most Clicked Profiles – stack ranking */}
+      {/* Most viewed athlete profiles – when a coach/visitor opens a public profile */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <MousePointer className="h-5 w-5" />
-            Most Clicked Profiles
+            <Eye className="h-5 w-5" />
+            Most Viewed Athlete Profiles
           </CardTitle>
           <CardDescription>
-            Profiles with the most clicks and profile-page opens (card_click + profile_view). Stack ranked by engagement.
+            Athletes whose public profile pages are viewed the most (e.g. when a coach opens a specific athlete&apos;s profile). Ranked by profile views and clicks through to the profile.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-[480px] overflow-y-auto">
             {profileClickRanking.length === 0 ? (
-              <p className="text-sm text-gray-500 py-4">No profile-click data yet. Clicks and profile views will appear here once users interact with athlete profiles.</p>
+              <p className="text-sm text-gray-500 py-4">No profile-view data yet. Views will appear here when coaches or visitors open athlete public profiles.</p>
             ) : (
               profileClickRanking.map((row, index) => (
                 <div
@@ -228,7 +228,7 @@ export default function CardAnalyticsPage() {
                   </div>
                   <div className="flex-shrink-0 text-right">
                     <span className="font-semibold text-gray-900">{row.clicks}</span>
-                    <span className="text-sm text-gray-500 ml-1">clicks</span>
+                    <span className="text-sm text-gray-500 ml-1">views</span>
                   </div>
                 </div>
               ))
