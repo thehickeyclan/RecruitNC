@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus
+  TrendingUp, Zap, Plus, Eye
 } from "lucide-react"
 
 interface AdminStats {
@@ -444,6 +444,17 @@ export default function AdminDashboard() {
                   <BarChart3 className="h-10 w-10 text-[#C8102E] mb-3" />
                   <h3 className="font-bold text-[#13294B] mb-1">Commitment Statistics</h3>
                   <p className="text-xs text-gray-600">View analytics</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Profile View Analytics */}
+            <Link href="/admin/card-analytics">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Eye className="h-10 w-10 text-[#D3B574] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Profile View Analytics</h3>
+                  <p className="text-xs text-gray-600">Most viewed profiles · everyone vs coaches</p>
                 </CardContent>
               </Card>
             </Link>

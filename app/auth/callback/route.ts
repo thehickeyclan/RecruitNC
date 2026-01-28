@@ -104,9 +104,12 @@ export async function GET(req: NextRequest) {
       let role: "user" | "coach" | "admin" = "user"
       let verifiedCoach = false
 
-      if (profileType === "college" || profileType === "coach" || profileType === "college-coach") {
+      const isCollegeCoach =
+        profileType === "college" || profileType === "coach" || profileType === "college-coach"
+      const isCoachProfile = isCollegeCoach || profileType === "hs-club-coach"
+      if (isCoachProfile) {
         role = "coach"
-        verifiedCoach = false // Requires admin approval
+        verifiedCoach = isCollegeCoach // Only college coaches get contact/GPA access; admin assigns school later. HS/club coaches stay unverified.
       }
 
       const { error: insertError } = await supabase.from("user_profiles").insert({
