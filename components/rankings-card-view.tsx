@@ -2,7 +2,6 @@
 
 import type React from "react"
 
-import { trackCardClick } from "@/lib/analytics-enhanced"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -163,10 +162,7 @@ export function RankingsCardView({
             key={athlete.id}
           className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
         >
-          <Link
-            href={`/unified-profile/${athlete.id}`}
-            onClick={() => trackCardClick(athlete.id, athlete.name)}
-          >
+          <Link href={`/unified-profile/${athlete.id}`}>
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">

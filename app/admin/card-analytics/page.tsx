@@ -292,7 +292,7 @@ export default function CardAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Most Popular Athletes</CardTitle>
-            <CardDescription>Athletes with the most card views (all event types)</CardDescription>
+            <CardDescription>Athletes with the most profile page views</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -324,7 +324,7 @@ export default function CardAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>User Profile Types</CardTitle>
-            <CardDescription>Who's viewing athlete cards</CardDescription>
+            <CardDescription>Who's viewing athlete profiles</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -349,8 +349,8 @@ export default function CardAnalyticsPage() {
       {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Card Views</CardTitle>
-          <CardDescription>Latest athlete card interactions</CardDescription>
+          <CardTitle>Recent Profile Views</CardTitle>
+          <CardDescription>Latest profile page visits (one per visit)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-96 overflow-y-auto">

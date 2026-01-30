@@ -24,11 +24,11 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
     }
 
-    // Get card view analytics without the join first
+    // Only count profile views (one per profile visit). Card clicks are no longer sent.
     const { data: cardViews, error: cardViewsError } = await supabase
       .from("user_analytics")
       .select("*")
-      .in("event_type", ["card_view", "card_click", "profile_view"])
+      .eq("event_type", "profile_view")
       .order("created_at", { ascending: false })
       .limit(100)
 
@@ -96,11 +96,11 @@ export async function GET() {
       .sort((a: any, b: any) => b.total_views - a.total_views)
       .slice(0, 20)
 
-    // Profile-view stack ranking: when a coach/visitor views an athlete's public profile (card_click + profile_view)
+    // Profile-view stack ranking: one count per profile page view
     const { data: profileClickEvents, error: profileClickError } = await supabase
       .from("user_analytics")
       .select("event_data")
-      .in("event_type", ["card_click", "profile_view"])
+      .eq("event_type", "profile_view")
       .order("created_at", { ascending: false })
       .limit(5000)
 
