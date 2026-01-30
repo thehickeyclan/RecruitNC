@@ -7,19 +7,19 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function SetupUserAnalytics() {
   const [loading, setLoading] = useState(false)
+  const [policyLoading, setPolicyLoading] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [policyResult, setPolicyResult] = useState<{ success: boolean; message: string } | null>(null)
 
   const createTable = async () => {
     setLoading(true)
     setResult(null)
-
+    setPolicyResult(null)
     try {
       const response = await fetch("/api/run-script/create-user-analytics-table", {
         method: "POST",
       })
-
       const data = await response.json()
-
       if (response.ok) {
         setResult({ success: true, message: data.message || "Table created successfully" })
       } else {
@@ -29,6 +29,29 @@ export default function SetupUserAnalytics() {
       setResult({ success: false, message: "Network error occurred" })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const addInsertPolicy = async () => {
+    setPolicyLoading(true)
+    setPolicyResult(null)
+    try {
+      const response = await fetch("/api/run-script/add-user-analytics-insert-policy", {
+        method: "POST",
+      })
+      const data = await response.json()
+      if (response.ok) {
+        setPolicyResult({ success: true, message: data.message || "INSERT policy added." })
+      } else {
+        setPolicyResult({
+          success: false,
+          message: data.error || data.details || "Failed. Run the SQL manually in Supabase if needed.",
+        })
+      }
+    } catch (error) {
+      setPolicyResult({ success: false, message: "Network error occurred" })
+    } finally {
+      setPolicyLoading(false)
     }
   }
 
@@ -59,6 +82,21 @@ export default function SetupUserAnalytics() {
               <AlertDescription>{result.message}</AlertDescription>
             </Alert>
           )}
+
+          <div className="border-t pt-4 mt-4">
+            <p className="text-sm text-gray-600 mb-2">
+              Profile view analytics not recording? RLS may be blocking inserts. Add a policy so anyone (including
+              anonymous) can insert events:
+            </p>
+            <Button onClick={addInsertPolicy} disabled={policyLoading} variant="outline" className="w-full">
+              {policyLoading ? "Adding policy..." : "Add INSERT policy for tracking"}
+            </Button>
+            {policyResult && (
+              <Alert variant={policyResult.success ? "default" : "destructive"} className="mt-2">
+                <AlertDescription>{policyResult.message}</AlertDescription>
+              </Alert>
+            )}
+          </div>
 
           {result?.success && (
             <div className="mt-4 p-4 bg-green-50 rounded-lg">

@@ -37,7 +37,7 @@ export async function POST() {
       -- Enable RLS
       ALTER TABLE user_analytics ENABLE ROW LEVEL SECURITY;
 
-      -- Create policy for admin access
+      -- Create policy for admin access (SELECT/UPDATE/DELETE)
       CREATE POLICY IF NOT EXISTS "Admin can view all analytics" ON user_analytics
         FOR ALL USING (
           EXISTS (
@@ -46,6 +46,17 @@ export async function POST() {
             AND user_profiles.is_admin = true
           )
         );
+
+      -- Allow anyone (authenticated or anonymous) to INSERT so profile-view tracking works
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_policies
+          WHERE schemaname = 'public' AND tablename = 'user_analytics' AND policyname = 'allow_analytics_insert'
+        ) THEN
+          CREATE POLICY "allow_analytics_insert" ON public.user_analytics FOR INSERT WITH CHECK (true);
+        END IF;
+      END $$;
     `
 
     const { error } = await supabase.rpc("exec_sql", { sql_query: createTableSQL })
