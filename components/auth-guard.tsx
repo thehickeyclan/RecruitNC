@@ -36,29 +36,37 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
 
   useEffect(() => {
     setMounted(true)
-    
-    // On desktop, cookies can take longer to be available after redirect
-    // Directly check Supabase session to verify cookies are actually set
-    const checkDirectSession = async () => {
-      try {
-        const supabase = createClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        setDirectSessionCheck(!!session)
-        console.log("[v0] Direct session check:", { hasSession: !!session, hasUser: !!user })
-      } catch (error) {
-        console.error("[v0] Direct session check error:", error)
-        setDirectSessionCheck(false)
+
+    // After redirect (e.g. from auth callback), cookies/session can take time to be
+    // available—especially on mobile. Retry getSession() multiple times before
+    // we decide "no session" to avoid redirect loops.
+    const checkDirectSessionWithRetries = async () => {
+      const supabase = createClient()
+      const maxTries = 4
+      const delayMs = 800
+      for (let tryNum = 0; tryNum < maxTries; tryNum++) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session) {
+            setDirectSessionCheck(true)
+            setSessionCheckComplete(true)
+            return
+          }
+        } catch (error) {
+          console.warn("[v0] AuthGuard session check try", tryNum + 1, error)
+        }
+        if (tryNum < maxTries - 1) {
+          await new Promise((r) => setTimeout(r, delayMs))
+        }
       }
-    }
-    
-    // Give auth context time to load session after page load/redirect
-    // This prevents redirect loops after successful login
-    // Increased delay for desktop browsers which may take longer to set cookies
-    const timer = setTimeout(async () => {
-      // Double-check session directly from Supabase (especially important on desktop)
-      await checkDirectSession()
+      setDirectSessionCheck(false)
       setSessionCheckComplete(true)
-    }, 1500) // Wait 1.5 seconds for session to load from cookies (longer for desktop)
+    }
+
+    // Initial wait for auth context and cookies after redirect (mobile needs more time)
+    const timer = setTimeout(() => {
+      checkDirectSessionWithRetries()
+    }, 1200)
     return () => clearTimeout(timer)
   }, [])
 
@@ -84,27 +92,30 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     const hasSession = user || directSessionCheck
 
     if (!hasSession && !redirecting) {
-      console.log("[v0] No user or session after checks, waiting 500ms more before redirect...")
-      const redirectTimer = setTimeout(async () => {
-        // Final check - verify session directly one more time
+      // On mobile, session can appear late. Retry 2 more times before redirecting to signin.
+      const doFinalRedirect = async () => {
+        const supabase = createClient()
+        for (let i = 0; i < 2; i++) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) return
+          } catch (_) {}
+          await new Promise((r) => setTimeout(r, 800))
+        }
         try {
-          const supabase = createClient()
           const { data: { session } } = await supabase.auth.getSession()
           if (!session && !redirecting) {
-            console.log("[v0] Still no session after delay, redirecting to signin")
             setRedirecting(true)
             router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
-          } else {
-            console.log("[v0] Session found after delay, no redirect needed")
           }
-        } catch (error) {
-          console.error("[v0] Final session check error:", error)
+        } catch (_) {
           if (!redirecting) {
             setRedirecting(true)
             router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
           }
         }
-      }, 500)
+      }
+      const redirectTimer = setTimeout(doFinalRedirect, 600)
       return () => clearTimeout(redirectTimer)
     } else if (requireAdmin && !isAdmin && user) {
       console.log("[v0] Admin access check:", {

@@ -221,12 +221,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (typeof document !== "undefined") {
           const hasCookies = document.cookie.includes("sb-")
           if (!hasCookies) {
-            console.log("[v0] No Supabase cookies, no auth calls needed")
+            console.log("[v0] No Supabase cookies on first check (may appear after redirect on mobile)")
             setSession(null)
             setUser(null)
             setProfile(null)
             setIsLoading(false)
-            return
+            // After redirect, cookies can appear late on mobile. Retry once after 2s.
+            const retryTimer = setTimeout(() => {
+              if (document.cookie.includes("sb-")) {
+                supabase.auth.getSession().then(({ data: { session }, error }) => {
+                  if (!error && session) {
+                    setSession(session)
+                    setUser(session.user)
+                    if (session.user) fetchUserProfile(session.user.id).then(setProfile)
+                  }
+                })
+              }
+            }, 2000)
+            return () => clearTimeout(retryTimer)
           }
         }
 
@@ -289,9 +301,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = { data: { subscription: null } }
 
     return () => {
-      if (subscription) {
-      subscription.unsubscribe()
-      }
+      if (typeof cleanup === "function") cleanup()
+      if (subscription) subscription.unsubscribe()
     }
   }, [supabase])
 
