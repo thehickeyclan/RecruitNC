@@ -2,6 +2,18 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
+// Match athlete-utils mapAthleteToDb: admin uses contactEmail, phone (camelCase)
+const ADD_COLUMNS_SQL = `
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS "contactEmail" TEXT;
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS phone TEXT;
+`
+
+async function ensureCreateProfileColumns(supabase: ReturnType<typeof createAdminClient>) {
+  await supabase.rpc("exec_sql", { sql_query: ADD_COLUMNS_SQL })
+  await supabase.rpc("exec_sql", { sql: ADD_COLUMNS_SQL })
+  await supabase.rpc("exec", { sql: ADD_COLUMNS_SQL })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -41,11 +53,13 @@ export async function POST(request: NextRequest) {
     const athleteName = `${String(formData.firstName).trim()} ${String(formData.lastName).trim()}`
     const now = new Date().toISOString()
 
-    // Optional: link new profile to a ranked spot (e.g. from Class of 2028 "New profile" link)
     const prospectRanking =
       formData.prospect_ranking != null && Number.isFinite(Number(formData.prospect_ranking))
         ? Math.min(30, Math.max(1, Number(formData.prospect_ranking)))
         : null
+
+    const adminSupabase = createAdminClient()
+    await ensureCreateProfileColumns(adminSupabase)
 
     const insertPayload: Record<string, unknown> = {
       name: athleteName,
@@ -59,7 +73,7 @@ export async function POST(request: NextRequest) {
       bio: formData.bio || null,
       achievements: formData.achievements ? [formData.achievements] : [],
       photourl: formData.photoUrl || null,
-      contact_email: formData.email || null,
+      contactEmail: formData.email || null,
       phone: formData.phone || null,
       claimed_by_user_id: user.id,
       claimed_at: now,
@@ -72,7 +86,6 @@ export async function POST(request: NextRequest) {
       insertPayload.prospect_ranking = prospectRanking
     }
 
-    const adminSupabase = createAdminClient()
     const { data: athlete, error } = await adminSupabase
       .from("athletes")
       .insert(insertPayload)
@@ -80,10 +93,15 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error("[Create Profile] Insert error:", error)
       const details = error.message || (error as Error).toString()
+      const needsColumns = /contact_email|phone|column/i.test(details)
       return NextResponse.json(
-        { error: "Failed to create profile", details },
+        {
+          error: "Failed to create profile",
+          details: needsColumns
+            ? `${details} Run POST /api/run-script/add-create-profile-columns or add contact_email, phone in Supabase SQL Editor, then retry.`
+            : details,
+        },
         { status: 500 },
       )
     }
