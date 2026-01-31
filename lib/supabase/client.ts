@@ -35,20 +35,22 @@ export function createClient() {
     cookies: {
       get(name: string) {
         if (typeof document === "undefined") return undefined
-        return document.cookie
+        const prefix = `${name}=`
+        const row = document.cookie
           .split("; ")
-          .find((row) => row.startsWith(`${name}=`))
-          ?.split("=")[1]
+          .find((r) => r.startsWith(prefix))
+        // Value can contain "=" (e.g. JWT); take everything after first "="
+        return row ? row.slice(prefix.length) : undefined
       },
       set(name: string, value: string, options: any) {
         if (typeof document === "undefined") return
-        document.cookie = `${name}=${value}; path=/; SameSite=None; Secure; ${
-          options?.maxAge ? `max-age=${options.maxAge}` : ""
-        }`
+        // Cookie value must not contain "; " — Supabase values are typically safe
+        const maxAge = options?.maxAge ? `; max-age=${options.maxAge}` : ""
+        document.cookie = `${name}=${value}; path=/; SameSite=Lax; Secure${maxAge}`
       },
-      remove(name: string, options: any) {
+      remove(name: string) {
         if (typeof document === "undefined") return
-        document.cookie = `${name}=; path=/; SameSite=None; Secure; max-age=0`
+        document.cookie = `${name}=; path=/; SameSite=Lax; Secure; max-age=0`
       },
     },
     },
