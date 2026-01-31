@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
 
     const insertPayload: Record<string, unknown> = {
       name: athleteName,
-      firstname: String(formData.firstName).trim(),
-      lastname: String(formData.lastName).trim(),
+      firstName: String(formData.firstName).trim(),
+      lastName: String(formData.lastName).trim(),
       gender: formData.gender,
       graduationyear,
       weightclass: formData.weightClass || null,
