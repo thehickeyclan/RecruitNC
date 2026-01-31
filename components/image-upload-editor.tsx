@@ -97,17 +97,15 @@ export function ImageUploadEditor({
   }
 
   return (
-    <div className={`relative group ${className}`}>
-      <div className="relative">
-        {(preview || currentImageUrl) && (
-          <Image
-            src={preview || currentImageUrl || "/placeholder.svg"}
-            alt="Profile"
-            width={300}
-            height={400}
-            className="w-full h-full object-cover rounded-xl"
-          />
-        )}
+    <div className={`relative w-full h-full min-h-[200px] group ${className}`}>
+      <div className="relative w-full h-full">
+        <Image
+          src={preview || currentImageUrl || "/wrestler-silhouette.png"}
+          alt="Profile"
+          fill
+          className="object-cover object-top rounded-xl"
+          sizes="(max-width: 768px) 100vw, 320px"
+        />
         {preview && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 rounded-xl">
             <Button size="sm" onClick={handleUpload} disabled={uploading}>

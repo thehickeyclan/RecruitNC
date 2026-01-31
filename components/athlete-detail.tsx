@@ -23,6 +23,7 @@ import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 import { InlineWeightEditor } from "./inline-weight-editor"
 import { InlineHighlightVideoEditor } from "./inline-highlight-video-editor"
+import { WorkingEntityLogo } from "./working-entity-logo"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -235,11 +236,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
     const loadLogos = async () => {
       try {
         if (highSchool && highSchool !== "Not specified") {
-          const response = await fetch(`/api/logo-mappings/by-entity/highschool/${encodeURIComponent(highSchool)}`)
-          if (response.ok) {
-            const data = await response.json()
-            if (data.success && data.logo_url) {
-              setHighSchoolLogo(data.logo_url)
+          const hsLogoUrl = athlete?.highSchoolLogoUrl ?? athlete?.highschoollogourl ?? (athlete as any)?.high_school_logo_url
+          if (hsLogoUrl) {
+            setHighSchoolLogo(hsLogoUrl)
+          } else {
+            const response = await fetch(`/api/logo-mappings/by-entity/highschool/${encodeURIComponent(highSchool)}`)
+            if (response.ok) {
+              const data = await response.json()
+              if (data.success && data.logo_url) {
+                setHighSchoolLogo(data.logo_url)
+              }
             }
           }
         }
@@ -254,8 +260,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           }
         }
 
-        if (athlete?.wrestlingClubLogoUrl) {
-          setClubLogo(athlete.wrestlingClubLogoUrl)
+        const clubLogoUrl = athlete?.wrestlingClubLogoUrl ?? athlete?.wrestlingclublogourl ?? (athlete as any)?.wrestling_club_logo_url
+        if (clubLogoUrl) {
+          setClubLogo(clubLogoUrl)
         } else if (wrestlingClub && wrestlingClub !== "Not specified") {
           const response = await fetch(`/api/logo-mappings/by-entity/club/${encodeURIComponent(wrestlingClub)}`)
           if (response.ok) {
@@ -317,7 +324,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
     }
 
     loadLogos()
-  }, [highSchool, college, athleteName, wrestlingClub, athlete?.wrestlingClubLogoUrl])
+  }, [highSchool, college, athleteName, wrestlingClub, athlete?.wrestlingClubLogoUrl, athlete?.highSchoolLogoUrl])
 
   const achievements = (() => {
     try {
@@ -653,15 +660,12 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         <div className="relative">
           {/* Mobile view */}
           <div className="block lg:hidden">
-            <div className="relative h-80 w-full">
+            <div className="relative h-80 w-full overflow-hidden">
               <Image
-                src={athletePhoto || "/placeholder.svg"}
+                src={athletePhoto || "/wrestler-silhouette.png"}
                 alt={athleteName}
                 fill
-                className={cn("object-cover", isKayne && "scale-90 origin-center")}
-                style={{
-                  objectPosition: "center 35%",
-                }}
+                className="object-cover object-top"
                 onError={() => setImageError(true)}
                 priority
               />
@@ -819,8 +823,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               </div>
 
               <div className="relative z-10 flex items-start gap-8 p-8">
-                <div className="flex-shrink-0 w-72 aspect-[3/4]">
-                  <div className="relative w-full h-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl">
+                <div className="flex-shrink-0 w-72 h-[360px]">
+                  <div className="relative w-full h-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl bg-[#13294B]">
                     {canEdit ? (
                       <ImageUploadEditor
                         athleteId={athlete.id}
@@ -831,10 +835,11 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       />
                     ) : (
                       <Image
-                        src={athletePhoto || "/placeholder.svg"}
+                        src={athletePhoto || "/wrestler-silhouette.png"}
                         alt={athleteName}
                         fill
                         className="object-cover object-top"
+                        sizes="320px"
                         onError={() => setImageError(true)}
                         priority
                       />
@@ -1023,23 +1028,38 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {highSchool && highSchool !== "Not specified" && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
+                      {highSchoolLogo ? (
+                        <Image
+                          src={highSchoolLogo}
+                          alt={`${highSchool} logo`}
+                          width={48}
+                          height={48}
+                          className="object-contain"
+                        />
+                      ) : (
+                        <WorkingEntityLogo entityName={highSchool} entityType="highschool" size={48} />
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">High School</p>
                     <p className="text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    {clubLogo && (
-                      <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200">
+                    <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
+                      {clubLogo ? (
                         <Image
-                          src={clubLogo || "/placeholder.svg"}
+                          src={clubLogo}
                           alt={`${wrestlingClub} logo`}
                           width={48}
                           height={48}
                           className="object-contain"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <WorkingEntityLogo entityName={wrestlingClub} entityType="club" size={48} />
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Wrestling Club</p>
                     <p className="text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
                   </div>
