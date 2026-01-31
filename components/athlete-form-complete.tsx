@@ -416,7 +416,7 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
                   <div className="flex flex-col items-center gap-2">
                     <div className="relative h-24 w-24 rounded-full overflow-hidden">
                       <Image
-                        src="/nc-united-blue-logo.png"
+                        src="https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png"
                         alt="NC United Blue Team Logo"
                         fill
                         className="object-contain"

@@ -51,6 +51,25 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
   return results || []
 }
 
+async function getNHSCAResultsFromTable(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
+  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
+  const { data: results } = await supabase
+    .from("wrestling_nhsca_results")
+    .select("*")
+    .ilike("athlete_name", `%${athleteName}%`)
+    .gte("year", graduationYear - 4)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (!results?.length) return []
+  return results.map((r: any) => ({
+    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+    placement: String(r.placement ?? r.place ?? ""),
+    record: (r.record ?? r.record_text ?? "").toString().trim(),
+    weight: r.weight ?? "",
+    division: r.division ?? "",
+  }))
+}
+
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
   const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
   const supabase = isPublicProfile ? createAdminClient() : await createClient()
@@ -78,8 +97,11 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     weight_class: r.weight_class ?? r.weight ?? "",
   }))
 
-  // Use shared tournament utils - handles both JSON and column format (same as school portal / public profiles)
-  const nhscaResults = getNhscaResults(athlete)
+  // Use shared tournament utils; fall back to NHSCA table when athlete row has no data
+  let nhscaResults = getNhscaResults(athlete)
+  if (nhscaResults.length === 0) {
+    nhscaResults = await getNHSCAResultsFromTable(athlete.name, athlete.graduationyear, supabase)
+  }
   const super32Results = getSuper32Results(athlete)
   const nationalTeamResults = getNationalTeamResults(athlete)
 

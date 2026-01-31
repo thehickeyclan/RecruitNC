@@ -222,7 +222,7 @@ export function FeaturedFlipCard({ athlete, onAnimationComplete }: FeaturedFlipC
 
             <div className="mt-auto flex justify-between items-center">
               <div className="relative z-10">
-                <img src="/nc-united-blue-logo.png" alt="North Carolina" className="h-8 w-auto" />
+                <img src="https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png" alt="North Carolina" className="h-8 w-auto" />
               </div>
 
               <button

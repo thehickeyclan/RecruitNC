@@ -422,7 +422,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 <Image
                   src={
                     ncUnitedTeamStatus === "blue"
-                      ? "/nc-united-blue-logo.png"
+                      ? "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png"
                       : ncUnitedTeamStatus === "gold"
                         ? "/nc-united-gold-logo.png"
                         : "/nc-united-main-logo.png"
@@ -643,7 +643,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                       <Image
                         src={
                           ncUnitedTeamStatus === "blue"
-                            ? "/nc-united-blue-logo.png"
+                            ? "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png"
                             : ncUnitedTeamStatus === "gold"
                               ? "/nc-united-gold-logo.png"
                               : "/nc-united-main-logo.png"

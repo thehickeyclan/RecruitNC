@@ -20,6 +20,7 @@ import { AthleteImage } from "@/components/athlete-image"
 import { ClubLogoClient } from "@/components/club-logo-client"
 import { HighSchoolLogoClient } from "@/components/high-school-logo-client"
 import { MatchDataSection } from "@/components/match-data-section-improved"
+import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
 
 interface ProspectPageProps {
   params: {
@@ -69,6 +70,9 @@ async function getProspect(id: string) {
       nhsca_2024_placement,
       nhsca_2025_record,
       nhsca_2025_placement,
+      nhsca_results,
+      super32_results,
+      super_32_results,
       nationally_ranked_wins,
       college_opens_experience,
       college,
@@ -190,6 +194,20 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
     getHighSchoolClassification(prospect.name, prospect.highschool, prospect.graduationyear),
   ])
 
+  // Use tournament-utils (handles JSON + scalar columns); fall back to table-fetched NHSCA when prospect row has no data
+  let effectiveNhsca = getNhscaResults(prospect)
+  if (effectiveNhsca.length === 0 && nhscaResults?.length) {
+    effectiveNhsca = nhscaResults.map((r: any) => ({
+      year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+      placement: String(r.placement ?? r.place ?? ""),
+      record: (r.record ?? r.record_text ?? "").toString().trim(),
+      weight: r.weight ?? "",
+      division: r.division ?? "",
+    }))
+  }
+
+  const effectiveSuper32 = getSuper32Results(prospect)
+
   const instagramLink =
     prospect.socialMedia?.instagram ||
     (typeof prospect.socialMedia === "string" && prospect.socialMedia.includes("instagram")
@@ -253,7 +271,7 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
                 {prospect.ncUnitedTeam === "blue" && (
                   <div className="flex items-center gap-1 sm:gap-2 bg-white rounded-full px-2 sm:px-3 lg:px-4 py-1 sm:py-2 shadow-lg">
                     <img
-                      src="/nc-united-blue-logo.png"
+                      src="https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png"
                       alt="NC United Blue"
                       className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 object-contain"
                     />
@@ -414,7 +432,7 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
                       <div className="flex items-center gap-3 sm:gap-4">
                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center p-2 shadow-md flex-shrink-0">
                           <img
-                            src="/nc-united-blue-logo.png"
+                            src="https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png"
                             alt="NC United Blue"
                             className="w-full h-full object-contain"
                           />
@@ -444,8 +462,8 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
               </Card>
             )}
 
-            {/* Super 32 Performance Card */}
-            {(prospect.super_32_2023_record || prospect.super_32_2024_record || prospect.super_32_2025_record) && (
+            {/* Super 32 Performance Card - uses tournament-utils (JSON + scalar columns) */}
+            {effectiveSuper32.length > 0 && (
               <Card className="shadow-lg border-2 border-gray-100 bg-[#F7F7F7] lg:col-span-2 xl:col-span-3">
                 <CardHeader className="bg-[#03154C] text-white">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -455,52 +473,28 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {prospect.super_32_2025_record && (
-                      <div className="p-6 bg-white rounded-lg shadow-sm">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="font-bold text-xl text-[#03154C]">2025 Super 32</span>
-                          {prospect.super_32_2025_placement && (
-                            <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
-                              {prospect.super_32_2025_placement}
-                            </Badge>
-                          )}
+                    {effectiveSuper32
+                      .sort((a, b) => b.year - a.year)
+                      .map((r) => (
+                        <div key={r.year} className="p-6 bg-white rounded-lg shadow-sm">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-bold text-xl text-[#03154C]">{r.year} Super 32</span>
+                            {r.placement && (
+                              <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
+                                {r.placement}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-3xl font-bold text-[#BC0B03]">{r.record || "—"}</div>
                         </div>
-                        <div className="text-3xl font-bold text-[#BC0B03]">{prospect.super_32_2025_record}</div>
-                      </div>
-                    )}
-                    {prospect.super_32_2024_record && (
-                      <div className="p-6 bg-white rounded-lg shadow-sm">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="font-bold text-xl text-[#03154C]">2024 Super 32</span>
-                          {prospect.super_32_2024_placement && (
-                            <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
-                              {prospect.super_32_2024_placement}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-3xl font-bold text-[#BC0B03]">{prospect.super_32_2024_record}</div>
-                      </div>
-                    )}
-                    {prospect.super_32_2023_record && (
-                      <div className="p-6 bg-white rounded-lg shadow-sm">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="font-bold text-xl text-[#03154C]">2023 Super 32</span>
-                          {prospect.super_32_2023_placement && (
-                            <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
-                              {prospect.super_32_2023_placement}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-3xl font-bold text-[#BC0B03]">{prospect.super_32_2023_record}</div>
-                      </div>
-                    )}
+                      ))}
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* NHSCA Competition Card */}
-            {(prospect.nhsca_2024_record || prospect.nhsca_2025_record) && (
+            {/* NHSCA Competition Card - uses tournament-utils + fallback to table-fetched results */}
+            {effectiveNhsca.length > 0 && (
               <Card className="shadow-lg border-2 border-gray-100 bg-[#F7F7F7] lg:col-span-2 xl:col-span-3">
                 <CardHeader className="bg-[#03154C] text-white">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -510,32 +504,21 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {prospect.nhsca_2025_record && (
-                      <div className="p-6 bg-white rounded-lg shadow-sm">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="font-bold text-xl text-[#03154C]">2025 NHSCA</span>
-                          {prospect.nhsca_2025_placement && (
-                            <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
-                              {prospect.nhsca_2025_placement}
-                            </Badge>
-                          )}
+                    {effectiveNhsca
+                      .sort((a, b) => b.year - a.year)
+                      .map((r) => (
+                        <div key={r.year} className="p-6 bg-white rounded-lg shadow-sm">
+                          <div className="flex justify-between items-center mb-3">
+                            <span className="font-bold text-xl text-[#03154C]">{r.year} NHSCA</span>
+                            {r.placement && (
+                              <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
+                                {r.placement}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-3xl font-bold text-[#BC0B03]">{r.record || "—"}</div>
                         </div>
-                        <div className="text-3xl font-bold text-[#BC0B03]">{prospect.nhsca_2025_record}</div>
-                      </div>
-                    )}
-                    {prospect.nhsca_2024_record && (
-                      <div className="p-6 bg-white rounded-lg shadow-sm">
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="font-bold text-xl text-[#03154C]">2024 NHSCA</span>
-                          {prospect.nhsca_2024_placement && (
-                            <Badge className="bg-[#D3B574] text-[#03154C] text-lg sm:text-xl px-4 sm:px-6 py-2 font-bold">
-                              {prospect.nhsca_2024_placement}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-3xl font-bold text-[#BC0B03]">{prospect.nhsca_2024_record}</div>
-                      </div>
-                    )}
+                      ))}
                   </div>
                 </CardContent>
               </Card>

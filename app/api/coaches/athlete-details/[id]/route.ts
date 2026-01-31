@@ -1,5 +1,25 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getNhscaResults } from "@/lib/tournament-utils"
+
+async function getNHSCAResultsFromTable(supabase: any, athleteName: string, graduationYear: number) {
+  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
+  const { data: results } = await supabase
+    .from("wrestling_nhsca_results")
+    .select("*")
+    .ilike("athlete_name", `%${athleteName}%`)
+    .gte("year", graduationYear - 4)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (!results?.length) return []
+  return results.map((r: any) => ({
+    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+    placement: String(r.placement ?? r.place ?? ""),
+    record: (r.record ?? r.record_text ?? "").toString().trim(),
+    weight: r.weight ?? "",
+    division: r.division ?? "",
+  }))
+}
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -61,8 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // If no star record exists, create a basic one for this coach
     if (!starData) {
       console.log("[v0] No star record found, creating one...")
-      
-      // Note: school_id is NOT in college_coach_stars, it's in user_profiles
+
       const { data: newStar } = await supabase
         .from("college_coach_stars")
         .insert({
@@ -75,16 +94,20 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         .single()
 
       console.log("[v0] Created new star record:", newStar)
-      
-      // Return athlete data without recruiting tracking
+
+      let athleteToReturn = {
+        ...athlete,
+        is_starred: false,
+        pipeline_stage: "Prospect",
+        communication_log: [],
+      }
+      if (getNhscaResults(athleteToReturn).length === 0) {
+        const fromTable = await getNHSCAResultsFromTable(supabase, athlete.name, athlete.graduationyear)
+        if (fromTable.length) athleteToReturn = { ...athleteToReturn, nhsca_results: fromTable }
+      }
       return NextResponse.json({
         success: true,
-        athlete: {
-          ...athlete,
-          is_starred: false,
-          pipeline_stage: "Prospect",
-          communication_log: [],
-        },
+        athlete: athleteToReturn,
       })
     }
 
@@ -147,9 +170,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       gi_bill_eligible: starData.gi_bill_eligible,
     }
 
+    let athleteToReturn = athleteWithTracking
+    if (getNhscaResults(athleteToReturn).length === 0) {
+      const fromTable = await getNHSCAResultsFromTable(supabase, athlete.name, athlete.graduationyear)
+      if (fromTable.length) athleteToReturn = { ...athleteToReturn, nhsca_results: fromTable }
+    }
+
     return NextResponse.json({
       success: true,
-      athlete: athleteWithTracking,
+      athlete: athleteToReturn,
     })
   } catch (error) {
     console.error("Athlete details API error:", error)
