@@ -54,7 +54,7 @@ import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/com
 import { CreateProspectModal } from "@/components/create-prospect-modal"
 import { StarRating } from "@/components/star-rating"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
-import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
+import { getNhscaResults, getSuper32Results, getNationalTeamResults } from "@/lib/tournament-utils"
 import { BirthdayCalendar } from "@/components/birthday-calendar"
 import {
   DropdownMenu,
@@ -3935,6 +3935,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       nchsaaResults={nchsaaResults}
                       nhscaResults={getNhscaResults(selectedAthlete)}
                       super32Results={getSuper32Results(selectedAthlete)}
+                      nationalTeamResults={getNationalTeamResults(selectedAthlete)}
                     />
 
                     {/* Empty state */}

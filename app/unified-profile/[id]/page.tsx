@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
-import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
+import { getNhscaResults, getSuper32Results, getNationalTeamResults } from "@/lib/tournament-utils"
 
 const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
   .split(",")
@@ -55,10 +55,6 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
 
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
   const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
-  console.log("[unified-profile] requested", params.id, {
-    rawPublicIds,
-    isPublicProfile,
-  })
   const supabase = isPublicProfile ? createAdminClient() : await createClient()
 
   let currentUserId: string | null = null
@@ -75,11 +71,19 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     notFound()
   }
 
-  const nchsaaResults = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
+  const rawNchsaa = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
+  // Normalize to shape expected by TournamentResultsDisplay (same as public/school profiles)
+  const nchsaaResults = (rawNchsaa || []).map((r: any) => ({
+    year: r.year,
+    place: r.place ?? r.place_finished ?? null,
+    classification: r.classification ?? r.division ?? "",
+    weight_class: r.weight_class ?? r.weight ?? "",
+  }))
 
-  // Use shared tournament utils - handles both JSON and column format
+  // Use shared tournament utils - handles both JSON and column format (same as school portal / public profiles)
   const nhscaResults = getNhscaResults(athlete)
   const super32Results = getSuper32Results(athlete)
+  const nationalTeamResults = getNationalTeamResults(athlete)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,6 +98,8 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
               nchsaaResults={nchsaaResults}
               nhscaResults={nhscaResults}
               super32Results={super32Results}
+              nationalTeamResults={nationalTeamResults}
+              alwaysShowStructure={true}
             />
           </div>
         }

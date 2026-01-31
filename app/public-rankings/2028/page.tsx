@@ -106,17 +106,6 @@ export default function Class2028RankingsPage() {
       setRankings(data.rankings || [])
       setLastUpdated(data.metadata?.last_updated || null)
       setUpdatePostUrl(data.metadata?.update_post_url || null)
-      
-      // Debug: Log top 3 data to see photourl values
-      const top3 = (data.rankings || [])
-        .filter((r: PublicRanking) => r.prospect_ranking && r.prospect_ranking <= 3)
-        .sort((a: PublicRanking, b: PublicRanking) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
-        .slice(0, 3)
-      console.log("Top 3 athletes with photos:", top3.map((a: PublicRanking) => ({
-        name: a.name,
-        rank: a.prospect_ranking,
-        photourl: a.photourl
-      })))
     } catch (err) {
       console.error("Error fetching 2028 rankings:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -182,15 +171,17 @@ export default function Class2028RankingsPage() {
     { name: "Ryan Thompson", school: "Cardinal Gibbons", weight: "165 lbs", achievements: "NHSCA 6th AA (2025) • State 5th (2025) • 44-3 record • Beat #29 in 2027", photourl: TOP3_PHOTO_URLS["Ryan Thompson"], prospect_ranking: 3, id: undefined as string | undefined },
   ]
 
-  // Always use static photos for Top 3 (known athletes) - API often lacks photourl
+  // Always show exactly 3 cards: use API data when available, pad with static so we never show 0–2 cards
   const staticPhotosByIndex = [TOP3_PHOTO_URLS["Aaron Ellison"], TOP3_PHOTO_URLS["Connor Reece"], TOP3_PHOTO_URLS["Ryan Thompson"]]
-  const finalTop3 =
-    top3Spotlight.length > 0
-      ? top3Spotlight.map((a, i) => ({
-          ...a,
-          photourl: (a.photourl && String(a.photourl).trim() ? a.photourl : null) || TOP3_PHOTO_URLS[a.name] || staticPhotosByIndex[i] || displayTop3[i]?.photourl,
-        }))
-      : displayTop3
+  const NEEDED = 3
+  const merged = top3Spotlight.slice(0, NEEDED).map((a, i) => ({
+    ...a,
+    photourl: (a.photourl && String(a.photourl).trim() ? a.photourl : null) || TOP3_PHOTO_URLS[a.name] || staticPhotosByIndex[i] || displayTop3[i]?.photourl,
+  }))
+  while (merged.length < NEEDED) {
+    merged.push(displayTop3[merged.length])
+  }
+  const finalTop3 = merged.slice(0, NEEDED)
 
   return (
     <AuthGuard>
@@ -242,18 +233,13 @@ export default function Class2028RankingsPage() {
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Top 3 of the Class of 2028</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                     {finalTop3.map((athlete, index) => {
-                      // Simple check for photo URL - be more permissive
-                      const photoUrl = athlete.photourl && 
-                                      String(athlete.photourl).trim() !== "" && 
-                                      String(athlete.photourl) !== "null" && 
+                      const photoUrl = athlete.photourl &&
+                                      String(athlete.photourl).trim() !== "" &&
+                                      String(athlete.photourl) !== "null" &&
                                       String(athlete.photourl) !== "undefined"
                                         ? String(athlete.photourl).trim()
                                         : null
                       const rank = athlete.prospect_ranking || index + 1
-                      
-                      // Debug log for each athlete
-                      console.log(`[Top 3] ${athlete.name} - photourl:`, athlete.photourl, "photoUrl:", photoUrl, "hasPhoto:", !!photoUrl)
-                      
                       return (
                         <div key={`${athlete.name}-${index}`} className="text-center">
                           <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">
@@ -263,7 +249,6 @@ export default function Class2028RankingsPage() {
                                 alt={`${athlete.name} - ${athlete.school}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  console.error(`[Image Error] Failed to load image for ${athlete.name}:`, photoUrl)
                                   // Hide image on error and show trophy fallback
                                   const target = e.target as HTMLImageElement
                                   target.style.display = 'none'
@@ -275,9 +260,7 @@ export default function Class2028RankingsPage() {
                                     parent.appendChild(fallback)
                                   }
                                 }}
-                                onLoad={() => {
-                                  console.log(`[Image Success] Loaded image for ${athlete.name}`)
-                                }}
+                                onLoad={() => {}}
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-[#03154C] to-[#1e3a8a] flex items-center justify-center">

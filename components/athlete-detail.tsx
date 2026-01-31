@@ -87,6 +87,8 @@ interface AthleteDetailProps {
     super_32_2023_placement?: string
     super_32_2024_placement?: string
     super_32_2025_placement?: string
+    ultimate_club_duals_2025_record?: string
+    ultimate_club_duals_2024_record?: string
     nationally_ranked_wins?: string
     college_opens_experience?: string
     prospect_ranking?: number

@@ -3,12 +3,22 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mapAthleteToDb } from "@/lib/athlete-utils"
 
-const RESTRICTED = new Set([
-  "name", "matches", "nhsca_results", "nhsca_2023_record", "nhsca_2024_record", "nhsca_2025_record",
-  "nhsca_2023_placement", "nhsca_2024_placement", "nhsca_2025_placement", "super32_results",
-  "super_32_2023_record", "super_32_2024_record", "super_32_2025_record",
-  "super_32_2023_placement", "super_32_2024_placement", "career_record", "season_record",
-])
+// Normalize for comparison: lowercase, no underscores (so careerRecord and career_record both match)
+const norm = (s: string) => s.toLowerCase().replace(/_/g, "")
+
+const RESTRICTED_RAW = [
+  "name", "matches",
+  "nhsca_results", "nhsca_2023_record", "nhsca_2024_record", "nhsca_2025_record",
+  "nhsca_2023_placement", "nhsca_2024_placement", "nhsca_2025_placement",
+  "nhsca_results_text",
+  "super32_results", "super_32_2023_record", "super_32_2024_record", "super_32_2025_record",
+  "super_32_2023_placement", "super_32_2024_placement", "super_32_2025_placement",
+  "super32_results_text",
+  "career_record", "season_record", "careerRecord",
+  "state_championships",
+  "ultimate_club_duals_2025_record", "ultimate_club_duals_2024_record",
+]
+const RESTRICTED = new Set(RESTRICTED_RAW.map(norm))
 
 export async function POST(
   request: NextRequest,
@@ -37,7 +47,6 @@ export async function POST(
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    const norm = (s: string) => s.toLowerCase().replace(/_/g, "")
     for (const field of Object.keys(updates)) {
       if (RESTRICTED.has(norm(field))) {
         return NextResponse.json(

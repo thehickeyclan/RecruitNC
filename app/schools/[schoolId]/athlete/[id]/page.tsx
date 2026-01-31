@@ -33,7 +33,7 @@ import {
 import Image from "next/image"
 import { toast } from "sonner"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
-import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
+import { getNhscaResults, getSuper32Results, getNationalTeamResults } from "@/lib/tournament-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -1175,6 +1175,7 @@ export default function AthleteRecruitingDetailPage() {
               nchsaaResults={nchsaaResults}
               nhscaResults={getNhscaResults(athlete)}
               super32Results={getSuper32Results(athlete)}
+              nationalTeamResults={getNationalTeamResults(athlete)}
             />
 
             {/* Editable Performance Fields */}
@@ -1186,225 +1187,60 @@ export default function AthleteRecruitingDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Career Record - FIRST */}
-                <div className="group relative">
+                {/* Career Record - read-only (NCHSAA/NHSCA/Super32/Match/National Team not user-editable) */}
+                <div>
                   <Label className="text-sm font-semibold mb-2 block">Career Record</Label>
-                  {editingField === "careerRecord" ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={editingValue}
-                        onChange={(e) => setEditingValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleFieldUpdate("careerRecord", editingValue)
-                          } else if (e.key === "Escape") {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }
-                        }}
-                        placeholder="e.g., 125-15"
-                        className="w-full text-base"
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleFieldUpdate("careerRecord", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }}
-                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border transition-colors"
-                      onClick={() => startEditing("careerRecord", athlete.careerRecord)}
-                    >
-                      {athlete.careerRecord ? (
-                        <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{athlete.careerRecord}</p>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Click to add career record</p>
-                      )}
-                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
-                    </div>
-                  )}
+                  <div className="rounded p-3 border border-border bg-muted/30">
+                    {athlete.careerRecord ? (
+                      <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">{athlete.careerRecord}</p>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No career record on file</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* State Championships - SECOND */}
-                <div className="group relative">
+                {/* State Championships (NCHSAA) - read-only */}
+                <div>
                   <Label className="text-sm font-semibold mb-2 block">State Championships</Label>
-                  {editingField === "state_championships" ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editingValue}
-                        onChange={(e) => setEditingValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }
-                        }}
-                        placeholder="e.g., 2024 - 1st Place, 2023 - 3rd Place"
-                        rows={3}
-                        className="w-full text-base"
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleFieldUpdate("state_championships", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }}
-                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
-                      onClick={() => startEditing("state_championships", athlete.college_opens_experience)}
-                    >
-                      {athlete.college_opens_experience ? (
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Click to add state championship results</p>
-                      )}
-                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
-                    </div>
-                  )}
+                  <div className="rounded p-3 border border-border bg-muted/30 min-h-[80px]">
+                    {athlete.college_opens_experience ? (
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap dark:text-slate-300">{athlete.college_opens_experience}</p>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No state championship results on file</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Super 32 - THIRD */}
-                <div className="group relative">
+                {/* Super 32 - read-only */}
+                <div>
                   <Label className="text-sm font-semibold mb-2 block">Super 32</Label>
-                  {editingField === "super32_results_text" ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editingValue}
-                        onChange={(e) => setEditingValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }
-                        }}
-                        placeholder="e.g., 2024 - All-American (5th Place), 2023 - Competed"
-                        rows={3}
-                        className="w-full text-base"
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleFieldUpdate("super32_results_text", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }}
-                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
-                      onClick={() => startEditing("super32_results_text", athlete.college_opens_experience)}
-                    >
-                      {athlete.college_opens_experience ? (
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Click to add Super 32 results</p>
-                      )}
-                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
-                    </div>
-                  )}
+                  <div className="rounded p-3 border border-border bg-muted/30 min-h-[80px]">
+                    {getSuper32Results(athlete).length > 0 ? (
+                      <p className="text-sm text-gray-700 dark:text-slate-300">
+                        {getSuper32Results(athlete).map((r, i) => (
+                          <span key={i}>{r.year}: {r.record || r.placement || "—"}{i < getSuper32Results(athlete).length - 1 ? " • " : ""}</span>
+                        ))}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No Super 32 results on file</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* NHSCA Results - FOURTH */}
-                <div className="group relative">
+                {/* NHSCA Nationals - read-only */}
+                <div>
                   <Label className="text-sm font-semibold mb-2 block">NHSCA Nationals</Label>
-                  {editingField === "nhsca_results_text" ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editingValue}
-                        onChange={(e) => setEditingValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }
-                        }}
-                        placeholder="e.g., 2024 - All-American, 2023 - 5th Place"
-                        rows={3}
-                        className="w-full text-base"
-                        autoFocus
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleFieldUpdate("nhsca_results_text", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setEditingField(null)
-                            setEditingValue("")
-                          }}
-                          className="min-h-[44px] md:min-h-[36px] touch-manipulation"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="cursor-pointer hover:bg-muted/60 dark:hover:bg-muted/40 rounded p-3 border border-border min-h-[80px] transition-colors"
-                      onClick={() => startEditing("nhsca_results_text", athlete.college_opens_experience)}
-                    >
-                      {athlete.college_opens_experience ? (
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{athlete.college_opens_experience}</p>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">Click to add NHSCA results</p>
-                      )}
-                      <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-3 right-3" />
-                    </div>
-                  )}
+                  <div className="rounded p-3 border border-border bg-muted/30 min-h-[80px]">
+                    {getNhscaResults(athlete).length > 0 ? (
+                      <p className="text-sm text-gray-700 dark:text-slate-300">
+                        {getNhscaResults(athlete).map((r, i) => (
+                          <span key={i}>{r.year}: {r.record || r.placement || "—"}{i < getNhscaResults(athlete).length - 1 ? " • " : ""}</span>
+                        ))}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No NHSCA results on file</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* College Opens */}

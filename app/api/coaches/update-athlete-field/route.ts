@@ -24,7 +24,8 @@ export async function PUT(request: NextRequest) {
     // Determine which coach's override to update
     const targetCoachId = viewAsCoachId || user.id
 
-    // Map field names to database column names
+    // Map field names to database column names.
+    // NCHSAA, NHSCA, Super32, Match Data, and National Team are not editable by users.
     const fieldMap: Record<string, string> = {
       phone: "override_phone",
       email: "override_email",
@@ -42,14 +43,10 @@ export async function PUT(request: NextRequest) {
       graduationyear: "override_graduation_year",
       graduation_year: "override_graduation_year",
       birthdate: "override_birthdate",
-      // Performance fields
-      state_championships: "override_state_championships",
-      nhsca_results_text: "override_nhsca_results",
-      super32_results_text: "override_super32_results",
       college_opens_experience: "override_college_opens",
       fargo_experience: "override_fargo",
       nationally_ranked_wins: "override_ranked_wins",
-      careerRecord: "override_career_record",
+      // Blocked: state_championships, nhsca_results_text, super32_results_text, careerRecord
     }
 
     const dbField = fieldMap[field]

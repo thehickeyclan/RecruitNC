@@ -221,6 +221,8 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       nhsca_2024_placement: athlete.nhsca_2024_placement || null,
       nhsca_2025_record: athlete.nhsca_2025_record || null,
       nhsca_2025_placement: athlete.nhsca_2025_placement || null,
+      ultimate_club_duals_2025_record: athlete.ultimate_club_duals_2025_record || null,
+      ultimate_club_duals_2024_record: athlete.ultimate_club_duals_2024_record || null,
       nationally_ranked_wins: athlete.nationally_ranked_wins || null,
       college_opens_experience: athlete.college_opens_experience || null,
       flo_profile_url: athlete.floProfileUrl || athlete.flo_profile_url || null,

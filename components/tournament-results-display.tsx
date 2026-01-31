@@ -21,23 +21,35 @@ interface NCHSAAResult {
   weight_class: string
 }
 
+export interface NationalTeamResult {
+  event: string
+  year: number
+  record: string
+}
+
 interface TournamentResultsDisplayProps {
   nhscaResults?: TournamentResult[]
   super32Results?: TournamentResult[]
   nchsaaResults?: NCHSAAResult[] // State championship data
+  /** NC United National Team: Ultimate Club Duals 2025/2024, NHSCA 2025 */
+  nationalTeamResults?: NationalTeamResult[]
   compact?: boolean // For smaller displays like cards
+  /** When true, always show NHSCA and Super 32 sections (with "No results" when empty) to match public/school profile structure */
+  alwaysShowStructure?: boolean
 }
 
 export function TournamentResultsDisplay({
   nhscaResults = [],
   super32Results = [],
   nchsaaResults = [],
+  nationalTeamResults = [],
   compact = false,
+  alwaysShowStructure = true,
 }: TournamentResultsDisplayProps) {
   const hasAnyResults = nhscaResults.length > 0 || super32Results.length > 0 || nchsaaResults.length > 0
 
-  if (!hasAnyResults) {
-    return null // Don't show section if no tournament data
+  if (!hasAnyResults && !alwaysShowStructure) {
+    return null
   }
 
   const getPlacementBadge = (placement: string | null | undefined, size: 'default' | 'sm' = 'default') => {
@@ -117,6 +129,43 @@ export function TournamentResultsDisplay({
   // Full table version for profiles
   return (
     <div className="space-y-6">
+      {/* NC United National Team - Ultimate Club Duals 2025/2024, NHSCA 2025 */}
+      {nationalTeamResults.length > 0 && (
+        <Card className="border-t-4 border-t-[#D3B574] shadow-md">
+          <CardHeader className="bg-gradient-to-r from-[#03154C] to-[#1e3a8a] py-4">
+            <CardTitle className="text-white flex items-center gap-2 text-lg">
+              <Trophy className="h-5 w-5 text-[#D3B574]" />
+              NC United National Team
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-sm text-gray-600 mb-4">
+              National team competition: Ultimate Club Duals and NHSCA National Duals
+            </p>
+            <div className="rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="font-semibold">Event</TableHead>
+                    <TableHead className="font-semibold">Year</TableHead>
+                    <TableHead className="font-semibold">Record</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {nationalTeamResults.map((result, index) => (
+                    <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                      <TableCell className="font-medium text-[#03154C]">{result.event}</TableCell>
+                      <TableCell className="font-semibold">{result.year}</TableCell>
+                      <TableCell className="font-mono">{result.record}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {nchsaaResults.length > 0 && (
         <Card className="border-t-4 border-t-yellow-500 shadow-md">
           <CardHeader className="bg-gradient-to-r from-yellow-500 to-amber-500 py-4">
@@ -167,7 +216,8 @@ export function TournamentResultsDisplay({
         </Card>
       )}
 
-      {nhscaResults.length > 0 && (
+      {/* NHSCA - always show when alwaysShowStructure so structure matches public/school profiles */}
+      {(nhscaResults.length > 0 || alwaysShowStructure) && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
@@ -188,15 +238,23 @@ export function TournamentResultsDisplay({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {nhscaResults.map((result, index) => (
-                    <TableRow key={index} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-semibold text-[#002147]">{result.year}</TableCell>
-                      <TableCell>{getPlacementBadge(result.placement)}</TableCell>
-                      <TableCell className="font-mono">{result.record || "—"}</TableCell>
-                      <TableCell>{result.weight || "—"}</TableCell>
-                      <TableCell>{result.division || "—"}</TableCell>
+                  {nhscaResults.length > 0 ? (
+                    nhscaResults.map((result, index) => (
+                      <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                        <TableCell className="font-semibold text-[#002147]">{result.year}</TableCell>
+                        <TableCell>{getPlacementBadge(result.placement)}</TableCell>
+                        <TableCell className="font-mono">{result.record || "—"}</TableCell>
+                        <TableCell>{result.weight || "—"}</TableCell>
+                        <TableCell>{result.division || "—"}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-gray-500 py-6">
+                        No NHSCA results recorded
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -204,7 +262,8 @@ export function TournamentResultsDisplay({
         </Card>
       )}
 
-      {super32Results.length > 0 && (
+      {/* Super 32 - always show when alwaysShowStructure so structure matches public/school profiles */}
+      {(super32Results.length > 0 || alwaysShowStructure) && (
         <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
           <CardHeader className="bg-gradient-to-r from-[#B31B1B] to-[#8B1515] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
@@ -225,15 +284,23 @@ export function TournamentResultsDisplay({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {super32Results.map((result, index) => (
-                    <TableRow key={index} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-semibold text-[#B31B1B]">{result.year}</TableCell>
-                      <TableCell>{getPlacementBadge(result.placement)}</TableCell>
-                      <TableCell className="font-mono">{result.record || "—"}</TableCell>
-                      <TableCell>{result.weight || "—"}</TableCell>
-                      <TableCell>{result.division || "—"}</TableCell>
+                  {super32Results.length > 0 ? (
+                    super32Results.map((result, index) => (
+                      <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                        <TableCell className="font-semibold text-[#B31B1B]">{result.year}</TableCell>
+                        <TableCell>{getPlacementBadge(result.placement)}</TableCell>
+                        <TableCell className="font-mono">{result.record || "—"}</TableCell>
+                        <TableCell>{result.weight || "—"}</TableCell>
+                        <TableCell>{result.division || "—"}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-gray-500 py-6">
+                        No Super 32 results recorded
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>

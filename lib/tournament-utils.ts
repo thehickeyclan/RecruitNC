@@ -171,3 +171,31 @@ export function getAllTournamentResults(athlete: any): {
     hasAny: nhsca.length > 0 || super32.length > 0,
   }
 }
+
+/** NC United National Team result row for display */
+export interface NationalTeamResultRow {
+  event: string
+  year: number
+  record: string
+}
+
+/**
+ * Get NC United National Team results: Ultimate Club Duals 2025/2024, NHSCA 2025.
+ * Show section when athlete competed on national team at any of these events.
+ */
+export function getNationalTeamResults(athlete: any): NationalTeamResultRow[] {
+  const rows: NationalTeamResultRow[] = []
+  const r2025 = (athlete?.ultimate_club_duals_2025_record ?? "").toString().trim()
+  if (r2025) {
+    rows.push({ event: "Ultimate Club Duals", year: 2025, record: r2025 })
+  }
+  const r2024 = (athlete?.ultimate_club_duals_2024_record ?? "").toString().trim()
+  if (r2024) {
+    rows.push({ event: "Ultimate Club Duals", year: 2024, record: r2024 })
+  }
+  const nhsca2025 = (athlete?.nhsca_2025_record ?? "").toString().trim()
+  if (nhsca2025) {
+    rows.push({ event: "NHSCA National Duals", year: 2025, record: nhsca2025 })
+  }
+  return rows
+}
