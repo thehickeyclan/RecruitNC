@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 
 import { AuthGuard } from "@/components/auth-guard"
 import { Badge } from "@/components/ui/badge"
@@ -146,11 +147,11 @@ export default function AllProspectsPage() {
           hasStateResults: allRankings.filter((r: any) => r.nchsaa_results && r.nchsaa_results.length > 0).length,
         })
 
-        // Filter to only include 2026 and 2027 (exclude 2025 and earlier, and 2028+)
+        // Include class of 2025, 2026, 2027
         const filtered = rawProspects
           .filter((prospect: Prospect) => {
             const gradYear = Number(prospect.graduationyear)
-            return gradYear >= 2026 && gradYear <= 2027
+            return gradYear >= 2025 && gradYear <= 2027
           })
           .filter(isNorthCarolinaProspect)
 
@@ -250,7 +251,7 @@ export default function AllProspectsPage() {
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     for (const prospect of prospects) {
-      if (prospect.graduationyear && prospect.graduationyear >= 2026 && prospect.graduationyear <= 2030) {
+      if (prospect.graduationyear && prospect.graduationyear >= 2025 && prospect.graduationyear <= 2030) {
         years.add(prospect.graduationyear)
       }
     }
@@ -378,27 +379,11 @@ export default function AllProspectsPage() {
   }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
 
   const sortedProspects = useMemo(() => {
-    // Filter to only include 2026 and 2027 (exclude 2025 and earlier)
-    const currentYear = new Date().getFullYear()
-    const minActiveYear = currentYear + 1 // 2026 and beyond
-    
     const activeProspects = filteredProspects.filter((prospect) => {
       const gradYear = prospect.graduationyear
-      return gradYear && gradYear >= minActiveYear && gradYear <= 2027
+      return gradYear && gradYear >= 2025 && gradYear <= 2027
     })
-    
-    return [...activeProspects].sort((a, b) => {
-      const rankA = a.prospect_ranking ?? Number.POSITIVE_INFINITY
-      const rankB = b.prospect_ranking ?? Number.POSITIVE_INFINITY
-
-      if (rankA !== rankB) return rankA - rankB
-
-      const gradA = a.graduationyear ?? Number.POSITIVE_INFINITY
-      const gradB = b.graduationyear ?? Number.POSITIVE_INFINITY
-      if (gradA !== gradB) return gradA - gradB
-
-      return (a.name || "").localeCompare(b.name || "")
-    })
+    return [...activeProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
   }, [filteredProspects])
 
   const committedCount = useMemo(
@@ -437,6 +422,13 @@ export default function AllProspectsPage() {
         (!["0", "none", "None"].includes(String(prospect.nationally_ranked_wins).trim()))
 
       const achievement = getHighestAchievement(prospect)
+      const status = summarizeStatus(prospect.recruiting_status)
+      const commitmentDisplay =
+        status === "committed" && prospect.college && prospect.college.trim() !== ""
+          ? "Committed"
+          : status === "verbal"
+            ? "Verbal"
+            : "Uncommitted"
 
       return {
         id: prospect.id || `prospect-${index}`,
@@ -452,6 +444,7 @@ export default function AllProspectsPage() {
         nationally_ranked_wins: prospect.nationally_ranked_wins ?? undefined,
         college: prospect.college ?? undefined,
         recruiting_status: prospect.recruiting_status ?? undefined,
+        commitment_status_display: commitmentDisplay,
       }
     })
 
@@ -483,8 +476,7 @@ export default function AllProspectsPage() {
     )
   }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
 
-  // TEMPORARY: Page temporarily shut down
-  const isShutDown = true // Set to false to re-enable the page
+  const isShutDown = false
 
   if (isShutDown) {
     return (
@@ -534,6 +526,19 @@ export default function AllProspectsPage() {
         </section>
 
         <section className="container mx-auto px-4 py-10 space-y-10">
+          {/* Submit your profile CTA */}
+          <div className="rounded-xl border-2 border-[#D3B574] bg-gradient-to-r from-[#13294B]/5 to-[#D3B574]/10 p-6 text-center">
+            <p className="text-lg font-semibold text-[#13294B] mb-2">Not listed? Add your profile.</p>
+            <p className="text-sm text-gray-600 mb-4 max-w-xl mx-auto">
+              Get in front of college coaches. Submit your athlete profile and we&apos;ll add you to the directory.
+            </p>
+            <Link href="/create-profile">
+              <Button className="bg-[#13294B] hover:bg-[#1e3a5f] text-white font-semibold px-6 py-3">
+                Submit your profile
+              </Button>
+            </Link>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border bg-card p-6 shadow-sm">
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Prospects</p>
@@ -1012,7 +1017,7 @@ export default function AllProspectsPage() {
               <div>
                 <h3 className="text-xl font-semibold text-[#03154C]">Prospect Directory</h3>
                 <p className="text-sm text-muted-foreground">
-                  Ranked prospects are surfaced first, followed by the extended North Carolina talent pool.
+                  All prospects A–Z. Sort by name, rank, weight, school, or commitment status.
                 </p>
               </div>
               <Badge variant="outline" className="gap-2 text-sm">
@@ -1043,10 +1048,12 @@ export default function AllProspectsPage() {
               <div className="overflow-x-auto px-2 pb-6">
                 <RankingsTableView
                   athletes={tableAthletes}
-                  hideRankColumn={true}
-                  showRankColumn={false}
-                  additionalDividerLabel="Additional North Carolina Prospects"
-                  dividerAfterRank={sortedProspects.length + 1}
+                  hideRankColumn={false}
+                  showRankColumn={true}
+                  defaultSortField="name"
+                  defaultSortDirection="asc"
+                  additionalDividerLabel=""
+                  dividerAfterRank={0}
                 />
               </div>
             ) : (

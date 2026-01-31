@@ -39,6 +39,7 @@ interface Athlete {
   nationally_ranked_wins?: string | number
   college?: string
   recruiting_status?: string
+  commitment_status_display?: string
 }
 
 interface RankingsTableViewProps {
@@ -48,6 +49,8 @@ interface RankingsTableViewProps {
   additionalDividerLabel?: string
   dividerAfterRank?: number
   showRankColumn?: boolean
+  defaultSortField?: SortField
+  defaultSortDirection?: SortDirection
 }
 
 type SortField = "rank" | "name" | "school" | "weight"
@@ -60,9 +63,11 @@ export function RankingsTableView({
   additionalDividerLabel = "Additional Ranked Prospects",
   dividerAfterRank = 30,
   showRankColumn = true,
+  defaultSortField,
+  defaultSortDirection,
 }: RankingsTableViewProps) {
-  const [sortField, setSortField] = useState<SortField>("rank")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [sortField, setSortField] = useState<SortField>(defaultSortField ?? "rank")
+  const [sortDirection, setSortDirection] = useState<SortDirection>(defaultSortDirection ?? "asc")
   const [collegeLogos, setCollegeLogos] = useState<Record<string, string>>({})
   const { user, profile, isAdmin, isVerifiedCoach } = useAuth()
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
@@ -317,7 +322,7 @@ export function RankingsTableView({
                   Name <SortIcon field="name" />
                 </Button>
               </TableHead>
-              <TableHead className="w-[110px] text-white font-semibold text-center">Committed</TableHead>
+              <TableHead className="w-[110px] text-white font-semibold text-center">Status</TableHead>
               <TableHead className="min-w-[180px] text-white font-semibold">
                 <Button
                   variant="ghost"
@@ -458,7 +463,9 @@ export function RankingsTableView({
                           </div>
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-sm">-</span>
+                        <span className="text-gray-500 text-sm font-medium">
+                          {athlete.commitment_status_display ?? (athlete.recruiting_status || "—")}
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
