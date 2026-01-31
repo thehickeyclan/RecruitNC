@@ -33,6 +33,7 @@ import {
 import Image from "next/image"
 import { toast } from "sonner"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -1169,11 +1170,11 @@ export default function AthleteRecruitingDetailPage() {
 
           {/* PERFORMANCE TAB */}
           <TabsContent value="performance" className="space-y-6">
-            {/* Tournament Results Display (same as unified profile) */}
+            {/* Tournament Results Display (uses column fallback when JSON empty) */}
             <TournamentResultsDisplay
               nchsaaResults={nchsaaResults}
-              nhscaResults={athlete.nhsca_results || []}
-              super32Results={athlete.super32_results || []}
+              nhscaResults={getNhscaResults(athlete)}
+              super32Results={getSuper32Results(athlete)}
             />
 
             {/* Editable Performance Fields */}

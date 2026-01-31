@@ -3,9 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
-import { MatchDataSection } from "@/components/match-data-section-improved"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
+import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
 
 const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
   .split(",")
@@ -77,64 +77,9 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
 
   const nchsaaResults = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
 
-  // Parse JSONB fields properly - they may come as strings from the database
-  const parseJsonField = (field: any): any[] => {
-    if (!field) return []
-    if (Array.isArray(field)) return field
-    if (typeof field === 'string') {
-      try {
-        const parsed = JSON.parse(field)
-        return Array.isArray(parsed) ? parsed : []
-      } catch {
-        return []
-      }
-    }
-    return []
-  }
-
-  // NHSCA: use JSON first, fallback to column format (nhsca_2023/2024/2025_record, placement)
-  const nhscaFromJson = parseJsonField(athlete.nhsca_results)
-  const nhscaResults =
-    nhscaFromJson.length > 0
-      ? nhscaFromJson.map((r: any) => ({
-          year: typeof r.year === "number" ? r.year : parseInt(r.year, 10) || new Date().getFullYear(),
-          placement: r.placement || r.place || "",
-          record: r.record ?? undefined,
-          weight: r.weight ?? undefined,
-          division: r.division ?? undefined,
-        }))
-      : [2025, 2024, 2023]
-          .filter(
-            (y) =>
-              (athlete as any)[`nhsca_${y}_record`] || (athlete as any)[`nhsca_${y}_placement`]
-          )
-          .map((year) => ({
-            year,
-            placement: String((athlete as any)[`nhsca_${year}_placement`] ?? ""),
-            record: (athlete as any)[`nhsca_${year}_record`] ?? undefined,
-          }))
-
-  // Super 32: use JSON first, fallback to column format (super_32_2023/2024/2025_record, placement)
-  const super32FromJson = parseJsonField(athlete.super32_results)
-  const super32Results =
-    super32FromJson.length > 0
-      ? super32FromJson.map((r: any) => ({
-          year: typeof r.year === "number" ? r.year : parseInt(r.year, 10) || new Date().getFullYear(),
-          placement: r.placement || r.place || "",
-          record: r.record ?? undefined,
-          weight: r.weight ?? undefined,
-          division: r.division ?? undefined,
-        }))
-      : [2025, 2024, 2023]
-          .filter(
-            (y) =>
-              (athlete as any)[`super_32_${y}_record`] || (athlete as any)[`super_32_${y}_placement`]
-          )
-          .map((year) => ({
-            year,
-            placement: String((athlete as any)[`super_32_${year}_placement`] ?? ""),
-            record: (athlete as any)[`super_32_${year}_record`] ?? undefined,
-          }))
+  // Use shared tournament utils - handles both JSON and column format
+  const nhscaResults = getNhscaResults(athlete)
+  const super32Results = getSuper32Results(athlete)
 
   return (
     <div className="min-h-screen bg-gray-50">

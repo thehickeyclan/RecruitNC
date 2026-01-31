@@ -54,6 +54,7 @@ import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/com
 import { CreateProspectModal } from "@/components/create-prospect-modal"
 import { StarRating } from "@/components/star-rating"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+import { getNhscaResults, getSuper32Results } from "@/lib/tournament-utils"
 import { BirthdayCalendar } from "@/components/birthday-calendar"
 import {
   DropdownMenu,
@@ -3929,18 +3930,18 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       </div>
                     )}
 
-                    {/* Tournament Results Display (same as unified profile) */}
+                    {/* Tournament Results Display (uses column fallback when JSON empty) */}
                     <TournamentResultsDisplay
                       nchsaaResults={nchsaaResults}
-                      nhscaResults={selectedAthlete.nhsca_results || []}
-                      super32Results={selectedAthlete.super32_results || []}
+                      nhscaResults={getNhscaResults(selectedAthlete)}
+                      super32Results={getSuper32Results(selectedAthlete)}
                     />
 
                     {/* Empty state */}
                     {!selectedAthlete.careerRecord && 
                      nchsaaResults.length === 0 &&
-                     (!selectedAthlete.nhsca_results || selectedAthlete.nhsca_results.length === 0) &&
-                     (!selectedAthlete.super32_results || selectedAthlete.super32_results.length === 0) &&
+                     getNhscaResults(selectedAthlete).length === 0 &&
+                     getSuper32Results(selectedAthlete).length === 0 &&
                      !selectedAthlete.college_opens_experience && (
                       <div className="text-center py-12 text-muted-foreground">
                         <Award className="h-12 w-12 mx-auto mb-3 opacity-20" />

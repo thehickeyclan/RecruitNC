@@ -18,12 +18,26 @@ export interface TournamentResult {
  * Works with both old columns and new JSON format
  * Prioritizes new JSON format if available
  */
+function parseJsonField(field: any): any[] {
+  if (!field) return []
+  if (Array.isArray(field)) return field
+  if (typeof field === "string") {
+    try {
+      const parsed = JSON.parse(field)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
 export function getNhscaResults(athlete: any): TournamentResult[] {
-  // Try new JSON format first
-  if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
-    return athlete.nhsca_results.map((result: any) => ({
-      year: result.year,
-      placement: result.placement,
+  const jsonResults = parseJsonField(athlete?.nhsca_results)
+  if (jsonResults.length > 0) {
+    return jsonResults.map((result: any) => ({
+      year: typeof result.year === "number" ? result.year : parseInt(String(result.year), 10) || new Date().getFullYear(),
+      placement: String(result.placement ?? result.place ?? ""),
       record: result.record || '',
       weight: result.weight || '',
       division: result.division || '',
@@ -59,11 +73,11 @@ export function getNhscaResults(athlete: any): TournamentResult[] {
  * Prioritizes new JSON format if available
  */
 export function getSuper32Results(athlete: any): TournamentResult[] {
-  // Try new JSON format first
-  if (athlete.super32_results && Array.isArray(athlete.super32_results) && athlete.super32_results.length > 0) {
-    return athlete.super32_results.map((result: any) => ({
-      year: result.year,
-      placement: result.placement,
+  const jsonResults = parseJsonField(athlete?.super32_results ?? athlete?.super_32_results)
+  if (jsonResults.length > 0) {
+    return jsonResults.map((result: any) => ({
+      year: typeof result.year === "number" ? result.year : parseInt(String(result.year), 10) || new Date().getFullYear(),
+      placement: String(result.placement ?? result.place ?? ""),
       record: result.record || '',
       weight: result.weight || '',
       division: result.division || '',
