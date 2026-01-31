@@ -90,14 +90,14 @@ export function getSuper32Results(athlete: any): TournamentResult[] {
     }))
   }
 
-  // Fallback to old column format (snake_case and camelCase for different DB/API shapes)
+  // Fallback to old column format: super_32_* (DB), super32_* (some APIs/forms), camelCase
   const results: TournamentResult[] = []
   const weight = athlete?.weightclass ?? athlete?.weightClass ?? ''
 
   const years = [2025, 2024, 2023]
   for (const year of years) {
-    const placementSnake = athlete?.[`super_32_${year}_placement`]
-    const recordSnake = athlete?.[`super_32_${year}_record`]
+    const placementSnake = athlete?.[`super_32_${year}_placement`] ?? athlete?.[`super32_${year}_placement`]
+    const recordSnake = athlete?.[`super_32_${year}_record`] ?? athlete?.[`super32_${year}_record`]
     const placementCamel = athlete?.[`super32${year}Placement` as keyof typeof athlete]
     const recordCamel = athlete?.[`super32${year}Record` as keyof typeof athlete]
     const placement = placementSnake ?? placementCamel

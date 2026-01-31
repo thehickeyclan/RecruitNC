@@ -137,6 +137,24 @@ async function getNHSCAResults(athleteName: string, graduationYear: number) {
   return results || []
 }
 
+async function getSuper32Results(athleteName: string, graduationYear: number) {
+  const supabase = await createClient()
+
+  if (!graduationYear || isNaN(graduationYear)) {
+    return []
+  }
+
+  const { data: results } = await supabase
+    .from("wrestling_super32_results")
+    .select("*")
+    .ilike("athlete_name", `%${athleteName}%`)
+    .gte("year", graduationYear - 4)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+
+  return results || []
+}
+
 async function getHighSchoolClassification(athleteName: string, highSchool: string, graduationYear?: number) {
   const supabase = await createClient()
 
@@ -188,9 +206,10 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
     notFound()
   }
 
-  const [nchsaaResults, nhscaResults, highSchoolClassification] = await Promise.all([
+  const [nchsaaResults, nhscaResults, super32Results, highSchoolClassification] = await Promise.all([
     getNCHSAAResults(prospect.name, prospect.graduationyear),
     getNHSCAResults(prospect.name, prospect.graduationyear),
+    getSuper32Results(prospect.name, prospect.graduationyear),
     getHighSchoolClassification(prospect.name, prospect.highschool, prospect.graduationyear),
   ])
 
@@ -206,7 +225,35 @@ export default async function ProspectPage({ params }: ProspectPageProps) {
     }))
   }
 
-  const effectiveSuper32 = getSuper32Results(prospect)
+  // Super32: use tournament-utils; fall back to table-fetched results when prospect row has no data
+  let effectiveSuper32 = getSuper32Results(prospect)
+  if (effectiveSuper32.length === 0 && super32Results?.length) {
+    effectiveSuper32 = super32Results.map((r: any) => ({
+      year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+      placement: String(r.placement ?? r.place ?? ""),
+      record: (r.record ?? r.record_text ?? "").toString().trim(),
+      weight: r.weight ?? "",
+      division: r.division ?? "",
+    }))
+  }
+  // Final fallback: build from prospect with all key variants (super_32_* and super32_*)
+  if (effectiveSuper32.length === 0) {
+    const years = [2025, 2024, 2023] as const
+    for (const year of years) {
+      const record =
+        (prospect as any)?.[`super_32_${year}_record`] ??
+        (prospect as any)?.[`super32_${year}_record`] ??
+        (prospect as any)?.[`super32${year}Record`]
+      const placement =
+        (prospect as any)?.[`super_32_${year}_placement`] ??
+        (prospect as any)?.[`super32_${year}_placement`] ??
+        (prospect as any)?.[`super32${year}Placement`]
+      if (record != null && String(record).trim() !== "" || placement != null && String(placement).trim() !== "") {
+        effectiveSuper32 = [...effectiveSuper32, { year, placement: String(placement ?? "").trim(), record: String(record ?? "").trim(), weight: "", division: "" }]
+      }
+    }
+    effectiveSuper32 = effectiveSuper32.sort((a, b) => b.year - a.year)
+  }
 
   const instagramLink =
     prospect.socialMedia?.instagram ||

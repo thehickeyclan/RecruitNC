@@ -70,6 +70,25 @@ async function getNHSCAResultsFromTable(athleteName: string, graduationYear: num
   }))
 }
 
+async function getSuper32ResultsFromTable(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
+  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
+  const { data: results } = await supabase
+    .from("wrestling_super32_results")
+    .select("*")
+    .ilike("athlete_name", `%${athleteName}%`)
+    .gte("year", graduationYear - 4)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (!results?.length) return []
+  return results.map((r: any) => ({
+    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+    placement: String(r.placement ?? r.place ?? ""),
+    record: (r.record ?? r.record_text ?? "").toString().trim(),
+    weight: r.weight ?? "",
+    division: r.division ?? "",
+  }))
+}
+
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
   const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
   const supabase = isPublicProfile ? createAdminClient() : await createClient()
@@ -97,12 +116,15 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     weight_class: r.weight_class ?? r.weight ?? "",
   }))
 
-  // Use shared tournament utils; fall back to NHSCA table when athlete row has no data
+  // Use shared tournament utils; fall back to tables when athlete row has no data
   let nhscaResults = getNhscaResults(athlete)
   if (nhscaResults.length === 0) {
     nhscaResults = await getNHSCAResultsFromTable(athlete.name, athlete.graduationyear, supabase)
   }
-  const super32Results = getSuper32Results(athlete)
+  let super32Results = getSuper32Results(athlete)
+  if (super32Results.length === 0) {
+    super32Results = await getSuper32ResultsFromTable(athlete.name, athlete.graduationyear, supabase)
+  }
   const nationalTeamResults = getNationalTeamResults(athlete)
 
   return (
