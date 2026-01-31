@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       achievements: formData.achievements ? [formData.achievements] : [],
       photourl: formData.photoUrl || null,
       contact_email: formData.email || null,
-      cell: formData.phone || null,
+      phone: formData.phone || null,
       claimed_by_user_id: user.id,
       claimed_at: now,
       profile_verified: true,
