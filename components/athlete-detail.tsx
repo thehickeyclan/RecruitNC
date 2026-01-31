@@ -133,9 +133,13 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
-  
-  // Check if current user can edit (owns profile or is admin)
-  const canEdit = currentUserId !== null // TODO: Add ownership check if needed
+
+  // Profile owner can see and edit their own private info (cell, GPA, ACT, SAT)
+  const isViewingOwnProfile = Boolean(currentUserId && athlete.claimed_by_user_id === currentUserId)
+  // Only profile owner or admin can edit; coaches can view but not edit
+  const canEdit = isViewingOwnProfile || isAdmin
+  // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
+  const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
 
   // Handler for inline edits
   const handleInlineSave = async (updates: Record<string, any>) => {
@@ -1160,8 +1164,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   {/* Removed duplicate Additional Achievements block (will render once after College Opens) */}
 
-      {/* Academics Section */}
-      {(athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act || editingSection === "academics") && (
+      {/* Academics Section - show when has data, when editing, or when owner so they can add GPA/SAT/ACT */}
+      {(athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act || editingSection === "academics" || isViewingOwnProfile) && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
             <div className="flex items-center justify-between">
@@ -1195,8 +1199,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               />
             ) : (
               <>
-                {/* Academic Stats - Only visible to coaches and admins */}
-                {(isAdmin || isVerifiedCoach) && (athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act) && (
+                {/* Academic Stats - Visible only to profile owner, coaches, and admins */}
+                {canSeePrivateInfo && (athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act) && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {athleteData.academic_gpa && (
                       <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
@@ -1230,11 +1234,11 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               </>
             )}
             
-            {/* Message for non-coaches */}
-            {!(isAdmin || isVerifiedCoach) && (athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
+            {/* Message for visitors who are not the athlete, coach, or admin */}
+            {!canSeePrivateInfo && (athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
                 <p className="text-sm text-blue-700 text-center">
-                  📊 Academic information is only visible to verified college coaches.
+                  📊 GPA, SAT, and ACT are only visible to you (when signed in as this athlete), verified college coaches, and administrators.
                 </p>
               </div>
             )}

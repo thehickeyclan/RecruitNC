@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 interface ContactInfoSectionProps {
   athlete: {
     phone?: string
+    cell?: string
+    cell_number?: string
     contactEmail?: string
     socialMedia?: string | object
     email?: string
@@ -37,7 +39,7 @@ export function ContactInfoSection({ athlete }: ContactInfoSectionProps) {
     return null
   }
 
-  const phone = athlete.phone
+  const phone = athlete.phone || athlete.cell || athlete.cell_number
   const email =
     athlete.contactEmail || athlete.email || athlete.email_address || athlete.emailAddress || athlete.contact_email
 
