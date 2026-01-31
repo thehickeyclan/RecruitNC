@@ -645,20 +645,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="twitterUrl">Actual Weight (lbs)</Label>
-                <Input
-                  id="twitterUrl"
-                  name="twitterUrl"
-                  type="number"
-                  min="0"
-                  max="500"
-                  value={formData.twitterUrl}
-                  onChange={handleChange}
-                  placeholder="Enter weight in pounds"
-                />
-              </div>
-
               {/* Prospect Status Section */}
               <div className="border-t pt-4 space-y-4">
                 <h3 className="text-lg font-medium">Prospect Status</h3>
