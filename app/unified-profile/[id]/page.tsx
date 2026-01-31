@@ -23,9 +23,7 @@ interface UnifiedProfilePageProps {
 async function getAthlete(id: string, supabase: SupabaseClient) {
   const { data: athlete, error } = await supabase
     .from("athletes")
-    .select(`
-      *
-    `)
+    .select("*")
     .eq("id", id)
     .single()
 

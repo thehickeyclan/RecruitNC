@@ -45,25 +45,30 @@ export function getNhscaResults(athlete: any): TournamentResult[] {
     }))
   }
 
-  // Fallback to old column format
+  // Fallback to old column format (snake_case and camelCase for different DB/API shapes)
   const results: TournamentResult[] = []
-  
+  const weight = athlete?.weightclass ?? athlete?.weightClass ?? ''
+
   const years = [2025, 2024, 2023]
   for (const year of years) {
-    const placement = athlete[`nhsca_${year}_placement`]
-    const record = athlete[`nhsca_${year}_record`]
-    
-    if (placement || record) {
+    const placementSnake = athlete?.[`nhsca_${year}_placement`]
+    const recordSnake = athlete?.[`nhsca_${year}_record`]
+    const placementCamel = athlete?.[`nhsca${year}Placement` as keyof typeof athlete]
+    const recordCamel = athlete?.[`nhsca${year}Record` as keyof typeof athlete]
+    const placement = placementSnake ?? placementCamel
+    const record = recordSnake ?? recordCamel
+
+    if (placement != null && String(placement).trim() !== '' || record != null && String(record).trim() !== '') {
       results.push({
         year,
-        placement: placement || '',
-        record: record || '',
-        weight: athlete.weightclass || '',
+        placement: placement != null ? String(placement).trim() : '',
+        record: record != null ? String(record).trim() : '',
+        weight,
         division: '',
       })
     }
   }
-  
+
   return results
 }
 
@@ -85,25 +90,30 @@ export function getSuper32Results(athlete: any): TournamentResult[] {
     }))
   }
 
-  // Fallback to old column format
+  // Fallback to old column format (snake_case and camelCase for different DB/API shapes)
   const results: TournamentResult[] = []
-  
+  const weight = athlete?.weightclass ?? athlete?.weightClass ?? ''
+
   const years = [2025, 2024, 2023]
   for (const year of years) {
-    const placement = athlete[`super_32_${year}_placement`]
-    const record = athlete[`super_32_${year}_record`]
-    
-    if (placement || record) {
+    const placementSnake = athlete?.[`super_32_${year}_placement`]
+    const recordSnake = athlete?.[`super_32_${year}_record`]
+    const placementCamel = athlete?.[`super32${year}Placement` as keyof typeof athlete]
+    const recordCamel = athlete?.[`super32${year}Record` as keyof typeof athlete]
+    const placement = placementSnake ?? placementCamel
+    const record = recordSnake ?? recordCamel
+
+    if (placement != null && String(placement).trim() !== '' || record != null && String(record).trim() !== '') {
       results.push({
         year,
-        placement: placement || '',
-        record: record || '',
-        weight: athlete.weightclass || '',
+        placement: placement != null ? String(placement).trim() : '',
+        record: record != null ? String(record).trim() : '',
+        weight,
         division: '',
       })
     }
   }
-  
+
   return results
 }
 

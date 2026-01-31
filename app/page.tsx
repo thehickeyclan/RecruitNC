@@ -180,46 +180,43 @@ export default function HomePage() {
         setRankingsLoading(true)
         setError(null)
 
-        // Fetch from both 2026 and 2027, get top 3 from each
+        // Use public-rankings API (same source as rankings pages) so featured data is always present
         const [response2026, response2027] = await Promise.all([
-          fetch(`/api/prospects?graduationYear=2026&limit=50`, {
+          fetch(`/api/public-rankings?year=2026&gender=Male`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
           }),
-          fetch(`/api/prospects?graduationYear=2027&limit=50`, {
+          fetch(`/api/public-rankings?year=2027&gender=Male`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
           }),
         ])
 
-        const data2026 = response2026.ok ? await response2026.json() : { prospects: [] }
-        const data2027 = response2027.ok ? await response2027.json() : { prospects: [] }
+        const data2026 = response2026.ok ? await response2026.json() : { rankings: [] }
+        const data2027 = response2027.ok ? await response2027.json() : { rankings: [] }
 
-        const prospects2026 = Array.isArray(data2026.prospects) ? data2026.prospects : []
-        const prospects2027 = Array.isArray(data2027.prospects) ? data2027.prospects : []
-        
-        // Get top 3 from each year, sorted by ranking
-        const top2026 = prospects2026
-          .filter((p: Athlete) => p.prospect_ranking != null)
-          .sort((a: Athlete, b: Athlete) => {
-            const rankA = typeof a.prospect_ranking === 'string' ? parseInt(a.prospect_ranking) : (a.prospect_ranking || 999)
-            const rankB = typeof b.prospect_ranking === 'string' ? parseInt(b.prospect_ranking) : (b.prospect_ranking || 999)
-            return rankA - rankB
-          })
-          .slice(0, 3)
+        const rankings2026 = Array.isArray(data2026.rankings) ? data2026.rankings : []
+        const rankings2027 = Array.isArray(data2027.rankings) ? data2027.rankings : []
 
-        const top2027 = prospects2027
-          .filter((p: Athlete) => p.prospect_ranking != null)
-          .sort((a: Athlete, b: Athlete) => {
-            const rankA = typeof a.prospect_ranking === 'string' ? parseInt(a.prospect_ranking) : (a.prospect_ranking || 999)
-            const rankB = typeof b.prospect_ranking === 'string' ? parseInt(b.prospect_ranking) : (b.prospect_ranking || 999)
-            return rankA - rankB
-          })
-          .slice(0, 3)
+        // Map to Athlete shape: id, name, highschool, graduationyear, photourl, prospect_ranking, weightclass, achievements
+        const mapRankingToAthlete = (r: any) => ({
+          id: r.id,
+          name: r.name || "Unknown",
+          highschool: r.highschool || "",
+          graduationyear: r.graduationyear,
+          photourl: r.photourl || "",
+          prospect_ranking: r.prospect_ranking,
+          weightclass: r.weight_display ? String(r.weight_display).replace(/\s*lbs$/i, "").trim() : "",
+          achievements: r.state_championship_summary || r.nhsca_record_display || r.super_32_record_display
+            ? [r.state_championship_summary, r.nhsca_record_display, r.super_32_record_display].filter(Boolean)
+            : [],
+        })
 
-        // Combine: 2026 first, then 2027
+        const top2026 = rankings2026.slice(0, 3).map(mapRankingToAthlete)
+        const top2027 = rankings2027.slice(0, 3).map(mapRankingToAthlete)
+
         setFeaturedRankings([...top2026, ...top2027])
         setError(null)
       } catch (err) {
