@@ -96,6 +96,7 @@ interface AthleteDetailProps {
     socialMedia?: any
     social_media?: any
     claimed_by_user_id?: string
+    profile_verified?: boolean
     additional_achievements?: string | null
     flo_profile_url?: string
     track_wrestling_profile_url?: string
@@ -637,8 +638,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   const instagramUrl = getInstagramUrl()
 
+  const isUnpublished = athlete.profile_verified === false
+
   return (
     <div className="space-y-8">
+      {isUnpublished && !isViewingOwnProfile && !isAdmin && (
+        <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 text-center">
+          <p className="text-sm font-medium text-amber-800">
+            This profile is not currently published and is hidden from public listings.
+          </p>
+        </div>
+      )}
       <Card className="overflow-hidden">
         <div className="relative">
           {/* Mobile view */}

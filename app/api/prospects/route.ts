@@ -75,6 +75,9 @@ export async function GET(request: NextRequest) {
       .order("name", { ascending: true })
       .range(offset, offset + limit - 1)
 
+    // Only show published profiles (profile_verified true or null for legacy athletes)
+    query = query.or("profile_verified.eq.true,profile_verified.is.null")
+
     // Note: NC filtering is handled client-side in the prospects page
     console.log("[v0] Prospects API - Returning all prospects (NC filtering handled client-side)")
 
@@ -128,6 +131,7 @@ export async function GET(request: NextRequest) {
     let countQuery = supabase
       .from("athletes")
       .select("*", { count: "exact", head: true })
+      .or("profile_verified.eq.true,profile_verified.is.null")
 
     if (graduationYear && graduationYear !== "all") {
       countQuery = countQuery.eq("graduationyear", Number.parseInt(graduationYear))

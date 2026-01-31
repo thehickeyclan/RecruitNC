@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus, Eye
+  TrendingUp, Zap, Plus, Eye, UserPlus
 } from "lucide-react"
 
 interface AdminStats {
@@ -307,6 +307,12 @@ export default function AdminDashboard() {
               <Button className="w-full h-20 bg-gradient-to-br from-[#C8102E] to-[#a00d25] hover:from-[#a00d25] hover:to-[#C8102E] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <FileText className="h-6 w-6" />
                 <span className="text-sm font-semibold">Submissions</span>
+              </Button>
+            </Link>
+            <Link href="/admin/new-profile-additions">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+                <UserPlus className="h-6 w-6" />
+                <span className="text-sm font-semibold">New Additions</span>
               </Button>
             </Link>
             <Link href="/admin/schools">

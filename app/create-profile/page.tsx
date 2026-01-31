@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
-import { CheckCircle, Clock, User, Mail, Phone, Trophy, Camera, AlertCircle } from "lucide-react"
+import { CheckCircle, User, Mail, Phone, Trophy, Camera, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
@@ -101,14 +101,18 @@ export default function CreateProfilePage() {
         body: JSON.stringify(formData),
       })
 
+      const data = await response.json()
+      if (response.ok && data.athleteId) {
+        router.push(`/unified-profile/${data.athleteId}`)
+        return
+      }
       if (response.ok) {
         setSuccess(true)
       } else {
-        const data = await response.json()
-        setError(data.error || "Failed to submit profile")
+        setError(data.error || "Failed to create profile")
       }
     } catch (err) {
-      setError("An error occurred while submitting your profile")
+      setError("An error occurred while creating your profile")
     } finally {
       setIsSubmitting(false)
     }
@@ -151,27 +155,17 @@ export default function CreateProfilePage() {
             <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <CardTitle className="text-2xl text-primary">Profile Submitted Successfully!</CardTitle>
+            <CardTitle className="text-2xl text-primary">Profile is live</CardTitle>
             <CardDescription className="text-lg">
-              Your athlete profile has been submitted for admin review
+              Your profile is published. You can edit it anytime from your profile page.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Clock className="w-5 h-5 text-amber-600" />
-                <span className="font-medium">Under Review</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Our admin team will review your profile within 24-48 hours. You'll receive an email notification once
-                approved.
-              </p>
-            </div>
             <div className="flex gap-4 justify-center">
-              <Button onClick={() => router.push("/athletes")} variant="outline">
-                Browse Athletes
+              <Button onClick={() => router.push("/profile")} variant="outline">
+                View My Account
               </Button>
-              <Button onClick={() => router.push("/profile")}>View My Account</Button>
+              <Button onClick={() => router.push("/prospects/all")}>Browse All Profiles</Button>
             </div>
           </CardContent>
         </Card>
@@ -205,8 +199,8 @@ export default function CreateProfilePage() {
               Athlete Information
             </CardTitle>
             <CardDescription>
-              Please fill out all required information. Your profile will be reviewed by our admin team before going
-              live.
+              Your profile will go live immediately. You can edit it anytime from your profile page. Admins can review
+              new additions and unpublish or update if needed.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -390,14 +384,13 @@ export default function CreateProfilePage() {
                 <div className="bg-muted p-4 rounded-lg mb-6">
                   <h4 className="font-medium mb-2">What happens next?</h4>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Your profile will be reviewed by our admin team</li>
-                    <li>• You'll receive an email notification once approved (usually within 24-48 hours)</li>
-                    <li>• Once approved, your profile will be live on the platform</li>
-                    <li>• You can update your information anytime through your account</li>
+                    <li>• Your profile goes live immediately</li>
+                    <li>• You&apos;ll be taken to your profile page to view and edit</li>
+                    <li>• You can update your information anytime from your profile</li>
                   </ul>
                 </div>
                 <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto px-8 py-3 text-lg">
-                  {isSubmitting ? "Submitting..." : "Submit Profile for Review"}
+                  {isSubmitting ? "Creating..." : "Create profile & go live"}
                 </Button>
               </div>
             </form>
