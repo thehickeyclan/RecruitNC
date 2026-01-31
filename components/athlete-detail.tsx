@@ -22,6 +22,7 @@ import { InlineAchievementsEditor } from "./inline-achievements-editor"
 import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 import { InlineWeightEditor } from "./inline-weight-editor"
+import { InlineHighlightVideoEditor } from "./inline-highlight-video-editor"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -1030,8 +1031,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* Contact Info Section */}
-      {canEdit && (editingSection === "contact" || athleteData.cell || athleteData.email || athleteData.contact_email || athleteData.instagram || athleteData.highlight_video_url) && (
+      {/* Contact Info Section - always show when can edit so users can add/update highlight video and contact */}
+      {canEdit && (
         <Card className="border-t-4 border-t-blue-600 shadow-md">
           <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-6">
             <div className="flex items-center justify-between">
@@ -1306,34 +1307,70 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* Highlight Video Section */}
-      {athlete?.highlight_video_url && (() => {
-        const videoId = getYouTubeVideoId(athlete.highlight_video_url)
-        if (!videoId) return null
-        
-        return (
-          <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
-            <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
+      {/* Highlight Video Section - show when has video or when can edit (to add/update) */}
+      {(athleteData?.highlight_video_url || canEdit) && (
+        <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
+          <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Video className="h-6 w-6 text-white" />
                 <h2 className="text-2xl font-bold text-white">Highlight Reel</h2>
               </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("highlight-video")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  {athleteData?.highlight_video_url ? "Update video" : "Add video"}
+                </Button>
+              )}
             </div>
-            <div className="p-8">
-              <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}`}
-                  title="Wrestling Highlight Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-                  style={{ border: 'none' }}
-                />
-              </div>
-            </div>
-          </Card>
-        )
-      })()}
+          </div>
+          <div className="p-8">
+            {editingSection === "highlight-video" ? (
+              <InlineHighlightVideoEditor
+                athleteId={athlete.id}
+                highlightVideoUrl={athleteData.highlight_video_url}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : athleteData?.highlight_video_url ? (
+              (() => {
+                const videoId = getYouTubeVideoId(athleteData.highlight_video_url)
+                if (!videoId) {
+                  return (
+                    <p className="text-gray-600">
+                      <a href={athleteData.highlight_video_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        Watch video
+                      </a>
+                      {canEdit && " — Use Edit to replace with a valid YouTube link for embedding."}
+                    </p>
+                  )
+                }
+                return (
+                  <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title="Wrestling Highlight Video"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                      style={{ border: "none" }}
+                    />
+                  </div>
+                )
+              })()
+            ) : (
+              <p className="text-gray-600">
+                {canEdit ? "Add a YouTube highlight video. Click the button above to paste your link." : "No highlight video yet."}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Additional Achievements will be rendered after College Opens Experience */}
 
