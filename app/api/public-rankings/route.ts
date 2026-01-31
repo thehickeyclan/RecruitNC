@@ -1,5 +1,6 @@
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
   if (!graduationYear || isNaN(graduationYear)) {
@@ -125,87 +126,17 @@ export async function GET(request: Request) {
         ? stateResults.map((r) => r.text).join(", ")
         : "No State Placement"
 
-      const nhscaResults_processed = []
+      // Single source of truth - same logic as unified-profile (lib/public-profile-data)
+      const { nhscaResults: nhscaForProfile, super32Results: super32ForProfile } =
+        buildPublicProfileTournamentData(athlete)
 
-      const nhscaFields = [
-        { year: 2025, record: athlete.nhsca_2025_record, placement: athlete.nhsca_2025_placement },
-        { year: 2024, record: athlete.nhsca_2024_record, placement: athlete.nhsca_2024_placement },
-      ]
-
-      for (const field of nhscaFields) {
-        if (field.placement || field.record) {
-          let resultText = `${field.year}`
-          let placement = null
-
-          if (field.placement) {
-            const place = Number.parseInt(field.placement)
-            if (!isNaN(place)) {
-              placement = place
-              if (place === 1) {
-                resultText += " Champion"
-              } else if (place <= 8) {
-                const ordinal = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-                resultText += ` ${ordinal} All-American`
-              } else {
-                resultText += ` ${place}th Place`
-              }
-            } else {
-              resultText += ` ${field.placement}`
-            }
-          }
-
-          if (field.record) {
-            resultText += ` (${field.record})`
-          }
-
-          nhscaResults_processed.push({
-            text: resultText,
-            placement: placement,
-            year: field.year,
-          })
-        }
+      const toApiResult = (r: { year: number; placement: string; record: string }) => {
+        const text = `${r.year}${r.placement ? ` ${r.placement}` : ""}${r.record ? ` (${r.record})` : ""}`.trim()
+        const placement = r.placement === "Champion" ? 1 : parseInt(r.placement) || null
+        return { text, placement, year: r.year }
       }
-
-      const super32Results = []
-      const super32Fields = [
-        { year: 2025, record: athlete.super_32_2025_record, placement: athlete.super_32_2025_placement },
-        { year: 2024, record: athlete.super_32_2024_record, placement: athlete.super_32_2024_placement },
-        { year: 2023, record: athlete.super_32_2023_record, placement: athlete.super_32_2023_placement },
-      ]
-
-      for (const field of super32Fields) {
-        if (field.placement || field.record) {
-          let resultText = `${field.year}`
-          let placement = null
-
-          if (field.placement) {
-            const place = Number.parseInt(field.placement)
-            if (!isNaN(place)) {
-              placement = place
-              if (place === 1) {
-                resultText += " Champion"
-              } else if (place <= 8) {
-                const ordinal = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-                resultText += ` ${ordinal} Place`
-              } else {
-                resultText += ` ${place}th Place`
-              }
-            } else {
-              resultText += ` ${field.placement}`
-            }
-          }
-
-          if (field.record) {
-            resultText += ` (${field.record})`
-          }
-
-          super32Results.push({
-            text: resultText,
-            placement: placement,
-            year: field.year,
-          })
-        }
-      }
+      const nhscaResults_processed = nhscaForProfile.map(toApiResult)
+      const super32Results = super32ForProfile.map(toApiResult)
 
       const hasRankedWin = !!(
         athlete.nationally_ranked_wins &&
