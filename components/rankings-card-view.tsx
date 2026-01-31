@@ -11,7 +11,7 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 
 interface Athlete {
-  id: string
+  id?: string
   name: string
   highschool: string
   weight_display: string
@@ -159,10 +159,10 @@ export function RankingsCardView({
               </div>
             )}
           <Card
-            key={athlete.id}
+            key={athlete.id ?? `athlete-${index}`}
           className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
         >
-          <Link href={`/unified-profile/${athlete.id}`}>
+          <Link href={athlete.id ? `/unified-profile/${athlete.id}` : "/create-profile"}>
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
@@ -172,7 +172,7 @@ export function RankingsCardView({
                     </Badge>
                   )}
                   <div className="flex items-center gap-2">
-                    {canSeeWatchList && (
+                    {canSeeWatchList && athlete.id && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -231,7 +231,9 @@ export function RankingsCardView({
                 </div>
 
                 <div className="text-center pt-2 border-t border-gray-100">
-                  <span className="text-xs text-gray-500">Tap to view full profile & achievements</span>
+                  <span className="text-xs text-gray-500">
+                    {athlete.id ? "Tap to view full profile & achievements" : "New profile — tap to create"}
+                  </span>
                 </div>
               </div>
             </CardContent>

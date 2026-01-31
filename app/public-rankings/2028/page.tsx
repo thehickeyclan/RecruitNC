@@ -304,16 +304,34 @@ export default function Class2028RankingsPage() {
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
                             {athlete.weight}
                           </Badge>
-                          {athlete.id && (
-                            <div className="mt-2">
+                          <div className="mt-2">
+                            {athlete.id ? (
                               <Link
                                 href={`/unified-profile/${athlete.id}`}
                                 className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
                               >
                                 View Profile →
                               </Link>
-                            </div>
-                          )}
+                            ) : (
+                              <Link
+                                href={(() => {
+                                  const [firstName, ...rest] = (athlete.name || "").trim().split(/\s+/)
+                                  const lastName = rest.join(" ") || ""
+                                  const params = new URLSearchParams({
+                                    firstName: firstName || "",
+                                    lastName,
+                                    highSchool: (athlete.school as string) || "",
+                                    graduationYear: "2028",
+                                    rank: String(athlete.prospect_ranking ?? rank),
+                                  })
+                                  return `/create-profile?${params.toString()}`
+                                })()}
+                                className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
+                              >
+                                New profile →
+                              </Link>
+                            )}
+                          </div>
                         </div>
                       )
                     })}
@@ -529,7 +547,23 @@ export default function Class2028RankingsPage() {
                                     View Profile
                                   </Link>
                                 ) : (
-                                  <span className="text-gray-400 text-sm">Profile coming soon</span>
+                                  <Link
+                                    href={(() => {
+                                      const [firstName, ...rest] = athlete.name.trim().split(/\s+/)
+                                      const lastName = rest.join(" ") || ""
+                                      const params = new URLSearchParams({
+                                        firstName: firstName || "",
+                                        lastName,
+                                        highSchool: athlete.school || "",
+                                        graduationYear: "2028",
+                                        rank: String(athlete.rank),
+                                      })
+                                      return `/create-profile?${params.toString()}`
+                                    })()}
+                                    className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
+                                  >
+                                    New profile
+                                  </Link>
                                 )}
                               </td>
                             </tr>

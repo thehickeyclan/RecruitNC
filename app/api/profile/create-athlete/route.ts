@@ -41,29 +41,40 @@ export async function POST(request: NextRequest) {
     const athleteName = `${String(formData.firstName).trim()} ${String(formData.lastName).trim()}`
     const now = new Date().toISOString()
 
+    // Optional: link new profile to a ranked spot (e.g. from Class of 2028 "New profile" link)
+    const prospectRanking =
+      formData.prospect_ranking != null && Number.isFinite(Number(formData.prospect_ranking))
+        ? Math.min(30, Math.max(1, Number(formData.prospect_ranking)))
+        : null
+
+    const insertPayload: Record<string, unknown> = {
+      name: athleteName,
+      firstname: String(formData.firstName).trim(),
+      lastname: String(formData.lastName).trim(),
+      gender: formData.gender,
+      graduationyear,
+      weightclass: formData.weightClass || null,
+      highschool: formData.highSchool || null,
+      location: formData.location || null,
+      bio: formData.bio || null,
+      achievements: formData.achievements ? [formData.achievements] : null,
+      photourl: formData.photoUrl || null,
+      contact_email: formData.email || null,
+      cell: formData.phone || null,
+      claimed_by_user_id: user.id,
+      claimed_at: now,
+      profile_verified: true,
+      recruiting_status: "Uncommitted",
+      updated_at: now,
+    }
+    if (prospectRanking != null) {
+      insertPayload.prospect_ranking = prospectRanking
+    }
+
     const adminSupabase = createAdminClient()
     const { data: athlete, error } = await adminSupabase
       .from("athletes")
-      .insert({
-        name: athleteName,
-        firstname: String(formData.firstName).trim(),
-        lastname: String(formData.lastName).trim(),
-        gender: formData.gender,
-        graduationyear,
-        weightclass: formData.weightClass || null,
-        highschool: formData.highSchool || null,
-        location: formData.location || null,
-        bio: formData.bio || null,
-        achievements: formData.achievements ? [formData.achievements] : null,
-        photourl: formData.photoUrl || null,
-        contact_email: formData.email || null,
-        cell: formData.phone || null,
-        claimed_by_user_id: user.id,
-        claimed_at: now,
-        profile_verified: true,
-        recruiting_status: "Uncommitted",
-        updated_at: now,
-      })
+      .insert(insertPayload)
       .select("id, name")
       .single()
 

@@ -26,7 +26,7 @@ interface StateResult {
 }
 
 interface Athlete {
-  id: string
+  id?: string
   name: string
   highschool: string
   weight_display: string
@@ -379,19 +379,23 @@ export function RankingsTableView({
                   >
                     {canSeeWatchList && (
                       <TableCell className="text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleStarToggle(athlete.id)}
-                          disabled={starringInProgress.has(athlete.id)}
-                          className="h-8 w-8 p-0 hover:bg-gray-100"
-                        >
-                          <Star
-                            className={`w-5 h-5 ${
-                              starredAthletes.has(athlete.id) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
-                            }`}
-                          />
-                        </Button>
+                        {athlete.id ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStarToggle(athlete.id)}
+                            disabled={starringInProgress.has(athlete.id)}
+                            className="h-8 w-8 p-0 hover:bg-gray-100"
+                          >
+                            <Star
+                              className={`w-5 h-5 ${
+                                starredAthletes.has(athlete.id) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
+                              }`}
+                            />
+                          </Button>
+                        ) : (
+                          <span className="w-8 h-8 inline-block" />
+                        )}
                       </TableCell>
                     )}
                     {!hideRankColumn && showRankColumn && (
@@ -473,11 +477,19 @@ export function RankingsTableView({
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/unified-profile/${athlete.id}`}>
-                        <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
-                          <ExternalLink className="w-3 h-3 text-gray-700" />
-                        </Button>
-                      </Link>
+                      {athlete.id ? (
+                        <Link href={`/unified-profile/${athlete.id}`}>
+                          <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
+                            <ExternalLink className="w-3 h-3 text-gray-700" />
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link href="/create-profile">
+                          <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100 text-xs px-2">
+                            New profile
+                          </Button>
+                        </Link>
+                      )}
                     </TableCell>
                   </TableRow>
                 </Fragment>

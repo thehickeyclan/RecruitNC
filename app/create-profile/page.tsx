@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { CheckCircle, User, Mail, Phone, Trophy, Camera, AlertCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 const HS_WEIGHT_CLASSES = {
@@ -67,6 +67,7 @@ interface ProfileFormData {
 export default function CreateProfilePage() {
   const { user, profile, isLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState<ProfileFormData>({
     firstName: "",
     lastName: "",
@@ -84,6 +85,26 @@ export default function CreateProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [prefilledFromRankings, setPrefilledFromRankings] = useState(false)
+
+  // Pre-fill from rankings "New profile" link (e.g. Class of 2028)
+  useEffect(() => {
+    if (prefilledFromRankings) return
+    const firstName = searchParams.get("firstName")?.trim()
+    const lastName = searchParams.get("lastName")?.trim()
+    const highSchool = searchParams.get("highSchool")?.trim()
+    const graduationYear = searchParams.get("graduationYear")?.trim()
+    if (firstName || lastName || highSchool || graduationYear) {
+      setFormData((prev) => ({
+        ...prev,
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(highSchool && { highSchool }),
+        ...(graduationYear && { graduationYear }),
+      }))
+      setPrefilledFromRankings(true)
+    }
+  }, [searchParams, prefilledFromRankings])
 
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -94,11 +115,21 @@ export default function CreateProfilePage() {
     setIsSubmitting(true)
     setError("")
 
+    const rankParam = searchParams.get("rank")
+    const prospectRanking =
+      rankParam != null && rankParam !== ""
+        ? Math.min(30, Math.max(1, Number.parseInt(rankParam, 10)))
+        : undefined
+    const payload: Record<string, unknown> = { ...formData }
+    if (Number.isFinite(prospectRanking)) {
+      payload.prospect_ranking = prospectRanking
+    }
+
     try {
       const response = await fetch("/api/profile/create-athlete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
 
       const data = await response.json()
