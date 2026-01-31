@@ -92,14 +92,49 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     return []
   }
 
-  const nhscaResults = parseJsonField(athlete.nhsca_results)
-  const super32Results = parseJsonField(athlete.super32_results)
+  // NHSCA: use JSON first, fallback to column format (nhsca_2023/2024/2025_record, placement)
+  const nhscaFromJson = parseJsonField(athlete.nhsca_results)
+  const nhscaResults =
+    nhscaFromJson.length > 0
+      ? nhscaFromJson.map((r: any) => ({
+          year: typeof r.year === "number" ? r.year : parseInt(r.year, 10) || new Date().getFullYear(),
+          placement: r.placement || r.place || "",
+          record: r.record ?? undefined,
+          weight: r.weight ?? undefined,
+          division: r.division ?? undefined,
+        }))
+      : [2025, 2024, 2023]
+          .filter(
+            (y) =>
+              (athlete as any)[`nhsca_${y}_record`] || (athlete as any)[`nhsca_${y}_placement`]
+          )
+          .map((year) => ({
+            year,
+            placement: String((athlete as any)[`nhsca_${year}_placement`] ?? ""),
+            record: (athlete as any)[`nhsca_${year}_record`] ?? undefined,
+          }))
 
-  console.log('[unified-profile] NHSCA data for', athlete.name, {
-    raw: athlete.nhsca_results,
-    parsed: nhscaResults,
-    count: nhscaResults.length
-  })
+  // Super 32: use JSON first, fallback to column format (super_32_2023/2024/2025_record, placement)
+  const super32FromJson = parseJsonField(athlete.super32_results)
+  const super32Results =
+    super32FromJson.length > 0
+      ? super32FromJson.map((r: any) => ({
+          year: typeof r.year === "number" ? r.year : parseInt(r.year, 10) || new Date().getFullYear(),
+          placement: r.placement || r.place || "",
+          record: r.record ?? undefined,
+          weight: r.weight ?? undefined,
+          division: r.division ?? undefined,
+        }))
+      : [2025, 2024, 2023]
+          .filter(
+            (y) =>
+              (athlete as any)[`super_32_${y}_record`] || (athlete as any)[`super_32_${y}_placement`]
+          )
+          .map((year) => ({
+            year,
+            placement: String((athlete as any)[`super_32_${year}_placement`] ?? ""),
+            record: (athlete as any)[`super_32_${year}_record`] ?? undefined,
+          }))
 
   return (
     <div className="min-h-screen bg-gray-50">

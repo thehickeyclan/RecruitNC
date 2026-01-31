@@ -168,40 +168,30 @@ export default function Class2028RankingsPage() {
       })
   }, [rankings])
 
-  // Fallback to static data if no rankings loaded yet (with hardcoded photo URLs)
-  // ALWAYS use fallback since API returns 0 athletes for 2028
+  // Static photo URLs for Top 3 (used when API lacks photourl)
+  const TOP3_PHOTO_URLS: Record<string, string> = {
+    "Aaron Ellison": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/V8uRmiV3jvkW1MHswu7L5-Aaron%20Ellison.png",
+    "Connor Reece": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/t9NpTXJchAu90ghSHuimP-Connor%20Reese.png",
+    "Ryan Thompson": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Cgw26wOygo4xndja5nd5u-Ryan%20Thompson.png",
+  }
+
   const displayTop3 = [
-    {
-      name: "Aaron Ellison",
-      school: "Lumberton",
-      weight: "150 lbs",
-      achievements: "NHSCA 4th (2024) + Fargo AA • State 4th (2025) • Super32 2-2 (2025) • 45-0 perfect record",
-      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/V8uRmiV3jvkW1MHswu7L5-Aaron%20Ellison.png",
-      prospect_ranking: 1,
-      id: undefined,
-    },
-    {
-      name: "Connor Reece",
-      school: "Northwest Guilford",
-      weight: "144 lbs",
-      achievements: "NHSCA 7th AA (2025) • State 4th (2025) • Super32 2-2 (2025) • 36-3 record",
-      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/t9NpTXJchAu90ghSHuimP-Connor%20Reese.png",
-      prospect_ranking: 2,
-      id: undefined,
-    },
-    {
-      name: "Ryan Thompson",
-      school: "Cardinal Gibbons",
-      weight: "165 lbs",
-      achievements: "NHSCA 6th AA (2025) • State 5th (2025) • 44-3 record • Beat #29 in 2027",
-      photourl: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Cgw26wOygo4xndja5nd5u-Ryan%20Thompson.png",
-      prospect_ranking: 3,
-      id: undefined,
-    },
+    { name: "Aaron Ellison", school: "Lumberton", weight: "150 lbs", achievements: "NHSCA 4th (2024) + Fargo AA • State 4th (2025) • Super32 2-2 (2025) • 45-0 perfect record", photourl: TOP3_PHOTO_URLS["Aaron Ellison"], prospect_ranking: 1, id: undefined as string | undefined },
+    { name: "Connor Reece", school: "Northwest Guilford", weight: "144 lbs", achievements: "NHSCA 7th AA (2025) • State 4th (2025) • Super32 2-2 (2025) • 36-3 record", photourl: TOP3_PHOTO_URLS["Connor Reece"], prospect_ranking: 2, id: undefined as string | undefined },
+    { name: "Ryan Thompson", school: "Cardinal Gibbons", weight: "165 lbs", achievements: "NHSCA 6th AA (2025) • State 5th (2025) • 44-3 record • Beat #29 in 2027", photourl: TOP3_PHOTO_URLS["Ryan Thompson"], prospect_ranking: 3, id: undefined as string | undefined },
   ]
-  
-  // If API data exists, use it; otherwise use static fallback
-  const finalTop3 = top3Spotlight.length > 0 ? top3Spotlight : displayTop3
+
+  // Use API data when available; merge in static photo URLs when API athlete lacks photourl
+  const finalTop3 =
+    top3Spotlight.length > 0
+      ? top3Spotlight.map((a, i) => {
+          const staticPhoto = TOP3_PHOTO_URLS[a.name] ?? displayTop3[i]?.photourl
+          return {
+            ...a,
+            photourl: a.photourl && String(a.photourl).trim() ? a.photourl : staticPhoto,
+          }
+        })
+      : displayTop3
 
   return (
     <AuthGuard>

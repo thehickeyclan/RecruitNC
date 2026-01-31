@@ -486,7 +486,7 @@ export default function HomePage() {
                   {featuredRankings
                     .filter((athlete) => athlete.graduationyear === 2026)
                     .map((athlete) => (
-                      <Link key={athlete.id} href={`/athletes/${athlete.id}`}>
+                      <Link key={athlete.id} href={`/unified-profile/${athlete.id}`}>
                         <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
                           <CardContent className="p-6">
                             <div className="flex items-start gap-4">
@@ -542,7 +542,7 @@ export default function HomePage() {
                   {featuredRankings
                     .filter((athlete) => athlete.graduationyear === 2027)
                     .map((athlete) => (
-                      <Link key={athlete.id} href={`/athletes/${athlete.id}`}>
+                      <Link key={athlete.id} href={`/unified-profile/${athlete.id}`}>
                         <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
                           <CardContent className="p-6">
                             <div className="flex items-start gap-4">

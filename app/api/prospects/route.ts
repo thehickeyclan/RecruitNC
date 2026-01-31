@@ -1,23 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
-
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          {
-            cookies: {
-              get: () => null,
-              set: () => {},
-              remove: () => {},
-            },
-          },
-        )
-      : await createClient()
+    const supabase = createAdminClient()
     // NOTE: service role client path avoids RLS policies that still reference legacy columns
     // Keep this temporary until the DB policy is updated to drop athletes.state_results references
     const { searchParams } = new URL(request.url)
@@ -145,14 +131,19 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Prospects API - Total count:", count)
     console.log("[v0] Prospects API - Returning prospects:", prospects?.length || 0)
 
+    const normalized = (prospects || []).map((p: any) => ({
+      ...p,
+      name: p.name || [p.firstName, p.lastName].filter(Boolean).join(" ").trim() || "Unknown",
+    }))
+
     return NextResponse.json(
       {
-        prospects: prospects || [],
+        prospects: normalized,
         pagination: {
           total: count || 0,
           limit,
           offset,
-          hasMore: (prospects?.length || 0) >= limit,
+          hasMore: normalized.length >= limit,
         },
       },
       {
