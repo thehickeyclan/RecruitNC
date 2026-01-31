@@ -52,6 +52,44 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
   return results || []
 }
 
+async function getNHSCAResultsFromTable(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
+  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
+  const { data: results } = await supabase
+    .from("wrestling_nhsca_results")
+    .select("*")
+    .ilike("athlete_name", `%${athleteName}%`)
+    .gte("year", graduationYear - 4)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (!results?.length) return []
+  return results.map((r: any) => ({
+    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+    placement: String(r.placement ?? r.place ?? ""),
+    record: (r.record ?? r.record_text ?? "").toString().trim(),
+    weight: r.weight ?? "",
+    division: r.division ?? "",
+  }))
+}
+
+async function getSuper32ResultsFromTable(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
+  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
+  const { data: results } = await supabase
+    .from("wrestling_super32_results")
+    .select("*")
+    .ilike("athlete_name", `%${athleteName}%`)
+    .gte("year", graduationYear - 4)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (!results?.length) return []
+  return results.map((r: any) => ({
+    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+    placement: String(r.placement ?? r.place ?? ""),
+    record: (r.record ?? r.record_text ?? "").toString().trim(),
+    weight: r.weight ?? "",
+    division: r.division ?? "",
+  }))
+}
+
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
   const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
   // Use admin client for athlete fetch - same data source as 2026/2027 pages (public-rankings API)
@@ -80,8 +118,18 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     weight_class: r.weight_class ?? r.weight ?? "",
   }))
 
-  // Single source of truth - same logic as 2026/2027 pages (lib/public-profile-data)
-  const { nhscaResults, super32Results } = buildPublicProfileTournamentData(athlete)
+  // Primary: athlete row (same as 2026/2027). Fallback: wrestling_nhsca_results, wrestling_super32_results
+  const athleteName = athlete.name ?? `${athlete.firstName || ""} ${athlete.lastName || ""}`.trim()
+  const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+
+  let { nhscaResults, super32Results } = buildPublicProfileTournamentData(athlete)
+  if (nhscaResults.length === 0) {
+    nhscaResults = await getNHSCAResultsFromTable(athleteName, gradYear, supabase)
+  }
+  if (super32Results.length === 0) {
+    super32Results = await getSuper32ResultsFromTable(athleteName, gradYear, supabase)
+  }
+
   const nationalTeamResults = getNationalTeamResults(athlete)
 
   return (
