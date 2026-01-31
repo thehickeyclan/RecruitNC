@@ -21,6 +21,7 @@ import { InlineAcademicsEditor } from "./inline-academics-editor"
 import { InlineAchievementsEditor } from "./inline-achievements-editor"
 import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 import { InlineSchoolClubEditor } from "./inline-school-club-editor"
+import { InlineWeightEditor } from "./inline-weight-editor"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -713,8 +714,21 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Year</p>
                   <p className="text-xl font-bold">{graduationYear || "N/A"}</p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Weight</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 flex flex-col">
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Weight</p>
+                    {canEdit && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20 -mr-1 -mt-0.5"
+                        onClick={() => setEditingSection("weight")}
+                        aria-label="Edit weight"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-xl font-bold">{weightClass}</p>
                 </div>
               </div>
@@ -857,8 +871,22 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Year</p>
                       <p className="text-2xl font-bold text-white">{graduationYear || "N/A"}</p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                      <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Weight</p>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 flex flex-col">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider">Weight</p>
+                        {canEdit && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-white/80 hover:text-white hover:bg-white/20 -mr-1"
+                            onClick={() => setEditingSection("weight")}
+                            aria-label="Edit weight"
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                      </div>
                       <p className="text-2xl font-bold text-white">{weightClass}</p>
                     </div>
                   </div>
@@ -926,6 +954,26 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           </div>
         </div>
       </Card>
+
+      {/* Weight Section (edit form when canEdit) */}
+      {canEdit && editingSection === "weight" && (
+        <Card className="border-t-4 border-t-amber-600 shadow-md">
+          <div className="bg-gradient-to-r from-amber-700 to-amber-800 p-6">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white">Weight Class</h2>
+            </div>
+          </div>
+          <div className="p-8">
+            <InlineWeightEditor
+              athleteId={athlete.id}
+              weightClass={athleteData.weightclass || athleteData.weight_class}
+              gender={athleteData.gender}
+              onSave={handleInlineSave}
+              onCancel={() => setEditingSection(null)}
+            />
+          </div>
+        </Card>
+      )}
 
       {/* School & Club Section */}
       {(canEdit || highSchool !== "Not specified" || wrestlingClub !== "Not specified") && (

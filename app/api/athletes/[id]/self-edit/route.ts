@@ -8,6 +8,8 @@ const EDITABLE_FIELDS = [
   "bio_headline",
   "highschool",
   "high_school",
+  "weightclass",
+  "weight_class",
   "wrestlingclub",
   "wrestlingClub",
   "cell",
@@ -92,6 +94,8 @@ export async function POST(
     const fieldMapping: Record<string, string> = {
       highschool: "highschool",
       high_school: "highschool",
+      weightclass: "weightclass",
+      weight_class: "weightclass",
       wrestlingclub: "wrestlingclub",
       wrestlingClub: "wrestlingclub",
       cell: "cell",
