@@ -140,7 +140,8 @@ export default function CreateProfilePage() {
       if (response.ok) {
         setSuccess(true)
       } else {
-        setError(data.error || "Failed to create profile")
+        const msg = data.details ? `${data.error || "Failed to create profile"}: ${data.details}` : (data.error || "Failed to create profile")
+        setError(msg)
       }
     } catch (err) {
       setError("An error occurred while creating your profile")

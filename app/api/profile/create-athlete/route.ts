@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       highschool: formData.highSchool || null,
       location: formData.location || null,
       bio: formData.bio || null,
-      achievements: formData.achievements ? [formData.achievements] : null,
+      achievements: formData.achievements ? [formData.achievements] : [],
       photourl: formData.photoUrl || null,
       contact_email: formData.email || null,
       cell: formData.phone || null,
@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       claimed_at: now,
       profile_verified: true,
       recruiting_status: "Uncommitted",
+      is_prospect: true,
       updated_at: now,
     }
     if (prospectRanking != null) {
@@ -80,8 +81,9 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[Create Profile] Insert error:", error)
+      const details = error.message || (error as Error).toString()
       return NextResponse.json(
-        { error: "Failed to create profile", details: error.message },
+        { error: "Failed to create profile", details },
         { status: 500 },
       )
     }
