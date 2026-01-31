@@ -13,9 +13,11 @@ interface InlineSchoolClubEditorProps {
   athleteId: string
   highSchool?: string
   wrestlingClub?: string
+  ncUnitedTeam?: string
   onSave: (updates: {
     highschool?: string
     wrestlingclub?: string
+    ncUnitedTeam?: string
   }) => Promise<void>
   onCancel: () => void
 }
@@ -24,11 +26,13 @@ export function InlineSchoolClubEditor({
   athleteId,
   highSchool,
   wrestlingClub,
+  ncUnitedTeam,
   onSave,
   onCancel,
 }: InlineSchoolClubEditorProps) {
   const [highSchoolValue, setHighSchoolValue] = useState(highSchool || "")
   const [clubValue, setClubValue] = useState(wrestlingClub || "")
+  const [ncUnitedValue, setNcUnitedValue] = useState(ncUnitedTeam || "none")
   const [customClub, setCustomClub] = useState("")
   const [showCustomClub, setShowCustomClub] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -55,15 +59,16 @@ export function InlineSchoolClubEditor({
       await onSave({
         highschool: highSchoolValue,
         wrestlingclub: finalClubValue,
+        ncUnitedTeam: ncUnitedValue,
       })
       toast({
         title: "Success",
-        description: "School and club information updated successfully",
+        description: "Profile information updated successfully",
       })
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to update school and club information",
+        description: error.message || "Failed to update profile information",
         variant: "destructive",
       })
     } finally {
@@ -116,6 +121,20 @@ export function InlineSchoolClubEditor({
             className="mt-2"
           />
         )}
+      </div>
+      <div>
+        <Label htmlFor="ncUnitedTeam">NC United Program</Label>
+        <Select value={ncUnitedValue} onValueChange={setNcUnitedValue}>
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Select NC United membership" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            <SelectItem value="blue">Blue Team</SelectItem>
+            <SelectItem value="gold">Gold Team</SelectItem>
+            <SelectItem value="both">Both Teams</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={saving} size="sm">

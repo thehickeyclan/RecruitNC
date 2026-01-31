@@ -819,8 +819,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               </div>
 
               <div className="relative z-10 flex items-start gap-8 p-8">
-                <div className="flex-shrink-0 w-80">
-                  <div className="relative h-96 w-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl">
+                <div className="flex-shrink-0 w-72 aspect-[3/4]">
+                  <div className="relative w-full h-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl">
                     {canEdit ? (
                       <ImageUploadEditor
                         athleteId={athlete.id}
@@ -834,10 +834,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         src={athletePhoto || "/placeholder.svg"}
                         alt={athleteName}
                         fill
-                        className={cn("object-cover origin-center", isKayne ? "scale-[.65]" : "scale-75")}
-                        style={{
-                          objectPosition: "center 35%",
-                        }}
+                        className="object-cover object-top"
                         onError={() => setImageError(true)}
                         priority
                       />
@@ -990,14 +987,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* School & Club Section */}
-      {(canEdit || highSchool !== "Not specified" || wrestlingClub !== "Not specified") && (
+      {/* Profile Section: High School, Wrestling Club, NC United */}
+      {(canEdit || highSchool !== "Not specified" || wrestlingClub !== "Not specified" || ncUnitedTeam) && (
         <Card className="border-t-4 border-t-green-600 shadow-md">
           <div className="bg-gradient-to-r from-green-700 to-green-800 p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GraduationCap className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">School & Club</h2>
+                <h2 className="text-2xl font-bold text-white">Profile</h2>
               </div>
               {canEdit && !editingSection && (
                 <Button
@@ -1018,21 +1015,50 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 athleteId={athlete.id}
                 highSchool={athleteData.highschool || athleteData.high_school}
                 wrestlingClub={athleteData.wrestlingclub || athleteData.wrestlingClub}
+                ncUnitedTeam={athleteData.ncUnitedTeam || athleteData.ncunitedteam}
                 onSave={handleInlineSave}
                 onCancel={() => setEditingSection(null)}
               />
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {highSchool && highSchool !== "Not specified" && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">High School</p>
-                    <p className="font-semibold text-gray-900">{highSchool}</p>
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">High School</p>
+                    <p className="text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <p className="text-sm text-gray-600 mb-1">Wrestling Club</p>
-                    <p className="font-semibold text-gray-900">{wrestlingClub}</p>
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    {clubLogo && (
+                      <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200">
+                        <Image
+                          src={clubLogo || "/placeholder.svg"}
+                          alt={`${wrestlingClub} logo`}
+                          width={48}
+                          height={48}
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Wrestling Club</p>
+                    <p className="text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
+                  </div>
+                )}
+                {ncUnitedTeam && ncUnitedTeam !== "none" && (
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                    <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200">
+                      <Image
+                        src="/nc-united-logo.png"
+                        alt="NC United logo"
+                        width={48}
+                        height={48}
+                        className="object-contain"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">NC United Program</p>
+                    <p className="text-xl font-bold text-gray-900 leading-tight">
+                      {ncUnitedTeam === "blue" ? "Blue Team" : ncUnitedTeam === "gold" ? "Gold Team" : ncUnitedTeam === "both" ? "Both Teams" : ncUnitedTeam}
+                    </p>
                   </div>
                 )}
               </div>
@@ -1253,66 +1279,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 </p>
               </div>
             )}
-          </div>
-        </Card>
-      )}
-
-      {/* Clubs & Programs Section */}
-      {(wrestlingClub !== "Not specified" || ncUnitedTeam) && (
-        <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
-          <div className="bg-gradient-to-r from-[#B31B1B] to-[#8B1515] p-6">
-            <div className="flex items-center gap-3">
-              <Award className="h-6 w-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Clubs & Programs</h2>
-            </div>
-          </div>
-          <div className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {wrestlingClub !== "Not specified" && (
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4">
-                    {clubLogo && (
-                      <div className="w-20 h-20 rounded-xl bg-gray-50 p-3 flex items-center justify-center shadow-sm flex-shrink-0 border border-gray-200">
-                        <Image
-                          src={clubLogo || "/placeholder.svg"}
-                          alt={`${wrestlingClub} logo`}
-                          width={64}
-                          height={64}
-                          className="object-contain"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">
-                        Wrestling Club
-                      </p>
-                      <p className="text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {ncUnitedTeam && (
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-xl bg-gray-50 p-3 flex items-center justify-center shadow-sm flex-shrink-0 border border-gray-200">
-                      <Image
-                        src="/nc-united-logo.png"
-                        alt="NC United logo"
-                        width={64}
-                        height={64}
-                        className="object-contain"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">
-                        NC United Team
-                      </p>
-                      <p className="text-xl font-bold text-gray-900 leading-tight">{ncUnitedTeam}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </Card>
       )}
