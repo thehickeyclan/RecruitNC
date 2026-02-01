@@ -22,16 +22,15 @@ const RESTRICTED = new Set(RESTRICTED_RAW.map(norm))
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: athleteId } = await params
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const athleteId = params.id
     const body = await request.json()
     const updates = body.updates || {}
     const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null
@@ -97,12 +96,37 @@ export async function POST(
     updatePayload.updated_at = new Date().toISOString()
     const payloadKeys = Object.keys(updatePayload).filter((k) => k !== "updated_at")
 
-    const { data: updatedAthlete, error: updateError } = await adminSupabase
+    let updatedAthlete: any
+    let updateError: { message?: string } | null = null
+
+    const updateResult = await adminSupabase
       .from("athletes")
       .update(updatePayload)
       .eq("id", athleteId)
       .select()
       .single()
+
+    updatedAthlete = updateResult.data
+    updateError = updateResult.error
+
+    // Fallback: some DBs use cell_number instead of phone
+    if (updateError?.message?.includes("phone") && /column|does not exist/i.test(updateError.message)) {
+      const payloadWithCellNumber = { ...updatePayload }
+      if ("phone" in payloadWithCellNumber) {
+        payloadWithCellNumber.cell_number = payloadWithCellNumber.phone
+        delete payloadWithCellNumber.phone
+      }
+      const retry = await adminSupabase
+        .from("athletes")
+        .update(payloadWithCellNumber)
+        .eq("id", athleteId)
+        .select()
+        .single()
+      if (!retry.error) {
+        updatedAthlete = retry.data
+        updateError = null
+      }
+    }
 
     if (updateError) {
       console.error("[self-edit] Update error:", updateError)

@@ -192,6 +192,7 @@ export interface NationalTeamResultRow {
 /**
  * Get NC United National Team results: Ultimate Club Duals 2025/2024, NHSCA 2025.
  * Show section when athlete competed on national team at any of these events.
+ * Reads from athlete row only (used when merging with nc_united table data).
  */
 export function getNationalTeamResults(athlete: any): NationalTeamResultRow[] {
   const rows: NationalTeamResultRow[] = []
@@ -208,4 +209,18 @@ export function getNationalTeamResults(athlete: any): NationalTeamResultRow[] {
     rows.push({ event: "NHSCA National Duals", year: 2025, record: nhsca2025 })
   }
   return rows
+}
+
+/**
+ * Merge UCD from nc_united tables (primary) with athlete-row data (fallback).
+ * Ultimate Club Duals: prefer table data; NHSCA National Duals: from athlete row.
+ */
+export function mergeNationalTeamResults(
+  ucdFromTable: NationalTeamResultRow[],
+  fromAthleteRow: NationalTeamResultRow[]
+): NationalTeamResultRow[] {
+  const ucdYears = new Set(ucdFromTable.map((r) => r.year))
+  const athleteUcd = fromAthleteRow.filter((r) => r.event === "Ultimate Club Duals" && !ucdYears.has(r.year))
+  const nhsca = fromAthleteRow.filter((r) => r.event === "NHSCA National Duals")
+  return [...ucdFromTable, ...athleteUcd, ...nhsca].sort((a, b) => b.year - a.year)
 }

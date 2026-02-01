@@ -140,3 +140,74 @@ function mapSuper32Rows(rows: any[]): TournamentResultRow[] {
     }
   })
 }
+
+/** NC United National Team result row (Ultimate Club Duals, NHSCA National Duals) */
+export interface NationalTeamResultRow {
+  event: string
+  year: number
+  record: string
+}
+
+/**
+ * Fetch Ultimate Club Duals results from nc_united tables (Legacy NC data).
+ * nc_united_tournament_results + nc_united_wrestlers + nc_united_tournaments.
+ * Falls back gracefully if tables don't exist.
+ */
+export async function getUltimateClubDualsFromTables(
+  supabase: SupabaseClient,
+  athleteName: string,
+  highSchool?: string
+): Promise<NationalTeamResultRow[]> {
+  if (!athleteName?.trim()) return []
+  const nameTrim = athleteName.trim().toLowerCase()
+
+  try {
+    // Fetch tournament results with wrestler and tournament joined
+    const { data: results, error } = await supabase
+      .from("nc_united_tournament_results")
+      .select("record, wins, losses, nc_united_wrestlers(first_name, last_name, high_school), nc_united_tournaments(name, year)")
+
+    if (error) return []
+    if (!results?.length) return []
+
+    const rows: NationalTeamResultRow[] = []
+    const seenYears = new Set<number>()
+    for (const r of results as any[]) {
+      const wrestler = r.nc_united_wrestlers
+      const tournament = r.nc_united_tournaments
+      if (!wrestler || !tournament) continue
+      const tName = (tournament.name ?? "").toString()
+      if (!tName.toLowerCase().includes("ultimate club duals")) continue
+      const year = typeof tournament.year === "number" ? tournament.year : parseInt(String(tournament.year), 10)
+      if (year !== 2024 && year !== 2025) continue
+      const fullName = `${(wrestler.first_name ?? "").trim()} ${(wrestler.last_name ?? "").trim()}`.trim().toLowerCase()
+      if (!fullName) continue
+      if (!fullName.includes(nameTrim) && !nameTrim.includes(fullName) && !namesMatch(nameTrim, fullName)) continue
+      if (highSchool?.trim() && wrestler.high_school) {
+        const rowSchool = (wrestler.high_school ?? "").toString().toLowerCase()
+        const athleteSchool = highSchool.trim().toLowerCase()
+        if (rowSchool && athleteSchool && !rowSchool.includes(athleteSchool) && !athleteSchool.includes(rowSchool)) continue
+      }
+      if (seenYears.has(year)) continue
+      seenYears.add(year)
+      const record = (r.record ?? "").toString().trim()
+      const derivedRecord = record || (r.wins != null || r.losses != null ? `${r.wins ?? 0}-${r.losses ?? 0}` : "")
+      if (!derivedRecord) continue
+      rows.push({ event: "Ultimate Club Duals", year, record: derivedRecord })
+    }
+    return rows.sort((a, b) => b.year - a.year)
+  } catch {
+    return []
+  }
+}
+
+function namesMatch(a: string, b: string): boolean {
+  const aParts = a.split(/\s+/).filter(Boolean)
+  const bParts = b.split(/\s+/).filter(Boolean)
+  if (!aParts.length || !bParts.length) return false
+  const aFirst = aParts[0] ?? ""
+  const aLast = aParts.slice(1).join(" ") || ""
+  const bFirst = bParts[0] ?? ""
+  const bLast = bParts.slice(1).join(" ") || ""
+  return aFirst === bFirst && aLast === bLast
+}

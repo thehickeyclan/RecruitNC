@@ -6,8 +6,8 @@ import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
-import { getNationalTeamResults } from "@/lib/tournament-utils"
-import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
+import { getNHSCAFromTables, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 
 const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
   .split(",")
@@ -94,7 +94,13 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     nhscaResults = fromAthlete.nhscaResults
   }
   // Super32: only from super32_results table (no athlete-row fallback) to avoid wrong/duplicate data
-  const nationalTeamResults = getNationalTeamResults(athlete)
+    const athleteRowNational = getNationalTeamResults(athlete)
+    const ucdFromTable = await getUltimateClubDualsFromTables(
+      supabase,
+      athleteName,
+      athlete.highschool ?? athlete.highSchool ?? ""
+    )
+    const nationalTeamResults = mergeNationalTeamResults(ucdFromTable, athleteRowNational)
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -8,6 +8,7 @@
 |-----------|-------------------------|----------------------------|----------------|
 | NHSCA     | `nhsca_placements`      | `wrestling_nhsca_results`  | athlete row    |
 | Super32   | `super32_results`       | —                          | none (table only) |
+| Ultimate Club Duals | `nc_united_tournament_results` (via nc_united_wrestlers, nc_united_tournaments) | athlete row (ultimate_club_duals_2024_record, ultimate_club_duals_2025_record) | — |
 
 Unified profile: NHSCA falls back to athlete row when tables return no rows. **Super32 does not use athlete-row fallback** (table only) to avoid wrong/duplicate data; results are deduped by year and filtered by high_school when provided.
 
