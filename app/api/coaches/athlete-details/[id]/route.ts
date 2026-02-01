@@ -1,25 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getNhscaResults } from "@/lib/tournament-utils"
-
-async function getNHSCAResultsFromTable(supabase: any, athleteName: string, graduationYear: number) {
-  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
-  const { data: results } = await supabase
-    .from("wrestling_nhsca_results")
-    .select("*")
-    .ilike("athlete_name", `%${athleteName}%`)
-    .gte("year", graduationYear - 4)
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
-  if (!results?.length) return []
-  return results.map((r: any) => ({
-    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
-    placement: String(r.placement ?? r.place ?? ""),
-    record: (r.record ?? r.record_text ?? "").toString().trim(),
-    weight: r.weight ?? "",
-    division: r.division ?? "",
-  }))
-}
+import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -95,15 +76,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
       console.log("[v0] Created new star record:", newStar)
 
+      const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+      const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
+      const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
+      const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear, { highSchool })
       let athleteToReturn = {
         ...athlete,
         is_starred: false,
         pipeline_stage: "Prospect",
         communication_log: [],
-      }
-      if (getNhscaResults(athleteToReturn).length === 0) {
-        const fromTable = await getNHSCAResultsFromTable(supabase, athlete.name, athlete.graduationyear)
-        if (fromTable.length) athleteToReturn = { ...athleteToReturn, nhsca_results: fromTable }
+        nhsca_results: nhsca.length ? nhsca : athlete.nhsca_results ?? [],
+        super32_results: super32.length ? super32 : athlete.super32_results ?? [],
       }
     return NextResponse.json({
         success: true,
@@ -170,10 +153,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       gi_bill_eligible: starData.gi_bill_eligible,
     }
 
-    let athleteToReturn = athleteWithTracking
-    if (getNhscaResults(athleteToReturn).length === 0) {
-      const fromTable = await getNHSCAResultsFromTable(supabase, athlete.name, athlete.graduationyear)
-      if (fromTable.length) athleteToReturn = { ...athleteToReturn, nhsca_results: fromTable }
+    const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+    const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
+    const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
+    const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear, { highSchool })
+    const athleteToReturn = {
+      ...athleteWithTracking,
+      nhsca_results: nhsca.length ? nhsca : athleteWithTracking.nhsca_results ?? athlete.nhsca_results ?? [],
+      super32_results: super32.length ? super32 : athleteWithTracking.super32_results ?? athlete.super32_results ?? [],
     }
     return NextResponse.json({
       success: true,

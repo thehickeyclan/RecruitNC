@@ -1,7 +1,7 @@
--- Connor Reese: query athlete data and tournament results
+-- Connor Reece/Reese (Northwest Guilford): query and fix Super32 data
 -- Run each block in Supabase SQL Editor
 
--- Block 1: athletes table
+-- Block 1: athletes table (find Connor's id)
 SELECT id, name, "firstName", "lastName", graduationyear, weightclass,
   nhsca_2024_record, nhsca_2024_placement, nhsca_2025_record, nhsca_2025_placement,
   super_32_2023_record, super_32_2023_placement,
@@ -9,12 +9,29 @@ SELECT id, name, "firstName", "lastName", graduationyear, weightclass,
   super_32_2025_record, super_32_2025_placement,
   super32_results
 FROM athletes
-WHERE name ILIKE '%Reese%' AND name ILIKE '%Connor%'
-   OR "firstName" ILIKE '%Connor%' AND "lastName" ILIKE '%Reese%'
-   OR name ILIKE '%Connor Reese%';
+WHERE name ILIKE '%Reece%' AND name ILIKE '%Connor%'
+   OR name ILIKE '%Reese%' AND name ILIKE '%Connor%'
+   OR ("firstName" ILIKE '%Connor%' AND ("lastName" ILIKE '%Reece%' OR "lastName" ILIKE '%Reese%'));
 
--- Block 2: wrestling_nhsca_results table
-SELECT * FROM wrestling_nhsca_results
-WHERE athlete_name ILIKE '%Reese%' AND athlete_name ILIKE '%Connor%'
-   OR athlete_name ILIKE '%Connor Reese%'
+-- Block 2: super32_results table (Connor Reece Northwest Guilford)
+SELECT * FROM super32_results
+WHERE athlete_name ILIKE '%Connor Reece%' OR athlete_name ILIKE '%Connor Reese%'
+   OR (athlete_name ILIKE '%Connor%' AND athlete_name ILIKE '%Reece%')
+   OR (athlete_name ILIKE '%Connor%' AND athlete_name ILIKE '%Reese%')
+   OR (high_school ILIKE '%Northwest Guilford%' AND athlete_name ILIKE '%Connor%')
 ORDER BY year DESC;
+
+-- Block 3: wrestling_nhsca_results table
+SELECT * FROM wrestling_nhsca_results
+WHERE athlete_name ILIKE '%Connor%' AND (athlete_name ILIKE '%Reece%' OR athlete_name ILIKE '%Reese%')
+ORDER BY year DESC;
+
+-- Block 4: UPDATE Super32 + NHSCA (by id – Connor Reece Northwest Guilford)
+-- Super32 2025: (2-2) 138lbs | NHSCA 2025: 7th place (freshman, 132lbs)
+UPDATE athletes
+SET
+  super_32_2025_record = '2-2',
+  super_32_2025_placement = NULL,
+  nhsca_2025_record = NULL,
+  nhsca_2025_placement = '7'
+WHERE id = '270fcf81-8337-4581-8a17-ff0093a1b6af';

@@ -1,6 +1,7 @@
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
+import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
   if (!graduationYear || isNaN(graduationYear)) {
@@ -34,24 +35,6 @@ async function getNCHSAAResults(supabase: any, athleteName: string, graduationYe
 
   return results || []
 }
-
-async function getNHSCAResultsFromTable(supabase: any, athleteName: string, graduationYear: number) {
-  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
-  const { data: results } = await supabase
-    .from("wrestling_nhsca_results")
-    .select("*")
-    .ilike("athlete_name", `%${athleteName}%`)
-    .gte("year", graduationYear - 4)
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
-  if (!results?.length) return []
-  return results.map((r: any) => ({
-    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
-    placement: String(r.placement ?? r.place ?? ""),
-    record: (r.record ?? r.record_text ?? "").toString().trim(),
-  }))
-}
-
 
 export async function GET(request: Request) {
   try {
@@ -144,13 +127,15 @@ export async function GET(request: Request) {
         ? stateResults.map((r) => r.text).join(", ")
         : "No State Placement"
 
-      // Primary: athlete row. Fallback: wrestling tables (2028 athletes often have data there)
-      const { nhscaResults: nhscaForProfile, super32Results: super32ForProfile } =
-        buildPublicProfileTournamentData(athlete)
-
-      let nhscaToUse = nhscaForProfile
-      if (nhscaToUse.length === 0) {
-        nhscaToUse = await getNHSCAResultsFromTable(supabase, athleteName, Number.parseInt(athlete.graduationyear, 10))
+      // Primary: nhsca_placements + super32_results tables. Fallback: athlete row.
+      const gradYear = Number.parseInt(athlete.graduationyear, 10) || new Date().getFullYear()
+      const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
+      let nhscaToUse = await getNHSCAFromTables(supabase, athleteName, gradYear)
+      let super32ToUse = await getSuper32FromTable(supabase, athleteName, gradYear, { highSchool })
+      if (nhscaToUse.length === 0 || super32ToUse.length === 0) {
+        const fromAthlete = buildPublicProfileTournamentData(athlete)
+        if (nhscaToUse.length === 0) nhscaToUse = fromAthlete.nhscaResults
+        if (super32ToUse.length === 0) super32ToUse = fromAthlete.super32Results
       }
       const toApiResult = (r: { year: number; placement: string; record: string }) => {
         const text = `${r.year}${r.placement ? ` ${r.placement}` : ""}${r.record ? ` (${r.record})` : ""}`.trim()
@@ -158,7 +143,7 @@ export async function GET(request: Request) {
         return { text, placement, year: r.year }
       }
       const nhscaResults_processed = nhscaToUse.map(toApiResult)
-      const super32Results = super32ForProfile.map(toApiResult)
+      const super32Results = super32ToUse.map(toApiResult)
 
       const hasRankedWin = !!(
         athlete.nationally_ranked_wins &&
