@@ -630,17 +630,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   const instagramUrl = getInstagramUrl()
 
-  const isUnpublished = athlete.profile_verified === false
-
   return (
     <div className="space-y-8">
-      {isUnpublished && !isViewingOwnProfile && !isAdmin && (
-        <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-4 text-center">
-          <p className="text-sm font-medium text-amber-800">
-            This profile is not currently published and is hidden from public listings.
-          </p>
-        </div>
-      )}
       <Card className="overflow-hidden">
         <div className="relative">
           {/* Mobile view */}
@@ -762,15 +753,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.flo_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity inline-block overflow-hidden"
+                      className="hover:opacity-80 transition-opacity inline-block overflow-hidden flex items-center justify-center"
                       aria-label="Flo Wrestling"
                     >
                       <Image
                         src={floLogo}
                         alt="Flo Wrestling"
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 object-contain border-0 outline-none"
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 object-contain border-0 outline-none"
                         style={{ border: 'none', outline: 'none', imageRendering: 'crisp-edges' }}
                       />
                     </a>
@@ -780,15 +771,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={athlete.track_wrestling_profile_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity"
+                      className="hover:opacity-80 transition-opacity flex items-center justify-center"
                       aria-label="Track Wrestling"
                     >
                       <Image
                         src={trackWrestlingLogo}
                         alt="Track Wrestling"
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 object-contain"
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 object-contain"
                       />
                     </a>
                   )}
@@ -918,15 +909,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.flo_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity inline-block overflow-hidden"
+                          className="hover:opacity-80 transition-opacity inline-block overflow-hidden flex items-center justify-center"
                           aria-label="Flo Wrestling"
                         >
                           <Image
                             src={floLogo}
                             alt="Flo Wrestling"
-                            width={24}
-                            height={24}
-                            className="w-6 h-6 object-contain border-0 outline-none"
+                            width={28}
+                            height={28}
+                            className="w-7 h-7 object-contain border-0 outline-none"
                             style={{ border: 'none', outline: 'none', imageRendering: 'crisp-edges' }}
                           />
                         </a>
@@ -936,15 +927,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={athlete.track_wrestling_profile_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity"
+                          className="hover:opacity-80 transition-opacity flex items-center justify-center"
                           aria-label="Track Wrestling"
                         >
                           <Image
                             src={trackWrestlingLogo}
                             alt="Track Wrestling"
-                            width={24}
-                            height={24}
-                            className="w-6 h-6 object-contain"
+                            width={28}
+                            height={28}
+                            className="w-7 h-7 object-contain"
                           />
                         </a>
                       )}

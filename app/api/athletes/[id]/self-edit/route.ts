@@ -109,13 +109,11 @@ export async function POST(
     updatedAthlete = updateResult.data
     updateError = updateResult.error
 
-    // Fallback: some DBs use cell_number instead of phone
-    if (updateError?.message?.includes("phone") && /column|does not exist/i.test(updateError.message)) {
+    // Fallback: DB may use cell_number instead of phone (try retry on any phone-related failure)
+    if (updateError && "phone" in updatePayload) {
       const payloadWithCellNumber = { ...updatePayload }
-      if ("phone" in payloadWithCellNumber) {
-        payloadWithCellNumber.cell_number = payloadWithCellNumber.phone
-        delete payloadWithCellNumber.phone
-      }
+      payloadWithCellNumber.cell_number = payloadWithCellNumber.phone as string
+      delete payloadWithCellNumber.phone
       const retry = await adminSupabase
         .from("athletes")
         .update(payloadWithCellNumber)
