@@ -1,0 +1,15 @@
+-- Aaron Ellison Super32 data
+-- Run in Supabase SQL Editor (weight shows from weightclass if super_32_*_weight columns don't exist)
+
+UPDATE athletes
+SET
+  super_32_2025_record = '2-2',
+  super_32_2025_placement = NULL,
+  super_32_2024_record = '0-2',
+  super_32_2024_placement = NULL
+WHERE id = 'a31bf725-32b8-4550-aff5-c74c59d97311';
+
+-- Optional: add weight columns first if you want per-year weight (2025: 144lbs, 2024: 138lbs):
+-- ALTER TABLE athletes ADD COLUMN IF NOT EXISTS super_32_2025_weight text;
+-- ALTER TABLE athletes ADD COLUMN IF NOT EXISTS super_32_2024_weight text;
+-- UPDATE athletes SET super_32_2025_weight = '144', super_32_2024_weight = '138' WHERE id = 'a31bf725-32b8-4550-aff5-c74c59d97311';

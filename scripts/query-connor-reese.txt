@@ -1,0 +1,20 @@
+-- Connor Reese: query athlete data and tournament results
+-- Run each block in Supabase SQL Editor
+
+-- Block 1: athletes table
+SELECT id, name, "firstName", "lastName", graduationyear, weightclass,
+  nhsca_2024_record, nhsca_2024_placement, nhsca_2025_record, nhsca_2025_placement,
+  super_32_2023_record, super_32_2023_placement,
+  super_32_2024_record, super_32_2024_placement,
+  super_32_2025_record, super_32_2025_placement,
+  super32_results
+FROM athletes
+WHERE name ILIKE '%Reese%' AND name ILIKE '%Connor%'
+   OR "firstName" ILIKE '%Connor%' AND "lastName" ILIKE '%Reese%'
+   OR name ILIKE '%Connor Reese%';
+
+-- Block 2: wrestling_nhsca_results table
+SELECT * FROM wrestling_nhsca_results
+WHERE athlete_name ILIKE '%Reese%' AND athlete_name ILIKE '%Connor%'
+   OR athlete_name ILIKE '%Connor Reese%'
+ORDER BY year DESC;

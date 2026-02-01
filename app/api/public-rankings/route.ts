@@ -52,22 +52,6 @@ async function getNHSCAResultsFromTable(supabase: any, athleteName: string, grad
   }))
 }
 
-async function getSuper32ResultsFromTable(supabase: any, athleteName: string, graduationYear: number) {
-  if (!graduationYear || isNaN(graduationYear) || !athleteName?.trim()) return []
-  const { data: results } = await supabase
-    .from("wrestling_super32_results")
-    .select("*")
-    .ilike("athlete_name", `%${athleteName}%`)
-    .gte("year", graduationYear - 4)
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
-  if (!results?.length) return []
-  return results.map((r: any) => ({
-    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
-    placement: String(r.placement ?? r.place ?? ""),
-    record: (r.record ?? r.record_text ?? "").toString().trim(),
-  }))
-}
 
 export async function GET(request: Request) {
   try {
@@ -168,18 +152,13 @@ export async function GET(request: Request) {
       if (nhscaToUse.length === 0) {
         nhscaToUse = await getNHSCAResultsFromTable(supabase, athleteName, Number.parseInt(athlete.graduationyear, 10))
       }
-      let super32ToUse = super32ForProfile
-      if (super32ToUse.length === 0) {
-        super32ToUse = await getSuper32ResultsFromTable(supabase, athleteName, Number.parseInt(athlete.graduationyear, 10))
-      }
-
       const toApiResult = (r: { year: number; placement: string; record: string }) => {
         const text = `${r.year}${r.placement ? ` ${r.placement}` : ""}${r.record ? ` (${r.record})` : ""}`.trim()
         const placement = r.placement === "Champion" ? 1 : parseInt(r.placement) || null
         return { text, placement, year: r.year }
       }
       const nhscaResults_processed = nhscaToUse.map(toApiResult)
-      const super32Results = super32ToUse.map(toApiResult)
+      const super32Results = super32ForProfile.map(toApiResult)
 
       const hasRankedWin = !!(
         athlete.nationally_ranked_wins &&

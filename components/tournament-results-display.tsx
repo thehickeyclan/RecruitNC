@@ -52,9 +52,9 @@ export function TournamentResultsDisplay({
     return null
   }
 
-  const getPlacementBadge = (placement: string | null | undefined, size: 'default' | 'sm' = 'default') => {
+  const getPlacementBadge = (placement: string | null | undefined, size: 'default' | 'sm' = 'default', emptyLabel = "—") => {
     if (!placement) {
-      return <span className="text-gray-400">—</span>
+      return <span className="text-gray-400">{emptyLabel}</span>
     }
     
     const p = placement.toLowerCase()
@@ -112,7 +112,7 @@ export function TournamentResultsDisplay({
                 <div key={index} className="flex items-center justify-between text-sm bg-gray-50 rounded p-2">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-700">{result.year}</span>
-                    {getPlacementBadge(result.placement, 'sm')}
+                    {getPlacementBadge(result.placement, 'sm', 'DNP')}
                   </div>
                   {result.record && (
                     <span className="text-gray-600 font-mono">{result.record}</span>
@@ -280,7 +280,6 @@ export function TournamentResultsDisplay({
                     <TableHead className="font-semibold">Placement</TableHead>
                     <TableHead className="font-semibold">Record</TableHead>
                     <TableHead className="font-semibold">Weight</TableHead>
-                    <TableHead className="font-semibold">Division</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -288,15 +287,14 @@ export function TournamentResultsDisplay({
                     super32Results.map((result, index) => (
                       <TableRow key={index} className="hover:bg-gray-50 transition-colors">
                         <TableCell className="font-semibold text-[#B31B1B]">{result.year}</TableCell>
-                        <TableCell>{getPlacementBadge(result.placement)}</TableCell>
+                        <TableCell>{getPlacementBadge(result.placement, 'default', 'DNP')}</TableCell>
                         <TableCell className="font-mono">{result.record || "—"}</TableCell>
                         <TableCell>{result.weight || "—"}</TableCell>
-                        <TableCell>{result.division || "—"}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-gray-500 py-6">
+                      <TableCell colSpan={4} className="text-center text-gray-500 py-6">
                         No Super 32 results recorded
                       </TableCell>
                     </TableRow>

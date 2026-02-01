@@ -51,10 +51,11 @@ export function buildPublicProfileTournamentData(athlete: any): PublicProfileTou
 
   const super32Results: TournamentResultForDisplay[] = []
   const super32Fields = [
-    { year: 2025, record: athlete?.super_32_2025_record ?? athlete?.super32_2025_record, placement: athlete?.super_32_2025_placement ?? athlete?.super32_2025_placement },
-    { year: 2024, record: athlete?.super_32_2024_record ?? athlete?.super32_2024_record, placement: athlete?.super_32_2024_placement ?? athlete?.super32_2024_placement },
-    { year: 2023, record: athlete?.super_32_2023_record ?? athlete?.super32_2023_record, placement: athlete?.super_32_2023_placement ?? athlete?.super32_2023_placement },
+    { year: 2025, record: athlete?.super_32_2025_record ?? athlete?.super32_2025_record, placement: athlete?.super_32_2025_placement ?? athlete?.super32_2025_placement, weight: athlete?.super_32_2025_weight ?? athlete?.super32_2025_weight },
+    { year: 2024, record: athlete?.super_32_2024_record ?? athlete?.super32_2024_record, placement: athlete?.super_32_2024_placement ?? athlete?.super32_2024_placement, weight: athlete?.super_32_2024_weight ?? athlete?.super32_2024_weight },
+    { year: 2023, record: athlete?.super_32_2023_record ?? athlete?.super32_2023_record, placement: athlete?.super_32_2023_placement ?? athlete?.super32_2023_placement, weight: athlete?.super_32_2023_weight ?? athlete?.super32_2023_weight },
   ]
+  const weightclass = (athlete?.weightclass ?? athlete?.weightClass ?? "").toString().trim()
 
   for (const field of super32Fields) {
     if (field.placement || field.record) {
@@ -69,10 +70,12 @@ export function buildPublicProfileTournamentData(athlete: any): PublicProfileTou
           } else placementStr = `${place}th Place`
         } else placementStr = String(field.placement)
       }
+      const weightStr = (field.weight ?? weightclass) ? String(field.weight ?? weightclass).trim() : ""
       super32Results.push({
         year: field.year,
         placement: placementStr,
         record: (field.record ?? "").toString().trim(),
+        weight: weightStr,
       })
     }
   }
