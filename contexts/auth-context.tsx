@@ -216,10 +216,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Always try getSession ONCE on mount (session may be in cookies OR localStorage).
-        // Skipping when document.cookie had no "sb-" caused login loops: after sign-in,
-        // session is often in localStorage only, so we never restored it.
-        console.log("[v0] Checking session ONCE on mount (cookies or localStorage)")
+        // Only call getSession() when we might have a session (cookies OR localStorage).
+        // Calling getSession() on every visitor causes rate limits in production.
+        // After sign-in, session is in localStorage so we must check for sb- there too.
+        const hasCookies = typeof document !== "undefined" && document.cookie.includes("sb-")
+        let hasStorage = false
+        try {
+          if (typeof localStorage !== "undefined") {
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i)
+              if (key && (key.startsWith("sb-") || key.includes("supabase"))) {
+                hasStorage = true
+                break
+              }
+            }
+          }
+        } catch (_) {}
+        if (!hasCookies && !hasStorage) {
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          setIsLoading(false)
+          const retryTimer = setTimeout(() => {
+            if (document.cookie.includes("sb-") || document.cookie.includes("supabase")) {
+              supabase.auth.getSession().then(({ data: { session }, error }) => {
+                if (!error && session) {
+                  setSession(session)
+                  setUser(session.user)
+                  if (session.user) fetchUserProfile(session.user.id).then(setProfile)
+                }
+              }).finally(() => setIsLoading(false))
+            }
+          }, 2000)
+          return () => clearTimeout(retryTimer)
+        }
+        console.log("[v0] Cookies or storage present, checking session ONCE on mount")
         const getSessionOnce = async () => {
           try {
             const { data: { session }, error } = await supabase.auth.getSession()
