@@ -18,10 +18,24 @@
 - **2022:** `scripts/super32-nc-records-2022.csv` — compare: `GET /api/debug/compare-super32-2022`
 - **2023:** `scripts/super32-nc-records-2023.csv` — compare: `GET /api/debug/compare-super32-2023`
 - **2024:** `scripts/super32-nc-records-2024.csv` — compare: `GET /api/debug/compare-super32-2024`
+- **2025:** `scripts/super32-nc-records-2025.csv` — compare: `GET /api/debug/compare-super32-2025` (authoritative external list: 91 NC wrestlers)
 
 **Columns:** `year`, `athlete_name`, `weight_class`, `wins`, `losses`, `record`, `city_from_source`
 
 `city_from_source` is **reference only** (e.g. for disambiguation or manual checks). It must **not** be written to `high_school`.
+
+---
+
+## Nuclear reconcile (one shot per year — no more wrong rows)
+
+If you have a **verified CSV** for 2022, 2023, 2024, or 2025 and want the DB to show **only** that list (no stray "only in DB" rows on kids' profiles):
+
+1. **Admin UI:** Go to **Admin → Super32 Tools** (`/admin/super32-tools`). Click **Reconcile 2022**, **Reconcile 2023**, **Reconcile 2024**, or **Reconcile 2025**. Confirm; the page shows success or error.
+2. **Or API:** `POST /api/debug/super32-nuclear-reconcile` with body `{ "year": 2022 }` (or `2023`, `2024`, `2025`). Requires admin (logged-in admin user).
+3. **What it does:** Deletes **all** `super32_results` for that year, then re-inserts **only** rows from `scripts/super32-nc-records-{year}.csv`. Resolves `high_school` from the `athletes` table by matching name.
+4. **Result:** For that year, the DB contains exactly what's in the CSV. No Adair Panama, Aiden Gore, or other wrong rows — no need to hunt through every athlete.
+
+Run once per year (2022, 2023, 2024, 2025) when you want to lock that year to the verified list. **2025** is the authoritative external list (91 NC wrestlers); this is the only Super32 data that should be pulled from external.
 
 ---
 
@@ -154,6 +168,8 @@ WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'troy shannon' AND weight_clas
 UPDATE super32_results SET record = '3-2', wins = 3, losses = 2
 WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'deondre johnson' AND weight_class = '285';
 ```
+
+**2024:** DB was correct; CSV was updated to match (Jekai Sedgwick 1-2, Sam Gosnell 1-2, Ayden Sumners 1-2, Corey Fazekas 2-2, Donovan Edwards 3-2, Hayden Snethen 1-2, Caleb Cox 4-2, Joseph Trahan 1-2). No DB UPDATEs needed for 2024 field differences.
 
 ### 2. Only in CSV
 

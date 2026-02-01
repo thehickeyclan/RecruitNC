@@ -47,3 +47,21 @@ Unified profile: NHSCA falls back to athlete row when tables return no rows. **S
 - Manually UPDATE `super_32_2025_record`, `nhsca_2025_placement`, etc. on athlete rows for display.
 - Create `wrestling_super32_results` — use `super32_results`.
 - Query athlete row scalar columns as the primary source for tournament data.
+
+---
+
+## Data Dawg vs unified profile (why Super32 can differ)
+
+**Data Dawg** (LegacyNC) gets Super32 from:
+
+1. **Main LegacyNC Supabase** — `super32_results` table (same as RecruitNC when they share that DB).
+2. **Optional separate Super32 Supabase** — If LegacyNC has `SUPER32_SUPABASE_URL` and `SUPER32_SUPABASE_SERVICE_ROLE_KEY` set, it can query a dedicated Super32 project via `getSuper32Admin()`. It may use “local” `super32_results` first and fall back to that project.
+
+**RecruitNC unified profile** always reads Super32 from the **main Supabase** (the one RecruitNC uses) via `getSuper32FromTable()` → `super32_results`.
+
+So if Data Dawg shows correct Super32 and the unified profile shows wrong (e.g. Adair Panama, Aidan Gore):
+
+- LegacyNC may be using the **separate Super32 Supabase**, which has clean data; RecruitNC only sees the main DB’s `super32_results`, which still has bad rows.
+- Or both use the main DB but the main DB has wrong rows — fix by running **Admin → Super32 Tools → Nuclear Reconcile** for 2022, 2023, 2024 so the main DB matches the verified CSVs.
+
+To align RecruitNC with Data Dawg: either clean the main DB (nuclear reconcile / delete wrong rows) or, if you want RecruitNC to use the same source as Data Dawg when the separate Super32 project is configured, add the same optional Super32 Supabase client and use it in `getSuper32FromTable()` (or a separate path) when those env vars are set.

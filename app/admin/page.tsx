@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus, Eye, UserPlus
+  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw
 } from "lucide-react"
 
 interface AdminStats {
@@ -333,6 +333,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">NHSCA Analytics</span>
               </Button>
             </Link>
+            <Link href="/admin/super32-tools">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
+                <RefreshCw className="h-6 w-6" />
+                <span className="text-sm font-semibold">Super32 Tools</span>
+              </Button>
+            </Link>
             <Link href="/admin/users-dashboard">
               <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <UserCheck className="h-6 w-6" />
@@ -395,6 +401,17 @@ export default function AdminDashboard() {
                   <FileText className="h-10 w-10 text-[#C8102E] mb-3" />
                   <h3 className="font-bold text-[#13294B] mb-1">Submissions Manager</h3>
                   <p className="text-xs text-gray-600">Review submissions</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Super32 Tools */}
+            <Link href="/admin/super32-tools">
+              <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <RefreshCw className="h-10 w-10 text-[#1a5f4a] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Super32 Tools</h3>
+                  <p className="text-xs text-gray-600">Reconcile DB to verified CSV</p>
                 </CardContent>
               </Card>
             </Link>

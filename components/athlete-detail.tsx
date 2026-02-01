@@ -525,37 +525,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       })
     }
 
-    // Try new JSON format first for Super 32
-    if (athlete?.super32_results && Array.isArray(athlete.super32_results) && athlete.super32_results.length > 0) {
-      athlete.super32_results.forEach((result: any) => {
-        tournaments.push({
-          tournament: "Super 32",
-          year: result.year,
-          placement: result.placement,
-          record: result.record,
-          type: "national",
-        })
-      })
-    } else {
-      // Fallback to old columns
-      const super32Years = [
-        { year: 2025, record: athlete?.super_32_2025_record, placement: athlete?.super_32_2025_placement },
-        { year: 2024, record: athlete?.super_32_2024_record, placement: athlete?.super_32_2024_placement },
-        { year: 2023, record: athlete?.super_32_2023_record, placement: athlete?.super_32_2023_placement },
-      ]
-
-      super32Years.forEach(({ year, record, placement }) => {
-        if (record || placement) {
-          tournaments.push({
-            tournament: "Super 32",
-            year,
-            placement: placement ? Number.parseInt(placement) || placement : null,
-            record,
-            type: "elite",
-          })
-        }
-      })
-    }
+    // Super 32: only from table (super32_results). Do NOT use athlete row (super_32_* / super32_results JSONB)
+    // so we never show wrong/stale data. When tournamentResultsComponent is passed, Super32 comes from table only.
+    // consolidatedTournaments is used for ordering; Super32 display is from tournamentResultsComponent.
+    // Skip adding Super32 from athlete row here to avoid double/wrong data.
 
     try {
       return tournaments.sort((a, b) => {

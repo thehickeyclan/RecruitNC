@@ -5,7 +5,7 @@ year,athlete_name,weight_class,wins,losses,record,city_from_source
 2024,Holt Quincy,113,1,2,1-2,Tarboro
 2024,Jordan Miller,113,1,2,1-2,Chapel Hill
 2024,Liam Mcconaughy,113,0,2,0-2,Indian Trail
-2024,Jekai Sedgwick,113,0,2,0-2,Raeford
+2024,Jekai Sedgwick,113,1,2,1-2,Raeford
 2024,Michael Santoro,113,0,2,0-2,DAVIDSON
 2024,Gabe Rogers,120,2,2,2-2,Chapel Hill
 2024,Mac Johnson,120,1,2,1-2,Eastover
@@ -15,11 +15,11 @@ year,athlete_name,weight_class,wins,losses,record,city_from_source
 2024,David Lambright,120,0,2,0-2,Asheboro
 2024,Grant Mccord,126,3,2,3-2,Greensboro
 2024,Tiaj Thao,126,1,2,1-2,Mocksville
-2024,Sam Gosnell,126,0,2,0-2,Rutherfordton
+2024,Sam Gosnell,126,1,2,1-2,Rutherfordton
 2024,Davis Jones,126,0,2,0-2,Charlotte
 2024,Aidan Szewczyk,126,0,2,0-2,Mocksville
 2024,Elijah Dorsey,126,0,2,0-2,Brown Summit
-2024,Ayden Sumners,126,0,2,0-2,Trinity
+2024,Ayden Sumners,126,1,2,1-2,Trinity
 2024,Gabriel Jones,126,0,2,0-2,Pinnacle
 2024,Adrian Fox,126,0,2,0-2,Forest City
 2024,Kaden Helms,126,0,2,0-2,Denver
@@ -38,7 +38,7 @@ year,athlete_name,weight_class,wins,losses,record,city_from_source
 2024,Ryan Mann,138,2,2,2-2,Tarboro
 2024,Kevin Obrien,138,2,2,2-2,Cleveland
 2024,Maximus Brady,138,4,2,4-2,Lillington
-2024,Corey Fazekas,138,1,2,1-2,Elizabeth City
+2024,Corey Fazekas,138,2,2,2-2,Elizabeth City
 2024,Till Helms,138,1,2,1-2,Denver
 2024,King Orvosh,138,0,2,0-2,Newland
 2024,Aiden Campbell,138,0,2,0-2,New Bern
@@ -56,7 +56,7 @@ year,athlete_name,weight_class,wins,losses,record,city_from_source
 2024,Tobin Mcnair,144,2,2,2-2,Raleigh
 2024,Ammon Scott,144,2,2,2-2,Belmont
 2024,Carson Worrick,144,1,2,1-2,Glade Valley
-2024,Donovan Edwards,144,2,2,2-2,High Point
+2024,Donovan Edwards,144,3,2,3-2,High Point
 2024,Samuel Gantt,144,1,2,1-2,Fayetteville
 2024,Coy Deel,144,0,2,0-2,Cove City
 2024,Beck Mcneer,144,0,2,0-2,Charlotte
@@ -70,9 +70,9 @@ year,athlete_name,weight_class,wins,losses,record,city_from_source
 2024,Lleyton Hooper,150,0,2,0-2,Robbinsville
 2024,Asher Watson,150,0,2,0-2,Huntersville
 2024,Cole Kenerley,150,0,2,0-2,Charlotte
-2024,Hayden Snethen,150,0,2,0-2,Union mills
+2024,Hayden Snethen,150,1,2,1-2,Union mills
 2024,Finn Mccafferty,157,2,2,2-2,Whispering Pines
-2024,Caleb Cox,157,3,2,3-2,Union Mills
+2024,Caleb Cox,157,4,2,4-2,Union Mills
 2024,Kenneth Pritz,157,1,2,1-2,Newland
 2024,Graham Furtick,157,1,2,1-2,Matthews
 2024,Santiago Ruiz diaz,157,0,2,0-2,Charlotte
@@ -106,5 +106,5 @@ year,athlete_name,weight_class,wins,losses,record,city_from_source
 2024,Seth Walker,215,0,2,0-2,Forest city
 2024,Damien Couture,285,3,2,3-2,Concord
 2024,Everest Ouellette,285,1,2,1-2,Kitty Hawk
-2024,Joseph Trahan,285,0,2,0-2,Trinity
+2024,Joseph Trahan,285,1,2,1-2,Trinity
 2024,Sebastian Rivera,285,0,2,0-2,Morrisville
