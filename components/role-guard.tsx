@@ -28,7 +28,12 @@ export function RoleGuard({
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push(`${fallbackPath}?redirect=${encodeURIComponent(window.location.pathname)}`)
+      const url = `${fallbackPath}?redirect=${encodeURIComponent(window.location.pathname)}`
+      if (typeof window !== "undefined" && window.self !== window.top) {
+        window.top!.location.href = url
+      } else {
+        router.push(url)
+      }
     }
   }, [user, isLoading, router, fallbackPath])
 

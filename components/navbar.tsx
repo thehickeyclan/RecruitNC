@@ -202,10 +202,10 @@ export function Navbar() {
                   size="sm"
                   className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized"
                 >
-                  <Link href="/auth/signin">Sign In</Link>
+                  <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
                 </Button>
                 <Button asChild size="sm" className="bg-red-600 text-white hover:bg-red-700 mobile-optimized">
-                  <Link href="/auth/signup">Sign Up</Link>
+                  <Link href="/auth/signup" target="_top" rel="noopener">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -222,14 +222,14 @@ export function Navbar() {
                   size="sm"
                   className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px] px-3"
                 >
-                  <Link href="/auth/signin">Sign In</Link>
+                  <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
                 </Button>
                 <Button
                   asChild
                   size="sm"
                   className="bg-red-600 text-white hover:bg-red-700 mobile-optimized min-h-[44px] px-3"
                 >
-                  <Link href="/auth/signup">Sign Up</Link>
+                  <Link href="/auth/signup" target="_top" rel="noopener">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -324,7 +324,7 @@ export function Navbar() {
                           variant="outline"
                           className="w-full border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px]"
                         >
-                          <Link href="/auth/signin" onClick={() => setIsOpen(false)}>
+                          <Link href="/auth/signin" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
                             Sign In
                           </Link>
                         </Button>
@@ -332,7 +332,7 @@ export function Navbar() {
                           asChild
                           className="w-full bg-red-600 text-white hover:bg-red-700 mobile-optimized min-h-[44px]"
                         >
-                          <Link href="/auth/signup" onClick={() => setIsOpen(false)}>
+                          <Link href="/auth/signup" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
                             Sign Up
                           </Link>
                         </Button>

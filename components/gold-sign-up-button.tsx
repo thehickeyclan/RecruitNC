@@ -30,6 +30,8 @@ export function GoldSignUpButton() {
   return (
     <Link
       href="/auth/signup"
+      target="_top"
+      rel="noopener"
       ref={buttonRef}
       className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 transition-colors"
     >

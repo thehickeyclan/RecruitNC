@@ -101,7 +101,13 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         } catch (_) {}
         if (!redirecting) {
           setRedirecting(true)
-          router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
+          const signinUrl = `/auth/signin?returnTo=${encodeURIComponent(pathname)}`
+          // Use full navigation when in iframe (app.ncwrestlingunited.com embed) so Chrome allows cookies
+          if (typeof window !== "undefined" && window.self !== window.top) {
+            window.top!.location.href = signinUrl
+          } else {
+            router.push(signinUrl)
+          }
         }
       }
       const redirectTimer = setTimeout(doFinalRedirect, 800)

@@ -51,7 +51,12 @@ export function ClaimProfileButton({ athleteId, athleteName, className, isClaime
 
   const redirectToSignIn = () => {
     const returnTo = encodeURIComponent(`/athletes/${athleteId}`)
-    window.location.href = `/auth/signin?returnTo=${returnTo}`
+    const url = `/auth/signin?returnTo=${returnTo}`
+    if (typeof window !== "undefined" && window.self !== window.top) {
+      window.top!.location.href = url
+    } else {
+      window.location.href = url
+    }
   }
 
   const handleClaimProfile = async () => {

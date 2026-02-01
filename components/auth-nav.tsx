@@ -101,12 +101,12 @@ export function AuthNav() {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <Link href="/auth/signin" onClick={() => setIsOpen(false)}>
+                <Link href="/auth/signin" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full bg-transparent">
                     Sign In
                   </Button>
                 </Link>
-                <Link href="/auth/signup" onClick={() => setIsOpen(false)}>
+                <Link href="/auth/signup" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
                   <Button className="w-full bg-red-600 hover:bg-red-700">Sign Up</Button>
                 </Link>
               </div>
@@ -188,10 +188,10 @@ export function AuthNav() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/auth/signin">
+              <Link href="/auth/signin" target="_top" rel="noopener">
                 <Button variant="outline">Sign In</Button>
               </Link>
-              <Link href="/auth/signup">
+              <Link href="/auth/signup" target="_top" rel="noopener">
                 <Button className="bg-red-600 hover:bg-red-700">Sign Up</Button>
               </Link>
             </div>

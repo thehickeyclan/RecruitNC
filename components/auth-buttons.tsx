@@ -45,6 +45,8 @@ export function AuthButtons() {
     <div className="flex items-center gap-2">
       <Link
         href="/auth/signin"
+        target="_top"
+        rel="noopener"
         className="px-3 py-1.5 rounded border border-gray-300"
         style={{
           backgroundColor: "white",
@@ -56,6 +58,8 @@ export function AuthButtons() {
       </Link>
       <Link
         href="/auth/signup"
+        target="_top"
+        rel="noopener"
         className="px-3 py-1.5 rounded"
         style={{
           backgroundColor: "#2563eb",

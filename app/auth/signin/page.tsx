@@ -18,21 +18,24 @@ export default function SignInPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [stuckInIframe, setStuckInIframe] = useState(false)
 
   const { signIn, user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
 
-  // Chrome desktop blocks cookies in iframes. If we're in an iframe, break out
-  // so the sign-in page loads first-party and login works.
+  // Chrome desktop blocks cookies in iframes (e.g. app embedded in ncwrestlingunited.com).
+  // Break out so sign-in loads first-party and login works.
   useEffect(() => {
     if (typeof window === "undefined") return
     if (window.self === window.top) return
     try {
       window.top!.location.href = window.location.href
+      // If we get here without navigating, we're stuck (e.g. sandbox/cross-origin)
+      setTimeout(() => setStuckInIframe(true), 500)
     } catch {
-      // Cross-origin or sandbox: can't set top.location; banner will show
+      setStuckInIframe(true)
     }
   }, [])
 
@@ -107,6 +110,34 @@ export default function SignInPage() {
     }
   }
 
+  // When stuck in iframe, cookies are blocked — show only "open in new tab"
+  if (stuckInIframe) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader>
+            <CardTitle>Sign in requires full access</CardTitle>
+            <CardDescription>
+              You&apos;re viewing this inside another site. Chrome blocks sign-in in this view. Open the sign-in page in its own tab to continue.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              className="w-full"
+              onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}
+            >
+              <ArrowRight className="mr-2 h-4 w-4" />
+              Open sign-in in new tab
+            </Button>
+            <p className="text-xs text-center text-gray-500">
+              A new tab will open where you can sign in successfully.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-4 sm:pt-8 pb-8 px-4">
       <div className="w-full max-w-6xl mt-4 sm:mt-8">
@@ -163,7 +194,7 @@ export default function SignInPage() {
                   size="lg"
                   className="bg-[#D3B574] hover:bg-[#c4a151] text-[#03154C] font-bold text-base md:text-lg px-6 md:px-8 py-5 md:py-6 h-auto w-full"
                 >
-                  <Link href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}>
+                  <Link href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`} target="_top" rel="noopener">
                     Create Free Account
                     <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
                   </Link>
@@ -249,6 +280,8 @@ export default function SignInPage() {
                   {"Don't have an account? "}
                   <Link
                     href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+                    target="_top"
+                    rel="noopener"
                     className="text-blue-600 hover:underline"
                   >
                     Sign up
