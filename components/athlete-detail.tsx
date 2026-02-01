@@ -202,7 +202,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
   const recruitingStatus = athlete?.recruiting_status || "Uncommitted"
-  const prospectRanking = (athlete as any)?.prospect_ranking
+  const rawRank = (athlete as any)?.prospect_ranking != null ? Number((athlete as any).prospect_ranking) : null
+  // Only show rank on profile when athlete is on our official rankings: top 30 in 2026/2027, top 20 in 2028
+  const maxRankForClass =
+    graduationYear === 2028 ? 20 : graduationYear === 2026 || graduationYear === 2027 ? 30 : 0
+  const prospectRanking =
+    rawRank != null &&
+    Number.isFinite(rawRank) &&
+    rawRank >= 1 &&
+    rawRank <= maxRankForClass
+      ? rawRank
+      : null
 
   console.log("[v0] Recruiting status from DB:", athlete?.recruiting_status)
   console.log("[v0] Final recruiting status:", recruitingStatus)

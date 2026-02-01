@@ -226,12 +226,14 @@ export default function AllProspectsPage() {
         if (!matchesTerm) return false
       }
 
-      if (yearFilter !== "all" && yearFilter !== "active") {
-        if (String(prospect.graduationyear || "") !== yearFilter) return false
-      }
       if (yearFilter === "active") {
         const y = prospect.graduationyear
         if (y !== 2026 && y !== 2027 && y !== 2028) return false
+      } else if (yearFilter === "graduates") {
+        const y = prospect.graduationyear
+        if (y == null || y > 2025) return false
+      } else if (yearFilter !== "all") {
+        if (String(prospect.graduationyear || "") !== yearFilter) return false
       }
 
       if (genderFilter !== "all") {
@@ -315,13 +317,15 @@ export default function AllProspectsPage() {
             ? "Verbal"
             : "Uncommitted"
 
-      // Only show numeric rank for Class of 2026, 2027, 2028 (our ranked classes); show "G" for graduated (2025 and earlier)
+      // Only show rank for athletes on our official rankings: top 30 in 2026/2027, top 20 in 2028; show "G" for graduated (2025 and earlier)
       const gradYear = prospect.graduationyear
       const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028
-      const prospectRanking =
-        isRankedClass && prospect.prospect_ranking != null && Number.isFinite(Number(prospect.prospect_ranking))
-          ? Number(prospect.prospect_ranking)
-          : null
+      const rawRank = prospect.prospect_ranking != null ? Number(prospect.prospect_ranking) : NaN
+      const maxRankForClass =
+        gradYear === 2028 ? 20 : (gradYear === 2026 || gradYear === 2027 ? 30 : 0)
+      const hasOfficialRank =
+        Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
+      const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null
       const rankDisplay = !isRankedClass && gradYear != null && gradYear <= 2025 ? "G" : undefined
 
       return {
@@ -532,6 +536,7 @@ export default function AllProspectsPage() {
                           <SelectContent>
                             <SelectItem value="active">Active (2026–2028)</SelectItem>
                             <SelectItem value="all">All Years</SelectItem>
+                            <SelectItem value="graduates">Graduates (2025 and earlier)</SelectItem>
                             {availableYears.map((year) => (
                               <SelectItem key={year} value={String(year)}>
                                 Class of {year}
@@ -688,7 +693,15 @@ export default function AllProspectsPage() {
                   </button>
                 </Badge>
               )}
-              {yearFilter !== "all" && yearFilter !== "active" && (
+              {yearFilter === "graduates" && (
+                <Badge variant="secondary" className="gap-1">
+                  Graduates (2025 and earlier)
+                  <button onClick={() => setYearFilter("active")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {yearFilter !== "all" && yearFilter !== "active" && yearFilter !== "graduates" && (
                 <Badge variant="secondary" className="gap-1">
                   Class of {yearFilter}
                   <button onClick={() => setYearFilter("active")} className="ml-1 hover:text-destructive">
@@ -816,6 +829,7 @@ export default function AllProspectsPage() {
                   <SelectContent>
                     <SelectItem value="active">Active (2026–2028)</SelectItem>
                     <SelectItem value="all">All Years</SelectItem>
+                    <SelectItem value="graduates">Graduates (2025 and earlier)</SelectItem>
                     {availableYears.map((year) => (
                       <SelectItem key={year} value={String(year)}>
                         Class of {year}
