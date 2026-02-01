@@ -84,7 +84,7 @@ export default function AllProspectsPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState("")
-  const [yearFilter, setYearFilter] = useState<string>("all")
+  const [yearFilter, setYearFilter] = useState<string>("active")
   const [genderFilter, setGenderFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [rankFilter, setRankFilter] = useState<"all" | "ranked" | "unranked">("all")
@@ -226,8 +226,12 @@ export default function AllProspectsPage() {
         if (!matchesTerm) return false
       }
 
-      if (yearFilter !== "all") {
+      if (yearFilter !== "all" && yearFilter !== "active") {
         if (String(prospect.graduationyear || "") !== yearFilter) return false
+      }
+      if (yearFilter === "active") {
+        const y = prospect.graduationyear
+        if (y !== 2026 && y !== 2027 && y !== 2028) return false
       }
 
       if (genderFilter !== "all") {
@@ -311,6 +315,15 @@ export default function AllProspectsPage() {
             ? "Verbal"
             : "Uncommitted"
 
+      // Only show numeric rank for Class of 2026, 2027, 2028 (our ranked classes); show "G" for graduated (2025 and earlier)
+      const gradYear = prospect.graduationyear
+      const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028
+      const prospectRanking =
+        isRankedClass && prospect.prospect_ranking != null && Number.isFinite(Number(prospect.prospect_ranking))
+          ? Number(prospect.prospect_ranking)
+          : null
+      const rankDisplay = !isRankedClass && gradYear != null && gradYear <= 2025 ? "G" : undefined
+
       return {
         id: prospect.id || `prospect-${index}`,
         name: prospect.name || "Unknown",
@@ -320,7 +333,8 @@ export default function AllProspectsPage() {
         achievement_color: achievement.color,
         has_ranked_win: hasRankedWin,
         academic_gpa: prospect.academic_gpa ?? null,
-        prospect_ranking: prospect.prospect_ranking ?? 9999,
+        prospect_ranking: prospectRanking,
+        rank_display: rankDisplay,
         photourl: prospect.photourl ?? undefined,
         nationally_ranked_wins: prospect.nationally_ranked_wins ?? undefined,
         college: prospect.college ?? undefined,
@@ -337,7 +351,7 @@ export default function AllProspectsPage() {
 
   const resetFilters = () => {
     setSearchTerm("")
-    setYearFilter("all")
+    setYearFilter("active")
     setGenderFilter("all")
     setStatusFilter("all")
     setRankFilter("all")
@@ -348,7 +362,7 @@ export default function AllProspectsPage() {
   const hasActiveFilters = useMemo(() => {
     return (
       searchTerm.trim() !== "" ||
-      yearFilter !== "all" ||
+      (yearFilter !== "all" && yearFilter !== "active") ||
       genderFilter !== "all" ||
       statusFilter !== "all" ||
       rankFilter !== "all" ||
@@ -462,7 +476,7 @@ export default function AllProspectsPage() {
                     Filters
                     {hasActiveFilters && (
                       <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                        {[yearFilter !== "all", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
+                        {[yearFilter !== "all" && yearFilter !== "active", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
                       </Badge>
                     )}
                   </Button>
@@ -516,6 +530,7 @@ export default function AllProspectsPage() {
                             <SelectValue placeholder="All Years" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="active">Active (2026–2028)</SelectItem>
                             <SelectItem value="all">All Years</SelectItem>
                             {availableYears.map((year) => (
                               <SelectItem key={year} value={String(year)}>
@@ -631,7 +646,7 @@ export default function AllProspectsPage() {
                 {showFilters ? "Hide Filters" : "Show Filters"}
                 {hasActiveFilters && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                    {[yearFilter !== "all", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
+                    {[yearFilter !== "all" && yearFilter !== "active", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
                   </Badge>
                 )}
               </Button>
@@ -673,9 +688,17 @@ export default function AllProspectsPage() {
                   </button>
                 </Badge>
               )}
-              {yearFilter !== "all" && (
+              {yearFilter !== "all" && yearFilter !== "active" && (
                 <Badge variant="secondary" className="gap-1">
-                  {yearFilter === "all" ? "All Years" : `Class of ${yearFilter}`}
+                  Class of {yearFilter}
+                  <button onClick={() => setYearFilter("active")} className="ml-1 hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              )}
+              {yearFilter === "active" && (
+                <Badge variant="secondary" className="gap-1">
+                  Active (2026–2028)
                   <button onClick={() => setYearFilter("all")} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -791,6 +814,7 @@ export default function AllProspectsPage() {
                     <SelectValue placeholder="All Years" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="active">Active (2026–2028)</SelectItem>
                     <SelectItem value="all">All Years</SelectItem>
                     {availableYears.map((year) => (
                       <SelectItem key={year} value={String(year)}>

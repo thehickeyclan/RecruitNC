@@ -20,7 +20,8 @@ interface Athlete {
   super_32_record_display: string | null
   has_ranked_win: boolean
   academic_gpa: number | null
-  prospect_ranking: number
+  prospect_ranking?: number | null
+  rank_display?: string
   photourl?: string
   nationally_ranked_wins?: string | number
   bio_headline?: string
@@ -39,26 +40,26 @@ export function RankingsCardView({
   showRankBadges = true,
   showAdditionalDivider = true,
 }: RankingsCardViewProps) {
-  const { user, profile, isAdmin, isVerifiedCoach } = useAuth()
+  const { user, profile, isAdmin, isCoach } = useAuth()
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
   const [starredAthletes, setStarredAthletes] = useState<Set<string>>(new Set())
   const [starringInProgress, setStarringInProgress] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const checkCoachStatus = async () => {
-      console.log("[v0] Card view - Checking coach status for star visibility")
+      console.log("[v0] Card view - Checking coach status for star visibility (myrecruits funnel)")
       if (!user || !profile) {
         console.log("[v0] Card view - No user or profile found")
         setCanSeeWatchList(false)
         return
       }
 
-      const canSeeStars = isAdmin || isVerifiedCoach
+      const canSeeStars = isAdmin || isCoach
       console.log(
         "[v0] Card view - Auth context - isAdmin:",
         isAdmin,
-        "isVerifiedCoach:",
-        isVerifiedCoach,
+        "isCoach:",
+        isCoach,
         "canSeeStars:",
         canSeeStars,
       )
@@ -82,7 +83,7 @@ export function RankingsCardView({
     }
 
     checkCoachStatus()
-  }, [user, profile, isAdmin, isVerifiedCoach])
+  }, [user, profile, isAdmin, isCoach])
 
   const handleStarToggle = async (athleteId: string, e: React.MouseEvent) => {
     e.preventDefault() // Prevent navigation to profile
@@ -146,8 +147,8 @@ export function RankingsCardView({
       {athletes.map((athlete, index) => (
         <>
           {showAdditionalDivider &&
-            athlete.prospect_ranking === 30 &&
-            athletes.some((a) => a.prospect_ranking > 30) && (
+            (athlete.prospect_ranking ?? 0) === 30 &&
+            athletes.some((a) => (a.prospect_ranking ?? 0) > 30) && (
               <div key={`divider-${athlete.id}`} className="col-span-full my-6">
                 <div className="flex items-center justify-center gap-3 py-4 rounded-lg bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
                   <div className="h-px bg-gray-300 flex-1 max-w-md"></div>
@@ -166,7 +167,12 @@ export function RankingsCardView({
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
-                  {showRankBadges && athlete.prospect_ranking <= 30 && (
+                  {showRankBadges && athlete.rank_display === "G" && (
+                    <Badge variant="outline" className="font-medium text-base px-2.5 py-1 border-gray-400 text-gray-600">
+                      G
+                    </Badge>
+                  )}
+                  {showRankBadges && athlete.rank_display !== "G" && (athlete.prospect_ranking ?? 0) <= 30 && (athlete.prospect_ranking ?? 0) > 0 && (
                     <Badge className="bg-blue-600 text-white font-bold text-base px-2.5 py-1">
                       #{athlete.prospect_ranking}
                     </Badge>

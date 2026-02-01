@@ -35,6 +35,7 @@ interface Athlete {
   has_ranked_win: boolean
   academic_gpa: number | null
   prospect_ranking?: number | null
+  rank_display?: string
   photourl?: string
   nationally_ranked_wins?: string | number
   college?: string
@@ -69,26 +70,26 @@ export function RankingsTableView({
   const [sortField, setSortField] = useState<SortField>(defaultSortField ?? "rank")
   const [sortDirection, setSortDirection] = useState<SortDirection>(defaultSortDirection ?? "asc")
   const [collegeLogos, setCollegeLogos] = useState<Record<string, string>>({})
-  const { user, profile, isAdmin, isVerifiedCoach } = useAuth()
+  const { user, profile, isAdmin, isCoach } = useAuth()
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
   const [starredAthletes, setStarredAthletes] = useState<Set<string>>(new Set())
   const [starringInProgress, setStarringInProgress] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const checkCoachStatus = async () => {
-      console.log("[v0] Checking coach status for star visibility")
+      console.log("[v0] Checking coach status for star visibility (myrecruits funnel)")
       if (!user || !profile) {
         console.log("[v0] No user or profile found")
         setCanSeeWatchList(false)
         return
       }
 
-      const canSeeStars = isAdmin || isVerifiedCoach
+      const canSeeStars = isAdmin || isCoach
       console.log(
         "[v0] Auth context - isAdmin:",
         isAdmin,
-        "isVerifiedCoach:",
-        isVerifiedCoach,
+        "isCoach:",
+        isCoach,
         "canSeeStars:",
         canSeeStars,
       )
@@ -112,7 +113,7 @@ export function RankingsTableView({
     }
 
     checkCoachStatus()
-  }, [user, profile, isAdmin, isVerifiedCoach])
+  }, [user, profile, isAdmin, isCoach])
 
   useEffect(() => {
     const fetchCollegeLogos = async () => {
@@ -348,10 +349,13 @@ export function RankingsTableView({
           </TableHeader>
           <TableBody className="bg-white">
             {sortedAthletes.map((athlete, index) => {
+              const rankDisplayG = athlete.rank_display === "G"
               const rankValue =
-                typeof athlete.prospect_ranking === "number" && Number.isFinite(athlete.prospect_ranking)
-                  ? athlete.prospect_ranking
-                  : null
+                rankDisplayG
+                  ? null
+                  : typeof athlete.prospect_ranking === "number" && Number.isFinite(athlete.prospect_ranking)
+                    ? athlete.prospect_ranking
+                    : null
 
               const shouldRenderDivider =
                 !hideRankColumn &&
@@ -401,7 +405,12 @@ export function RankingsTableView({
                     {!hideRankColumn && showRankColumn && (
                       <TableCell className="font-medium pr-2">
                         <div className="flex items-center gap-2 min-w-[82px]">
-                          {rankValue !== null && rankValue <= dividerAfterRank && (
+                          {rankDisplayG && (
+                            <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600 font-medium">
+                              G
+                            </div>
+                          )}
+                          {!rankDisplayG && rankValue !== null && rankValue <= dividerAfterRank && (
                             <div
                               className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
                               style={{ backgroundColor: "#B31B1B" }}
@@ -409,12 +418,12 @@ export function RankingsTableView({
                               #{rankValue}
                             </div>
                           )}
-                          {rankValue !== null && rankValue > dividerAfterRank && (
+                          {!rankDisplayG && rankValue !== null && rankValue > dividerAfterRank && (
                             <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-300 text-gray-600">
                               #{rankValue}
                             </div>
                           )}
-                          {rankValue === null && (
+                          {!rankDisplayG && rankValue === null && (
                             <div className="px-3 py-1 rounded-full text-sm min-w-[2.5rem] text-center border border-gray-200 text-gray-400">
                               —
                             </div>
