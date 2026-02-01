@@ -256,9 +256,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const { data: { session }, error } = await supabase.auth.getSession()
             if (error) {
               console.warn("[v0] getSession error (non-fatal):", error.message)
-          setSession(null)
-          setUser(null)
-          setProfile(null)
+              setSession(null)
+              setUser(null)
+              setProfile(null)
+              clearSupabaseCookies()
             } else if (session) {
               console.log("[v0] Session found on mount:", session.user.email)
         setSession(session)
@@ -271,12 +272,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setSession(null)
               setUser(null)
               setProfile(null)
+              // Don't clear storage on null — Chrome can return null briefly after sign-in; clearing would wipe the session
             }
           } catch (err: any) {
             console.error("[v0] getSession exception:", err.message)
             setSession(null)
             setUser(null)
             setProfile(null)
+            clearSupabaseCookies()
           } finally {
         setIsLoading(false)
           }

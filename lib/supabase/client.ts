@@ -44,13 +44,15 @@ export function createClient() {
       },
       set(name: string, value: string, options: any) {
         if (typeof document === "undefined") return
-        // Cookie value must not contain "; " — Supabase values are typically safe
+        // Chrome rejects cookies with Secure on HTTP; Safari is more permissive. Only set Secure on HTTPS.
+        const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : ""
         const maxAge = options?.maxAge ? `; max-age=${options.maxAge}` : ""
-        document.cookie = `${name}=${value}; path=/; SameSite=Lax; Secure${maxAge}`
+        document.cookie = `${name}=${value}; path=/; SameSite=Lax${secure}${maxAge}`
       },
       remove(name: string) {
         if (typeof document === "undefined") return
-        document.cookie = `${name}=; path=/; SameSite=Lax; Secure; max-age=0`
+        const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : ""
+        document.cookie = `${name}=; path=/; SameSite=Lax${secure}; max-age=0`
       },
     },
     },
