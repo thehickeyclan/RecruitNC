@@ -130,9 +130,7 @@ export function InlineSchoolClubEditor({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
-            <SelectItem value="blue">Blue Team</SelectItem>
-            <SelectItem value="gold">Gold Team</SelectItem>
-            <SelectItem value="both">Both Teams</SelectItem>
+            <SelectItem value="blue">NC United Blue</SelectItem>
           </SelectContent>
         </Select>
       </div>

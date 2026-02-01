@@ -24,10 +24,13 @@ const RESTRICTED = new Set(RESTRICTED_RAW.map(norm))
 const CONTACT_FIELDS = new Set(["cell", "cell_number", "email", "contact_email", "email_address", "instagram", "instagram_handle", "instagram_username", "highlight_video_url", "highlightVideoUrl"])
 
 // Only these columns exist in athletes table - never send instagram, etc. as top-level
+// All self-editable fields from unified profile inline editors (InlineWeightEditor, InlineSchoolClubEditor, etc.)
 const ALLOWED_UPDATE_COLUMNS = new Set([
   "cell", "cell_number", "phone", "contact_email", "contactEmail", "socialMedia", "social_media",
   "highlight_video_url", "updated_at", "bio", "bio_headline", "highschool", "wrestlingClub",
-  "academic_gpa", "academic_sat", "academic_act", "academic_summary", "additional_achievements",
+  "ncUnitedTeam", "ncunitedteam", "weightclass", "weight_class",
+  "academic_gpa", "academic_sat", "academic_act", "academic_summary",
+  "college_opens_experience", "achievements", "additional_achievements",
 ])
 
 function isContactOnlyUpdate(updates: Record<string, unknown>): boolean {
