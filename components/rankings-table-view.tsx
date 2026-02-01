@@ -434,12 +434,16 @@ export function RankingsTableView({
                     )}
                     <TableCell className="pl-4">
                       <div className="flex items-center gap-3 leading-tight">
-                        <Link
-                          href={`/unified-profile/${athlete.id}`}
-                          className="hover:text-[#D3B574] transition-colors underline"
-                        >
-                          <span className="font-semibold text-gray-900 cursor-pointer">{athlete.name}</span>
-                        </Link>
+                        {athlete.id ? (
+                          <Link
+                            href={`/unified-profile/${athlete.id}`}
+                            className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
+                          >
+                            {athlete.name}
+                          </Link>
+                        ) : (
+                          <span className="font-semibold text-gray-900">{athlete.name}</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">

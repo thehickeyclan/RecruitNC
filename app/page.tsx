@@ -379,27 +379,29 @@ export default function HomePage() {
           Features
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1" style={{ borderTopColor: "#BC0B03" }}>
-            <CardContent className="p-6">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold" style={{ color: "#BC0B03" }}>
-                Athlete Profiles
-              </h3>
-              <p className="text-gray-600">
-                Detailed profiles of NC wrestlers including their high school, graduation year, college commitment, and
-                achievements.
-              </p>
-            </CardContent>
-          </Card>
+          <Link href="/prospects/all" className="block">
+            <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#BC0B03" }}>
+              <CardContent className="p-6">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+                  <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#BC0B03" }}>
+                  Athlete Profiles
+                </h3>
+                <p className="text-gray-600">
+                  Detailed profiles of NC wrestlers including their high school, graduation year, college commitment, and
+                  achievements.
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Link href="/colleges" className="block">
             <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#002147" }}>
