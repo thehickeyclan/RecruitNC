@@ -745,15 +745,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       href={instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity"
+                      className="hover:opacity-80 transition-opacity flex items-center justify-center"
                       aria-label="Instagram"
                     >
                       <Image
                         src={instagramLogo}
                         alt="Instagram"
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 object-contain"
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 object-contain"
                       />
                     </a>
                   )}
@@ -901,15 +901,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           href={instagramUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:opacity-80 transition-opacity"
+                          className="hover:opacity-80 transition-opacity flex items-center justify-center"
                           aria-label="Instagram"
                         >
                           <Image
                             src={instagramLogo}
                             alt="Instagram"
-                            width={24}
-                            height={24}
-                            className="w-6 h-6 object-contain"
+                            width={28}
+                            height={28}
+                            className="w-7 h-7 object-contain"
                           />
                         </a>
                       )}
