@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 
-import { AuthGuard } from "@/components/auth-guard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -98,28 +97,17 @@ export default function AllProspectsPage() {
       setError(null)
 
       try {
-        const yearPromises = [2026, 2027, 2028, 2029, 2030].flatMap(year =>
-          ['Male', 'Female'].map(gender =>
-            fetch(`/api/admin/prospects/simple-ranking?year=${year}&gender=${gender}`, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-              cache: 'no-store',
-            })
-          )
-        )
-
-        const prospectsRes = fetch('/api/prospects?limit=1000', {
+        // Single source: all athletes (NC) from public API – no admin APIs
+        const prospectsResponse = await fetch('/api/prospects?limit=5000', {
           method: 'GET',
           headers: { Accept: 'application/json' },
           cache: 'no-store',
         })
 
-        const [prospectsResponse, ...rankingsResponses] = await Promise.all([prospectsRes, ...yearPromises])
-
         if (!prospectsResponse.ok) {
           const text = await prospectsResponse.text().catch(() => '')
           throw new Error(
-            `Prospects API ${prospectsResponse.status} ${prospectsResponse.statusText}${text ? ` - ${text}` : ''}`,
+            `Athlete profiles API ${prospectsResponse.status} ${prospectsResponse.statusText}${text ? ` - ${text}` : ''}`,
           )
         }
 
@@ -130,116 +118,13 @@ export default function AllProspectsPage() {
             ? prospectsPayload
             : []
 
-        const allRankings: any[] = []
-        for (const response of rankingsResponses) {
-          if (response.ok) {
-            const payload = await response.json()
-            const rankings = Array.isArray(payload?.athletes)
-              ? payload.athletes
-              : []
-            allRankings.push(...rankings)
-          }
-        }
+        // All NC athletes, all years (filter client-side by year/gender)
+        const filtered = rawProspects.filter(isNorthCarolinaProspect)
 
-        console.log('[v0] Rankings API response:', {
-          count: allRankings.length,
-          sample: allRankings.slice(0, 2),
-          hasStateResults: allRankings.filter((r: any) => r.nchsaa_results && r.nchsaa_results.length > 0).length,
-        })
-
-        // Include class of 2025, 2026, 2027
-        const filtered = rawProspects
-          .filter((prospect: Prospect) => {
-            const gradYear = Number(prospect.graduationyear)
-            return gradYear >= 2025 && gradYear <= 2027
-          })
-          .filter(isNorthCarolinaProspect)
-
-        const rankingMap = new Map<string, any>()
-        for (const ranking of allRankings) {
-          if (ranking?.id) rankingMap.set(ranking.id, ranking)
-        }
-
-        const merged = filtered.map((prospect) => {
-          const ranking = rankingMap.get(prospect.id)
-          
-          let stateResults = ranking?.nchsaa_results
-          if (stateResults && Array.isArray(stateResults) && stateResults.length > 0) {
-            stateResults = stateResults.map((result: any) => {
-              const year = result.year
-              const place = result.place
-              const classification = result.classification || ''
-              
-              let text = ''
-              let placement: number | null = place
-              
-              if (place === 1) {
-                text = `${year} ${classification} State Champion`
-              } else if (place && place <= 8) {
-                const ordinal = place === 2 ? '2nd' : place === 3 ? '3rd' : `${place}th`
-                text = `${year} ${classification} State ${ordinal}`
-              } else if (place && place > 8) {
-                text = `${year} ${classification} State Qualifier`
-                placement = null
-              } else {
-                text = `${year} ${classification} State Participant`
-                placement = null
-              }
-              
-              return {
-                text,
-                placement,
-                year
-              }
-            }).sort((a: any, b: any) => (b.year || 0) - (a.year || 0))
-          }
-          
-          // Calculate state championship summary - check for 2x, 3x, or 4x state champion
-          let stateChampionshipSummary = null
-          if (stateResults && Array.isArray(stateResults) && stateResults.length > 0) {
-            const stateChampionships = stateResults.filter((r: any) => r.placement === 1)
-            const championshipCount = stateChampionships.length
-            if (championshipCount >= 2 && championshipCount <= 4) {
-              stateChampionshipSummary = `${championshipCount}x State Champion`
-            } else {
-              stateChampionshipSummary = stateResults[0]?.text
-            }
-          }
-          
-          return {
-            ...prospect,
-            prospect_ranking: ranking?.prospect_ranking ?? ranking?.overall_rank ?? prospect.prospect_ranking ?? null,
-            nhsca_results: ranking?.nhsca_results ?? prospect.nhsca_results,
-            nhsca_record_display:
-              ranking?.nhsca_record_display ??
-              ranking?.nhsca_record ??
-              prospect.nhsca_record_display ??
-              prospect.nhsca_2025_record ??
-              prospect.nhsca_2024_record,
-            super_32_results: ranking?.super_32_results ?? prospect.super_32_results ?? prospect.super32_results,
-            super_32_record_display:
-              ranking?.super_32_record_display ??
-              ranking?.super_32_record ??
-              prospect.super_32_record_display ??
-              prospect.super_32_2025_record ??
-              prospect.super_32_2024_record,
-            state_results: stateResults ?? prospect.state_results,
-            state_championship_summary:
-              stateChampionshipSummary ??
-              ranking?.state_championship_summary ??
-              prospect.state_championship_summary ??
-              prospect.achievements?.find((achievement) => achievement.toLowerCase().includes("state")),
-          }
-        })
-
-        if (merged.length > 0) {
-          console.log("[prospects/all] merged sample", merged.slice(0, 3))
-        }
-
-        setProspects(merged)
+        setProspects(filtered)
       } catch (fetchError: any) {
-        console.error("[prospects/all] Error loading prospects:", fetchError)
-        setError(fetchError?.message || "Unable to load prospects right now.")
+        console.error("[prospects/all] Error loading athlete profiles:", fetchError)
+        setError(fetchError?.message || "Unable to load athlete profiles right now.")
       } finally {
         setIsLoading(false)
       }
@@ -251,7 +136,7 @@ export default function AllProspectsPage() {
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     for (const prospect of prospects) {
-      if (prospect.graduationyear && prospect.graduationyear >= 2025 && prospect.graduationyear <= 2030) {
+      if (prospect.graduationyear && prospect.graduationyear >= 2024 && prospect.graduationyear <= 2032) {
         years.add(prospect.graduationyear)
       }
     }
@@ -379,11 +264,7 @@ export default function AllProspectsPage() {
   }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
 
   const sortedProspects = useMemo(() => {
-    const activeProspects = filteredProspects.filter((prospect) => {
-      const gradYear = prospect.graduationyear
-      return gradYear && gradYear >= 2025 && gradYear <= 2027
-    })
-    return [...activeProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
+    return [...filteredProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
   }, [filteredProspects])
 
   const committedCount = useMemo(
@@ -480,8 +361,7 @@ export default function AllProspectsPage() {
 
   if (isShutDown) {
     return (
-      <AuthGuard>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="max-w-2xl mx-auto px-4 py-16 text-center">
             <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-[#B31B1B]">
               <h1 className="text-3xl font-bold text-[#002147] mb-4">Page Temporarily Unavailable</h1>
@@ -502,46 +382,41 @@ export default function AllProspectsPage() {
             </div>
           </div>
         </div>
-      </AuthGuard>
     )
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-background">
-        <section className="bg-gradient-to-r from-[#03154C] to-[#012ECD] text-white py-14">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl">
-              <Badge className="mb-4 bg-white/20 text-white" variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Prospect Directory
-              </Badge>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">All NC College Prospects</h1>
-              <p className="text-lg md:text-xl text-white/90">
-                View every NC United athlete in one place – ranked prospects plus the extended college recruiting pool,
-                with filters for class year, gender, division, and recruiting status.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="container mx-auto px-4 py-10 space-y-10">
-          {/* Submit your profile CTA */}
-          <div className="rounded-xl border-2 border-[#D3B574] bg-gradient-to-r from-[#13294B]/5 to-[#D3B574]/10 p-6 text-center">
-            <p className="text-lg font-semibold text-[#13294B] mb-2">Not listed? Add your profile.</p>
-            <p className="text-sm text-gray-600 mb-4 max-w-xl mx-auto">
-              Get in front of college coaches. Submit your athlete profile and we&apos;ll add you to the directory.
+    <div className="min-h-screen bg-background">
+      {/* Hero: NC Athlete Profiles – public, no auth required */}
+      <section className="bg-gradient-to-r from-[#03154C] via-[#002147] to-[#012ECD] text-white py-16 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl">
+            <Badge className="mb-4 bg-white/20 text-white border-white/30" variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              NC Athletes
+            </Badge>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">Athlete Profiles</h1>
+            <p className="text-lg md:text-xl text-white/90 mb-8">
+              All NC wrestlers – every graduation year, male and female. Browse by name, school, year, and more.
+              Create your profile and we automatically pull in your NCHSAA, NHSCA, and Super 32 results.
             </p>
             <Link href="/create-profile">
-              <Button className="bg-[#13294B] hover:bg-[#1e3a5f] text-white font-semibold px-6 py-3">
-                Submit your profile
+              <Button
+                size="lg"
+                className="bg-[#D3B574] hover:bg-[#c4a660] text-[#002147] font-bold text-lg px-8 py-6 rounded-lg shadow-lg"
+              >
+                Create your profile
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-10 space-y-10">
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border bg-card p-6 shadow-sm">
-              <p className="text-sm font-medium text-muted-foreground mb-1">Total Prospects</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">Total Athletes</p>
               <p className="text-3xl font-bold text-[#03154C]">{sortedProspects.length}</p>
             </div>
             <div className="rounded-lg border bg-card p-6 shadow-sm">
@@ -681,10 +556,10 @@ export default function AllProspectsPage() {
                         <label className="mb-2 block text-sm font-medium">Ranking Status</label>
                         <Select value={rankFilter} onValueChange={(value) => setRankFilter(value as typeof rankFilter)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="All Prospects" />
+                            <SelectValue placeholder="All Athletes" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="all">All Prospects</SelectItem>
+                            <SelectItem value="all">All Athletes</SelectItem>
                             <SelectItem value="ranked">Ranked</SelectItem>
                             <SelectItem value="unranked">Unranked</SelectItem>
                           </SelectContent>
@@ -959,7 +834,7 @@ export default function AllProspectsPage() {
                     <SelectValue placeholder="All Prospects" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Prospects</SelectItem>
+                    <SelectItem value="all">All Athletes</SelectItem>
                     <SelectItem value="ranked">Ranked</SelectItem>
                     <SelectItem value="unranked">Unranked</SelectItem>
                   </SelectContent>
@@ -1015,7 +890,7 @@ export default function AllProspectsPage() {
           <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center justify-between border-b px-6 py-4">
               <div>
-                <h3 className="text-xl font-semibold text-[#03154C]">Prospect Directory</h3>
+                <h3 className="text-xl font-semibold text-[#03154C]">Athlete Profiles</h3>
                 <p className="text-sm text-muted-foreground">
                   All prospects A–Z. Sort by name, rank, weight, school, or commitment status.
                 </p>
@@ -1069,7 +944,6 @@ export default function AllProspectsPage() {
           </div>
         </section>
       </div>
-    </AuthGuard>
   )
 }
 
