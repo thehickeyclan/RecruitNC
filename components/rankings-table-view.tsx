@@ -328,6 +328,16 @@ export function RankingsTableView({
                   Name <SortIcon field="name" />
                 </Button>
               </TableHead>
+              <TableHead className="w-20 text-white font-semibold">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleSort("year")}
+                  className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
+                >
+                  Year <SortIcon field="year" />
+                </Button>
+              </TableHead>
               <TableHead className="w-[110px] text-white font-semibold text-center">Status</TableHead>
               <TableHead className="min-w-[180px] text-white font-semibold">
                 <Button
@@ -337,16 +347,6 @@ export function RankingsTableView({
                   className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
                 >
                   School <SortIcon field="school" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-20 text-white font-semibold">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleSort("year")}
-                  className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
-                >
-                  Year <SortIcon field="year" />
                 </Button>
               </TableHead>
               <TableHead className="w-20 text-white font-semibold">
@@ -501,9 +501,6 @@ export function RankingsTableView({
                       )}
                     </TableCell>
                     <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
-                    <TableCell className="text-center text-gray-700 font-medium">
-                      {athlete.graduation_year ? `Class of ${athlete.graduation_year}` : "—"}
-                    </TableCell>
                     <TableCell>
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
