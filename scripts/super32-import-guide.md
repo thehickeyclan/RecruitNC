@@ -17,6 +17,7 @@
 
 - **2022:** `scripts/super32-nc-records-2022.csv` — compare: `GET /api/debug/compare-super32-2022`
 - **2023:** `scripts/super32-nc-records-2023.csv` — compare: `GET /api/debug/compare-super32-2023`
+- **2024:** `scripts/super32-nc-records-2024.csv` — compare: `GET /api/debug/compare-super32-2024`
 
 **Columns:** `year`, `athlete_name`, `weight_class`, `wins`, `losses`, `record`, `city_from_source`
 
@@ -134,6 +135,26 @@ UPDATE super32_results SET record = '0-2', wins = 0, losses = 2
 WHERE year = 2022 AND LOWER(TRIM(athlete_name)) = 'matthew cranfill' AND weight_class = '220';
 ```
 
+Example SQL for **2023** (compare: `compare-super32-2023`):
+
+```sql
+-- Fix record/wins/losses from CSV (2023)
+UPDATE super32_results SET record = '1-2', wins = 1, losses = 2
+WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'brad yokum' AND weight_class = '120';
+
+UPDATE super32_results SET record = '0-2', wins = 0, losses = 2
+WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'alexander soukup' AND weight_class = '126';
+
+UPDATE super32_results SET record = '1-2', wins = 1, losses = 2
+WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'job brown' AND weight_class = '144';
+
+UPDATE super32_results SET record = '1-2', wins = 1, losses = 2
+WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'troy shannon' AND weight_class = '165';
+
+UPDATE super32_results SET record = '3-2', wins = 3, losses = 2
+WHERE year = 2023 AND LOWER(TRIM(athlete_name)) = 'deondre johnson' AND weight_class = '285';
+```
+
 ### 2. Only in CSV
 
 These rows are in the CSV but not in the DB (name + weight didn’t match). Either:
@@ -146,7 +167,7 @@ These rows are in the CSV but not in the DB (name + weight didn’t match). Eith
 
 These rows are in the DB but not in the CSV. Either:
 
-- **Keep** them if they’re valid (e.g. from another source or a different bracket).
+- **Keep** them if they’re valid (e.g. from another source or a different bracket). Female wrestlers are correctly only in the DB when the CSV is males-only—keep those rows (do not delete them).
 - **Remove** them if they’re duplicates or wrong:  
   `DELETE FROM super32_results WHERE year = YEAR AND athlete_name = '...' AND weight_class = '...';`  
   Only do this after you’re sure the CSV is the single source of truth for that year.
