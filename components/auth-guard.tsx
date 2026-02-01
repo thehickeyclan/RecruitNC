@@ -92,30 +92,19 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     const hasSession = user || directSessionCheck
 
     if (!hasSession && !redirecting) {
-      // On mobile, session can appear late. Retry 2 more times before redirecting to signin.
+      // One more getSession before redirecting (avoids loop when session appears late)
       const doFinalRedirect = async () => {
         const supabase = createClient()
-        for (let i = 0; i < 2; i++) {
-          try {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (session) return
-          } catch (_) {}
-          await new Promise((r) => setTimeout(r, 800))
-        }
         try {
           const { data: { session } } = await supabase.auth.getSession()
-          if (!session && !redirecting) {
-            setRedirecting(true)
-            router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
-          }
-        } catch (_) {
-          if (!redirecting) {
-            setRedirecting(true)
-            router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
-          }
+          if (session) return
+        } catch (_) {}
+        if (!redirecting) {
+          setRedirecting(true)
+          router.push(`/auth/signin?returnTo=${encodeURIComponent(pathname)}`)
         }
       }
-      const redirectTimer = setTimeout(doFinalRedirect, 600)
+      const redirectTimer = setTimeout(doFinalRedirect, 800)
       return () => clearTimeout(redirectTimer)
     } else if (requireAdmin && !isAdmin && user) {
       console.log("[v0] Admin access check:", {

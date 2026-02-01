@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,10 +19,19 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { signIn, user } = useAuth()
+  const { signIn, user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
+
+  // If already logged in, redirect to returnTo or home to break redirect loops
+  useEffect(() => {
+    if (isLoading) return
+    if (user) {
+      const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
+      window.location.href = target
+    }
+  }, [user, isLoading, returnTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,17 +84,14 @@ export default function SignInPage() {
       setLoading(false)
     } else {
       console.log("[v0] Sign in successful, waiting for session to be fully set...")
-      // Wait longer for session cookies to be fully set by Supabase and auth context to update
-      // Increased delay to 1.5 seconds to ensure session is loaded before redirect
-      // This prevents redirect loops where AuthGuard checks before session is loaded
+      // Wait 2.5s so session is in storage and AuthGuard won't redirect back to signin
+      const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
+        ? "/auth/callback-admin"
+        : (returnTo || "/")
       setTimeout(() => {
-        const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
-          ? "/auth/callback-admin"
-          : (returnTo || "/")
-        console.log("[v0] Redirecting to:", redirectUrl, "- session should be set now")
-        // Force full page reload to pick up session cookies
+        console.log("[v0] Redirecting to:", redirectUrl)
         window.location.href = redirectUrl
-      }, 1500)
+      }, 2500)
     }
   }
 
@@ -202,7 +208,16 @@ export default function SignInPage() {
                 </div>
 
                 {error && (
-                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
+                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                    {error}
+                    {(error.includes("rate limit") || error.includes("429") || error.includes("Too many")) && (
+                      <p className="mt-2 text-xs">
+                        <Link href="/auth/clear-cooldown" className="text-blue-600 hover:underline">
+                          Clear rate limit cooldown and try again
+                        </Link>
+                      </p>
+                    )}
+                  </div>
                 )}
                 <Button 
                   type="submit" 

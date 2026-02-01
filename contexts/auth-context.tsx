@@ -216,35 +216,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // If we have cookies, try to get the session (but only once on mount)
-        // This is necessary to restore session after login/refresh
-        if (typeof document !== "undefined") {
-          const hasCookies = document.cookie.includes("sb-")
-          if (!hasCookies) {
-            console.log("[v0] No Supabase cookies on first check (may appear after redirect on mobile)")
-            setSession(null)
-            setUser(null)
-            setProfile(null)
-            setIsLoading(false)
-            // After redirect, cookies can appear late on mobile. Retry once after 2s.
-            const retryTimer = setTimeout(() => {
-              if (document.cookie.includes("sb-")) {
-                supabase.auth.getSession().then(({ data: { session }, error }) => {
-                  if (!error && session) {
-                    setSession(session)
-                    setUser(session.user)
-                    if (session.user) fetchUserProfile(session.user.id).then(setProfile)
-                  }
-                })
-              }
-            }, 2000)
-            return () => clearTimeout(retryTimer)
-          }
-        }
-
-        // We have cookies - try to get the session ONCE on mount
-        // This is safe because it's only called once, not repeatedly
-        console.log("[v0] Cookies present, checking session ONCE on mount")
+        // Always try getSession ONCE on mount (session may be in cookies OR localStorage).
+        // Skipping when document.cookie had no "sb-" caused login loops: after sign-in,
+        // session is often in localStorage only, so we never restored it.
+        console.log("[v0] Checking session ONCE on mount (cookies or localStorage)")
         const getSessionOnce = async () => {
           try {
             const { data: { session }, error } = await supabase.auth.getSession()
