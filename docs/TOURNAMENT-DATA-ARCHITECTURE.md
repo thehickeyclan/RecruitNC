@@ -7,9 +7,9 @@
 | Data      | Primary Table           | Fallback Table             | Fallback 2     |
 |-----------|-------------------------|----------------------------|----------------|
 | NHSCA     | `nhsca_placements`      | `wrestling_nhsca_results`  | athlete row    |
-| Super32   | `super32_results`       | —                          | athlete row    |
+| Super32   | `super32_results`       | —                          | none (table only) |
 
-All profile pages, rankings APIs, and coach portal read from these tables. Athlete row columns (`nhsca_2025_record`, `super_32_2025_record`, etc.) are used only when the tables return no rows.
+Unified profile: NHSCA falls back to athlete row when tables return no rows. **Super32 does not use athlete-row fallback** (table only) to avoid wrong/duplicate data; results are deduped by year and filtered by high_school when provided.
 
 ## Table Schemas
 

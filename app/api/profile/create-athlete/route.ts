@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
       "graduationYear",
       "weightClass",
       "highSchool",
-      "location",
     ]
     for (const field of requiredFields) {
       if (!formData[field]) {
@@ -70,6 +69,7 @@ export async function POST(request: NextRequest) {
       weightclass: formData.weightClass || null,
       highschool: formData.highSchool || null,
       location: formData.location || null,
+      wrestlingClub: formData.wrestlingClub || formData.club || null,
       bio: formData.bio || null,
       achievements: formData.achievements ? [formData.achievements] : [],
       photourl: formData.photoUrl || null,

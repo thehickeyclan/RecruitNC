@@ -88,7 +88,7 @@ export async function getSuper32FromTable(
   if ((!athleteName?.trim() && !options?.highSchool?.trim()) || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
 
-  // Try athlete_name; filter by high_school when multiple athletes share similar names (e.g. Connor Reece vs Connor Reese)
+  // Try athlete_name; when high_school is provided, only return rows that match school (avoid wrong-athlete / wrong-school data)
   if (athleteName?.trim()) {
     const namePattern = `%${athleteName.trim()}%`
     const { data: byName } = await supabase
@@ -106,9 +106,10 @@ export async function getSuper32FromTable(
         const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
         return rowSchool.includes(school) || school.includes(rowSchool)
       })
-      if (filtered.length > 0) rows = filtered
+      // Only use rows that match this athlete's school; otherwise return none (avoid showing another school's data)
+      rows = filtered
     }
-    if (rows.length) return mapSuper32Rows(rows)
+    if (rows.length) return dedupeSuper32ByYear(mapSuper32Rows(rows))
   }
 
   // Fallback: match by high_school only
@@ -121,10 +122,20 @@ export async function getSuper32FromTable(
       .lte("year", graduationYear)
       .order("year", { ascending: false })
 
-    if (bySchool?.length) return mapSuper32Rows(bySchool)
+    if (bySchool?.length) return dedupeSuper32ByYear(mapSuper32Rows(bySchool))
   }
 
   return []
+}
+
+/** One row per year (avoids duplicate 2024 entries from table/imports). */
+function dedupeSuper32ByYear(rows: TournamentResultRow[]): TournamentResultRow[] {
+  const byYear = new Map<number, TournamentResultRow>()
+  for (const row of rows) {
+    const y = typeof row.year === "number" ? row.year : parseInt(String(row.year), 10)
+    if (!byYear.has(y)) byYear.set(y, row)
+  }
+  return Array.from(byYear.values()).sort((a, b) => (b.year as number) - (a.year as number))
 }
 
 function mapSuper32Rows(rows: any[]): TournamentResultRow[] {

@@ -58,7 +58,7 @@ interface ProfileFormData {
   graduationYear: string
   weightClass: string
   highSchool: string
-  location: string
+  wrestlingClub: string
   bio: string
   achievements: string
   photoUrl: string
@@ -77,7 +77,7 @@ export default function CreateProfilePage() {
     graduationYear: "",
     weightClass: "",
     highSchool: "",
-    location: "",
+    wrestlingClub: "",
     bio: "",
     achievements: "",
     photoUrl: "",
@@ -357,13 +357,12 @@ export default function CreateProfilePage() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="location">Location (City, State) *</Label>
+                  <Label htmlFor="wrestlingClub">Club</Label>
                   <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleChange("location", e.target.value)}
-                    placeholder="Charlotte, NC"
-                    required
+                    id="wrestlingClub"
+                    value={formData.wrestlingClub}
+                    onChange={(e) => handleChange("wrestlingClub", e.target.value)}
+                    placeholder="e.g. NC United, Wolfpack WC"
                   />
                 </div>
               </div>
