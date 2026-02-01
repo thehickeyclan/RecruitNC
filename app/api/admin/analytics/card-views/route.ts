@@ -30,7 +30,7 @@ export async function GET() {
       .select("*")
       .eq("event_type", "profile_view")
       .order("created_at", { ascending: false })
-      .limit(100)
+      .limit(500)
 
     if (cardViewsError) {
       console.error("[v0] Profile-view analytics fetch error:", cardViewsError)
@@ -96,10 +96,10 @@ export async function GET() {
       .sort((a: any, b: any) => b.total_views - a.total_views)
       .slice(0, 20)
 
-    // Profile-view stack ranking: one count per profile page view
+    // Profile-view stack ranking: one count per profile page view, with last_viewed
     const { data: profileClickEvents, error: profileClickError } = await supabase
       .from("user_analytics")
-      .select("event_data")
+      .select("event_data, created_at")
       .eq("event_type", "profile_view")
       .order("created_at", { ascending: false })
       .limit(5000)
@@ -112,8 +112,8 @@ export async function GET() {
       "college_coach", "coach", "admin", "college-coach", "hs-club-coach",
     ])
 
-    const clickCounts: Record<string, { name: string; count: number }> = {}
-    const coachClickCounts: Record<string, { name: string; count: number }> = {}
+    const clickCounts: Record<string, { name: string; count: number; lastViewed?: string }> = {}
+    const coachClickCounts: Record<string, { name: string; count: number; lastViewed?: string }> = {}
     if (profileClickEvents) {
       for (const row of profileClickEvents) {
         let ed = row.event_data as { athlete_id?: string; athlete_name?: string; profile_type?: string } | null
@@ -128,21 +128,22 @@ export async function GET() {
         const id = ed.athlete_id
         const name = ed.athlete_name || "Unknown"
         const isCoach = ed.profile_type != null && COACH_PROFILE_TYPES.has(ed.profile_type)
+        const createdAt = (row as { created_at?: string }).created_at
 
-        if (!clickCounts[id]) clickCounts[id] = { name, count: 0 }
+        if (!clickCounts[id]) clickCounts[id] = { name, count: 0, lastViewed: createdAt || undefined }
         clickCounts[id].count++
         if (isCoach) {
-          if (!coachClickCounts[id]) coachClickCounts[id] = { name, count: 0 }
+          if (!coachClickCounts[id]) coachClickCounts[id] = { name, count: 0, lastViewed: createdAt || undefined }
           coachClickCounts[id].count++
         }
       }
     }
     const profileClickRanking = Object.entries(clickCounts)
-      .map(([athlete_id, { name: athlete_name, count: clicks }]) => ({ athlete_id, athlete_name, clicks }))
+      .map(([athlete_id, { name: athlete_name, count: clicks, lastViewed }]) => ({ athlete_id, athlete_name, clicks, lastViewed }))
       .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 50)
     const profileViewRankingCoaches = Object.entries(coachClickCounts)
-      .map(([athlete_id, { name: athlete_name, count: clicks }]) => ({ athlete_id, athlete_name, clicks }))
+      .map(([athlete_id, { name: athlete_name, count: clicks, lastViewed }]) => ({ athlete_id, athlete_name, clicks, lastViewed }))
       .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 50)
 

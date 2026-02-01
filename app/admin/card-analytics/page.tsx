@@ -37,6 +37,7 @@ interface ProfileClickRank {
   athlete_id: string
   athlete_name: string
   clicks: number
+  lastViewed?: string
 }
 
 export default function CardAnalyticsPage() {
@@ -225,7 +226,11 @@ export default function CardAnalyticsPage() {
                       >
                         {row.athlete_name}
                       </Link>
-                      <p className="text-xs text-gray-500 truncate">{row.athlete_id}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {row.lastViewed
+                          ? `Last viewed: ${new Date(row.lastViewed).toLocaleString()}`
+                          : row.athlete_id}
+                      </p>
                     </div>
                   </div>
                   <div className="flex-shrink-0 text-right">
@@ -273,7 +278,11 @@ export default function CardAnalyticsPage() {
                       >
                         {row.athlete_name}
                       </Link>
-                      <p className="text-xs text-gray-500 truncate">{row.athlete_id}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {row.lastViewed
+                          ? `Last viewed: ${new Date(row.lastViewed).toLocaleString()}`
+                          : row.athlete_id}
+                      </p>
                     </div>
                   </div>
                   <div className="flex-shrink-0 text-right">
@@ -354,7 +363,7 @@ export default function CardAnalyticsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {cardViews.slice(0, 50).map((view) => (
+            {cardViews.slice(0, 200).map((view) => (
               <div key={view.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
                   <Badge variant="outline">{view.event_type.replace("_", " ")}</Badge>
