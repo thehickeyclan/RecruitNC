@@ -279,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(null)
             setUser(null)
             setProfile(null)
-            clearSupabaseCookies()
+            // Don't clear cookies on exception — can be transient (e.g. Chrome desktop)
           } finally {
         setIsLoading(false)
           }
@@ -321,10 +321,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // REMOVED: Cooldown check - let Supabase handle rate limiting
       // We'll use admin login API as fallback if rate limited
-      
-      // Clear any existing stale cookies BEFORE attempting sign in
-      clearSupabaseCookies()
-      
+      // REMOVED: clearSupabaseCookies() before sign-in — it broke Chrome desktop
+      // (clearing then immediately setting new cookies can fail on desktop Chrome)
+
       // Clear any old cooldown flags
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("rate_limit_cooldown")

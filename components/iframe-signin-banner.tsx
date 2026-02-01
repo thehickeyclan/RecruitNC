@@ -74,7 +74,8 @@ export function IframeSignInBanner() {
           </Button>
           <button
             onClick={() => setDismissed(true)}
-            className="p-1.5 rounded-full hover:bg-black/10 aria-label="Dismiss""
+            className="p-1.5 rounded-full hover:bg-black/10"
+            aria-label="Dismiss"
           >
             <X className="h-4 w-4" />
           </button>
