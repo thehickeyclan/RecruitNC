@@ -24,6 +24,18 @@ export default function SignInPage() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
 
+  // Chrome desktop blocks cookies in iframes. If we're in an iframe, break out
+  // so the sign-in page loads first-party and login works.
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (window.self === window.top) return
+    try {
+      window.top!.location.href = window.location.href
+    } catch {
+      // Cross-origin or sandbox: can't set top.location; banner will show
+    }
+  }, [])
+
   // If already logged in, redirect to returnTo or home to break redirect loops
   useEffect(() => {
     if (isLoading) return

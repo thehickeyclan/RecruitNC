@@ -29,6 +29,11 @@
     -webkit-user-select: none;
     user-select: none;
   }
+
+  /* When iframe sign-in banner is visible, push content down so navbar isn't covered */
+  body.iframe-banner-visible #app-content {
+    padding-top: 3.5rem;
+  }
 }
 
 @layer components {

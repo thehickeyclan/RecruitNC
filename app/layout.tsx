@@ -10,6 +10,8 @@ import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context"
 import { CoachApprovalNotification } from "@/components/coach-approval-notification"
 import { IframeResizer } from "@/components/iframe-resizer"
+import { StorageAccessPrompt } from "@/components/storage-access-prompt"
+import { IframeSignInBanner } from "@/components/iframe-signin-banner"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 
 export const metadata = {
@@ -69,8 +71,10 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
             <IframeResizer />
+            <StorageAccessPrompt />
+            <IframeSignInBanner />
             <CoachApprovalNotification />
-            <div className="relative flex flex-col min-h-screen">
+            <div id="app-content" className="relative flex flex-col min-h-screen">
               <Navbar />
               <main className="flex-1">{children}</main>
               <Footer />
