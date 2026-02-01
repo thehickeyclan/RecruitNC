@@ -1,12 +1,9 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AuthGuard } from "@/components/auth-guard"
 import {
   Trophy,
   Medal,
@@ -45,8 +42,6 @@ interface Athlete {
 }
 
 export default function ClassOf2027RankingsPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
@@ -66,12 +61,10 @@ export default function ClassOf2027RankingsPage() {
       }
     }
 
-    if (user) {
-      fetchAthletes()
-    }
-  }, [user])
+    fetchAthletes()
+  }, [])
 
-  if (loading) {
+  if (loadingAthletes) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
@@ -79,13 +72,8 @@ export default function ClassOf2027RankingsPage() {
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="relative mx-auto w-24 h-24 mb-6">
@@ -430,6 +418,5 @@ export default function ClassOf2027RankingsPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   )
 }

@@ -39,8 +39,14 @@ export function createClient() {
         const row = document.cookie
           .split("; ")
           .find((r) => r.startsWith(prefix))
-        // Value can contain "=" (e.g. JWT); take everything after first "="
-        return row ? row.slice(prefix.length) : undefined
+        const fromCookie = row ? row.slice(prefix.length) : undefined
+        if (fromCookie) return fromCookie
+        // Fallback: read from localStorage when cookies are blocked (e.g. Chrome desktop, iframe)
+        try {
+          return localStorage.getItem(name) ?? undefined
+        } catch {
+          return undefined
+        }
       },
       set(name: string, value: string, options: any) {
         if (typeof document === "undefined") return
@@ -48,11 +54,18 @@ export function createClient() {
         const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : ""
         const maxAge = options?.maxAge ? `; max-age=${options.maxAge}` : ""
         document.cookie = `${name}=${value}; path=/; SameSite=Lax${secure}${maxAge}`
+        // Persist to localStorage so session survives when cookies are blocked
+        try {
+          localStorage.setItem(name, value)
+        } catch (_) {}
       },
       remove(name: string) {
         if (typeof document === "undefined") return
         const secure = typeof location !== "undefined" && location.protocol === "https:" ? "; Secure" : ""
         document.cookie = `${name}=; path=/; SameSite=Lax${secure}; max-age=0`
+        try {
+          localStorage.removeItem(name)
+        } catch (_) {}
       },
     },
     },

@@ -2,12 +2,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Users, Target, Award, TrendingUp } from "lucide-react"
 import Link from "next/link"
-import { AuthGuard } from "@/components/auth-guard"
 
 export default function PublicRankingsHomepage() {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
         {/* Header */}
         <div className="bg-[#03154C] text-white">
           <div className="container mx-auto px-4 py-16">
@@ -161,6 +159,5 @@ export default function PublicRankingsHomepage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   )
 }

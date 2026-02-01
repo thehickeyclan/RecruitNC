@@ -1,13 +1,10 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { AuthGuard } from "@/components/auth-guard"
 import { Users, Target, ExternalLink, Instagram, Trophy, Clock } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
 
@@ -30,8 +27,6 @@ interface Athlete {
 }
 
 export default function ClassOf2026RankingsPage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
@@ -62,21 +57,15 @@ export default function ClassOf2026RankingsPage() {
       }
     }
 
-    if (user && !hasFetched.current) {
-      fetchAthletes()
-    }
-  }, [user])
+    fetchAthletes()
+  }, [])
 
-  if (loading) {
+  if (loadingAthletes) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-[#B31B1B]"></div>
       </div>
     )
-  }
-
-  if (!user) {
-    return null
   }
 
   const top3Athletes = athletes.slice(0, 3)
@@ -87,8 +76,7 @@ export default function ClassOf2026RankingsPage() {
   ]
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#03154C] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
@@ -377,6 +365,5 @@ export default function ClassOf2026RankingsPage() {
           </div>
         </div>
       </div>
-    </AuthGuard>
   )
 }

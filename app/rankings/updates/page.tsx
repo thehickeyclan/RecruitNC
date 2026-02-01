@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar, Trophy, TrendingUp, Users } from "lucide-react"
 import Link from "next/link"
-import { AuthGuard } from "@/components/auth-guard"
 import { useSearchParams } from "next/navigation"
 import { useMemo } from "react"
 
@@ -138,8 +137,7 @@ export default function RankingUpdatesPage() {
   }, [yearParam, dateParam])
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Header */}
           <div className="mb-8">
@@ -266,6 +264,5 @@ export default function RankingUpdatesPage() {
           )}
         </div>
       </div>
-    </AuthGuard>
   )
 }
