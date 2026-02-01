@@ -12,6 +12,7 @@ import { ViewToggle } from "@/components/view-toggle"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 import { Search, Filter, ArrowLeft, Trophy, Users, Clock } from "lucide-react"
+import { AuthGuard } from "@/components/auth-guard"
 
 interface PublicRanking {
   id: string
@@ -644,5 +645,6 @@ export default function Class2028RankingsPage() {
           </div>
         </div>
       </div>
+    </AuthGuard>
   )
 }
