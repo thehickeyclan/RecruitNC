@@ -112,19 +112,7 @@ export async function getSuper32FromTable(
     if (rows.length) return dedupeSuper32ByYear(mapSuper32Rows(rows))
   }
 
-  // Fallback: match by high_school only
-  if (options?.highSchool?.trim()) {
-    const { data: bySchool } = await supabase
-      .from("super32_results")
-      .select("*")
-      .ilike("high_school", `%${options.highSchool.trim()}%`)
-      .gte("year", startYear)
-      .lte("year", graduationYear)
-      .order("year", { ascending: false })
-
-    if (bySchool?.length) return dedupeSuper32ByYear(mapSuper32Rows(bySchool))
-  }
-
+  // Do NOT fall back to high_school only — that showed other kids' Super32 (e.g. Adair Panama) on this athlete's profile. Only show rows that match this athlete's name.
   return []
 }
 

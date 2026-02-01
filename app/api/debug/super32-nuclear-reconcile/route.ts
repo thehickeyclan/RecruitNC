@@ -13,7 +13,7 @@ import { getAdminAuth } from "@/lib/cached-auth-check"
 import { readFileSync } from "fs"
 import { join } from "path"
 
-const ALLOWED_YEARS = [2022, 2023, 2024] as const
+const ALLOWED_YEARS = [2022, 2023, 2024, 2025] as const
 
 type CsvRow = {
   year: number
@@ -36,37 +36,32 @@ function normalizeWeight(w: unknown): string {
   return Number.isFinite(n) ? String(n) : s
 }
 
-function parseCsv(path: string): CsvRow[] {
-  try {
-    const raw = readFileSync(path, "utf-8")
-    const lines = raw.split(/\r?\n/).filter((line) => line.trim())
-    if (lines.length < 2) return []
-    const header = lines[0].toLowerCase().split(",").map((h) => h.trim())
-    const rows: CsvRow[] = []
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",").map((v) => v.trim())
-      const row: Record<string, string> = {}
-      header.forEach((h, j) => {
-        row[h] = values[j] ?? ""
-      })
-      const year = parseInt(row.year ?? "", 10)
-      const wins = parseInt(row.wins ?? "", 10)
-      const losses = parseInt(row.losses ?? "", 10)
-      if (Number.isNaN(year) || (row.athlete_name ?? "").trim() === "") continue
-      rows.push({
-        year,
-        athlete_name: (row.athlete_name ?? "").trim(),
-        weight_class: normalizeWeight(row.weight_class ?? ""),
-        wins: Number.isNaN(wins) ? 0 : wins,
-        losses: Number.isNaN(losses) ? 0 : losses,
-        record: (row.record ?? "").trim(),
-        city_from_source: (row.city_from_source ?? "").trim(),
-      })
-    }
-    return rows
-  } catch {
-    return []
+function parseCsvFromString(raw: string): CsvRow[] {
+  const lines = raw.split(/\r?\n/).filter((line) => line.trim())
+  if (lines.length < 2) return []
+  const header = lines[0].toLowerCase().split(",").map((h) => h.trim())
+  const rows: CsvRow[] = []
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(",").map((v) => v.trim())
+    const row: Record<string, string> = {}
+    header.forEach((h, j) => {
+      row[h] = values[j] ?? ""
+    })
+    const year = parseInt(row.year ?? "", 10)
+    const wins = parseInt(row.wins ?? "", 10)
+    const losses = parseInt(row.losses ?? "", 10)
+    if (Number.isNaN(year) || (row.athlete_name ?? "").trim() === "") continue
+    rows.push({
+      year,
+      athlete_name: (row.athlete_name ?? "").trim(),
+      weight_class: normalizeWeight(row.weight_class ?? ""),
+      wins: Number.isNaN(wins) ? 0 : wins,
+      losses: Number.isNaN(losses) ? 0 : losses,
+      record: (row.record ?? "").trim(),
+      city_from_source: (row.city_from_source ?? "").trim(),
+    })
   }
+  return rows
 }
 
 export async function POST(request: NextRequest) {
@@ -86,10 +81,23 @@ export async function POST(request: NextRequest) {
     }
 
     const csvPath = join(process.cwd(), "scripts", `super32-nc-records-${year}.csv`)
-    const csvRows = parseCsv(csvPath)
+    let rawCsv: string
+    try {
+      rawCsv = readFileSync(csvPath, "utf-8")
+    } catch (e) {
+      console.error("[super32-nuclear-reconcile] CSV file read failed:", e)
+      return NextResponse.json(
+        {
+          error: `CSV not available for ${year}. On Vercel, scripts/ may not be deployed — run nuclear reconcile locally (e.g. \`curl -X POST .../api/debug/super32-nuclear-reconcile -d '{"year":${year}}'\` with auth) or ensure scripts/ is included in the build.`,
+          details: e instanceof Error ? e.message : String(e),
+        },
+        { status: 503 }
+      )
+    }
+    const csvRows = parseCsvFromString(rawCsv)
     if (csvRows.length === 0) {
       return NextResponse.json(
-        { error: `No rows in CSV for ${year}. Check scripts/super32-nc-records-${year}.csv` },
+        { error: `No rows parsed for ${year}. Check scripts/super32-nc-records-${year}.csv has valid header and data.` },
         { status: 400 }
       )
     }

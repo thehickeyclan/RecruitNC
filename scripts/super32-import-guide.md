@@ -1,5 +1,32 @@
 # Super 32 NC Results – Import Guide
 
+## Where does wrong data like "Aidan Gore 2024 0-2 at 113" come from?
+
+**Only from the database.** The repo and CSVs do **not** contain "Aidan Gore" for 2024. The verified 2024 CSV has **Spear Gorelick** at 138, not Aidan Gore at 113.
+
+- **Unified profile** (and Data Dawg) get Super32 from the **`super32_results`** table. So if you see "Aidan Gore 2024 0-2 113" on a profile, there is (or was) a **row in `super32_results`** with something like `athlete_name` = 'Aidan Gore' (or a typo), `year` = 2024, `weight_class` = '113', `record` = '0-2'. That row was added by an old import or manual entry — not from the verified CSV.
+- **Prospects list / coach portal** may also show Super32 from the **`athletes`** table columns `super_32_2024_record` and `super_32_2024_placement` on the athlete row. So wrong data can also live there.
+
+**Fix:**
+
+1. **Remove bad rows from `super32_results`:** Run the override script `scripts/supabase-super32-override-2024.txt` in the Supabase SQL Editor. It deletes all 2024 rows and re-inserts only the 108 verified names — so any "Aidan Gore" or other wrong row for 2024 is gone.
+2. **Optional: find and delete a specific bad row** (Supabase SQL Editor):
+   ```sql
+   -- Find it
+   SELECT * FROM super32_results
+   WHERE year = 2024 AND (athlete_name ILIKE '%Aidan%Gore%' OR (weight_class = '113' AND record = '0-2'));
+   -- Delete it (use the id from the query above)
+   DELETE FROM super32_results WHERE year = 2024 AND athlete_name ILIKE '%Aidan%Gore%';
+   ```
+3. **Clear athlete-row Super32 for that person** (if it shows on prospects/coach):
+   ```sql
+   UPDATE athletes
+   SET super_32_2024_record = NULL, super_32_2024_placement = NULL
+   WHERE name ILIKE '%Aidan%Gore%';
+   ```
+
+---
+
 ## Critical: High school is not city
 
 **Super 32’s source data does not include high school** – it often has city/location only. **Do not use city as high school.**
@@ -36,6 +63,8 @@ If you have a **verified CSV** for 2022, 2023, 2024, or 2025 and want the DB to 
 4. **Result:** For that year, the DB contains exactly what's in the CSV. No Adair Panama, Aiden Gore, or other wrong rows — no need to hunt through every athlete.
 
 Run once per year (2022, 2023, 2024, 2025) when you want to lock that year to the verified list. **2025** is the authoritative external list (91 NC wrestlers); this is the only Super32 data that should be pulled from external.
+
+**Or just run SQL in Supabase:** Copy the contents of `scripts/supabase-super32-override-2024.txt` into the Supabase SQL Editor and run it. That deletes all 2024 Super32 rows and re-inserts only the verified CSV; `high_school` is resolved from the `athletes` table by name. No app deploy, no API — one script.
 
 ---
 

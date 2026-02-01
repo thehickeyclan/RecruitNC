@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { AdminHeader } from "@/components/admin-header"
 import { RefreshCw, CheckCircle, AlertCircle } from "lucide-react"
 
-const YEARS = [2022, 2023, 2024] as const
+const YEARS = [2022, 2023, 2024, 2025] as const
 
 export default function Super32ToolsPage() {
   const [running, setRunning] = useState<number | null>(null)
@@ -40,10 +40,11 @@ export default function Super32ToolsPage() {
           message: data.message ?? `Reconciled ${data.inserted ?? 0} rows for ${year}.`,
         })
       } else {
+        const detail = data.details ? ` — ${data.details}` : ""
         setResult({
           year,
           success: false,
-          message: data.error ?? data.details ?? "Reconcile failed",
+          message: (data.error ?? "Reconcile failed") + detail,
         })
       }
     } catch (e) {
@@ -72,7 +73,8 @@ export default function Super32ToolsPage() {
           <p className="text-sm text-muted-foreground">
             For a chosen year, <strong>delete all</strong> Super32 rows in the DB and re-insert <strong>only</strong> from
             the verified CSV. Use this when you want the DB to match the CSV exactly — no wrong rows on kids&apos;
-            profiles (e.g. Adair Panama, Aiden Gore). High school is resolved from the athletes table.
+            profiles (e.g. Adair Panama, Aiden Gore). High school is resolved from the athletes table. If you see
+            &quot;CSV not available&quot; (e.g. on Vercel), run nuclear reconcile locally where <code className="text-xs">scripts/</code> is present.
           </p>
           <div className="flex flex-wrap gap-3">
             {YEARS.map((year) => (
