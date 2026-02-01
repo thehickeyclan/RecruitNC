@@ -68,7 +68,7 @@ export async function GET() {
     const supabase = createAdminClient()
     const { data: dbRows, error } = await supabase
       .from("super32_results")
-      .select("athlete_name, year, weight_class, weight, wins, losses, record, high_school, school")
+      .select("athlete_name, year, weight_class, wins, losses, record, high_school, school")
       .eq("year", YEAR)
       .order("athlete_name", { ascending: true })
 
@@ -81,7 +81,7 @@ export async function GET() {
 
     const dbList = (dbRows ?? []).map((r: any) => ({
       athlete_name: (r.athlete_name ?? "").toString().trim(),
-      weight_class: normalizeWeight(r.weight_class ?? r.weight ?? ""),
+      weight_class: normalizeWeight(r.weight_class ?? ""),
       wins: r.wins != null ? Number(r.wins) : null,
       losses: r.losses != null ? Number(r.losses) : null,
       record: (r.record ?? "").toString().trim(),
