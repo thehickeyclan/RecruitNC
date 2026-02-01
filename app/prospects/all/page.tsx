@@ -373,6 +373,7 @@ export default function AllProspectsPage() {
         name: prospect.name || "Unknown",
         highschool: prospect.highschool || "—",
         weight_display: weightValue || "-",
+        graduation_year: prospect.graduationyear ?? null,
         achievement_badge: achievement.badge,
         achievement_color: achievement.color,
         has_ranked_win: hasRankedWin,

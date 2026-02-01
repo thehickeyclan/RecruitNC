@@ -30,6 +30,7 @@ interface Athlete {
   name: string
   highschool: string
   weight_display: string
+  graduation_year?: number | null
   achievement_badge?: string
   achievement_color?: string
   has_ranked_win: boolean
@@ -54,7 +55,7 @@ interface RankingsTableViewProps {
   defaultSortDirection?: SortDirection
 }
 
-type SortField = "rank" | "name" | "school" | "weight"
+type SortField = "rank" | "name" | "school" | "weight" | "year"
 type SortDirection = "asc" | "desc"
 
 export function RankingsTableView({
@@ -251,6 +252,10 @@ export function RankingsTableView({
         aValue = Number.parseInt(a.weight_display) || 999
         bValue = Number.parseInt(b.weight_display) || 999
         break
+      case "year":
+        aValue = a.graduation_year ?? 0
+        bValue = b.graduation_year ?? 0
+        break
       default:
         aValue = a.prospect_ranking
         bValue = b.prospect_ranking
@@ -338,6 +343,16 @@ export function RankingsTableView({
                 <Button
                   variant="ghost"
                   size="sm"
+                  onClick={() => handleSort("year")}
+                  className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
+                >
+                  Year <SortIcon field="year" />
+                </Button>
+              </TableHead>
+              <TableHead className="w-20 text-white font-semibold">
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => handleSort("weight")}
                   className="font-semibold text-white hover:text-gray-200 p-0 h-auto hover:bg-transparent"
                 >
@@ -367,7 +382,7 @@ export function RankingsTableView({
                 <Fragment key={athlete.id}>
                   {shouldRenderDivider && (
                     <TableRow className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                      <TableCell colSpan={canSeeWatchList ? 8 : 7} className="py-2 text-center">
+                      <TableCell colSpan={canSeeWatchList ? 9 : 8} className="py-2 text-center">
                         <div className="flex items-center justify-center gap-3">
                           <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
                           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
@@ -486,6 +501,9 @@ export function RankingsTableView({
                       )}
                     </TableCell>
                     <TableCell className="text-gray-700 font-medium">{athlete.highschool || "-"}</TableCell>
+                    <TableCell className="text-center text-gray-700 font-medium">
+                      {athlete.graduation_year ? `Class of ${athlete.graduation_year}` : "—"}
+                    </TableCell>
                     <TableCell>
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
