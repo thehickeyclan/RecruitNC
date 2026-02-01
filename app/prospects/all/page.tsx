@@ -162,9 +162,10 @@ export default function AllProspectsPage() {
   }, [prospects])
 
   const summarizeStatus = (status?: string | null): RecruitingStatus => {
-    const normalized = status?.toLowerCase() || ""
+    const normalized = (status ?? "").toString().toLowerCase().trim()
+    if (!normalized) return "uncommitted"
     if (normalized.includes("verb")) return "verbal"
-    if (normalized.includes("commit")) return "committed"
+    if (normalized.includes("commit") || normalized.includes("signed")) return "committed"
     if (normalized.includes("recruit")) return "recruiting"
     if (normalized.includes("interest")) return "interested"
     return "uncommitted"
@@ -237,21 +238,60 @@ export default function AllProspectsPage() {
       }
 
       if (genderFilter !== "all") {
-        const genderValue = (prospect.gender || "").toLowerCase()
-        if (genderFilter === "male" && !["male", "m", "boy", "men", "man"].some((g) => genderValue === g)) return false
-        if (genderFilter === "female" && !["female", "f", "girl", "women", "woman"].some((g) => genderValue === g))
-          return false
+        const genderValue = ((prospect.gender ?? "") as string).toString().toLowerCase().trim()
+        if (genderFilter === "male") {
+          const isMale =
+            genderValue === "male" ||
+            genderValue === "m" ||
+            genderValue === "men" ||
+            genderValue === "man" ||
+            genderValue === "boy" ||
+            genderValue.includes("men's") ||
+            genderValue.includes("male") ||
+            genderValue.includes("boys")
+          const isFemale =
+            genderValue.includes("female") ||
+            genderValue.includes("woman") ||
+            genderValue.includes("girl")
+          if (!isMale || isFemale) return false
+        }
+        if (genderFilter === "female") {
+          const isFemale =
+            genderValue === "female" ||
+            genderValue === "f" ||
+            genderValue.includes("woman") ||
+            genderValue.includes("women") ||
+            genderValue.includes("girl")
+          const isMale =
+            (genderValue.includes("male") && !genderValue.includes("female")) ||
+            genderValue.includes("men") ||
+            genderValue.includes("boy")
+          if (!isFemale || isMale) return false
+        }
       }
 
       if (statusFilter !== "all") {
-        const summarized = summarizeStatus(prospect.recruiting_status)
+        const statusRaw =
+          (prospect as any).recruiting_status ??
+          (prospect as any).recruitingStatus ??
+          (prospect as any).recruiting_status_display ??
+          ""
+        const summarized = summarizeStatus(statusRaw)
         if (statusFilter === "committed" && summarized !== "committed") return false
         if (statusFilter === "uncommitted" && summarized === "committed") return false
         if (statusFilter === "verbal" && summarized !== "verbal") return false
       }
 
-      if (rankFilter === "ranked" && !prospect.prospect_ranking) return false
-      if (rankFilter === "unranked" && prospect.prospect_ranking) return false
+      if (rankFilter === "ranked" || rankFilter === "unranked") {
+        const gradYear = prospect.graduationyear
+        const rawRank = prospect.prospect_ranking != null ? Number(prospect.prospect_ranking) : NaN
+        const maxRank =
+          gradYear === 2028 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
+        const hasOfficialRank =
+          Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRank
+        if (rankFilter === "ranked" && !hasOfficialRank) return false
+        if (rankFilter === "unranked" && hasOfficialRank) return false
+      }
 
       if (weightFilters.length > 0) {
         const normalizedWeight = (prospect.weightclass || prospect.weight?.toString() || "")
