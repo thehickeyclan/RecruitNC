@@ -405,14 +405,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
-    // Must redirect to /auth/callback so token/code is exchanged for a session.
-    // Include next=/auth/reset-password so callback knows to send user there (Supabase PKCE
-    // may send code but not type=recovery, causing default redirect to homepage).
+    // Redirect directly to reset-password page. Supabase may use implicit flow (tokens in
+    // URL fragment #) which the server never receives—only a client page can read the hash.
     const base =
       typeof window !== "undefined"
         ? window.location.origin
         : process.env.NEXT_PUBLIC_SITE_URL || ""
-    const redirectUrl = `${base}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`
+    const redirectUrl = `${base}/auth/reset-password`
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,

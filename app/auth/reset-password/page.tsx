@@ -17,13 +17,73 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [hasSession, setHasSession] = useState<boolean | null>(null)
+  const [recovering, setRecovering] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    createClient().auth.getSession().then(({ data: { session } }) => {
+    const supabase = createClient()
+
+    async function recoverSessionFromUrl() {
+      if (typeof window === "undefined") return
+
+      const url = new URL(window.location.href)
+      const hash = window.location.hash?.slice(1)
+      const code = url.searchParams.get("code")
+      const tokenHash = url.searchParams.get("token_hash")
+      const type = url.searchParams.get("type")
+
+      // Implicit flow: tokens in fragment (#access_token=...&refresh_token=...)
+      if (hash) {
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get("access_token")
+        const refreshToken = params.get("refresh_token")
+        if (accessToken && refreshToken) {
+          const { error: setErr } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+          if (!setErr) {
+            window.history.replaceState(null, "", "/auth/reset-password")
+            setHasSession(true)
+            setRecovering(false)
+            return
+          }
+        }
+      }
+
+      // PKCE: code in query
+      if (code) {
+        const { error: exchangeErr } = await supabase.auth.exchangeCodeForSession(code)
+        if (!exchangeErr) {
+          window.history.replaceState(null, "", "/auth/reset-password")
+          setHasSession(true)
+          setRecovering(false)
+          return
+        }
+      }
+
+      // Token hash flow: token_hash + type in query
+      if (tokenHash && type) {
+        const { error: verifyErr } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: type as "recovery" | "signup" | "invite" | "magiclink" | "email_change",
+        })
+        if (!verifyErr) {
+          window.history.replaceState(null, "", "/auth/reset-password")
+          setHasSession(true)
+          setRecovering(false)
+          return
+        }
+      }
+
+      // No URL params to recover from – check existing session
+      const { data: { session } } = await supabase.auth.getSession()
       setHasSession(!!session)
       if (!session) setError("Invalid or expired reset link. Please request a new one from the sign-in page.")
-    })
+      setRecovering(false)
+    }
+
+    recoverSessionFromUrl()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,6 +126,17 @@ export default function ResetPasswordPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (recovering) {
+    return (
+      <div className="container mx-auto flex h-screen flex-col items-center justify-center px-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Verifying reset link...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
