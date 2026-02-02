@@ -444,46 +444,39 @@ export default function MatchManagerPage() {
   const athleteProgress = selectedAthlete ? getAthleteProgress(selectedAthlete) : null
 
   const parseRawTextToJson = (rawText: string) => {
-    const lines = rawText.trim().split("\n")
+    // Normalize line endings and trim; then for multi-line format we use dense lines (no blanks)
+    const allLines = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().split("\n")
 
     const matches: Match[] = []
 
-    if (lines.length === 0) return matches
+    if (allLines.length === 0) return matches
 
     // Check if this is the multi-line format (starts with Win/Loss)
-    const firstLine = lines[0].trim().toLowerCase()
+    const firstLine = allLines[0].trim().toLowerCase()
     const isMultiLineFormat = firstLine === "win" || firstLine === "loss"
 
     if (isMultiLineFormat) {
-      // Multi-line format: Each match spans multiple lines
-      // Format:
-      // Win/Loss
-      // Date
-      // Percentage (or "Forfeit")
-      // Opponent Name (or "Forfeit")
-      // • Opponent School (may be missing for forfeits)
-      // Weight
-      // • (separator)
-      // Tournament/Event
-      // • (separator)
-      // Method (Dec, Fall, TF, SV-1, MD, DQ, For.)
-      
+      // Remove empty lines so fixed offsets (0..9 per match) are reliable when pasted data has blank lines
+      const lines = allLines.map((l) => l.trim()).filter((l) => l.length > 0)
+
+      // Multi-line format: Each match spans 10 lines (or 8 for forfeit)
+      // Win/Loss, Date, Percentage|Forfeit, Opponent|Forfeit, • School, Weight, •, Event, •, Method
       let i = 0
       while (i < lines.length) {
-        const resultLine = lines[i]?.trim()
-        if (!resultLine || (resultLine.toLowerCase() !== "win" && resultLine.toLowerCase() !== "loss")) {
+        const resultLine = lines[i] ?? ""
+        if (resultLine.toLowerCase() !== "win" && resultLine.toLowerCase() !== "loss") {
           i++
           continue
         }
 
         const isWin = resultLine.toLowerCase() === "win"
-        const date = lines[i + 1]?.trim() || ""
-        const percentageOrForfeit = lines[i + 2]?.trim() || ""
-        const opponentOrForfeit = lines[i + 3]?.trim() || ""
-        
-        // Check if this is a forfeit
-        const isForfeit = opponentOrForfeit.toLowerCase() === "forfeit" || percentageOrForfeit.toLowerCase() === "forfeit"
-        
+        const date = lines[i + 1] ?? ""
+        const percentageOrForfeit = lines[i + 2] ?? ""
+        const opponentOrForfeit = lines[i + 3] ?? ""
+
+        const isForfeit =
+          opponentOrForfeit.toLowerCase() === "forfeit" || percentageOrForfeit.toLowerCase() === "forfeit"
+
         let opponent = ""
         let opponentSchool = ""
         let weight = ""
@@ -493,40 +486,26 @@ export default function MatchManagerPage() {
         let lineOffset = 3
 
         if (isForfeit) {
-          // For forfeits, the structure is:
-          // Win/Loss
-          // Date
-          // Forfeit (opponent name)
-          // Weight (with "lbs")
-          // • (separator)
-          // Tournament
-          // • (separator)
-          // For. (method)
           opponent = "Forfeit"
           opponentSchool = ""
-          weight = (lines[i + 3]?.trim() || "").replace(" lbs", "").trim()
-          venue = lines[i + 5]?.trim() || ""
-          method = lines[i + 7]?.trim() || "For."
+          weight = (lines[i + 3] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = lines[i + 5] ?? ""
+          method = (lines[i + 7] ?? "").trim() || "For."
           lineOffset = 7
         } else {
-          // Normal match structure
-          opponent = opponentOrForfeit
-          const schoolLine = lines[i + 4]?.trim() || ""
-          opponentSchool = schoolLine.startsWith("•") ? schoolLine.substring(1).trim() : ""
-          weight = (lines[i + 5]?.trim() || "").replace(" lbs", "").trim()
-          venue = lines[i + 7]?.trim() || ""
-          method = lines[i + 9]?.trim() || ""
-          
-          // Try to parse percentage
+          opponent = opponentOrForfeit.trim()
+          const schoolLine = (lines[i + 4] ?? "").trim()
+          // Allow bullet •, middle dot ·, or leading dash
+          opponentSchool = schoolLine.replace(/^[•·\-]\s*/, "").trim()
+          weight = (lines[i + 5] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = (lines[i + 7] ?? "").trim()
+          method = (lines[i + 9] ?? "").trim()
+
           const percentMatch = percentageOrForfeit.match(/^[\d.]+$/)
-          if (percentMatch) {
-            oppPercent = parseFloat(percentageOrForfeit)
-          }
-          
+          if (percentMatch) oppPercent = parseFloat(percentageOrForfeit)
           lineOffset = 9
         }
 
-        // Skip if we don't have essential data
         if (!date || !venue) {
           i++
           continue
@@ -564,14 +543,15 @@ export default function MatchManagerPage() {
         i += lineOffset + 1
       }
     } else {
-      // Check if this is the new format (has "Summary" column)
-      const headerLine = lines[0].toLowerCase()
+      // Tab-separated formats: use original line array
+      const lines = allLines
+      const headerLine = (lines[0] ?? "").toLowerCase()
       const isNewFormat = headerLine.includes("summary")
 
       if (isNewFormat) {
         // New format: Date | Event | Weight | Summary
         for (let i = 1; i < lines.length; i++) {
-          const line = lines[i].trim()
+          const line = (lines[i] ?? "").trim()
           if (!line) continue
 
           const parts = line.split("\t")
@@ -610,7 +590,7 @@ export default function MatchManagerPage() {
       } else {
         // Old format: Date | Winner | Winner School | Loser | Loser School | Result | Venue | Weight | Opp%
         for (let i = 1; i < lines.length; i++) {
-          const line = lines[i].trim()
+          const line = (lines[i] ?? "").trim()
           if (!line) continue
 
           const parts = line.split("\t")
