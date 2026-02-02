@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 
 // Match athlete-utils mapAthleteToDb: admin uses contactEmail, phone (camelCase)
 const ADD_COLUMNS_SQL = `
@@ -86,9 +87,12 @@ export async function POST(request: NextRequest) {
       insertPayload.prospect_ranking = prospectRanking
     }
 
+    const columns = await getAthletesColumnNames(adminSupabase)
+    const filteredPayload = filterPayloadToSchema(insertPayload, columns)
+
     const { data: athlete, error } = await adminSupabase
       .from("athletes")
-      .insert(insertPayload)
+      .insert(filteredPayload)
       .select("id, name")
       .single()
 

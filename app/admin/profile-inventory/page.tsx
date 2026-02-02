@@ -134,10 +134,9 @@ export default function ProfileInventoryPage() {
         <>
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>In Athletes (created or claimed)</CardTitle>
+              <CardTitle>In Athletes (user-created)</CardTitle>
               <CardDescription>
-                Profiles that are already in the athletes table (created via &quot;Create Profile&quot; or
-                &quot;Claim Profile&quot;). {filteredClaimed.length} in last {days} days
+                Profiles in the athletes table with a linked user (claimed_by_user_id set). {filteredClaimed.length} in last {days} days
                 {searchLower ? `, ${filteredClaimed.length} match search` : ""}.
               </CardDescription>
             </CardHeader>

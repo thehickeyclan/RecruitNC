@@ -63,12 +63,7 @@ export async function POST(
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    // Only profile owner or admin can self-edit
-    const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-    const isAdmin = profile?.is_admin === true
-    if (athlete.claimed_by_user_id !== user.id && !isAdmin) {
-      return NextResponse.json({ error: "Not authorized to edit this profile" }, { status: 403 })
-    }
+    // Any logged-in user can edit; we track who made changes via audit log.
 
     for (const field of Object.keys(updates)) {
       if (RESTRICTED.has(norm(field))) {
@@ -186,10 +181,11 @@ export async function POST(
 
     updatePayload.updated_at = new Date().toISOString()
 
-    // Only send columns that exist - never instagram (lives in socialMedia.instagram)
+    // Only send columns that exist on this row (query-driven) and are allowed
+    const athleteColumnSet = new Set(athleteKeys)
     const filteredPayload: Record<string, unknown> = {}
     for (const k of Object.keys(updatePayload)) {
-      if (ALLOWED_UPDATE_COLUMNS.has(k)) filteredPayload[k] = updatePayload[k]
+      if (ALLOWED_UPDATE_COLUMNS.has(k) && athleteColumnSet.has(k)) filteredPayload[k] = updatePayload[k]
     }
     if (Object.keys(filteredPayload).length === 0) {
       return NextResponse.json({ error: "No valid changes to apply" }, { status: 400 })

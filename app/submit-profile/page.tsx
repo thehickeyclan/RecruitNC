@@ -33,6 +33,7 @@ export default function SubmitProfilePage() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [createdAthleteId, setCreatedAthleteId] = useState<string | null>(null)
   const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
   const [confirmedAge, setConfirmedAge] = useState(false)
 
@@ -174,10 +175,12 @@ export default function SubmitProfilePage() {
         throw new Error(errorData.details || errorData.error || "Failed to submit profile")
       }
 
+      const data = await response.json().catch(() => ({}))
+      if (data.athleteId) setCreatedAthleteId(data.athleteId)
       setSubmitted(true)
       toast({
-        title: "Profile submitted!",
-        description: "Your athlete profile has been submitted for review. We'll review it within 2-3 business days.",
+        title: "Profile created",
+        description: "The profile is live. You can view and edit it anytime.",
       })
     } catch (error: any) {
       console.error("Error submitting profile:", error)
@@ -199,42 +202,43 @@ export default function SubmitProfilePage() {
             <div className="flex items-center gap-3">
               <CheckCircle className="h-8 w-8 text-green-600" />
               <div>
-                <CardTitle className="text-green-900">Profile Submitted Successfully!</CardTitle>
+                <CardTitle className="text-green-900">Profile created</CardTitle>
                 <CardDescription className="text-green-700">
-                  Thank you for submitting your athlete profile
+                  The profile is live. You can view and edit it anytime.
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-green-800">
-              Your profile for{" "}
+              The profile for{" "}
               <strong>
                 {formData.firstName} {formData.lastName}
               </strong>{" "}
-              has been submitted and is now pending review by our admin team.
+              is live. You can view and edit it anytime from your account or by searching on the site.
             </p>
             <div className="bg-white p-4 rounded-lg border border-green-200">
-              <h3 className="font-semibold mb-2">What happens next?</h3>
+              <h3 className="font-semibold mb-2">Next steps</h3>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-green-600">•</span>
-                  <span>Our team will review your submission within 2-3 business days</span>
+                  <span>Search for the athlete on the prospects or rankings page to open the profile</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-600">•</span>
-                  <span>If approved, the profile will be published to our prospects page</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-600">•</span>
-                  <span>You'll receive an email notification once the profile is live</span>
+                  <span>All fields on the profile are editable now—update contact, school, bio, photo, etc. and save</span>
                 </li>
               </ul>
             </div>
           </CardContent>
           <CardFooter className="flex gap-3">
+            {createdAthleteId && (
+              <Link href={`/unified-profile/${createdAthleteId}`}>
+                <Button>View profile</Button>
+              </Link>
+            )}
             <Link href="/prospects">
-              <Button>View Prospects</Button>
+              <Button variant={createdAthleteId ? "outline" : "default"}>View Prospects</Button>
             </Link>
             <Link href="/">
               <Button variant="outline">Go Home</Button>
