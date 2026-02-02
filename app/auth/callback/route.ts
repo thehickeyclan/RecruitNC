@@ -151,8 +151,9 @@ export async function GET(req: NextRequest) {
 
     let redirectPath = next && next !== "/" ? next : "/"
 
-    // Password reset flow: send to reset-password page so they can set new password
-    if (type === "recovery") {
+    // Password reset flow: send to reset-password page. Check both type=recovery (token_hash)
+    // and next=/auth/reset-password (PKCE may send code without type).
+    if (type === "recovery" || next === "/auth/reset-password") {
       redirectPath = "/auth/reset-password"
     } else if (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach") {
       redirectPath = "/coaches/dashboard"

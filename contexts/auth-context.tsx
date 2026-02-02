@@ -405,13 +405,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
-    // Must redirect to /auth/callback so token_hash is exchanged for a session via verifyOtp.
-    // The callback then redirects to /auth/reset-password. Going directly to reset-password
-    // means the token is never exchanged and getSession() returns null → "Invalid or expired link".
-    const redirectUrl =
+    // Must redirect to /auth/callback so token/code is exchanged for a session.
+    // Include next=/auth/reset-password so callback knows to send user there (Supabase PKCE
+    // may send code but not type=recovery, causing default redirect to homepage).
+    const base =
       typeof window !== "undefined"
-        ? `${window.location.origin}/auth/callback`
-        : `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_SITE_URL || ""
+    const redirectUrl = `${base}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
