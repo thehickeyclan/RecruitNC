@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     const adminSupabase = createAdminClient()
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get("limit") || "50")
+    const limit = parseInt(searchParams.get("limit") || "500")
     const offset = parseInt(searchParams.get("offset") || "0")
 
     // Get total count first
