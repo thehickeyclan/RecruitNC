@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context"
+import { ConditionalAuthGuard } from "@/components/conditional-auth-guard"
 import { CoachApprovalNotification } from "@/components/coach-approval-notification"
 import { IframeResizer } from "@/components/iframe-resizer"
 import { StorageAccessPrompt } from "@/components/storage-access-prompt"
@@ -76,7 +77,9 @@ export default function RootLayout({
             <CoachApprovalNotification />
             <div id="app-content" className="relative flex flex-col min-h-screen">
               <Navbar />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1">
+              <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
+            </main>
               <Footer />
             </div>
             <Toaster />
