@@ -1,0 +1,2 @@
+# Git push
+When the user says "push update" (or similar): stage and commit all relevant changes. The agent cannot run `git push` (no GitHub credentials in this environment). After committing, reply in one line that they should run `git push` locally—do not repeat long explanations.
