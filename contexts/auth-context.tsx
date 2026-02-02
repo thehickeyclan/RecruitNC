@@ -405,10 +405,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
+    // Must redirect to /auth/callback so token_hash is exchanged for a session via verifyOtp.
+    // The callback then redirects to /auth/reset-password. Going directly to reset-password
+    // means the token is never exchanged and getSession() returns null → "Invalid or expired link".
     const redirectUrl =
       typeof window !== "undefined"
-        ? `${window.location.origin}/auth/reset-password`
-        : `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`
+        ? `${window.location.origin}/auth/callback`
+        : `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
