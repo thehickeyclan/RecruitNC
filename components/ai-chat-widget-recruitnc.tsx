@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageCircle, X, Send, Loader2, ThumbsUp, ThumbsDown, Mic, MicOff, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { formatDataDawgMessage } from "@/lib/data-dawg-render-links"
 
 interface Message {
   role: "user" | "assistant"
@@ -642,7 +643,14 @@ export function AIChatWidget() {
                                 : "bg-slate-100 text-slate-900"
                             )}
                           >
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            {isUser ? (
+                              <p className="whitespace-pre-wrap">{message.content}</p>
+                            ) : (
+                              <div
+                                className="whitespace-pre-wrap [&_a]:text-blue-600 [&_a]:hover:text-blue-800 [&_a]:underline"
+                                dangerouslySetInnerHTML={{ __html: formatDataDawgMessage(message.content) }}
+                              />
+                            )}
                             {!isUser && message.messageId && (
                               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
                                 <span className="text-[10px] text-slate-500">Helpful?</span>

@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { nanoid } from "nanoid"
 
 export const runtime = "nodejs"
@@ -27,50 +28,68 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No athlete ID provided" }, { status: 400 })
     }
 
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authErr,
+    } = await supabase.auth.getUser()
+    if (authErr || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const adminSupabase = createAdminClient()
+    const { data: athlete, error: athleteErr } = await adminSupabase
+      .from("athletes")
+      .select("id, claimed_by_user_id")
+      .eq("id", athleteId)
+      .single()
+    if (athleteErr || !athlete) {
+      return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
+    }
+    const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
+    const isAdmin = profile?.is_admin === true
+    if (athlete.claimed_by_user_id !== user.id && !isAdmin) {
+      return NextResponse.json({ error: "Not authorized to update this profile" }, { status: 403 })
+    }
+
     const uniqueId = nanoid(8)
     const fileExtension = file.name.split(".").pop() || "jpg"
     const filename = `athletes/${athleteId}/${category}-${uniqueId}.${fileExtension}`
 
     console.log("[v0] Uploading to Blob with filename:", filename)
 
-    // Upload to Vercel Blob - simplified to match example
     const blob = await put(filename, file, {
       access: "public",
     })
 
     console.log("[v0] Blob upload successful:", blob.url)
 
-    const supabase = createClient()
-
-    // Determine which field to update based on the category
-    let updateField = "photourl"
-    if (category === "commitment") {
-      updateField = "commitmentPhotoUrl"
-    } else if (category === "headshot") {
-      updateField = "headshot_url"
+    // DB columns: photourl, headshot_url; commitment may be commitmentphotourl or commitment_photo_url
+    const fieldMap: Record<string, string> = {
+      profile: "photourl",
+      headshot: "headshot_url",
+      commitment: "commitmentphotourl",
     }
-
-    console.log("[v0] Updating database field:", updateField, "for athlete:", athleteId)
-
-    const { data, error } = await supabase
+    let updateField = fieldMap[category] || "photourl"
+    let { error } = await adminSupabase
       .from("athletes")
       .update({ [updateField]: blob.url })
       .eq("id", athleteId)
       .select()
 
+    if (error && category === "commitment" && /column.*does not exist|could not find/i.test(error.message)) {
+      updateField = "commitment_photo_url"
+      const retry = await adminSupabase.from("athletes").update({ [updateField]: blob.url }).eq("id", athleteId).select()
+      error = retry.error
+    }
     if (error) {
       console.error("[v0] Database update error:", error)
       return NextResponse.json(
-        {
-          error: "Failed to update athlete record",
-          details: error.message,
-          url: blob.url, // Still return the URL so the image isn't lost
-        },
+        { error: "Failed to update athlete record", details: error.message, url: blob.url },
         { status: 500 },
       )
     }
-
-    console.log("[v0] Database update successful:", data)
+    console.log("[v0] Database update successful")
 
     return NextResponse.json({
       success: true,
