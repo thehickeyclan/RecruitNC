@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -15,14 +16,14 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasSession, setHasSession] = useState<boolean | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    // Check if we have the hash fragment from the reset link
-    const hash = window.location.hash
-    if (!hash || !hash.startsWith("#access_token=")) {
-      setError("Invalid or expired reset link. Please request a new one.")
-    }
+    createClient().auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session)
+      if (!session) setError("Invalid or expired reset link. Please request a new one from the sign-in page.")
+    })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,7 +78,12 @@ export default function ResetPasswordPage() {
 
         {error && (
           <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>
+              {error}
+              <Link href="/auth/forgot-password" className="mt-2 block font-medium underline">
+                Request a new link
+              </Link>
+            </AlertDescription>
           </Alert>
         )}
 
@@ -127,7 +133,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || hasSession === false}>
                 {isLoading ? "Resetting..." : "Reset Password"}
               </Button>
             </div>

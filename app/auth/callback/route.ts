@@ -7,17 +7,21 @@ export async function GET(req: NextRequest) {
 
   const requestUrl = new URL(req.url)
   const code = requestUrl.searchParams.get("code")
+  const tokenHash = requestUrl.searchParams.get("token_hash")
+  const type = requestUrl.searchParams.get("type")
   const next = requestUrl.searchParams.get("next") || "/"
 
   console.log("[v0] Callback params:", {
     hasCode: !!code,
+    hasTokenHash: !!tokenHash,
+    type,
     next,
     fullUrl: req.url,
     origin: requestUrl.origin,
   })
 
-  if (!code) {
-    console.error("[v0] No code provided in callback")
+  if (!code && !tokenHash) {
+    console.error("[v0] No code or token_hash provided in callback")
     return NextResponse.redirect(new URL("/auth/signin?error=no_code", requestUrl.origin))
   }
 
@@ -63,12 +67,25 @@ export async function GET(req: NextRequest) {
       },
     )
 
-    console.log("[v0] Exchanging code for session...")
+    let session: { user: { id: string }; user_metadata?: Record<string, unknown> } | null = null
+    let exchangeError: { message?: string } | null = null
 
-    const {
-      data: { session },
-      error: exchangeError,
-    } = await supabase.auth.exchangeCodeForSession(code)
+    if (tokenHash && type) {
+      // Password reset / magic link: verifyOtp (token_hash flow)
+      console.log("[v0] Verifying OTP (token_hash flow)...")
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: type as "recovery" | "signup" | "invite" | "magiclink" | "email_change",
+      })
+      session = data?.session ?? null
+      exchangeError = error
+    } else if (code) {
+      // PKCE flow: exchangeCodeForSession
+      console.log("[v0] Exchanging code for session...")
+      const result = await supabase.auth.exchangeCodeForSession(code)
+      session = result.data?.session ?? null
+      exchangeError = result.error
+    }
 
     if (exchangeError) {
       console.error("[v0] Code exchange error:", exchangeError)
@@ -134,7 +151,10 @@ export async function GET(req: NextRequest) {
 
     let redirectPath = next && next !== "/" ? next : "/"
 
-    if (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach") {
+    // Password reset flow: send to reset-password page so they can set new password
+    if (type === "recovery") {
+      redirectPath = "/auth/reset-password"
+    } else if (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach") {
       redirectPath = "/coaches/dashboard"
     } else if (profile?.role === "admin" || profile?.is_admin) {
       redirectPath = "/admin"
