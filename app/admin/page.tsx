@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw
+  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList
 } from "lucide-react"
 
 interface AdminStats {
@@ -315,6 +315,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">New Additions</span>
               </Button>
             </Link>
+            <Link href="/admin/profile-inventory">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+                <ClipboardList className="h-6 w-6" />
+                <span className="text-sm font-semibold">Profile Inventory</span>
+              </Button>
+            </Link>
             <Link href="/admin/schools">
               <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <School className="h-6 w-6" />
@@ -379,6 +385,17 @@ export default function AdminDashboard() {
                   <Plus className="h-10 w-10 text-[#13294B] mb-3" />
                   <h3 className="font-bold text-[#13294B] mb-1">Add New Athlete</h3>
                   <p className="text-xs text-gray-600">Create new profile</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Profile Inventory */}
+            <Link href="/admin/profile-inventory">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <ClipboardList className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Profile Inventory</h3>
+                  <p className="text-xs text-gray-600">User-created & pending submissions</p>
                 </CardContent>
               </Card>
             </Link>
