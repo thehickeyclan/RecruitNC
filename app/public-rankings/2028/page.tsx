@@ -134,6 +134,9 @@ export default function Class2028RankingsPage() {
 
   const hasActiveFilters = searchTerm !== ""
 
+  // Normalize name for matching (trim, collapse spaces, lowercase) so "Jacob Perry" matches DB "Jacob Perry" or "Jacob  Perry"
+  const normalizeName = (s: string) => (s || "").trim().replace(/\s+/g, " ").toLowerCase()
+
   // Get Top 3 from actual rankings data - recompute when rankings change
   const top3Spotlight = useMemo(() => {
     if (!rankings || rankings.length === 0) return []
@@ -185,10 +188,10 @@ export default function Class2028RankingsPage() {
   while (merged.length < NEEDED) {
     merged.push(displayTop3[merged.length])
   }
-  // Resolve profile id from linkResolution for static names (e.g. Jacob Perry) so "View Profile" shows when they have a profile
+  const norm = (s: string) => (s || "").trim().replace(/\s+/g, " ").toLowerCase()
   const finalTop3 = merged.slice(0, NEEDED).map((a) => ({
     ...a,
-    id: a.id || linkResolution.find((r) => r.name.toLowerCase() === (a.name || "").toLowerCase())?.id,
+    id: a.id || linkResolution.find((r) => norm(r.name) === norm(a.name || ""))?.id,
   }))
 
   return (
@@ -500,13 +503,9 @@ export default function Class2028RankingsPage() {
                       </thead>
                       <tbody>
                         {top20Data.map((athlete) => {
-                          // Resolve profile ID from linkResolution (all 2028 athletes) so "View Profile" shows when they have a profile (e.g. Jacob Perry), even if prospect_ranking is null
-                          const linkMatch = linkResolution.find(
-                            (r) => r.name.toLowerCase() === athlete.name.toLowerCase()
-                          )
-                          const rankingMatch = rankings.find(
-                            (r) => r.name.toLowerCase() === athlete.name.toLowerCase()
-                          )
+                          const want = normalizeName(athlete.name)
+                          const linkMatch = linkResolution.find((r) => normalizeName(r.name) === want)
+                          const rankingMatch = rankings.find((r) => normalizeName(r.name || "") === want)
                           const matchingAthlete = linkMatch ? { id: linkMatch.id } : rankingMatch
                           const profileUrl = matchingAthlete?.id
                             ? `/unified-profile/${matchingAthlete.id}`
