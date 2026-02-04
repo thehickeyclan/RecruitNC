@@ -121,9 +121,17 @@ export async function updateAthleteAction(id: string, athleteData: any) {
       bio_headline_length: updatePayload.bio_headline?.length || 0
     })
 
+    // Filter to only valid DB columns (avoids errors from unknown columns)
+    const columns = await getAthletesColumnNames(adminSupabase)
+    const filteredPayload = filterPayloadToSchema(updatePayload as Record<string, unknown>, columns)
+    // Always include bio/bio_headline (schema may not list them if sample row lacked them)
+    if ("bio" in updatePayload || "bio_headline" in updatePayload) {
+      filteredPayload.bio = updatePayload.bio !== undefined ? String(updatePayload.bio) : ""
+      filteredPayload.bio_headline = updatePayload.bio_headline !== undefined ? String(updatePayload.bio_headline) : ""
+    }
+
     // Use admin client for update to bypass RLS (this is an admin action)
-    // This ensures updates work even if RLS policies are restrictive
-    const { data, error } = await adminSupabase.from("athletes").update(updatePayload).eq("id", id).select().single()
+    const { data, error } = await adminSupabase.from("athletes").update(filteredPayload).eq("id", id).select().single()
 
     if (error) {
       console.error("Error updating athlete:", error)

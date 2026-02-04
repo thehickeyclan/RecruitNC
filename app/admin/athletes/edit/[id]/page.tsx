@@ -103,81 +103,6 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
     }
   }
 
-  const handleSaveBio = async () => {
-    try {
-      console.log("[v0] Bio save - Current athlete data:", {
-        id: athlete.id,
-        name: athlete.name,
-        bio: athlete.bio,
-        bio_headline: athlete.bio_headline,
-      })
-
-      console.log("[v0] Bio save - Editable values:", {
-        editableBio,
-        editableHeadline,
-      })
-
-      const updateData = {
-        ...athlete, // Include all existing athlete data
-        bio: editableBio,
-        bio_headline: editableHeadline,
-      }
-
-      console.log("[v0] Bio save - Update data being sent:", {
-        bio: updateData.bio,
-        bio_headline: updateData.bio_headline,
-        firstName: updateData.firstName,
-        lastName: updateData.lastName,
-      })
-
-      const result = await updateAthleteAction(id, updateData)
-
-      console.log("[v0] Bio save - Update result:", result)
-      console.log("[v0] Bio save - Result data bio fields:", {
-        bio: result.data?.bio,
-        bio_headline: result.data?.bio_headline,
-      })
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to save bio")
-      }
-
-      // Update state with the returned data from the server (which should have the saved values)
-      if (result.data) {
-        setAthlete(result.data)
-        setEditableBio(result.data.bio || "")
-        setEditableHeadline(result.data.bio_headline || "")
-      } else {
-        // Fallback: use the values we sent
-        setAthlete((prev) => ({ ...prev, bio: editableBio, bio_headline: editableHeadline }))
-      }
-
-      // Force a refresh of the data to ensure we have the latest from the database
-      const refreshResult = await getAthleteByIdAction(id)
-      if (refreshResult.success && refreshResult.data) {
-        setAthlete(refreshResult.data)
-        setEditableBio(refreshResult.data.bio || "")
-        setEditableHeadline(refreshResult.data.bio_headline || "")
-        console.log("[v0] Bio save - Refreshed data:", {
-          bio: refreshResult.data.bio,
-          bio_headline: refreshResult.data.bio_headline,
-        })
-      }
-
-      toast({
-        title: "Success",
-        description: "Bio and headline saved successfully!",
-      })
-    } catch (error) {
-      console.error("Error saving bio:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save bio. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
   const handleSubmit = async (data: any) => {
     try {
       setSaveSuccess(false)
@@ -487,15 +412,7 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
                 rows={4}
                 className="mt-1"
               />
-            </div>
-
-            <div className="flex justify-end">
-              <Button 
-                onClick={handleSaveBio} 
-                className="bg-[#B31B1B] hover:bg-[#8B1515] text-white"
-              >
-                Save Bio & Headline
-              </Button>
+              <p className="text-xs text-gray-500 mt-1">Save using &quot;Save Changes&quot; at the bottom of the page</p>
             </div>
           </div>
 
