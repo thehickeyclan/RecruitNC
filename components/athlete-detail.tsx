@@ -241,12 +241,11 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   console.log("[v0] Rendering unified profile sections in order:")
   console.log("[v0] 1. Hero Banner")
-  console.log("[v0] 2. ContactInfoSection")
-  console.log("[v0] 3. Academics Section")
-  console.log("[v0] 4. Clubs & Programs Section")
-  console.log("[v0] 5. AI Bio Section")
-  console.log("[v0] 6. Tournament Results (NHSCA & Super 32 Tables)")
-  console.log("[v0] 7. MatchDataSectionImproved (Career Stats Banner, Season Summary Table, Individual Matches)")
+  console.log("[v0] 2. Summary (Tournament Results)")
+  console.log("[v0] 3. Athlete Profile (AI Bio)")
+  console.log("[v0] 4. High School and Programs")
+  console.log("[v0] 5. Contact, Academics, Highlight Video, College Opens, Achievements")
+  console.log("[v0] 6. MatchDataSectionImproved")
 
   const getAthletePhoto = () => {
     if (athleteName.toLowerCase().includes("liam hickey")) {
@@ -997,14 +996,68 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* Profile Section: High School, Wrestling Club, NC United */}
+      {/* Summary - Tournament Results (NHSCA, Super 32) - starting point */}
+      {tournamentResultsComponent}
+
+      {/* Athlete Profile - AI Bio */}
+      {(athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Athlete Profile</h2>
+              </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("bio")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="p-8">
+            {editingSection === "bio" ? (
+              <InlineBioEditor
+                athleteId={athlete.id}
+                bio={athleteData.bio}
+                bioHeadline={athleteData.bio_headline}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <>
+                <div className="mb-4">
+                  <div className="flex-1">
+                    {athleteData?.bio_headline && (
+                      <h3 className="text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
+                    )}
+                  </div>
+                </div>
+                {athleteData?.bio && (
+                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                    <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* High School and Programs */}
       {(canEdit || highSchool !== "Not specified" || wrestlingClub !== "Not specified" || ncUnitedTeam) && (
         <Card className="border-t-4 border-t-green-600 shadow-md">
           <div className="bg-gradient-to-r from-green-700 to-green-800 p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GraduationCap className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Profile</h2>
+                <h2 className="text-2xl font-bold text-white">High School and Programs</h2>
               </div>
               {canEdit && !editingSection && (
                 <Button
@@ -1259,59 +1312,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* AI Bio Section - Athlete Profile */}
-      {(athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
-        <Card className="border-t-4 border-t-[#002147] shadow-md">
-          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Athlete Profile</h2>
-              </div>
-              {canEdit && !editingSection && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={() => setEditingSection("bio")}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="p-8">
-            {editingSection === "bio" ? (
-              <InlineBioEditor
-                athleteId={athlete.id}
-                bio={athleteData.bio}
-                bioHeadline={athleteData.bio_headline}
-                onSave={handleInlineSave}
-                onCancel={() => setEditingSection(null)}
-              />
-            ) : (
-              <>
-                <div className="mb-4">
-                  <div className="flex-1">
-                    {athleteData?.bio_headline && (
-                      <h3 className="text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
-                    )}
-                  </div>
-                </div>
-                {athleteData?.bio && (
-                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-                    <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </Card>
-      )}
-
-  {/* Removed duplicate Additional Achievements block (will render once after College Opens) */}
-
       {/* Highlight Video Section - show when has video or when can edit (to add/update) */}
       {(athleteData?.highlight_video_url || canEdit) && (
         <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
@@ -1378,9 +1378,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       )}
 
       {/* Additional Achievements will be rendered after College Opens Experience */}
-
-      {/* Tournament Results - New Format */}
-      {tournamentResultsComponent}
 
       {/* College Opens Experience */}
       {(athleteData.college_opens_experience || editingSection === "college-opens" || canEdit) && (
