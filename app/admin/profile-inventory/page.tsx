@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AdminHeader } from "@/components/admin-header"
 import { ClipboardList, Loader2, Search, Eye, Pencil, FileText, RefreshCw } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface ClaimedAthlete {
   id: string
@@ -17,6 +18,7 @@ interface ClaimedAthlete {
   claimed_at: string | null
   profile_verified: boolean | null
   claimed_by_user_id: string | null
+  hs_matches_uploaded?: boolean | null
 }
 
 interface PendingSubmission {
@@ -37,6 +39,28 @@ export default function ProfileInventoryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+
+  const setHsMatches = async (athleteId: string, checked: boolean) => {
+    setTogglingId(athleteId)
+    try {
+      const res = await fetch("/api/admin/profile-inventory/hs-matches", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId, checked }),
+        credentials: "include",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.details || data.error || "Failed to update")
+      setClaimedAthletes((prev) =>
+        prev.map((a) => (a.id === athleteId ? { ...a, hs_matches_uploaded: checked } : a)),
+      )
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update HS Matches")
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   const fetchInventory = async () => {
     try {
@@ -156,6 +180,7 @@ export default function ProfileInventoryPage() {
                         <th className="text-left p-3 font-medium">Grad Year</th>
                         <th className="text-left p-3 font-medium">Added</th>
                         <th className="text-left p-3 font-medium">Status</th>
+                        <th className="text-left p-3 font-medium">HS Matches</th>
                         <th className="text-right p-3 font-medium">Actions</th>
                       </tr>
                     </thead>
@@ -173,6 +198,18 @@ export default function ProfileInventoryPage() {
                               <Badge className="bg-green-100 text-green-800">Live</Badge>
                             ) : (
                               <Badge variant="secondary">Unpublished</Badge>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <Checkbox
+                              checked={a.hs_matches_uploaded ?? false}
+                              onCheckedChange={(checked) =>
+                                setHsMatches(a.id, checked === true)
+                              }
+                              disabled={togglingId === a.id}
+                            />
+                            {togglingId === a.id && (
+                              <Loader2 className="inline h-4 w-4 ml-1 animate-spin text-gray-400" />
                             )}
                           </td>
                           <td className="p-3 text-right">

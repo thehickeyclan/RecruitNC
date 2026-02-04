@@ -34,6 +34,13 @@ export default function SubmitProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [createdAthleteId, setCreatedAthleteId] = useState<string | null>(null)
+  const [existingCandidate, setExistingCandidate] = useState<{
+    athleteId: string
+    athleteName: string
+    highschool: string
+    graduationYear: number
+  } | null>(null)
+  const [forceCreate, setForceCreate] = useState(false)
   const [agreedToPrivacy, setAgreedToPrivacy] = useState(false)
   const [confirmedAge, setConfirmedAge] = useState(false)
 
@@ -162,7 +169,7 @@ export default function SubmitProfilePage() {
       const response = await fetch("/api/athlete-profile-submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, forceCreate: forceCreate ? true : undefined }),
       })
 
       if (!response.ok) {
@@ -176,11 +183,25 @@ export default function SubmitProfilePage() {
       }
 
       const data = await response.json().catch(() => ({}))
+      if (data.confirmRequired && data.athleteId) {
+        setExistingCandidate({
+          athleteId: data.athleteId,
+          athleteName: data.athleteName || `${formData.firstName} ${formData.lastName}`,
+          highschool: data.highschool || formData.highSchool || "",
+          graduationYear: data.graduationYear ?? parseInt(formData.graduationYear, 10),
+        })
+        toast({
+          title: "Confirm this profile",
+          description: "We found an existing profile. Please confirm it's yours.",
+        })
+        return
+      }
+      setForceCreate(false)
       if (data.athleteId) setCreatedAthleteId(data.athleteId)
       setSubmitted(true)
       toast({
-        title: data.existing ? "Profile already exists" : "Profile created",
-        description: data.message || (data.existing ? "You've been linked to the existing profile so you can view and edit it." : "The profile is live. You can view and edit it anytime."),
+        title: data.existing ? "Profile linked" : "Profile created",
+        description: data.message || "You can view and edit it anytime.",
       })
     } catch (error: any) {
       console.error("Error submitting profile:", error)
@@ -192,6 +213,111 @@ export default function SubmitProfilePage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleClaimExisting = async () => {
+    if (!existingCandidate) return
+    setIsSubmitting(true)
+    try {
+      const res = await fetch("/api/profile/claim-existing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId: existingCandidate.athleteId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Failed to link profile")
+      setCreatedAthleteId(data.athleteId)
+      setExistingCandidate(null)
+      setSubmitted(true)
+      toast({
+        title: "Profile linked",
+        description: data.message || "You're now linked to this profile. You can view and edit it anytime.",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Could not link profile",
+        description: err.message || "Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCreateNewAnyway = async () => {
+    setExistingCandidate(null)
+    setIsSubmitting(true)
+    try {
+      const response = await fetch("/api/athlete-profile-submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, forceCreate: true }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data.details || data.error || "Failed to create profile")
+      if (data.athleteId) setCreatedAthleteId(data.athleteId)
+      setSubmitted(true)
+      toast({
+        title: "Profile created",
+        description: data.message || "You can view and edit it anytime.",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Submission failed",
+        description: err.message || "There was an error creating the profile. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (existingCandidate) {
+    return (
+      <AuthGuard>
+        <div className="container mx-auto p-6 max-w-2xl">
+          <Card className="border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-900">We found an existing profile</CardTitle>
+              <CardDescription className="text-amber-800">
+                Is this you or your athlete? Linking to an existing profile keeps rankings and data in one place.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-white p-4 rounded-lg border border-amber-200">
+                <p className="font-medium text-amber-900">
+                  {existingCandidate.athleteName}
+                  {existingCandidate.highschool && ` · ${existingCandidate.highschool}`}
+                  {` · Class of ${existingCandidate.graduationYear}`}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={handleClaimExisting}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Linking...
+                    </>
+                  ) : (
+                    "Yes, this is us"
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCreateNewAnyway}
+                  disabled={isSubmitting}
+                >
+                  No, create a new profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </AuthGuard>
+    )
   }
 
   if (submitted) {

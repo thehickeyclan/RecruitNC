@@ -86,6 +86,13 @@ export default function CreateProfilePage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [prefilledFromRankings, setPrefilledFromRankings] = useState(false)
+  const [existingCandidate, setExistingCandidate] = useState<{
+    athleteId: string
+    athleteName: string
+    highschool: string
+    graduationYear: number
+  } | null>(null)
+  const [forceCreate, setForceCreate] = useState(false)
 
   // Pre-fill from rankings "New profile" link (e.g. Class of 2028)
   useEffect(() => {
@@ -120,7 +127,7 @@ export default function CreateProfilePage() {
       rankParam != null && rankParam !== ""
         ? Math.min(30, Math.max(1, Number.parseInt(rankParam, 10)))
         : undefined
-    const payload: Record<string, unknown> = { ...formData }
+    const payload: Record<string, unknown> = { ...formData, forceCreate: forceCreate ? true : undefined }
     if (Number.isFinite(prospectRanking)) {
       payload.prospect_ranking = prospectRanking
     }
@@ -133,7 +140,18 @@ export default function CreateProfilePage() {
       })
 
       const data = await response.json()
+      if (response.ok && data.confirmRequired && data.athleteId) {
+        setExistingCandidate({
+          athleteId: data.athleteId,
+          athleteName: data.athleteName || `${formData.firstName} ${formData.lastName}`,
+          highschool: data.highschool || formData.highSchool || "",
+          graduationYear: data.graduationYear ?? Number.parseInt(String(formData.graduationYear), 10),
+        })
+        setError("")
+        return
+      }
       if (response.ok && data.athleteId) {
+        setForceCreate(false)
         router.push(`/unified-profile/${data.athleteId}`)
         return
       }
@@ -143,6 +161,59 @@ export default function CreateProfilePage() {
         const msg = data.details ? `${data.error || "Failed to create profile"}: ${data.details}` : (data.error || "Failed to create profile")
         setError(msg)
       }
+    } catch (err) {
+      setError("An error occurred while creating your profile")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleClaimExisting = async () => {
+    if (!existingCandidate) return
+    setIsSubmitting(true)
+    setError("")
+    try {
+      const res = await fetch("/api/profile/claim-existing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId: existingCandidate.athleteId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Failed to link profile")
+      setExistingCandidate(null)
+      router.push(`/unified-profile/${data.athleteId}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not link profile")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCreateNewAnyway = async () => {
+    setExistingCandidate(null)
+    setForceCreate(true)
+    setIsSubmitting(true)
+    setError("")
+    const rankParam = searchParams.get("rank")
+    const prospectRanking =
+      rankParam != null && rankParam !== ""
+        ? Math.min(30, Math.max(1, Number.parseInt(rankParam, 10)))
+        : undefined
+    const payload: Record<string, unknown> = { ...formData, forceCreate: true }
+    if (Number.isFinite(prospectRanking)) payload.prospect_ranking = prospectRanking
+    try {
+      const response = await fetch("/api/profile/create-athlete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const data = await response.json()
+      if (response.ok && data.athleteId) {
+        setForceCreate(false)
+        router.push(`/unified-profile/${data.athleteId}`)
+        return
+      }
+      setError(data.details || data.error || "Failed to create profile")
     } catch (err) {
       setError("An error occurred while creating your profile")
     } finally {
@@ -202,6 +273,46 @@ export default function CreateProfilePage() {
           </CardContent>
         </Card>
       </div>
+    )
+  }
+
+  if (existingCandidate) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-900">We found an existing profile</CardTitle>
+              <CardDescription className="text-amber-800">
+                Is this you? Linking to an existing profile keeps rankings and data in one place.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="bg-white p-4 rounded-lg border border-amber-200">
+                <p className="font-medium text-amber-900">
+                  {existingCandidate.athleteName}
+                  {existingCandidate.highschool && ` · ${existingCandidate.highschool}`}
+                  {` · Class of ${existingCandidate.graduationYear}`}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={handleClaimExisting} disabled={isSubmitting}>
+                  {isSubmitting ? "Linking..." : "Yes, this is me"}
+                </Button>
+                <Button variant="outline" onClick={handleCreateNewAnyway} disabled={isSubmitting}>
+                  No, create a new profile
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </AuthGuard>
     )
   }
 

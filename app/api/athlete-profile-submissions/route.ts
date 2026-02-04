@@ -35,33 +35,29 @@ export async function POST(request: NextRequest) {
 
     const adminSupabase = createAdminClient()
 
-    const existing = await findExistingAthlete(adminSupabase, {
-      name: athleteName,
-      graduationYear: graduationyear,
-      school: body.highSchool || undefined,
-    })
-    if (existing) {
-      await adminSupabase
-        .from("athletes")
-        .update({
-          claimed_by_user_id: user.id,
-          claimed_at: now,
-          contact_email: body.email || null,
-          phone: body.phone || null,
-          updated_at: now,
-        })
-        .eq("id", existing.id)
-      await supabase
-        .from("user_profiles")
-        .update({ athlete_id: existing.id, athlete_name: existing.name })
-        .eq("user_id", user.id)
-      return NextResponse.json({
-        success: true,
-        existing: true,
-        athleteId: existing.id,
-        athleteName: existing.name,
-        message: "This prospect already has a profile. You've been linked to it so you can view and edit it.",
-      }, { status: 200 })
+    if (!body.forceCreate) {
+      const existing = await findExistingAthlete(adminSupabase, {
+        name: athleteName,
+        graduationYear: graduationyear,
+        school: body.highSchool || undefined,
+      })
+      if (existing) {
+        const { data: existingRow } = await adminSupabase
+          .from("athletes")
+          .select("highschool, graduationyear")
+          .eq("id", existing.id)
+          .single()
+        return NextResponse.json({
+          success: true,
+          existing: true,
+          confirmRequired: true,
+          athleteId: existing.id,
+          athleteName: existing.name,
+          highschool: (existingRow as any)?.highschool ?? body.highSchool ?? "",
+          graduationYear: graduationyear,
+          message: "We found an existing profile. Please confirm it's yours before we link you.",
+        }, { status: 200 })
+      }
     }
 
     const athletePayload: Record<string, unknown> = {
@@ -133,14 +129,22 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Link this athlete to the user's profile so "My Profile" shows it and they can find it easily
-    await supabase
+    // Link this athlete to the user's profile so "My Profile" shows it (admin client avoids RLS blocking)
+    const { error: profileLinkError } = await adminSupabase
       .from("user_profiles")
       .update({
         athlete_id: athlete.id,
         athlete_name: athlete.name,
       })
       .eq("user_id", user.id)
+
+    if (profileLinkError) {
+      console.error("[Profile Submission] user_profiles link error:", profileLinkError)
+      return NextResponse.json({
+        error: "Profile created but could not link to your account",
+        details: profileLinkError.message,
+      }, { status: 500 })
+    }
 
     return NextResponse.json({
       success: true,

@@ -38,20 +38,40 @@ export async function GET(req: NextRequest) {
 
     const adminSupabase = createAdminClient()
 
-    const [athletesResult, submissionsResult] = await Promise.all([
-      adminSupabase
+    const athletesSelect =
+      "id, name, highschool, graduationyear, claimed_at, profile_verified, claimed_by_user_id, hs_matches_uploaded"
+    let athletesResult = await adminSupabase
+      .from("athletes")
+      .select(athletesSelect)
+      .not("claimed_by_user_id", "is", null)
+      .gte("claimed_at", iso)
+      .order("claimed_at", { ascending: false })
+      .limit(500)
+
+    if (athletesResult.error && /hs_matches_uploaded|column/i.test(athletesResult.error.message)) {
+      athletesResult = await adminSupabase
         .from("athletes")
         .select("id, name, highschool, graduationyear, claimed_at, profile_verified, claimed_by_user_id")
         .not("claimed_by_user_id", "is", null)
         .gte("claimed_at", iso)
         .order("claimed_at", { ascending: false })
-        .limit(500),
+        .limit(500)
+      if (athletesResult.data?.length) {
+        (athletesResult.data as { hs_matches_uploaded?: boolean }[]).forEach(
+          (r) => (r.hs_matches_uploaded = false),
+        )
+      }
+    }
+
+    const [_, submissionsResult] = await Promise.all([
+      Promise.resolve(athletesResult),
       adminSupabase
         .from("athlete_profile_submissions")
         .select("id, firstname, lastname, email, highschool, graduationyear, status, submitted_at")
         .order("submitted_at", { ascending: false })
         .limit(500),
     ])
+    athletesResult = _
 
     if (athletesResult.error) {
       console.error("[profile-inventory] athletes error:", athletesResult.error)
