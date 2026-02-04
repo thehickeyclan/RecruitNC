@@ -987,8 +987,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
       {/* 2. Athlete Profile (Bio) - always show for consistent structure */}
       <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="bio">
-        <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="bio">
-          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+        <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-6 w-6 text-white" />
