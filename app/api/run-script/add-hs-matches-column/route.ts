@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-const SQL =
-  "ALTER TABLE athletes ADD COLUMN IF NOT EXISTS hs_matches_uploaded BOOLEAN DEFAULT false;"
+const SQL = `
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS hs_matches_uploaded BOOLEAN DEFAULT false;
+ALTER TABLE athletes ADD COLUMN IF NOT EXISTS admin_reviewed BOOLEAN DEFAULT false;
+`.trim()
 const MANUAL_MSG =
-  "Could not add via RPC. Run in Supabase SQL Editor:\n\nALTER TABLE athletes ADD COLUMN IF NOT EXISTS hs_matches_uploaded BOOLEAN DEFAULT false;"
+  "Could not add via RPC. Run in Supabase SQL Editor:\n\nALTER TABLE athletes ADD COLUMN IF NOT EXISTS hs_matches_uploaded BOOLEAN DEFAULT false;\nALTER TABLE athletes ADD COLUMN IF NOT EXISTS admin_reviewed BOOLEAN DEFAULT false;"
 
 /**
- * One-time: add hs_matches_uploaded to athletes for the profile-inventory "HS Matches" checkbox.
+ * One-time: add hs_matches_uploaded and admin_reviewed to athletes for profile-inventory.
  * POST /api/run-script/add-hs-matches-column (with auth; recommend admin only in production).
  */
 export async function POST() {
@@ -24,7 +26,7 @@ export async function POST() {
     }
     return NextResponse.json({
       success: true,
-      message: "Column athletes.hs_matches_uploaded added (or already exists).",
+      message: "Columns athletes.hs_matches_uploaded and admin_reviewed added (or already exist).",
     })
   } catch (err) {
     console.error("[add-hs-matches-column] Error:", err)

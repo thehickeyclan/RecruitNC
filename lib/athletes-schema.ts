@@ -17,7 +17,7 @@ const KNOWN_ATHLETE_COLUMNS = new Set([
   "nationally_ranked_wins", "college_opens_experience",
   "recruiting_status", "is_prospect", "profile_verified", "prospect_ranking",
   "claimed_by_user_id", "claimed_at", "updated_at",
-  "hs_matches_uploaded",
+  "hs_matches_uploaded", "admin_reviewed",
   "socialMedia", "social_media",
 ])
 

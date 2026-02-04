@@ -19,6 +19,7 @@ interface ClaimedAthlete {
   profile_verified: boolean | null
   claimed_by_user_id: string | null
   hs_matches_uploaded?: boolean | null
+  admin_reviewed?: boolean | null
 }
 
 interface PendingSubmission {
@@ -40,6 +41,7 @@ export default function ProfileInventoryPage() {
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
 
   const setHsMatches = async (athleteId: string, checked: boolean) => {
     setTogglingId(athleteId)
@@ -59,6 +61,27 @@ export default function ProfileInventoryPage() {
       setError(e instanceof Error ? e.message : "Failed to update HS Matches")
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  const setAdminReviewed = async (athleteId: string, checked: boolean) => {
+    setReviewingId(athleteId)
+    try {
+      const res = await fetch("/api/admin/profile-inventory/admin-reviewed", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ athleteId, checked }),
+        credentials: "include",
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.details || data.error || "Failed to update")
+      setClaimedAthletes((prev) =>
+        prev.map((a) => (a.id === athleteId ? { ...a, admin_reviewed: checked } : a)),
+      )
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update Reviewed")
+    } finally {
+      setReviewingId(null)
     }
   }
 
@@ -161,7 +184,7 @@ export default function ProfileInventoryPage() {
               <CardTitle>In Athletes (user-created)</CardTitle>
               <CardDescription>
                 Profiles in the athletes table with a linked user (claimed_by_user_id set). {filteredClaimed.length} in last {days} days
-                {searchLower ? `, ${filteredClaimed.length} match search` : ""}.
+                {searchLower ? `, ${filteredClaimed.length} match search` : ""}. HS Matches = uploaded; Reviewed = you&apos;ve reviewed and approved (backend only; users always see live).
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -181,6 +204,7 @@ export default function ProfileInventoryPage() {
                         <th className="text-left p-3 font-medium">Added</th>
                         <th className="text-left p-3 font-medium">Status</th>
                         <th className="text-left p-3 font-medium">HS Matches</th>
+                        <th className="text-left p-3 font-medium">Reviewed</th>
                         <th className="text-right p-3 font-medium">Actions</th>
                       </tr>
                     </thead>
@@ -209,6 +233,18 @@ export default function ProfileInventoryPage() {
                               disabled={togglingId === a.id}
                             />
                             {togglingId === a.id && (
+                              <Loader2 className="inline h-4 w-4 ml-1 animate-spin text-gray-400" />
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <Checkbox
+                              checked={a.admin_reviewed ?? false}
+                              onCheckedChange={(checked) =>
+                                setAdminReviewed(a.id, checked === true)
+                              }
+                              disabled={reviewingId === a.id}
+                            />
+                            {reviewingId === a.id && (
                               <Loader2 className="inline h-4 w-4 ml-1 animate-spin text-gray-400" />
                             )}
                           </td>

@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     const adminSupabase = createAdminClient()
 
     const athletesSelect =
-      "id, name, highschool, graduationyear, claimed_at, profile_verified, claimed_by_user_id, hs_matches_uploaded"
+      "id, name, highschool, graduationyear, claimed_at, profile_verified, claimed_by_user_id, hs_matches_uploaded, admin_reviewed"
     let athletesResult = await adminSupabase
       .from("athletes")
       .select(athletesSelect)
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
       .order("claimed_at", { ascending: false })
       .limit(500)
 
-    if (athletesResult.error && /hs_matches_uploaded|column/i.test(athletesResult.error.message)) {
+    if (athletesResult.error && /hs_matches_uploaded|admin_reviewed|column/i.test(athletesResult.error.message)) {
       athletesResult = await adminSupabase
         .from("athletes")
         .select("id, name, highschool, graduationyear, claimed_at, profile_verified, claimed_by_user_id")
@@ -57,8 +57,11 @@ export async function GET(req: NextRequest) {
         .order("claimed_at", { ascending: false })
         .limit(500)
       if (athletesResult.data?.length) {
-        (athletesResult.data as { hs_matches_uploaded?: boolean }[]).forEach(
-          (r) => (r.hs_matches_uploaded = false),
+        (athletesResult.data as { hs_matches_uploaded?: boolean; admin_reviewed?: boolean }[]).forEach(
+          (r) => {
+            r.hs_matches_uploaded = false
+            r.admin_reviewed = false
+          },
         )
       }
     }
