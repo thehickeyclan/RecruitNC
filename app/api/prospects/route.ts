@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
         bio,
         location,
         prospect_ranking,
+        rankings,
         recruiting_status,
         created_at,
         updated_at,

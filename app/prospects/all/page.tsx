@@ -214,6 +214,18 @@ export default function AllProspectsPage() {
     return { level: "dnq", badge: "DNQ", color: "bg-gray-400 text-white" }
   }
 
+  function getRawRank(prospect: Prospect): number {
+    const p = prospect.prospect_ranking
+    if (p != null && Number.isFinite(Number(p))) return Number(p)
+    const r = (prospect as any)?.rankings
+    if (r != null && typeof r === "number" && Number.isFinite(r)) return r
+    if (r != null && typeof r === "object") {
+      const n = (r as Record<string, unknown>)[2028] ?? (r as Record<string, unknown>)["2028"] ?? (r as Record<string, unknown>).class_2028 ?? (r as Record<string, unknown>).state ?? (r as Record<string, unknown>).national
+      if (typeof n === "number" && Number.isFinite(n)) return n
+    }
+    return NaN
+  }
+
   const filteredProspects = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
 
@@ -284,7 +296,7 @@ export default function AllProspectsPage() {
 
       if (rankFilter === "ranked" || rankFilter === "unranked") {
         const gradYear = prospect.graduationyear
-        const rawRank = prospect.prospect_ranking != null ? Number(prospect.prospect_ranking) : NaN
+        const rawRank = getRawRank(prospect)
         const maxRank =
           gradYear === 2028 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
         const hasOfficialRank =
@@ -360,7 +372,7 @@ export default function AllProspectsPage() {
       // Only show rank for athletes on our official rankings: top 30 in 2026/2027, top 20 in 2028; show "G" for graduated (2025 and earlier)
       const gradYear = prospect.graduationyear
       const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028
-      const rawRank = prospect.prospect_ranking != null ? Number(prospect.prospect_ranking) : NaN
+      const rawRank = getRawRank(prospect)
       const maxRankForClass =
         gradYear === 2028 ? 20 : (gradYear === 2026 || gradYear === 2027 ? 30 : 0)
       const hasOfficialRank =

@@ -5,10 +5,21 @@ function normalize(s: string): string {
   return (s || "").trim().replace(/\s+/g, " ").toLowerCase()
 }
 
+function getFullName(row: Record<string, unknown>): string {
+  const name = (row.name as string)?.trim()
+  if (name) return name
+  const wrestling = (row.wrestling_name as string)?.trim()
+  if (wrestling) return wrestling
+  const first = (row.firstname ?? row.firstName ?? row.first_name) as string | undefined
+  const last = (row.lastname ?? row.lastName ?? row.last_name) as string | undefined
+  const combined = [first, last].filter(Boolean).join(" ").trim()
+  return combined || ""
+}
+
 /**
  * Resolve display names to athlete IDs for a given graduation year.
  * GET /api/public-rankings/resolve-ids?year=2028&names=Jacob Perry,Aaron Ellison,...
- * Returns { "Jacob Perry": "uuid", "Aaron Ellison": "uuid", ... } for each name that has a matching athlete.
+ * Returns { "Jacob Perry": "uuid", ... } for each name that has a matching athlete.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -29,39 +40,53 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const yearNum = parseInt(year, 10) || year
+    const yearNum = parseInt(year, 10)
+    // Match year as number or string (DB may store 2028 or "2028")
     const { data: athletes, error } = await supabase
       .from("athletes")
-      .select("id, name, firstname, lastname, wrestling_name")
-      .eq("graduationyear", yearNum)
+      .select("*")
+      .in("graduationyear", [yearNum, year])
 
     if (error) {
       console.error("[resolve-ids] Error:", error)
       return NextResponse.json({ ids: {}, error: error.message }, { status: 500 })
     }
 
-    // Build map: normalized full name -> { id, canonicalName } (keep first match)
-    const byNormalized = new Map<string, { id: string; canonicalName: string }>()
+    const byNormalized = new Map<string, { id: string }>()
+    const byNameAndSchool = new Map<string, { id: string }>()
     for (const a of athletes || []) {
       const row = a as Record<string, unknown>
       const id = row.id as string
-      const full =
-        (row.name as string)?.trim() ||
-        (row.wrestling_name as string)?.trim() ||
-        [row.firstname ?? row.firstName, row.lastname ?? row.lastName].filter(Boolean).join(" ").trim() ||
-        ""
-      const normalized = normalize(full)
-      if (normalized && id && !byNormalized.has(normalized)) {
-        byNormalized.set(normalized, { id, canonicalName: full })
+      if (!id) continue
+      const full = getFullName(row)
+      const n = normalize(full)
+      const school = normalize((row.highschool as string) || "")
+      if (n && !byNormalized.has(n)) {
+        byNormalized.set(n, { id })
+      }
+      if (n && school) {
+        const key = `${n}|${school}`
+        if (!byNameAndSchool.has(key)) byNameAndSchool.set(key, { id })
+      }
+      const first = (row.firstname ?? row.firstName ?? row.first_name) as string | undefined
+      const last = (row.lastname ?? row.lastName ?? row.last_name) as string | undefined
+      if (first && last) {
+        const alt = normalize(`${last} ${first}`)
+        if (alt && !byNormalized.has(alt)) byNormalized.set(alt, { id })
       }
     }
 
-    // For each requested name, return id if we have a match (normalized)
     const ids: Record<string, string> = {}
-    for (const name of requestedNames) {
-      const n = normalize(name)
-      const found = byNormalized.get(n)
-      if (found) ids[name] = found.id
+    for (const key of requestedNames) {
+      const parts = key.split("|").map((p) => p.trim())
+      const namePart = parts[0] || ""
+      const schoolPart = parts[1] ? normalize(parts[1]) : ""
+      const n = normalize(namePart)
+      // Prefer name+school match so "Jacob Perry|New Bern" finds the right one
+      const found =
+        (n && schoolPart && byNameAndSchool.get(`${n}|${schoolPart}`)) ||
+        (n && byNormalized.get(n))
+      if (found) ids[key] = found.id
     }
 
     return NextResponse.json({ ids })

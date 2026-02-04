@@ -56,12 +56,8 @@ const top20Data = [
   { rank: 20, name: "Vincent Grack", school: "William Amos Hough", weight: "157 lbs", achievements: "State Qualifier • 39-6 record • 64.29% pin rate" },
 ]
 
-type LinkResolutionEntry = { id: string; name: string; highschool: string }
-
 export default function Class2028RankingsPage() {
   const [rankings, setRankings] = useState<PublicRanking[]>([])
-  const [linkResolution, setLinkResolution] = useState<LinkResolutionEntry[]>([])
-  const [resolvedIds, setResolvedIds] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
@@ -108,19 +104,8 @@ export default function Class2028RankingsPage() {
 
       const data = await response.json()
       setRankings(data.rankings || [])
-      setLinkResolution(data.linkResolution || [])
       setLastUpdated(data.metadata?.last_updated || null)
       setUpdatePostUrl(data.metadata?.update_post_url || null)
-
-      // Direct name -> id lookup so static names (e.g. Jacob Perry) always link to profile when they exist
-      const names = top20Data.map((a) => a.name).join(",")
-      const resolveRes = await fetch(
-        `/api/public-rankings/resolve-ids?year=2028&names=${encodeURIComponent(names)}`
-      )
-      if (resolveRes.ok) {
-        const { ids } = await resolveRes.json()
-        setResolvedIds(ids || {})
-      }
     } catch (err) {
       console.error("Error fetching 2028 rankings:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -144,9 +129,6 @@ export default function Class2028RankingsPage() {
     .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 20)
 
   const hasActiveFilters = searchTerm !== ""
-
-  // Normalize name for matching (trim, collapse spaces, lowercase) so "Jacob Perry" matches DB "Jacob Perry" or "Jacob  Perry"
-  const normalizeName = (s: string) => (s || "").trim().replace(/\s+/g, " ").toLowerCase()
 
   // Get Top 3 from actual rankings data - recompute when rankings change
   const top3Spotlight = useMemo(() => {
@@ -199,11 +181,7 @@ export default function Class2028RankingsPage() {
   while (merged.length < NEEDED) {
     merged.push(displayTop3[merged.length])
   }
-  const norm = (s: string) => (s || "").trim().replace(/\s+/g, " ").toLowerCase()
-  const finalTop3 = merged.slice(0, NEEDED).map((a) => ({
-    ...a,
-    id: a.id || linkResolution.find((r) => norm(r.name) === norm(a.name || ""))?.id,
-  }))
+  const finalTop3 = merged.slice(0, NEEDED)
 
   return (
     <AuthGuard>
@@ -299,32 +277,16 @@ export default function Class2028RankingsPage() {
                             {athlete.weight}
                           </Badge>
                           <div className="mt-2">
-                            {athlete.id ? (
-                              <Link
-                                href={`/unified-profile/${athlete.id}`}
-                                className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
-                              >
-                                View Profile →
-                              </Link>
-                            ) : (
-                              <Link
-                                href={(() => {
-                                  const [firstName, ...rest] = (athlete.name || "").trim().split(/\s+/)
-                                  const lastName = rest.join(" ") || ""
-                                  const params = new URLSearchParams({
-                                    firstName: firstName || "",
-                                    lastName,
-                                    highSchool: (athlete.school as string) || "",
-                                    graduationYear: "2028",
-                                    rank: String(athlete.prospect_ranking ?? rank),
-                                  })
-                                  return `/create-profile?${params.toString()}`
-                                })()}
-                                className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
-                              >
-                                New profile →
-                              </Link>
-                            )}
+                            <Link
+                              href={`/unified-profile/by-name?${new URLSearchParams({
+                                name: athlete.name || "",
+                                school: (athlete.school as string) || "",
+                                year: "2028",
+                              }).toString()}`}
+                              className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
+                            >
+                              View Profile →
+                            </Link>
                           </div>
                         </div>
                       )
@@ -514,13 +476,11 @@ export default function Class2028RankingsPage() {
                       </thead>
                       <tbody>
                         {top20Data.map((athlete) => {
-                          const directId = resolvedIds[athlete.name]
-                          const want = normalizeName(athlete.name)
-                          const linkMatch = linkResolution.find((r) => normalizeName(r.name) === want)
-                          const rankingMatch = rankings.find((r) => normalizeName(r.name || "") === want)
-                          const profileId = directId || linkMatch?.id || rankingMatch?.id
-                          const profileUrl = profileId ? `/unified-profile/${profileId}` : `#`
-                          
+                          const byNameUrl = `/unified-profile/by-name?${new URLSearchParams({
+                            name: athlete.name,
+                            school: athlete.school,
+                            year: "2028",
+                          }).toString()}`
                           return (
                             <tr key={athlete.rank} className="border-b hover:bg-gray-50">
                               <td className="px-4 py-3">
@@ -530,32 +490,12 @@ export default function Class2028RankingsPage() {
                               <td className="px-4 py-3">{athlete.school}</td>
                               <td className="px-4 py-3">{athlete.weight}</td>
                               <td className="px-4 py-3">
-                                {profileId ? (
-                                  <Link
-                                    href={profileUrl}
-                                    className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
-                                  >
-                                    View Profile
-                                  </Link>
-                                ) : (
-                                  <Link
-                                    href={(() => {
-                                      const [firstName, ...rest] = athlete.name.trim().split(/\s+/)
-                                      const lastName = rest.join(" ") || ""
-                                      const params = new URLSearchParams({
-                                        firstName: firstName || "",
-                                        lastName,
-                                        highSchool: athlete.school || "",
-                                        graduationYear: "2028",
-                                        rank: String(athlete.rank),
-                                      })
-                                      return `/create-profile?${params.toString()}`
-                                    })()}
-                                    className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
-                                  >
-                                    New profile
-                                  </Link>
-                                )}
+                                <Link
+                                  href={byNameUrl}
+                                  className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
+                                >
+                                  View Profile
+                                </Link>
                               </td>
                             </tr>
                           )

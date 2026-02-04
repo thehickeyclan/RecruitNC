@@ -97,6 +97,7 @@ interface AthleteDetailProps {
     nationally_ranked_wins?: string
     college_opens_experience?: string
     prospect_ranking?: number
+    rankings?: unknown
     instagram?: string
     instagram_handle?: string
     instagram_username?: string
@@ -213,7 +214,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
   const recruitingStatus = athlete?.recruiting_status || "Uncommitted"
-  const rawRank = (athlete as any)?.prospect_ranking != null ? Number((athlete as any).prospect_ranking) : null
+  const rawRank = (() => {
+    const p = (athlete as any)?.prospect_ranking
+    if (p != null && Number.isFinite(Number(p))) return Number(p)
+    const r = (athlete as any)?.rankings
+    if (r != null && typeof r === "number" && Number.isFinite(r)) return r
+    if (r != null && typeof r === "object") {
+      const n = (r as Record<string, unknown>)[2028] ?? (r as Record<string, unknown>)["2028"] ?? (r as Record<string, unknown>).class_2028 ?? (r as Record<string, unknown>).state ?? (r as Record<string, unknown>).national
+      if (typeof n === "number" && Number.isFinite(n)) return n
+    }
+    return null
+  })()
   // Only show rank on profile when athlete is on our official rankings: top 30 in 2026/2027, top 20 in 2028
   const maxRankForClass =
     graduationYear === 2028 ? 20 : graduationYear === 2026 || graduationYear === 2027 ? 30 : 0
