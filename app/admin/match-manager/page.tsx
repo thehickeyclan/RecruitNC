@@ -533,15 +533,100 @@ export default function MatchManagerPage() {
       return parseTrackFormat(allLines)
     }
 
-    // Rank format: either Win/Loss blocks or tab-separated
-    const firstLine = allLines[0].trim().toLowerCase()
-    const isMultiLineFormat = firstLine === "win" || firstLine === "loss"
+    // Rank format: Win/Loss-first blocks, date-first blocks, or tab-separated
+    const denseLines = allLines.map((l) => l.trim()).filter((l) => l.length > 0)
+    const firstLine = (denseLines[0] ?? "").trim().toLowerCase()
+    const looksLikeDate = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test((denseLines[0] ?? "").trim())
+    const isWinLossFirst = firstLine === "win" || firstLine === "loss"
+    const isDateFirstRank = looksLikeDate && denseLines.length >= 8 && (denseLines[9]?.toLowerCase() === "win" || denseLines[9]?.toLowerCase() === "loss" || denseLines[7]?.toLowerCase() === "win" || denseLines[7]?.toLowerCase() === "loss")
 
-    if (isMultiLineFormat) {
-      // Remove empty lines so fixed offsets (0..9 per match) are reliable when pasted data has blank lines
-      const lines = allLines.map((l) => l.trim()).filter((l) => l.length > 0)
+    if (isDateFirstRank) {
+      // Rank date-first: Date, Percent|Forfeit, Opponent|Weight, • School|•, Weight|Event, •|•, Event|Method, •|Win/Loss, Method|, Win/Loss (10 lines regular, 8 forfeit)
+      const lines = denseLines
+      let i = 0
+      while (i < lines.length) {
+        const date = (lines[i] ?? "").trim()
+        if (!/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(date)) {
+          i++
+          continue
+        }
+        const second = (lines[i + 1] ?? "").trim()
+        const isForfeit = second.toLowerCase() === "forfeit"
+        let isWin: boolean
+        let opponent = ""
+        let opponentSchool = ""
+        let weight = ""
+        let venue = ""
+        let method = ""
+        let oppPercent: number | null = null
+        let advance: number
 
-      // Multi-line format: Each match spans 10 lines (or 8 for forfeit)
+        if (isForfeit) {
+          const winLoss = (lines[i + 7] ?? "").toLowerCase().trim()
+          if (winLoss !== "win" && winLoss !== "loss") {
+            i++
+            continue
+          }
+          isWin = winLoss === "win"
+          weight = (lines[i + 2] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = (lines[i + 4] ?? "").trim()
+          method = (lines[i + 6] ?? "").trim() || "For."
+          opponent = "Forfeit"
+          advance = 8
+        } else {
+          const winLoss = (lines[i + 9] ?? "").toLowerCase().trim()
+          if (winLoss !== "win" && winLoss !== "loss") {
+            i++
+            continue
+          }
+          isWin = winLoss === "win"
+          const percentStr = (lines[i + 1] ?? "").trim()
+          opponent = (lines[i + 2] ?? "").trim()
+          const schoolLine = (lines[i + 3] ?? "").trim()
+          opponentSchool = schoolLine.replace(/^[•·\-]\s*/, "").trim()
+          weight = (lines[i + 4] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = (lines[i + 6] ?? "").trim()
+          method = (lines[i + 8] ?? "").trim()
+          const percentMatch = percentStr.match(/^[\d.]+$/)
+          if (percentMatch) oppPercent = parseFloat(percentStr)
+          advance = 10
+        }
+
+        if (!venue) {
+          i++
+          continue
+        }
+
+        if (isWin) {
+          matches.push({
+            date,
+            winner: "",
+            winner_school: "",
+            loser: opponent,
+            loser_school: opponentSchool,
+            result: method,
+            venue,
+            weight,
+            opp_percent: oppPercent,
+          })
+        } else {
+          matches.push({
+            date,
+            winner: opponent,
+            winner_school: opponentSchool,
+            loser: "",
+            loser_school: "",
+            result: method,
+            venue,
+            weight,
+            opp_percent: oppPercent,
+          })
+        }
+        i += advance
+      }
+    } else if (isWinLossFirst) {
+      // Multi-line format (Win/Loss first): Each match spans 10 lines (or 8 for forfeit)
+      const lines = denseLines
       // Win/Loss, Date, Percentage|Forfeit, Opponent|Forfeit, • School, Weight, •, Event, •, Method
       let i = 0
       while (i < lines.length) {
