@@ -729,11 +729,12 @@ export default function MatchManagerPage() {
       return
     }
 
-    // Deduplicate: same date + opponent + venue + result = one match (bracket/consolation often list same bout twice)
+    // Deduplicate: same date + opponent = one match (bracket/dual/tri often list same bout multiple times)
     const seen = new Set<string>()
     const dedupedMatches: typeof convertedMatches = []
     for (const m of convertedMatches) {
-      const key = `${m.date}|${m.opponent}|${m.opponent_school}|${m.venue}|${m.result}|${m.win_loss}`
+      const opponentNorm = m.opponent.trim().toLowerCase()
+      const key = `${m.date}|${opponentNorm}|${m.win_loss}`
       if (seen.has(key)) continue
       seen.add(key)
       dedupedMatches.push(m)

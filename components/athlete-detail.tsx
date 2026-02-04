@@ -71,9 +71,14 @@ interface AthleteDetailProps {
     commitment_date?: string
     bio?: string
     bio_headline?: string
+    gpa?: number
+    sat?: number
+    act?: number
     academic_gpa?: number
     academic_sat?: number
     academic_act?: number
+    academic_summary?: string | null
+    academic_interest?: string | null
     recruiting_status?: string
     nhsca_2024_record?: string
     nhsca_2025_record?: string
@@ -145,6 +150,12 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const canEdit = Boolean(currentUserId)
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
   const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
+
+  // Academic fields: support both gpa/sat/act and academic_gpa/academic_sat/academic_act (DB column variants)
+  const effectiveGpa = athleteData?.academic_gpa ?? athleteData?.gpa
+  const effectiveSat = athleteData?.academic_sat ?? athleteData?.sat
+  const effectiveAct = athleteData?.academic_act ?? athleteData?.act
+  const hasAcademicData = Boolean(effectiveGpa || effectiveSat || effectiveAct)
 
   // Handler for inline edits
   const handleInlineSave = async (updates: Record<string, any>) => {
@@ -1144,6 +1155,92 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {/* Contact Info Section - For coaches/admins (keep original) */}
       {!canEdit && <ContactInfoSection athlete={athlete} />}
 
+      {/* Academics Section - GPA, SAT, ACT - show when has data, when editing, or when can edit (to add) */}
+      {(hasAcademicData || editingSection === "academics" || canEdit) && (
+        <Card className="border-t-4 border-t-[#002147] shadow-md">
+          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <GraduationCap className="h-6 w-6 text-white" />
+                <h2 className="text-2xl font-bold text-white">Academics</h2>
+              </div>
+              {canEdit && !editingSection && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white hover:bg-white/20"
+                  onClick={() => setEditingSection("academics")}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="p-8">
+            {editingSection === "academics" ? (
+              <InlineAcademicsEditor
+                athleteId={athlete.id}
+                gpa={effectiveGpa}
+                sat={effectiveSat}
+                act={effectiveAct}
+                onSave={handleInlineSave}
+                onCancel={() => setEditingSection(null)}
+              />
+            ) : (
+              <>
+                {canSeePrivateInfo && hasAcademicData && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {effectiveGpa != null && (
+                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">GPA</p>
+                        <p className="text-4xl font-bold text-[#002147]">
+                          {Number(effectiveGpa).toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">Grade Point Average</p>
+                      </div>
+                    )}
+                    {effectiveSat != null && (
+                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">SAT</p>
+                        <p className="text-4xl font-bold text-[#002147]">{effectiveSat}</p>
+                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
+                      </div>
+                    )}
+                    {effectiveAct != null && (
+                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">ACT</p>
+                        <p className="text-4xl font-bold text-[#002147]">{effectiveAct}</p>
+                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {(athleteData?.academic_summary || athleteData?.academic_interest) && canSeePrivateInfo && (
+                  <div className="mt-4 space-y-2">
+                    {athleteData.academic_summary && (
+                      <p className="text-sm text-gray-700">{athleteData.academic_summary}</p>
+                    )}
+                    {athleteData.academic_interest && (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Academic Interest:</span> {athleteData.academic_interest}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+            {!canSeePrivateInfo && hasAcademicData && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <p className="text-sm text-blue-700 text-center">
+                  📊 GPA, SAT, and ACT are only visible to you (when signed in as this athlete), verified college coaches, and administrators.
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+
       {/* AI Bio Section - Athlete Profile */}
       {(athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
@@ -1196,88 +1293,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       )}
 
   {/* Removed duplicate Additional Achievements block (will render once after College Opens) */}
-
-      {/* Academics Section - show when has data, when editing, or when owner so they can add GPA/SAT/ACT */}
-      {(athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act || editingSection === "academics" || isViewingOwnProfile) && (
-        <Card className="border-t-4 border-t-[#002147] shadow-md">
-          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <GraduationCap className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Academics</h2>
-              </div>
-              {canEdit && !editingSection && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={() => setEditingSection("academics")}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="p-8">
-
-            {editingSection === "academics" ? (
-              <InlineAcademicsEditor
-                athleteId={athlete.id}
-                gpa={athleteData.academic_gpa}
-                sat={athleteData.academic_sat}
-                act={athleteData.academic_act}
-                onSave={handleInlineSave}
-                onCancel={() => setEditingSection(null)}
-              />
-            ) : (
-              <>
-                {/* Academic Stats - Visible only to profile owner, coaches, and admins */}
-                {canSeePrivateInfo && (athleteData?.academic_gpa || athleteData?.academic_sat || athleteData?.academic_act) && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {athleteData.academic_gpa && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">GPA</p>
-                        <p className="text-4xl font-bold text-[#002147]">
-                          {athleteData.academic_gpa.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">Grade Point Average</p>
-                      </div>
-                    )}
-                    {athleteData.academic_sat && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">SAT</p>
-                        <p className="text-4xl font-bold text-[#002147]">
-                          {athleteData.academic_sat}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
-                      </div>
-                    )}
-                    {athleteData.academic_act && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">ACT</p>
-                        <p className="text-4xl font-bold text-[#002147]">
-                          {athleteData.academic_act}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-            
-            {/* Message for visitors who are not the athlete, coach, or admin */}
-            {!canSeePrivateInfo && (athlete?.academic_gpa || athlete?.academic_sat || athlete?.academic_act) && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <p className="text-sm text-blue-700 text-center">
-                  📊 GPA, SAT, and ACT are only visible to you (when signed in as this athlete), verified college coaches, and administrators.
-                </p>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
 
       {/* Highlight Video Section - show when has video or when can edit (to add/update) */}
       {(athleteData?.highlight_video_url || canEdit) && (
