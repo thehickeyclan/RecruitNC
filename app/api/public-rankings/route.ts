@@ -88,10 +88,30 @@ export async function GET(request: Request) {
 
     console.log("[v0] Found athletes:", athletes?.length || 0)
 
+    // Link resolution: all athletes in this year/gender (id, name, school) so 2028 page can show "View Profile" for static names (e.g. Jacob Perry) even when prospect_ranking is null
+    const { data: allForYear } = await supabase
+      .from("athletes")
+      .select("id, name, firstname, lastname, highschool")
+      .eq("graduationyear", year)
+      .eq("gender", gender)
+
+    const linkResolution = (allForYear || []).map((a: Record<string, unknown>) => {
+      const name =
+        (a.name as string)?.trim() ||
+        [a.firstName ?? a.firstname, a.lastName ?? a.lastname].filter(Boolean).join(" ").trim() ||
+        ""
+      return {
+        id: a.id as string,
+        name,
+        highschool: (a.highschool as string) || "",
+      }
+    })
+
     if (!athletes || athletes.length === 0) {
       return NextResponse.json({
         rankings: [],
-        message: "No athletes found for the specified criteria",
+        linkResolution,
+        metadata: { year, gender, total_count: 0, last_updated: null, update_post_url: null },
       })
     }
 
@@ -194,6 +214,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       rankings,
+      linkResolution,
       metadata: {
         year,
         gender,

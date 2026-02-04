@@ -56,8 +56,11 @@ const top20Data = [
   { rank: 20, name: "Vincent Grack", school: "William Amos Hough", weight: "157 lbs", achievements: "State Qualifier • 39-6 record • 64.29% pin rate" },
 ]
 
+type LinkResolutionEntry = { id: string; name: string; highschool: string }
+
 export default function Class2028RankingsPage() {
   const [rankings, setRankings] = useState<PublicRanking[]>([])
+  const [linkResolution, setLinkResolution] = useState<LinkResolutionEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
@@ -104,6 +107,7 @@ export default function Class2028RankingsPage() {
 
       const data = await response.json()
       setRankings(data.rankings || [])
+      setLinkResolution(data.linkResolution || [])
       setLastUpdated(data.metadata?.last_updated || null)
       setUpdatePostUrl(data.metadata?.update_post_url || null)
     } catch (err) {
@@ -181,7 +185,11 @@ export default function Class2028RankingsPage() {
   while (merged.length < NEEDED) {
     merged.push(displayTop3[merged.length])
   }
-  const finalTop3 = merged.slice(0, NEEDED)
+  // Resolve profile id from linkResolution for static names (e.g. Jacob Perry) so "View Profile" shows when they have a profile
+  const finalTop3 = merged.slice(0, NEEDED).map((a) => ({
+    ...a,
+    id: a.id || linkResolution.find((r) => r.name.toLowerCase() === (a.name || "").toLowerCase())?.id,
+  }))
 
   return (
     <AuthGuard>
@@ -492,15 +500,17 @@ export default function Class2028RankingsPage() {
                       </thead>
                       <tbody>
                         {top20Data.map((athlete) => {
-                          // Try to find matching athlete in rankings data to get ID
-                          const matchingAthlete = rankings.find(
+                          // Resolve profile ID from linkResolution (all 2028 athletes) so "View Profile" shows when they have a profile (e.g. Jacob Perry), even if prospect_ranking is null
+                          const linkMatch = linkResolution.find(
                             (r) => r.name.toLowerCase() === athlete.name.toLowerCase()
                           )
-                          // Use unified-profile route with ID if available
-                          // Note: Name-based slugs may 404 until profiles are created
-                          const profileUrl = matchingAthlete?.id 
+                          const rankingMatch = rankings.find(
+                            (r) => r.name.toLowerCase() === athlete.name.toLowerCase()
+                          )
+                          const matchingAthlete = linkMatch ? { id: linkMatch.id } : rankingMatch
+                          const profileUrl = matchingAthlete?.id
                             ? `/unified-profile/${matchingAthlete.id}`
-                            : `#` // Disable link if no ID found to avoid 404
+                            : `#`
                           
                           return (
                             <tr key={athlete.rank} className="border-b hover:bg-gray-50">
