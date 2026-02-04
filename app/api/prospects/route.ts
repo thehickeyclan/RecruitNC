@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control": "public, max-age=900, stale-while-revalidate=1800", // 15 minutes cache
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           "Content-Type": "application/json",
         },
       },

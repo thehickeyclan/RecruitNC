@@ -190,33 +190,37 @@ export interface NationalTeamResultRow {
 }
 
 /**
- * Get NC United National Team results: Ultimate Club Duals 2025/2024 only.
- * NHSCA National Duals requires dedicated nc_united table data (not nhsca_2025_record,
- * which is individual NHSCA nationals, not the NC United team duals).
+ * Get NC United National Team results from athlete row (fallback when nc_united tables lack data).
+ * Ultimate Club Duals + NHSCA National Duals (team events; NOT individual NHSCA nationals).
  */
 export function getNationalTeamResults(athlete: any): NationalTeamResultRow[] {
   const rows: NationalTeamResultRow[] = []
-  const r2025 = (athlete?.ultimate_club_duals_2025_record ?? "").toString().trim()
-  if (r2025) {
-    rows.push({ event: "Ultimate Club Duals", year: 2025, record: r2025 })
-  }
-  const r2024 = (athlete?.ultimate_club_duals_2024_record ?? "").toString().trim()
-  if (r2024) {
-    rows.push({ event: "Ultimate Club Duals", year: 2024, record: r2024 })
-  }
+  // Ultimate Club Duals
+  const ucd2025 = (athlete?.ultimate_club_duals_2025_record ?? "").toString().trim()
+  if (ucd2025) rows.push({ event: "Ultimate Club Duals", year: 2025, record: ucd2025 })
+  const ucd2024 = (athlete?.ultimate_club_duals_2024_record ?? "").toString().trim()
+  if (ucd2024) rows.push({ event: "Ultimate Club Duals", year: 2024, record: ucd2024 })
+  const ucd2023 = (athlete?.ultimate_club_duals_2023_record ?? "").toString().trim()
+  if (ucd2023) rows.push({ event: "Ultimate Club Duals", year: 2023, record: ucd2023 })
+  // NHSCA National Duals (team event; not individual nhsca_2025_record)
+  const nd2025 = (athlete?.nhsca_national_duals_2025_record ?? athlete?.nhsca_duals_2025_record ?? "").toString().trim()
+  if (nd2025) rows.push({ event: "NHSCA National Duals", year: 2025, record: nd2025 })
+  const nd2024 = (athlete?.nhsca_national_duals_2024_record ?? athlete?.nhsca_duals_2024_record ?? "").toString().trim()
+  if (nd2024) rows.push({ event: "NHSCA National Duals", year: 2024, record: nd2024 })
+  const nd2023 = (athlete?.nhsca_national_duals_2023_record ?? athlete?.nhsca_duals_2023_record ?? "").toString().trim()
+  if (nd2023) rows.push({ event: "NHSCA National Duals", year: 2023, record: nd2023 })
   return rows
 }
 
 /**
- * Merge UCD from nc_united tables (primary) with athlete-row data (fallback).
- * Ultimate Club Duals: prefer table data; NHSCA National Duals: from athlete row.
+ * Merge NC United National Team results: table data (primary) + athlete row (fallback).
+ * Dedupe by event|year; table wins when both have same event+year.
  */
 export function mergeNationalTeamResults(
-  ucdFromTable: NationalTeamResultRow[],
+  fromTable: NationalTeamResultRow[],
   fromAthleteRow: NationalTeamResultRow[]
 ): NationalTeamResultRow[] {
-  const ucdYears = new Set(ucdFromTable.map((r) => r.year))
-  const athleteUcd = fromAthleteRow.filter((r) => r.event === "Ultimate Club Duals" && !ucdYears.has(r.year))
-  const nhsca = fromAthleteRow.filter((r) => r.event === "NHSCA National Duals")
-  return [...ucdFromTable, ...athleteUcd, ...nhsca].sort((a, b) => b.year - a.year)
+  const tableKeys = new Set(fromTable.map((r) => `${r.event}|${r.year}`))
+  const athleteFallback = fromAthleteRow.filter((r) => !tableKeys.has(`${r.event}|${r.year}`))
+  return [...fromTable, ...athleteFallback].sort((a, b) => b.year - a.year)
 }

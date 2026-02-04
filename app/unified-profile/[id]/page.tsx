@@ -95,11 +95,11 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
   }
   // Super32: only from super32_results table (no athlete-row fallback) to avoid wrong/duplicate data
     const athleteRowNational = getNationalTeamResults(athlete)
-    const ucdFromTable = await getUltimateClubDualsFromTables(
-      supabase,
-      athleteName,
-      athlete.highschool ?? athlete.highSchool ?? ""
-    )
+    const hs = athlete.highschool ?? athlete.highSchool ?? ""
+    let ucdFromTable = await getUltimateClubDualsFromTables(supabase, athleteName, hs)
+    if (ucdFromTable.length === 0 && athlete.wrestling_name?.trim() && athlete.wrestling_name.trim() !== athleteName) {
+      ucdFromTable = await getUltimateClubDualsFromTables(supabase, athlete.wrestling_name.trim(), hs)
+    }
     const nationalTeamResults = mergeNationalTeamResults(ucdFromTable, athleteRowNational)
 
   return (

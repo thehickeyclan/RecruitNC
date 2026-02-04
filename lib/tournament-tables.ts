@@ -149,8 +149,21 @@ export interface NationalTeamResultRow {
 }
 
 /**
- * Fetch Ultimate Club Duals results from nc_united tables (Legacy NC data).
- * nc_united_tournament_results + nc_united_wrestlers + nc_united_tournaments.
+ * NC United National Team event: Ultimate Club Duals or NHSCA National Duals.
+ * NHSCA: match "NHSCA Duals", "NHSCA National Duals", "NHSCA Dual", "NHSCA Dual Meet", etc.
+ */
+function isNationalTeamEvent(tournamentName: string): { event: string } | null {
+  const t = tournamentName.toLowerCase()
+  if (t.includes("ultimate club duals")) return { event: "Ultimate Club Duals" }
+  if (t.includes("nhsca") && (t.includes("national duals") || t.includes("duals") || t.includes("dual"))) return { event: "NHSCA National Duals" }
+  return null
+}
+
+/**
+ * Fetch NC United National Team results (Ultimate Club Duals, NHSCA National Duals) from nc_united tables.
+ * Schema: scripts/155-create-nc-united-national-team-schema.sql
+ * Data: 156-insert-nhsca-2025-data.sql, 157-insert-ucd-2024-data.sql, 158-insert-ucd-2025-data.sql
+ * Tables: nc_united_tournament_results + nc_united_wrestlers + nc_united_tournaments.
  * Falls back gracefully if tables don't exist.
  */
 export async function getUltimateClubDualsFromTables(
@@ -162,43 +175,62 @@ export async function getUltimateClubDualsFromTables(
   const nameTrim = athleteName.trim().toLowerCase()
 
   try {
-    // Fetch tournament results with wrestler and tournament joined
-    const { data: results, error } = await supabase
+    // Relation names in Supabase are usually the referenced table name; some schemas use FK name (wrestler, tournament).
+    let data: any[] | null = null
+    const q1 = await supabase
       .from("nc_united_tournament_results")
       .select("record, wins, losses, nc_united_wrestlers(first_name, last_name, high_school), nc_united_tournaments(name, year)")
-
-    if (error) return []
-    if (!results?.length) return []
-
-    const rows: NationalTeamResultRow[] = []
-    const seenYears = new Set<number>()
-    for (const r of results as any[]) {
-      const wrestler = r.nc_united_wrestlers
-      const tournament = r.nc_united_tournaments
-      if (!wrestler || !tournament) continue
-      const tName = (tournament.name ?? "").toString()
-      if (!tName.toLowerCase().includes("ultimate club duals")) continue
-      const year = typeof tournament.year === "number" ? tournament.year : parseInt(String(tournament.year), 10)
-      if (year !== 2024 && year !== 2025) continue
-      const fullName = `${(wrestler.first_name ?? "").trim()} ${(wrestler.last_name ?? "").trim()}`.trim().toLowerCase()
-      if (!fullName) continue
-      if (!fullName.includes(nameTrim) && !nameTrim.includes(fullName) && !namesMatch(nameTrim, fullName)) continue
-      if (highSchool?.trim() && wrestler.high_school) {
-        const rowSchool = (wrestler.high_school ?? "").toString().toLowerCase()
-        const athleteSchool = highSchool.trim().toLowerCase()
-        if (rowSchool && athleteSchool && !rowSchool.includes(athleteSchool) && !athleteSchool.includes(rowSchool)) continue
-      }
-      if (seenYears.has(year)) continue
-      seenYears.add(year)
-      const record = (r.record ?? "").toString().trim()
-      const derivedRecord = record || (r.wins != null || r.losses != null ? `${r.wins ?? 0}-${r.losses ?? 0}` : "")
-      if (!derivedRecord) continue
-      rows.push({ event: "Ultimate Club Duals", year, record: derivedRecord })
+      .limit(2000)
+    if (!q1.error && q1.data?.length !== undefined) {
+      data = q1.data as any[]
     }
-    return rows.sort((a, b) => b.year - a.year)
+    if (!data?.length && (q1.error?.code === "42703" || q1.error?.message?.includes("relation"))) {
+      const q2 = await supabase
+        .from("nc_united_tournament_results")
+        .select("record, wins, losses, wrestler(first_name, last_name, high_school), tournament(name, year)")
+        .limit(2000)
+      if (!q2.error && q2.data) data = q2.data as any[]
+    }
+    if (!data?.length) return []
+    return buildNationalTeamRows(data, nameTrim, highSchool ?? "")
   } catch {
     return []
   }
+}
+
+function buildNationalTeamRows(
+  results: any[],
+  nameTrim: string,
+  highSchool: string
+): NationalTeamResultRow[] {
+  const rows: NationalTeamResultRow[] = []
+  const seenKeys = new Set<string>()
+  for (const r of results) {
+    const wrestler = r.nc_united_wrestlers ?? r.wrestler
+    const tournament = r.nc_united_tournaments ?? r.tournament
+    if (!wrestler || !tournament) continue
+    const tName = (tournament.name ?? "").toString()
+    const eventInfo = isNationalTeamEvent(tName)
+    if (!eventInfo) continue
+    const year = typeof tournament.year === "number" ? tournament.year : parseInt(String(tournament.year), 10)
+    if (year < 2023 || year > 2026) continue
+    const f = (wrestler.first_name ?? wrestler.firstname ?? "").toString().trim()
+    const l = (wrestler.last_name ?? wrestler.lastname ?? "").toString().trim()
+    const fullName = `${f} ${l}`.trim().toLowerCase()
+    if (!fullName) continue
+    if (!fullName.includes(nameTrim) && !nameTrim.includes(fullName) && !namesMatch(nameTrim, fullName)) continue
+    const rowSchool = (wrestler.high_school ?? wrestler.highschool ?? "").toString().trim().toLowerCase()
+    const athleteSchool = highSchool.trim().toLowerCase()
+    if (rowSchool && athleteSchool && !rowSchool.includes(athleteSchool) && !athleteSchool.includes(rowSchool)) continue
+    const yearKey = `${eventInfo.event}|${year}`
+    if (seenKeys.has(yearKey)) continue
+    seenKeys.add(yearKey)
+    const record = (r.record ?? "").toString().trim()
+    const derivedRecord = record || (r.wins != null || r.losses != null ? `${r.wins ?? 0}-${r.losses ?? 0}` : "")
+    if (!derivedRecord) continue
+    rows.push({ event: eventInfo.event, year, record: derivedRecord })
+  }
+  return rows.sort((a, b) => b.year - a.year)
 }
 
 function namesMatch(a: string, b: string): boolean {
@@ -209,5 +241,5 @@ function namesMatch(a: string, b: string): boolean {
   const aLast = aParts.slice(1).join(" ") || ""
   const bFirst = bParts[0] ?? ""
   const bLast = bParts.slice(1).join(" ") || ""
-  return aFirst === bFirst && aLast === bLast
+  return aFirst.toLowerCase() === bFirst.toLowerCase() && aLast.toLowerCase() === bLast.toLowerCase()
 }
