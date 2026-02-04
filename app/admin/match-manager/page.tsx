@@ -446,46 +446,77 @@ export default function MatchManagerPage() {
 
   const parseTrackFormat = (lines: string[]): Match[] => {
     const matches: Match[] = []
-    const headerLine = (lines[0] ?? "").toLowerCase()
-    const startIdx = headerLine.includes("date") && (headerLine.includes("summary") || headerLine.includes("event")) ? 1 : 0
+    const nonEmpty = lines.map((l) => l.trim()).filter((l) => l.length > 0)
 
-    for (let i = startIdx; i < lines.length; i++) {
-      const line = (lines[i] ?? "").trim()
-      if (!line) continue
-
-      const parts = line.split(/\t/)
-      if (parts.length < 4) continue
-
-      const [date, event, weight, summary] = parts.map((p) => p.trim())
-
-      if (!summary) continue
-      if (summary.toLowerCase().includes("bye")) continue
-      if (summary.toLowerCase().includes("unknown") && summary.toLowerCase().includes("for")) continue
-
-      // Format: "Round - Winner (School) over Loser (School) (Result)" or "Winner (School) over Loser (School) (Result)"
+    const tryParseSummary = (summary: string): Match | null => {
+      if (!summary || summary.toLowerCase().includes("bye")) return null
+      if (summary.toLowerCase().includes("unknown") && summary.toLowerCase().includes("for")) return null
       const overMatch = summary.match(
         /(?:.+\s-\s)?(.+?)\s*\(([^)]+)\)\s+over\s+(.+?)\s*\(([^)]+)\)\s*(?:\(([^)]+)\))?\s*$/
       )
-      if (overMatch) {
-        const [, winner, winnerSchool, loser, loserSchool, resultRaw] = overMatch
-        const result = resultRaw ? resultRaw.replace(/[()]/g, "").trim() : ""
-        if (loser.trim().toLowerCase() === "unknown") continue
+      if (!overMatch) return null
+      const [, winner, winnerSchool, loser, loserSchool, resultRaw] = overMatch
+      const result = resultRaw ? resultRaw.replace(/[()]/g, "").trim() : ""
+      if (loser.trim().toLowerCase() === "unknown") return null
+      return { winner: winner.trim(), winnerSchool: winnerSchool.trim(), loser: loser.trim(), loserSchool: loserSchool.trim(), result }
+    }
 
-        const weightClean = weight ? weight.replace(/^\d*A\s+/i, "").trim() : weight
+    // 1) Tab-separated: one line per match with Date\tEvent\tWeight\tSummary
+    const headerLine = (nonEmpty[0] ?? "").toLowerCase()
+    const hasHeader = headerLine.includes("date") && (headerLine.includes("summary") || headerLine.includes("event"))
+    const startIdx = hasHeader ? 1 : 0
 
-        matches.push({
-          date: date || "",
-          winner: winner.trim(),
-          winner_school: winnerSchool.trim(),
-          loser: loser.trim(),
-          loser_school: loserSchool.trim(),
-          result,
-          venue: event || "",
-          weight: weightClean || weight || "",
-          opp_percent: null,
-        })
+    for (let i = startIdx; i < nonEmpty.length; i++) {
+      const line = nonEmpty[i] ?? ""
+      const parts = line.split(/\t/)
+      if (parts.length >= 4) {
+        const [date, event, weight, summary] = parts.map((p) => p.trim())
+        const parsed = tryParseSummary(summary)
+        if (parsed) {
+          const weightClean = weight ? weight.replace(/^\d*A\s+/i, "").trim() : weight
+          matches.push({
+            date: date || "",
+            winner: parsed.winner,
+            winner_school: parsed.winnerSchool,
+            loser: parsed.loser,
+            loser_school: parsed.loserSchool,
+            result: parsed.result,
+            venue: event || "",
+            weight: weightClean || weight || "",
+            opp_percent: null,
+          })
+        }
       }
     }
+
+    // 2) Line-by-line: 4 lines per match (Date, Event, Weight, Summary) when paste has no tabs
+    if (matches.length === 0 && nonEmpty.length >= 4) {
+      const lineStart = (nonEmpty[0] ?? "").toLowerCase() === "date" ? 4 : 0
+      for (let i = lineStart; i < nonEmpty.length - 3; i++) {
+        const summary = nonEmpty[i + 3] ?? ""
+        if (!summary.includes(" over ")) continue
+        const parsed = tryParseSummary(summary)
+        if (parsed) {
+          const date = nonEmpty[i] ?? ""
+          const event = nonEmpty[i + 1] ?? ""
+          const weight = nonEmpty[i + 2] ?? ""
+          const weightClean = weight ? weight.replace(/^\d*A\s+/i, "").trim() : weight
+          matches.push({
+            date,
+            winner: parsed.winner,
+            winner_school: parsed.winnerSchool,
+            loser: parsed.loser,
+            loser_school: parsed.loserSchool,
+            result: parsed.result,
+            venue: event,
+            weight: weightClean || weight,
+            opp_percent: null,
+          })
+          i += 3 // advance past this match's 4 lines
+        }
+      }
+    }
+
     return matches
   }
 
