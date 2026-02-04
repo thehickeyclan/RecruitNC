@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { mapAthleteToDb, mapDbToAthlete } from "./athlete-utils"
+import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 
 export async function getAthletesAction() {
   try {
@@ -188,8 +189,12 @@ export async function createAthleteAction(athleteData: any) {
     // Map frontend fields to database fields
     const dbData = await mapAthleteToDb(athleteData)
 
-    const supabase = await createClient()
-    const { data, error } = await supabase.from("athletes").insert([dbData]).select().single()
+    // Use admin client to bypass RLS; filter payload to only valid columns (avoids 500 from schema mismatch)
+    const adminSupabase = createAdminClient()
+    const columns = await getAthletesColumnNames(adminSupabase)
+    const filteredPayload = filterPayloadToSchema(dbData as Record<string, unknown>, columns)
+
+    const { data, error } = await adminSupabase.from("athletes").insert([filteredPayload]).select().single()
 
     if (error) {
       console.error("Error creating athlete:", error)

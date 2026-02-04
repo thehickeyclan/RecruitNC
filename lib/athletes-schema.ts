@@ -45,6 +45,8 @@ const COLUMN_ALIASES: Record<string, string[]> = {
   contactEmail: ["contactEmail", "contact_email", "email"],
   firstname: ["firstname", "firstName"],
   lastname: ["lastname", "lastName"],
+  firstName: ["firstName", "firstname"],
+  lastName: ["lastName", "lastname"],
   wrestling_club: ["wrestling_club", "wrestlingClub"],
 }
 
