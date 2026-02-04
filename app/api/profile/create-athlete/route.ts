@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 
 // Match athlete-utils mapAthleteToDb: admin uses contactEmail, phone (camelCase)
 const ADD_COLUMNS_SQL = `
@@ -53,13 +54,41 @@ export async function POST(request: NextRequest) {
     const athleteName = `${String(formData.firstName).trim()} ${String(formData.lastName).trim()}`
     const now = new Date().toISOString()
 
+    const adminSupabase = createAdminClient()
+
+    const existing = await findExistingAthlete(adminSupabase, {
+      name: athleteName,
+      graduationYear,
+      school: formData.highSchool || undefined,
+    })
+    if (existing) {
+      await adminSupabase
+        .from("athletes")
+        .update({
+          claimed_by_user_id: user.id,
+          claimed_at: now,
+          updated_at: now,
+        })
+        .eq("id", existing.id)
+      await supabase
+        .from("user_profiles")
+        .update({ athlete_id: existing.id, athlete_name: existing.name })
+        .eq("user_id", user.id)
+      return NextResponse.json({
+        success: true,
+        existing: true,
+        athleteId: existing.id,
+        athleteName: existing.name,
+        message: "This prospect already has a profile. You've been linked to it.",
+      })
+    }
+
+    await ensureCreateProfileColumns(adminSupabase)
+
     const prospectRanking =
       formData.prospect_ranking != null && Number.isFinite(Number(formData.prospect_ranking))
         ? Math.min(30, Math.max(1, Number(formData.prospect_ranking)))
         : null
-
-    const adminSupabase = createAdminClient()
-    await ensureCreateProfileColumns(adminSupabase)
 
     const insertPayload: Record<string, unknown> = {
       name: athleteName,

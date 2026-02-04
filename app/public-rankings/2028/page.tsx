@@ -56,6 +56,8 @@ const top20Data = [
   { rank: 20, name: "Vincent Grack", school: "William Amos Hough", weight: "157 lbs", achievements: "State Qualifier • 39-6 record • 64.29% pin rate" },
 ]
 
+const JACOB_PERRY_PROFILE_ID = "ddea34af-ae6a-4880-8a1c-687576bef1fe"
+
 export default function Class2028RankingsPage() {
   const [rankings, setRankings] = useState<PublicRanking[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -476,11 +478,14 @@ export default function Class2028RankingsPage() {
                       </thead>
                       <tbody>
                         {top20Data.map((athlete) => {
-                          const byNameUrl = `/unified-profile/by-name?${new URLSearchParams({
-                            name: athlete.name,
-                            school: athlete.school,
-                            year: "2028",
-                          }).toString()}`
+                          const profileUrl =
+                            athlete.name === "Jacob Perry"
+                              ? `/unified-profile/${JACOB_PERRY_PROFILE_ID}`
+                              : `/unified-profile/by-name?${new URLSearchParams({
+                                  name: athlete.name,
+                                  school: athlete.school,
+                                  year: "2028",
+                                }).toString()}`
                           return (
                             <tr key={athlete.rank} className="border-b hover:bg-gray-50">
                               <td className="px-4 py-3">
@@ -491,7 +496,7 @@ export default function Class2028RankingsPage() {
                               <td className="px-4 py-3">{athlete.weight}</td>
                               <td className="px-4 py-3">
                                 <Link
-                                  href={byNameUrl}
+                                  href={profileUrl}
                                   className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
                                 >
                                   View Profile

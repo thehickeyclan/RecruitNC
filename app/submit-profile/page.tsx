@@ -179,8 +179,8 @@ export default function SubmitProfilePage() {
       if (data.athleteId) setCreatedAthleteId(data.athleteId)
       setSubmitted(true)
       toast({
-        title: "Profile created",
-        description: "The profile is live. You can view and edit it anytime.",
+        title: data.existing ? "Profile already exists" : "Profile created",
+        description: data.message || (data.existing ? "You've been linked to the existing profile so you can view and edit it." : "The profile is live. You can view and edit it anytime."),
       })
     } catch (error: any) {
       console.error("Error submitting profile:", error)
