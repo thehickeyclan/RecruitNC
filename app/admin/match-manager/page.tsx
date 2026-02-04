@@ -48,6 +48,7 @@ export default function MatchManagerPage() {
   const [jsonData, setJsonData] = useState("")
   const [bulkJsonData, setBulkJsonData] = useState("")
   const [rawTextData, setRawTextData] = useState("")
+  const [rawTextFormat, setRawTextFormat] = useState<"rank" | "track">("rank")
   const [parseResult, setParseResult] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
@@ -443,7 +444,52 @@ export default function MatchManagerPage() {
   const selectedAthleteData = athletes.find((a) => a.id === selectedAthlete)
   const athleteProgress = selectedAthlete ? getAthleteProgress(selectedAthlete) : null
 
-  const parseRawTextToJson = (rawText: string) => {
+  const parseTrackFormat = (lines: string[]): Match[] => {
+    const matches: Match[] = []
+    const headerLine = (lines[0] ?? "").toLowerCase()
+    const startIdx = headerLine.includes("date") && (headerLine.includes("summary") || headerLine.includes("event")) ? 1 : 0
+
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = (lines[i] ?? "").trim()
+      if (!line) continue
+
+      const parts = line.split(/\t/)
+      if (parts.length < 4) continue
+
+      const [date, event, weight, summary] = parts.map((p) => p.trim())
+
+      if (!summary) continue
+      if (summary.toLowerCase().includes("bye")) continue
+      if (summary.toLowerCase().includes("unknown") && summary.toLowerCase().includes("for")) continue
+
+      // Format: "Round - Winner (School) over Loser (School) (Result)" or "Winner (School) over Loser (School) (Result)"
+      const overMatch = summary.match(
+        /(?:.+\s-\s)?(.+?)\s*\(([^)]+)\)\s+over\s+(.+?)\s*\(([^)]+)\)\s*(?:\(([^)]+)\))?\s*$/
+      )
+      if (overMatch) {
+        const [, winner, winnerSchool, loser, loserSchool, resultRaw] = overMatch
+        const result = resultRaw ? resultRaw.replace(/[()]/g, "").trim() : ""
+        if (loser.trim().toLowerCase() === "unknown") continue
+
+        const weightClean = weight ? weight.replace(/^\d*A\s+/i, "").trim() : weight
+
+        matches.push({
+          date: date || "",
+          winner: winner.trim(),
+          winner_school: winnerSchool.trim(),
+          loser: loser.trim(),
+          loser_school: loserSchool.trim(),
+          result,
+          venue: event || "",
+          weight: weightClean || weight || "",
+          opp_percent: null,
+        })
+      }
+    }
+    return matches
+  }
+
+  const parseRawTextToJson = (rawText: string, format: "rank" | "track" = "rank") => {
     // Normalize line endings and trim; then for multi-line format we use dense lines (no blanks)
     const allLines = rawText.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().split("\n")
 
@@ -451,7 +497,12 @@ export default function MatchManagerPage() {
 
     if (allLines.length === 0) return matches
 
-    // Check if this is the multi-line format (starts with Win/Loss)
+    // Track format: tab-separated Date, Event, Weight, Summary (from Trackwrestling, etc.)
+    if (format === "track") {
+      return parseTrackFormat(allLines)
+    }
+
+    // Rank format: either Win/Loss blocks or tab-separated
     const firstLine = allLines[0].trim().toLowerCase()
     const isMultiLineFormat = firstLine === "win" || firstLine === "loss"
 
@@ -629,7 +680,7 @@ export default function MatchManagerPage() {
       return
     }
 
-    const parsedMatches = parseRawTextToJson(rawTextData)
+    const parsedMatches = parseRawTextToJson(rawTextData, rawTextFormat)
 
     if (parsedMatches.length === 0) {
       setParseResult({ success: false, error: "No valid matches were found. Please check the format." })
@@ -1143,10 +1194,39 @@ export default function MatchManagerPage() {
               </div>
 
               <div>
-                <Label htmlFor="rawTextData">Raw Match Data (Tab-Separated)</Label>
+                <Label>Data Format</Label>
+                <div className="flex gap-4 mt-1 mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rawFormat"
+                      checked={rawTextFormat === "rank"}
+                      onChange={() => setRawTextFormat("rank")}
+                      className="rounded"
+                    />
+                    <span className="text-sm font-medium">Rank</span>
+                    <span className="text-xs text-gray-500">— Win/Loss blocks with date, opponent, school, venue, method</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rawFormat"
+                      checked={rawTextFormat === "track"}
+                      onChange={() => setRawTextFormat("track")}
+                      className="rounded"
+                    />
+                    <span className="text-sm font-medium">Track</span>
+                    <span className="text-xs text-gray-500">— Tab: Date, Event, Weight, Summary (e.g. from Trackwrestling)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="rawTextData">Raw Match Data</Label>
                 <p className="text-xs text-gray-500 mb-2">
-                  Paste your data with summary line first, then match lines. Format: Date, Winner, School, Loser,
-                  School, Result, Venue, Weight, Opp%
+                  {rawTextFormat === "rank"
+                    ? "Paste Win/Loss blocks or tab-separated: Date, Winner, School, Loser, School, Result, Venue, Weight, Opp%"
+                    : "Paste tab-separated: Date, Event, Weight, Summary (e.g. Champ. Round 2 - Athlete (School) over Opponent (School) (Dec 9-4))"}
                 </p>
                 <Textarea
                   id="rawTextData"
