@@ -102,6 +102,15 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
+    // Link this athlete to the user's profile so "My Profile" shows it and they can find it easily
+    await supabase
+      .from("user_profiles")
+      .update({
+        athlete_id: athlete.id,
+        athlete_name: athlete.name,
+      })
+      .eq("user_id", user.id)
+
     return NextResponse.json({
       success: true,
       athleteId: athlete.id,

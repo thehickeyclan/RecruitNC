@@ -298,7 +298,7 @@ export function ProfileClient() {
                   </CardTitle>
                   <CardDescription>Upload your own photo for your athlete profile</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <PublicImageUpload
                     athleteId={profile.athlete_id}
                     athleteName={profile.athlete_name}
@@ -307,6 +307,14 @@ export function ProfileClient() {
                       // Optionally refresh or show success message
                     }}
                   />
+                  <div className="flex flex-wrap gap-2 pt-2 border-t">
+                    <Button asChild variant="default" size="sm">
+                      <a href={`/unified-profile/${profile.athlete_id}`}>View {profile.athlete_name}&apos;s profile</a>
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <a href={`/edit-profile/${profile.athlete_id}`}>Edit profile</a>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

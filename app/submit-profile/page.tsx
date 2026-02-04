@@ -269,8 +269,8 @@ export default function SubmitProfilePage() {
         <CardHeader>
           <CardTitle>Submit New Athlete Profile</CardTitle>
           <CardDescription>
-            Submit a new wrestler profile to be added to our North Carolina wrestling prospects database. All
-            submissions are reviewed by our admin team before being published.
+            Submit a new wrestler profile to be added to our North Carolina wrestling prospects database. The
+            profile goes live immediately and will appear under My Profile and on the Prospects page.
           </CardDescription>
         </CardHeader>
 
@@ -279,8 +279,8 @@ export default function SubmitProfilePage() {
             <Alert className="bg-blue-50 border-blue-200">
               <AlertCircle className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                <strong>Note:</strong> All fields marked with * are required. Your submission will be reviewed by our
-                admin team within 2-3 business days.
+                <strong>Note:</strong> All fields marked with * are required. The profile is published right away and
+                will appear under <strong>My Profile</strong> and on the <strong>Prospects</strong> page.
               </AlertDescription>
             </Alert>
 
