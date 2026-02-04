@@ -61,6 +61,7 @@ type LinkResolutionEntry = { id: string; name: string; highschool: string }
 export default function Class2028RankingsPage() {
   const [rankings, setRankings] = useState<PublicRanking[]>([])
   const [linkResolution, setLinkResolution] = useState<LinkResolutionEntry[]>([])
+  const [resolvedIds, setResolvedIds] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
@@ -110,6 +111,16 @@ export default function Class2028RankingsPage() {
       setLinkResolution(data.linkResolution || [])
       setLastUpdated(data.metadata?.last_updated || null)
       setUpdatePostUrl(data.metadata?.update_post_url || null)
+
+      // Direct name -> id lookup so static names (e.g. Jacob Perry) always link to profile when they exist
+      const names = top20Data.map((a) => a.name).join(",")
+      const resolveRes = await fetch(
+        `/api/public-rankings/resolve-ids?year=2028&names=${encodeURIComponent(names)}`
+      )
+      if (resolveRes.ok) {
+        const { ids } = await resolveRes.json()
+        setResolvedIds(ids || {})
+      }
     } catch (err) {
       console.error("Error fetching 2028 rankings:", err)
       setError(err instanceof Error ? err.message : "An error occurred")
@@ -503,13 +514,12 @@ export default function Class2028RankingsPage() {
                       </thead>
                       <tbody>
                         {top20Data.map((athlete) => {
+                          const directId = resolvedIds[athlete.name]
                           const want = normalizeName(athlete.name)
                           const linkMatch = linkResolution.find((r) => normalizeName(r.name) === want)
                           const rankingMatch = rankings.find((r) => normalizeName(r.name || "") === want)
-                          const matchingAthlete = linkMatch ? { id: linkMatch.id } : rankingMatch
-                          const profileUrl = matchingAthlete?.id
-                            ? `/unified-profile/${matchingAthlete.id}`
-                            : `#`
+                          const profileId = directId || linkMatch?.id || rankingMatch?.id
+                          const profileUrl = profileId ? `/unified-profile/${profileId}` : `#`
                           
                           return (
                             <tr key={athlete.rank} className="border-b hover:bg-gray-50">
@@ -520,7 +530,7 @@ export default function Class2028RankingsPage() {
                               <td className="px-4 py-3">{athlete.school}</td>
                               <td className="px-4 py-3">{athlete.weight}</td>
                               <td className="px-4 py-3">
-                                {matchingAthlete?.id ? (
+                                {profileId ? (
                                   <Link
                                     href={profileUrl}
                                     className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
