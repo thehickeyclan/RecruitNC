@@ -999,8 +999,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       {/* Summary - Tournament Results (NHSCA, Super 32) - starting point */}
       {tournamentResultsComponent}
 
-      {/* Athlete Profile - AI Bio */}
-      {(athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
+      {/* Athlete Profile - AI Bio - always show when canEdit so users can add/edit; otherwise show when there's content */}
+      {(canEdit || athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
             <div className="flex items-center justify-between">
