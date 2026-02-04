@@ -659,18 +659,24 @@ export default function MatchManagerPage() {
           venue = lines[i + 5] ?? ""
           method = (lines[i + 7] ?? "").trim() || "For."
           lineOffset = 7
-        } else {
+        } else if (/^[\d.]+$/.test(percentageOrForfeit)) {
           opponent = opponentOrForfeit.trim()
           const schoolLine = (lines[i + 4] ?? "").trim()
-          // Allow bullet •, middle dot ·, or leading dash
           opponentSchool = schoolLine.replace(/^[•·\-]\s*/, "").trim()
           weight = (lines[i + 5] ?? "").replace(/\s*lbs\s*$/i, "").trim()
           venue = (lines[i + 7] ?? "").trim()
           method = (lines[i + 9] ?? "").trim()
-
-          const percentMatch = percentageOrForfeit.match(/^[\d.]+$/)
-          if (percentMatch) oppPercent = parseFloat(percentageOrForfeit)
+          oppPercent = parseFloat(percentageOrForfeit)
           lineOffset = 9
+        } else {
+          // 9-line format (no percentage): Opponent at i+2, School at i+3
+          opponent = percentageOrForfeit.trim()
+          const schoolLine = opponentOrForfeit.trim()
+          opponentSchool = schoolLine.replace(/^[•·\-]\s*/, "").trim()
+          weight = (lines[i + 4] ?? "").replace(/\s*lbs\s*$/i, "").trim()
+          venue = (lines[i + 6] ?? "").trim()
+          method = (lines[i + 8] ?? "").trim()
+          lineOffset = 8
         }
 
         if (!date || !venue) {
@@ -916,7 +922,10 @@ export default function MatchManagerPage() {
         (m.result.toLowerCase().includes("dec") || m.result.toLowerCase().includes("sv")),
     ).length
     const forfeits = convertedMatches.filter(
-      (m) => m.win_loss === "W" && m.result.toLowerCase().includes("for"),
+      (m) =>
+        m.win_loss === "W" &&
+        (m.opponent.toLowerCase() === "forfeit" ||
+          (m.result && /^(for|for\.|forf\.?|forfeit|ff\.?)$/i.test(m.result.trim()))),
     ).length
 
     const dates = convertedMatches
