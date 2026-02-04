@@ -257,7 +257,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       return "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/athlete/anna-ockerman-1746893349014.png"
     }
 
-    const photoUrl = athlete?.photourl || athlete?.photo_url || athlete?.image_url
+    // Prefer athleteData so uploaded photo shows immediately (athleteData is updated on save)
+    const photoUrl =
+      athleteData?.photourl ||
+      athleteData?.photo_url ||
+      athleteData?.image_url ||
+      athlete?.photourl ||
+      athlete?.photo_url ||
+      athlete?.image_url
 
     if (photoUrl && !imageError && photoUrl !== "/wrestler-silhouette.png") {
       return photoUrl

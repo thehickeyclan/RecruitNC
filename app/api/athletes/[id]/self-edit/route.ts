@@ -183,9 +183,12 @@ export async function POST(
 
     // Only send columns that exist on this row (query-driven) and are allowed
     const athleteColumnSet = new Set(athleteKeys)
+    const alwaysAllow = new Set(["bio", "bio_headline"]) // Known columns; include even if not in sample row
     const filteredPayload: Record<string, unknown> = {}
     for (const k of Object.keys(updatePayload)) {
-      if (ALLOWED_UPDATE_COLUMNS.has(k) && athleteColumnSet.has(k)) filteredPayload[k] = updatePayload[k]
+      const inAllowed = ALLOWED_UPDATE_COLUMNS.has(k)
+      const inRowOrAlways = athleteColumnSet.has(k) || alwaysAllow.has(k)
+      if (inAllowed && inRowOrAlways) filteredPayload[k] = updatePayload[k]
     }
     if (Object.keys(filteredPayload).length === 0) {
       return NextResponse.json({ error: "No valid changes to apply" }, { status: 400 })
