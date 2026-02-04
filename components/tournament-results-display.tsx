@@ -126,11 +126,11 @@ export function TournamentResultsDisplay({
     )
   }
 
-  // Full table version for profiles
+  // Full table version for profiles - fixed order: NC United National Team, NCHSAA, NHSCA, Super 32
   return (
     <div className="space-y-6">
-      {/* NC United National Team - Ultimate Club Duals 2025/2024, NHSCA 2025 */}
-      {nationalTeamResults.length > 0 && (
+      {/* 1. NC United National Team - Ultimate Club Duals 2025/2024, NHSCA 2025 */}
+      {(nationalTeamResults.length > 0 || alwaysShowStructure) && (
         <Card className="border-t-4 border-t-[#D3B574] shadow-md">
           <CardHeader className="bg-gradient-to-r from-[#03154C] to-[#1e3a8a] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
@@ -152,13 +152,19 @@ export function TournamentResultsDisplay({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {nationalTeamResults.map((result, index) => (
+                  {nationalTeamResults.length > 0 ? nationalTeamResults.map((result, index) => (
                     <TableRow key={index} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium text-[#03154C]">{result.event}</TableCell>
                       <TableCell className="font-semibold">{result.year}</TableCell>
                       <TableCell className="font-mono">{result.record}</TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-gray-500 py-6">
+                        No national team results recorded
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -166,7 +172,8 @@ export function TournamentResultsDisplay({
         </Card>
       )}
 
-      {nchsaaResults.length > 0 && (
+      {/* 2. NCHSAA State Championships */}
+      {(nchsaaResults.length > 0 || alwaysShowStructure) && (
         <Card className="border-t-4 border-t-yellow-500 shadow-md">
           <CardHeader className="bg-gradient-to-r from-yellow-500 to-amber-500 py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
@@ -186,29 +193,37 @@ export function TournamentResultsDisplay({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {nchsaaResults.map((result, index) => {
-                    let placementText: string
-                    if (result.place === null || result.place === undefined) {
-                      placementText = "SQ"
-                    } else if (result.place === 1) {
-                      placementText = "Champion"
-                    } else if (result.place === 2) {
-                      placementText = "2nd Place"
-                    } else if (result.place === 3) {
-                      placementText = "3rd Place"
-                    } else {
-                      placementText = `${result.place}th Place`
-                    }
-                    
-                    return (
-                      <TableRow key={index} className="hover:bg-gray-50 transition-colors">
-                        <TableCell className="font-semibold text-yellow-600">{result.year}</TableCell>
-                        <TableCell>{getPlacementBadge(placementText)}</TableCell>
-                        <TableCell>{result.classification}</TableCell>
-                        <TableCell>{result.weight_class}</TableCell>
-                      </TableRow>
-                    )
-                  })}
+                  {nchsaaResults.length > 0 ? (
+                    nchsaaResults.map((result, index) => {
+                      let placementText: string
+                      if (result.place === null || result.place === undefined) {
+                        placementText = "SQ"
+                      } else if (result.place === 1) {
+                        placementText = "Champion"
+                      } else if (result.place === 2) {
+                        placementText = "2nd Place"
+                      } else if (result.place === 3) {
+                        placementText = "3rd Place"
+                      } else {
+                        placementText = `${result.place}th Place`
+                      }
+
+                      return (
+                        <TableRow key={index} className="hover:bg-gray-50 transition-colors">
+                          <TableCell className="font-semibold text-yellow-600">{result.year}</TableCell>
+                          <TableCell>{getPlacementBadge(placementText)}</TableCell>
+                          <TableCell>{result.classification}</TableCell>
+                          <TableCell>{result.weight_class}</TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-gray-500 py-6">
+                        No NCHSAA results recorded
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -216,7 +231,7 @@ export function TournamentResultsDisplay({
         </Card>
       )}
 
-      {/* NHSCA - always show when alwaysShowStructure so structure matches public/school profiles */}
+      {/* 3. NHSCA National Championship */}
       {(nhscaResults.length > 0 || alwaysShowStructure) && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] py-4">
@@ -262,7 +277,7 @@ export function TournamentResultsDisplay({
         </Card>
       )}
 
-      {/* Super 32 - always show when alwaysShowStructure so structure matches public/school profiles */}
+      {/* 4. Super 32 */}
       {(super32Results.length > 0 || alwaysShowStructure) && (
         <Card className="border-t-4 border-t-[#B31B1B] shadow-md">
           <CardHeader className="bg-gradient-to-r from-[#B31B1B] to-[#8B1515] py-4">

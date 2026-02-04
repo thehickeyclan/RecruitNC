@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
-import { ContactInfoSection } from "./contact-info-section"
 import { useAuth } from "@/contexts/auth-context"
 import { InlineEditSection } from "./inline-edit-section"
 import { InlineEditHeader } from "./inline-edit-header"
@@ -235,16 +234,6 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
     rawRank <= maxRankForClass
       ? rawRank
       : null
-
-  console.log("[v0] Recruiting status from DB:", athlete?.recruiting_status)
-  console.log("[v0] Final recruiting status:", recruitingStatus)
-
-  console.log("[v0] Rendering unified profile sections in order:")
-  console.log("[v0] 1. Hero Banner")
-  console.log("[v0] 2. Bio")
-  console.log("[v0] 3. High School and Programs")
-  console.log("[v0] 4. Tournament Results, Contact, Academics, Highlight, College Opens, Achievements")
-  console.log("[v0] 5. MatchDataSectionImproved")
 
   const getAthletePhoto = () => {
     if (athleteName.toLowerCase().includes("liam hickey")) {
@@ -659,6 +648,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   return (
     <div className="space-y-8">
+      {/* 1. Banner (hero with photo, name, weight, college) */}
       <Card className="overflow-hidden">
         <div className="relative">
           {/* Mobile view */}
@@ -995,9 +985,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* Bio - always show when canEdit so users can add/edit; otherwise show when there's content */}
-      {(canEdit || athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
-        <Card className="border-t-4 border-t-[#002147] shadow-md">
+      {/* 2. Athlete Profile (Bio) - always show for consistent structure */}
+      <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="bio">
+        <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="bio">
           <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1035,20 +1025,20 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     )}
                   </div>
                 </div>
-                {athleteData?.bio && (
+                {athleteData?.bio ? (
                   <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                     <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
                   </div>
+                ) : (
+                  <p className="text-gray-500 italic">{canEdit ? "No bio yet. Click Edit to add." : "No bio available."}</p>
                 )}
               </>
             )}
           </div>
         </Card>
-      )}
 
-      {/* High School and Programs */}
-      {(canEdit || highSchool !== "Not specified" || wrestlingClub !== "Not specified" || ncUnitedTeam) && (
-        <Card className="border-t-4 border-t-green-600 shadow-md">
+      {/* 3. High School and Programs - always show for consistent structure */}
+      <Card className="border-t-4 border-t-green-600 shadow-md" data-section="high-school-programs">
           <div className="bg-gradient-to-r from-green-700 to-green-800 p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -1135,39 +1125,41 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     </p>
                   </div>
                 )}
+                {(!highSchool || highSchool === "Not specified") && (!wrestlingClub || wrestlingClub === "Not specified") && (!ncUnitedTeam || ncUnitedTeam === "none") && (
+                  <p className="text-gray-500 italic col-span-full">{canEdit ? "No school or programs listed. Click Edit to add." : "No school or programs listed."}</p>
+                )}
               </div>
             )}
           </div>
         </Card>
-      )}
 
-      {/* Tournament Results - NCHSAA, NHSCA, Super 32 */}
+      {/* 4. Tournament Results - NC United National Team, NCHSAA, NHSCA, Super 32 */}
       {tournamentResultsComponent}
 
-      {/* Contact Info Section - always show when can edit so users can add/update highlight video and contact */}
-      {canEdit && (
-        <Card className="border-t-4 border-t-blue-600 shadow-md">
-          <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Contact Information</h2>
-              </div>
-              {canEdit && !editingSection && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={() => setEditingSection("contact")}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              )}
+      {/* 5. Contact Information - always show for consistent structure */}
+      <Card className="border-t-4 border-t-blue-600 shadow-md" data-section="contact">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="h-6 w-6 text-white" />
+              <h2 className="text-2xl font-bold text-white">Contact Information</h2>
             </div>
+            {canEdit && !editingSection && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={() => setEditingSection("contact")}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
           </div>
-          <div className="p-8">
-            {editingSection === "contact" ? (
+        </div>
+        <div className="p-8">
+          {canEdit ? (
+            editingSection === "contact" ? (
               <InlineContactEditor
                 athleteId={athlete.id}
                 cell={athleteData.cell || athleteData.cell_number || athleteData.phone}
@@ -1216,19 +1208,44 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     </a>
                   </div>
                 )}
+                {!(athleteData.cell || athleteData.cell_number || athleteData.phone) && !(athleteData.email || athleteData.contact_email || athleteData.email_address) && !(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && !athleteData.highlight_video_url && (
+                  <p className="text-gray-500 italic">No contact information yet. Click Edit to add.</p>
+                )}
               </div>
-            )}
-          </div>
-        </Card>
-      )}
-      
-      {/* Contact Info Section - For coaches/admins (keep original) */}
-      {!canEdit && <ContactInfoSection athlete={athlete} />}
+            )
+          ) : (
+            (isAdmin || isVerifiedCoach) && (athleteData.cell || athleteData.cell_number || athleteData.phone || athleteData.email || athleteData.contact_email || athleteData.email_address || athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) ? (
+              <div className="space-y-4">
+                {(athleteData.cell || athleteData.cell_number || athleteData.phone) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Cell Phone</p>
+                    <p className="font-semibold text-gray-900">{athleteData.cell || athleteData.cell_number || athleteData.phone}</p>
+                  </div>
+                )}
+                {(athleteData.email || athleteData.contact_email || athleteData.email_address) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Email</p>
+                    <p className="font-semibold text-gray-900">{athleteData.email || athleteData.contact_email || athleteData.email_address}</p>
+                  </div>
+                )}
+                {(athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username) && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm text-gray-600 mb-1">Instagram</p>
+                    <p className="font-semibold text-gray-900">{athleteData.instagram || athleteData.instagram_handle || athleteData.instagram_username}</p>
+                  </div>
+                )}
+                <p className="text-xs text-amber-700 flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> Visible to verified coaches and administrators only.</p>
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">Contact information is available to verified college coaches and administrators.</p>
+            )
+          )}
+        </div>
+      </Card>
 
-      {/* Academics Section - GPA, SAT, ACT - show when has data, when editing, or when can edit (to add) */}
-      {(hasAcademicData || editingSection === "academics" || canEdit) && (
-        <Card className="border-t-4 border-t-[#002147] shadow-md">
-          <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
+      {/* 6. Academics - always show for consistent structure */}
+      <Card className="border-t-4 border-t-[#002147] shadow-md" data-section="academics">
+        <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <GraduationCap className="h-6 w-6 text-white" />
@@ -1309,12 +1326,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             )}
           </div>
         </Card>
-      )}
 
-      {/* Highlight Video Section - show when has video or when can edit (to add/update) */}
-      {(athleteData?.highlight_video_url || canEdit) && (
-        <Card className="border-t-4 border-t-[#BC0B03] shadow-md">
-          <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
+      {/* 7. Highlight Reel - always show for consistent structure */}
+      <Card className="border-t-4 border-t-[#BC0B03] shadow-md" data-section="highlight-reel">
+        <div className="bg-gradient-to-r from-[#BC0B03] to-[#9a0902] p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Video className="h-6 w-6 text-white" />
@@ -1374,14 +1389,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             )}
           </div>
         </Card>
-      )}
 
-      {/* Additional Achievements will be rendered after College Opens Experience */}
-
-      {/* College Opens Experience */}
-      {(athleteData.college_opens_experience || editingSection === "college-opens" || canEdit) && (
-        <div className="container mx-auto px-4 py-8">
-          <Card className="shadow-lg border-l-4 border-l-blue-600">
+      {/* 8. College Opens Experience - always show for consistent structure */}
+      <Card className="shadow-lg border-l-4 border-l-blue-600 border-t-4 border-t-blue-600" data-section="college-opens">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-[#13294B]">
@@ -1411,17 +1421,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 />
               ) : (
                 <div className="whitespace-pre-line text-gray-700 leading-relaxed">
-                  {athleteData.college_opens_experience || "No college opens experience listed. Click Edit to add."}
+                  {athleteData.college_opens_experience || (canEdit ? "No college opens experience listed. Click Edit to add." : "No college opens experience listed.")}
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
-      )}
 
-      {(canEdit || additionalAchievements.length > 0 || achievements.length > 0) && (
-        <div className="container mx-auto px-4 py-8">
-          <Card className="border-t-4 border-t-[#1D4ED8] shadow-md">
+      {/* 9. Achievements - always show for consistent structure */}
+      <Card className="border-t-4 border-t-[#1D4ED8] shadow-md" data-section="achievements">
             <div className="bg-gradient-to-r from-[#1D4ED8] to-[#1E3A8A] p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1476,14 +1483,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       </ul>
                     </div>
                   )}
+                  {achievements.length === 0 && additionalAchievements.length === 0 && (
+                    <p className="text-gray-500 italic">{canEdit ? "No achievements yet. Click Edit to add." : "No achievements listed."}</p>
+                  )}
                 </>
               )}
             </div>
           </Card>
-        </div>
-      )}
 
-      {/* Match Data Section */}
+      {/* 10. High School Career Match Results */}
       <MatchDataSectionImproved athleteId={athlete.id} athleteName={athleteName} graduationYear={graduationYear} />
 
       {/* Last Edited By - Footer */}

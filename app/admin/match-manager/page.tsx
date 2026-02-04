@@ -921,33 +921,46 @@ export default function MatchManagerPage() {
       return
     }
 
+    // Deduplicate: Rank exports often list the same bout twice (both perspectives). Same date + opponent + W/L = one match.
+    const seen = new Set<string>()
+    const deduped: typeof convertedMatches = []
+    for (const m of convertedMatches) {
+      const key = `${m.date}|${m.opponent.trim().toLowerCase()}|${m.win_loss}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      deduped.push(m)
+    }
+    const matchCountBeforeDedup = convertedMatches.length
+    const matchCountAfterDedup = deduped.length
+    const finalMatches = deduped
+
     const firstName = selectedAthleteData.name.split(" ")[0] || ""
     const lastName = selectedAthleteData.name.split(" ").slice(1).join(" ") || ""
 
-    const wins = convertedMatches.filter((m) => m.win_loss === "W").length
-    const losses = convertedMatches.filter((m) => m.win_loss === "L").length
-    const pins = convertedMatches.filter(
+    const wins = finalMatches.filter((m) => m.win_loss === "W").length
+    const losses = finalMatches.filter((m) => m.win_loss === "L").length
+    const pins = finalMatches.filter(
       (m) => m.win_loss === "W" && m.result.toLowerCase().includes("fall"),
     ).length
-    const techFalls = convertedMatches.filter(
+    const techFalls = finalMatches.filter(
       (m) => m.win_loss === "W" && (m.result.toLowerCase().includes("tf") || m.result.toLowerCase().includes("tech")),
     ).length
-    const majorDecisions = convertedMatches.filter(
+    const majorDecisions = finalMatches.filter(
       (m) => m.win_loss === "W" && m.result.toLowerCase().includes("major"),
     ).length
-    const decisions = convertedMatches.filter(
+    const decisions = finalMatches.filter(
       (m) =>
         m.win_loss === "W" &&
         (m.result.toLowerCase().includes("dec") || m.result.toLowerCase().includes("sv")),
     ).length
-    const forfeits = convertedMatches.filter(
+    const forfeits = finalMatches.filter(
       (m) =>
         m.win_loss === "W" &&
         (m.opponent.toLowerCase() === "forfeit" ||
           (m.result && /^(for|for\.|forf\.?|forfeit|ff\.?)$/i.test(m.result.trim()))),
     ).length
 
-    const dates = convertedMatches
+    const dates = finalMatches
       .map((m) => {
         const parts = m.date.split(/[-/]/)
         if (parts.length !== 3) return null
@@ -1017,13 +1030,17 @@ export default function MatchManagerPage() {
         tf_percentage: tfPercentage,
         finishing_percentage: finishingPercentage,
       },
-      matches: convertedMatches,
+      matches: finalMatches,
     }
 
     setJsonData(JSON.stringify(jsonPayload, null, 2))
+    const dedupNote =
+      matchCountBeforeDedup > matchCountAfterDedup
+        ? ` (${matchCountBeforeDedup - matchCountAfterDedup} duplicate bouts removed from Rank export)`
+        : ""
     setParseResult({
       success: true,
-      message: `Successfully parsed ${convertedMatches.length} matches. JSON has been loaded into the Single Athlete Upload tab.`,
+      message: `Successfully parsed ${matchCountAfterDedup} matches${dedupNote}. JSON has been loaded into the Single Athlete Upload tab.`,
     })
   }
 

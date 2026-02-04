@@ -56,10 +56,43 @@ const top20Data = [
   { rank: 20, name: "Vincent Grack", school: "William Amos Hough", weight: "157 lbs", achievements: "State Qualifier • 39-6 record • 64.29% pin rate" },
 ]
 
-const JACOB_PERRY_PROFILE_ID = "ddea34af-ae6a-4880-8a1c-687576bef1fe"
+// Profile ID map for 2028 - use direct IDs when by-name lookup fails (name/school spelling can differ)
+const PROFILE_IDS_2028: Record<string, string> = {
+  "Jacob Perry": "ddea34af-ae6a-4880-8a1c-687576bef1fe",
+  "Stephen Cross": "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c",
+}
+
+function norm(s: string) {
+  return (s || "").trim().replace(/\s+/g, " ").toLowerCase()
+}
+
+function getProfileUrl(
+  name: string,
+  school: string,
+  linkRes: { id: string; name: string; highschool: string }[]
+): string {
+  const n = norm(name)
+  const s = norm(school)
+  // 1. Hardcoded map (handles name spelling differences)
+  const hardcoded = PROFILE_IDS_2028[name] ?? Object.entries(PROFILE_IDS_2028).find(
+    ([k]) => norm(k) === n
+  )?.[1]
+  if (hardcoded) return `/unified-profile/${hardcoded}`
+  // 2. API linkResolution - match name + school
+  const fromApi = linkRes.find((r) => {
+    if (norm(r.name) !== n) return false
+    if (!s) return true
+    const hs = norm(r.highschool || "")
+    return hs === s || hs.includes(s) || s.includes(hs)
+  })
+  if (fromApi) return `/unified-profile/${fromApi.id}`
+  // 3. Fallback: by-name lookup
+  return `/unified-profile/by-name?${new URLSearchParams({ name, school, year: "2028" }).toString()}`
+}
 
 export default function Class2028RankingsPage() {
   const [rankings, setRankings] = useState<PublicRanking[]>([])
+  const [linkResolution, setLinkResolution] = useState<{ id: string; name: string; highschool: string }[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
@@ -106,6 +139,7 @@ export default function Class2028RankingsPage() {
 
       const data = await response.json()
       setRankings(data.rankings || [])
+      setLinkResolution(data.linkResolution || [])
       setLastUpdated(data.metadata?.last_updated || null)
       setUpdatePostUrl(data.metadata?.update_post_url || null)
     } catch (err) {
@@ -280,11 +314,7 @@ export default function Class2028RankingsPage() {
                           </Badge>
                           <div className="mt-2">
                             <Link
-                              href={`/unified-profile/by-name?${new URLSearchParams({
-                                name: athlete.name || "",
-                                school: (athlete.school as string) || "",
-                                year: "2028",
-                              }).toString()}`}
+                              href={athlete.id ? `/unified-profile/${athlete.id}` : getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)}
                               className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
                             >
                               View Profile →
@@ -478,14 +508,7 @@ export default function Class2028RankingsPage() {
                       </thead>
                       <tbody>
                         {top20Data.map((athlete) => {
-                          const profileUrl =
-                            athlete.name === "Jacob Perry"
-                              ? `/unified-profile/${JACOB_PERRY_PROFILE_ID}`
-                              : `/unified-profile/by-name?${new URLSearchParams({
-                                  name: athlete.name,
-                                  school: athlete.school,
-                                  year: "2028",
-                                }).toString()}`
+                          const profileUrl = getProfileUrl(athlete.name, athlete.school, linkResolution)
                           return (
                             <tr key={athlete.rank} className="border-b hover:bg-gray-50">
                               <td className="px-4 py-3">
