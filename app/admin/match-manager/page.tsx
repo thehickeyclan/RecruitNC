@@ -637,9 +637,15 @@ export default function MatchManagerPage() {
         }
 
         const isWin = resultLine.toLowerCase() === "win"
-        const date = lines[i + 1] ?? ""
-        const percentageOrForfeit = lines[i + 2] ?? ""
-        const opponentOrForfeit = lines[i + 3] ?? ""
+        const date = (lines[i + 1] ?? "").trim()
+        const percentageOrForfeit = (lines[i + 2] ?? "").trim()
+        const opponentOrForfeit = (lines[i + 3] ?? "").trim()
+
+        // Must have valid date (mm/dd/yyyy)
+        if (!/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(date)) {
+          i++
+          continue
+        }
 
         const isForfeit =
           opponentOrForfeit.toLowerCase() === "forfeit" || percentageOrForfeit.toLowerCase() === "forfeit"
@@ -650,16 +656,24 @@ export default function MatchManagerPage() {
         let venue = ""
         let method = ""
         let oppPercent: number | null = null
-        let lineOffset = 3
+        let advance: number
 
         if (isForfeit) {
+          if (i + 8 > lines.length) {
+            i++
+            continue
+          }
           opponent = "Forfeit"
           opponentSchool = ""
           weight = (lines[i + 3] ?? "").replace(/\s*lbs\s*$/i, "").trim()
-          venue = lines[i + 5] ?? ""
+          venue = (lines[i + 5] ?? "").trim()
           method = (lines[i + 7] ?? "").trim() || "For."
-          lineOffset = 7
+          advance = 8
         } else if (/^[\d.]+$/.test(percentageOrForfeit)) {
+          if (i + 10 > lines.length) {
+            i++
+            continue
+          }
           opponent = opponentOrForfeit.trim()
           const schoolLine = (lines[i + 4] ?? "").trim()
           opponentSchool = schoolLine.replace(/^[•·\-]\s*/, "").trim()
@@ -667,8 +681,12 @@ export default function MatchManagerPage() {
           venue = (lines[i + 7] ?? "").trim()
           method = (lines[i + 9] ?? "").trim()
           oppPercent = parseFloat(percentageOrForfeit)
-          lineOffset = 9
+          advance = 10
         } else {
+          if (i + 9 > lines.length) {
+            i++
+            continue
+          }
           // 9-line format (no percentage): Opponent at i+2, School at i+3
           opponent = percentageOrForfeit.trim()
           const schoolLine = opponentOrForfeit.trim()
@@ -676,10 +694,11 @@ export default function MatchManagerPage() {
           weight = (lines[i + 4] ?? "").replace(/\s*lbs\s*$/i, "").trim()
           venue = (lines[i + 6] ?? "").trim()
           method = (lines[i + 8] ?? "").trim()
-          lineOffset = 8
+          advance = 9
         }
 
-        if (!date || !venue) {
+        // Venue must be non-empty and not a bullet
+        if (!venue || venue === "•" || venue === "·" || /^[\d.]+$/.test(venue)) {
           i++
           continue
         }
@@ -713,7 +732,7 @@ export default function MatchManagerPage() {
           })
         }
 
-        i += lineOffset + 1
+        i += advance
       }
     } else {
       // Tab-separated formats: use original line array

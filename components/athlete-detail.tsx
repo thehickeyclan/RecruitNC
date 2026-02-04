@@ -241,11 +241,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   console.log("[v0] Rendering unified profile sections in order:")
   console.log("[v0] 1. Hero Banner")
-  console.log("[v0] 2. Summary (Tournament Results)")
-  console.log("[v0] 3. Athlete Profile (AI Bio)")
-  console.log("[v0] 4. High School and Programs")
-  console.log("[v0] 5. Contact, Academics, Highlight Video, College Opens, Achievements")
-  console.log("[v0] 6. MatchDataSectionImproved")
+  console.log("[v0] 2. Bio")
+  console.log("[v0] 3. High School and Programs")
+  console.log("[v0] 4. Tournament Results, Contact, Academics, Highlight, College Opens, Achievements")
+  console.log("[v0] 5. MatchDataSectionImproved")
 
   const getAthletePhoto = () => {
     if (athleteName.toLowerCase().includes("liam hickey")) {
@@ -996,10 +995,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         </Card>
       )}
 
-      {/* Summary - Tournament Results (NHSCA, Super 32) - starting point */}
-      {tournamentResultsComponent}
-
-      {/* Athlete Profile - AI Bio - always show when canEdit so users can add/edit; otherwise show when there's content */}
+      {/* Bio - always show when canEdit so users can add/edit; otherwise show when there's content */}
       {(canEdit || athleteData?.bio_headline || athleteData?.bio || editingSection === "bio") && (
         <Card className="border-t-4 border-t-[#002147] shadow-md">
           <div className="bg-gradient-to-r from-[#002147] to-[#003366] p-6">
@@ -1144,6 +1140,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
           </div>
         </Card>
       )}
+
+      {/* Tournament Results - NCHSAA, NHSCA, Super 32 */}
+      {tournamentResultsComponent}
 
       {/* Contact Info Section - always show when can edit so users can add/update highlight video and contact */}
       {canEdit && (
