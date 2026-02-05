@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield } from "lucide-react"
+import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
@@ -23,6 +23,7 @@ import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 import { InlineWeightEditor } from "./inline-weight-editor"
 import { InlineHighlightVideoEditor } from "./inline-highlight-video-editor"
 import { WorkingEntityLogo } from "./working-entity-logo"
+import { useToast } from "@/components/ui/use-toast"
 
 // Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -143,6 +144,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  const handleShareProfile = async () => {
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      toast({ title: "Link copied", description: "Profile link copied to clipboard." })
+    } catch {
+      toast({ title: "Copy failed", description: "Could not copy link. Try selecting the URL manually.", variant: "destructive" })
+    }
+  }
 
   // Profile owner can see their own private info (cell, GPA, ACT, SAT)
   const isViewingOwnProfile = Boolean(currentUserId && athlete.claimed_by_user_id === currentUserId)
@@ -677,8 +689,18 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             </div>
 
             <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white p-6 relative">
-              {/* Star Button - Top Right of Banner */}
-              <div className="absolute top-4 right-4">
+              {/* Share + Star - Top Right of Banner */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white/90 hover:text-white hover:bg-white/20 h-9 px-3"
+                  onClick={handleShareProfile}
+                  aria-label="Share profile"
+                >
+                  <Share2 className="w-4 h-4 mr-1.5" />
+                  Share
+                </Button>
                 <WatchListButton athleteId={athlete.id} />
               </div>
 
@@ -810,8 +832,18 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             <div className="relative min-h-[360px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
               <div className="absolute inset-0 bg-black/10" />
 
-              {/* Star Button - Top Right */}
-              <div className="absolute top-6 right-6 z-20">
+              {/* Share + Star - Top Right */}
+              <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-white/90 hover:text-white hover:bg-white/20"
+                  onClick={handleShareProfile}
+                  aria-label="Share profile"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share profile
+                </Button>
                 <WatchListButton athleteId={athlete.id} />
               </div>
 
