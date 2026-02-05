@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     if (!formData.forceCreate) {
       const existing = await findExistingAthlete(adminSupabase, {
         name: athleteName,
-        graduationYear,
+        graduationYear: graduationyear,
         school: formData.highSchool || undefined,
       })
       if (existing) {
