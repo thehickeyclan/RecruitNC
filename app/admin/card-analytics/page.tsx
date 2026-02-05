@@ -5,8 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { Loader2, Eye, Users, TrendingUp, User, RefreshCw } from "lucide-react"
+import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "lucide-react"
+
+const RANGE_OPTIONS = [
+  { value: "today", label: "Today" },
+  { value: "last30", label: "Last 30 days" },
+  { value: "year", label: "This year" },
+  { value: "all", label: "All time" },
+] as const
+type RangeValue = (typeof RANGE_OPTIONS)[number]["value"]
 
 interface CardView {
   id: number
@@ -43,6 +52,7 @@ interface ProfileClickRank {
 export default function CardAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [range, setRange] = useState<RangeValue>("all")
   const [cardViews, setCardViews] = useState<CardView[]>([])
   const [topAthletes, setTopAthletes] = useState<AthleteStats[]>([])
   const [profileClickRanking, setProfileClickRanking] = useState<ProfileClickRank[]>([])
@@ -52,14 +62,17 @@ export default function CardAnalyticsPage() {
 
   useEffect(() => {
     fetchAnalytics()
-  }, [])
+  }, [range])
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch("/api/admin/analytics/card-views", { cache: "no-store" })
+      const params = new URLSearchParams()
+      if (range && range !== "all") params.set("range", range)
+      const url = `/api/admin/analytics/card-views${params.toString() ? `?${params.toString()}` : ""}`
+      const response = await fetch(url, { cache: "no-store" })
       const data = await response.json()
 
       if (!response.ok) {
@@ -124,15 +137,32 @@ export default function CardAnalyticsPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Profile View Analytics</h1>
           <p className="text-gray-600">When coaches and visitors view athlete public profiles</p>
         </div>
-        <Button onClick={fetchAnalytics} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-gray-500" />
+            <Select value={range} onValueChange={(v) => setRange(v as RangeValue)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Time range" />
+              </SelectTrigger>
+              <SelectContent>
+                {RANGE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={fetchAnalytics} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {error && (

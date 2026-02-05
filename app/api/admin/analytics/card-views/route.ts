@@ -1,7 +1,27 @@
 import { createClient } from "@/lib/supabase/server"
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
-export async function GET() {
+// No practical cap; Supabase would default to 1000 without a limit.
+const MAX_ROWS = 100000
+
+function getFromDateForRange(range: string | null): string | null {
+  const now = new Date()
+  if (!range || range === "all") return null
+  let from: Date
+  if (range === "today") {
+    from = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+  } else if (range === "last30") {
+    from = new Date(now)
+    from.setDate(from.getDate() - 30)
+  } else if (range === "year") {
+    from = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0)
+  } else {
+    return null
+  }
+  return from.toISOString()
+}
+
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
 
@@ -24,13 +44,21 @@ export async function GET() {
       return NextResponse.json({ error: "Forbidden: admin only" }, { status: 403 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const range = searchParams.get("range") || "all"
+    const fromDate = getFromDateForRange(range)
+
     // Only count profile views (one per profile visit). Card clicks are no longer sent.
-    const { data: cardViews, error: cardViewsError } = await supabase
+    let cardViewsQuery = supabase
       .from("user_analytics")
       .select("*")
       .eq("event_type", "profile_view")
       .order("created_at", { ascending: false })
-      .limit(500)
+      .limit(MAX_ROWS)
+    if (fromDate) {
+      cardViewsQuery = cardViewsQuery.gte("created_at", fromDate)
+    }
+    const { data: cardViews, error: cardViewsError } = await cardViewsQuery
 
     if (cardViewsError) {
       console.error("[v0] Profile-view analytics fetch error:", cardViewsError)
@@ -97,12 +125,16 @@ export async function GET() {
       .slice(0, 20)
 
     // Profile-view stack ranking: one count per profile page view, with last_viewed
-    const { data: profileClickEvents, error: profileClickError } = await supabase
+    let profileClickQuery = supabase
       .from("user_analytics")
       .select("event_data, created_at")
       .eq("event_type", "profile_view")
       .order("created_at", { ascending: false })
-      .limit(5000)
+      .limit(MAX_ROWS)
+    if (fromDate) {
+      profileClickQuery = profileClickQuery.gte("created_at", fromDate)
+    }
+    const { data: profileClickEvents, error: profileClickError } = await profileClickQuery
 
     if (profileClickError) {
       console.error("[v0] Profile-view ranking query error:", profileClickError)
@@ -163,6 +195,7 @@ export async function GET() {
       profileViewRankingCoaches: profileViewRankingCoaches || [],
       profileTypeStats,
       totalViews: cardViews?.length || 0,
+      range: range || "all",
     })
   } catch (error: any) {
     console.error("[v0] Card analytics API error:", error)
