@@ -111,10 +111,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         }
       }
       const redirectTimer = setTimeout(doFinalRedirect, 800)
-        userEmail: user.email,
-        isAdmin,
-        profileIsAdmin: profile?.is_admin,
-      })
+      return () => clearTimeout(redirectTimer)
     }
   }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
 
