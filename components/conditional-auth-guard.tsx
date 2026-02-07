@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/auth-guard"
  * Wraps children in AuthGuard for all routes except:
  * - Homepage (/)
  * - Auth flow routes (/auth/*) so signin, signup, forgot-password, reset-password, callback, etc. work without a session
+ * - NC United Blue program page (/blue) - public-facing flagship page
  */
 export function ConditionalAuthGuard({
   children,
@@ -16,7 +17,8 @@ export function ConditionalAuthGuard({
   const pathname = usePathname()
   const isHomepage = pathname === "/"
   const isAuthRoute = pathname?.startsWith("/auth/") ?? false
-  const isPublic = isHomepage || isAuthRoute
+  const isBluePage = pathname === "/blue"
+  const isPublic = isHomepage || isAuthRoute || isBluePage
 
   if (isPublic) {
     return <>{children}</>

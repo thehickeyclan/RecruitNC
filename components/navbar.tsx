@@ -64,6 +64,7 @@ export function Navbar() {
     { href: "/", label: "Home" },
     { href: "/commits", label: "Commits" },
     { href: "/public-rankings", label: "Rankings" },
+    { href: "/blue", label: "Blue Program" },
     { href: "/prospects/all", label: "Athlete Profiles" },
     { href: "/my-recruits", label: "My Recruits" },
     { href: "/about", label: "About" },
