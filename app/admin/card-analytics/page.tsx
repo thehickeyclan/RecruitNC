@@ -11,7 +11,9 @@ import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "luci
 
 const RANGE_OPTIONS = [
   { value: "today", label: "Today" },
+  { value: "last7", label: "Last 7 days" },
   { value: "last30", label: "Last 30 days" },
+  { value: "last90", label: "Last 3 months" },
   { value: "year", label: "This year" },
   { value: "all", label: "All time" },
 ] as const

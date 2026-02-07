@@ -10,9 +10,15 @@ function getFromDateForRange(range: string | null): string | null {
   let from: Date
   if (range === "today") {
     from = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+  } else if (range === "last7") {
+    from = new Date(now)
+    from.setDate(from.getDate() - 7)
   } else if (range === "last30") {
     from = new Date(now)
     from.setDate(from.getDate() - 30)
+  } else if (range === "last90") {
+    from = new Date(now)
+    from.setDate(from.getDate() - 90)
   } else if (range === "year") {
     from = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0)
   } else {

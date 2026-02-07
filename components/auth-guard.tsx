@@ -111,9 +111,6 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         }
       }
       const redirectTimer = setTimeout(doFinalRedirect, 800)
-      return () => clearTimeout(redirectTimer)
-    } else if (requireAdmin && !isAdmin && user) {
-      console.log("[v0] Admin access check:", {
         userEmail: user.email,
         isAdmin,
         profileIsAdmin: profile?.is_admin,

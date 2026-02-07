@@ -49,6 +49,7 @@ export default function MatchManagerPage() {
   const [bulkJsonData, setBulkJsonData] = useState("")
   const [rawTextData, setRawTextData] = useState("")
   const [rawTextFormat, setRawTextFormat] = useState<"rank" | "track">("rank")
+  const [deduplicateMatches, setDeduplicateMatches] = useState(true)
   const [parseResult, setParseResult] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false)
@@ -921,18 +922,27 @@ export default function MatchManagerPage() {
       return
     }
 
-    // Deduplicate: Rank exports often list the same bout twice (both perspectives). Same date + opponent + W/L = one match.
-    const seen = new Set<string>()
-    const deduped: typeof convertedMatches = []
-    for (const m of convertedMatches) {
-      const key = `${m.date}|${m.opponent.trim().toLowerCase()}|${m.win_loss}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      deduped.push(m)
-    }
+    // Deduplicate (optional): Rank exports sometimes list the same bout twice. When enabled,
+    // merge duplicates by date+opponent+W/L+result+venue. Disable to count all entries (raw).
     const matchCountBeforeDedup = convertedMatches.length
-    const matchCountAfterDedup = deduped.length
-    const finalMatches = deduped
+    let matchCountAfterDedup = matchCountBeforeDedup
+    let finalMatches: typeof convertedMatches
+    if (deduplicateMatches) {
+      const seen = new Set<string>()
+      const deduped: typeof convertedMatches = []
+      for (const m of convertedMatches) {
+        const r = (m.result ?? "").trim().toLowerCase()
+        const v = (m.venue ?? "").trim().toLowerCase()
+        const key = `${m.date}|${m.opponent.trim().toLowerCase()}|${m.win_loss}|${r}|${v}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        deduped.push(m)
+      }
+      matchCountAfterDedup = deduped.length
+      finalMatches = deduped
+    } else {
+      finalMatches = convertedMatches
+    }
 
     const firstName = selectedAthleteData.name.split(" ")[0] || ""
     const lastName = selectedAthleteData.name.split(" ").slice(1).join(" ") || ""
@@ -1364,6 +1374,22 @@ export default function MatchManagerPage() {
                   </label>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="deduplicateMatches"
+                  checked={deduplicateMatches}
+                  onChange={(e) => setDeduplicateMatches(e.target.checked)}
+                  className="rounded h-4 w-4"
+                />
+                <Label htmlFor="deduplicateMatches" className="cursor-pointer font-normal">
+                  Match Rank (deduplicate) — merge export duplicates to match Rank&apos;s record
+                </Label>
+              </div>
+              <p className="text-xs text-gray-500 -mt-2 ml-6">
+                Uncheck for Raw (no deduplication) — count every entry
+              </p>
 
               <div>
                 <Label htmlFor="rawTextData">Raw Match Data</Label>
