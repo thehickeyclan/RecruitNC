@@ -170,7 +170,7 @@ export function FeaturedAthletesSimple() {
       {viewMode === "carousel" ? <CarouselView /> : <GridView />}
 
       <div className="mt-6 flex justify-center">
-        <Link href="/auth/signin">
+        <Link href="/auth/signin" target="_top" rel="noopener">
           <Button>Sign In to View All Commitments</Button>
         </Link>
       </div>

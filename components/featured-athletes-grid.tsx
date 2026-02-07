@@ -132,7 +132,7 @@ export function FeaturedAthletesGrid() {
     <section className="mb-12">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold">Featured Commitments</h2>
-        <Link href="/auth/signin">
+        <Link href="/auth/signin" target="_top" rel="noopener">
           <Button variant="outline" size="sm">
             Sign In to View All
           </Button>
@@ -160,7 +160,7 @@ export function FeaturedAthletesGrid() {
           </div>
 
           <div className="mt-6 flex justify-center">
-            <Link href="/auth/signin">
+            <Link href="/auth/signin" target="_top" rel="noopener">
               <Button>Sign In to View All Commitments</Button>
             </Link>
           </div>
@@ -173,10 +173,10 @@ export function FeaturedAthletesGrid() {
               Sign in or create an account to view detailed information about NC wrestling commitments.
             </p>
             <div className="flex gap-4">
-              <Link href="/auth/signin">
+              <Link href="/auth/signin" target="_top" rel="noopener">
                 <Button>Sign In</Button>
               </Link>
-              <Link href="/auth/signup">
+              <Link href="/auth/signup" target="_top" rel="noopener">
                 <Button variant="outline">Sign Up</Button>
               </Link>
             </div>

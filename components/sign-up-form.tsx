@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -73,8 +74,8 @@ export function SignUpForm() {
               We&apos;ve sent a verification link to {email}. Please verify to finish setting up your account.
             </p>
           </div>
-          <Button className="w-full" onClick={() => router.push("/auth/signin")}>
-            Back to Sign In
+          <Button asChild className="w-full">
+            <Link href="/auth/signin" target="_top" rel="noopener">Back to Sign In</Link>
           </Button>
         </CardContent>
       </Card>
@@ -180,9 +181,9 @@ export function SignUpForm() {
 
           <div className="text-center text-sm">
             Already have an account?{" "}
-            <Button variant="link" className="px-0 font-normal" onClick={() => router.push("/auth/signin")}>
+            <Link href="/auth/signin" target="_top" rel="noopener" className="text-primary underline underline-offset-4 hover:no-underline font-normal">
               Sign in
-            </Button>
+            </Link>
           </div>
         </div>
       </CardContent>

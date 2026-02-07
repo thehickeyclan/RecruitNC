@@ -101,12 +101,13 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
         } catch (_) {}
         if (!redirecting) {
           setRedirecting(true)
-          const signinUrl = `/auth/signin?returnTo=${encodeURIComponent(pathname)}`
-          // Use full navigation when in iframe (app.ncwrestlingunited.com embed) so Chrome allows cookies
+          const signinPath = `/auth/signin?returnTo=${encodeURIComponent(pathname)}`
+          // Use full navigation when in iframe (app.ncwrestlingunited.com embed) so Chrome allows cookies.
+          // Must use absolute URL—relative would resolve against parent (ncwrestlingunited.com) and 404.
           if (typeof window !== "undefined" && window.self !== window.top) {
-            window.top!.location.href = signinUrl
+            window.top!.location.href = window.location.origin + signinPath
           } else {
-            router.push(signinUrl)
+            router.push(signinPath)
           }
         }
       }

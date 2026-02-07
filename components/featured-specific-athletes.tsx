@@ -197,7 +197,7 @@ export function FeaturedSpecificAthletes() {
     <section className="mb-12">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold">Featured Commitments</h2>
-        <Link href="/auth/signin">
+        <Link href="/auth/signin" target="_top" rel="noopener">
           <Button variant="outline" size="sm">
             Sign In to View All
           </Button>
@@ -245,7 +245,7 @@ export function FeaturedSpecificAthletes() {
       )}
 
       <div className="mt-6 flex justify-center">
-        <Link href="/auth/signin">
+        <Link href="/auth/signin" target="_top" rel="noopener">
           <Button>Sign In to View All Commitments</Button>
         </Link>
       </div>

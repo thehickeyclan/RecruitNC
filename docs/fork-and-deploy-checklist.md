@@ -22,9 +22,10 @@ Create `.env.local` and add:
 Tip: If you import this repo into Vercel, set these in Project Settings → Environment Variables.
 
 ## 4) Supabase Auth settings (no DB changes required)
-- In the Supabase project, add your local dev URL (http://localhost:3000) and your Vercel domains (Preview + Production) to:
-  - Authentication → URL Configuration → Redirect URLs
+- In the Supabase project, add your local dev URL (http://localhost:3000), Vercel domains (Preview + Production), **and custom domain** (e.g. https://app.ncwrestlingunited.com) to:
+  - Authentication → URL Configuration → Site URL and Redirect URLs (add `https://app.ncwrestlingunited.com`, `https://app.ncwrestlingunited.com/auth/callback`)
   - Authentication → Providers → each provider (if using OAuth)
+- **Chrome + custom domain**: If auth works on Vercel but not on app.ncwrestlingunited.com, ensure the custom domain is in Supabase Redirect URLs. Auth links use `target="_top"` so sign-in breaks out of iframes (required when app is embedded on ncwrestlingunited.com).
 - Test sign-in flow in a Private window to avoid stale cookies.
 
 ## 5) Auth middleware notes

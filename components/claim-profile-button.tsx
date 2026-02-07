@@ -51,11 +51,12 @@ export function ClaimProfileButton({ athleteId, athleteName, className, isClaime
 
   const redirectToSignIn = () => {
     const returnTo = encodeURIComponent(`/athletes/${athleteId}`)
-    const url = `/auth/signin?returnTo=${returnTo}`
+    const path = `/auth/signin?returnTo=${returnTo}`
     if (typeof window !== "undefined" && window.self !== window.top) {
-      window.top!.location.href = url
+      // Must use absolute URL when breaking out of iframe (parent may be different origin)
+      window.top!.location.href = window.location.origin + path
     } else {
-      window.location.href = url
+      window.location.href = path
     }
   }
 
