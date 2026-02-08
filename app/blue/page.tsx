@@ -13,6 +13,8 @@ const NATIONAL_TEAM_URL = "#"
 const NATIONAL_TEAM_SCHEDULE_URL = "#"
 const COMPETITION_CALENDAR_URL = "#"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "NC United Blue | NC Wrestling United",
   description:

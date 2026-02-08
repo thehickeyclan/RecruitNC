@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 const BASE =
   "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo"
@@ -38,8 +38,8 @@ function isValidUrl(s: string): boolean {
 export async function getBlueContent(): Promise<BlueContent> {
   const defaults = { ...BLUE_IMAGE_KEYS }
   try {
-    const supabase = await createClient()
-    const { data: rows } = await supabase
+    const admin = createAdminClient()
+    const { data: rows } = await admin
       .from("page_content")
       .select("key, value")
       .in("key", Object.keys(BLUE_IMAGE_KEYS))
