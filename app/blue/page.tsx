@@ -45,7 +45,6 @@ const QUICK_LINK_GROUPS = [
   {
     label: "Recognition",
     links: [
-      { href: "#recognition", label: "Achievements" },
       { href: "#coaching-excellence", label: "Coaching Excellence" },
       { href: "#testimonials", label: "Testimonials" },
     ],
@@ -276,35 +275,7 @@ export default async function BluePage() {
             </p>
           </section>
 
-          {/* 8. Recognition */}
-          <section id="recognition">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Recognition</h2>
-            <p className="mb-6 text-[#03154C]/90">
-              Celebrating our athletes&apos; achievements and the impact of NC United Wrestling.
-            </p>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-[#03154C] mb-2">NHSCA 2025</h3>
-                  <p className="text-sm text-[#03154C]/90 mb-2">
-                    Outstanding performance at the National High School Coaches Association tournament with multiple placers.
-                  </p>
-                  <p className="text-xs text-[#03154C]/70"><strong>Highlights:</strong> 8 wrestlers placed, 3 finalists, 1 champion</p>
-                </CardContent>
-              </Card>
-              <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-[#03154C] mb-2">Ultimate Club Duals 2024</h3>
-                  <p className="text-sm text-[#03154C]/90 mb-2">
-                    Dominant team performance showcasing the depth and skill of our wrestling program.
-                  </p>
-                  <p className="text-xs text-[#03154C]/70"><strong>Highlights:</strong> Team championship, multiple individual titles</p>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
-          {/* 8b. Coaching Excellence */}
+          {/* 8. Coaching Excellence */}
           <section id="coaching-excellence">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Coaching Excellence</h2>
             <p className="mb-6 text-[#03154C]/90">
@@ -324,9 +295,17 @@ export default async function BluePage() {
                 </div>
                 <CardContent className="p-5">
                   <h3 className="text-lg font-bold text-[#03154C] mb-2">Colton Palmer</h3>
-                  <p className="text-sm text-[#03154C]/90 leading-relaxed">
-                    Colton Palmer is a former NC State wrestler, four-year letter winner, team co-captain, and NCAA Tournament qualifier. A two-time NCHSAA state champion and former national record holder in career wins, he now serves as VP of Enterprise Strategy & Development at Strategic Executives Agency and continues to give back as founder of NC Wrestling United, a volunteer coach, and a board member of NC USA Wrestling.
+                  <p className="text-sm text-[#03154C]/90 leading-relaxed mb-1">
+                    Colton Palmer is a former NC State wrestler, four-year letter winner, team co-captain, and NCAA Tournament qualifier.
                   </p>
+                  <details className="group">
+                    <summary className="text-sm font-medium text-[#D3B574] cursor-pointer hover:underline list-none [&::-webkit-details-marker]:hidden">
+                      Read more
+                    </summary>
+                    <p className="text-sm text-[#03154C]/90 leading-relaxed mt-2 pt-2 border-t border-[#D3B574]/30">
+                      A two-time NCHSAA state champion and former national record holder in career wins, he now serves as VP of Enterprise Strategy & Development at Strategic Executives Agency and continues to give back as founder of NC Wrestling United, a volunteer coach, and a board member of NC USA Wrestling.
+                    </p>
+                  </details>
                 </CardContent>
               </Card>
               <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
@@ -342,9 +321,17 @@ export default async function BluePage() {
                 </div>
                 <CardContent className="p-5">
                   <h3 className="text-lg font-bold text-[#03154C] mb-2">Mike Macchiavello</h3>
-                  <p className="text-sm text-[#03154C]/90 leading-relaxed">
-                    Mike Macchiavello is a North Carolina native, NCAA Division I National Champion at NC State, and Co-Founder of NC United. A former NC high school state champion and U.S. National Team member, he has represented Team USA internationally and served in leadership roles with USA Wrestling, including the Board of Directors and Executive Committee. He holds undergraduate and graduate degrees from NC State and remains deeply connected to North Carolina wrestling.
+                  <p className="text-sm text-[#03154C]/90 leading-relaxed mb-1">
+                    Mike Macchiavello is a North Carolina native, NCAA Division I National Champion at NC State, and Co-Founder of NC United.
                   </p>
+                  <details className="group">
+                    <summary className="text-sm font-medium text-[#D3B574] cursor-pointer hover:underline list-none [&::-webkit-details-marker]:hidden">
+                      Read more
+                    </summary>
+                    <p className="text-sm text-[#03154C]/90 leading-relaxed mt-2 pt-2 border-t border-[#D3B574]/30">
+                      A former NC high school state champion and U.S. National Team member, he has represented Team USA internationally and served in leadership roles with USA Wrestling, including the Board of Directors and Executive Committee. He holds undergraduate and graduate degrees from NC State and remains deeply connected to North Carolina wrestling.
+                    </p>
+                  </details>
                 </CardContent>
               </Card>
               <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
@@ -360,9 +347,17 @@ export default async function BluePage() {
                 </div>
                 <CardContent className="p-5">
                   <h3 className="text-lg font-bold text-[#03154C] mb-2">Araad Fisher</h3>
-                  <p className="text-sm text-[#03154C]/90 leading-relaxed">
-                    Araad Fisher is a former Duke wrestler and four-year starter who competed at 184, 197, and heavyweight. A North Carolina state finalist and High School All-American, he has built a successful career in high tech while continuing to give back to the wrestling community.
+                  <p className="text-sm text-[#03154C]/90 leading-relaxed mb-1">
+                    Araad Fisher is a former Duke wrestler and four-year starter who competed at 184, 197, and heavyweight.
                   </p>
+                  <details className="group">
+                    <summary className="text-sm font-medium text-[#D3B574] cursor-pointer hover:underline list-none [&::-webkit-details-marker]:hidden">
+                      Read more
+                    </summary>
+                    <p className="text-sm text-[#03154C]/90 leading-relaxed mt-2 pt-2 border-t border-[#D3B574]/30">
+                      A North Carolina state finalist and High School All-American, he has built a successful career in high tech while continuing to give back to the wrestling community.
+                    </p>
+                  </details>
                 </CardContent>
               </Card>
             </div>

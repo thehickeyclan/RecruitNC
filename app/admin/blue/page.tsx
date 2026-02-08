@@ -22,13 +22,16 @@ const SLOT_LABELS: Record<BlueImageKey, string> = {
   blue_coach_araad_fischer: "Coaching Excellence — Araad Fisher",
 }
 
-const SLOT_ORDER: BlueImageKey[] = [
+const PAGE_IMAGE_KEYS: BlueImageKey[] = [
   "blue_banner_url",
   "blue_national_team_kids",
   "blue_what_makes_1",
   "blue_what_makes_2",
   "blue_training_env",
   "blue_pipeline",
+]
+
+const COACH_PHOTO_KEYS: BlueImageKey[] = [
   "blue_coach_colton_palmer",
   "blue_coach_mike_macchiavello",
   "blue_coach_araad_fischer",
@@ -105,39 +108,85 @@ export default function AdminBluePage() {
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="space-y-6">
-          {SLOT_ORDER.map((key) => {
-            const url = content?.[key]
-            return (
-              <Card key={key}>
-                <CardHeader>
-                  <CardTitle className="text-base">{SLOT_LABELS[key]}</CardTitle>
-                  <CardDescription>Upload a new image to use on the Blue page</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {url && (
-                    <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50">
-                      <Image
-                        src={url}
-                        alt={SLOT_LABELS[key]}
-                        width={600}
-                        height={300}
-                        className="h-auto w-full object-contain max-h-48"
-                        unoptimized
+        <div className="space-y-10">
+          <section>
+            <h2 className="text-lg font-semibold text-[#03154C] mb-4">Page images</h2>
+            <div className="space-y-6">
+              {PAGE_IMAGE_KEYS.map((key) => {
+                const url = content?.[key]
+                return (
+                  <Card key={key}>
+                    <CardHeader>
+                      <CardTitle className="text-base">{SLOT_LABELS[key]}</CardTitle>
+                      <CardDescription>Upload a new image to use on the Blue page</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {url && (
+                        <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50">
+                          <Image
+                            src={url}
+                            alt={SLOT_LABELS[key]}
+                            width={600}
+                            height={300}
+                            className="h-auto w-full object-contain max-h-48"
+                            unoptimized
+                          />
+                        </div>
+                      )}
+                      <ImageUpload
+                        category="blue"
+                        entityName={key.replace("blue_", "")}
+                        existingImageUrl={url}
+                        onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
+                        aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}
                       />
-                    </div>
-                  )}
-                  <ImageUpload
-                    category="blue"
-                    entityName={key.replace("blue_", "")}
-                    existingImageUrl={url}
-                    onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
-                    aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}
-                  />
-                </CardContent>
-              </Card>
-            )
-          })}
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-[#03154C] mb-4">Coach photos (Coaching Excellence)</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Colton Palmer, Mike Macchiavello, and Araad Fisher — update each photo below.
+            </p>
+            <div className="space-y-6">
+              {COACH_PHOTO_KEYS.map((key) => {
+                const url = content?.[key]
+                return (
+                  <Card key={key}>
+                    <CardHeader>
+                      <CardTitle className="text-base">{SLOT_LABELS[key]}</CardTitle>
+                      <CardDescription>Upload a new image to use on the Blue page</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {url && (
+                        <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50">
+                          <Image
+                            src={url}
+                            alt={SLOT_LABELS[key]}
+                            width={600}
+                            height={300}
+                            className="h-auto w-full object-contain max-h-48"
+                            unoptimized
+                          />
+                        </div>
+                      )}
+                      <ImageUpload
+                        category="blue"
+                        entityName={key.replace("blue_", "")}
+                        existingImageUrl={url}
+                        onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
+                        aspectRatio="square"
+                      />
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </section>
         </div>
       )}
 
