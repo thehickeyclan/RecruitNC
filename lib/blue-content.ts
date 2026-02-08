@@ -10,9 +10,7 @@ export const BLUE_IMAGE_KEYS = {
   blue_what_makes_1: `${BASE}/0CbXEvNaC6TEMIUDdaX7x-Blue%20Pic%201.png`,
   blue_what_makes_2: `${BASE}/en2sHJA9p9VQNhORVHmHb-Blue%20Pic%206.png`,
   blue_training_env: `${BASE}/e9FE8F2VrBgwI5zMEzS0D-Blue%20pic%204.png`,
-  blue_pipeline_1: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
-  blue_pipeline_2: `${BASE}/TulKFSt65m9i4aOxZgjzX-Blue%20Pic%209.png`,
-  blue_pipeline_3: `${BASE}/51gNIOlEb2w84uiSHyPJM-Blue%20Pic%2010.png`,
+  blue_pipeline: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
 } as const
 
 export type BlueImageKey = keyof typeof BLUE_IMAGE_KEYS
@@ -23,9 +21,7 @@ export interface BlueContent {
   blue_what_makes_1: string
   blue_what_makes_2: string
   blue_training_env: string
-  blue_pipeline_1: string
-  blue_pipeline_2: string
-  blue_pipeline_3: string
+  blue_pipeline: string
 }
 
 function isValidUrl(s: string): boolean {

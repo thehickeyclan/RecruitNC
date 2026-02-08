@@ -225,16 +225,15 @@ export default async function BluePage() {
               history. Last year, the National Team went 7–1 at NHSCA Duals and reached the
               Round of 16 before losing to a multi-state all-star team.
             </p>
-            <div className="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-                <Image src={images.blue_pipeline_1} alt="NC United Blue at competition" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
-              </div>
-              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-                <Image src={images.blue_pipeline_2} alt="NC United Blue wrestlers" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
-              </div>
-              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md sm:col-span-2 md:col-span-1">
-                <Image src={images.blue_pipeline_3} alt="NC United Blue team" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
-              </div>
+            <div className="my-6 overflow-hidden rounded-xl border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
+              <Image
+                src={images.blue_pipeline}
+                alt="NC United National Team — NHSCA Duals 2025, Virginia Beach, VA"
+                width={900}
+                height={500}
+                className="h-auto w-full object-contain"
+                unoptimized
+              />
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
               {/* TODO: Add link when URL is supplied */}

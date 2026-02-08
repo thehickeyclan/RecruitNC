@@ -16,9 +16,7 @@ const SLOT_LABELS: Record<BlueImageKey, string> = {
   blue_what_makes_1: "What Makes Blue Different — image 1",
   blue_what_makes_2: "What Makes Blue Different — image 2",
   blue_training_env: "Training Environment (large)",
-  blue_pipeline_1: "National Team Pipeline — image 1",
-  blue_pipeline_2: "National Team Pipeline — image 2",
-  blue_pipeline_3: "National Team Pipeline — image 3",
+  blue_pipeline: "National Team Pipeline (one wide rectangle)",
 }
 
 const SLOT_ORDER: BlueImageKey[] = [
@@ -27,9 +25,7 @@ const SLOT_ORDER: BlueImageKey[] = [
   "blue_what_makes_1",
   "blue_what_makes_2",
   "blue_training_env",
-  "blue_pipeline_1",
-  "blue_pipeline_2",
-  "blue_pipeline_3",
+  "blue_pipeline",
 ]
 
 export default function AdminBluePage() {
@@ -130,7 +126,7 @@ export default function AdminBluePage() {
                     entityName={key.replace("blue_", "")}
                     existingImageUrl={url}
                     onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
-                    aspectRatio={key === "blue_banner_url" ? "wide" : "square"}
+                    aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}
                   />
                 </CardContent>
               </Card>

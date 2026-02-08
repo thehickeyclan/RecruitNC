@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { BLUE_IMAGE_KEYS, type BlueImageKey } from "@/lib/blue-content"
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       )
     }
+    revalidatePath("/blue")
     return NextResponse.json({ success: true, key, value })
   } catch (e) {
     console.error("[admin/blue/content]", e)
