@@ -25,22 +25,42 @@ export const metadata: Metadata = {
     "Creating Opportunity. Setting the Standard. Representing North Carolina. NC United Blue is the flagship development program for elite high school wrestlers.",
 }
 
-const QUICK_LINKS = [
-  { href: "#what-is", label: "What Is NC United Blue" },
-  { href: "#mission", label: "Mission & Vision" },
-  { href: "#opportunity", label: "Opportunity & Obligation" },
-  { href: "#what-makes-different", label: "What Makes Blue Different" },
-  { href: "#training", label: "Training & College Partnerships" },
-  { href: "#from-self-to-state", label: "From Self to State" },
-  { href: "#national-team", label: "National Team Pipeline" },
-  { href: "#recognition", label: "Recognition" },
-  { href: "#testimonials", label: "Testimonials" },
-  { href: "#qualification", label: "Qualification & Selection" },
-  { href: "#membership", label: "Blue Membership & Registration" },
-  { href: "#roster", label: "Blue Roster" },
-  { href: "#alumni", label: "Blue Alumni" },
-  { href: "#schedule", label: "Competition & Schedule" },
-  { href: "#state-qualifier", label: "State Qualifier Interest" },
+const QUICK_LINK_GROUPS = [
+  {
+    label: "About",
+    links: [
+      { href: "#what-is", label: "What Is Blue" },
+      { href: "#mission", label: "Mission & Vision" },
+      { href: "#opportunity", label: "Opportunity & Obligation" },
+      { href: "#what-makes-different", label: "What Makes Blue Different" },
+    ],
+  },
+  {
+    label: "Program",
+    links: [
+      { href: "#training", label: "Training & Partnerships" },
+      { href: "#national-team", label: "National Team Pipeline" },
+      { href: "#from-self-to-state", label: "From Self to State" },
+    ],
+  },
+  {
+    label: "Recognition",
+    links: [
+      { href: "#recognition", label: "Achievements" },
+      { href: "#testimonials", label: "Testimonials" },
+    ],
+  },
+  {
+    label: "Join & Info",
+    links: [
+      { href: "#qualification", label: "Qualification" },
+      { href: "#membership", label: "Membership" },
+      { href: "#roster", label: "Roster" },
+      { href: "#alumni", label: "Alumni" },
+      { href: "#schedule", label: "Schedule" },
+      { href: "#state-qualifier", label: "State Qualifier Interest" },
+    ],
+  },
 ]
 
 export default async function BluePage() {
@@ -63,6 +83,35 @@ export default async function BluePage() {
           </div>
         </figure>
 
+        {/* Quick Links — under banner, grouped */}
+        <nav
+          className="mb-10 rounded-xl border-2 border-[#D3B574]/50 bg-white py-5 px-4 shadow-md"
+          aria-label="Page sections"
+          style={{ borderColor: GOLD }}
+        >
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            {QUICK_LINK_GROUPS.map((group) => (
+              <div key={group.label}>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#03154C]/70 mb-2.5">
+                  {group.label}
+                </h3>
+                <ul className="space-y-1.5">
+                  {group.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-[#03154C] hover:text-[#D3B574] hover:underline"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </nav>
+
         {/* National Team Kids — Admin → Blue to upload/replace */}
         <figure className="mb-12">
           <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/50 bg-white shadow-lg">
@@ -79,29 +128,6 @@ export default async function BluePage() {
             Tobin McNair, Mac Johnson, and Bentley Sly (left to right) — NC United National Team
           </figcaption>
         </figure>
-
-        {/* Quick Links — on-brand */}
-        <nav
-          className="sticky top-0 z-10 mb-12 rounded-lg border-2 border-[#D3B574]/50 bg-white py-4 shadow-md"
-          aria-label="Quick links"
-          style={{ borderColor: GOLD }}
-        >
-          <h2 className="mb-3 px-4 text-sm font-semibold text-[#03154C]">
-            Quick Links
-          </h2>
-          <ul className="flex flex-wrap gap-x-4 gap-y-2 px-4">
-            {QUICK_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-sm font-medium text-[#03154C] hover:text-[#D3B574] hover:underline"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
 
         {/* Main Content */}
         <article className="space-y-16">
@@ -166,10 +192,10 @@ export default async function BluePage() {
                 who have been where you want to go.
               </li>
               <li>
-                <strong className="text-[#03154C]">College Coaches Run Practices</strong> — Coaches from UNC, NC State,
-                UNC Pembroke, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead
-                sessions. You train in a college environment, across divisions (D1, D2, D3,
-                NAIA), and learn what it takes to compete at the next level.
+                <strong className="text-[#03154C]">College coaches in the room</strong> — We don’t always have them, but
+                often college coaches from UNC, NC State, UNC Pembroke, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and
+                more lead or support practices so kids see a college-style cadence and environment. Coaches get to know
+                athletes and huddle with them for Q&A on recruiting, college transitions, expectations, and more.
               </li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-4">
