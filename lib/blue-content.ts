@@ -11,6 +11,9 @@ export const BLUE_IMAGE_KEYS = {
   blue_what_makes_2: `${BASE}/en2sHJA9p9VQNhORVHmHb-Blue%20Pic%206.png`,
   blue_training_env: `${BASE}/e9FE8F2VrBgwI5zMEzS0D-Blue%20pic%204.png`,
   blue_pipeline: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
+  blue_coach_colton_palmer: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
+  blue_coach_mike_macchiavello: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
+  blue_coach_araad_fischer: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
 } as const
 
 export type BlueImageKey = keyof typeof BLUE_IMAGE_KEYS
@@ -22,6 +25,9 @@ export interface BlueContent {
   blue_what_makes_2: string
   blue_training_env: string
   blue_pipeline: string
+  blue_coach_colton_palmer: string
+  blue_coach_mike_macchiavello: string
+  blue_coach_araad_fischer: string
 }
 
 function isValidUrl(s: string): boolean {

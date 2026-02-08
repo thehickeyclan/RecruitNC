@@ -40,13 +40,13 @@ const QUICK_LINK_GROUPS = [
     links: [
       { href: "#training", label: "Training & Partnerships" },
       { href: "#national-team", label: "National Team Pipeline" },
-      { href: "#from-self-to-state", label: "From Self to State" },
     ],
   },
   {
     label: "Recognition",
     links: [
       { href: "#recognition", label: "Achievements" },
+      { href: "#coaching-excellence", label: "Coaching Excellence" },
       { href: "#testimonials", label: "Testimonials" },
     ],
   },
@@ -134,12 +134,11 @@ export default async function BluePage() {
           {/* 1. What Is NC United Blue */}
           <section id="what-is">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">What Is NC United Blue</h2>
+            <p className="leading-relaxed text-[#03154C]/90 mb-4">
+              NC United Blue is the premier training and competition program for North Carolina&apos;s top high school wrestlers. It brings the state&apos;s best athletes together in one environment—training under common standards, pushing each other daily, and competing as a unified group on the biggest stages.
+            </p>
             <p className="leading-relaxed text-[#03154C]/90">
-              NC United Blue is the flagship development program of NC Wrestling United—a select
-              group of elite high school wrestlers who train together, compete together, and
-              represent North Carolina at the highest levels. Blue is built on the belief that
-              North Carolina has the talent to compete with any state in the nation; our job is
-              to create the environment where that talent is developed and showcased.
+              Blue is built on a simple idea: elite wrestlers grow faster when they train with other elite wrestlers. By setting shared expectations, demanding accountability, and competing together, NC United Blue creates a culture where North Carolina&apos;s best sharpen each other and represent the state with pride.
             </p>
           </section>
 
@@ -193,7 +192,7 @@ export default async function BluePage() {
               </li>
               <li>
                 <strong className="text-[#03154C]">College coaches in the room</strong> — Regularly, college coaches from
-                UNC, NC State, UNC Pembroke, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
+                UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
                 practices so kids see a college-style cadence and environment. Coaches get to know athletes and huddle
                 with them for Q&A on recruiting, college transitions, expectations, and more.
               </li>
@@ -218,7 +217,7 @@ export default async function BluePage() {
             </div>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
               Blue practices are <strong className="text-[#03154C]">Sundays 1–3pm</strong> at the UNC wrestling room in
-              Fetzer Hall—in season and post season, every Sunday.{" "}
+              Fetzer Hall—every other Sunday in season, every Sunday post season.{" "}
               <Link href={COMPETITION_CALENDAR_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
                 View the NC United calendar →
               </Link>
@@ -235,7 +234,7 @@ export default async function BluePage() {
               </li>
               <li>
                 <strong className="text-[#03154C]">Partnerships across the Southeast</strong> —
-                Age-appropriate groups sometimes train with other colleges (e.g., UVA) to
+                Our most elite groups sometimes train with other colleges (e.g., UVA) to
                 maximize exposure and development.
               </li>
             </ul>
@@ -251,22 +250,7 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 6. From Self to State */}
-          <section id="from-self-to-state">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">From Self to State</h2>
-            <blockquote className="my-6 border-l-4 bg-[#03154C]/5 pl-6 italic text-[#03154C]/90" style={{ borderLeftColor: GOLD }}>
-              &ldquo;From Self to State&rdquo; — Blue wrestlers learn that success starts with
-              individual discipline and commitment, extends to their team and community, and
-              ultimately represents the entire state of North Carolina.
-            </blockquote>
-            <p className="leading-relaxed text-[#03154C]/90">
-              This motto guides how we train and compete. Every rep, every drill, every match
-              is part of a larger journey—from personal accountability to collective pride in
-              representing North Carolina.
-            </p>
-          </section>
-
-          {/* 7. National Team Pipeline */}
+          {/* 6. National Team Pipeline */}
           <section id="national-team">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">National Team Pipeline</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
@@ -298,7 +282,7 @@ export default async function BluePage() {
             <p className="mb-6 text-[#03154C]/90">
               Celebrating our athletes&apos; achievements and the impact of NC United Wrestling.
             </p>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
                 <CardContent className="p-6">
                   <h3 className="text-lg font-bold text-[#03154C] mb-2">NHSCA 2025</h3>
@@ -317,13 +301,68 @@ export default async function BluePage() {
                   <p className="text-xs text-[#03154C]/70"><strong>Highlights:</strong> Team championship, multiple individual titles</p>
                 </CardContent>
               </Card>
+            </div>
+          </section>
+
+          {/* 8b. Coaching Excellence */}
+          <section id="coaching-excellence">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Coaching Excellence</h2>
+            <p className="mb-6 text-[#03154C]/90">
+              Led by Coach Macchiavello, Coach Palmer, and Coach Fisher.
+            </p>
+            <div className="grid gap-8 md:grid-cols-3">
               <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-[#03154C] mb-2">Coaching Excellence</h3>
-                  <p className="text-sm text-[#03154C]/90 mb-2">
-                    Our experienced coaching staff continues to develop champions both on and off the mat.
+                <div className="aspect-[3/4] relative bg-[#03154C]/5">
+                  <Image
+                    src={images.blue_coach_colton_palmer}
+                    alt="Colton Palmer"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                </div>
+                <CardContent className="p-5">
+                  <h3 className="text-lg font-bold text-[#03154C] mb-2">Colton Palmer</h3>
+                  <p className="text-sm text-[#03154C]/90 leading-relaxed">
+                    Colton Palmer is a former NC State wrestler, four-year letter winner, team co-captain, and NCAA Tournament qualifier. A two-time NCHSAA state champion and former national record holder in career wins, he now serves as VP of Enterprise Strategy & Development at Strategic Executives Agency and continues to give back as founder of NC Wrestling United, a volunteer coach, and a board member of NC USA Wrestling.
                   </p>
-                  <p className="text-xs text-[#03154C]/70"><strong>Led by:</strong> Coach Macchiavello, Coach Palmer, and Coach Carlson</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
+                <div className="aspect-[3/4] relative bg-[#03154C]/5">
+                  <Image
+                    src={images.blue_coach_mike_macchiavello}
+                    alt="Mike Macchiavello"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                </div>
+                <CardContent className="p-5">
+                  <h3 className="text-lg font-bold text-[#03154C] mb-2">Mike Macchiavello</h3>
+                  <p className="text-sm text-[#03154C]/90 leading-relaxed">
+                    Mike Macchiavello is a North Carolina native, NCAA Division I National Champion at NC State, and Co-Founder of NC United. A former NC high school state champion and U.S. National Team member, he has represented Team USA internationally and served in leadership roles with USA Wrestling, including the Board of Directors and Executive Committee. He holds undergraduate and graduate degrees from NC State and remains deeply connected to North Carolina wrestling.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
+                <div className="aspect-[3/4] relative bg-[#03154C]/5">
+                  <Image
+                    src={images.blue_coach_araad_fischer}
+                    alt="Araad Fisher"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                </div>
+                <CardContent className="p-5">
+                  <h3 className="text-lg font-bold text-[#03154C] mb-2">Araad Fisher</h3>
+                  <p className="text-sm text-[#03154C]/90 leading-relaxed">
+                    Araad Fisher is a former Duke wrestler and four-year starter who competed at 184, 197, and heavyweight. A North Carolina state finalist and High School All-American, he has built a successful career in high tech while continuing to give back to the wrestling community.
+                  </p>
                 </CardContent>
               </Card>
             </div>

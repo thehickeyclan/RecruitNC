@@ -17,6 +17,9 @@ const SLOT_LABELS: Record<BlueImageKey, string> = {
   blue_what_makes_2: "What Makes Blue Different — image 2",
   blue_training_env: "Training Environment (large)",
   blue_pipeline: "National Team Pipeline (one wide rectangle)",
+  blue_coach_colton_palmer: "Coaching Excellence — Colton Palmer",
+  blue_coach_mike_macchiavello: "Coaching Excellence — Mike Macchiavello",
+  blue_coach_araad_fischer: "Coaching Excellence — Araad Fisher",
 }
 
 const SLOT_ORDER: BlueImageKey[] = [
@@ -26,6 +29,9 @@ const SLOT_ORDER: BlueImageKey[] = [
   "blue_what_makes_2",
   "blue_training_env",
   "blue_pipeline",
+  "blue_coach_colton_palmer",
+  "blue_coach_mike_macchiavello",
+  "blue_coach_araad_fischer",
 ]
 
 export default function AdminBluePage() {
