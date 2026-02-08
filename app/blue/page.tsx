@@ -9,6 +9,8 @@ import { BlueAlumniPlaceholder } from "./blue-alumni-placeholder"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
+import { NextStepsCTA } from "./next-steps-cta"
+import { ExploreBlue } from "./explore-blue"
 
 const NAVY = "#03154C"
 const GOLD = "#D3B574"
@@ -25,43 +27,6 @@ export const metadata: Metadata = {
   description:
     "Creating Opportunity. Setting the Standard. Representing North Carolina. NC United Blue is the flagship development program for elite high school wrestlers.",
 }
-
-const QUICK_LINK_GROUPS = [
-  {
-    label: "About",
-    links: [
-      { href: "#what-is", label: "What Is Blue" },
-      { href: "#mission", label: "Mission & Vision" },
-      { href: "#opportunity", label: "Opportunity & Obligation" },
-      { href: "#what-makes-different", label: "What Makes Blue Different" },
-    ],
-  },
-  {
-    label: "Program",
-    links: [
-      { href: "#training", label: "Training & Partnerships" },
-      { href: "#national-team", label: "National Team Pipeline" },
-    ],
-  },
-  {
-    label: "Recognition",
-    links: [
-      { href: "#coaching-excellence", label: "Coaching Excellence" },
-      { href: "#testimonials", label: "Testimonials" },
-    ],
-  },
-  {
-    label: "Join & Info",
-    links: [
-      { href: "#qualification", label: "Qualification" },
-      { href: "#membership", label: "Membership" },
-      { href: "#roster", label: "Roster" },
-      { href: "#alumni", label: "Alumni" },
-      { href: "#schedule", label: "Schedule" },
-      { href: "#state-qualifier", label: "State Qualifier Interest" },
-    ],
-  },
-]
 
 export default async function BluePage() {
   const images = await getBlueContent()
@@ -82,35 +47,6 @@ export default async function BluePage() {
             />
           </div>
         </figure>
-
-        {/* Quick Links — under banner, grouped */}
-        <nav
-          className="mb-10 rounded-xl border-2 border-[#D3B574]/50 bg-white py-5 px-4 shadow-md"
-          aria-label="Page sections"
-          style={{ borderColor: GOLD }}
-        >
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {QUICK_LINK_GROUPS.map((group) => (
-              <div key={group.label}>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#03154C]/70 mb-2.5">
-                  {group.label}
-                </h3>
-                <ul className="space-y-1.5">
-                  {group.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-sm text-[#03154C] hover:text-[#D3B574] hover:underline"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </nav>
 
         {/* National Team Kids — Admin → Blue to upload/replace */}
         <figure className="mb-12">
@@ -140,6 +76,7 @@ export default async function BluePage() {
             <p className="leading-relaxed text-[#03154C]/90">
               Blue is built on a simple idea: elite wrestlers grow faster when they train with other elite wrestlers. By setting shared expectations, demanding accountability, and competing together, NC United Blue creates a culture where North Carolina&apos;s best sharpen each other and represent the state with pride.
             </p>
+            <NextStepsCTA />
           </section>
 
           {/* 2. Mission & Vision */}
@@ -478,6 +415,8 @@ export default async function BluePage() {
             </p>
             <StateQualifierInterestCTA />
           </section>
+
+          <ExploreBlue />
         </article>
 
         {/* Back to top */}
