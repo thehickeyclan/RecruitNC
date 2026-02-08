@@ -109,48 +109,11 @@ export default function AdminBluePage() {
         </div>
       ) : (
         <div className="space-y-10">
-          <section>
-            <h2 className="text-lg font-semibold text-[#03154C] mb-4">Page images</h2>
-            <div className="space-y-6">
-              {PAGE_IMAGE_KEYS.map((key) => {
-                const url = content?.[key]
-                return (
-                  <Card key={key}>
-                    <CardHeader>
-                      <CardTitle className="text-base">{SLOT_LABELS[key]}</CardTitle>
-                      <CardDescription>Upload a new image to use on the Blue page</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {url && (
-                        <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50">
-                          <Image
-                            src={url}
-                            alt={SLOT_LABELS[key]}
-                            width={600}
-                            height={300}
-                            className="h-auto w-full object-contain max-h-48"
-                            unoptimized
-                          />
-                        </div>
-                      )}
-                      <ImageUpload
-                        category="blue"
-                        entityName={key.replace("blue_", "")}
-                        existingImageUrl={url}
-                        onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
-                        aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}
-                      />
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-semibold text-[#03154C] mb-4">Coach photos (Coaching Excellence)</h2>
+          {/* Coach photos first so they're impossible to miss */}
+          <section className="rounded-lg border-2 border-[#D3B574] bg-[#03154C]/5 p-4">
+            <h2 className="text-lg font-semibold text-[#03154C] mb-1">Coach photos (Coaching Excellence)</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Colton Palmer, Mike Macchiavello, and Araad Fisher — update each photo below.
+              Colton Palmer, Mike Macchiavello, Araad Fisher — update each photo below.
             </p>
             <div className="space-y-6">
               {COACH_PHOTO_KEYS.map((key) => {
@@ -180,6 +143,44 @@ export default function AdminBluePage() {
                         existingImageUrl={url}
                         onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
                         aspectRatio="square"
+                      />
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-[#03154C] mb-4">Other page images</h2>
+            <div className="space-y-6">
+              {PAGE_IMAGE_KEYS.map((key) => {
+                const url = content?.[key]
+                return (
+                  <Card key={key}>
+                    <CardHeader>
+                      <CardTitle className="text-base">{SLOT_LABELS[key]}</CardTitle>
+                      <CardDescription>Upload a new image to use on the Blue page</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {url && (
+                        <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50">
+                          <Image
+                            src={url}
+                            alt={SLOT_LABELS[key]}
+                            width={600}
+                            height={300}
+                            className="h-auto w-full object-contain max-h-48"
+                            unoptimized
+                          />
+                        </div>
+                      )}
+                      <ImageUpload
+                        category="blue"
+                        entityName={key.replace("blue_", "")}
+                        existingImageUrl={url}
+                        onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
+                        aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}
                       />
                     </CardContent>
                   </Card>
