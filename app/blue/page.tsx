@@ -192,10 +192,10 @@ export default async function BluePage() {
                 who have been where you want to go.
               </li>
               <li>
-                <strong className="text-[#03154C]">College coaches in the room</strong> — We don’t always have them, but
-                often college coaches from UNC, NC State, UNC Pembroke, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and
-                more lead or support practices so kids see a college-style cadence and environment. Coaches get to know
-                athletes and huddle with them for Q&A on recruiting, college transitions, expectations, and more.
+                <strong className="text-[#03154C]">College coaches in the room</strong> — Regularly, college coaches from
+                UNC, NC State, UNC Pembroke, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
+                practices so kids see a college-style cadence and environment. Coaches get to know athletes and huddle
+                with them for Q&A on recruiting, college transitions, expectations, and more.
               </li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-4">
@@ -216,6 +216,13 @@ export default async function BluePage() {
             <div className="mb-6 overflow-hidden rounded-lg border-2 border-[#D3B574]/50 bg-white shadow-md">
               <Image src={images.blue_training_env} alt="NC United Blue training environment" width={700} height={400} className="h-auto w-full object-contain" unoptimized />
             </div>
+            <p className="mb-4 leading-relaxed text-[#03154C]/90">
+              Blue practices are <strong className="text-[#03154C]">Sundays 1–3pm</strong> at the UNC wrestling room in
+              Fetzer Hall—in season and post season, every Sunday.{" "}
+              <Link href={COMPETITION_CALENDAR_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
+                View the NC United calendar →
+              </Link>
+            </p>
             <ul className="space-y-3 leading-relaxed text-[#03154C]/90">
               <li>
                 <strong className="text-[#03154C]">UNC</strong> serves as the primary home for
@@ -232,6 +239,16 @@ export default async function BluePage() {
                 maximize exposure and development.
               </li>
             </ul>
+            <div className="mt-6 rounded-lg border-2 border-[#D3B574]/40 bg-[#03154C]/5 p-5">
+              <h3 className="text-lg font-semibold text-[#03154C] mb-2">Drop-ins</h3>
+              <p className="text-[#03154C]/90 text-sm leading-relaxed mb-2">
+                Drop-ins are welcome. We have limited availability per practice. To attend, sign up on the{" "}
+                <Link href={COMPETITION_CALENDAR_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
+                  NC United calendar
+                </Link>
+                {" "}by clicking on the practice and completing the registration form.
+              </p>
+            </div>
           </section>
 
           {/* 6. From Self to State */}
