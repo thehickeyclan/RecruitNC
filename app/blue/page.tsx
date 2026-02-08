@@ -293,18 +293,31 @@ export default async function BluePage() {
               What coaches, parents, and wrestlers are saying about NC United.
             </p>
             <div className="space-y-6">
-              <Card className="border-2 border-[#D3B574]/40">
-                <CardContent className="p-6">
-                  <div className="flex text-[#D3B574] mb-3">
-                    {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="h-5 w-5 fill-current" />)}
+              <Card className="border-2 border-[#D3B574]/40 overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="flex flex-col md:flex-row md:items-stretch">
+                    <div className="md:w-1/2 aspect-video md:aspect-auto md:min-h-[280px] bg-[#03154C]/5">
+                      <iframe
+                        src="https://www.youtube.com/embed/0gfFU6hkpY4?start=1181"
+                        title="UNC Associate Head Coach Testimonial"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full min-h-[220px] md:min-h-[280px]"
+                      />
+                    </div>
+                    <div className="md:w-1/2 p-6 flex flex-col justify-center">
+                      <div className="flex text-[#D3B574] mb-3">
+                        {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="h-5 w-5 fill-current" />)}
+                      </div>
+                      <blockquote className="text-[#03154C]/90 italic mb-4">
+                        &ldquo;NC United is doing an incredible job of bringing together the best talent in North Carolina and
+                        creating opportunities for these wrestlers to compete at the highest level. The program is producing
+                        college-ready athletes who understand what it takes to succeed.&rdquo;
+                      </blockquote>
+                      <div className="font-semibold text-[#03154C]">Tony Ramos</div>
+                      <div className="text-sm text-[#03154C]/80">Associate Head Coach, UNC Wrestling</div>
+                    </div>
                   </div>
-                  <blockquote className="text-[#03154C]/90 italic mb-4">
-                    &ldquo;NC United is doing an incredible job of bringing together the best talent in North Carolina and
-                    creating opportunities for these wrestlers to compete at the highest level. The program is producing
-                    college-ready athletes who understand what it takes to succeed.&rdquo;
-                  </blockquote>
-                  <div className="font-semibold text-[#03154C]">Tony Ramos</div>
-                  <div className="text-sm text-[#03154C]/80">Associate Head Coach, UNC Wrestling</div>
                 </CardContent>
               </Card>
               <div className="grid md:grid-cols-2 gap-6">
