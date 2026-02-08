@@ -46,6 +46,11 @@ const adminNavItems = [
     href: "/admin/enhanced-logo-manager",
     icon: "🎨",
   },
+  {
+    title: "Blue Page",
+    href: "/admin/blue",
+    icon: "🖼️",
+  },
 ]
 
 export function AdminHeader() {

@@ -2,6 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Metadata } from "next"
+import { getBlueContent } from "@/lib/blue-content"
 import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
 import { BlueAlumniPlaceholder } from "./blue-alumni-placeholder"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
@@ -11,18 +12,6 @@ import { BackToTop } from "./back-to-top"
 const NATIONAL_TEAM_URL = "#"
 const NATIONAL_TEAM_SCHEDULE_URL = "#"
 const COMPETITION_CALENDAR_URL = "#"
-
-// Blue program images (Vercel Blob Storage)
-const IMAGES = {
-  banner: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/X65GjDIcBrIc9dG2D6d-1-Blue%20Page%20Banner.png",
-  nationalTeamKids: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/mtS_xnViZ3kKW1u7xHnxQ-National%20Team%20kids%20pic.png",
-  blue1: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/0CbXEvNaC6TEMIUDdaX7x-Blue%20Pic%201.png",
-  blue4: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/e9FE8F2VrBgwI5zMEzS0D-Blue%20pic%204.png",
-  blue6: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/en2sHJA9p9VQNhORVHmHb-Blue%20Pic%206.png",
-  blue7: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png",
-  blue9: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/TulKFSt65m9i4aOxZgjzX-Blue%20Pic%209.png",
-  blue10: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/51gNIOlEb2w84uiSHyPJM-Blue%20Pic%2010.png",
-} as const
 
 export const metadata: Metadata = {
   title: "NC United Blue | NC Wrestling United",
@@ -46,15 +35,16 @@ const QUICK_LINKS = [
   { href: "#state-qualifier", label: "State Qualifier Interest" },
 ]
 
-export default function BluePage() {
+export default async function BluePage() {
+  const images = await getBlueContent()
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
-        {/* Blue page banner — full image, no crop */}
+        {/* Banner — Admin → Blue to upload/replace */}
         <figure className="mb-12">
           <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/30 bg-gray-50 shadow-lg">
             <Image
-              src={IMAGES.banner}
+              src={images.blue_banner_url}
               alt="NC United Blue"
               width={1200}
               height={600}
@@ -65,11 +55,11 @@ export default function BluePage() {
           </div>
         </figure>
 
-        {/* National Team Kids — featured image with caption */}
+        {/* National Team Kids — Admin → Blue to upload/replace */}
         <figure className="mb-12">
           <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/30 bg-gray-50 shadow-lg">
             <Image
-              src={IMAGES.nationalTeamKids}
+              src={images.blue_national_team_kids}
               alt="Tobin McNair, Mac Johnson, and Bentley Sly representing NC United National Team"
               width={900}
               height={600}
@@ -176,10 +166,10 @@ export default function BluePage() {
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-                <Image src={IMAGES.blue1} alt="NC United Blue training" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+                <Image src={images.blue_what_makes_1} alt="NC United Blue training" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
               </div>
               <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-                <Image src={IMAGES.blue6} alt="NC United Blue in action" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+                <Image src={images.blue_what_makes_2} alt="NC United Blue in action" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
               </div>
             </div>
           </section>
@@ -190,7 +180,7 @@ export default function BluePage() {
               Training Environment & College Partnerships
             </h2>
             <div className="mb-6 overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-              <Image src={IMAGES.blue4} alt="NC United Blue training environment" width={700} height={400} className="h-auto w-full object-contain" unoptimized />
+              <Image src={images.blue_training_env} alt="NC United Blue training environment" width={700} height={400} className="h-auto w-full object-contain" unoptimized />
             </div>
             <ul className="space-y-3 leading-relaxed text-muted-foreground">
               <li>
@@ -235,13 +225,13 @@ export default function BluePage() {
             </p>
             <div className="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
               <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-                <Image src={IMAGES.blue7} alt="NC United Blue at competition" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+                <Image src={images.blue_pipeline_1} alt="NC United Blue at competition" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
               </div>
               <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md">
-                <Image src={IMAGES.blue9} alt="NC United Blue wrestlers" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+                <Image src={images.blue_pipeline_2} alt="NC United Blue wrestlers" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
               </div>
               <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/30 bg-gray-50 shadow-md sm:col-span-2 md:col-span-1">
-                <Image src={IMAGES.blue10} alt="NC United Blue team" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+                <Image src={images.blue_pipeline_3} alt="NC United Blue team" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
               </div>
             </div>
             <p className="mb-4 text-sm text-muted-foreground">
