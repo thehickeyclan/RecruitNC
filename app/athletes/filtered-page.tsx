@@ -5,6 +5,7 @@ import { DivisionFilterDropdown } from "@/components/division-filter-dropdown"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthlete } from "@/lib/professional-athlete"
 import type { Athlete } from "@/types/athlete"
+import { matchesDivisionFilter } from "@/lib/division-display"
 
 interface FilteredAthletesProps {
   initialAthletes: Athlete[]
@@ -25,17 +26,7 @@ const FilteredAthletes = ({ initialAthletes }: FilteredAthletesProps) => {
       return
     }
 
-    // Filter athletes by the selected division
-    // This uses a case-insensitive includes check to match partial division strings
-    const filtered = athletes.filter((athlete) => {
-      if (!athlete.division) return false
-
-      // Normalize the division string for comparison
-      const athleteDivision = athlete.division.toLowerCase()
-      const searchDivision = division.toLowerCase()
-
-      return athleteDivision.includes(searchDivision)
-    })
+    const filtered = athletes.filter((athlete) => matchesDivisionFilter(athlete.division, division))
 
     setFilteredAthletes(filtered)
   }

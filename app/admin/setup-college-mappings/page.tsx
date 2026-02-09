@@ -1,16 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2, CheckCircle, AlertCircle, Database, ArrowLeft } from "lucide-react"
+import { Loader2, CheckCircle, AlertCircle, Database, ArrowLeft, List } from "lucide-react"
 
 export default function SetupCollegeMappingsPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string; seeded?: number; count?: number } | null>(null)
+  const [missing, setMissing] = useState<string[] | null>(null)
+  const [missingLoading, setMissingLoading] = useState(false)
   const { toast } = useToast()
+
+  async function loadMissing() {
+    setMissingLoading(true)
+    setMissing(null)
+    try {
+      const res = await fetch("/api/college-division-mappings/missing")
+      const data = await res.json()
+      if (res.ok) setMissing(data.missing ?? [])
+      else toast({ title: "Error", description: data.error ?? "Failed to load", variant: "destructive" })
+    } finally {
+      setMissingLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadMissing()
+  }, [])
 
   async function runSetup() {
     setLoading(true)
@@ -30,6 +49,7 @@ export default function SetupCollegeMappingsPage() {
         count: data.count,
       })
       toast({ title: "Success", description: data.message })
+      loadMissing()
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Network error"
       setResult({ success: false, message: msg })
@@ -57,9 +77,8 @@ export default function SetupCollegeMappingsPage() {
               College division mappings
             </CardTitle>
             <CardDescription>
-              Division is read <strong>only</strong> from <code className="text-xs bg-gray-100 px-1 rounded">college_division_mappings</code> — no other source.
-              This button seeds or upserts that table. To fix wrong divisions, edit that table in Supabase or run the SQL in{" "}
-              <code className="text-xs bg-gray-100 px-1 rounded">docs/fix-college-divisions-in-supabase.md</code>.
+              Division is read <strong>only</strong> from <code className="text-xs bg-gray-100 px-1 rounded">college_division_mappings</code> — no other table, no cluster.
+              Add every college that appears in commits to that one table in Supabase. Below: colleges in your DB that are missing from the table (they show as Unknown).
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -99,12 +118,28 @@ export default function SetupCollegeMappingsPage() {
               </div>
             )}
 
-            <div className="mt-6 pt-4 border-t text-sm text-gray-600 space-y-2">
-              <p className="font-medium text-gray-700">How to update divisions</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Click the button above to apply the built-in list (fixes Roanoke, Lander, Presbyterian, Mount Union, Gardner-Webb, etc.).</li>
-                <li>To fix wrong divisions: Supabase → Table Editor → <code className="bg-gray-100 px-1 rounded">college_division_mappings</code>. Edit <code className="bg-gray-100 px-1 rounded">division</code> or add rows. Or run the SQL in <code className="bg-gray-100 px-1 rounded">docs/fix-college-divisions-in-supabase.md</code> (SQL Editor). That table is the only source — the app does not use college_master for division.</li>
-              </ol>
+            <div className="mt-6 pt-4 border-t">
+              <p className="font-medium text-gray-700 flex items-center gap-2">
+                <List className="h-4 w-4" />
+                Colleges in commits not in <code className="bg-gray-100 px-1 rounded">college_division_mappings</code> (add these in Supabase)
+              </p>
+              {missingLoading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
+              {!missingLoading && missing && (
+                <div className="mt-2 max-h-48 overflow-y-auto rounded border bg-gray-50 p-2 text-sm">
+                  {missing.length === 0 ? (
+                    <p className="text-green-700">None — every college from athlete records is in the table.</p>
+                  ) : (
+                    <ul className="list-disc list-inside space-y-0.5 text-gray-700">
+                      {missing.map((c) => (
+                        <li key={c}>{c}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Supabase → Table Editor → college_division_mappings → add a row for each with <code className="bg-gray-100 px-1 rounded">college_name</code> exactly as shown and <code className="bg-gray-100 px-1 rounded">division</code> = NCAA Division I, NCAA Division II, NCAA Division III, NAIA, or NJCAA.
+              </p>
             </div>
           </CardContent>
         </Card>

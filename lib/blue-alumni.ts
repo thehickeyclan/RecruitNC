@@ -23,7 +23,7 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, highschool, college, ncUnitedTeam")
+      .select("id, name, graduationyear, highschool, college, division, ncUnitedTeam")
       .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
@@ -45,14 +45,19 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     const blueAlumni = (data ?? []).filter(isBlue)
 
     const withDivision = await Promise.all(
-      blueAlumni.map(async (row: any) => ({
-        id: row.id ?? "",
-        name: row.name ?? "",
-        graduationyear: Number(row.graduationyear) || 0,
-        highschool: row.highschool ?? "",
-        college: row.college ?? "",
-        division: await getDivisionFromMappings(row.college ?? ""),
-      })),
+      blueAlumni.map(async (row: any) => {
+        const fromMapping = await getDivisionFromMappings(row.college ?? "")
+        const stored = (row.division ?? "").trim()
+        const division = fromMapping || stored || "Unknown"
+        return {
+          id: row.id ?? "",
+          name: row.name ?? "",
+          graduationyear: Number(row.graduationyear) || 0,
+          highschool: row.highschool ?? "",
+          college: row.college ?? "",
+          division,
+        }
+      }),
     )
     return withDivision
   } catch (e) {

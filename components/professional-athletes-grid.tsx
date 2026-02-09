@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { ProfessionalCommitmentCard } from "./professional-commitment-card"
 import { AlertCircle, RefreshCw } from "lucide-react"
+import { matchesDivisionFilter } from "@/lib/division-display"
 
 // Professional athlete data with correct divisions
 const PROFESSIONAL_ATHLETES = [
@@ -170,13 +171,10 @@ export function ProfessionalAthletesGrid({
       })
     }
 
-    // Apply division filter - exact match with database values
     if (divisionFilter && divisionFilter.length > 0) {
-      filtered = filtered.filter((athlete) => {
-        const athleteDivision = String(athlete.division || "")
-        const isMatch = divisionFilter.includes(athleteDivision)
-        return isMatch
-      })
+      filtered = filtered.filter((athlete) =>
+        divisionFilter.some((filterVal) => matchesDivisionFilter(athlete.division, filterVal))
+      )
     }
 
     // Apply gender filter

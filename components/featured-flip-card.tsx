@@ -7,6 +7,7 @@ import type { Athlete } from "@/types/athlete"
 import { EntityLogo } from "@/components/entity-logo"
 import { DivisionLogo } from "@/components/division-logo"
 import { FileUp as Flip, ArrowRight } from "lucide-react"
+import { useResolvedDivision } from "@/hooks/use-resolved-division"
 
 interface FeaturedFlipCardProps {
   athlete: Athlete
@@ -19,6 +20,8 @@ export function FeaturedFlipCard({ athlete, onAnimationComplete }: FeaturedFlipC
   const [showTooltip, setShowTooltip] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+  const displayDivision = useResolvedDivision(athlete.college)
+  const divisionToShow = displayDivision || athlete.division || ""
 
   useEffect(() => {
     setIsMounted(true)
@@ -190,13 +193,13 @@ export function FeaturedFlipCard({ athlete, onAnimationComplete }: FeaturedFlipC
           <div className="p-4 h-full flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold text-lg">{athlete.name}</h3>
-              <DivisionLogo division={athlete.division || ""} className="w-10 h-10" />
+              <DivisionLogo division={divisionToShow} className="w-10 h-10" />
             </div>
 
             <div className="mb-3">
               <p className="text-sm font-medium text-gray-700">College Commitment:</p>
               <p className="font-medium">{athlete.college}</p>
-              <p className="text-xs text-gray-500">{athlete.division}</p>
+              <p className="text-xs text-gray-500">{divisionToShow || "—"}</p>
             </div>
 
             {athlete.achievements && athlete.achievements.length > 0 && (

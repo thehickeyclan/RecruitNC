@@ -133,13 +133,13 @@ export function FlipCard({ athlete }: FlipCardProps) {
           <div className="p-4 h-full flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold text-lg">{athleteName}</h3>
-              <DivisionLogo division={athlete.division || ""} size={40} />
+              <DivisionLogo division={divisionToShow} size={40} />
             </div>
 
             <div className="mb-3">
               <p className="text-sm font-medium text-gray-700">College Commitment:</p>
               <p className="font-medium">{athlete.college}</p>
-              <p className="text-xs text-gray-500">{athlete.division}</p>
+              <p className="text-xs text-gray-500">{divisionToShow || "—"}</p>
             </div>
 
             {athlete.achievements && athlete.achievements.length > 0 && (

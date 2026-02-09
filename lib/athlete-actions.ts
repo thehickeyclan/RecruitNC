@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { mapAthleteToDb, mapDbToAthlete } from "./athlete-utils"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { upsertCollegeDivisionMapping } from "@/lib/upsert-college-division-mapping"
 
 export async function getAthletesAction() {
   try {
@@ -161,6 +162,14 @@ export async function updateAthleteAction(id: string, athleteData: any) {
       console.error("[auto-commit] Failed to auto-align committed athlete:", syncError)
     }
 
+    if (data.college && data.division) {
+      try {
+        await upsertCollegeDivisionMapping(adminSupabase, data.college, data.division)
+      } catch (mappingErr) {
+        console.error("[college-mapping] Failed to upsert college_division_mappings:", mappingErr)
+      }
+    }
+
     // Map database fields back to frontend fields for the response
     const updatedAthlete = await mapDbToAthlete(data)
 
@@ -211,6 +220,14 @@ export async function createAthleteAction(athleteData: any) {
 
     if (!data) {
       return { success: false, error: "Failed to create athlete" }
+    }
+
+    if (data.college && data.division) {
+      try {
+        await upsertCollegeDivisionMapping(adminSupabase, data.college, data.division)
+      } catch (mappingErr) {
+        console.error("[college-mapping] Failed to upsert college_division_mappings:", mappingErr)
+      }
     }
 
     // Map database fields back to frontend fields for the response

@@ -1,27 +1,43 @@
 "use client"
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CANONICAL_DIVISIONS_FULL, normalizeToCanonicalFull } from "@/lib/division-display"
 
 type Props = {
   value: string
   onValueChange: (value: string) => void
   placeholder?: string
   className?: string
+  required?: boolean
+  disabled?: boolean
 }
 
-export function DivisionDropdown({ value, onValueChange, placeholder = "Select division", className }: Props) {
+/** Division dropdown: only canonical options (NCAA Division I/II/III, NAIA, NJCAA, Club). Prevents inconsistent free-text. */
+export function DivisionDropdown({
+  value,
+  onValueChange,
+  placeholder = "Select division",
+  className,
+  required,
+  disabled,
+}: Props) {
+  const displayValue = normalizeToCanonicalFull(value)
+
   return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={className}>
+    <Select
+      value={displayValue || undefined}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
+      <SelectTrigger className={className} aria-required={required}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="NCAA Division I">NCAA Division I</SelectItem>
-        <SelectItem value="NCAA Division II">NCAA Division II</SelectItem>
-        <SelectItem value="NCAA Division III">NCAA Division III</SelectItem>
-        <SelectItem value="NAIA">NAIA</SelectItem>
-        <SelectItem value="NJCAA">NJCAA</SelectItem>
-        <SelectItem value="Independent">Independent</SelectItem>
+        {CANONICAL_DIVISIONS_FULL.map((div) => (
+          <SelectItem key={div} value={div}>
+            {div}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   )

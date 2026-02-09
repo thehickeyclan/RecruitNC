@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getDivisionFilterValues } from "@/lib/division-display"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 30 // Cache for 30 seconds to reduce API calls
@@ -74,8 +75,11 @@ export async function GET(request: Request) {
       }
 
       if (divisionFilter && divisionFilter !== "all") {
-        query = query.eq("division", divisionFilter)
-        console.log(`🤼 Athletes API: Filtering by division: ${divisionFilter}`)
+        const divisionValues = getDivisionFilterValues(divisionFilter)
+        if (divisionValues.length > 0) {
+          query = query.in("division", divisionValues)
+          console.log(`🤼 Athletes API: Filtering by division: ${divisionFilter} (matches ${divisionValues.length} values)`)
+        }
       }
 
       const result = await Promise.race([

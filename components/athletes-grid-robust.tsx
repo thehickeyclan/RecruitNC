@@ -64,9 +64,11 @@ export function AthletesGridRobust({ athletes, filteredAthletes, className = "" 
         if (athlete.graduation_year?.toString() !== selectedYear) return false
       }
 
-      // Division filter
       if (selectedDivisions.length > 0) {
-        if (!selectedDivisions.includes(athlete.division || "")) return false
+        const matches = selectedDivisions.some((filterVal) =>
+          matchesDivisionFilter(athlete.division, filterVal)
+        )
+        if (!matches) return false
       }
 
       // Gender filter
@@ -118,9 +120,7 @@ export function AthletesGridRobust({ athletes, filteredAthletes, className = "" 
     return ["All Years", ...years]
   }, [athletes])
 
-  const availableDivisions = useMemo(() => {
-    return Array.from(new Set(athletes.map((athlete) => athlete.division).filter(Boolean))).sort()
-  }, [athletes])
+  const availableDivisions = useMemo(() => [...CANONICAL_DIVISIONS_FULL], [])
 
   const availableGenders = useMemo(() => {
     return Array.from(new Set(athletes.map((athlete) => athlete.gender).filter(Boolean))).sort()

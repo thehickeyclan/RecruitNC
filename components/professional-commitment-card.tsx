@@ -6,6 +6,8 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RotateCw, ExternalLink, Instagram, Calendar } from "lucide-react"
+import { getDivisionDisplayShort } from "@/lib/division-display"
+import { useResolvedDivision } from "@/hooks/use-resolved-division"
 
 interface Athlete {
   id: string
@@ -68,6 +70,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     totalLosses: number
     totalWinPercentage: number
   } | null>(null)
+  const displayDivision = useResolvedDivision(athlete.college)
 
   useEffect(() => {
     setIsFlipped(false)
@@ -536,7 +539,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 </div>
                 <div className="flex-1 min-w-0">
                   <h5 className="font-bold text-gray-900 text-sm truncate">{athlete.college || "College"}</h5>
-                  <p className="text-xs text-gray-600">{athlete.division || "NCAA Division"}</p>
+                  <p className="text-xs text-gray-600">{displayDivision ? getDivisionDisplayShort(displayDivision) : (athlete.division || "—")}</p>
                   <p className="text-xs text-gray-600">
                     <span className="font-semibold">Projected Weight:</span>{" "}
                     {athlete.college_weight_class ? `${athlete.college_weight_class} lbs` : "TBD"}

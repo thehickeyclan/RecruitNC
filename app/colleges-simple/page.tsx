@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
+import { CANONICAL_DIVISIONS_FULL, matchesDivisionFilter } from "@/lib/division-display"
 
 export default function CollegesSimplePage() {
   const [colleges, setColleges] = useState<any[]>([])
@@ -67,14 +68,12 @@ export default function CollegesSimplePage() {
     fetchColleges()
   }, [])
 
-  // Filter colleges by division
   const filteredColleges =
     divisionFilter === "all"
       ? colleges
-      : colleges.filter((college) => {
-          // Check if any athlete at this college has the selected division
-          return college.athletes.some((athlete: any) => athlete.division === divisionFilter)
-        })
+      : colleges.filter((college) =>
+          college.athletes.some((athlete: any) => matchesDivisionFilter(athlete.division, divisionFilter))
+        )
 
   return (
     <div className="container mx-auto py-10">
@@ -89,11 +88,11 @@ export default function CollegesSimplePage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Divisions</SelectItem>
-              <SelectItem value="Division I">Division I</SelectItem>
-              <SelectItem value="Division II">Division II</SelectItem>
-              <SelectItem value="Division III">Division III</SelectItem>
-              <SelectItem value="NAIA">NAIA</SelectItem>
-              <SelectItem value="NJCAA">NJCAA</SelectItem>
+              {CANONICAL_DIVISIONS_FULL.map((div) => (
+                <SelectItem key={div} value={div}>
+                  {div}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

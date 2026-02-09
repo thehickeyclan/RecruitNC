@@ -101,8 +101,8 @@ export function SearchAndFilter({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Years</SelectItem>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
+                  {(years ?? []).map((year) => (
+                    <SelectItem key={year} value={String(year)}>
                       {year}
                     </SelectItem>
                   ))}
@@ -134,7 +134,7 @@ export function SearchAndFilter({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Divisions</SelectItem>
-                  {divisions.map((division) => (
+                  {(divisions ?? []).map((division) => (
                     <SelectItem key={division} value={division}>
                       {division}
                     </SelectItem>

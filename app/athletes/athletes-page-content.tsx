@@ -5,6 +5,7 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { AthletesHeroBanner } from "@/components/athletes-hero-banner"
 import { SearchAndFilter } from "@/components/search-and-filter"
 import { AthletesWelcomeMessage } from "@/components/athletes-welcome-message"
+import { CANONICAL_DIVISIONS_FULL, matchesDivisionFilter } from "@/lib/division-display"
 
 interface Athlete {
   id: string
@@ -76,7 +77,7 @@ export function AthletesPageContent() {
 
       const matchesGender = selectedGender === "all" || athlete.gender === selectedGender
 
-      const matchesDivision = selectedDivision === "all" || athlete.division === selectedDivision
+      const matchesDivision = matchesDivisionFilter(athlete.division, selectedDivision)
 
       return matchesSearch && matchesYear && matchesGender && matchesDivision
     })
@@ -87,10 +88,7 @@ export function AthletesPageContent() {
     return years.sort()
   }, [athletes])
 
-  const availableDivisions = useMemo(() => {
-    const divisions = [...new Set(athletes.map((a) => a.division).filter(Boolean))]
-    return divisions.sort()
-  }, [athletes])
+  const availableDivisions = useMemo(() => [...CANONICAL_DIVISIONS_FULL], [])
 
   if (loading) {
     return (
@@ -122,8 +120,9 @@ export function AthletesPageContent() {
           onGenderChange={setSelectedGender}
           selectedDivision={selectedDivision}
           onDivisionChange={setSelectedDivision}
-          availableYears={availableYears}
-          availableDivisions={availableDivisions}
+          years={availableYears.map(Number).filter(Boolean)}
+          divisions={availableDivisions}
+          totalResults={filteredAthletes.length}
         />
 
         {filteredAthletes.length === 0 ? (

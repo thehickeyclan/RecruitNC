@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { supabase } from "@/lib/supabase"
+import { CANONICAL_DIVISIONS_FULL, matchesDivisionFilter } from "@/lib/division-display"
 import { FixedProductionFlipCard } from "@/components/fixed-production-flip-card"
 import { AthletesHeroBanner } from "@/components/athletes-hero-banner"
 import { SearchAndFilter } from "@/components/search-and-filter"
@@ -148,17 +149,15 @@ export default function AthletesPage() {
       filtered = filtered.filter((athlete) => athlete.gender === selectedGender)
     }
 
-    // Division filter
     if (selectedDivision !== "all") {
-      filtered = filtered.filter((athlete) => athlete.division === selectedDivision)
+      filtered = filtered.filter((athlete) => matchesDivisionFilter(athlete.division, selectedDivision))
     }
 
     setFilteredAthletes(filtered)
   }, [athletes, searchTerm, selectedYear, selectedGender, selectedDivision])
 
-  // Get available filter options
   const availableYears = [...new Set(athletes.map((a) => String(a.graduationyear)).filter(Boolean))].sort()
-  const availableDivisions = [...new Set(athletes.map((a) => a.division).filter(Boolean))].sort()
+  const availableDivisions = useMemo(() => [...CANONICAL_DIVISIONS_FULL], [])
 
   if (loading) {
     return (
@@ -201,8 +200,9 @@ export default function AthletesPage() {
           onGenderChange={setSelectedGender}
           selectedDivision={selectedDivision}
           onDivisionChange={setSelectedDivision}
-          availableYears={availableYears}
-          availableDivisions={availableDivisions}
+          years={availableYears.map(Number).filter((n) => !isNaN(n))}
+          divisions={availableDivisions}
+          totalResults={filteredAthletes.length}
         />
 
         <div className="mb-6">

@@ -5,6 +5,7 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { AthletesHeroBanner } from "@/components/athletes-hero-banner"
 import { AthletesWelcomeMessage } from "@/components/athletes-welcome-message"
 import { Search, Filter, X } from 'lucide-react'
+import { CANONICAL_DIVISIONS_FULL, matchesDivisionFilter } from "@/lib/division-display"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -63,9 +64,7 @@ export function AthletesPageClient({ athletes }: AthletesPageClientProps) {
     return [...new Set(athletes.map((a) => String(a.graduationyear)).filter(Boolean))].sort()
   }, [athletes])
 
-  const availableDivisions = useMemo(() => {
-    return [...new Set(athletes.map((a) => a.division).filter(Boolean))].sort()
-  }, [athletes])
+  const availableDivisions = useMemo(() => [...CANONICAL_DIVISIONS_FULL], [])
 
   // Filter athletes based on search and filter criteria
   const filteredAthletes = useMemo(() => {
@@ -93,9 +92,9 @@ export function AthletesPageClient({ athletes }: AthletesPageClientProps) {
       filtered = filtered.filter((athlete) => athlete.gender === selectedGender)
     }
 
-    // Division filter
+    // Division filter (normalized so D1/NCAA Division I etc. all match)
     if (selectedDivision !== "all") {
-      filtered = filtered.filter((athlete) => athlete.division === selectedDivision)
+      filtered = filtered.filter((athlete) => matchesDivisionFilter(athlete.division, selectedDivision))
     }
 
     return filtered

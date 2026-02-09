@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { CANONICAL_DIVISIONS_FULL, getDivisionDisplayShort } from "@/lib/division-display"
 
 interface DivisionFilterDropdownProps {
   onSelect: (division: string | null) => void
@@ -18,13 +19,11 @@ interface DivisionFilterDropdownProps {
 export function DivisionFilterDropdown({ onSelect }: DivisionFilterDropdownProps) {
   const [selectedDivision, setSelectedDivision] = useState<string | null>(null)
 
-  const divisions = [
-    { id: "ncaa-d1", label: "NCAA DI", value: "NCAA DI" },
-    { id: "ncaa-d2", label: "NCAA DII", value: "NCAA DII" },
-    { id: "ncaa-d3", label: "NCAA DIII", value: "NCAA DIII" },
-    { id: "naia", label: "NAIA", value: "NAIA" },
-    { id: "njcaa", label: "NJCAA", value: "NJCAA" },
-  ]
+  const divisions = CANONICAL_DIVISIONS_FULL.map((full) => ({
+    id: full,
+    label: getDivisionDisplayShort(full),
+    value: full,
+  }))
 
   const handleSelect = (division: string | null) => {
     setSelectedDivision(division)

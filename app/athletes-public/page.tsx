@@ -7,6 +7,7 @@ import { SearchAndFilter } from "@/components/search-and-filter"
 import { AthletesWelcomeMessage } from "@/components/athletes-welcome-message"
 import { Suspense } from "react"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
+import { CANONICAL_DIVISIONS_FULL, matchesDivisionFilter } from "@/lib/division-display"
 
 interface Athlete {
   id: string
@@ -119,17 +120,16 @@ function AthletesPublicPageContent() {
       filtered = filtered.filter((athlete) => athlete.gender === selectedGender)
     }
 
-    // Division filter
+    // Division filter (normalized so D1/NCAA Division I etc. all match)
     if (selectedDivision !== "all") {
-      filtered = filtered.filter((athlete) => athlete.division === selectedDivision)
+      filtered = filtered.filter((athlete) => matchesDivisionFilter(athlete.division, selectedDivision))
     }
 
     setFilteredAthletes(filtered)
   }, [athletes, searchTerm, selectedYear, selectedGender, selectedDivision])
 
-  // Get available filter options
   const availableYears = [...new Set(athletes.map((a) => String(a.graduationyear)).filter(Boolean))].sort()
-  const availableDivisions = [...new Set(athletes.map((a) => a.division).filter(Boolean))].sort()
+  const availableDivisions = [...CANONICAL_DIVISIONS_FULL]
 
   if (loading) {
     return (
@@ -171,8 +171,9 @@ function AthletesPublicPageContent() {
           onGenderChange={setSelectedGender}
           selectedDivision={selectedDivision}
           onDivisionChange={setSelectedDivision}
-          availableYears={availableYears}
-          availableDivisions={availableDivisions}
+          years={availableYears.map(Number).filter((n) => !isNaN(n))}
+          divisions={availableDivisions}
+          totalResults={filteredAthletes.length}
         />
 
         <div className="mb-6">
