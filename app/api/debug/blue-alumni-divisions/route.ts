@@ -12,7 +12,14 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       count: alumni.length,
-      alumni: alumni.map((a) => ({ name: a.name, college: a.college, division: a.division })),
+      alumni: alumni.map((a) => ({
+        id: a.id,
+        name: a.name,
+        graduationyear: a.graduationyear,
+        highschool: a.highschool,
+        college: a.college,
+        division: a.division,
+      })),
     })
   } catch (e) {
     return NextResponse.json({
