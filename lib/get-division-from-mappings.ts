@@ -45,8 +45,15 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
   let division = cache.get(key)
   if (division) return division
 
+  // Prefer longest matching key so "Roanoke College" wins over "Roanoke", "Belmont Abbey" over "Abbey"
+  let bestKey = ""
+  let bestDivision = ""
   for (const [dbKey, div] of cache) {
-    if (key.includes(dbKey) || dbKey.includes(key)) return div
+    if (!(key.includes(dbKey) || dbKey.includes(key))) continue
+    if (dbKey.length > bestKey.length) {
+      bestKey = dbKey
+      bestDivision = div
+    }
   }
-  return ""
+  return bestDivision
 }

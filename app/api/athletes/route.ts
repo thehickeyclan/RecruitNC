@@ -5,7 +5,7 @@ import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export const dynamic = "force-dynamic"
-export const revalidate = 30 // Cache for 30 seconds to reduce API calls
+// Do not cache: divisions must always come fresh from college_division_mappings
 
 export async function GET(request: Request) {
   try {

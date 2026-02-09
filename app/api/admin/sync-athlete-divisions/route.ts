@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getDivisionFromMappings, clearDivisionMappingsCache } from "@/lib/get-division-from-mappings"
 
@@ -57,6 +58,8 @@ export async function POST() {
     }
 
     clearDivisionMappingsCache()
+    revalidatePath("/blue")
+    revalidatePath("/")
 
     return NextResponse.json({
       success: true,
