@@ -2,6 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getNCHSAAResults } from "@/lib/nchsaa-results"
 
 const CURRENT_YEAR = new Date().getFullYear()
+/** Current roster = class of 2025 and later (still in program). Min year so 2025 shows until you have 2026+ Blue. */
+const CURRENT_ROSTER_MIN_GRAD_YEAR = Math.min(2025, CURRENT_YEAR)
 
 export type BlueCurrentMember = {
   id: string
@@ -45,7 +47,7 @@ export async function getBlueCurrentMembers(): Promise<BlueCurrentMember[]> {
           "nhsca_2023_placement, nhsca_2024_placement, nhsca_2025_placement, " +
           "super_32_2023_placement, super_32_2024_placement, super_32_2025_placement"
       )
-      .gte("graduationyear", CURRENT_YEAR)
+      .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
       .lte("graduationyear", CURRENT_YEAR + 6)
       .order("graduationyear", { ascending: true })
       .order("name", { ascending: true })

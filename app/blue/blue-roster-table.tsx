@@ -13,7 +13,7 @@ export function BlueRosterTable({ members }: Props) {
     return (
       <div className="rounded-xl border-2 border-[#D3B574]/40 bg-white/50 p-8 text-center">
         <p className="text-[#03154C]/80">
-          No current Blue members on record. Set NC United Team = Blue in Admin → Athletes for athletes with graduation year 2026 or later.
+          No current Blue members on record. Set NC United Team = Blue in Admin → Athletes for athletes with graduation year 2025 or later.
         </p>
       </div>
     )
