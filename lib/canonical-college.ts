@@ -76,3 +76,13 @@ export function collegeToLookupKey(raw: string | null | undefined): string {
   const canonical = normalizeCollegeToCanonical(raw)
   return canonical.toLowerCase()
 }
+
+/** All lowercase keys that map to this canonical (for cache expansion so DB lookup finds every variant). */
+export function getLookupKeysForCanonical(canonical: string): string[] {
+  const c = (canonical ?? "").trim().toLowerCase()
+  if (!c) return []
+  const keys = Object.entries(VARIANT_TO_CANONICAL)
+    .filter(([, v]) => v.toLowerCase() === c)
+    .map(([k]) => k)
+  return keys.length ? keys : [c]
+}

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,6 +28,8 @@ interface AthleteFormCompleteProps {
 export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormCompleteProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState("personal")
+  const [collegeNeedingDivision, setCollegeNeedingDivision] = useState<string | null>(null)
+  const [divisionForNewCollege, setDivisionForNewCollege] = useState("")
   const [formData, setFormData] = useState<Partial<Athlete>>({
     name: initialData?.name || "",
     firstName: initialData?.firstName || "",
@@ -104,40 +107,80 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
     setFormData((prev) => ({ ...prev, achievements: newAchievements }))
   }
 
+  const doSubmit = async () => {
+    if (formData.firstName && formData.lastName && !formData.name) {
+      formData.name = `${formData.firstName} ${formData.lastName}`
+    }
+    const filteredAchievements = (formData.achievements || []).filter((a) => a.trim() !== "")
+    const { division: _omitDivision, ...payload } = formData
+    await onSubmit({
+      ...payload,
+      achievements: filteredAchievements,
+      graduationYear: Number(formData.graduationYear),
+      weight: formData.weight ? Number(formData.weight) : undefined,
+      rankings: {
+        state: formData.rankings?.state ? Number(formData.rankings.state) : undefined,
+        national: formData.rankings?.national ? Number(formData.rankings.national) : undefined,
+      },
+    })
+    toast({
+      title: initialData?.id ? "Athlete updated" : "Athlete added",
+      description: `${formData.name} has been ${initialData?.id ? "updated" : "added"} successfully`,
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
     try {
-      // Auto-generate name if first and last name are provided but name is not
-      if (formData.firstName && formData.lastName && !formData.name) {
-        formData.name = `${formData.firstName} ${formData.lastName}`
+      const college = (formData.college ?? "").trim()
+      if (college) {
+        const res = await fetch(`/api/get-college-division?college=${encodeURIComponent(college)}`)
+        const data = await res.json()
+        const division = (data.division ?? "").trim()
+        if (!division || division.toLowerCase() === "unknown") {
+          setCollegeNeedingDivision(college)
+          setDivisionForNewCollege("")
+          setIsSubmitting(false)
+          return
+        }
       }
-
-      // Filter out empty achievements
-      const filteredAchievements = (formData.achievements || []).filter((a) => a.trim() !== "")
-      const { division: _omitDivision, ...payload } = formData
-
-      await onSubmit({
-        ...payload,
-        achievements: filteredAchievements,
-        graduationYear: Number(formData.graduationYear),
-        weight: formData.weight ? Number(formData.weight) : undefined,
-        rankings: {
-          state: formData.rankings?.state ? Number(formData.rankings.state) : undefined,
-          national: formData.rankings?.national ? Number(formData.rankings.national) : undefined,
-        },
-      })
-
-      toast({
-        title: initialData?.id ? "Athlete updated" : "Athlete added",
-        description: `${formData.name} has been ${initialData?.id ? "updated" : "added"} successfully`,
-      })
+      await doSubmit()
     } catch (error) {
       console.error("Form submission error:", error)
       toast({
         title: "Submission failed",
         description: "There was an error saving the athlete information",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleConfirmCollegeDivision = async () => {
+    if (!collegeNeedingDivision || !divisionForNewCollege) return
+    setIsSubmitting(true)
+    try {
+      const res = await fetch("/api/admin/set-college-division", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ college_name: collegeNeedingDivision, division: divisionForNewCollege }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error ?? "Failed to set division")
+      setCollegeNeedingDivision(null)
+      setDivisionForNewCollege("")
+      await doSubmit()
+      toast({
+        title: "Division saved",
+        description: `${collegeNeedingDivision} is now set to ${divisionForNewCollege}. Athlete saved.`,
+      })
+    } catch (error) {
+      console.error("Set college division error:", error)
+      toast({
+        title: "Could not save division",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -728,6 +771,32 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
           </Button>
         </CardFooter>
       </form>
+
+      <Dialog open={!!collegeNeedingDivision} onOpenChange={(open) => !open && setCollegeNeedingDivision(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Set division for this college</DialogTitle>
+            <DialogDescription>
+              &quot;{collegeNeedingDivision}&quot; isn&apos;t in our division list yet. What division is it? (You only need to set this once.)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <DivisionDropdown
+              value={divisionForNewCollege}
+              onValueChange={setDivisionForNewCollege}
+              placeholder="Select division"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCollegeNeedingDivision(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmCollegeDivision} disabled={!divisionForNewCollege || isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save division & continue"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

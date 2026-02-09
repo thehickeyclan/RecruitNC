@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { standardizeDivision } from "@/lib/division-standardizer"
 import { CANONICAL_DIVISIONS_FULL, type CanonicalDivisionFull } from "@/lib/division-display"
-import { collegeToLookupKey } from "@/lib/canonical-college"
+import { collegeToLookupKey, getLookupKeysForCanonical, normalizeCollegeToCanonical } from "@/lib/canonical-college"
 
 /** Re-export for consumers that need the list. */
 export const CANONICAL_DIVISIONS = CANONICAL_DIVISIONS_FULL
@@ -71,6 +71,17 @@ async function refreshDivisionMappingsCache() {
         const rawDiv = (row.division ?? "").toString().trim()
         const div = toCanonical(rawDiv) || (rawDiv.toLowerCase() === "unknown" ? "Unknown" : "")
         if (name && div) merged[name] = div
+      }
+      // So "Mount Olive" and "University of Mount Olive" both resolve to same division from DB
+      for (const key of Object.keys(merged)) {
+        const div = merged[key]
+        const row = mappingRows?.find((r) => (r.college_name ?? "").toString().trim().toLowerCase() === key)
+        const canonical = row ? normalizeCollegeToCanonical(row.college_name) : ""
+        if (canonical) {
+          for (const variant of getLookupKeysForCanonical(canonical)) {
+            merged[variant] = div
+          }
+        }
       }
     }
 
