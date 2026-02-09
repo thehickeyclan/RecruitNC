@@ -11,6 +11,13 @@ import { Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { COLLEGE_DIVISION_OPTIONS } from "@/types/college"
 
+const DIVISION_VALUES = [...COLLEGE_DIVISION_OPTIONS, ""] as const
+
+function normalizeDivisionValue(division: string | null | undefined): string {
+  if (division == null || division === "") return ""
+  return DIVISION_VALUES.includes(division as any) ? division : ""
+}
+
 type CollegeRow = {
   id: string
   name: string
@@ -72,7 +79,9 @@ export default function AdminCollegesPage() {
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <AdminHeader title="Colleges (divisions)" description="Set division for each college. This is the source of truth for the app." />
+      <AdminHeader />
+      <h1 className="text-2xl font-bold mb-2">Colleges (divisions)</h1>
+      <p className="text-sm text-muted-foreground mb-4">Set division for each college. This is the source of truth for the app.</p>
       <div className="mb-4">
         <Link href="/admin">
           <Button variant="ghost" size="sm">
@@ -106,7 +115,7 @@ export default function AdminCollegesPage() {
                   <div className="flex items-center gap-2">
                     <Label className="text-xs text-muted-foreground whitespace-nowrap">Division</Label>
                     <Select
-                      value={college.division || ""}
+                      value={normalizeDivisionValue(college.division)}
                       onValueChange={(value) => updateDivision(college.id, value)}
                       disabled={savingId === college.id}
                     >
