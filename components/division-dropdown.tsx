@@ -3,6 +3,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CANONICAL_DIVISIONS_FULL, normalizeToCanonicalFull } from "@/lib/division-display"
 
+const EMPTY_VALUE = "__empty__"
+
 type Props = {
   value: string
   onValueChange: (value: string) => void
@@ -21,18 +23,24 @@ export function DivisionDropdown({
   required,
   disabled,
 }: Props) {
-  const displayValue = normalizeToCanonicalFull(value)
+  const normalized = normalizeToCanonicalFull(value)
+  const selectValue = normalized || EMPTY_VALUE
+
+  const handleChange = (v: string) => {
+    onValueChange(v === EMPTY_VALUE ? "" : v)
+  }
 
   return (
     <Select
-      value={displayValue || undefined}
-      onValueChange={onValueChange}
+      value={selectValue}
+      onValueChange={handleChange}
       disabled={disabled}
     >
       <SelectTrigger className={className} aria-required={required}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
+        <SelectItem value={EMPTY_VALUE}>{placeholder}</SelectItem>
         {CANONICAL_DIVISIONS_FULL.map((div) => (
           <SelectItem key={div} value={div}>
             {div}

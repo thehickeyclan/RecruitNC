@@ -61,6 +61,7 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       { college_name: "Presbyterian", division: "NCAA Division I" },
       { college_name: "UNC Pembroke", division: "NCAA Division II" },
       { college_name: "Mount Olive", division: "NCAA Division II" },
+      { college_name: "University of Mount Olive", division: "NCAA Division II" },
       { college_name: "Belmont Abbey", division: "NCAA Division II" },
       { college_name: "Lander", division: "NCAA Division II" },
       { college_name: "Greensboro College", division: "NCAA Division III" },

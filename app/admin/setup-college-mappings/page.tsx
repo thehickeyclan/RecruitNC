@@ -9,7 +9,9 @@ import { Loader2, CheckCircle, AlertCircle, Database, ArrowLeft, List } from "lu
 
 export default function SetupCollegeMappingsPage() {
   const [loading, setLoading] = useState(false)
+  const [syncLoading, setSyncLoading] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string; seeded?: number; count?: number } | null>(null)
+  const [syncResult, setSyncResult] = useState<{ success: boolean; updated?: number; totalWithCollege?: number; error?: string } | null>(null)
   const [missing, setMissing] = useState<string[] | null>(null)
   const [missingLoading, setMissingLoading] = useState(false)
   const { toast } = useToast()
@@ -56,6 +58,32 @@ export default function SetupCollegeMappingsPage() {
       toast({ title: "Error", description: msg, variant: "destructive" })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function runSyncAthleteDivisions() {
+    setSyncLoading(true)
+    setSyncResult(null)
+    try {
+      const res = await fetch("/api/admin/sync-athlete-divisions", { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        setSyncResult({ success: false, error: data.error || "Request failed" })
+        toast({ title: "Sync failed", description: data.error || "Request failed", variant: "destructive" })
+        return
+      }
+      setSyncResult({
+        success: true,
+        updated: data.updated,
+        totalWithCollege: data.totalWithCollege,
+      })
+      toast({ title: "Sync done", description: `Updated ${data.updated} athlete divisions from college_division_mappings.` })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Network error"
+      setSyncResult({ success: false, error: msg })
+      toast({ title: "Sync failed", description: msg, variant: "destructive" })
+    } finally {
+      setSyncLoading(false)
     }
   }
 
@@ -117,6 +145,48 @@ export default function SetupCollegeMappingsPage() {
                 </div>
               </div>
             )}
+
+            <div className="pt-4 border-t">
+              <p className="font-medium text-gray-700 mb-2">Fix all athlete divisions from mappings</p>
+              <p className="text-sm text-gray-600 mb-2">
+                Sets every athlete&apos;s <code className="bg-gray-100 px-1 rounded">division</code> from <code className="bg-gray-100 px-1 rounded">college_division_mappings</code> (by their college). Run after seeding or updating the table.
+              </p>
+              <Button
+                onClick={runSyncAthleteDivisions}
+                disabled={syncLoading}
+                variant="outline"
+                className="border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10"
+              >
+                {syncLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Syncing…
+                  </>
+                ) : (
+                  "Sync athlete divisions from mappings"
+                )}
+              </Button>
+              {syncResult && (
+                <div
+                  className={`flex items-start gap-2 p-3 rounded-lg text-sm mt-2 ${
+                    syncResult.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                  }`}
+                >
+                  {syncResult.success ? (
+                    <CheckCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    {syncResult.success ? (
+                      <p className="font-medium">Updated {syncResult.updated} of {syncResult.totalWithCollege} athletes with a college.</p>
+                    ) : (
+                      <p className="font-medium">{syncResult.error}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="mt-6 pt-4 border-t">
               <p className="font-medium text-gray-700 flex items-center gap-2">

@@ -22,6 +22,8 @@ const FALLBACK_DIVISION: Record<string, string> = {
   "mount union": "NCAA Division III",
   "university of mount union": "NCAA Division III",
   "belmont abbey": "NCAA Division II",
+  "mount olive": "NCAA Division II",
+  "university of mount olive": "NCAA Division II",
 }
 
 /**
@@ -62,6 +64,8 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
     "lander": "lander",
     "presbyterian": "presbyterian",
     "mount union": "mount union",
+    "mount olive": "mount olive",
+    "university of mount olive": "mount olive",
   }
   const lookupName = aliasToCanonical[collegeLower] ?? collegeLower
 
