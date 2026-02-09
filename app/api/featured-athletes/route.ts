@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getCollegesByIds } from "@/lib/colleges"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 60 // Cache for 60 seconds
@@ -28,11 +29,31 @@ async function safeSupabaseQuery(queryFn: () => Promise<any>, context: string) {
   }
 }
 
+/** Add division from colleges table; rawRows have college_id, mappedAthletes get division set by id. */
+async function attachDivision(
+  supabase: Awaited<ReturnType<typeof createAdminClient>>,
+  rawRows: any[],
+  mappedAthletes: any[],
+) {
+  const idToCollegeId = new Map<string, string>()
+  rawRows.forEach((r) => {
+    if (r.id != null && r.college_id) idToCollegeId.set(String(r.id), r.college_id)
+  })
+  const collegeIds = [...new Set(idToCollegeId.values())]
+  const collegesMap = collegeIds.length ? await getCollegesByIds(supabase, collegeIds) : new Map()
+  mappedAthletes.forEach((a) => {
+    const cid = idToCollegeId.get(String(a.id))
+    const c = cid ? collegesMap.get(cid) : null
+    a.division = c?.division ?? ""
+  })
+  return mappedAthletes
+}
+
 export async function GET(request: Request) {
   try {
-    // Use admin client to bypass RLS for public featured athletes endpoint
     const supabase = createAdminClient()
-    
+    let recentCommitmentAthletes: any[] = []
+
     const { searchParams } = new URL(request.url)
     const yearParam = searchParams.get("year")
     const targetYear = yearParam ? Number.parseInt(yearParam) : 2026
@@ -61,6 +82,7 @@ export async function GET(request: Request) {
           name: athlete.name || "Unknown",
           highschool: athlete.highschool || "Unknown High School",
           college: athlete.college || "Unknown College",
+          division: "", // filled below
           graduationyear: athlete.graduationyear || 2025,
           photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
           weightclass: athlete.weightclass || "Unknown",
@@ -82,6 +104,7 @@ export async function GET(request: Request) {
           gender: athlete.gender || "Male",
           commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
         }))
+        await attachDivision(supabase, athletes, mappedAthletes)
 
         // Ensure we have all 3 athletes, fill with fallbacks if needed
         const athleteNames = mappedAthletes.map(a => a.name.toLowerCase())
@@ -201,11 +224,12 @@ export async function GET(request: Request) {
         })
         .slice(0, 3)
 
-      const recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
+      recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
         id: athlete.id?.toString() || "",
         name: athlete.name || "Unknown",
         highschool: athlete.highschool || "Unknown High School",
         college: athlete.college || "Unknown College",
+        division: "",
         graduationyear: athlete.graduationyear || targetYear,
         photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
         weightclass: athlete.weightclass || "Unknown",
@@ -227,6 +251,7 @@ export async function GET(request: Request) {
         gender: athlete.gender || "Male",
         commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
       }))
+      await attachDivision(supabase, sortedCommitments, recentCommitmentAthletes)
 
       if (recentCommitmentAthletes.length > 0) {
         return NextResponse.json(
@@ -292,27 +317,26 @@ export async function GET(request: Request) {
       name: athlete.name || "Unknown",
       highschool: athlete.highschool || "Unknown High School",
       college: athlete.college || "Unknown College",
+      division: "",
       graduationyear: athlete.graduationyear || targetYear,
-        photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
-        weightclass: athlete.weightclass || "Unknown", // HS weight only
-        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null, // College weight only
-        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
-        hs_weight_class: athlete.weightclass || "Unknown",
-        wrestlingclub: athlete.wrestlingClub || "",
-        club: athlete.wrestlingClub || "",
-        wrestlingClub: athlete.wrestlingClub || "",
-        achievements: Array.isArray(athlete.achievements)
-          ? athlete.achievements
-          : typeof athlete.achievements === "string"
-            ? athlete.achievements
-                .split(",")
-                .map((a) => a.trim())
-                .filter(Boolean)
-            : [],
-        team: athlete.team || "",
-        gender: athlete.gender || "Male",
+      photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
+      weightclass: athlete.weightclass || "Unknown",
+      college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
+      projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
+      hs_weight_class: athlete.weightclass || "Unknown",
+      wrestlingclub: athlete.wrestlingClub || "",
+      club: athlete.wrestlingClub || "",
+      wrestlingClub: athlete.wrestlingClub || "",
+      achievements: Array.isArray(athlete.achievements)
+        ? athlete.achievements
+        : typeof athlete.achievements === "string"
+          ? athlete.achievements.split(",").map((a) => a.trim()).filter(Boolean)
+          : [],
+      team: athlete.team || "",
+      gender: athlete.gender || "Male",
       commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
     }))
+    await attachDivision(supabase, validAthletes, mappedAthletes)
 
     console.log(`✅ Featured Athletes API: Successfully mapped ${mappedAthletes.length} athletes`)
     console.log("[v0] ===== API RESPONSE DEBUG =====")

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { getCollegesByIds } from "@/lib/colleges"
+import { matchesDivisionFilter } from "@/lib/division-display"
 
 export const dynamic = "force-dynamic"
 
@@ -16,8 +17,9 @@ export async function GET(request: Request) {
 
     const yearFilter = searchParams.get("year")
     const genderFilter = searchParams.get("gender")
+    const divisionFilter = searchParams.get("division")
 
-    console.log("🤼 Athletes API: Filters applied:", { yearFilter, genderFilter })
+    console.log("🤼 Athletes API: Filters applied:", { yearFilter, genderFilter, divisionFilter })
 
     let supabase
     try {
@@ -209,12 +211,18 @@ export async function GET(request: Request) {
       }
     })
 
-    console.log(`✅ Athletes API: Successfully processed ${mappedAthletes.length} athletes`)
+    let resultAthletes = mappedAthletes
+    if (divisionFilter && divisionFilter !== "all") {
+      resultAthletes = mappedAthletes.filter((a) => matchesDivisionFilter(a.division, divisionFilter))
+      console.log(`🤼 Athletes API: Division filter "${divisionFilter}" → ${resultAthletes.length} athletes`)
+    }
+
+    console.log(`✅ Athletes API: Successfully processed ${resultAthletes.length} athletes`)
 
     const totalPages = Math.ceil((count || 0) / limit)
     const response = NextResponse.json({
       success: true,
-      athletes: mappedAthletes,
+      athletes: resultAthletes,
       pagination: {
         page,
         limit,
