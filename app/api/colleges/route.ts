@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { standardizeDivision } from "@/lib/division-standardizer"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -15,20 +16,21 @@ export async function GET(request: Request) {
 
     const supabaseClient = createClient()
 
-    // First, get the college division mappings to use as the authoritative source
+    // First, get the college divisions (single source of truth - admin "simple division mapping")
     const { data: mappings, error: mappingsError } = await supabaseClient
-      .from("college_division_mappings")
+      .from("college_divisions")
       .select("college_name, division")
 
     const divisionMap = new Map<string, string>()
 
     if (!mappingsError && mappings) {
-      console.log(`📊 Loaded ${mappings.length} college division mappings`)
+      console.log(`📊 Loaded ${mappings.length} college divisions`)
       mappings.forEach((mapping) => {
-        divisionMap.set(mapping.college_name.toLowerCase(), mapping.division)
+        const normalized = standardizeDivision(mapping.division)
+        divisionMap.set(mapping.college_name.toLowerCase(), normalized !== "Unknown" ? normalized : mapping.division)
       })
     } else {
-      console.warn("⚠️ Could not load college division mappings, using athlete data only")
+      console.warn("⚠️ Could not load college_divisions, using athlete data only")
     }
 
     const { data: athletes, error } = await supabaseClient

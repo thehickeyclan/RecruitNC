@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
-/** Reads division from college_division_mappings only (single source of truth). Resolves aliases (e.g. NCSU → NC State) then looks up in table. */
+/** Reads division from college_divisions (single source of truth). Resolves aliases (e.g. NCSU → NC State) then looks up in table. */
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)

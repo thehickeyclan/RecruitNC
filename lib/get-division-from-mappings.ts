@@ -18,7 +18,7 @@ export function clearDivisionMappingsCache(): void {
 }
 
 /**
- * Single source of truth: college_division_mappings table only.
+ * Single source of truth: college_divisions table (admin "simple division mapping").
  * Resolves college name via canonical aliases (NCSU → NC State, etc.) then looks up in table.
  * Returns "" if college is not in the table — add it in the DB and set the correct division.
  */
@@ -57,7 +57,7 @@ async function refreshDivisionMappingsCache() {
 
   try {
     const { data: mappingRows, error: mapError } = await supabase
-      .from("college_division_mappings")
+      .from("college_divisions")
       .select("college_name, division")
 
     const toCanonical = (d: string) => {

@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getDivisionFromMappings, clearDivisionMappingsCache } from "@/lib/get-division-from-mappings"
 
 /**
- * POST: Set every athlete's division from college_division_mappings (single source of truth).
+ * POST: Set every athlete's division from college_divisions (single source of truth).
  * Overwrites athlete.division so the DB column stays in sync with the table.
  */
 export async function POST() {

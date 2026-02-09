@@ -5,7 +5,7 @@ import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { normalizeToCanonicalFull } from "@/lib/division-display"
 
 /**
- * POST: Set division for one college in college_division_mappings (single source of truth).
+ * POST: Set division for one college in college_divisions (single source of truth).
  * Body: { college_name: string, division: string }
  * Used when user is prompted for a new/unknown college before saving an athlete.
  */
@@ -31,9 +31,9 @@ export async function POST(request: Request) {
     const supabase = createAdminClient()
 
     const { error } = await supabase
-      .from("college_division_mappings")
+      .from("college_divisions")
       .upsert(
-        { college_name: canonicalCollege, division: canonicalDivision },
+        { college_name: canonicalCollege, division: canonicalDivision, updated_at: new Date().toISOString() },
         { onConflict: "college_name" },
       )
 
