@@ -6,9 +6,10 @@ import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getBlueContent } from "@/lib/blue-content"
-import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
+import { BlueRosterTable } from "./blue-roster-table"
 import { BlueAlumniTable } from "./blue-alumni-table"
 import { getBlueAlumni } from "@/lib/blue-alumni"
+import { getBlueCurrentMembers } from "@/lib/blue-current-members"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
@@ -40,7 +41,11 @@ export default async function BluePage() {
     const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
     isAdmin = !!profile?.is_admin
   }
-  const [images, alumni] = await Promise.all([getBlueContent(), getBlueAlumni()])
+  const [images, alumni, currentMembers] = await Promise.all([
+    getBlueContent(),
+    getBlueAlumni(),
+    getBlueCurrentMembers(),
+  ])
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
@@ -389,7 +394,7 @@ export default async function BluePage() {
               The current squad includes 40+ state titles, 70+ state qualifiers, 15 NHSCA /
               Super32 / Ironman All-Americans, and commits across D1, D2, D3, NAIA, and Juco.
             </p>
-            <BlueRosterPlaceholder />
+            <BlueRosterTable members={currentMembers} />
           </section>
 
           {/* 13. Blue Alumni — division from college_division_mappings only */}
