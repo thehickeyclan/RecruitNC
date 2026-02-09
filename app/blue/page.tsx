@@ -6,7 +6,8 @@ import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { getBlueContent } from "@/lib/blue-content"
 import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
-import { BlueAlumniFetcher } from "./blue-alumni-fetcher"
+import { BlueAlumniTable } from "./blue-alumni-table"
+import { getBlueAlumni } from "@/lib/blue-alumni"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 
 export default async function BluePage() {
   unstable_noStore()
-  const [images] = await Promise.all([getBlueContent()])
+  const [images, alumni] = await Promise.all([getBlueContent(), getBlueAlumni()])
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
@@ -385,13 +386,16 @@ export default async function BluePage() {
 
           {/* 13. Blue Alumni */}
           <section id="alumni">
+            <p className="mb-2 text-right text-xs text-amber-600" data-page-version="blue-2026-02-09">
+              Divisions from college_division_mappings
+            </p>
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Alumni</h2>
             <p className="mb-6 leading-relaxed text-[#03154C]/90">
               Alumni matter. They return during breaks and summer, scrap live with current
               members, and mentor the next generation. Blue is a program, not a one-time
               experience—alumni stay connected and give back.
             </p>
-            <BlueAlumniFetcher />
+            <BlueAlumniTable alumni={alumni} />
           </section>
 
           {/* 14. Competition & Schedule */}
