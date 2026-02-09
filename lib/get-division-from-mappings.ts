@@ -6,7 +6,7 @@ export type CanonicalDivision = CanonicalDivisionFull
 
 let cache: Map<string, string> | null = null
 let cacheTime = 0
-const CACHE_MS = 5 * 60 * 1000
+const CACHE_MS = 30 * 1000 // 30s so pages always get fresh divisions after deploy
 
 export function clearDivisionMappingsCache(): void {
   cache = null

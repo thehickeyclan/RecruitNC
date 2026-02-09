@@ -14,7 +14,7 @@ export type BlueAlumnus = {
 
 /**
  * Server-only: fetch Blue alumni (ncUnitedTeam = blue, graduation year 2025 and older).
- * Division only from college_divisions (single source of truth).
+ * Division only from college_division_mappings (single source of truth). Never use athlete.division.
  */
 const ALUMNI_CUTOFF_YEAR = 2025
 
