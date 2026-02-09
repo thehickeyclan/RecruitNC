@@ -13,18 +13,22 @@ export function clearDivisionMappingsCache(): void {
   cacheTime = 0
 }
 
-/** Override so D2/D3 show correctly even if DB has wrong data. */
-const DIVISION_OVERRIDES: Record<string, string> = {
-  "roanoke college": "NCAA Division III",
-  roanoke: "NCAA Division III",
-  "belmont abbey": "NCAA Division II",
-  lander: "NCAA Division II",
-  "mount union": "NCAA Division III",
+/**
+ * Read college_name and division from a row (schema: college_name text, division text).
+ * Supabase may return snake_case or camelCase depending on client.
+ */
+function rowCollegeName(row: Record<string, unknown>): string {
+  const v = row.college_name ?? row.collegeName
+  return (v != null ? String(v) : "").trim()
+}
+function rowDivision(row: Record<string, unknown>): string {
+  const v = row.division
+  return (v != null ? String(v) : "").trim()
 }
 
 /**
  * Get division for a college from college_division_mappings table.
- * Match: exact lowercase, or DB name contained in input, or input contained in DB name (e.g. "University of Mount Olive" -> "Mount Olive" row).
+ * Table: college_name (text), division (text). Match: exact lowercase, then longest substring.
  */
 export async function getDivisionFromMappings(collegeName: string): Promise<string> {
   const raw = (collegeName ?? "").trim()
@@ -37,15 +41,13 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
       .select("college_name, division")
 
     cache = new Map()
-    if (!error && rows?.length) {
+    if (!error && Array.isArray(rows) && rows.length > 0) {
       for (const row of rows) {
-        const r = row as { college_name?: string; collegeName?: string; division?: string }
-        const name = (r.college_name ?? r.collegeName ?? "").toString().trim()
-        const div = (r.division ?? "").toString().trim()
+        const name = rowCollegeName(row as Record<string, unknown>)
+        const div = rowDivision(row as Record<string, unknown>)
         if (name && div) cache.set(name.toLowerCase(), div)
       }
     }
-    for (const [k, v] of Object.entries(DIVISION_OVERRIDES)) cache.set(k, v)
     cacheTime = Date.now()
   }
 

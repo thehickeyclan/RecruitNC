@@ -18,28 +18,23 @@ export type BlueAlumnus = {
  */
 const ALUMNI_CUTOFF_YEAR = 2025
 
-/** Known DII/DIII overrides so we show correct divisions even if DB has wrong data. */
-const DIVISION_OVERRIDES: Record<string, string> = {
-  "roanoke college": "NCAA Division III",
-  roanoke: "NCAA Division III",
-  "belmont abbey": "NCAA Division II",
-  lander: "NCAA Division II",
-  "mount union": "NCAA Division III",
-  "gardner webb": "NCAA Division I",
-  "gardner-webb": "NCAA Division I",
+/** Read college_name and division from a row (schema: college_name text, division text). */
+function rowCollegeName(row: Record<string, unknown>): string {
+  const v = row.college_name ?? row.collegeName
+  return (v != null ? String(v) : "").trim()
+}
+function rowDivision(row: Record<string, unknown>): string {
+  const v = row.division
+  return (v != null ? String(v) : "").trim()
 }
 
-/** Build map: lowercase college_name -> division. Handles snake_case or camelCase from DB. */
+/** Build map: lowercase college_name -> division from college_division_mappings rows. */
 function buildDivisionMap(rows: Record<string, unknown>[]): Map<string, string> {
   const map = new Map<string, string>()
   for (const r of rows) {
-    const name = String((r.college_name ?? r.collegeName ?? "") ?? "").trim()
-    const div = String((r.division ?? "") ?? "").trim()
+    const name = rowCollegeName(r)
+    const div = rowDivision(r)
     if (name && div) map.set(name.toLowerCase(), div)
-  }
-  // Apply overrides so D2/D3 show correctly even if table is wrong
-  for (const [key, division] of Object.entries(DIVISION_OVERRIDES)) {
-    map.set(key, division)
   }
   return map
 }
