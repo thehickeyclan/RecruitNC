@@ -2,8 +2,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getNCHSAAResults } from "@/lib/nchsaa-results"
 
 const CURRENT_YEAR = new Date().getFullYear()
-/** Current roster = still in HS: class of 2026 and later. Alumni = 2025 and older. */
-const CURRENT_ROSTER_MIN_YEAR = CURRENT_YEAR // 2026
 
 export type BlueCurrentMember = {
   id: string
@@ -15,7 +13,7 @@ export type BlueCurrentMember = {
 }
 
 function isBlue(row: Record<string, unknown>) {
-  const raw = row?.ncUnitedTeam ?? row?.ncunitedteam ?? row?.nc_united_team ?? row?.ncunited_team ?? ""
+  const raw = row?.ncUnitedTeam ?? row?.ncunitedteam ?? row?.nc_united_team ?? ""
   const v = String(raw ?? "").toLowerCase().trim()
   return v === "blue" || v === "both" || v.includes("blue")
 }
@@ -47,7 +45,7 @@ export async function getBlueCurrentMembers(): Promise<BlueCurrentMember[]> {
           "nhsca_2023_placement, nhsca_2024_placement, nhsca_2025_placement, " +
           "super_32_2023_placement, super_32_2024_placement, super_32_2025_placement"
       )
-      .gte("graduationyear", CURRENT_ROSTER_MIN_YEAR) // 2026+
+      .gte("graduationyear", CURRENT_YEAR)
       .lte("graduationyear", CURRENT_YEAR + 6)
       .order("graduationyear", { ascending: true })
       .order("name", { ascending: true })
