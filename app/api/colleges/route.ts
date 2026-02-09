@@ -16,22 +16,36 @@ export async function GET(request: Request) {
 
     const supabaseClient = createClient()
 
-    // First, get the college divisions (single source of truth - admin "simple division mapping")
-    const { data: mappings, error: mappingsError } = await supabaseClient
+    // Division source: college_divisions first, fallback to college_division_mappings so we never show all Unknown
+    const divisionMap = new Map<string, string>()
+    const addToMap = (rows: { college_name?: string; division?: string }[] | null) => {
+      if (!rows) return
+      rows.forEach((mapping) => {
+        const name = (mapping.college_name ?? "").toLowerCase()
+        if (!name) return
+        const normalized = standardizeDivision(mapping.division)
+        const div = normalized !== "Unknown" ? normalized : (mapping.division ?? "")
+        if (div) divisionMap.set(name, div)
+      })
+    }
+
+    const { data: divisionsData, error: divError } = await supabaseClient
       .from("college_divisions")
       .select("college_name, division")
-
-    const divisionMap = new Map<string, string>()
-
-    if (!mappingsError && mappings) {
-      console.log(`📊 Loaded ${mappings.length} college divisions`)
-      mappings.forEach((mapping) => {
-        const normalized = standardizeDivision(mapping.division)
-        divisionMap.set(mapping.college_name.toLowerCase(), normalized !== "Unknown" ? normalized : mapping.division)
-      })
-    } else {
-      console.warn("⚠️ Could not load college_divisions, using athlete data only")
+    if (!divError && divisionsData?.length) {
+      console.log(`📊 Loaded ${divisionsData.length} college divisions`)
+      addToMap(divisionsData)
     }
+    if (divisionMap.size === 0) {
+      const { data: mappingsData } = await supabaseClient
+        .from("college_division_mappings")
+        .select("college_name, division")
+      if (mappingsData?.length) {
+        console.log(`📊 Fallback: loaded ${mappingsData.length} from college_division_mappings`)
+        addToMap(mappingsData)
+      }
+    }
+    if (divisionMap.size === 0) console.warn("⚠️ No division mappings loaded, using athlete data only")
 
     const { data: athletes, error } = await supabaseClient
       .from("athletes")
