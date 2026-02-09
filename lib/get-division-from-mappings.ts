@@ -66,21 +66,22 @@ async function refreshDivisionMappingsCache() {
     }
 
     if (!mapError && mappingRows?.length) {
+      // One division per canonical school. If we have both "Mount Olive" = DII and
+      // "University of Mount Olive" = DI, prefer the row whose name is the canonical form.
+      const canonicalToDivision: Record<string, string> = {}
       for (const row of mappingRows) {
-        const name = (row.college_name ?? "").toString().trim().toLowerCase()
+        const rawName = (row.college_name ?? "").toString().trim()
         const rawDiv = (row.division ?? "").toString().trim()
         const div = toCanonical(rawDiv) || (rawDiv.toLowerCase() === "unknown" ? "Unknown" : "")
-        if (name && div) merged[name] = div
+        if (!rawName || !div) continue
+        const canonical = normalizeCollegeToCanonical(rawName)
+        const isCanonicalRow = rawName.toLowerCase() === canonical.toLowerCase()
+        if (!canonicalToDivision[canonical] || isCanonicalRow) canonicalToDivision[canonical] = div
       }
-      // So "Mount Olive" and "University of Mount Olive" both resolve to same division from DB
-      for (const key of Object.keys(merged)) {
-        const div = merged[key]
-        const row = mappingRows?.find((r) => (r.college_name ?? "").toString().trim().toLowerCase() === key)
-        const canonical = row ? normalizeCollegeToCanonical(row.college_name) : ""
-        if (canonical) {
-          for (const variant of getLookupKeysForCanonical(canonical)) {
-            merged[variant] = div
-          }
+      // Spread to all variant keys so "Mount Olive" and "University of Mount Olive" resolve the same
+      for (const [canonical, div] of Object.entries(canonicalToDivision)) {
+        for (const variant of getLookupKeysForCanonical(canonical)) {
+          merged[variant] = div
         }
       }
     }
