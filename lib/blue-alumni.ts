@@ -12,9 +12,11 @@ export type BlueAlumnus = {
 }
 
 /**
- * Server-only: fetch Blue alumni (ncUnitedTeam = blue, graduation year < current year).
+ * Server-only: fetch Blue alumni (ncUnitedTeam = blue, graduation year 2025 and older).
  * Ordered by graduation year desc, then name.
  */
+const ALUMNI_CUTOFF_YEAR = 2025
+
 export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
   try {
     const supabase = createAdminClient()
@@ -22,7 +24,7 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     const { data, error } = await supabase
       .from("athletes")
       .select("id, name, graduationyear, highschool, college, division, ncunitedteam, ncUnitedTeam")
-      .lt("graduationyear", CURRENT_YEAR)
+      .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
