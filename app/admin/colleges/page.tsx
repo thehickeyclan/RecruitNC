@@ -11,11 +11,11 @@ import { Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { COLLEGE_DIVISION_OPTIONS } from "@/types/college"
 
-const DIVISION_VALUES = [...COLLEGE_DIVISION_OPTIONS, ""] as const
+const NONE_VALUE = "__none__" // Radix Select forbids value=""
 
 function normalizeDivisionValue(division: string | null | undefined): string {
-  if (division == null || division === "") return ""
-  return DIVISION_VALUES.includes(division as any) ? division : ""
+  if (division == null || division === "") return NONE_VALUE
+  return COLLEGE_DIVISION_OPTIONS.includes(division as any) ? division : NONE_VALUE
 }
 
 type CollegeRow = {
@@ -116,7 +116,7 @@ export default function AdminCollegesPage() {
                     <Label className="text-xs text-muted-foreground whitespace-nowrap">Division</Label>
                     <Select
                       value={normalizeDivisionValue(college.division)}
-                      onValueChange={(value) => updateDivision(college.id, value)}
+                      onValueChange={(value) => updateDivision(college.id, value === NONE_VALUE ? "" : value)}
                       disabled={savingId === college.id}
                     >
                       <SelectTrigger className="w-[220px]">
@@ -128,7 +128,7 @@ export default function AdminCollegesPage() {
                             {opt}
                           </SelectItem>
                         ))}
-                        <SelectItem value="">— None —</SelectItem>
+                        <SelectItem value={NONE_VALUE}>— None —</SelectItem>
                       </SelectContent>
                     </Select>
                     {savingId === college.id && (
