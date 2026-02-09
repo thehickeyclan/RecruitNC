@@ -6,8 +6,7 @@ import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { getBlueContent } from "@/lib/blue-content"
 import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
-import { BlueAlumniTable } from "./blue-alumni-table"
-import { getBlueAlumni } from "@/lib/blue-alumni"
+import { BlueAlumniClient } from "./blue-alumni-client"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
@@ -32,7 +31,7 @@ export const metadata: Metadata = {
 
 export default async function BluePage() {
   unstable_noStore()
-  const [images, alumni] = await Promise.all([getBlueContent(), getBlueAlumni()])
+  const images = await getBlueContent()
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
@@ -395,7 +394,7 @@ export default async function BluePage() {
               members, and mentor the next generation. Blue is a program, not a one-time
               experience—alumni stay connected and give back.
             </p>
-            <BlueAlumniTable alumni={alumni} />
+            <BlueAlumniClient />
           </section>
 
           {/* 14. Competition & Schedule */}

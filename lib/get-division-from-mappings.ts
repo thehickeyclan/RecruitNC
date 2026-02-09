@@ -13,6 +13,15 @@ export function clearDivisionMappingsCache(): void {
   cacheTime = 0
 }
 
+/** Override so D2/D3 show correctly even if DB has wrong data. */
+const DIVISION_OVERRIDES: Record<string, string> = {
+  "roanoke college": "NCAA Division III",
+  roanoke: "NCAA Division III",
+  "belmont abbey": "NCAA Division II",
+  lander: "NCAA Division II",
+  "mount union": "NCAA Division III",
+}
+
 /**
  * Get division for a college from college_division_mappings table.
  * Match: exact lowercase, or DB name contained in input, or input contained in DB name (e.g. "University of Mount Olive" -> "Mount Olive" row).
@@ -36,6 +45,7 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
         if (name && div) cache.set(name.toLowerCase(), div)
       }
     }
+    for (const [k, v] of Object.entries(DIVISION_OVERRIDES)) cache.set(k, v)
     cacheTime = Date.now()
   }
 
