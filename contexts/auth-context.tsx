@@ -365,7 +365,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return res
     } catch (err: any) {
       console.error("[v0] Sign in error:", err)
-      return { error: { message: err.message || "Sign in failed" } }
+      const msg = err?.message || "Sign in failed"
+      const friendly =
+        msg === "Failed to fetch"
+          ? "Network error. Check your connection. For local dev, ensure .env.local has NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY and restart the dev server."
+          : msg
+      return { error: { message: friendly } }
     }
   }
 

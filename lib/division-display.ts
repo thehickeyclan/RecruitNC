@@ -1,7 +1,7 @@
 /**
  * Division display: single place for full vs abbreviated labels.
  * - Full: spell out NCAA, Roman numerals (I, II, III). Use when space allows.
- * - Short: NCAA D-I, NCAA D-II, etc. Use on cards, filters, tables.
+ * - Short: DI, DII, DIII, NAIA, NJCAA. Use on cards, filters, tables.
  * Do not mix "D1" with "Division I" — use these helpers everywhere.
  */
 
@@ -17,9 +17,9 @@ export const DIVISION_FULL = {
 
 /** Abbreviated labels for cards, filters, tables. */
 export const DIVISION_SHORT = {
-  D1: "NCAA D-I",
-  D2: "NCAA D-II",
-  D3: "NCAA D-III",
+  D1: "DI",
+  D2: "DII",
+  D3: "DIII",
   NAIA: "NAIA",
   NJCAA: "NJCAA",
   CLUB: "Club (NCWA)",
@@ -67,7 +67,7 @@ export function getDivisionDisplayFull(division: string | null | undefined): str
 }
 
 /**
- * Return the abbreviated label (NCAA D-I, etc.) for cards, filters, tables.
+ * Return the abbreviated label (DI, DII, DIII, etc.) for cards, filters, tables.
  */
 export function getDivisionDisplayShort(division: string | null | undefined): string {
   if (!division?.trim()) return "—"

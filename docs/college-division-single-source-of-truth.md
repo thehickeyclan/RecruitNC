@@ -16,7 +16,7 @@ All division display (Blue alumni table, College tab, APIs) comes from **one pla
 
 **Abbreviated (cards, filters, tables):** Use `getDivisionDisplayShort()` from `lib/division-display.ts`:
 
-- NCAA D-I, NCAA D-II, NCAA D-III, NAIA, NJCAA, Club (NCWA)
+- DI, DII, DIII, NAIA, NJCAA, Club (NCWA)
 
 Do not mix "D1" with "Division I" — use the helpers in `lib/division-display.ts` everywhere. Anything else (D1, NCAA DI, JUCO, etc.) is normalized. If a college is not in either table, or has no division set, the UI shows **Unknown**.
 

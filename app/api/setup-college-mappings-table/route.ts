@@ -51,41 +51,55 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       }
     }
 
+    // Canonical list: correct divisions so Roanoke = D-III, plus add Lander, Presbyterian, Mount Union, Gardner-Webb, Appalachian State
+    const canonicalColleges = [
+      { college_name: "UNC Chapel Hill", division: "NCAA Division I" },
+      { college_name: "NC State", division: "NCAA Division I" },
+      { college_name: "Duke", division: "NCAA Division I" },
+      { college_name: "Appalachian State", division: "NCAA Division I" },
+      { college_name: "Gardner-Webb", division: "NCAA Division I" },
+      { college_name: "Presbyterian", division: "NCAA Division I" },
+      { college_name: "UNC Pembroke", division: "NCAA Division II" },
+      { college_name: "Mount Olive", division: "NCAA Division II" },
+      { college_name: "Belmont Abbey", division: "NCAA Division II" },
+      { college_name: "Lander", division: "NCAA Division II" },
+      { college_name: "Greensboro College", division: "NCAA Division III" },
+      { college_name: "Guilford College", division: "NCAA Division III" },
+      { college_name: "Roanoke College", division: "NCAA Division III" },
+      { college_name: "Roanoke", division: "NCAA Division III" },
+      { college_name: "Mount Union", division: "NCAA Division III" },
+      { college_name: "Montreat College", division: "NAIA" },
+      { college_name: "Wake Tech", division: "NJCAA" },
+    ]
+
     const rowCount = count ?? 0
     if (rowCount === 0) {
       console.log("Table exists but is empty, seeding with initial data...")
-
-      const initialColleges = [
-        { college_name: "UNC Chapel Hill", division: "NCAA Division I" },
-        { college_name: "NC State", division: "NCAA Division I" },
-        { college_name: "Duke", division: "NCAA Division I" },
-        { college_name: "UNC Pembroke", division: "NCAA Division II" },
-        { college_name: "Mount Olive", division: "NCAA Division II" },
-        { college_name: "Belmont Abbey", division: "NCAA Division II" },
-        { college_name: "Greensboro College", division: "NCAA Division III" },
-        { college_name: "Guilford College", division: "NCAA Division III" },
-        { college_name: "Montreat College", division: "NAIA" },
-        { college_name: "Wake Tech", division: "NJCAA" },
-      ]
-
-      // Insert initial data
-      const { error: insertError } = await supabase.from("college_division_mappings").insert(initialColleges)
-
+      const { error: insertError } = await supabase.from("college_division_mappings").insert(canonicalColleges)
       if (insertError) {
         console.error("Error seeding data:", insertError)
         throw insertError
       }
-
       return NextResponse.json({
         success: true,
         message: "College division mappings table seeded successfully",
-        seeded: initialColleges.length,
+        seeded: canonicalColleges.length,
       })
+    }
+
+    // Table has data: upsert canonical list to fix wrong divisions (e.g. Roanoke → D-III) and add missing schools
+    const { error: upsertError } = await supabase
+      .from("college_division_mappings")
+      .upsert(canonicalColleges, { onConflict: "college_name" })
+
+    if (upsertError) {
+      console.error("Error upserting college mappings:", upsertError)
+      throw upsertError
     }
 
     return NextResponse.json({
       success: true,
-      message: "College division mappings table already exists and has data",
+      message: "College division mappings updated (canonical list upserted). Refresh the Blue page.",
       count: rowCount,
     })
   } catch (error) {

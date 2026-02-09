@@ -42,6 +42,13 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
     "pembroke": "unc pembroke",
     "wake tech": "wake tech",
     "waketech": "wake tech",
+    "gardner webb": "gardner-webb",
+    "gardner-webb": "gardner-webb",
+    "roanoke": "roanoke",
+    "roanoke college": "roanoke college",
+    "lander": "lander",
+    "presbyterian": "presbyterian",
+    "mount union": "mount union",
   }
   const lookupName = aliasToCanonical[collegeLower] ?? collegeLower
 

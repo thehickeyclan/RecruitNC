@@ -57,9 +57,9 @@ export default function SetupCollegeMappingsPage() {
               College division mappings
             </CardTitle>
             <CardDescription>
-              Seed or confirm the <code className="text-xs bg-gray-100 px-1 rounded">college_division_mappings</code> table
-              so Blue alumni and other views show the correct division (NCAA Division I, II, III, NAIA, NJCAA). Safe to run
-              more than once — if the table already has data, it will not overwrite.
+              Seed or fix the <code className="text-xs bg-gray-100 px-1 rounded">college_division_mappings</code> table so Blue alumni
+              show the correct division. Safe to run more than once — when the table has data, this upserts the canonical list
+              (Roanoke → DIII, Lander, Presbyterian, Gardner-Webb, etc.) so wrong divisions get corrected.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -98,6 +98,14 @@ export default function SetupCollegeMappingsPage() {
                 </div>
               </div>
             )}
+
+            <div className="mt-6 pt-4 border-t text-sm text-gray-600 space-y-2">
+              <p className="font-medium text-gray-700">How to update divisions</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Click the button above to apply the built-in list (fixes Roanoke, Lander, Presbyterian, Mount Union, Gardner-Webb, etc.).</li>
+                <li>To fix other schools or add new ones: Supabase Dashboard → Table Editor → <code className="bg-gray-100 px-1 rounded">college_division_mappings</code>. Edit the <code className="bg-gray-100 px-1 rounded">division</code> column or add rows. Use exactly: <strong>NCAA Division I</strong>, <strong>NCAA Division II</strong>, <strong>NCAA Division III</strong>, <strong>NAIA</strong>, or <strong>NJCAA</strong>. <code className="bg-gray-100 px-1 rounded">college_name</code> should match what appears in athlete records (e.g. &quot;Gardner-Webb&quot; or &quot;Gardner Webb&quot; — add both if needed).</li>
+              </ol>
+            </div>
           </CardContent>
         </Card>
       </div>

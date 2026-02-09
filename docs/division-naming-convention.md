@@ -17,9 +17,7 @@ Store and compare using these exact strings. Do not mix "D1" with "Division I".
 
 Use `getDivisionDisplayShort()` from `lib/division-display.ts`:
 
-- NCAA D-I
-- NCAA D-II
-- NCAA D-III
+- DI, DII, DIII
 - NAIA
 - NJCAA
 - Club (NCWA)
