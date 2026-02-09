@@ -1,21 +1,11 @@
 import Link from "next/link"
 import type { BlueAlumnus } from "@/lib/blue-alumni"
+import { getDivisionDisplayShort } from "@/lib/division-display"
 
 const GOLD = "#D3B574"
 
 type Props = {
   alumni: BlueAlumnus[]
-}
-
-function formatDivision(division: string): string {
-  if (!division || division.trim() === "") return "—"
-  const d = division.toLowerCase()
-  if (d.includes("d1") || d.includes("division i")) return "NCAA DI"
-  if (d.includes("d2") || d.includes("division ii")) return "NCAA DII"
-  if (d.includes("d3") || d.includes("division iii")) return "NCAA DIII"
-  if (d.includes("naia")) return "NAIA"
-  if (d.includes("juco") || d.includes("njcaa")) return "NJCAA"
-  return division
 }
 
 export function BlueAlumniTable({ alumni }: Props) {
@@ -56,7 +46,7 @@ export function BlueAlumniTable({ alumni }: Props) {
                 <td className="px-4 py-3 text-[#03154C]/90">{row.graduationyear}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.highschool || "—"}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.college || "—"}</td>
-                <td className="px-4 py-3 text-[#03154C]/90">{formatDivision(row.division)}</td>
+                <td className="px-4 py-3 text-[#03154C]/90">{getDivisionDisplayShort(row.division)}</td>
               </tr>
             ))}
           </tbody>

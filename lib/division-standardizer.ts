@@ -1,19 +1,16 @@
 /**
- * Standardizes division names to a consistent format
- * @param division The division name to standardize
- * @returns Standardized division name
+ * Standardizes division names to full canonical form.
+ * Spell out NCAA; use Roman numerals (I, II, III). No "D1" / "Division 1" mix.
+ * @returns "NCAA Division I" | "NCAA Division II" | "NCAA Division III" | "NAIA" | "NJCAA" | "Club (NCWA)" or original
  */
 export function standardizeDivision(division: string | null | undefined): string {
   if (!division) return "Unknown"
 
   const divLower = division.toLowerCase().trim()
 
-  // Special case for Montreat College
-  if (divLower.includes("montreat")) {
-    return "NAIA"
-  }
+  if (divLower.includes("montreat")) return "NAIA"
 
-  // Division I variations
+  // NCAA Division I (Roman numeral I)
   if (
     divLower === "ncaa di" ||
     divLower === "ncaa d1" ||
@@ -30,10 +27,10 @@ export function standardizeDivision(division: string | null | undefined): string
     divLower.includes("d-1") ||
     divLower.includes("d-i")
   ) {
-    return "Division I"
+    return "NCAA Division I"
   }
 
-  // Division II variations
+  // NCAA Division II (Roman numeral II)
   if (
     divLower === "ncaa dii" ||
     divLower === "ncaa d2" ||
@@ -50,10 +47,10 @@ export function standardizeDivision(division: string | null | undefined): string
     divLower.includes("d-2") ||
     divLower.includes("d-ii")
   ) {
-    return "Division II"
+    return "NCAA Division II"
   }
 
-  // Division III variations
+  // NCAA Division III (Roman numeral III)
   if (
     divLower === "ncaa diii" ||
     divLower === "ncaa d3" ||
@@ -70,15 +67,11 @@ export function standardizeDivision(division: string | null | undefined): string
     divLower.includes("d-3") ||
     divLower.includes("d-iii")
   ) {
-    return "Division III"
+    return "NCAA Division III"
   }
 
-  // NAIA variations
-  if (divLower.includes("naia")) {
-    return "NAIA"
-  }
+  if (divLower.includes("naia")) return "NAIA"
 
-  // NJCAA variations
   if (
     divLower.includes("njcaa") ||
     divLower.includes("juco") ||
@@ -88,7 +81,9 @@ export function standardizeDivision(division: string | null | undefined): string
     return "NJCAA"
   }
 
-  return division // Return original if no match
+  if (divLower.includes("club") || divLower.includes("ncwa")) return "Club (NCWA)"
+
+  return division
 }
 
 /**
@@ -215,15 +210,15 @@ export function getCollegeDivision(collegeName: string): string {
   ]
 
   if (divisionIColleges.some((college) => normalizedName.includes(college))) {
-    return "Division I"
+    return "NCAA Division I"
   }
 
   if (divisionIIColleges.some((college) => normalizedName.includes(college))) {
-    return "Division II"
+    return "NCAA Division II"
   }
 
   if (divisionIIIColleges.some((college) => normalizedName.includes(college))) {
-    return "Division III"
+    return "NCAA Division III"
   }
 
   if (naiaColleges.some((college) => normalizedName.includes(college))) {

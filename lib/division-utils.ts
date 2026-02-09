@@ -5,23 +5,16 @@ export function buildDivisionFilter(division: string): any {
 }
 
 // Get division sort value (for consistent sorting across the app)
+// Accepts full form (NCAA Division I, etc.) and legacy "Division I" for compatibility.
 export function getDivisionSortValue(division: string | null | undefined): number {
-  // Handle null, undefined, or non-string values
   if (!division || typeof division !== "string") return 999
 
-  // Use exact match for standardized division names
-  switch (division) {
-    case "Division I":
-      return 1
-    case "Division II":
-      return 2
-    case "Division III":
-      return 3
-    case "NAIA":
-      return 4
-    case "NJCAA":
-      return 5
-    default:
-      return 999 // Unknown division
-  }
+  const d = division.trim()
+  if (d === "NCAA Division I" || d === "Division I") return 1
+  if (d === "NCAA Division II" || d === "Division II") return 2
+  if (d === "NCAA Division III" || d === "Division III") return 3
+  if (d === "NAIA") return 4
+  if (d === "NJCAA") return 5
+  if (d === "Club (NCWA)") return 6
+  return 999
 }

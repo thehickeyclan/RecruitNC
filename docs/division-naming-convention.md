@@ -1,29 +1,39 @@
 # Division Naming Convention
 
-Use these exact, canonical values across the database:
+**Spell out NCAA every time. Use Roman numerals (I, II, III), not numbers.**
 
-- DI
-- DII
-- DIII
+## Full form (database, APIs, when space allows)
+
+- **NCAA Division I**
+- **NCAA Division II**
+- **NCAA Division III**
+- **NAIA**
+- **NJCAA**
+- **Club (NCWA)** (if tracking club/NCWA programs)
+
+Store and compare using these exact strings. Do not mix "D1" with "Division I".
+
+## Abbreviated (cards, filters, tables)
+
+Use `getDivisionDisplayShort()` from `lib/division-display.ts`:
+
+- NCAA D-I
+- NCAA D-II
+- NCAA D-III
 - NAIA
 - NJCAA
+- Club (NCWA)
 
-Notes:
-- NJCAA is the correct label (do not use "NJCA" or "JUCO").
-- These values are case-sensitive.
-- Do not use alternatives like "NCAA Division I/II/III", "D1/D2/D3", "D-I/D-II/D-III", or "JUCO".
+Be consistent — don’t mix "D1" with "Division I" anywhere.
 
-Why this set?
-- Short, unambiguous, widely understood, and consistent with college athletics.
-- Minimizes label drift across tables and tools.
+## Where to update
 
-Where to update
-- Supabase Table Editor → logo_mappings → filter entity_type = 'college' → edit division inline.
-- After edits, if you need athlete records to carry the same division in athletes.division, re-run your division sync script.
+- **college_division_mappings** or **college_master**: use the full form (NCAA Division I, etc.).
+- **lib/division-display.ts**: single place for full vs short labels.
 
-Common alias mapping (for reference)
-- DI: "D1", "NCAA D1", "Division I", "NCAA Division I", "D-I"
-- DII: "D2", "NCAA D2", "Division II", "NCAA Division II", "D-II"
-- DIII: "D3", "NCAA D3", "Division III", "NCAA Division III", "D-III"
-- NAIA: "NAIA" (usually consistent)
-- NJCAA: "JUCO", "NJCA", "NJCCAA"
+## Common inputs (normalized to full form)
+
+- "D1", "DI", "Division 1" → NCAA Division I
+- "D2", "DII", "Division 2" → NCAA Division II
+- "D3", "DIII", "Division 3" → NCAA Division III
+- "JUCO", "NJCA" → NJCAA
