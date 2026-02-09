@@ -400,7 +400,7 @@ export default async function BluePage() {
               members, and mentor the next generation. Blue is a program, not a one-time
               experience—alumni stay connected and give back.
             </p>
-            <BlueAlumniTable alumni={alumni} isAdmin={isAdmin} />
+            <BlueAlumniTable alumni={alumni} />
           </section>
 
           {/* 14. Competition & Schedule */}

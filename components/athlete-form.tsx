@@ -16,8 +16,6 @@ import type { Athlete } from "@/types/athlete"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
-import { DivisionDropdown } from "@/components/division-dropdown"
-
 interface AthleteFormProps {
   onSubmit: (data: any) => Promise<any>
   initialData?: Partial<Athlete>
@@ -153,7 +151,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
 
     // College info - only populate if not a prospect
     college: initialData?.is_prospect ? "" : initialData?.college || "",
-    division: initialData?.is_prospect ? "" : initialData?.division || "",
     commitmentDate: initialData?.is_prospect
       ? ""
       : initialData?.commitmentdate
@@ -353,9 +350,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
       if (!formData.college.trim()) {
         errors.college = "College is required for committed athletes"
       }
-      if (!formData.division.trim()) {
-        errors.division = "Division is required for committed athletes"
-      }
       if (!formData.collegeWeightClass.trim()) {
         errors.collegeWeightClass = "College weight class is required for committed athletes"
       }
@@ -399,7 +393,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
         highSchoolDivision: safeTrim(formData.highSchoolDivision, initialData?.highSchoolDivision),
         highSchoolLogoUrl: safeTrim(formData.highSchoolLogoUrl, initialData?.highSchoolLogoUrl),
         college: safeTrim(formData.college, initialData?.college),
-        division: safeTrim(formData.division, initialData?.division),
         commitmentDate: safeTrim(formData.commitmentDate, initialData?.commitmentDate),
         wrestlingClub: safeTrim(formData.wrestlingClub, initialData?.wrestlingClub),
         customWrestlingClub: safeTrim(formData.customWrestlingClub, initialData?.customWrestlingClub),
@@ -484,7 +477,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
       ...prev,
       isProspect: checked,
       college: checked ? "" : prev.college,
-      division: checked ? "" : prev.division,
       commitmentDate: checked ? "" : prev.commitmentDate,
       commitmentPhotoUrl: checked ? "" : prev.commitmentPhotoUrl,
       collegeLogoUrl: checked ? "" : prev.collegeLogoUrl,
@@ -496,7 +488,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
       setValidationErrors((prev) => {
         const newErrors = { ...prev }
         delete newErrors.college
-        delete newErrors.division
         delete newErrors.collegeWeightClass
         delete newErrors.commitmentDate
         return newErrors
@@ -879,25 +870,6 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                     placeholder="https://example.com/logo.png"
                     disabled={formData.recruiting_status === "Uncommitted"}
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="division">
-                    Division{" "}
-                    {(formData.recruiting_status === "Committed" ||
-                      formData.recruiting_status === "College Athlete") && <span className="text-red-500">*</span>}
-                  </Label>
-                  <DivisionDropdown
-                    value={formData.division}
-                    onValueChange={(value) => handleSelectChange("division", value)}
-                    required={
-                      formData.recruiting_status === "Committed" || formData.recruiting_status === "College Athlete"
-                    }
-                    disabled={formData.recruiting_status === "Uncommitted"}
-                  />
-                  {validationErrors.division && (
-                    <p className="text-sm text-red-500 mt-1">{validationErrors.division}</p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1443,7 +1415,6 @@ interface AthleteFormData {
   collegeWeightClass: string
   highSchool: string
   college: string
-  division: string
   commitmentDate: string
   isProspect: boolean
   customWrestlingClub: string

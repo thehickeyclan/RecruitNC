@@ -20,7 +20,6 @@ interface Athlete {
   name: string
   highschool: string
   college: string
-  division: string
   graduationyear: number
   photourl: string
   commitmentPhotoUrl?: string
@@ -42,13 +41,6 @@ export default function HomePage() {
     total: 0,
     male: 0,
     female: 0,
-    divisions: {
-      D1: 0,
-      D2: 0,
-      D3: 0,
-      NAIA: 0,
-      NJCAA: 0,
-    },
   })
   const [loading, setLoading] = useState(true)
   const [athletesLoading, setAthletesLoading] = useState(true)
@@ -139,13 +131,6 @@ export default function HomePage() {
           total: apiStats.totalAthletes || 0,
           male: apiStats.genderBreakdown?.male || 0,
           female: apiStats.genderBreakdown?.female || 0,
-          divisions: {
-            D1: apiStats.divisionBreakdown?.D1 || 0,
-            D2: apiStats.divisionBreakdown?.D2 || 0,
-            D3: apiStats.divisionBreakdown?.D3 || 0,
-            NAIA: apiStats.divisionBreakdown?.NAIA || 0,
-            NJCAA: apiStats.divisionBreakdown?.NJCAA || 0,
-          },
         }
 
         setStats(newStats)
@@ -158,13 +143,6 @@ export default function HomePage() {
           total: 0,
           male: 0,
           female: 0,
-          divisions: {
-            D1: 0,
-            D2: 0,
-            D3: 0,
-            NAIA: 0,
-            NJCAA: 0,
-          },
         })
       } finally {
         setLoading(false)
@@ -674,9 +652,8 @@ export default function HomePage() {
             <p className="text-gray-500">Loading statistics...</p>
           </div>
         ) : (
-          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
-            {/* Total Commitments Card */}
-            <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
+          <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-1 lg:max-w-md">
+            <Card className="border overflow-hidden border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
               <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
               <CardContent className="p-4">
                 <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
@@ -705,122 +682,6 @@ export default function HomePage() {
                     </span>
                     <span className="text-xs" style={{ color: "#BC0B03", opacity: 0.7 }}>
                       Female
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Division Breakdown Card */}
-            <Card className="border overflow-hidden lg:col-span-5 border-yellow-200" style={{ borderColor: "#D3B574", borderOpacity: 0.3 }}>
-              <div className="h-2" style={{ backgroundColor: "#D3B574" }}></div>
-              <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-2" style={{ color: "#D3B574" }}>
-                  Division Breakdown
-                </h3>
-                <div className="grid grid-cols-5 gap-2 lg:gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#002147",
-                          height: `${stats.total ? Math.max((stats.divisions.D1 / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#002147" }}
-                    >
-                      {stats.divisions.D1}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
-                      D1
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#012ECD",
-                          height: `${stats.total ? Math.max((stats.divisions.D2 / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#012ECD" }}
-                    >
-                      {stats.divisions.D2}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#012ECD" }}>
-                      D2
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#002147",
-                          height: `${stats.total ? Math.max((stats.divisions.D3 / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#002147" }}
-                    >
-                      {stats.divisions.D3}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
-                      D3
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#D3B574",
-                          height: `${stats.total ? Math.max((stats.divisions.NAIA / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#D3B574", color: "#002147" }}
-                    >
-                      {stats.divisions.NAIA}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#D3B574" }}>
-                      NAIA
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="w-full h-16 rounded-t-md flex items-end justify-center overflow-hidden bg-gray-100">
-                      <div
-                        className="w-full transition-all duration-300"
-                        style={{
-                          backgroundColor: "#BC0B03",
-                          height: `${stats.total ? Math.max((stats.divisions.NJCAA / stats.total) * 100, 8) : 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div
-                      className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                      style={{ backgroundColor: "#BC0B03" }}
-                    >
-                      {stats.divisions.NJCAA}
-                    </div>
-                    <span className="text-xs font-medium mt-1" style={{ color: "#BC0B03" }}>
-                      NJCAA
                     </span>
                   </div>
                 </div>

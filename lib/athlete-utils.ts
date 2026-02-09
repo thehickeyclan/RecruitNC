@@ -1,30 +1,7 @@
 "use server"
 
 import type { Athlete } from "@/types/athlete"
-import { normalizeToCanonicalFull } from "@/lib/division-display"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
-
-// Helper function to normalize division names
-export async function normalizeDivision(division: string | null): Promise<string> {
-  if (!division) return "Unknown"
-
-  const divLower = division.toLowerCase().trim()
-
-  // Standardize to NCAA DI, DII, DIII format with Roman numerals
-  if (divLower.includes("d1") || divLower.includes("division 1") || divLower.includes("division i")) {
-    return "NCAA DI"
-  } else if (divLower.includes("d2") || divLower.includes("division 2") || divLower.includes("division ii")) {
-    return "NCAA DII"
-  } else if (divLower.includes("d3") || divLower.includes("division 3") || divLower.includes("division iii")) {
-    return "NCAA DIII"
-  } else if (divLower.includes("naia")) {
-    return "NAIA"
-  } else if (divLower.includes("juco") || divLower.includes("junior college") || divLower.includes("njcaa")) {
-    return "NJCAA"
-  }
-
-  return division
-}
 
 // Map database fields to our Athlete type (DB → Frontend)
 export async function mapDbToAthlete(data: any): Promise<Athlete> {
@@ -60,7 +37,6 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     highschool: data.highschool || "",
     highSchool: data.highschool || "",
     college: data.college || "",
-    division: data.division || "",
     weightclass: data.weightclass || "",
     weightClass: data.weightclass || "",
     college_weight_class: data.college_weight_class || "", // Added college_weight_class field mapping
@@ -161,7 +137,6 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       lastName: athlete.lastName || "",
       highschool: athlete.highSchool || athlete.highschool || "",
       college: normalizeCollegeToCanonical(athlete.college) || athlete.college || "",
-      division: normalizeToCanonicalFull(athlete.division) || athlete.division || "",
       weightclass: athlete.weightClass || athlete.weightclass || "",
       college_weight_class: athlete.collegeWeightClass || athlete.college_weight_class || "", // Added college_weight_class field mapping to database
       graduationyear: athlete.graduationYear || athlete.graduationyear || new Date().getFullYear(),
@@ -250,7 +225,6 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       gender: "Male",
       highschool: athlete?.highSchool || athlete?.highschool || "",
       college: normalizeCollegeToCanonical(athlete?.college) || athlete?.college || "",
-      division: athlete?.division || "",
       graduationyear: new Date().getFullYear(),
       commitmentdate: new Date().toISOString().split("T")[0],
       recruiting_status: athlete?.recruiting_status || "Uncommitted",

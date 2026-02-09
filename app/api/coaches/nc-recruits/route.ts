@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export async function GET(request: Request) {
   try {
@@ -231,7 +230,7 @@ export async function GET(request: Request) {
     // Fetch athlete details
     const { data: athletes, error: athletesError } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, weightclass, highschool, college, division, location, recruiting_status")
+      .select("id, name, graduationyear, weightclass, highschool, college, location, recruiting_status")
       .in("id", committedAthleteIds.length > 0 ? committedAthleteIds : ["00000000-0000-0000-0000-000000000000"])
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
@@ -365,24 +364,19 @@ export async function GET(request: Request) {
       return true
     })
 
-    const athletesWithStage = await Promise.all(
-      filteredForStage.map(async (athlete) => {
-        const star = committedStars?.find((s) => s.athlete_id === athlete.id)
-        const pipelineStage = star?.pipeline_stage || athlete.recruiting_status || "Committed"
-        const division = await getDivisionFromMappings(athlete.college ?? "") || athlete.division || ""
-
-        return {
-          id: athlete.id,
-          name: athlete.name,
-          year: athlete.graduationyear,
-          weight: athlete.weightclass,
-          highschool: athlete.highschool,
-          college: athlete.college,
-          division,
-          status: pipelineStage,
-        }
-      }),
-    )
+    const athletesWithStage = filteredForStage.map((athlete) => {
+      const star = committedStars?.find((s) => s.athlete_id === athlete.id)
+      const pipelineStage = star?.pipeline_stage || athlete.recruiting_status || "Committed"
+      return {
+        id: athlete.id,
+        name: athlete.name,
+        year: athlete.graduationyear,
+        weight: athlete.weightclass,
+        highschool: athlete.highschool,
+        college: athlete.college,
+        status: pipelineStage,
+      }
+    })
 
     // Sort by year (descending), then name
     athletesWithStage.sort((a, b) => {

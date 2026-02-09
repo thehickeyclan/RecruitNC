@@ -2472,7 +2472,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                       <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Weight</th>
                       <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">High School</th>
                       <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">College</th>
-                      <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Division</th>
                       <th className="h-12 px-4 text-left align-middle font-semibold text-foreground">Status</th>
                     </tr>
                   </thead>
@@ -2487,15 +2486,6 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         <td className="p-4 align-middle">{recruit.weight ? `${recruit.weight}lbs` : "-"}</td>
                         <td className="p-4 align-middle">{recruit.highschool || "-"}</td>
                         <td className="p-4 align-middle">{recruit.college || "-"}</td>
-                        <td className="p-4 align-middle">
-                          {recruit.division ? (
-                            <Badge variant="outline" className="text-xs">
-                              {recruit.division}
-                            </Badge>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
                         <td className="p-4 align-middle">
                           <Badge
                             variant="outline"

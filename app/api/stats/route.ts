@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export const dynamic = "force-dynamic"
 
@@ -203,62 +202,21 @@ export async function GET(req: Request) {
     let total = 0
     let male = 0
     let female = 0
-
-    // Initialize all buckets so the UI always sees the same keys
-    let DI = 0,
-      DII = 0,
-      DIII = 0,
-      NAIA = 0,
-      NJCAA = 0,
-      Independent = 0
-
     const yearCounts: Record<string, number> = {
       "2025": 0,
       "2026": 0,
       other: 0,
     }
 
-    // Resolve division from college_division_mappings (single source of truth)
-    const divisionStrings = await Promise.all(
-      athletes.map((a) => getDivisionFromMappings((a as AnyAthlete).college ?? "")),
-    )
-
-    for (let i = 0; i < athletes.length; i++) {
-      const a = athletes[i]
+    for (const a of athletes) {
       total++
-
-      // Gender
       const g = extractGender(a)
       if (g === "male") male++
       else if (g === "female") female++
-
-      // Division (from mappings, then normalize to bucket)
-      const div = normalizeDivision(divisionStrings[i])
-      if (div === "DI") DI++
-      else if (div === "DII") DII++
-      else if (div === "DIII") DIII++
-      else if (div === "NAIA") NAIA++
-      else if (div === "NJCAA") NJCAA++
-      else if (div === "Independent") Independent++
-
-      // Year
       const y = extractGradYear(a)
       if (y === 2025) yearCounts["2025"]++
       else if (y === 2026) yearCounts["2026"]++
       else yearCounts.other++
-    }
-
-    const divisionBreakdown = {
-      DI,
-      DII,
-      DIII,
-      NAIA,
-      NJCAA,
-      Independent,
-      // legacy aliases for backward-compatibility
-      D1: DI,
-      D2: DII,
-      D3: DIII,
     }
 
     const payload = {
@@ -266,7 +224,6 @@ export async function GET(req: Request) {
       stats: {
         totalAthletes: total,
         genderBreakdown: { male, female },
-        divisionBreakdown,
         yearBreakdown: yearCounts,
       },
     }
@@ -287,17 +244,6 @@ export async function GET(req: Request) {
         stats: {
           totalAthletes: 0,
           genderBreakdown: { male: 0, female: 0 },
-          divisionBreakdown: {
-            DI: 0,
-            DII: 0,
-            DIII: 0,
-            NAIA: 0,
-            NJCAA: 0,
-            Independent: 0,
-            D1: 0,
-            D2: 0,
-            D3: 0,
-          },
           yearBreakdown: { "2025": 0, "2026": 0, other: 0 },
         },
         error: "Failed to compute stats",

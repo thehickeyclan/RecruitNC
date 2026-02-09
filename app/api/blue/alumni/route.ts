@@ -2,8 +2,7 @@ import { NextResponse } from "next/server"
 import { getBlueAlumni } from "@/lib/blue-alumni"
 
 /**
- * Public API: Blue Alumni list with divisions from college_division_mappings.
- * Used by the Blue page so the table always loads fresh (no cached HTML).
+ * Public API: Blue Alumni list.
  */
 export const dynamic = "force-dynamic"
 
@@ -19,7 +18,6 @@ export async function GET() {
         graduationyear: a.graduationyear,
         highschool: a.highschool,
         college: a.college,
-        division: a.division,
       })),
     })
     res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")

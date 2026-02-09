@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getDivisionFilterValues } from "@/lib/division-display"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
-import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export const dynamic = "force-dynamic"
-// Do not cache: divisions must always come fresh from college_division_mappings
 
 export async function GET(request: Request) {
   try {
@@ -18,9 +15,8 @@ export async function GET(request: Request) {
 
     const yearFilter = searchParams.get("year")
     const genderFilter = searchParams.get("gender")
-    const divisionFilter = searchParams.get("division")
 
-    console.log("🤼 Athletes API: Filters applied:", { yearFilter, genderFilter, divisionFilter })
+    console.log("🤼 Athletes API: Filters applied:", { yearFilter, genderFilter })
 
     let supabase
     try {
@@ -54,9 +50,9 @@ export async function GET(request: Request) {
         .from("athletes")
         .select(
           `
-            id, name, highschool, college, division, 
+            id, name, highschool, college,
             graduationyear, photourl, commitmentPhotoUrl,
-            weightclass, wrestlingClub, 
+            weightclass, wrestlingClub,
             achievements, ncUnitedTeam, gender, commitmentdate,
             firstName, lastName
           `,
@@ -74,14 +70,6 @@ export async function GET(request: Request) {
       if (genderFilter && genderFilter !== "all") {
         query = query.eq("gender", genderFilter)
         console.log(`🤼 Athletes API: Filtering by gender: ${genderFilter}`)
-      }
-
-      if (divisionFilter && divisionFilter !== "all") {
-        const divisionValues = getDivisionFilterValues(divisionFilter)
-        if (divisionValues.length > 0) {
-          query = query.in("division", divisionValues)
-          console.log(`🤼 Athletes API: Filtering by division: ${divisionFilter} (matches ${divisionValues.length} values)`)
-        }
       }
 
       const result = await Promise.race([
@@ -175,18 +163,13 @@ export async function GET(request: Request) {
 
     console.log(`🤼 Athletes API: Processing ${data.length} athlete records`)
 
-    // Division only from college_division_mappings (single source of truth). Roanoke College → Roanoke → table.
-    const mappedAthletes = await Promise.all(
-      data.map(async (athlete) => {
-        const photoUrl = athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png"
-        const division = await getDivisionFromMappings(athlete.college ?? "") || ""
-
-        return {
-          id: athlete.id,
-          name: athlete.name,
-          highschool: athlete.highschool || "",
-          college: athlete.college || "",
-          division,
+    const mappedAthletes = data.map((athlete: any) => {
+      const photoUrl = athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png"
+      return {
+        id: athlete.id,
+        name: athlete.name,
+        highschool: athlete.highschool || "",
+        college: athlete.college || "",
         graduationyear: athlete.graduationyear || 0,
         photourl: photoUrl,
         photoUrl: photoUrl,
@@ -214,9 +197,8 @@ export async function GET(request: Request) {
         high_school: athlete.highschool || "",
         wrestling_club: athlete.wrestlingClub || "",
         commitment_date: athlete.commitmentdate || "",
-        }
-      }),
-    )
+      }
+    })
 
     console.log(`✅ Athletes API: Successfully processed ${mappedAthletes.length} athletes`)
 
@@ -306,7 +288,6 @@ export async function POST(request: Request) {
       is_prospect: body.is_prospect || false,
       recruiting_status: body.recruiting_status || "Uncommitted",
       college: normalizeCollegeToCanonical(body.college) || body.college || null,
-      division: body.division || null,
       highSchoolLogoUrl: body.highSchoolDivision || body.highSchoolLogoUrl || null,
       commitmentdate: body.commitmentdate || null,
       collegeLogoUrl: body.collegeLogoUrl || null,
