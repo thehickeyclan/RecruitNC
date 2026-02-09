@@ -477,7 +477,18 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* College division mappings */}
+            {/* Colleges (divisions) — colleges table used by app */}
+            <Link href="/admin/colleges">
+              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <School className="h-10 w-10 text-[#13294B] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Colleges (divisions)</h3>
+                  <p className="text-xs text-gray-600">Set division per college</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* College division mappings (legacy) */}
             <Link href="/admin/setup-college-mappings">
               <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">

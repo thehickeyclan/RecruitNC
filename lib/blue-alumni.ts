@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getCollegesByIds } from "@/lib/colleges"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -18,7 +19,7 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
 
     const { data, error } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, highschool, college, ncUnitedTeam")
+      .select("id, name, graduationyear, highschool, college, college_id, ncUnitedTeam")
       .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
@@ -39,13 +40,20 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     }
     const blueAlumni = (data ?? []).filter(isBlue)
 
-    return blueAlumni.map((row: any) => ({
-      id: row.id ?? "",
-      name: row.name ?? "",
-      graduationyear: Number(row.graduationyear) || 0,
-      highschool: row.highschool ?? "",
-      college: row.college ?? "",
-    }))
+    const collegeIds = [...new Set(blueAlumni.map((r: any) => r.college_id).filter(Boolean))]
+    const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
+
+    return blueAlumni.map((row: any) => {
+      const collegeName =
+        (row.college_id && collegesMap.get(row.college_id)?.name) || row.college || ""
+      return {
+        id: row.id ?? "",
+        name: row.name ?? "",
+        graduationyear: Number(row.graduationyear) || 0,
+        highschool: row.highschool ?? "",
+        college: collegeName,
+      }
+    })
   } catch (e) {
     console.error("[blue-alumni] error:", e)
     return []

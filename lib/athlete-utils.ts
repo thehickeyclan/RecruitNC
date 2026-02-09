@@ -36,7 +36,9 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     lastName: data.lastName || "",
     highschool: data.highschool || "",
     highSchool: data.highschool || "",
-    college: data.college || "",
+    college: (data.colleges?.name ?? data.college_name ?? data.college ?? "") as string,
+    college_id: data.college_id ?? null,
+    division: (data.colleges?.division ?? data.college_division ?? data.division ?? undefined) as string | undefined,
     weightclass: data.weightclass || "",
     weightClass: data.weightclass || "",
     college_weight_class: data.college_weight_class || "", // Added college_weight_class field mapping
@@ -137,6 +139,7 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       lastName: athlete.lastName || "",
       highschool: athlete.highSchool || athlete.highschool || "",
       college: normalizeCollegeToCanonical(athlete.college) || athlete.college || "",
+      college_id: athlete.college_id ?? null,
       weightclass: athlete.weightClass || athlete.weightclass || "",
       college_weight_class: athlete.collegeWeightClass || athlete.college_weight_class || "", // Added college_weight_class field mapping to database
       graduationyear: athlete.graduationYear || athlete.graduationyear || new Date().getFullYear(),
@@ -225,6 +228,7 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       gender: "Male",
       highschool: athlete?.highSchool || athlete?.highschool || "",
       college: normalizeCollegeToCanonical(athlete?.college) || athlete?.college || "",
+      college_id: athlete?.college_id ?? null,
       graduationyear: new Date().getFullYear(),
       commitmentdate: new Date().toISOString().split("T")[0],
       recruiting_status: athlete?.recruiting_status || "Uncommitted",

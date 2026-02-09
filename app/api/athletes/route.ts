@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
+import { getCollegesByIds } from "@/lib/colleges"
 
 export const dynamic = "force-dynamic"
 
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
         .from("athletes")
         .select(
           `
-            id, name, highschool, college,
+            id, name, highschool, college, college_id,
             graduationyear, photourl, commitmentPhotoUrl,
             weightclass, wrestlingClub,
             achievements, ncUnitedTeam, gender, commitmentdate,
@@ -163,13 +164,21 @@ export async function GET(request: Request) {
 
     console.log(`🤼 Athletes API: Processing ${data.length} athlete records`)
 
+    const collegeIds = [...new Set((data as any[]).map((a) => a.college_id).filter(Boolean))]
+    const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
+
     const mappedAthletes = data.map((athlete: any) => {
       const photoUrl = athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png"
+      const collegeRow = athlete.college_id ? collegesMap.get(athlete.college_id) : null
+      const collegeName = collegeRow?.name ?? athlete.college ?? ""
+      const division = collegeRow?.division ?? ""
       return {
         id: athlete.id,
         name: athlete.name,
         highschool: athlete.highschool || "",
-        college: athlete.college || "",
+        college: collegeName,
+        college_id: athlete.college_id ?? null,
+        division,
         graduationyear: athlete.graduationyear || 0,
         photourl: photoUrl,
         photoUrl: photoUrl,

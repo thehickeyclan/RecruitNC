@@ -6,6 +6,8 @@ export type Athlete = {
   highschool: string
   highSchool?: string
   college: string
+  college_id?: string | null
+  division?: string
   weightclass: string
   weightClass?: string
   graduationyear: number

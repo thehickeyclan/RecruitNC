@@ -19,7 +19,7 @@ const KNOWN_ATHLETE_COLUMNS = new Set([
   "claimed_by_user_id", "claimed_at", "updated_at",
   "hs_matches_uploaded", "admin_reviewed",
   "socialMedia", "social_media",
-  "college", "commitmentdate", "commitment_date",
+  "college", "college_id", "commitmentdate", "commitment_date",
 ])
 
 /**
