@@ -16,11 +16,13 @@ export async function GET(request: Request) {
 
     const supabaseClient = createClient()
 
-    // Division source: college_divisions first, fallback to college_division_mappings so we never show all Unknown
+    // Division source: college_division_mappings (single table in DB)
     const divisionMap = new Map<string, string>()
-    const addToMap = (rows: { college_name?: string; division?: string }[] | null) => {
-      if (!rows) return
-      rows.forEach((mapping) => {
+    const { data: mappingsData } = await supabaseClient
+      .from("college_division_mappings")
+      .select("college_name, division")
+    if (mappingsData?.length) {
+      mappingsData.forEach((mapping) => {
         const name = (mapping.college_name ?? "").toLowerCase()
         if (!name) return
         const normalized = standardizeDivision(mapping.division)
@@ -28,24 +30,6 @@ export async function GET(request: Request) {
         if (div) divisionMap.set(name, div)
       })
     }
-
-    const { data: divisionsData, error: divError } = await supabaseClient
-      .from("college_divisions")
-      .select("college_name, division")
-    if (!divError && divisionsData?.length) {
-      console.log(`📊 Loaded ${divisionsData.length} college divisions`)
-      addToMap(divisionsData)
-    }
-    if (divisionMap.size === 0) {
-      const { data: mappingsData } = await supabaseClient
-        .from("college_division_mappings")
-        .select("college_name, division")
-      if (mappingsData?.length) {
-        console.log(`📊 Fallback: loaded ${mappingsData.length} from college_division_mappings`)
-        addToMap(mappingsData)
-      }
-    }
-    if (divisionMap.size === 0) console.warn("⚠️ No division mappings loaded, using athlete data only")
 
     const { data: athletes, error } = await supabaseClient
       .from("athletes")

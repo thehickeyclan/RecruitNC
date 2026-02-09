@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const supabase = createAdminClient()
 
     const { error } = await supabase
-      .from("college_divisions")
+      .from("college_division_mappings")
       .upsert(
         { college_name: canonicalCollege, division: canonicalDivision, updated_at: new Date().toISOString() },
         { onConflict: "college_name" },

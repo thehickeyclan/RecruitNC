@@ -14,7 +14,7 @@ export function clearDivisionMappingsCache(): void {
 }
 
 /**
- * Get division for a college from college_divisions table only.
+ * Get division for a college from college_division_mappings table.
  * Match: exact lowercase, or DB name contained in input, or input contained in DB name (e.g. "University of Mount Olive" -> "Mount Olive" row).
  */
 export async function getDivisionFromMappings(collegeName: string): Promise<string> {
@@ -24,7 +24,7 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
   if (!cache || Date.now() - cacheTime > CACHE_MS) {
     const supabase = createAdminClient()
     const { data: rows, error } = await supabase
-      .from("college_divisions")
+      .from("college_division_mappings")
       .select("college_name, division")
 
     cache = new Map()
