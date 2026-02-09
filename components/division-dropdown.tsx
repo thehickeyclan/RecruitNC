@@ -3,8 +3,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CANONICAL_DIVISIONS_FULL, normalizeToCanonicalFull } from "@/lib/division-display"
 
-/** Empty option value — no default to DI; user must choose or leave unset. */
-const EMPTY_VALUE = ""
+/** Placeholder option value (Radix Select forbids empty string on SelectItem). */
+const EMPTY_VALUE = "__none__"
 
 type Props = {
   value: string
