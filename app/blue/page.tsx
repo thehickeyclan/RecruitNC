@@ -6,7 +6,6 @@ import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { getBlueContent } from "@/lib/blue-content"
 import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
-import { BlueAlumniClient } from "./blue-alumni-client"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
@@ -381,20 +380,6 @@ export default async function BluePage() {
               Super32 / Ironman All-Americans, and commits across D1, D2, D3, NAIA, and Juco.
             </p>
             <BlueRosterPlaceholder />
-          </section>
-
-          {/* 13. Blue Alumni */}
-          <section id="alumni">
-            <p className="mb-2 text-right text-xs text-amber-600" data-page-version="blue-2026-02-09">
-              Divisions from college_division_mappings
-            </p>
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Alumni</h2>
-            <p className="mb-6 leading-relaxed text-[#03154C]/90">
-              Alumni matter. They return during breaks and summer, scrap live with current
-              members, and mentor the next generation. Blue is a program, not a one-time
-              experience—alumni stay connected and give back.
-            </p>
-            <BlueAlumniClient />
           </section>
 
           {/* 14. Competition & Schedule */}
