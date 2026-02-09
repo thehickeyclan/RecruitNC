@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { standardizeDivision } from "@/lib/division-standardizer"
 import { CANONICAL_DIVISIONS_FULL, type CanonicalDivisionFull } from "@/lib/division-display"
 
@@ -28,14 +28,31 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
 
   const collegeLower = raw.toLowerCase()
 
-  // Exact match
-  let division = divisionMappingsCache[collegeLower]
+  // Resolve common aliases to a name we have in the table
+  const aliasToCanonical: Record<string, string> = {
+    "unc": "unc chapel hill",
+    "north carolina": "unc chapel hill",
+    "university of north carolina": "unc chapel hill",
+    "nc state": "nc state",
+    "north carolina state": "nc state",
+    "ncsu": "nc state",
+    "app state": "appalachian state",
+    "appalachian": "appalachian state",
+    "uncp": "unc pembroke",
+    "pembroke": "unc pembroke",
+    "wake tech": "wake tech",
+    "waketech": "wake tech",
+  }
+  const lookupName = aliasToCanonical[collegeLower] ?? collegeLower
 
-  // Partial match (e.g. "Appalachian State" vs "App State")
+  // Exact match
+  let division = divisionMappingsCache[lookupName]
+
+  // Partial match (e.g. "Appalachian State University" vs "App State")
   if (!division) {
     const keys = Object.keys(divisionMappingsCache)
     const matchingKey = keys.find(
-      (key) => collegeLower.includes(key) || key.includes(collegeLower),
+      (key) => lookupName.includes(key) || key.includes(lookupName),
     )
     if (matchingKey) division = divisionMappingsCache[matchingKey]
   }
@@ -45,7 +62,7 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
 }
 
 async function refreshDivisionMappingsCache() {
-  const supabase = createClient()
+  const supabase = createAdminClient()
   const merged: Record<string, string> = {}
 
   try {
