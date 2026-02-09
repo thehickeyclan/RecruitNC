@@ -15,15 +15,25 @@ function bucketDivision(division: string | null | undefined): "D1" | "D2" | "D3"
   return null
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const yearParam = searchParams.get("year")
+
     const supabase = await createClient()
-    const { data: rows, error } = await supabase
+    let query = supabase
       .from("athletes")
       .select("id, college_id, graduationyear, gender")
       .not("college", "is", null)
       .neq("college", "")
       .or("is_prospect.is.null,is_prospect.eq.false")
+
+    if (yearParam && yearParam !== "all") {
+      const y = Number.parseInt(yearParam, 10)
+      if (Number.isFinite(y)) query = query.eq("graduationyear", y)
+    }
+
+    const { data: rows, error } = await query
 
     if (error) {
       console.error("[commitment-stats]", error)

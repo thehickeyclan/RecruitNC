@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { BlueAlumnus } from "@/lib/blue-alumni"
 
 const GOLD = "#D3B574"
@@ -44,7 +45,21 @@ export function BlueAlumniTable({ alumni }: Props) {
                 </td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.graduationyear}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.highschool || "—"}</td>
-                <td className="px-4 py-3 text-[#03154C]/90">{row.college || "—"}</td>
+                <td className="px-4 py-3 text-[#03154C]/90">
+                  <span className="inline-flex items-center gap-2">
+                    {row.college_logo_url ? (
+                      <Image
+                        src={row.college_logo_url}
+                        alt=""
+                        width={24}
+                        height={24}
+                        className="h-6 w-6 rounded object-contain flex-shrink-0"
+                        unoptimized
+                      />
+                    ) : null}
+                    <span>{row.college || "—"}</span>
+                  </span>
+                </td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.division || "—"}</td>
               </tr>
             ))}

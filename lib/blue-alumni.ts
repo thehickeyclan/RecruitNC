@@ -9,6 +9,7 @@ export type BlueAlumnus = {
   graduationyear: number
   highschool: string
   college: string
+  college_logo_url?: string | null
   division: string
 }
 
@@ -48,12 +49,14 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
       const collegeRow = row.college_id ? collegesMap.get(row.college_id) : null
       const collegeName = collegeRow?.name || row.college || ""
       const division = collegeRow?.division ?? ""
+      const college_logo_url = collegeRow?.logo_url ?? null
       return {
         id: row.id ?? "",
         name: row.name ?? "",
         graduationyear: Number(row.graduationyear) || 0,
         highschool: row.highschool ?? "",
         college: collegeName,
+        college_logo_url,
         division,
       }
     })

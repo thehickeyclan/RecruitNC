@@ -104,3 +104,13 @@ ALTER TABLE athletes DROP COLUMN IF EXISTS college;
 - **colleges.division** is a single text value per college (e.g. `"NCAA Division II"`). It starts as `''` after backfill.
 - **Where to set divisions:** Admin → **Colleges (divisions)** (`/admin/colleges`). That page lists all rows from the `colleges` table; use the dropdown per row to set division. The app shows `colleges.division` everywhere.
 - Optional: run a one-time update from a spreadsheet or list of (college name, division) if you have one.
+
+---
+
+## How new colleges work
+
+- **Colleges table** is the single source of truth. Rows are created by:
+  1. **Backfill** (Steps 3–4) — one row per distinct `athletes.college` at migration time.
+  2. **Admin → Colleges (divisions)** — there is no “add college” form on that page yet; add new rows in **Supabase → Table Editor → colleges** (insert `name`, set `division` on the Colleges admin page).
+  3. **Athlete admin** — the college field is a **dropdown** that lists existing colleges from the `colleges` table. Choosing one sets `athletes.college_id` and `athletes.college` (name). If the school isn’t in the list, add it in Supabase (or Admin) first, then pick it for the athlete.
+- **New commit with a brand‑new school:** Add the college row (Supabase or a future “Add college” in Admin), then in Athlete edit use the college dropdown to select it. That links the athlete to the college so division and name stay in sync.

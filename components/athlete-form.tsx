@@ -151,6 +151,7 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
 
     // College info - only populate if not a prospect
     college: initialData?.is_prospect ? "" : initialData?.college || "",
+    college_id: initialData?.college_id ?? "",
     commitmentDate: initialData?.is_prospect
       ? ""
       : initialData?.commitmentdate
@@ -214,8 +215,33 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
 
   const [activeTab, setActiveTab] = useState("basic")
   const [renderError, setRenderError] = useState<string | null>(null)
+  const [collegeList, setCollegeList] = useState<{ id: string; name: string }[]>([])
 
   const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchColleges = async () => {
+      try {
+        const res = await fetch("/api/admin/colleges", { cache: "no-store" })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.colleges)) {
+          const list = data.colleges.map((c: any) => ({ id: c.id, name: c.name }))
+          setCollegeList(list)
+          // If we have a college name but no college_id (e.g. legacy), try to match
+          const currentCollege = initialData?.college?.trim()
+          if (currentCollege && !initialData?.college_id && list.length) {
+            const match = list.find((c) => c.name.trim().toLowerCase() === currentCollege.toLowerCase())
+            if (match) {
+              setFormData((prev) => ({ ...prev, college_id: match.id, college: match.name }))
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchColleges()
+  }, [initialData?.college, initialData?.college_id])
 
   useEffect(() => {
     const fetchWrestlingClubs = async () => {
@@ -393,6 +419,7 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
         highSchoolDivision: safeTrim(formData.highSchoolDivision, initialData?.highSchoolDivision),
         highSchoolLogoUrl: safeTrim(formData.highSchoolLogoUrl, initialData?.highSchoolLogoUrl),
         college: safeTrim(formData.college, initialData?.college),
+        college_id: formData.college_id || null,
         commitmentDate: safeTrim(formData.commitmentDate, initialData?.commitmentDate),
         wrestlingClub: safeTrim(formData.wrestlingClub, initialData?.wrestlingClub),
         customWrestlingClub: safeTrim(formData.customWrestlingClub, initialData?.customWrestlingClub),
@@ -477,6 +504,7 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
       ...prev,
       isProspect: checked,
       college: checked ? "" : prev.college,
+      college_id: checked ? "" : prev.college_id,
       commitmentDate: checked ? "" : prev.commitmentDate,
       commitmentPhotoUrl: checked ? "" : prev.commitmentPhotoUrl,
       collegeLogoUrl: checked ? "" : prev.collegeLogoUrl,
@@ -849,14 +877,27 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                     {(formData.recruiting_status === "Committed" ||
                       formData.recruiting_status === "College Athlete") && <span className="text-red-500">*</span>}
                   </Label>
-                  <Input
-                    id="college"
-                    name="college"
-                    value={formData.college}
-                    onChange={handleChange}
-                    placeholder="Enter college name"
+                  <Select
+                    value={formData.college_id || "__none__"}
+                    onValueChange={(value) => {
+                      const id = value === "__none__" ? "" : value
+                      const name = id ? collegeList.find((c) => c.id === id)?.name ?? "" : ""
+                      setFormData((prev) => ({ ...prev, college_id: id, college: name }))
+                    }}
                     disabled={formData.recruiting_status === "Uncommitted"}
-                  />
+                  >
+                    <SelectTrigger id="college" className={validationErrors.college ? "border-red-500" : ""}>
+                      <SelectValue placeholder="Select college" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Select college —</SelectItem>
+                      {collegeList.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {validationErrors.college && <p className="text-sm text-red-500 mt-1">{validationErrors.college}</p>}
                 </div>
 
@@ -1415,6 +1456,7 @@ interface AthleteFormData {
   collegeWeightClass: string
   highSchool: string
   college: string
+  college_id: string
   commitmentDate: string
   isProspect: boolean
   customWrestlingClub: string

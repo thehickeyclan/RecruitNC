@@ -76,26 +76,27 @@ export default function AthletesPage() {
     fetchAthletes()
   }, [selectedGender, selectedYear, selectedDivision])
 
-  // Fetch stats based on selected year
+  // Fetch stats from commitment-stats (division from colleges table); supports year filter
   useEffect(() => {
     async function fetchStats() {
       try {
         setStatsLoading(true)
         const yearParam = selectedYear !== "all" ? `?year=${selectedYear}` : ""
-        const response = await fetch(`/api/stats${yearParam}`)
+        const response = await fetch(`/api/commitment-stats${yearParam}`, { cache: "no-store" })
         if (response.ok) {
           const data = await response.json()
-          if (data.success) {
+          if (data.success && data.stats) {
+            const s = data.stats
             setStats({
-              total: data.stats.totalAthletes || 0,
-              male: data.stats.genderBreakdown?.male || 0,
-              female: data.stats.genderBreakdown?.female || 0,
+              total: s.totalCommitments || 0,
+              male: s.byGender?.male || 0,
+              female: s.byGender?.female || 0,
               divisions: {
-                D1: data.stats.divisionBreakdown?.D1 || 0,
-                D2: data.stats.divisionBreakdown?.D2 || 0,
-                D3: data.stats.divisionBreakdown?.D3 || 0,
-                NAIA: data.stats.divisionBreakdown?.NAIA || 0,
-                NJCAA: data.stats.divisionBreakdown?.NJCAA || 0,
+                D1: s.byDivision?.D1 || 0,
+                D2: s.byDivision?.D2 || 0,
+                D3: s.byDivision?.D3 || 0,
+                NAIA: s.byDivision?.NAIA || 0,
+                NJCAA: s.byDivision?.NJCAA || 0,
               },
             })
           }

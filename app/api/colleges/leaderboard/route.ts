@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { getCollegesByIds } from "@/lib/colleges"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from("athletes")
-      .select("college, highschool, gender, graduationyear, commitmentdate, rankings, division, prospect_ranking")
+      .select("college, college_id, highschool, gender, graduationyear, commitmentdate, rankings, prospect_ranking")
       .not("college", "is", null)
       .not("highschool", "is", null)
 
@@ -108,6 +109,11 @@ export async function GET(request: NextRequest) {
         message: "No athlete data found for the selected filters",
       })
     }
+
+    // Resolve division from colleges table (athletes.division column no longer exists)
+    const collegeIds = [...new Set((athletes as any[]).map((a) => a.college_id).filter(Boolean))]
+    const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
+    const getDivisionForAthlete = (a: any) => (a.college_id ? collegesMap.get(a.college_id)?.division : null) ?? null
 
     // Process athlete data to create college statistics
     const collegeStats = new Map<
@@ -273,8 +279,8 @@ export async function GET(request: NextRequest) {
       const stats = collegeStats.get(canonicalName)!
       stats.total_commits++
 
-      // Normalize athlete's division from their College tab Division field
-      const normalizedAthleteDivision = normalizeDivision(athlete.division)
+      // Division comes from colleges table via college_id (athletes.division no longer exists)
+      const normalizedAthleteDivision = normalizeDivision(getDivisionForAthlete(athlete))
 
       // Track division frequency to determine most common division for the college
       if (normalizedAthleteDivision !== "Unknown") {
