@@ -51,38 +51,73 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
   return ""
 }
 
+function buildMergedFromRows(
+  rows: { college_name?: unknown; division?: unknown; collegeName?: unknown }[],
+  toCanonical: (d: string) => string,
+): Record<string, string> {
+  const merged: Record<string, string> = {}
+  if (!rows?.length) return merged
+  const canonicalToDivision: Record<string, string> = {}
+  for (const row of rows) {
+    // Support both snake_case (Supabase default) and camelCase
+    const rawName = (
+      (row.college_name ?? row.collegeName ?? "") as string
+    ).toString().trim()
+    const rawDiv = (row.division ?? "").toString().trim()
+    if (!rawName) continue
+    // Use canonical division if recognized; otherwise keep standardized or raw so we don't drop rows
+    const div =
+      toCanonical(rawDiv) ||
+      (rawDiv.toLowerCase() === "unknown" ? "Unknown" : "") ||
+      standardizeDivision(rawDiv) ||
+      rawDiv
+    if (!div) continue
+    const canonical = normalizeCollegeToCanonical(rawName)
+    const isCanonicalRow = rawName.toLowerCase() === canonical.toLowerCase()
+    if (!canonicalToDivision[canonical] || isCanonicalRow) canonicalToDivision[canonical] = div
+  }
+  for (const [canonical, div] of Object.entries(canonicalToDivision)) {
+    // Always add exact canonical key (lowercase) so DB names match
+    const cLower = canonical.toLowerCase()
+    merged[cLower] = div
+    for (const variant of getLookupKeysForCanonical(canonical)) {
+      merged[variant] = div
+    }
+  }
+  return merged
+}
+
 async function refreshDivisionMappingsCache() {
   const supabase = createAdminClient()
-  const merged: Record<string, string> = {}
+  const toCanonical = (d: string) => {
+    const s = standardizeDivision(d)
+    return CANONICAL_DIVISIONS.includes(s as CanonicalDivision) ? s : ""
+  }
 
   try {
-    const { data: mappingRows, error: mapError } = await supabase
+    // Primary: college_divisions (admin simple mapping)
+    const { data: divisionsRows, error: divError } = await supabase
       .from("college_divisions")
       .select("college_name, division")
 
-    const toCanonical = (d: string) => {
-      const s = standardizeDivision(d)
-      return CANONICAL_DIVISIONS.includes(s as CanonicalDivision) ? s : ""
-    }
+    let merged = buildMergedFromRows(divisionsRows ?? [], toCanonical)
 
-    if (!mapError && mappingRows?.length) {
-      // One division per canonical school. If we have both "Mount Olive" = DII and
-      // "University of Mount Olive" = DI, prefer the row whose name is the canonical form.
-      const canonicalToDivision: Record<string, string> = {}
-      for (const row of mappingRows) {
-        const rawName = (row.college_name ?? "").toString().trim()
-        const rawDiv = (row.division ?? "").toString().trim()
-        const div = toCanonical(rawDiv) || (rawDiv.toLowerCase() === "unknown" ? "Unknown" : "")
-        if (!rawName || !div) continue
-        const canonical = normalizeCollegeToCanonical(rawName)
-        const isCanonicalRow = rawName.toLowerCase() === canonical.toLowerCase()
-        if (!canonicalToDivision[canonical] || isCanonicalRow) canonicalToDivision[canonical] = div
+    // Fallback: if college_divisions empty or failed, use college_division_mappings so divisions don't all show Unknown
+    if (Object.keys(merged).length === 0 || divError) {
+      const { data: mappingRows, error: mapError } = await supabase
+        .from("college_division_mappings")
+        .select("college_name, division")
+      if (!mapError && mappingRows?.length) {
+        merged = buildMergedFromRows(mappingRows, toCanonical)
       }
-      // Spread to all variant keys so "Mount Olive" and "University of Mount Olive" resolve the same
-      for (const [canonical, div] of Object.entries(canonicalToDivision)) {
-        for (const variant of getLookupKeysForCanonical(canonical)) {
-          merged[variant] = div
-        }
+    } else if (Object.keys(merged).length > 0) {
+      // college_divisions had data; fill any missing colleges from college_division_mappings
+      const { data: mappingRows } = await supabase
+        .from("college_division_mappings")
+        .select("college_name, division")
+      const fromMappings = buildMergedFromRows(mappingRows ?? [], toCanonical)
+      for (const [key, div] of Object.entries(fromMappings)) {
+        if (!merged[key]) merged[key] = div
       }
     }
 
