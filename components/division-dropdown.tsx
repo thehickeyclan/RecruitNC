@@ -3,7 +3,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CANONICAL_DIVISIONS_FULL, normalizeToCanonicalFull } from "@/lib/division-display"
 
-const EMPTY_VALUE = "__empty__"
+/** Empty option value — no default to DI; user must choose or leave unset. */
+const EMPTY_VALUE = ""
 
 type Props = {
   value: string
@@ -14,7 +15,7 @@ type Props = {
   disabled?: boolean
 }
 
-/** Division dropdown: only canonical options (NCAA Division I/II/III, NAIA, NJCAA, Club). Prevents inconsistent free-text. */
+/** Division dropdown: only canonical options (NCAA Division I/II/III, NAIA, NJCAA, Club). No default to DI. */
 export function DivisionDropdown({
   value,
   onValueChange,

@@ -4,6 +4,7 @@ import { unstable_noStore } from "next/cache"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Metadata } from "next"
 import { Star } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
 import { getBlueContent } from "@/lib/blue-content"
 import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
 import { BlueAlumniTable } from "./blue-alumni-table"
@@ -32,6 +33,13 @@ export const metadata: Metadata = {
 
 export default async function BluePage() {
   unstable_noStore()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let isAdmin = false
+  if (user) {
+    const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
+    isAdmin = !!profile?.is_admin
+  }
   const [images, alumni] = await Promise.all([getBlueContent(), getBlueAlumni()])
   return (
     <div className="min-h-screen bg-white">
@@ -392,7 +400,7 @@ export default async function BluePage() {
               members, and mentor the next generation. Blue is a program, not a one-time
               experience—alumni stay connected and give back.
             </p>
-            <BlueAlumniTable alumni={alumni} />
+            <BlueAlumniTable alumni={alumni} isAdmin={isAdmin} />
           </section>
 
           {/* 14. Competition & Schedule */}

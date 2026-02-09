@@ -1,14 +1,15 @@
 import Link from "next/link"
 import type { BlueAlumnus } from "@/lib/blue-alumni"
-import { getDivisionDisplayShort } from "@/lib/division-display"
+import { BlueAlumniDivisionCell } from "./blue-alumni-division-cell"
 
 const GOLD = "#D3B574"
 
 type Props = {
   alumni: BlueAlumnus[]
+  isAdmin?: boolean
 }
 
-export function BlueAlumniTable({ alumni }: Props) {
+export function BlueAlumniTable({ alumni, isAdmin = false }: Props) {
   if (alumni.length === 0) {
     return (
       <div className="rounded-xl border-2 border-[#D3B574]/40 bg-white/50 p-8 text-center">
@@ -46,7 +47,12 @@ export function BlueAlumniTable({ alumni }: Props) {
                 <td className="px-4 py-3 text-[#03154C]/90">{row.graduationyear}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.highschool || "—"}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.college || "—"}</td>
-                <td className="px-4 py-3 text-[#03154C]/90">{getDivisionDisplayShort(row.division)}</td>
+                <BlueAlumniDivisionCell
+                  athleteId={row.id}
+                  college={row.college}
+                  division={row.division}
+                  editable={isAdmin}
+                />
               </tr>
             ))}
           </tbody>
