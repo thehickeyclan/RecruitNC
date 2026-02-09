@@ -86,8 +86,18 @@ export async function GET(request: Request) {
           graduationyear: athlete.graduationyear || 2025,
           photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
           weightclass: athlete.weightclass || "Unknown",
-          college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
-          projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
+          college_weight_class:
+            athlete.college_weight_class != null
+              ? String(athlete.college_weight_class)
+              : athlete.projected_weight != null
+                ? String(athlete.projected_weight)
+                : null,
+          projected_weight:
+            athlete.projected_weight != null
+              ? String(athlete.projected_weight)
+              : athlete.college_weight_class != null
+                ? String(athlete.college_weight_class)
+                : null,
           hs_weight_class: athlete.weightclass || "Unknown",
           wrestlingclub: athlete.wrestlingClub || "",
           club: athlete.wrestlingClub || "",
@@ -233,8 +243,18 @@ export async function GET(request: Request) {
         graduationyear: athlete.graduationyear || targetYear,
         photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
         weightclass: athlete.weightclass || "Unknown",
-        college_weight_class: athlete.college_weight_class ?? athlete.projected_weight ?? null,
-        projected_weight: athlete.projected_weight ?? athlete.college_weight_class ?? null,
+        college_weight_class:
+          athlete.college_weight_class != null
+            ? String(athlete.college_weight_class)
+            : athlete.projected_weight != null
+              ? String(athlete.projected_weight)
+              : null,
+        projected_weight:
+          athlete.projected_weight != null
+            ? String(athlete.projected_weight)
+            : athlete.college_weight_class != null
+              ? String(athlete.college_weight_class)
+              : null,
         hs_weight_class: athlete.weightclass || "Unknown",
         wrestlingclub: athlete.wrestlingClub || athlete.wrestlingclub || "",
         club: athlete.wrestlingClub || athlete.wrestlingclub || "",

@@ -540,7 +540,9 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                   )}
                   <p className="text-xs text-gray-600">
                     <span className="font-semibold">Projected Weight:</span>{" "}
-                    {athlete.college_weight_class ? `${athlete.college_weight_class} lbs` : "TBD"}
+                    {athlete.college_weight_class != null && String(athlete.college_weight_class).trim() !== ""
+                      ? `${String(athlete.college_weight_class)} lbs`
+                      : "TBD"}
                   </p>
                   {athlete.commitmentdate && (
                     <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">

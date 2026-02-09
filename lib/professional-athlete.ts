@@ -57,11 +57,14 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
       ? Number(input?.class_year)
       : undefined)
 
+  const rawWeightclass = input?.weightclass ?? input?.weight_class ?? input?.weight ?? undefined
   const weightclass: string | number | undefined =
-    input?.weightclass ?? input?.weight_class ?? input?.weight ?? undefined
+    rawWeightclass != null && rawWeightclass !== "" ? rawWeightclass : undefined
 
-  const college_weight_class: string | number | undefined =
+  const rawCollegeWeight =
     input?.college_weight_class ?? input?.collegeWeightClass ?? input?.projected_weight ?? undefined
+  const college_weight_class: string | number | undefined =
+    rawCollegeWeight != null && rawCollegeWeight !== "" ? rawCollegeWeight : undefined
 
   const commitmentdate: string | undefined = input?.commitmentdate ?? input?.commitment_date ?? undefined
 
