@@ -43,17 +43,17 @@ const VARIANT_TO_CANONICAL: Record<string, string> = {
   "wake tech": "Wake Tech",
   "waketech": "Wake Tech",
 
-  // Roanoke, Lander, etc. (so they match table)
-  "roanoke": "Roanoke College",
-  "roanoke college": "Roanoke College",
-  "lander": "Lander University",
-  "lander university": "Lander University",
-  "presbyterian": "Presbyterian College",
-  "presbyterian college": "Presbyterian College",
+  // One row per school: short canonical name (table has "Roanoke" = D3)
+  "roanoke": "Roanoke",
+  "roanoke college": "Roanoke",
+  "lander": "Lander",
+  "lander university": "Lander",
+  "presbyterian": "Presbyterian",
+  "presbyterian college": "Presbyterian",
   "mount union": "Mount Union",
   "university of mount union": "Mount Union",
-  "belmont abbey": "Belmont Abbey College",
-  "belmont abbey college": "Belmont Abbey College",
+  "belmont abbey": "Belmont Abbey",
+  "belmont abbey college": "Belmont Abbey",
 }
 
 /**

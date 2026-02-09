@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getDivisionFilterValues } from "@/lib/division-display"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
+import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 30 // Cache for 30 seconds to reduce API calls
@@ -174,25 +175,18 @@ export async function GET(request: Request) {
 
     console.log(`🤼 Athletes API: Processing ${data.length} athlete records`)
 
-    // Map the database data to our format with proper field mapping
-    const mappedAthletes = data.map((athlete) => {
-      const photoUrl = athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png"
+    // Division only from college_division_mappings (single source of truth). Roanoke College → Roanoke → table.
+    const mappedAthletes = await Promise.all(
+      data.map(async (athlete) => {
+        const photoUrl = athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png"
+        const division = await getDivisionFromMappings(athlete.college ?? "") || ""
 
-      // Log photo URL info for first 3 athletes to debug
-      if (data.indexOf(athlete) < 3) {
-        console.log(`[v0] Photo debug for ${athlete.name}:`, {
-          photourl: athlete.photourl,
-          commitmentPhotoUrl: athlete.commitmentPhotoUrl,
-          finalPhotoUrl: photoUrl,
-        })
-      }
-
-      return {
-        id: athlete.id,
-        name: athlete.name,
-        highschool: athlete.highschool || "",
-        college: athlete.college || "",
-        division: athlete.division || "",
+        return {
+          id: athlete.id,
+          name: athlete.name,
+          highschool: athlete.highschool || "",
+          college: athlete.college || "",
+          division,
         graduationyear: athlete.graduationyear || 0,
         photourl: photoUrl,
         photoUrl: photoUrl,
@@ -220,8 +214,9 @@ export async function GET(request: Request) {
         high_school: athlete.highschool || "",
         wrestling_club: athlete.wrestlingClub || "",
         commitment_date: athlete.commitmentdate || "",
-      }
-    })
+        }
+      }),
+    )
 
     console.log(`✅ Athletes API: Successfully processed ${mappedAthletes.length} athletes`)
 

@@ -47,10 +47,9 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
     wrestlingClubLogoUrl: initialData?.wrestlingClubLogoUrl || "",
     ncUnitedTeam: initialData?.ncUnitedTeam || "none",
 
-    // College Commitment
+    // College Commitment (division comes from college_division_mappings table only)
     college: initialData?.college || "",
     collegeLogoUrl: initialData?.collegeLogoUrl || "",
-    division: initialData?.division || "",
     commitmentDate: initialData?.commitmentDate || "",
 
     // Achievements & Stats
@@ -117,9 +116,10 @@ export function AthleteFormComplete({ onSubmit, initialData }: AthleteFormComple
 
       // Filter out empty achievements
       const filteredAchievements = (formData.achievements || []).filter((a) => a.trim() !== "")
+      const { division: _omitDivision, ...payload } = formData
 
       await onSubmit({
-        ...formData,
+        ...payload,
         achievements: filteredAchievements,
         graduationYear: Number(formData.graduationYear),
         weight: formData.weight ? Number(formData.weight) : undefined,

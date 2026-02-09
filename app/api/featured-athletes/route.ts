@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 60 // Cache for 60 seconds
@@ -56,12 +57,15 @@ export async function GET(request: Request) {
         const athletes = specificNamesResult.data
         console.log(`✅ Featured Athletes API: Found ${athletes.length} specific 2025 athletes`)
 
-        const mappedAthletes = athletes.map((athlete) => ({
-          id: athlete.id?.toString() || "",
-          name: athlete.name || "Unknown",
-          highschool: athlete.highschool || "Unknown High School",
-          college: athlete.college || "Unknown College",
-          division: athlete.division || "Unknown Division",
+        const mappedAthletes = await Promise.all(
+          athletes.map(async (athlete) => {
+            const division = (await getDivisionFromMappings(athlete.college ?? "")) || athlete.division || "Unknown Division"
+            return {
+              id: athlete.id?.toString() || "",
+              name: athlete.name || "Unknown",
+              highschool: athlete.highschool || "Unknown High School",
+              college: athlete.college || "Unknown College",
+              division,
           graduationyear: athlete.graduationyear || 2025,
           photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
           weightclass: athlete.weightclass || "Unknown",
@@ -82,7 +86,9 @@ export async function GET(request: Request) {
           team: athlete.team || "",
           gender: athlete.gender || "Male",
           commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
-        }))
+            }
+          }),
+        )
 
         // Ensure we have all 3 athletes, fill with fallbacks if needed
         const athleteNames = mappedAthletes.map(a => a.name.toLowerCase())
@@ -207,12 +213,15 @@ export async function GET(request: Request) {
         })
         .slice(0, 3)
 
-      const recentCommitmentAthletes = sortedCommitments.map((athlete: any) => ({
-        id: athlete.id?.toString() || "",
-        name: athlete.name || "Unknown",
-        highschool: athlete.highschool || "Unknown High School",
-        college: athlete.college || "Unknown College",
-        division: athlete.division || "Unknown Division",
+      const recentCommitmentAthletes = await Promise.all(
+        sortedCommitments.map(async (athlete: any) => {
+          const division = (await getDivisionFromMappings(athlete.college ?? "")) || athlete.division || "Unknown Division"
+          return {
+            id: athlete.id?.toString() || "",
+            name: athlete.name || "Unknown",
+            highschool: athlete.highschool || "Unknown High School",
+            college: athlete.college || "Unknown College",
+            division,
         graduationyear: athlete.graduationyear || targetYear,
         photourl: athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png",
         weightclass: athlete.weightclass || "Unknown",
@@ -233,7 +242,9 @@ export async function GET(request: Request) {
         team: athlete.team || "",
         gender: athlete.gender || "Male",
         commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
-      }))
+          }
+        }),
+      )
 
       if (recentCommitmentAthletes.length > 0) {
         return NextResponse.json(

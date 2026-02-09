@@ -44,8 +44,11 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
     if (matchingKey) division = divisionMappingsCache[matchingKey]
   }
 
-  const normalized = division ? standardizeDivision(division) : ""
-  return CANONICAL_DIVISIONS.includes(normalized as CanonicalDivision) ? normalized : ""
+  if (!division) return ""
+  const normalized = standardizeDivision(division)
+  if (CANONICAL_DIVISIONS.includes(normalized as CanonicalDivision)) return normalized
+  if ((division || "").trim().toLowerCase() === "unknown") return "Unknown"
+  return ""
 }
 
 async function refreshDivisionMappingsCache() {
@@ -65,7 +68,8 @@ async function refreshDivisionMappingsCache() {
     if (!mapError && mappingRows?.length) {
       for (const row of mappingRows) {
         const name = (row.college_name ?? "").toString().trim().toLowerCase()
-        const div = toCanonical(row.division ?? "")
+        const rawDiv = (row.division ?? "").toString().trim()
+        const div = toCanonical(rawDiv) || (rawDiv.toLowerCase() === "unknown" ? "Unknown" : "")
         if (name && div) merged[name] = div
       }
     }

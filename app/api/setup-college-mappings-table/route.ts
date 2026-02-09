@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { clearDivisionMappingsCache } from "@/lib/get-division-from-mappings"
+import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -62,12 +63,10 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       { college_name: "Presbyterian", division: "NCAA Division I" },
       { college_name: "UNC Pembroke", division: "NCAA Division II" },
       { college_name: "Mount Olive", division: "NCAA Division II" },
-      { college_name: "University of Mount Olive", division: "NCAA Division II" },
       { college_name: "Belmont Abbey", division: "NCAA Division II" },
       { college_name: "Lander", division: "NCAA Division II" },
       { college_name: "Greensboro College", division: "NCAA Division III" },
       { college_name: "Guilford College", division: "NCAA Division III" },
-      { college_name: "Roanoke College", division: "NCAA Division III" },
       { college_name: "Roanoke", division: "NCAA Division III" },
       { college_name: "Mount Union", division: "NCAA Division III" },
       { college_name: "Montreat College", division: "NAIA" },
@@ -128,12 +127,27 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       throw upsertError
     }
 
+    // Inventory: add every college from athletes to the table (Unknown if not already present)
+    const { data: athleteRows } = await supabase.from("athletes").select("college").not("college", "is", null).neq("college", "")
+    const canonicalSet = new Set<string>()
+    for (const row of athleteRows ?? []) {
+      const c = normalizeCollegeToCanonical(row.college)
+      if (c) canonicalSet.add(c)
+    }
+    const { data: existingRows } = await supabase.from("college_division_mappings").select("college_name")
+    const existingSet = new Set((existingRows ?? []).map((r) => (r.college_name ?? "").trim()).filter(Boolean))
+    const toAdd = [...canonicalSet].filter((name) => !existingSet.has(name)).map((college_name) => ({ college_name, division: "Unknown" }))
+    if (toAdd.length > 0) {
+      await supabase.from("college_division_mappings").upsert(toAdd, { onConflict: "college_name" })
+    }
+
     clearDivisionMappingsCache()
 
     return NextResponse.json({
       success: true,
-      message: "College division mappings updated (canonical list upserted). Refresh the Blue page.",
+      message: "College division mappings updated. Inventory: every college from athletes is in the table (Unknown = you set division in Supabase).",
       count: rowCount,
+      inventoryAdded: toAdd.length,
     })
   } catch (error) {
     console.error("Error setting up college mappings table:", error)

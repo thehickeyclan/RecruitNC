@@ -3,8 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getDivisionFromMappings, clearDivisionMappingsCache } from "@/lib/get-division-from-mappings"
 
 /**
- * POST: Set every athlete's division from college_division_mappings (single source of truth).
- * Resolves college name via canonical aliases, then looks up division in the table only.
+ * POST: Fill division only when athlete.division is empty. Never overwrite existing division
+ * (respects admin edits like Brock Sullivan → D3). Uses college_division_mappings for lookup.
  */
 export async function POST() {
   try {
@@ -32,16 +32,15 @@ export async function POST() {
       const college = (athlete.college ?? "").trim()
       if (!college) continue
 
+      const currentDivision = (athlete.division ?? "").trim()
+      if (currentDivision) continue // never overwrite — only fill when empty
+
       const correctDivision = await getDivisionFromMappings(college)
       if (!correctDivision) continue
 
-      const currentDivision = (athlete.division ?? "").trim()
-      const normalizedNew = correctDivision
-      if (currentDivision === normalizedNew) continue
-
       const { error: updateError } = await supabase
         .from("athletes")
-        .update({ division: normalizedNew })
+        .update({ division: correctDivision })
         .eq("id", athlete.id)
 
       if (updateError) {
@@ -52,8 +51,8 @@ export async function POST() {
       changes.push({
         id: athlete.id,
         college,
-        oldDivision: currentDivision || "(empty)",
-        newDivision: normalizedNew,
+        oldDivision: "(empty)",
+        newDivision: correctDivision,
       })
     }
 
