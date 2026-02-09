@@ -1,5 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
+import { unstable_noStore } from "next/cache"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Metadata } from "next"
 import { Star } from "lucide-react"
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
 }
 
 export default async function BluePage() {
+  unstable_noStore() // prevent cached HTML so Blue Alumni divisions are always fresh
   const [images, alumni] = await Promise.all([getBlueContent(), getBlueAlumni()])
   return (
     <div className="min-h-screen bg-white">
