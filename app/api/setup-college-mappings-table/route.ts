@@ -7,10 +7,10 @@ export async function POST() {
   try {
     console.log("Setting up college mappings table...")
 
-    // First check if table exists by trying a simple query
-    const { data: existingData, error: checkError } = await supabase
+    // First check if table exists and get row count (count comes from response, not data, when head: true)
+    const { count, error: checkError } = await supabase
       .from("college_division_mappings")
-      .select("count", { count: "exact", head: true })
+      .select("college_name", { count: "exact", head: true })
 
     if (checkError) {
       if (checkError.message.includes("relation") && checkError.message.includes("does not exist")) {
@@ -51,10 +51,8 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       }
     }
 
-    // If we get here, table exists. Check if it has data
-    const { count } = existingData as any
-
-    if (count === 0) {
+    const rowCount = count ?? 0
+    if (rowCount === 0) {
       console.log("Table exists but is empty, seeding with initial data...")
 
       const initialColleges = [
@@ -88,7 +86,7 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
     return NextResponse.json({
       success: true,
       message: "College division mappings table already exists and has data",
-      count: count,
+      count: rowCount,
     })
   } catch (error) {
     console.error("Error setting up college mappings table:", error)
