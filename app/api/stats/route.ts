@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export const dynamic = "force-dynamic"
 
@@ -217,7 +218,13 @@ export async function GET(req: Request) {
       other: 0,
     }
 
-    for (const a of athletes) {
+    // Resolve division from college_division_mappings (single source of truth)
+    const divisionStrings = await Promise.all(
+      athletes.map((a) => getDivisionFromMappings((a as AnyAthlete).college ?? "")),
+    )
+
+    for (let i = 0; i < athletes.length; i++) {
+      const a = athletes[i]
       total++
 
       // Gender
@@ -225,8 +232,8 @@ export async function GET(req: Request) {
       if (g === "male") male++
       else if (g === "female") female++
 
-      // Division
-      const div = extractDivision(a)
+      // Division (from mappings, then normalize to bucket)
+      const div = normalizeDivision(divisionStrings[i])
       if (div === "DI") DI++
       else if (div === "DII") DII++
       else if (div === "DIII") DIII++

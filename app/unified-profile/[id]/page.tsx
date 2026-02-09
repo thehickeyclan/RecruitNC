@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 import { AthleteDetail } from "@/components/athlete-detail"
+import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
@@ -73,6 +74,12 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     notFound()
   }
 
+  // Division from college_division_mappings (single source of truth) for card/profile display
+  const resolvedDivision = await getDivisionFromMappings(athlete.college ?? "")
+  const athleteWithDivision = resolvedDivision
+    ? { ...athlete, division: resolvedDivision }
+    : athlete
+
   const rawNchsaa = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
   const nchsaaResults = (rawNchsaa || []).map((r: any) => ({
     year: r.year,
@@ -106,7 +113,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     <div className="min-h-screen bg-gray-50">
       <ProfileViewTracker athleteId={athlete.id} athleteName={athlete.name || "Unknown"} />
       <AthleteDetail 
-        athlete={athlete} 
+        athlete={athleteWithDivision} 
         nchsaaResults={nchsaaResults} 
         currentUserId={currentUserId}
         tournamentResultsComponent={

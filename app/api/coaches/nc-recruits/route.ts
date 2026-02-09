@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 export async function GET(request: Request) {
   try {
@@ -344,30 +345,31 @@ export async function GET(request: Request) {
     console.log(`[NC Recruits API] ✅ Final results: ${ncAthletes.length} active NC athletes from ${activeAthletes.length} active recruits (out of ${athletes?.length || 0} total committed athletes) for school: ${schoolName}`)
     console.log(`[NC Recruits API] Athlete names:`, ncAthletes.map(a => a.name))
 
-    // Get pipeline_stage from college_coach_stars for each athlete
+    // Get pipeline_stage from college_coach_stars for each athlete; division from college_division_mappings only
     // DOUBLE-CHECK: Filter out any 2025 or earlier athletes that might have slipped through
-    const athletesWithStage = ncAthletes
-      .filter((athlete) => {
-        const graduationYear = athlete.graduationyear
-        const gradYearNum = typeof graduationYear === 'string' ? parseInt(graduationYear, 10) : graduationYear
-        
-        // STRICT FINAL CHECK: Must be a valid number AND >= minActiveYear
-        if (!gradYearNum || isNaN(gradYearNum)) {
-          console.log(`[NC Recruits API] 🚨 FINAL FILTER: Excluding ${athlete.name} - invalid graduation year: ${graduationYear}`)
-          return false
-        }
-        
-        const isActive = gradYearNum >= minActiveYear
-        if (!isActive) {
-          console.log(`[NC Recruits API] 🚨 FINAL FILTER: Excluding ${athlete.name} (class of ${graduationYear}/${gradYearNum}) - NOT >= ${minActiveYear}`)
-          return false
-        }
-        
-        return true
-      })
-      .map((athlete) => {
+    const filteredForStage = ncAthletes.filter((athlete) => {
+      const graduationYear = athlete.graduationyear
+      const gradYearNum = typeof graduationYear === 'string' ? parseInt(graduationYear, 10) : graduationYear
+
+      if (!gradYearNum || isNaN(gradYearNum)) {
+        console.log(`[NC Recruits API] 🚨 FINAL FILTER: Excluding ${athlete.name} - invalid graduation year: ${graduationYear}`)
+        return false
+      }
+
+      const isActive = gradYearNum >= minActiveYear
+      if (!isActive) {
+        console.log(`[NC Recruits API] 🚨 FINAL FILTER: Excluding ${athlete.name} (class of ${graduationYear}/${gradYearNum}) - NOT >= ${minActiveYear}`)
+        return false
+      }
+
+      return true
+    })
+
+    const athletesWithStage = await Promise.all(
+      filteredForStage.map(async (athlete) => {
         const star = committedStars?.find((s) => s.athlete_id === athlete.id)
         const pipelineStage = star?.pipeline_stage || athlete.recruiting_status || "Committed"
+        const division = await getDivisionFromMappings(athlete.college ?? "") || athlete.division || ""
 
         return {
           id: athlete.id,
@@ -376,10 +378,11 @@ export async function GET(request: Request) {
           weight: athlete.weightclass,
           highschool: athlete.highschool,
           college: athlete.college,
-          division: athlete.division,
+          division,
           status: pipelineStage,
         }
-      })
+      }),
+    )
 
     // Sort by year (descending), then name
     athletesWithStage.sort((a, b) => {
