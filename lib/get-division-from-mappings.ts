@@ -12,9 +12,8 @@ let lastCacheUpdate = 0
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
 /**
- * Resolve a college name to a canonical division using the single source of truth:
- * college_division_mappings (primary) and college_master + college_aliases (fallback).
- * Always returns one of: NCAA Division I, NCAA Division II, NCAA Division III, NAIA, NJCAA, Club (NCWA), or Unknown.
+ * Resolve a college name to a canonical division.
+ * Single source of truth: college_division_mappings only. To fix wrong divisions, update that table in Supabase.
  */
 export async function getDivisionFromMappings(collegeName: string): Promise<string> {
   const raw = collegeName?.trim()
@@ -73,7 +72,6 @@ async function refreshDivisionMappingsCache() {
   const merged: Record<string, string> = {}
 
   try {
-    // 1) college_division_mappings — primary source
     const { data: mappingRows, error: mapError } = await supabase
       .from("college_division_mappings")
       .select("college_name, division")
@@ -88,37 +86,6 @@ async function refreshDivisionMappingsCache() {
         const name = (row.college_name ?? "").toString().trim().toLowerCase()
         const div = toCanonical(row.division ?? "")
         if (name && div) merged[name] = div
-      }
-    }
-
-    // 2) college_master + college_aliases — fallback so one source has all colleges
-    const { data: masters, error: masterError } = await supabase
-      .from("college_master")
-      .select("id, canonical_name, display_name, division")
-
-    if (!masterError && masters?.length) {
-      const idToDivision: Record<number, string> = {}
-      for (const m of masters) {
-        const div = toCanonical(m.division ?? "")
-        idToDivision[m.id] = div
-        const can = (m.canonical_name ?? "").toString().trim().toLowerCase()
-        const dis = (m.display_name ?? "").toString().trim().toLowerCase()
-        if (can && div && !merged[can]) merged[can] = div
-        if (dis && div && dis !== can && !merged[dis]) merged[dis] = div
-      }
-
-      const { data: aliases } = await supabase
-        .from("college_aliases")
-        .select("alias_name, college_master_id")
-
-      if (aliases?.length) {
-        for (const a of aliases) {
-          const div = idToDivision[a.college_master_id]
-          if (div) {
-            const al = (a.alias_name ?? "").toString().trim().toLowerCase()
-            if (al && !merged[al]) merged[al] = div
-          }
-        }
       }
     }
 

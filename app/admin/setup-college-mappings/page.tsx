@@ -57,9 +57,9 @@ export default function SetupCollegeMappingsPage() {
               College division mappings
             </CardTitle>
             <CardDescription>
-              Seed or fix the <code className="text-xs bg-gray-100 px-1 rounded">college_division_mappings</code> table so Blue alumni
-              show the correct division. Safe to run more than once — when the table has data, this upserts the canonical list
-              (Roanoke → DIII, Lander, Presbyterian, Gardner-Webb, etc.) so wrong divisions get corrected.
+              Division is read <strong>only</strong> from <code className="text-xs bg-gray-100 px-1 rounded">college_division_mappings</code> — no other source.
+              This button seeds or upserts that table. To fix wrong divisions, edit that table in Supabase or run the SQL in{" "}
+              <code className="text-xs bg-gray-100 px-1 rounded">docs/fix-college-divisions-in-supabase.md</code>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -103,7 +103,7 @@ export default function SetupCollegeMappingsPage() {
               <p className="font-medium text-gray-700">How to update divisions</p>
               <ol className="list-decimal list-inside space-y-1">
                 <li>Click the button above to apply the built-in list (fixes Roanoke, Lander, Presbyterian, Mount Union, Gardner-Webb, etc.).</li>
-                <li>To fix other schools or add new ones: Supabase Dashboard → Table Editor → <code className="bg-gray-100 px-1 rounded">college_division_mappings</code>. Edit the <code className="bg-gray-100 px-1 rounded">division</code> column or add rows. Use exactly: <strong>NCAA Division I</strong>, <strong>NCAA Division II</strong>, <strong>NCAA Division III</strong>, <strong>NAIA</strong>, or <strong>NJCAA</strong>. <code className="bg-gray-100 px-1 rounded">college_name</code> should match what appears in athlete records (e.g. &quot;Gardner-Webb&quot; or &quot;Gardner Webb&quot; — add both if needed).</li>
+                <li>To fix wrong divisions: Supabase → Table Editor → <code className="bg-gray-100 px-1 rounded">college_division_mappings</code>. Edit <code className="bg-gray-100 px-1 rounded">division</code> or add rows. Or run the SQL in <code className="bg-gray-100 px-1 rounded">docs/fix-college-divisions-in-supabase.md</code> (SQL Editor). That table is the only source — the app does not use college_master for division.</li>
               </ol>
             </div>
           </CardContent>
