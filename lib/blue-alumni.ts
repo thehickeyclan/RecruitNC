@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -13,17 +14,16 @@ export type BlueAlumnus = {
 
 /**
  * Server-only: fetch Blue alumni (ncUnitedTeam = blue, graduation year 2025 and older).
- * Ordered by graduation year desc, then name.
+ * Division comes from central college_division_mappings (same as College tab), not athlete row.
  */
 const ALUMNI_CUTOFF_YEAR = 2025
 
 export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
   try {
     const supabase = createAdminClient()
-    // Select all needed columns; NC United column may be ncUnitedTeam or ncunitedteam depending on DB.
     const { data, error } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, highschool, college, division, ncUnitedTeam")
+      .select("id, name, graduationyear, highschool, college, ncUnitedTeam")
       .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
@@ -44,14 +44,17 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     }
     const blueAlumni = (data ?? []).filter(isBlue)
 
-    return blueAlumni.map((row: any) => ({
-      id: row.id ?? "",
-      name: row.name ?? "",
-      graduationyear: Number(row.graduationyear) || 0,
-      highschool: row.highschool ?? "",
-      college: row.college ?? "",
-      division: row.division ?? "",
-    }))
+    const withDivision = await Promise.all(
+      blueAlumni.map(async (row: any) => ({
+        id: row.id ?? "",
+        name: row.name ?? "",
+        graduationyear: Number(row.graduationyear) || 0,
+        highschool: row.highschool ?? "",
+        college: row.college ?? "",
+        division: await getDivisionFromMappings(row.college ?? ""),
+      })),
+    )
+    return withDivision
   } catch (e) {
     console.error("[blue-alumni] error:", e)
     return []
