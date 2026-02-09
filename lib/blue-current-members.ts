@@ -15,9 +15,14 @@ export type BlueCurrentMember = {
 }
 
 function isBlue(row: Record<string, unknown>) {
-  const raw = row?.ncUnitedTeam ?? row?.ncunitedteam ?? row?.nc_united_team ?? ""
+  const raw =
+    row?.ncUnitedTeam ??
+    row?.ncunitedteam ??
+    row?.nc_united_team ??
+    row?.team ??
+    ""
   const v = String(raw ?? "").toLowerCase().trim()
-  return v === "blue" || v === "both" || v.includes("blue")
+  return v === "blue" || v === "blue team" || v === "both" || v.includes("blue")
 }
 
 function placementNumber(value: unknown): number | null {

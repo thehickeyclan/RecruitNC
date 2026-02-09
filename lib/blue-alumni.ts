@@ -13,8 +13,7 @@ export type BlueAlumnus = {
   division: string
 }
 
-/** Alumni = class of 2024 and earlier (graduated). Current roster = 2025 and later. */
-const ALUMNI_MAX_GRAD_YEAR = 2024
+const ALUMNI_CUTOFF_YEAR = 2025
 
 export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
   try {
@@ -23,7 +22,7 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     const { data, error } = await supabase
       .from("athletes")
       .select("id, name, graduationyear, highschool, college, college_id, ncUnitedTeam")
-      .lte("graduationyear", ALUMNI_MAX_GRAD_YEAR)
+      .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
