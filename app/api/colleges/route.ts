@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { standardizeDivision } from "@/lib/division-standardizer"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -11,29 +10,14 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const page = Number.parseInt(searchParams.get("page") || "1")
-    const limit = Math.min(Number.parseInt(searchParams.get("limit") || "100"), 500) // Max 500 per request
+    const limit = Math.min(Number.parseInt(searchParams.get("limit") || "100"), 500)
     const offset = (page - 1) * limit
 
     const supabaseClient = createClient()
 
-    // Division source: college_division_mappings (single table in DB)
-    const divisionMap = new Map<string, string>()
-    const { data: mappingsData } = await supabaseClient
-      .from("college_division_mappings")
-      .select("college_name, division")
-    if (mappingsData?.length) {
-      mappingsData.forEach((mapping) => {
-        const name = (mapping.college_name ?? "").toLowerCase()
-        if (!name) return
-        const normalized = standardizeDivision(mapping.division)
-        const div = normalized !== "Unknown" ? normalized : (mapping.division ?? "")
-        if (div) divisionMap.set(name, div)
-      })
-    }
-
     const { data: athletes, error } = await supabaseClient
       .from("athletes")
-      .select("college, division, name, graduationyear, commitmentdate, weightclass, gender")
+      .select("college, name, graduationyear, commitmentdate, weightclass, gender")
       .not("college", "is", null)
       .not("college", "eq", "")
 
@@ -55,41 +39,19 @@ export async function GET(request: Request) {
 
     console.log(`🏫 Colleges API: Processing ${athletes.length} athlete records`)
 
-    // Process the data to group by college
     const collegeMap = new Map()
-    let totalCommits = 0
-
     athletes.forEach((athlete) => {
       if (!athlete.college) return
-      totalCommits++
 
       const collegeLower = athlete.college.toLowerCase()
-
-      // Use mapping as primary source, fall back to athlete data
-      let division = divisionMap.get(collegeLower) || athlete.division || "Unknown"
-
-      // Try partial matching if exact match fails
-      if (division === "Unknown" && divisionMap.size > 0) {
-        for (const [mappedCollege, mappedDivision] of divisionMap.entries()) {
-          if (collegeLower.includes(mappedCollege) || mappedCollege.includes(collegeLower)) {
-            division = mappedDivision
-            break
-          }
-        }
-      }
-
       const displayName = athlete.college
-      const canonicalName = athlete.college.toLowerCase()
-
-      // Determine gender
       const gender = athlete.gender?.toLowerCase() === "female" ? "Women" : "Men"
 
-      if (!collegeMap.has(canonicalName)) {
-        collegeMap.set(canonicalName, {
-          id: canonicalName.replace(/\s+/g, "-"),
+      if (!collegeMap.has(collegeLower)) {
+        collegeMap.set(collegeLower, {
+          id: collegeLower.replace(/\s+/g, "-"),
           name: displayName,
-          canonical_name: canonicalName,
-          division: division,
+          canonical_name: collegeLower,
           count: 1,
           menCount: gender === "Men" ? 1 : 0,
           womenCount: gender === "Women" ? 1 : 0,
@@ -97,20 +59,11 @@ export async function GET(request: Request) {
           recent_commits: [],
         })
       } else {
-        const college = collegeMap.get(canonicalName)
+        const college = collegeMap.get(collegeLower)
         college.count += 1
-
-        if (gender === "Men") {
-          college.menCount = (college.menCount || 0) + 1
-        } else {
-          college.womenCount = (college.womenCount || 0) + 1
-        }
-
-        if (athlete.weightclass) {
-          college.weightClasses.add(athlete.weightclass)
-        }
-
-        // Add to recent commits
+        if (gender === "Men") college.menCount = (college.menCount || 0) + 1
+        else college.womenCount = (college.womenCount || 0) + 1
+        if (athlete.weightclass) college.weightClasses.add(athlete.weightclass)
         if (athlete.name) {
           college.recent_commits.push({
             name: athlete.name,
@@ -121,14 +74,12 @@ export async function GET(request: Request) {
       }
     })
 
-    // Convert weightClasses sets to strings
     const weightClassOrder = ["125", "133", "141", "149", "157", "165", "174", "184", "197", "285", "HWT"]
 
     const collegesArray = Array.from(collegeMap.values()).map((college) => {
       const weightClassesArray = Array.from(college.weightClasses).sort(
         (a, b) => weightClassOrder.indexOf(a) - weightClassOrder.indexOf(b),
       )
-
       return {
         ...college,
         weightClasses: weightClassesArray.join(", "),
@@ -138,7 +89,6 @@ export async function GET(request: Request) {
       }
     })
 
-    // Sort colleges by athlete count
     collegesArray.sort((a, b) => b.count - a.count)
 
     const totalColleges = collegesArray.length
@@ -146,7 +96,6 @@ export async function GET(request: Request) {
     const totalPages = Math.ceil(totalColleges / limit)
 
     console.log(`✅ Colleges API: Successfully processed ${collegesArray.length} colleges`)
-    console.log(`📊 Using division mappings for ${divisionMap.size} colleges`)
 
     const response = NextResponse.json({
       success: true,
@@ -161,9 +110,7 @@ export async function GET(request: Request) {
       },
     })
 
-    // Add caching headers for performance
     response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=600")
-
     return response
   } catch (error) {
     console.error("💥 Colleges API: Unexpected error:", error)
