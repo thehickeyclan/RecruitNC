@@ -2,18 +2,14 @@
 
 import { useState, useEffect } from "react"
 
-const cache: Record<string, string> = {}
-
 async function fetchDivision(college: string): Promise<string> {
   if (!college?.trim()) return ""
-  const key = college.trim().toLowerCase()
-  if (cache[key]) return cache[key]
   try {
-    const res = await fetch(`/api/get-college-division?college=${encodeURIComponent(college)}`)
+    const res = await fetch(`/api/get-college-division?college=${encodeURIComponent(college)}`, {
+      cache: "no-store",
+    })
     const data = await res.json()
-    const div = data.division ?? ""
-    cache[key] = div
-    return div
+    return data.division ?? ""
   } catch {
     return ""
   }

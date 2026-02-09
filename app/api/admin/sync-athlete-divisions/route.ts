@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
+import { getDivisionFromMappings, clearDivisionMappingsCache } from "@/lib/get-division-from-mappings"
 
 /**
- * POST: Set every athlete's division from college_division_mappings (by college name).
- * Use this to fix hundreds of wrong athlete.division values in one go.
- * Reads college_division_mappings (and code fallbacks for Mount Olive, etc.), then updates athletes.division.
+ * POST: Set every athlete's division from college_division_mappings (single source of truth).
+ * Resolves college name via canonical aliases, then looks up division in the table only.
  */
 export async function POST() {
   try {
@@ -57,6 +56,8 @@ export async function POST() {
         newDivision: normalizedNew,
       })
     }
+
+    clearDivisionMappingsCache()
 
     return NextResponse.json({
       success: true,

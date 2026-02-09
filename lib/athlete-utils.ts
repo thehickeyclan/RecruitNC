@@ -2,6 +2,7 @@
 
 import type { Athlete } from "@/types/athlete"
 import { normalizeToCanonicalFull } from "@/lib/division-display"
+import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 
 // Helper function to normalize division names
 export async function normalizeDivision(division: string | null): Promise<string> {
@@ -159,7 +160,7 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       firstName: athlete.firstName || "",
       lastName: athlete.lastName || "",
       highschool: athlete.highSchool || athlete.highschool || "",
-      college: athlete.college || "",
+      college: normalizeCollegeToCanonical(athlete.college) || athlete.college || "",
       division: normalizeToCanonicalFull(athlete.division) || athlete.division || "",
       weightclass: athlete.weightClass || athlete.weightclass || "",
       college_weight_class: athlete.collegeWeightClass || athlete.college_weight_class || "", // Added college_weight_class field mapping to database
@@ -248,7 +249,7 @@ export async function mapAthleteToDb(athlete: any): Promise<any> {
       lastName: athlete?.lastName || "",
       gender: "Male",
       highschool: athlete?.highSchool || athlete?.highschool || "",
-      college: athlete?.college || "",
+      college: normalizeCollegeToCanonical(athlete?.college) || athlete?.college || "",
       division: athlete?.division || "",
       graduationyear: new Date().getFullYear(),
       commitmentdate: new Date().toISOString().split("T")[0],

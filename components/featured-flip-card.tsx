@@ -7,8 +7,6 @@ import type { Athlete } from "@/types/athlete"
 import { EntityLogo } from "@/components/entity-logo"
 import { DivisionLogo } from "@/components/division-logo"
 import { FileUp as Flip, ArrowRight } from "lucide-react"
-import { useResolvedDivision } from "@/hooks/use-resolved-division"
-
 interface FeaturedFlipCardProps {
   athlete: Athlete
   onAnimationComplete?: () => void
@@ -20,8 +18,7 @@ export function FeaturedFlipCard({ athlete, onAnimationComplete }: FeaturedFlipC
   const [showTooltip, setShowTooltip] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
-  const displayDivision = useResolvedDivision(athlete.college)
-  const divisionToShow = displayDivision || athlete.division || ""
+  const divisionToShow = athlete.division ?? ""
 
   useEffect(() => {
     setIsMounted(true)

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { clearDivisionMappingsCache } from "@/lib/get-division-from-mappings"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -71,6 +72,35 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       { college_name: "Mount Union", division: "NCAA Division III" },
       { college_name: "Montreat College", division: "NAIA" },
       { college_name: "Wake Tech", division: "NJCAA" },
+      // Missing colleges from commits (added so seed upserts them)
+      { college_name: "Andrew College", division: "NAIA" },
+      { college_name: "Baldwin & Wallace", division: "NCAA Division III" },
+      { college_name: "Binghamton", division: "NCAA Division I" },
+      { college_name: "Carl Albert State College", division: "NJCAA" },
+      { college_name: "Case Western Reserve", division: "NCAA Division III" },
+      { college_name: "Davis & Elkins", division: "NCAA Division II" },
+      { college_name: "Emory & Henry", division: "NCAA Division III" },
+      { college_name: "Ferrum", division: "NCAA Division III" },
+      { college_name: "Frostburg State", division: "NCAA Division III" },
+      { college_name: "Georgetown", division: "NCAA Division I" },
+      { college_name: "Heidelberg", division: "NCAA Division III" },
+      { college_name: "Hiram", division: "NCAA Division III" },
+      { college_name: "Indian Hills Community College", division: "NJCAA" },
+      { college_name: "Iowa Central", division: "NJCAA" },
+      { college_name: "King", division: "NCAA Division II" },
+      { college_name: "Life University", division: "NAIA" },
+      { college_name: "Lynchburg", division: "NCAA Division III" },
+      { college_name: "McKendree", division: "NCAA Division II" },
+      { college_name: "Mercyhurst", division: "NCAA Division II" },
+      { college_name: "Minnesota West", division: "NJCAA" },
+      { college_name: "Norwich", division: "NCAA Division III" },
+      { college_name: "Ohio University", division: "NCAA Division I" },
+      { college_name: "Reinhardt", division: "NAIA" },
+      { college_name: "Salem", division: "NCAA Division II" },
+      { college_name: "The Apprentice School", division: "NCAA Division III" },
+      { college_name: "Tiffin", division: "NCAA Division II" },
+      { college_name: "Utah Valley", division: "NCAA Division I" },
+      { college_name: "West Liberty", division: "NCAA Division II" },
     ]
 
     const rowCount = count ?? 0
@@ -97,6 +127,8 @@ INSERT INTO college_division_mappings (college_name, division) VALUES
       console.error("Error upserting college mappings:", upsertError)
       throw upsertError
     }
+
+    clearDivisionMappingsCache()
 
     return NextResponse.json({
       success: true,

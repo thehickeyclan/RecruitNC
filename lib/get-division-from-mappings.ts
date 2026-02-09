@@ -1,35 +1,26 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { standardizeDivision } from "@/lib/division-standardizer"
 import { CANONICAL_DIVISIONS_FULL, type CanonicalDivisionFull } from "@/lib/division-display"
+import { collegeToLookupKey } from "@/lib/canonical-college"
 
-/** Re-export for consumers that need the list. Spell out NCAA; Roman numerals I, II, III. */
+/** Re-export for consumers that need the list. */
 export const CANONICAL_DIVISIONS = CANONICAL_DIVISIONS_FULL
 export type CanonicalDivision = CanonicalDivisionFull
 
-// Cache: college name (lowercase) -> canonical division
+// Cache: lookup key (lowercase) -> canonical division. Refreshed from DB only.
 let divisionMappingsCache: Record<string, string> | null = null
 let lastCacheUpdate = 0
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-// Fallback: correct division when DB has wrong/duplicate rows. Key = lowercase college name or partial.
-const FALLBACK_DIVISION: Record<string, string> = {
-  "roanoke": "NCAA Division III",
-  "roanoke college": "NCAA Division III",
-  "lander": "NCAA Division II",
-  "lander university": "NCAA Division II",
-  "presbyterian": "NCAA Division I",
-  "presbyterian college": "NCAA Division I",
-  "mount union": "NCAA Division III",
-  "university of mount union": "NCAA Division III",
-  "belmont abbey": "NCAA Division II",
-  "mount olive": "NCAA Division II",
-  "university of mount olive": "NCAA Division II",
+export function clearDivisionMappingsCache(): void {
+  divisionMappingsCache = null
+  lastCacheUpdate = 0
 }
 
 /**
- * Resolve a college name to a canonical division.
- * Single source of truth: college_division_mappings only. To fix wrong divisions, update that table in Supabase.
- * When a college is NOT in the table, returns "" so callers can fall back to athlete.division (avoids "Unknown" everywhere when table is incomplete).
+ * Single source of truth: college_division_mappings table only.
+ * Resolves college name via canonical aliases (NCSU → NC State, etc.) then looks up in table.
+ * Returns "" if college is not in the table — add it in the DB and set the correct division.
  */
 export async function getDivisionFromMappings(collegeName: string): Promise<string> {
   const raw = collegeName?.trim()
@@ -41,51 +32,16 @@ export async function getDivisionFromMappings(collegeName: string): Promise<stri
 
   if (!divisionMappingsCache) return ""
 
-  const collegeLower = raw.toLowerCase()
+  const lookupKey = collegeToLookupKey(raw)
 
-  // Resolve common aliases to a name we have in the table
-  const aliasToCanonical: Record<string, string> = {
-    "unc": "unc chapel hill",
-    "north carolina": "unc chapel hill",
-    "university of north carolina": "unc chapel hill",
-    "nc state": "nc state",
-    "north carolina state": "nc state",
-    "ncsu": "nc state",
-    "app state": "appalachian state",
-    "appalachian": "appalachian state",
-    "uncp": "unc pembroke",
-    "pembroke": "unc pembroke",
-    "wake tech": "wake tech",
-    "waketech": "wake tech",
-    "gardner webb": "gardner-webb",
-    "gardner-webb": "gardner-webb",
-    "roanoke": "roanoke",
-    "roanoke college": "roanoke college",
-    "lander": "lander",
-    "presbyterian": "presbyterian",
-    "mount union": "mount union",
-    "mount olive": "mount olive",
-    "university of mount olive": "mount olive",
-  }
-  const lookupName = aliasToCanonical[collegeLower] ?? collegeLower
+  let division = divisionMappingsCache[lookupKey]
 
-  // Exact match
-  let division = divisionMappingsCache[lookupName]
-
-  // Partial match (e.g. "Appalachian State University" vs "App State")
   if (!division) {
     const keys = Object.keys(divisionMappingsCache)
     const matchingKey = keys.find(
-      (key) => lookupName.includes(key) || key.includes(lookupName),
+      (key) => lookupKey.includes(key) || key.includes(lookupKey),
     )
     if (matchingKey) division = divisionMappingsCache[matchingKey]
-  }
-
-  // These schools: always use correct division (DB often has wrong/duplicate rows)
-  for (const [key, fallbackDiv] of Object.entries(FALLBACK_DIVISION)) {
-    if (key === collegeLower || collegeLower.includes(key) || key.includes(collegeLower)) {
-      return fallbackDiv
-    }
   }
 
   const normalized = division ? standardizeDivision(division) : ""

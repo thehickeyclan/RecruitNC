@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
 
+/** Reads division from college_division_mappings only (single source of truth). Resolves aliases (e.g. NCSU → NC State) then looks up in table. */
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
@@ -12,7 +13,10 @@ export async function GET(request: Request) {
 
     const division = await getDivisionFromMappings(collegeName)
 
-    return NextResponse.json({ college: collegeName, division })
+    return NextResponse.json(
+      { college: collegeName, division },
+      { headers: { "Cache-Control": "no-store, max-age=0" } },
+    )
   } catch (error) {
     console.error("Error getting college division:", error)
     return NextResponse.json(

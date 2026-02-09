@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getDivisionFromMappings } from "@/lib/get-division-from-mappings"
+import { normalizeToCanonicalFull } from "@/lib/division-display"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -14,7 +15,7 @@ export type BlueAlumnus = {
 
 /**
  * Server-only: fetch Blue alumni (ncUnitedTeam = blue, graduation year 2025 and older).
- * Division comes from central college_division_mappings (same as College tab), not athlete row.
+ * Division: use DB (athlete.division) first. Only lookup when empty so we never overwrite correct data.
  */
 const ALUMNI_CUTOFF_YEAR = 2025
 
@@ -46,9 +47,14 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
 
     const withDivision = await Promise.all(
       blueAlumni.map(async (row: any) => {
-        const fromMapping = await getDivisionFromMappings(row.college ?? "")
         const stored = (row.division ?? "").trim()
-        const division = fromMapping || stored || "Unknown"
+        const canonicalStored = stored ? normalizeToCanonicalFull(stored) : ""
+        const college = row.college ?? ""
+        const division =
+          canonicalStored ||
+          stored ||
+          (await getDivisionFromMappings(college)) ||
+          "Unknown"
         return {
           id: row.id ?? "",
           name: row.name ?? "",

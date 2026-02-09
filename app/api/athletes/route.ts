@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getDivisionFilterValues } from "@/lib/division-display"
+import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 30 // Cache for 30 seconds to reduce API calls
@@ -309,7 +310,7 @@ export async function POST(request: Request) {
       photourl: body.photoUrl,
       is_prospect: body.is_prospect || false,
       recruiting_status: body.recruiting_status || "Uncommitted",
-      college: body.college || null,
+      college: normalizeCollegeToCanonical(body.college) || body.college || null,
       division: body.division || null,
       highSchoolLogoUrl: body.highSchoolDivision || body.highSchoolLogoUrl || null,
       commitmentdate: body.commitmentdate || null,

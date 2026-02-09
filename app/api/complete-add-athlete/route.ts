@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { autoFetchNHSCAForProfile } from "@/lib/nhsca-auto-fetch"
+import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       firstName: body.firstName || null,
       lastName: body.lastName || null,
       highschool: body.highschool || body.highSchool || null,
-      college: body.college || null,
+      college: normalizeCollegeToCanonical(body.college) || body.college || null,
       graduationyear: body.graduationyear || body.graduationYear || null,
       commitmentdate: body.commitmentdate || body.commitmentDate || null,
       weightclass: body.weightclass || body.weightClass || null,
