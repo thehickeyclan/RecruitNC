@@ -173,7 +173,7 @@ export function FlipCard({ athlete }: FlipCardProps) {
 
               <div className="flex justify-between items-center">
                 <div className="relative z-10">
-                  <img src="https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png" alt="North Carolina" style={{ height: "32px", width: "auto" }} />
+                  <img src="/nc-united-blue-logo.png" alt="NC United" style={{ height: "32px", width: "auto" }} />
                 </div>
 
                 {/* Flip back icon button */}

@@ -463,13 +463,13 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         badges.push({
           color: "bg-white text-blue-900 border-2 border-blue-900",
           text: "NC UNITED BLUE",
-          icon: "/nc-united-logo.png",
+          icon: "/nc-united-blue-logo.png",
         })
       } else if (ncUnitedTeam?.toLowerCase().includes("gold")) {
         badges.push({
           color: "bg-white text-yellow-700 border-2 border-yellow-700",
           text: "NC UNITED GOLD",
-          icon: "/nc-united-logo.png",
+          icon: "/nc-united-blue-logo.png",
         })
       }
 
@@ -1143,7 +1143,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200">
                       <Image
-                        src="/nc-united-logo.png"
+                        src="/nc-united-blue-logo.png"
                         alt="NC United logo"
                         width={48}
                         height={48}

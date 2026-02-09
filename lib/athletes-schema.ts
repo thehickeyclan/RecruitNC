@@ -20,6 +20,7 @@ const KNOWN_ATHLETE_COLUMNS = new Set([
   "hs_matches_uploaded", "admin_reviewed",
   "socialMedia", "social_media",
   "college", "college_id", "commitmentdate", "commitment_date",
+  "ncUnitedTeam", "ncunitedteam", "nc_united_team", "team",
 ])
 
 /**

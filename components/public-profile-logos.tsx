@@ -107,7 +107,7 @@ export function PublicProfileLogos({
         <div className="flex items-center gap-3">
           <div className="size-12 rounded-full bg-blue-50 ring-1 ring-blue-100 overflow-hidden flex items-center justify-center">
             <Image
-              src="https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/CqLaWvzmjRuOdctL8VovY-NC%20United.png"
+              src="/nc-united-blue-logo.png"
               alt="NC United Blue"
               width={44}
               height={44}

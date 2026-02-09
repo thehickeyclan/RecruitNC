@@ -14,14 +14,22 @@ export type BlueCurrentMember = {
   accolades: string[]
 }
 
+/** Get NC United team value from a row regardless of DB column name (camelCase vs snake_case). */
+function getTeamValue(row: Record<string, unknown>): string {
+  const keys = Object.keys(row)
+  for (const k of keys) {
+    const lower = k.toLowerCase().replace(/_/g, "")
+    if (lower === "ncunitedteam" || lower === "team") {
+      const val = row[k]
+      if (val != null && String(val).trim() !== "") return String(val).trim()
+    }
+  }
+  return ""
+}
+
 function isBlue(row: Record<string, unknown>) {
-  const raw =
-    row?.ncUnitedTeam ??
-    row?.ncunitedteam ??
-    row?.nc_united_team ??
-    row?.team ??
-    ""
-  const v = String(raw ?? "").toLowerCase().trim()
+  const raw = getTeamValue(row)
+  const v = raw.toLowerCase()
   return v === "blue" || v === "blue team" || v === "both" || v.includes("blue")
 }
 
@@ -45,13 +53,10 @@ export async function getBlueCurrentMembers(): Promise<BlueCurrentMember[]> {
   try {
     const supabase = createAdminClient()
 
+    // Use select("*") so we get the team column whatever its DB name (ncUnitedTeam vs ncunitedteam vs nc_united_team)
     const { data, error } = await supabase
       .from("athletes")
-      .select(
-        "id, name, firstname, lastname, graduationyear, highschool, weightclass, ncUnitedTeam, nc_united_team, " +
-          "nhsca_2023_placement, nhsca_2024_placement, nhsca_2025_placement, " +
-          "super_32_2023_placement, super_32_2024_placement, super_32_2025_placement"
-      )
+      .select("*")
       .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
       .lte("graduationyear", CURRENT_YEAR + 6)
       .order("graduationyear", { ascending: true })
