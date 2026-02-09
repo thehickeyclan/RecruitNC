@@ -24,6 +24,7 @@ interface Athlete {
   wrestling_club?: string
   club?: string
   college?: string
+  division?: string
   gender?: string
   commitmentdate?: string
   commitmentDate?: string
@@ -534,6 +535,9 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 </div>
                 <div className="flex-1 min-w-0">
                   <h5 className="font-bold text-gray-900 text-sm truncate">{athlete.college || "College"}</h5>
+                  {athlete.division && (
+                    <p className="text-xs text-gray-600 font-medium">{athlete.division}</p>
+                  )}
                   <p className="text-xs text-gray-600">
                     <span className="font-semibold">Projected Weight:</span>{" "}
                     {athlete.college_weight_class ? `${athlete.college_weight_class} lbs` : "TBD"}

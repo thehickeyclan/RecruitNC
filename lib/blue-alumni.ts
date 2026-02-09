@@ -9,6 +9,7 @@ export type BlueAlumnus = {
   graduationyear: number
   highschool: string
   college: string
+  division: string
 }
 
 const ALUMNI_CUTOFF_YEAR = 2025
@@ -44,14 +45,16 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
 
     return blueAlumni.map((row: any) => {
-      const collegeName =
-        (row.college_id && collegesMap.get(row.college_id)?.name) || row.college || ""
+      const collegeRow = row.college_id ? collegesMap.get(row.college_id) : null
+      const collegeName = collegeRow?.name || row.college || ""
+      const division = collegeRow?.division ?? ""
       return {
         id: row.id ?? "",
         name: row.name ?? "",
         graduationyear: Number(row.graduationyear) || 0,
         highschool: row.highschool ?? "",
         college: collegeName,
+        division,
       }
     })
   } catch (e) {

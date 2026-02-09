@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { supabase } from "@/lib/supabase"
 
 type StatsData = {
   totalCommitments: number
@@ -50,71 +49,16 @@ export function HomepageStatsDisplay() {
     const fetchStats = async () => {
       try {
         setLoading(true)
-
-        // Get all athletes with college commitments
-        const { data: athletes, error: athletesError } = await supabase
-          .from("athletes")
-          .select("id, name, college, division, graduationyear, gender")
-          .not("college", "is", null)
-
-        if (athletesError) throw new Error("Failed to fetch athletes")
-
-        // Initialize stats object
-        const newStats: StatsData = {
-          totalCommitments: athletes.length,
-          byYear: {
-            2025: 0,
-            2026: 0,
-            other: 0,
-          },
-          byDivision: {
-            D1: 0,
-            D2: 0,
-            D3: 0,
-            NAIA: 0,
-            NJCAA: 0,
-          },
-          byGender: {
-            male: 0,
-            female: 0,
-          },
+        const res = await fetch("/api/commitment-stats", { cache: "no-store" })
+        const data = await res.json()
+        if (data.success && data.stats) {
+          setStats({
+            totalCommitments: data.stats.totalCommitments,
+            byYear: data.stats.byYear,
+            byDivision: data.stats.byDivision,
+            byGender: data.stats.byGender,
+          })
         }
-
-        // Process athletes
-        athletes.forEach((athlete) => {
-          // Count by graduation year
-          if (athlete.graduationyear === 2025) {
-            newStats.byYear[2025]++
-          } else if (athlete.graduationyear === 2026) {
-            newStats.byYear[2026]++
-          } else {
-            newStats.byYear.other++
-          }
-
-          // Count by division - EXACT MATCH
-          const division = athlete.division || ""
-          if (division === "NCAA Division I") {
-            newStats.byDivision.D1++
-          } else if (division === "NCAA Division II") {
-            newStats.byDivision.D2++
-          } else if (division === "NCAA Division III") {
-            newStats.byDivision.D3++
-          } else if (division === "NAIA") {
-            newStats.byDivision.NAIA++
-          } else if (division === "NJCAA") {
-            newStats.byDivision.NJCAA++
-          }
-
-          // Count by gender
-          const gender = (athlete.gender || "").toLowerCase()
-          if (gender === "female") {
-            newStats.byGender.female++
-          } else {
-            newStats.byGender.male++
-          }
-        })
-
-        setStats(newStats)
       } catch (err) {
         console.error("Error fetching stats:", err)
       } finally {

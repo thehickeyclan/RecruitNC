@@ -21,13 +21,14 @@ export function BlueAlumniTable({ alumni }: Props) {
   return (
     <div className="overflow-hidden rounded-xl border-2 border-[#D3B574]/40 bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[420px] text-left text-sm">
+        <table className="w-full min-w-[520px] text-left text-sm">
           <thead>
             <tr className="border-b-2 border-[#D3B574]/50 bg-[#03154C]/5" style={{ borderColor: `${GOLD}80` }}>
               <th className="px-4 py-3 font-semibold text-[#03154C]">Name</th>
               <th className="px-4 py-3 font-semibold text-[#03154C]">Class</th>
               <th className="px-4 py-3 font-semibold text-[#03154C]">High School</th>
               <th className="px-4 py-3 font-semibold text-[#03154C]">College</th>
+              <th className="px-4 py-3 font-semibold text-[#03154C]">Division</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#D3B574]/20">
@@ -44,6 +45,7 @@ export function BlueAlumniTable({ alumni }: Props) {
                 <td className="px-4 py-3 text-[#03154C]/90">{row.graduationyear}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.highschool || "—"}</td>
                 <td className="px-4 py-3 text-[#03154C]/90">{row.college || "—"}</td>
+                <td className="px-4 py-3 text-[#03154C]/90">{row.division || "—"}</td>
               </tr>
             ))}
           </tbody>
