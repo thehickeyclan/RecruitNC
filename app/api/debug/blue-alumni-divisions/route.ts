@@ -9,7 +9,7 @@ import { getBlueAlumni } from "@/lib/blue-alumni"
 export async function GET() {
   try {
     const alumni = await getBlueAlumni()
-    return NextResponse.json({
+    const res = NextResponse.json({
       ok: true,
       count: alumni.length,
       alumni: alumni.map((a) => ({
@@ -21,6 +21,8 @@ export async function GET() {
         division: a.division,
       })),
     })
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
+    return res
   } catch (e) {
     return NextResponse.json({
       ok: false,

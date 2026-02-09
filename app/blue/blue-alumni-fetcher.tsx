@@ -13,14 +13,15 @@ export function BlueAlumniFetcher() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/debug/blue-alumni-divisions")
+    const minLoading = new Promise((r) => setTimeout(r, 600))
+    const fetchData = fetch(`/api/debug/blue-alumni-divisions?t=${Date.now()}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         if (data.ok && Array.isArray(data.alumni)) {
           setAlumni(data.alumni as BlueAlumnus[])
         }
       })
-      .finally(() => setLoading(false))
+    Promise.all([fetchData, minLoading]).finally(() => setLoading(false))
   }, [])
 
   if (loading) {
