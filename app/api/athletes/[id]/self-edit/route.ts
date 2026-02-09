@@ -25,10 +25,11 @@ const CONTACT_FIELDS = new Set(["cell", "cell_number", "email", "contact_email",
 
 // Only these columns exist in athletes table - never send instagram, etc. as top-level
 // All self-editable fields from unified profile inline editors (InlineWeightEditor, InlineSchoolClubEditor, etc.)
+// NC United Program (ncUnitedTeam) is admin-only: set in Admin → Athletes, read-only on unified profile.
 const ALLOWED_UPDATE_COLUMNS = new Set([
   "cell", "cell_number", "phone", "contact_email", "contactEmail", "socialMedia", "social_media",
   "highlight_video_url", "updated_at", "bio", "bio_headline", "highschool", "wrestlingClub",
-  "ncUnitedTeam", "ncunitedteam", "weightclass", "weight_class",
+  "weightclass", "weight_class",
   "academic_gpa", "academic_sat", "academic_act", "academic_summary",
   "college_opens_experience", "achievements", "additional_achievements",
 ])

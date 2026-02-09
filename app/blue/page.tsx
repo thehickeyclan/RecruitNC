@@ -5,7 +5,8 @@ import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { getBlueContent } from "@/lib/blue-content"
 import { BlueRosterPlaceholder } from "./blue-roster-placeholder"
-import { BlueAlumniPlaceholder } from "./blue-alumni-placeholder"
+import { BlueAlumniTable } from "./blue-alumni-table"
+import { getBlueAlumni } from "@/lib/blue-alumni"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
 }
 
 export default async function BluePage() {
-  const images = await getBlueContent()
+  const [images, alumni] = await Promise.all([getBlueContent(), getBlueAlumni()])
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
@@ -46,23 +47,6 @@ export default async function BluePage() {
               priority
             />
           </div>
-        </figure>
-
-        {/* National Team Kids — Admin → Blue to upload/replace */}
-        <figure className="mb-12">
-          <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/50 bg-white shadow-lg">
-            <Image
-              src={images.blue_national_team_kids}
-              alt="Tobin McNair, Mac Johnson, and Bentley Sly representing NC United National Team"
-              width={900}
-              height={600}
-              className="h-auto w-full object-contain"
-              unoptimized
-            />
-          </div>
-          <figcaption className="mt-2 text-center text-sm text-[#03154C]/80">
-            Tobin McNair, Mac Johnson, and Bentley Sly (left to right) — NC United National Team
-          </figcaption>
         </figure>
 
         {/* Main Content */}
@@ -90,7 +74,35 @@ export default async function BluePage() {
             </p>
           </section>
 
-          {/* 3. Opportunity & Obligation */}
+          {/* National Team Kids — Admin → Blue to upload/replace */}
+          <figure className="my-10">
+            <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/50 bg-white shadow-lg">
+              <Image
+                src={images.blue_national_team_kids}
+                alt="Tobin McNair, Mac Johnson, and Bentley Sly representing NC United National Team"
+                width={900}
+                height={600}
+                className="h-auto w-full object-contain"
+                unoptimized
+              />
+            </div>
+            <figcaption className="mt-2 text-center text-sm text-[#03154C]/80">
+              Tobin McNair, Mac Johnson, and Bentley Sly (left to right) — NC United National Team
+            </figcaption>
+          </figure>
+
+          {/* 3. Recruiting Support & Exposure */}
+          <section id="recruiting">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Recruiting Support & Exposure</h2>
+            <p className="leading-relaxed text-[#03154C]/90 mb-4">
+              College recruiting can feel like a black hole for wrestlers and parents. NC United exists to bring clarity, education, and real opportunity to the process by first understanding each athlete&apos;s goals—academically, athletically, and personally. We educate Blue members on how college recruiting works, create meaningful exposure through RecruitNC, and actively connect college coaches with our athletes.
+            </p>
+            <p className="leading-relaxed text-[#03154C]/90 mb-4">
+              Local college programs are deeply engaged in our ecosystem and are familiar with NC United athletes long before recruiting decisions are made. To date, NC United has helped connect hundreds of wrestlers to college opportunities across all divisions. We host an annual College Coaches Lounge at the state championships, provide regular athlete updates to college staffs, and celebrate commitments through signing announcements and our Signing Day podcast—giving athletes a platform to share their recruiting journey while helping the next generation learn from those experiences.
+            </p>
+          </section>
+
+          {/* 4. Opportunity & Obligation */}
           <section id="opportunity">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Opportunity & Obligation</h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -118,7 +130,7 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 4. What Makes Blue Different */}
+          {/* 5. What Makes Blue Different */}
           <section id="what-makes-different">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">What Makes Blue Different</h2>
             <ul className="space-y-4 text-[#03154C]/90">
@@ -187,7 +199,7 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 6. National Team Pipeline */}
+          {/* 7. National Team Pipeline */}
           <section id="national-team">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">National Team Pipeline</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
@@ -299,7 +311,7 @@ export default async function BluePage() {
                       {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="h-5 w-5 fill-current" />)}
                     </div>
                     <blockquote className="text-[#03154C]/90 italic mb-4 text-sm">
-                      &ldquo;Being part of NC United has been the highlight of my wrestling career. The coaching, the
+                      &ldquo;Being part of NC United has been the <span className="bg-[#D3B574]/25 px-1 rounded not-italic font-medium text-[#03154C]">highlight</span> of my wrestling career. The coaching, the
                       competition, and the camaraderie with teammates from across the state have all helped me improve
                       tremendously.&rdquo;
                     </blockquote>
@@ -378,7 +390,7 @@ export default async function BluePage() {
               members, and mentor the next generation. Blue is a program, not a one-time
               experience—alumni stay connected and give back.
             </p>
-            <BlueAlumniPlaceholder />
+            <BlueAlumniTable alumni={alumni} />
           </section>
 
           {/* 14. Competition & Schedule */}

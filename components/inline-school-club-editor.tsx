@@ -14,6 +14,8 @@ interface InlineSchoolClubEditorProps {
   highSchool?: string
   wrestlingClub?: string
   ncUnitedTeam?: string
+  /** When true, NC United Program is read-only (set in Admin only). Default true. */
+  ncUnitedTeamReadOnly?: boolean
   onSave: (updates: {
     highschool?: string
     wrestlingclub?: string
@@ -27,6 +29,7 @@ export function InlineSchoolClubEditor({
   highSchool,
   wrestlingClub,
   ncUnitedTeam,
+  ncUnitedTeamReadOnly = true,
   onSave,
   onCancel,
 }: InlineSchoolClubEditorProps) {
@@ -56,11 +59,12 @@ export function InlineSchoolClubEditor({
     try {
       setSaving(true)
       const finalClubValue = showCustomClub || isCustomClub ? customClub || clubValue : clubValue
-      await onSave({
+      const updates: { highschool?: string; wrestlingclub?: string; ncUnitedTeam?: string } = {
         highschool: highSchoolValue,
         wrestlingclub: finalClubValue,
-        ncUnitedTeam: ncUnitedValue,
-      })
+      }
+      if (!ncUnitedTeamReadOnly) updates.ncUnitedTeam = ncUnitedValue
+      await onSave(updates)
       toast({
         title: "Success",
         description: "Profile information updated successfully",
@@ -124,15 +128,22 @@ export function InlineSchoolClubEditor({
       </div>
       <div>
         <Label htmlFor="ncUnitedTeam">NC United Program</Label>
-        <Select value={ncUnitedValue} onValueChange={setNcUnitedValue}>
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select NC United membership" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            <SelectItem value="blue">NC United Blue</SelectItem>
-          </SelectContent>
-        </Select>
+        {ncUnitedTeamReadOnly ? (
+          <div className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+            {ncUnitedValue === "blue" ? "NC United Blue" : ncUnitedValue === "gold" ? "NC United Gold" : ncUnitedValue === "both" ? "Both Teams" : "None"}
+            <span className="ml-2 text-xs text-gray-500">(set in Admin → Athletes)</span>
+          </div>
+        ) : (
+          <Select value={ncUnitedValue} onValueChange={setNcUnitedValue}>
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select NC United membership" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="blue">NC United Blue</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={saving} size="sm">

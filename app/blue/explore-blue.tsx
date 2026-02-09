@@ -14,6 +14,7 @@ const GROUPS = [
     id: "about",
     label: "About",
     links: [
+      { href: "#recruiting", label: "Recruiting Support & Exposure" },
       { href: "#opportunity", label: "Opportunity & Obligation" },
       { href: "#what-makes-different", label: "What Makes Blue Different" },
     ],
