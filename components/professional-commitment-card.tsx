@@ -778,42 +778,22 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 }
 
 const getNCUnitedTeamStatus = (athlete: Athlete) => {
-  console.log("[v0] NC United Team Status Check:", {
-    name: athlete.name,
-    ncUnitedTeam: athlete.ncUnitedTeam,
-    athleteObject: athlete,
-  })
+  const raw = (athlete as any).ncUnitedTeam ?? (athlete as any).ncunitedteam ?? ""
+  const teamValue = String(raw).toLowerCase().trim()
 
-  if (athlete.ncUnitedTeam) {
-    const teamValue = athlete.ncUnitedTeam.toLowerCase().trim()
-    console.log("[v0] Found ncUnitedTeam field:", teamValue)
-
-    if (teamValue === "blue" || teamValue.includes("blue")) {
-      return "blue"
-    }
-    if (teamValue === "gold" || teamValue.includes("gold")) {
-      return "gold"
-    }
-    if (teamValue === "both") {
-      return "blue"
-    }
+  if (teamValue && (teamValue === "blue" || teamValue.includes("blue") || teamValue === "both")) {
+    return "blue"
+  }
+  if (teamValue && (teamValue === "gold" || teamValue.includes("gold"))) {
+    return "gold"
   }
 
   const knownBlueTeamMembers = ["colt campbell", "liam hickey"]
   const knownGoldTeamMembers: string[] = []
-
   const athleteName = athlete.name?.toLowerCase() || ""
 
-  if (knownBlueTeamMembers.some((name) => athleteName.includes(name))) {
-    console.log("[v0] Matched hardcoded blue team member:", athleteName)
-    return "blue"
-  }
+  if (knownBlueTeamMembers.some((name) => athleteName.includes(name))) return "blue"
+  if (knownGoldTeamMembers.some((name) => athleteName.includes(name))) return "gold"
 
-  if (knownGoldTeamMembers.some((name) => athleteName.includes(name))) {
-    console.log("[v0] Matched hardcoded gold team member:", athleteName)
-    return "gold"
-  }
-
-  console.log("[v0] No NC United team status found for:", athleteName)
   return null
 }

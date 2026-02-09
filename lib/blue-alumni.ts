@@ -20,27 +20,29 @@ const ALUMNI_CUTOFF_YEAR = 2025
 export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
   try {
     const supabase = createAdminClient()
-    // ncUnitedTeam / ncunitedteam: value "blue" or "both" = Blue program. Filter in JS for column name flexibility.
+    // Select all needed columns; NC United column may be ncUnitedTeam or ncunitedteam depending on DB.
     const { data, error } = await supabase
       .from("athletes")
-      .select("id, name, graduationyear, highschool, college, division, ncunitedteam, ncUnitedTeam")
+      .select("id, name, graduationyear, highschool, college, division, ncUnitedTeam")
       .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
 
-    const blueValue = (row: any) =>
-      (row?.ncunitedteam ?? row?.ncUnitedTeam ?? "").toString().toLowerCase()
-    const isBlue = (row: any) => {
-      const v = blueValue(row)
-      return v === "blue" || v === "both"
-    }
-    const blueAlumni = (data ?? []).filter(isBlue)
-
     if (error) {
       console.error("[blue-alumni] query error:", error)
       return []
     }
+
+    const blueValue = (row: any) => {
+      const raw = row?.ncUnitedTeam ?? row?.ncunitedteam ?? row?.nc_united_team ?? ""
+      return String(raw ?? "").toLowerCase().trim()
+    }
+    const isBlue = (row: any) => {
+      const v = blueValue(row)
+      return v === "blue" || v === "both" || v.includes("blue")
+    }
+    const blueAlumni = (data ?? []).filter(isBlue)
 
     return blueAlumni.map((row: any) => ({
       id: row.id ?? "",
