@@ -301,9 +301,12 @@ export default function ClassOf2026RankingsPage() {
                   variant="secondary"
                   size="lg"
                   className="bg-[#D3B574] text-gray-900 hover:bg-[#D3B574]/90 text-sm sm:text-base"
+                  asChild
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Follow NC United on Instagram
+                  <a href="https://www.instagram.com/ncwrestlingunited/" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Follow NC United on Instagram
+                  </a>
                 </Button>
               </CardContent>
             </Card>

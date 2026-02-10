@@ -56,19 +56,45 @@ export default function ContactPage() {
             <CardContent className="space-y-4">
               <div>
                 <h3 className="font-medium">Email</h3>
-                <p className="text-sm text-muted-foreground">info@ncunitedwrestling.com</p>
+                <a
+                  href="mailto:info@ncwrestlingunited.com"
+                  className="text-sm text-muted-foreground hover:underline"
+                >
+                  info@ncwrestlingunited.com
+                </a>
               </div>
 
               <div>
                 <h3 className="font-medium">Social Media</h3>
-                <p className="text-sm text-muted-foreground">@NCUnitedWrestling</p>
+                <p className="text-sm text-muted-foreground">
+                  <a
+                    href="https://www.instagram.com/ncwrestlingunited/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    Instagram
+                  </a>
+                  {" · "}
+                  <a
+                    href="https://www.facebook.com/ncwrestlingunited"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                  >
+                    Facebook
+                  </a>
+                </p>
               </div>
 
               <div>
                 <h3 className="font-medium">Report a Commitment</h3>
                 <p className="text-sm text-muted-foreground">
-                  To report a new college commitment, please use the form or email us directly with the athlete's
-                  information.
+                  To report a new college commitment, please use the form or email us at{" "}
+                  <a href="mailto:info@ncwrestlingunited.com" className="hover:underline">
+                    info@ncwrestlingunited.com
+                  </a>{" "}
+                  with the athlete&apos;s information.
                 </p>
               </div>
             </CardContent>

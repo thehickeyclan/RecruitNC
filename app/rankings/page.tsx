@@ -397,9 +397,11 @@ export default function ClassOf2027RankingsPage() {
                 <p className="mb-6 opacity-90">
                   Stay updated with the latest rankings, tournament results, and recruiting news.
                 </p>
-                <Button variant="secondary" size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Follow NC United on Instagram
+                <Button variant="secondary" size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>
+                  <a href="https://www.instagram.com/ncwrestlingunited/" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Follow NC United on Instagram
+                  </a>
                 </Button>
               </CardContent>
             </Card>

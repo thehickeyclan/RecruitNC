@@ -55,7 +55,15 @@ export default function AboutPage() {
                 </div>
                 <div>
                   <span className="block font-medium">Social Media</span>
-                  <span className="text-sm">@NCUnitedWrestling</span>
+                  <span className="text-sm">
+                    <a href="https://www.instagram.com/ncwrestlingunited/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Instagram
+                    </a>
+                    {" · "}
+                    <a href="https://www.facebook.com/ncwrestlingunited" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Facebook
+                    </a>
+                  </span>
                 </div>
               </div>
             </CardContent>

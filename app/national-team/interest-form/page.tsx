@@ -624,7 +624,11 @@ export default function NationalTeamInterestForm() {
                       </Button>
                       {submitStatus === "error" && (
                         <p className="text-sm text-[#B31B1B] mt-2 text-center">
-                          There was an error submitting your form. Please try again or contact us directly.
+                          There was an error submitting your form. Please try again or{" "}
+                          <a href="mailto:info@ncwrestlingunited.com" className="underline font-medium">
+                            contact us at info@ncwrestlingunited.com
+                          </a>
+                          .
                         </p>
                       )}
                     </div>
@@ -726,8 +730,8 @@ export default function NationalTeamInterestForm() {
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-700 mb-2">
             <strong>Questions?</strong> Contact us at{" "}
-            <a href="mailto:ncunitedwrestling@gmail.com" className="text-[#002147] hover:text-[#B31B1B] font-semibold">
-              ncunitedwrestling@gmail.com
+            <a href="mailto:info@ncwrestlingunited.com" className="text-[#002147] hover:text-[#B31B1B] font-semibold">
+              info@ncwrestlingunited.com
             </a>
           </p>
           <p className="text-sm text-gray-600 italic">

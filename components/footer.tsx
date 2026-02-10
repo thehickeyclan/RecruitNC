@@ -66,9 +66,34 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-sm text-gray-300 hover:text-white">
+                <a
+                  href="https://store.ncwrestlingunited.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-300 hover:text-white"
+                >
+                  Store
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://legacy.ncwrestlingunited.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-300 hover:text-white"
+                >
+                  LegacyNC
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://ncwrestlingunited.com/about/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-300 hover:text-white"
+                >
                   About
-                </Link>
+                </a>
               </li>
               <li>
                 <Link href="/contact" className="text-sm text-gray-300 hover:text-white">
@@ -80,9 +105,35 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold">Contact</h3>
             <p className="mt-2 text-sm text-gray-300">Have questions or want to report a commitment?</p>
-            <Link href="/contact" className="mt-2 inline-block text-sm font-medium text-blue-400 hover:text-blue-300">
+            <a
+              href="mailto:info@ncwrestlingunited.com"
+              className="mt-2 inline-block text-sm font-medium text-blue-400 hover:text-blue-300"
+            >
+              info@ncwrestlingunited.com
+            </a>
+            <span className="mx-2 text-gray-500">·</span>
+            <Link href="/contact" className="text-sm font-medium text-blue-400 hover:text-blue-300">
               Contact Us
             </Link>
+            <p className="mt-3 text-sm text-gray-300">Follow us</p>
+            <div className="mt-1 flex gap-3">
+              <a
+                href="https://www.instagram.com/ncwrestlingunited/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-blue-400 hover:text-blue-300"
+              >
+                Instagram
+              </a>
+              <a
+                href="https://www.facebook.com/ncwrestlingunited"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-blue-400 hover:text-blue-300"
+              >
+                Facebook
+              </a>
+            </div>
           </div>
         </div>
         <div className="mt-8 border-t border-gray-700 pt-8">

@@ -967,10 +967,10 @@ export default function RecruitingPage() {
                 <HelpCircle className="h-12 w-12 text-[#D3B574] mx-auto mb-4" />
                 <h3 className="text-white font-bold mb-2">💬 CONTACT US</h3>
                 <p className="text-white/70 text-sm mb-4">
-                  Have questions? Need guidance? Reach out to our team
+                  Have questions? Need guidance? Reach out at info@ncwrestlingunited.com
                 </p>
-                <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10">
-                  Get Help →
+                <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10" asChild>
+                  <a href="mailto:info@ncwrestlingunited.com">Get Help →</a>
                 </Button>
               </CardContent>
             </Card>
