@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getBlueContent } from "@/lib/blue-content"
 import { BlueAlumniTable } from "./blue-alumni-table"
 import { getBlueAlumni } from "@/lib/blue-alumni"
-import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
+import { BlueExpressInterestForm } from "./blue-express-interest-form"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
 import { NextStepsCTA } from "./next-steps-cta"
@@ -430,21 +430,16 @@ export default async function BluePage() {
             </p>
           </section>
 
-          {/* 13. State Qualifier Interest (primary CTA) */}
+          {/* 13. State Qualifier Interest & Blue Membership (consolidated) */}
           <section id="state-qualifier">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">State Qualifier Interest</h2>
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">State Qualifier Interest & Blue Membership</h2>
             <p className="mb-6 leading-relaxed text-[#03154C]/90">
-              State qualifiers are determined the weekend before States. If you qualified for
-              states and want to express interest in Blue, use the button below. We will review
-              submissions and extend invites to those who fit the program.
+              State qualifiers are determined the weekend before States. If you qualified for states and want to express interest in Blue, submit the form below. We will review submissions and extend invites to those who fit the program.
             </p>
-            <StateQualifierInterestCTA />
-          </section>
-
-          {/* 14. Blue Membership & Registration at States */}
-          <section id="membership">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Membership & Registration at States</h2>
-            <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
+            <div className="mb-10 max-w-xl">
+              <BlueExpressInterestForm />
+            </div>
+            <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8" id="membership">
               <div className="flex-shrink-0 w-full md:w-[280px] overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
                 <Image
                   src={images.blue_shirt}
@@ -456,11 +451,11 @@ export default async function BluePage() {
                 />
               </div>
               <Card className="flex-1 min-w-0 border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="pt-6">
                   <p className="leading-relaxed text-[#03154C]/90">
                     Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. Membership is invite-led, not automatic, and is not defined by a single tournament. Invitations are extended throughout the year based on an athlete&apos;s body of work, commitment to improvement, and alignment with the culture of NC United Blue.
                   </p>
-                  <p className="leading-relaxed text-[#03154C]/90">
+                  <p className="mt-4 leading-relaxed text-[#03154C]/90">
                     In addition to year-round invitations, a wave of invitations will be extended to select 2026 State Qualifiers, with official registration and Blue shirt pickup taking place at the State Championships. Invited athletes are asked to stop by Suite 109 at States to complete registration and receive their Blue shirt, which serves as a symbol of membership in the program.
                   </p>
                 </CardContent>
