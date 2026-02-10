@@ -16,6 +16,9 @@ create table if not exists public.blue_express_interest (
   highest_achievement text not null check (highest_achievement in (
     'all_american', 'state_champion', 'state_placer', 'state_qualifier', 'na'
   )),
+  high_school text,
+  club text,
+  comments text,
   created_at timestamptz not null default now()
 );
 
@@ -28,4 +31,13 @@ create policy "Service role can read all"
   on public.blue_express_interest for select to service_role using (true);
 ```
 
-Form fields: first name, last name, cell, graduation year, highest level achievement (All American, State Champion, State Placer, State Qualifier, N/A).
+Form fields: first name, last name, cell, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments.
+
+If the table already exists, add the new columns:
+
+```sql
+alter table public.blue_express_interest
+  add column if not exists high_school text,
+  add column if not exists club text,
+  add column if not exists comments text;
+```

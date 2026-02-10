@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -28,6 +29,9 @@ export function BlueExpressInterestForm() {
   const [cell, setCell] = useState("")
   const [graduationYear, setGraduationYear] = useState("")
   const [highestAchievement, setHighestAchievement] = useState("")
+  const [highSchool, setHighSchool] = useState("")
+  const [club, setClub] = useState("")
+  const [comments, setComments] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -69,6 +73,9 @@ export function BlueExpressInterestForm() {
           cell: cell.trim(),
           graduationYear,
           highestAchievement,
+          highSchool: highSchool.trim() || undefined,
+          club: club.trim() || undefined,
+          comments: comments.trim() || undefined,
         }),
       })
       const data = await res.json()
@@ -84,6 +91,9 @@ export function BlueExpressInterestForm() {
       setCell("")
       setGraduationYear("")
       setHighestAchievement("")
+      setHighSchool("")
+      setClub("")
+      setComments("")
     } catch {
       setStatus("error")
       setErrorMessage("Something went wrong. Please try again.")
@@ -159,6 +169,37 @@ export function BlueExpressInterestForm() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
+          <Label htmlFor="blue-high-school" className="text-[#03154C]">
+            High school
+          </Label>
+          <Input
+            id="blue-high-school"
+            type="text"
+            value={highSchool}
+            onChange={(e) => setHighSchool(e.target.value)}
+            className="border-[#03154C]/30 bg-white"
+            placeholder="High school"
+            disabled={isSubmitting}
+            autoComplete="organization"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="blue-club" className="text-[#03154C]">
+            Club
+          </Label>
+          <Input
+            id="blue-club"
+            type="text"
+            value={club}
+            onChange={(e) => setClub(e.target.value)}
+            className="border-[#03154C]/30 bg-white"
+            placeholder="Club (optional)"
+            disabled={isSubmitting}
+          />
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
           <Label htmlFor="blue-graduation-year" className="text-[#03154C]">
             Graduation year
           </Label>
@@ -192,6 +233,20 @@ export function BlueExpressInterestForm() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="blue-comments" className="text-[#03154C]">
+          Anything else you’d like us to know? (optional)
+        </Label>
+        <Textarea
+          id="blue-comments"
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+          className="min-h-[100px] border-[#03154C]/30 bg-white"
+          placeholder="Freeform — goals, questions, etc."
+          disabled={isSubmitting}
+          rows={4}
+        />
       </div>
       <Button
         type="submit"

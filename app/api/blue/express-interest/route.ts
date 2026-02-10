@@ -13,6 +13,9 @@ export async function POST(request: NextRequest) {
     const cell = body.cell?.trim()
     const graduationYear = body.graduationYear?.trim()
     const highestAchievement = body.highestAchievement?.trim()
+    const highSchool = body.highSchool?.trim() || null
+    const club = body.club?.trim() || null
+    const comments = body.comments?.trim() || null
 
     if (!firstName) return NextResponse.json({ ok: false, error: "First name is required" }, { status: 400 })
     if (!lastName) return NextResponse.json({ ok: false, error: "Last name is required" }, { status: 400 })
@@ -31,6 +34,9 @@ export async function POST(request: NextRequest) {
           cell_phone: cell,
           graduation_year: graduationYear,
           highest_achievement: highestAchievement,
+          high_school: highSchool,
+          club: club,
+          comments: comments,
         },
       ])
 

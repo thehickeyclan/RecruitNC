@@ -22,6 +22,9 @@ type Submission = {
   cell_phone: string
   graduation_year: string
   highest_achievement: string
+  high_school: string | null
+  club: string | null
+  comments: string | null
   created_at: string
 }
 
@@ -100,9 +103,12 @@ export default function BlueInterestPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
+                      <TableHead>High school</TableHead>
+                      <TableHead>Club</TableHead>
                       <TableHead>Cell</TableHead>
                       <TableHead>Grad year</TableHead>
                       <TableHead>Highest achievement</TableHead>
+                      <TableHead>Comments</TableHead>
                       <TableHead>Submitted</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -112,12 +118,21 @@ export default function BlueInterestPage() {
                         <TableCell className="font-medium">
                           {row.first_name} {row.last_name}
                         </TableCell>
+                        <TableCell className="max-w-[140px] truncate" title={row.high_school ?? ""}>
+                          {row.high_school || "—"}
+                        </TableCell>
+                        <TableCell className="max-w-[120px] truncate" title={row.club ?? ""}>
+                          {row.club || "—"}
+                        </TableCell>
                         <TableCell>{row.cell_phone}</TableCell>
                         <TableCell>{row.graduation_year}</TableCell>
                         <TableCell>
                           {ACHIEVEMENT_LABELS[row.highest_achievement] ?? row.highest_achievement}
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
+                        <TableCell className="max-w-[200px] truncate text-sm" title={row.comments ?? ""}>
+                          {row.comments || "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                           {new Date(row.created_at).toLocaleString()}
                         </TableCell>
                       </TableRow>
