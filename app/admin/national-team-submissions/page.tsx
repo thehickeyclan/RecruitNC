@@ -664,7 +664,7 @@ export default function NationalTeamSubmissionsPage() {
                     <Input
                       id="rankScore"
                       type="number"
-                      value={rankScore || selectedSubmission.rank_score ?? ""}
+                      value={rankScore || (selectedSubmission.rank_score ?? "")}
                       onChange={(e) => setRankScore(e.target.value)}
                       placeholder="Enter rank score"
                       className="mt-1"
@@ -695,7 +695,7 @@ export default function NationalTeamSubmissionsPage() {
                     </Label>
                     <Textarea
                       id="adminNotes"
-                      value={adminNotes || selectedSubmission.admin_notes ?? ""}
+                      value={adminNotes || (selectedSubmission.admin_notes ?? "")}
                       onChange={(e) => setAdminNotes(e.target.value)}
                       placeholder="Add notes about this submission..."
                       className="mt-1 min-h-[100px]"
