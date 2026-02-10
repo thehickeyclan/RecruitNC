@@ -6,10 +6,8 @@ import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { getBlueContent } from "@/lib/blue-content"
-import { BlueRosterTable } from "./blue-roster-table"
 import { BlueAlumniTable } from "./blue-alumni-table"
 import { getBlueAlumni } from "@/lib/blue-alumni"
-import { getBlueCurrentMembers } from "@/lib/blue-current-members"
 import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
@@ -41,10 +39,9 @@ export default async function BluePage() {
     const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
     isAdmin = !!profile?.is_admin
   }
-  const [images, alumni, currentMembers] = await Promise.all([
+  const [images, alumni] = await Promise.all([
     getBlueContent(),
     getBlueAlumni(),
-    getBlueCurrentMembers(),
   ])
   return (
     <div className="min-h-screen bg-white">
@@ -387,17 +384,26 @@ export default async function BluePage() {
             </Card>
           </section>
 
-          {/* 12. Blue Roster */}
+          {/* 12. Blue Roster — team photo */}
           <section id="roster">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Roster (Current Members)</h2>
             <p className="mb-6 leading-relaxed text-[#03154C]/90">
               The current squad includes 40+ state titles, 70+ state qualifiers, 15 NHSCA /
               Super32 / Ironman All-Americans, and commits across D1, D2, D3, NAIA, and Juco.
             </p>
-            <BlueRosterTable members={currentMembers} />
+            <div className="overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
+              <Image
+                src={images.blue_team_photo}
+                alt="NC United Blue Team"
+                width={900}
+                height={600}
+                className="h-auto w-full object-contain"
+                unoptimized
+              />
+            </div>
           </section>
 
-          {/* 13. Blue Alumni — division from college_division_mappings only */}
+          {/* 13. Blue Alumni */}
           <section id="alumni">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Alumni</h2>
             <p className="mb-6 leading-relaxed text-[#03154C]/90">
