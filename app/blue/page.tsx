@@ -12,7 +12,6 @@ import { StateQualifierInterestCTA } from "./state-qualifier-interest-cta"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
 import { NextStepsCTA } from "./next-steps-cta"
-import { ExploreBlue } from "./explore-blue"
 
 const NAVY = "#03154C"
 const GOLD = "#D3B574"
@@ -75,6 +74,11 @@ export default async function BluePage() {
             <p className="leading-relaxed text-[#03154C]/90">
               Blue is built on a simple idea: elite wrestlers grow faster when they train with other elite wrestlers. By setting shared expectations, demanding accountability, and competing together, NC United Blue creates a culture where North Carolina&apos;s best sharpen each other and represent the state with pride.
             </p>
+          </section>
+
+          {/* Next Steps — Choose how you want to explore Blue (Learn / Train / Join) */}
+          <section id="next-steps" className="my-10">
+            <NextStepsCTA />
           </section>
 
           {/* 2. Mission & Vision */}
@@ -257,10 +261,10 @@ export default async function BluePage() {
           <section id="recruiting">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Recruiting Support & Exposure</h2>
             <p className="leading-relaxed text-[#03154C]/90 mb-4">
-              College recruiting can feel like a black hole for wrestlers and parents. NC United exists to bring clarity, education, and real opportunity to the process by first understanding each athlete&apos;s goals—academically, athletically, and personally. We educate Blue members on how college recruiting works, create meaningful exposure through RecruitNC, and actively connect college coaches with our athletes.
+              College coaches want to see athletes <span className="font-medium text-[#03154C]">training with the best, competing against the best, and beating the best</span>. NC United is built to facilitate exactly that: Blue members train in a high-accountability environment, compete at national events, and build a résumé that speaks for itself. We bring clarity and real opportunity to the recruiting process by understanding each athlete&apos;s goals—academically, athletically, and personally—and by connecting college coaches with our athletes through RecruitNC and regular updates.
             </p>
             <p className="leading-relaxed text-[#03154C]/90 mb-4">
-              Local college programs are deeply engaged in our ecosystem and are familiar with NC United athletes long before recruiting decisions are made. To date, NC United has helped connect hundreds of wrestlers to college opportunities across all divisions. We host an annual College Coaches Lounge at the state championships, provide regular athlete updates to college staffs, and celebrate commitments through signing announcements and our Signing Day podcast—giving athletes a platform to share their recruiting journey while helping the next generation learn from those experiences.
+              Our ecosystem raises the level for everyone. We host an annual College Coaches Lounge at the state championships, offer internship assistance and career planning programs, and celebrate commitments through signing announcements and our Signing Day podcast. Local college programs are deeply engaged with NC United and get to know our athletes long before recruiting decisions are made—so when it&apos;s time to commit, our wrestlers are ready.
             </p>
           </section>
 
@@ -410,9 +414,7 @@ export default async function BluePage() {
           <section id="qualification">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Qualification & Selection</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
-              Blue is invite-led with structured pathways for consideration. Typically, we look
-              at elite high school athletes who have qualified for states and want to wrestle
-              at the next level.
+              Blue is invite-led with structured pathways for consideration. A critical piece: we look for athletes who <span className="font-medium text-[#03154C]">demonstrate they love the sport</span>—competing year-round and actively seeking the best training partners and competition. Typically, that includes elite high school athletes who have qualified for states and want to wrestle at the next level.
             </p>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
               We also consider edge cases: injuries that affected state qualification, athletes
@@ -465,14 +467,6 @@ export default async function BluePage() {
               </Card>
             </div>
           </section>
-
-          {/* 15. Next Steps (Learn / Train / Join) */}
-          <section id="next-steps" className="mt-10">
-            <NextStepsCTA />
-          </section>
-
-          {/* 16. Explore Blue / footer navigation */}
-          <ExploreBlue />
         </article>
 
         {/* Back to top */}
