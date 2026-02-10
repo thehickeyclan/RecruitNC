@@ -8,7 +8,7 @@ import { ImageUpload } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, ArrowLeft } from "lucide-react"
-import type { BlueContent, BlueImageKey } from "@/lib/blue-content"
+import { BLUE_IMAGE_KEYS, type BlueContent, type BlueImageKey } from "@/lib/blue-content"
 
 const SLOT_LABELS: Record<BlueImageKey, string> = {
   blue_banner_url: "Page banner (top)",
@@ -65,6 +65,15 @@ export default function AdminBluePage() {
   }, [])
 
   const saveSlot = async (key: BlueImageKey, url: string) => {
+    // "Remove" sends empty string; API requires a valid URL, so reset to default locally
+    if (!url || !url.startsWith("http")) {
+      setContent((prev) => (prev ? { ...prev, [key]: BLUE_IMAGE_KEYS[key] } : null))
+      toast({
+        title: "Image reset",
+        description: `${SLOT_LABELS[key]} reverted to default.`,
+      })
+      return
+    }
     try {
       const res = await fetch("/api/admin/blue/content", {
         method: "POST",
@@ -181,7 +190,7 @@ export default function AdminBluePage() {
                       )}
                       <ImageUpload
                         category="blue"
-                        entityName={key.replace("blue_", "")}
+                        entityName={key === "blue_shirt" ? "blue-shirt" : key.replace("blue_", "")}
                         existingImageUrl={url}
                         onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
                         aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}

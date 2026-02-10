@@ -373,29 +373,31 @@ export default async function BluePage() {
           {/* 11. Blue Membership & Registration at States */}
           <section id="membership">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Membership & Registration at States</h2>
-            <div className="mb-6 overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md max-w-md mx-auto">
-              <Image
-                src={images.blue_shirt}
-                alt="NC United Blue shirt — symbol of membership"
-                width={500}
-                height={500}
-                className="h-auto w-full object-contain"
-                unoptimized
-              />
+            <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
+              <div className="flex-shrink-0 w-full md:w-[280px] overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
+                <Image
+                  src={images.blue_shirt}
+                  alt="NC United Blue shirt — symbol of membership"
+                  width={280}
+                  height={320}
+                  className="h-auto w-full object-contain"
+                  unoptimized
+                />
+              </div>
+              <Card className="flex-1 min-w-0 border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
+                <CardContent className="pt-6 space-y-4">
+                  <p className="leading-relaxed text-[#03154C]/90">
+                    Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. It is not automatic, and it is not defined by a single tournament. Membership reflects an athlete&apos;s body of work, commitment to improvement, and alignment with the culture of NC United Blue.
+                  </p>
+                  <p className="leading-relaxed text-[#03154C]/90">
+                    Ahead of the State Championships, invitations are extended to athletes who have been identified as confirmed Blue members. These athletes are invited to stop by Suite 109 at States to formally register and pick up their Blue shirt, which serves as a symbol of membership in the program.
+                  </p>
+                  <p className="leading-relaxed text-[#03154C]/90">
+                    Athletes who have qualified for States but have not yet received an invitation are encouraged to express interest below. Expressing interest allows our staff to better understand an athlete&apos;s goals and follow up after the State Championships as we continue to evaluate, expand, and build the Blue program moving forward.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-            <Card className="border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
-              <CardContent className="pt-6 space-y-4">
-                <p className="leading-relaxed text-[#03154C]/90">
-                  Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. It is not automatic, and it is not defined by a single tournament. Membership reflects an athlete&apos;s body of work, commitment to improvement, and alignment with the culture of NC United Blue.
-                </p>
-                <p className="leading-relaxed text-[#03154C]/90">
-                  Ahead of the State Championships, invitations are extended to athletes who have been identified as confirmed Blue members. These athletes are invited to stop by Suite 109 at States to formally register and pick up their Blue shirt, which serves as a symbol of membership in the program.
-                </p>
-                <p className="leading-relaxed text-[#03154C]/90">
-                  Athletes who have qualified for States but have not yet received an invitation are encouraged to express interest below. Expressing interest allows our staff to better understand an athlete&apos;s goals and follow up after the State Championships as we continue to evaluate, expand, and build the Blue program moving forward.
-                </p>
-              </CardContent>
-            </Card>
           </section>
 
           {/* 12. Blue Roster — team photo */}
