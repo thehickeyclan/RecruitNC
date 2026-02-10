@@ -21,13 +21,16 @@ const config: Config = {
     extend: {
       colors: {
         // NC United Branding Colors
+        "nc-blue": "#002147", // NC United navy (footer, gradients)
         "nc-navy": {
           950: "#002147", // NC United Logo Navy Blue
         },
         "nc-red": {
+          DEFAULT: "#B31B1B",
           800: "#B31B1B", // Red
         },
         "nc-gold": {
+          DEFAULT: "#CBAF5D",
           800: "#CBAF5D", // Gold
         },
         border: "hsl(var(--border))",

@@ -26,6 +26,16 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="mt-2 space-y-2">
               <li>
+                <Link href="/blue" className="text-sm text-gray-300 hover:text-white">
+                  Blue Program
+                </Link>
+              </li>
+              <li>
+                <Link href="/national-team" className="text-sm text-gray-300 hover:text-white">
+                  National Team
+                </Link>
+              </li>
+              <li>
                 <Link href="/athletes" className="text-sm text-gray-300 hover:text-white">
                   Athletes
                 </Link>
