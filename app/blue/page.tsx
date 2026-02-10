@@ -64,13 +64,13 @@ export default async function BluePage() {
         </figure>
 
         {/* Call-out: 2026 State Qualifiers */}
-        <div className="mb-10 rounded-xl border-2 border-[#D3B574] bg-[#03154C]/5 px-5 py-4 text-center">
-          <p className="font-semibold text-[#03154C]">
+        <div className="mb-10 rounded-xl border-2 border-[#B31B1B] bg-[#B31B1B] px-5 py-4 text-center text-white">
+          <p className="font-semibold">
             All 2026 State Qualifiers: fill out the form below to express interest in Blue.
           </p>
           <Link
             href="#state-qualifier"
-            className="mt-2 inline-block text-sm font-medium text-[#03154C] hover:text-[#D3B574] hover:underline"
+            className="mt-2 inline-block text-sm font-medium text-white hover:underline"
           >
             Go to form →
           </Link>
