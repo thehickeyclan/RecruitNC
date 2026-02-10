@@ -214,7 +214,7 @@ export default function NCUnitedNationalTeam() {
                 <Card className="overflow-hidden shadow-lg border-0">
                   <div
                     className="relative h-64 md:h-80 bg-cover bg-center bg-no-repeat"
-                    style={{ backgroundImage: "url('/images/ucd-team-singlets.png')" }}
+                    style={{ backgroundImage: "url('/images/ucd-2025-team-photo.png')" }}
                   >
                     <div className="absolute inset-0 bg-black/40"></div>
                     <div className="relative z-10 p-6 md:p-8 h-full flex flex-col justify-end text-white">
