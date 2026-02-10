@@ -174,3 +174,67 @@ export async function PATCH(request: NextRequest) {
     )
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const auth = await requireAdmin()
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const id = body?.id
+
+    if (!id) {
+      return NextResponse.json({ ok: false, error: "Submission ID is required" }, { status: 400 })
+    }
+
+    let adminClient
+    try {
+      adminClient = createAdminClient()
+    } catch (e: any) {
+      if (/SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY/.test(e?.message || "")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to environment variables.",
+          },
+          { status: 503 }
+        )
+      }
+      throw e
+    }
+
+    const { error } = await adminClient
+      .from("national_team_interest_forms")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      console.error("[Admin API] Error deleting submission:", error)
+      if (isMissingTableError(error)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "The submissions table does not exist. Run the migration: scripts/206-create-national-team-interest-form-table.sql",
+          },
+          { status: 503 }
+        )
+      }
+      return NextResponse.json(
+        { ok: false, error: error.message || "Failed to delete submission" },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ ok: true })
+  } catch (error: any) {
+    console.error("[Admin API] Exception deleting submission:", error)
+    return NextResponse.json(
+      { ok: false, error: error?.message || "Failed to delete submission" },
+      { status: 500 }
+    )
+  }
+}

@@ -11,7 +11,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { getFullTournamentData, type TournamentResult, type DualResult } from "@/lib/nc-united-api"
 import { getStorageImageUrl } from "@/lib/nc-united-storage"
-import { Footer } from "@/components/footer"
 
 export default function UCD2024Results() {
   const [loading, setLoading] = useState(true)
@@ -784,8 +783,6 @@ export default function UCD2024Results() {
         </section>
       )}
 
-      {/* Site Footer */}
-      <Footer />
     </div>
   )
 }

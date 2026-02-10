@@ -30,6 +30,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Trash2,
 } from "lucide-react"
 
 const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
@@ -74,6 +75,7 @@ export default function NationalTeamSubmissionsPage() {
   const [selectedTournament, setSelectedTournament] = useState<string>("all")
   const [selectedWeight, setSelectedWeight] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"rank" | "name" | "weight" | "created">("rank")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true)
@@ -124,6 +126,30 @@ export default function NationalTeamSubmissionsPage() {
       } catch (err: any) {
         console.error("Error updating submission:", err)
         alert(`Failed to update submission: ${err?.message || "Unknown error"}`)
+      }
+    },
+    [loadSubmissions]
+  )
+
+  const deleteSubmission = useCallback(
+    async (submissionId: string) => {
+      if (!confirm("Delete this submission? This cannot be undone.")) return
+      setDeletingId(submissionId)
+      try {
+        const response = await fetch("/api/admin/national-team-submissions", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: submissionId }),
+        })
+        const result = await response.json()
+        if (!result.ok) throw new Error(result.error || "Failed to delete submission")
+        await loadSubmissions()
+        setSelectedSubmission(null)
+      } catch (err: any) {
+        console.error("Error deleting submission:", err)
+        alert(`Failed to delete: ${err?.message || "Unknown error"}`)
+      } finally {
+        setDeletingId(null)
       }
     },
     [loadSubmissions]
@@ -705,24 +731,41 @@ export default function NationalTeamSubmissionsPage() {
               </div>
             )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
-                Cancel
-              </Button>
+            <DialogFooter className="flex-wrap gap-2 sm:gap-0">
               <Button
-                onClick={() => {
-                  if (selectedSubmission) {
-                    updateSubmission(selectedSubmission.id, {
-                      status: newStatus || selectedSubmission.status,
-                      admin_notes: adminNotes || selectedSubmission.admin_notes || null,
-                      rank_score: rankScore ? parseInt(rankScore) : selectedSubmission.rank_score,
-                    })
-                  }
-                }}
-                className="bg-[#002147] hover:bg-[#003366]"
+                variant="destructive"
+                onClick={() => selectedSubmission && deleteSubmission(selectedSubmission.id)}
+                disabled={!selectedSubmission || deletingId === selectedSubmission?.id}
+                className="mr-auto"
               >
-                Save Changes
+                {deletingId === selectedSubmission?.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </>
+                )}
               </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setSelectedSubmission(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (selectedSubmission) {
+                      updateSubmission(selectedSubmission.id, {
+                        status: newStatus || selectedSubmission.status,
+                        admin_notes: adminNotes || selectedSubmission.admin_notes || null,
+                        rank_score: rankScore ? parseInt(rankScore) : selectedSubmission.rank_score,
+                      })
+                    }
+                  }}
+                  className="bg-[#002147] hover:bg-[#003366]"
+                >
+                  Save Changes
+                </Button>
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>

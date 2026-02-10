@@ -9,7 +9,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { getFullTournamentData, type TournamentResult, type DualResult } from "@/lib/nc-united-api"
 import { getStorageImageUrl } from "@/lib/nc-united-storage"
-import { Footer } from "@/components/footer"
 
 export default function NHSCA2025Results() {
   const [loading, setLoading] = useState(true)
@@ -605,8 +604,6 @@ export default function NHSCA2025Results() {
         </div>
       </section>
 
-      {/* Site Footer */}
-      <Footer />
     </div>
   )
 }

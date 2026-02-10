@@ -26,6 +26,16 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="mt-2 space-y-2">
               <li>
+                <Link href="/prospects/all" className="text-sm text-gray-300 hover:text-white">
+                  Athlete Profiles
+                </Link>
+              </li>
+              <li>
+                <Link href="/public-rankings" className="text-sm text-gray-300 hover:text-white">
+                  Rankings
+                </Link>
+              </li>
+              <li>
                 <Link href="/blue" className="text-sm text-gray-300 hover:text-white">
                   Blue Program
                 </Link>
@@ -37,12 +47,17 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/athletes" className="text-sm text-gray-300 hover:text-white">
-                  Athletes
+                  Commitments
+                </Link>
+              </li>
+              <li>
+                <Link href="/high-schools" className="text-sm text-gray-300 hover:text-white">
+                  By High School
                 </Link>
               </li>
               <li>
                 <Link href="/colleges" className="text-sm text-gray-300 hover:text-white">
-                  Colleges
+                  By College
                 </Link>
               </li>
               <li>
@@ -53,6 +68,11 @@ export function Footer() {
               <li>
                 <Link href="/about" className="text-sm text-gray-300 hover:text-white">
                   About
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-sm text-gray-300 hover:text-white">
+                  Contact
                 </Link>
               </li>
             </ul>

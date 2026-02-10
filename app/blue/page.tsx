@@ -17,10 +17,11 @@ import { ExploreBlue } from "./explore-blue"
 const NAVY = "#03154C"
 const GOLD = "#D3B574"
 
-// TODO: Replace with actual URLs when supplied
-const NATIONAL_TEAM_URL = "#"
-const NATIONAL_TEAM_SCHEDULE_URL = "#"
-const COMPETITION_CALENDAR_URL = "#"
+// National Team hub = about + schedule; interest form = expressions of interest
+const NATIONAL_TEAM_ABOUT_URL = "/national-team"
+const NATIONAL_TEAM_SCHEDULE_URL = "/national-team"
+const NATIONAL_TEAM_INTEREST_FORM_URL = "/national-team/interest-form"
+const COMPETITION_CALENDAR_URL = "/national-team"
 
 export const dynamic = "force-dynamic"
 
@@ -230,8 +231,7 @@ export default async function BluePage() {
               />
             </div>
             <p className="mb-4 text-sm text-[#03154C]/90">
-              {/* TODO: Add link when URL is supplied */}
-              <Link href={NATIONAL_TEAM_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
+              <Link href={NATIONAL_TEAM_ABOUT_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
                 Learn more about the National Team →
               </Link>
             </p>
@@ -419,10 +419,9 @@ export default async function BluePage() {
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Competition & Schedule</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
               Blue competes at national events throughout the year. The National Team schedule
-              and competition calendar will be linked here.
+              and competition calendar are linked below.
             </p>
-            <p className="space-x-4 text-sm">
-              {/* TODO: Add links when URLs are supplied */}
+            <p className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
               <Link
                 href={NATIONAL_TEAM_SCHEDULE_URL}
                 className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
@@ -434,6 +433,12 @@ export default async function BluePage() {
                 className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
               >
                 Competition Calendar →
+              </Link>
+              <Link
+                href={NATIONAL_TEAM_INTEREST_FORM_URL}
+                className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
+              >
+                National Team Interest Form →
               </Link>
             </p>
           </section>

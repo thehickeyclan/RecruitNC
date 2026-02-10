@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, FileEdit } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 import {
@@ -61,16 +61,20 @@ export function Navbar() {
     }
   }
 
-  const navItems = [
+  // Top-level nav: Home, Prospects (dropdown), Rankings, Blue, National Team (dropdown). About/Contact in footer only.
+  const mainNavLinks = [
     { href: "/", label: "Home" },
-    { href: "/commits", label: "Commits" },
     { href: "/public-rankings", label: "Rankings" },
     { href: "/blue", label: "Blue Program" },
-    { href: "/national-team", label: "National Team" },
+  ]
+
+  const prospectsItems = [
     { href: "/prospects/all", label: "Athlete Profiles" },
-    { href: "/my-recruits", label: "My Recruits" },
-    { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
+  ]
+  const commitmentItems = [
+    { href: "/athletes", label: "All Commitments" },
+    { href: "/high-schools", label: "By High School" },
+    { href: "/colleges", label: "By College" },
   ]
 
   const nationalTeamItems = [
@@ -111,7 +115,43 @@ export function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              {navItems.slice(0, 1).map((item) => (
+              <Link
+                href="/"
+                className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+              >
+                Home
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                  Prospects
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel className="font-normal text-muted-foreground">
+                    Profiles &amp; commitments
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {prospectsItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="cursor-pointer">
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="font-normal text-muted-foreground">
+                    Commitments
+                  </DropdownMenuLabel>
+                  {commitmentItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href} className="cursor-pointer">
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              {mainNavLinks.slice(1).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -122,71 +162,36 @@ export function Navbar() {
               ))}
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
-                  Commits
+                  National Team
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem asChild>
-                    <Link href="/athletes" className="cursor-pointer">
-                      Athletes
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/high-schools" className="cursor-pointer">
-                      High Schools
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/colleges" className="cursor-pointer">
-                      Colleges
-                    </Link>
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="start" className="w-72">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Users className="h-4 w-4" />
+                      National Team
+                    </div>
+                    <p className="text-xs text-muted-foreground font-normal mt-1">
+                      NC United National Team Portal
+                    </p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {nationalTeamItems.map((sub) => {
+                    const Icon = sub.icon
+                    return (
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{sub.label}</span>
+                            <span className="text-xs text-muted-foreground">{sub.description}</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              {navItems.slice(2).map((item) =>
-                item.href === "/national-team" ? (
-                  <DropdownMenu key="national-team">
-                    <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
-                      National Team
-                      <ChevronDown className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-72">
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="flex items-center gap-2 font-semibold">
-                          <Users className="h-4 w-4" />
-                          National Team
-                        </div>
-                        <p className="text-xs text-muted-foreground font-normal mt-1">
-                          NC United National Team Portal
-                        </p>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {nationalTeamItems.map((sub) => {
-                        const Icon = sub.icon
-                        return (
-                          <DropdownMenuItem key={sub.href} asChild>
-                            <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
-                              <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                              <div className="flex flex-col gap-0.5">
-                                <span className="font-medium">{sub.label}</span>
-                                <span className="text-xs text-muted-foreground">{sub.description}</span>
-                              </div>
-                            </Link>
-                          </DropdownMenuItem>
-                        )
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
-                  >
-                    {item.label}
-                  </Link>
-                )
-              )}
               {highlightNavItems.map((item) => (
                 <Link
                   key={item.href}
@@ -306,7 +311,40 @@ export function Navbar() {
                 }}
               >
                 <div className="flex flex-col space-y-4 mt-8 pb-8">
-                  {navItems.slice(0, 1).map((item) => (
+                  <Link
+                    href="/"
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Home
+                  </Link>
+                  <div className="px-3">
+                    <div className="text-gray-600 font-medium text-sm mb-2">Prospects</div>
+                    <div className="pl-4 space-y-2">
+                      {prospectsItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                      <div className="text-gray-500 text-xs font-medium mt-3 mb-1">Commitments</div>
+                      {commitmentItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                  {mainNavLinks.slice(1).map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}
@@ -316,32 +354,6 @@ export function Navbar() {
                       {item.label}
                     </Link>
                   ))}
-                  <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">Commits</div>
-                    <div className="pl-4 space-y-2">
-                      <Link
-                        href="/athletes"
-                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Athletes
-                      </Link>
-                      <Link
-                        href="/high-schools"
-                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        High Schools
-                      </Link>
-                      <Link
-                        href="/colleges"
-                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Colleges
-                      </Link>
-                    </div>
-                  </div>
                   <div className="px-3">
                     <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
                     <div className="pl-4 space-y-2">
@@ -357,18 +369,6 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
-                  {navItems.slice(2)
-                    .filter((item) => item.href !== "/national-team")
-                    .map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
                   {highlightNavItems.map((item) => (
                     <Link
                       key={item.href}
