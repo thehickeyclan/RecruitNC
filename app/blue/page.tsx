@@ -22,6 +22,8 @@ const NATIONAL_TEAM_ABOUT_URL = "/national-team"
 const NATIONAL_TEAM_SCHEDULE_URL = "/national-team"
 const NATIONAL_TEAM_INTEREST_FORM_URL = "/national-team/interest-form"
 const COMPETITION_CALENDAR_URL = "/national-team"
+// Practice schedule & drop-in sign-up
+const NC_UNITED_CALENDAR_URL = "https://calendar.ncwrestlingunited.com/"
 
 export const dynamic = "force-dynamic"
 
@@ -180,9 +182,9 @@ export default async function BluePage() {
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
               Blue practices are <strong className="text-[#03154C]">Sundays 1–3pm</strong> at the UNC wrestling room in
               Fetzer Hall—every other Sunday in season, every Sunday post season.{" "}
-              <Link href={COMPETITION_CALENDAR_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
+              <a href={NC_UNITED_CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
                 View the NC United calendar →
-              </Link>
+              </a>
             </p>
             <ul className="space-y-3 leading-relaxed text-[#03154C]/90">
               <li>
@@ -204,9 +206,9 @@ export default async function BluePage() {
               <h3 className="text-lg font-semibold text-[#03154C] mb-2">Drop-ins</h3>
               <p className="text-[#03154C]/90 text-sm leading-relaxed mb-2">
                 Drop-ins are welcome. We have limited availability per practice. To attend, sign up on the{" "}
-                <Link href={COMPETITION_CALENDAR_URL} className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
+                <a href={NC_UNITED_CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
                   NC United calendar
-                </Link>
+                </a>
                 {" "}by clicking on the practice and completing the registration form.
               </p>
             </div>
@@ -371,14 +373,26 @@ export default async function BluePage() {
           {/* 11. Blue Membership & Registration at States */}
           <section id="membership">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Membership & Registration at States</h2>
+            <div className="mb-6 overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md max-w-md mx-auto">
+              <Image
+                src={images.blue_shirt}
+                alt="NC United Blue shirt — symbol of membership"
+                width={500}
+                height={500}
+                className="h-auto w-full object-contain"
+                unoptimized
+              />
+            </div>
             <Card className="border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 space-y-4">
                 <p className="leading-relaxed text-[#03154C]/90">
-                  The Blue shirt is for confirmed Blue members only. We send invites{" "}
-                  <strong className="text-[#03154C]">before</strong> States. Invited athletes
-                  come by Suite 109 at States to register and pick up their shirt. If you have
-                  not received an invite, you are not yet a confirmed member—but you can express
-                  interest below if you are a state qualifier.
+                  Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. It is not automatic, and it is not defined by a single tournament. Membership reflects an athlete&apos;s body of work, commitment to improvement, and alignment with the culture of NC United Blue.
+                </p>
+                <p className="leading-relaxed text-[#03154C]/90">
+                  Ahead of the State Championships, invitations are extended to athletes who have been identified as confirmed Blue members. These athletes are invited to stop by Suite 109 at States to formally register and pick up their Blue shirt, which serves as a symbol of membership in the program.
+                </p>
+                <p className="leading-relaxed text-[#03154C]/90">
+                  Athletes who have qualified for States but have not yet received an invitation are encouraged to express interest below. Expressing interest allows our staff to better understand an athlete&apos;s goals and follow up after the State Championships as we continue to evaluate, expand, and build the Blue program moving forward.
                 </p>
               </CardContent>
             </Card>

@@ -15,6 +15,7 @@ export const BLUE_IMAGE_KEYS = {
   blue_coach_mike_macchiavello: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
   blue_coach_araad_fischer: `${BASE}/O7pdQfe_87-lRsmAyht2z-Blue%20Pic%207%20.png`,
   blue_team_photo: `${BASE}/eNZzhlbUPjwSpRAahxEPt-Blue%20Team%20Photo.png`,
+  blue_shirt: `${BASE}/eNZzhlbUPjwSpRAahxEPt-Blue%20Team%20Photo.png`,
 } as const
 
 export type BlueImageKey = keyof typeof BLUE_IMAGE_KEYS
@@ -30,6 +31,7 @@ export interface BlueContent {
   blue_coach_mike_macchiavello: string
   blue_coach_araad_fischer: string
   blue_team_photo: string
+  blue_shirt: string
 }
 
 function isValidUrl(s: string): boolean {

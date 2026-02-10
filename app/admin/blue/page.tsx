@@ -21,6 +21,7 @@ const SLOT_LABELS: Record<BlueImageKey, string> = {
   blue_coach_mike_macchiavello: "Coaching Excellence — Mike Macchiavello",
   blue_coach_araad_fischer: "Coaching Excellence — Araad Fisher",
   blue_team_photo: "Blue Roster (team photo)",
+  blue_shirt: "Blue shirt (Membership & Registration section)",
 }
 
 const PAGE_IMAGE_KEYS: BlueImageKey[] = [
@@ -30,6 +31,7 @@ const PAGE_IMAGE_KEYS: BlueImageKey[] = [
   "blue_what_makes_2",
   "blue_training_env",
   "blue_pipeline",
+  "blue_shirt",
   "blue_team_photo",
 ]
 
