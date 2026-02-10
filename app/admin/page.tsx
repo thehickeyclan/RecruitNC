@@ -345,6 +345,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">National Team Submissions</span>
               </Button>
             </Link>
+            <Link href="/admin/blue-interest">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#03154C] to-[#0a2571] hover:from-[#0a2571] hover:to-[#03154C] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+                <FileText className="h-6 w-6" />
+                <span className="text-sm font-semibold">Blue Interest Forms</span>
+              </Button>
+            </Link>
             <Link href="/admin/super32-tools">
               <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
                 <RefreshCw className="h-6 w-6" />
@@ -435,6 +441,17 @@ export default function AdminDashboard() {
                   <Users className="h-10 w-10 text-[#002147] mb-3" />
                   <h3 className="font-bold text-[#13294B] mb-1">National Team Submissions</h3>
                   <p className="text-xs text-gray-600">Interest form responses</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Blue Interest Forms */}
+            <Link href="/admin/blue-interest">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <FileText className="h-10 w-10 text-[#D3B574] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Blue Interest Forms</h3>
+                  <p className="text-xs text-gray-600">State qualifier express interest</p>
                 </CardContent>
               </Card>
             </Link>

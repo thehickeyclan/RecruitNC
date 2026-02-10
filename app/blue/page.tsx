@@ -63,6 +63,19 @@ export default async function BluePage() {
           </div>
         </figure>
 
+        {/* Call-out: 2026 State Qualifiers */}
+        <div className="mb-10 rounded-xl border-2 border-[#D3B574] bg-[#03154C]/5 px-5 py-4 text-center">
+          <p className="font-semibold text-[#03154C]">
+            All 2026 State Qualifiers: fill out the form below to express interest in Blue.
+          </p>
+          <Link
+            href="#state-qualifier"
+            className="mt-2 inline-block text-sm font-medium text-[#03154C] hover:text-[#D3B574] hover:underline"
+          >
+            Go to form →
+          </Link>
+        </div>
+
         {/* Main Content — Identity → Standards → Experience → Proof → Access → Action */}
         <article className="space-y-16">
           {/* 1. Hero + What Is NC United Blue */}
@@ -225,7 +238,7 @@ export default async function BluePage() {
                   href={NATIONAL_TEAM_SCHEDULE_URL}
                   className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
                 >
-                  National Team Schedule →
+                  About our National Team →
                 </Link>
                 <Link
                   href={COMPETITION_CALENDAR_URL}
@@ -434,11 +447,8 @@ export default async function BluePage() {
           <section id="state-qualifier">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">State Qualifier Interest & Blue Membership</h2>
             <p className="mb-6 leading-relaxed text-[#03154C]/90">
-              State qualifiers are determined the weekend before States. If you qualified for states and want to express interest in Blue, submit the form below. We will review submissions and extend invites to those who fit the program.
+              State qualifiers are determined the weekend before States. We will review submissions and extend invites to those who fit the program.
             </p>
-            <div className="mb-10 max-w-xl">
-              <BlueExpressInterestForm />
-            </div>
             <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8" id="membership">
               <div className="flex-shrink-0 w-full md:w-[280px] overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
                 <Image
@@ -461,11 +471,23 @@ export default async function BluePage() {
                 </CardContent>
               </Card>
             </div>
+            <div className="mt-10 max-w-xl">
+              <h3 className="mb-3 text-lg font-semibold text-[#03154C]">Express interest in Blue</h3>
+              <p className="mb-4 text-sm text-[#03154C]/90">
+                If you qualified for states and want to express interest, submit the form below.
+              </p>
+              <BlueExpressInterestForm />
+            </div>
           </section>
         </article>
 
-        {/* Back to top */}
-        <footer className="mt-16 border-t border-[#D3B574]/40 pt-8 text-center text-[#03154C]/80">
+        {/* Back to top + link to form */}
+        <footer className="mt-16 border-t border-[#D3B574]/40 pt-8 text-center text-[#03154C]/80 space-y-3">
+          <p>
+            <Link href="#state-qualifier" className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline">
+              Express interest in Blue →
+            </Link>
+          </p>
           <BackToTop />
         </footer>
       </div>
