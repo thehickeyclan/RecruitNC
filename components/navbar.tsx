@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, FileEdit } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 
 export function Navbar() {
@@ -70,6 +71,14 @@ export function Navbar() {
     { href: "/my-recruits", label: "My Recruits" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
+  ]
+
+  const nationalTeamItems = [
+    { href: "/national-team", label: "About", description: "Learn about the NC United National Team", icon: Users },
+    { href: "/national-team/ucd-2024-results", label: "UCD 2024", description: "Ultimate Club Duals 2024 results and highlights", icon: Trophy },
+    { href: "/national-team/ucd-2025-results", label: "UCD 2025", description: "Ultimate Club Duals 2025 results and highlights", icon: Trophy },
+    { href: "/national-team/nhsca-2025-results", label: "NHSCA 2025", description: "NHSCA Duals 2025 results and highlights", icon: Medal },
+    { href: "/national-team/interest-form", label: "Interest Form", description: "Express interest in Spring/Summer 2026 National Team", icon: Users },
   ]
 
   const highlightNavItems = showMyRecruits
@@ -134,15 +143,50 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              {navItems.slice(2).map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.slice(2).map((item) =>
+                item.href === "/national-team" ? (
+                  <DropdownMenu key="national-team">
+                    <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                      National Team
+                      <ChevronDown className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-72">
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex items-center gap-2 font-semibold">
+                          <Users className="h-4 w-4" />
+                          National Team
+                        </div>
+                        <p className="text-xs text-muted-foreground font-normal mt-1">
+                          NC United National Team Portal
+                        </p>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {nationalTeamItems.map((sub) => {
+                        const Icon = sub.icon
+                        return (
+                          <DropdownMenuItem key={sub.href} asChild>
+                            <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                              <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium">{sub.label}</span>
+                                <span className="text-xs text-muted-foreground">{sub.description}</span>
+                              </div>
+                            </Link>
+                          </DropdownMenuItem>
+                        )
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
               {highlightNavItems.map((item) => (
                 <Link
                   key={item.href}
@@ -298,7 +342,24 @@ export function Navbar() {
                       </Link>
                     </div>
                   </div>
-                  {navItems.slice(2).map((item) => (
+                  <div className="px-3">
+                    <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
+                    <div className="pl-4 space-y-2">
+                      {nationalTeamItems.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                  {navItems.slice(2)
+                    .filter((item) => item.href !== "/national-team")
+                    .map((item) => (
                     <Link
                       key={item.href}
                       href={item.href}

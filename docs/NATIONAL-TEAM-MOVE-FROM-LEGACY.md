@@ -32,6 +32,18 @@ For the Legacy NC side (what to copy, redirects, nav cleanup), see **Legacy NC**
 | **Page: hub** `app/national-team/page.tsx` | ✅ In RecruitNC; nav link added |
 | Pages: ucd-2024, ucd-2025, nhsca-2025, interest-form | ✅ In RecruitNC; `SiteFooter` → `Footer`; images in `public/images/` |
 | Nav + optional admin | Nav done; optional admin after pages |
+| Admin: national-team-submissions API + page | ✅ In RecruitNC; dashboard link added |
+
+## Migrate admin interest form submissions to RecruitNC
+
+**No data migration** — `national_team_interest_forms` lives in the shared DB; submissions are already available to RecruitNC.
+
+1. **Copy the API** — `app/api/admin/national-team-submissions/route.ts`. Same find/replace: `getSupabaseAdmin` → `createAdminClient`, `@/lib/server-supabase` → `@/lib/supabase/admin`. GET returns all submissions; PATCH updates by id.
+2. **Copy the admin page** — `app/admin/national-team-submissions/page.tsx`. Place it under RecruitNC’s admin area (`app/admin/national-team-submissions/`). Fix `@/components` paths if needed. RecruitNC has no `AlertDialog`; use `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter` from `@/components/ui/dialog` instead.
+3. **Auth** — In Legacy NC the page is behind AdminGuard in the admin layout; the API does not check auth. In RecruitNC the page is under `app/admin/` which uses `AuthGuard requireAdmin={true}` in `app/admin/layout.tsx`. The API is restricted to admins: GET and PATCH use `requireAdmin()` (server Supabase client + `user_profiles.is_admin`); 401 if not authenticated, 403 if not admin.
+4. **UI** — Page uses Card, Button, Badge, Tabs, Table, Input, Textarea, Label, Select, Dialog (not AlertDialog), and lucide-react; align with RecruitNC’s `@/components/ui/*` paths/names.
+5. **Dashboard link** — Add a link from RecruitNC’s admin dashboard (`app/admin/page.tsx`) to the new submissions page (e.g. “National Team submissions” in Quick Actions and/or Management Tools).
+6. **Check** — Load the page as an admin, confirm the list matches the DB, and test updating status/notes via PATCH.
 
 ## Migration complete (including images)
 
@@ -54,7 +66,7 @@ To confirm images locally: run the app and open `/national-team`, then each resu
 - **Pages:** `app/national-team/` (hub + interest-form + ucd-2024-results, ucd-2025-results, nhsca-2025-results).
 - **APIs:** `api/nc-united/tournaments`, `results`, `duals`, `gallery`, `wrestlers`; `api/national-team/interest-form` (POST).
 - **Lib:** `lib/nc-united-api.ts`, `lib/nc-united-storage.ts`, `lib/nc-united-images.ts`. These do **not** use Supabase (only `fetch()` to `/api/nc-united/...` and URL/path helpers). No changes needed when copying.
-- **Admin (optional):** `admin/national-team-submissions` + `api/admin/national-team-submissions`.
+- **Admin:** `admin/national-team-submissions` + `api/admin/national-team-submissions` (in RecruitNC; dashboard link added).
 
 ## When copying API routes into RecruitNC
 
