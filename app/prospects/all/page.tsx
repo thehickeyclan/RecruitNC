@@ -220,7 +220,7 @@ export default function AllProspectsPage() {
     const r = (prospect as any)?.rankings
     if (r != null && typeof r === "number" && Number.isFinite(r)) return r
     if (r != null && typeof r === "object") {
-      const n = (r as Record<string, unknown>)[2028] ?? (r as Record<string, unknown>)["2028"] ?? (r as Record<string, unknown>).class_2028 ?? (r as Record<string, unknown>).state ?? (r as Record<string, unknown>).national
+      const n = (r as Record<string, unknown>)[2029] ?? (r as Record<string, unknown>)["2029"] ?? (r as Record<string, unknown>).class_2029 ?? (r as Record<string, unknown>)[2028] ?? (r as Record<string, unknown>)["2028"] ?? (r as Record<string, unknown>).class_2028 ?? (r as Record<string, unknown>).state ?? (r as Record<string, unknown>).national
       if (typeof n === "number" && Number.isFinite(n)) return n
     }
     return NaN
@@ -241,7 +241,7 @@ export default function AllProspectsPage() {
 
       if (yearFilter === "active") {
         const y = prospect.graduationyear
-        if (y !== 2026 && y !== 2027 && y !== 2028) return false
+        if (y == null || y < 2026 || y > 2029) return false
       } else if (yearFilter === "graduates") {
         const y = prospect.graduationyear
         if (y == null || y > 2025) return false
@@ -298,7 +298,7 @@ export default function AllProspectsPage() {
         const gradYear = prospect.graduationyear
         const rawRank = getRawRank(prospect)
         const maxRank =
-          gradYear === 2028 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
+          gradYear === 2028 || gradYear === 2029 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
         const hasOfficialRank =
           Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRank
         if (rankFilter === "ranked" && !hasOfficialRank) return false
@@ -369,12 +369,12 @@ export default function AllProspectsPage() {
             ? "Verbal"
             : "Uncommitted"
 
-      // Only show rank for athletes on our official rankings: top 30 in 2026/2027, top 20 in 2028; show "G" for graduated (2025 and earlier)
+      // Only show rank for athletes on our official rankings: top 30 in 2026/2027, top 20 in 2028/2029; show "G" for graduated (2025 and earlier)
       const gradYear = prospect.graduationyear
-      const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028
+      const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028 || gradYear === 2029
       const rawRank = getRawRank(prospect)
       const maxRankForClass =
-        gradYear === 2028 ? 20 : (gradYear === 2026 || gradYear === 2027 ? 30 : 0)
+        gradYear === 2028 || gradYear === 2029 ? 20 : (gradYear === 2026 || gradYear === 2027 ? 30 : 0)
       const hasOfficialRank =
         Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
       const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null
@@ -587,7 +587,7 @@ export default function AllProspectsPage() {
                             <SelectValue placeholder="All Years" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="active">Active (2026–2028)</SelectItem>
+                            <SelectItem value="active">Active (2026–2029)</SelectItem>
                             <SelectItem value="all">All Years</SelectItem>
                             <SelectItem value="graduates">Graduates (2025 and earlier)</SelectItem>
                             {availableYears.map((year) => (
@@ -764,7 +764,7 @@ export default function AllProspectsPage() {
               )}
               {yearFilter === "active" && (
                 <Badge variant="secondary" className="gap-1">
-                  Active (2026–2028)
+                  Active (2026–2029)
                   <button onClick={() => setYearFilter("all")} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -880,7 +880,7 @@ export default function AllProspectsPage() {
                     <SelectValue placeholder="All Years" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active (2026–2028)</SelectItem>
+                    <SelectItem value="active">Active (2026–2029)</SelectItem>
                     <SelectItem value="all">All Years</SelectItem>
                     <SelectItem value="graduates">Graduates (2025 and earlier)</SelectItem>
                     {availableYears.map((year) => (

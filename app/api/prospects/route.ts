@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Prospects API - Filters:", { graduationYear, gender, division, limit, offset })
 
+    // division removed: now on colleges table (college_id -> colleges.division)
     let query = supabase
       .from("athletes")
       .select(`
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
         state,
         wrestlingClub,
         college,
-        division,
+        college_id,
         photourl,
         achievements,
         bio,
@@ -79,17 +80,10 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Prospects API - Filtering by gender:", gender)
     }
 
+    // Division filter removed: athletes.division no longer exists; division is on colleges table.
+    // Client can filter by college/division using college_id + colleges join if we add it later.
     if (division && division !== "all") {
-      if (division === "DI") {
-        query = query.or("division.eq.Division I,division.eq.NCAA Division I,division.eq.NCAA DI")
-      } else if (division === "DII") {
-        query = query.or("division.eq.Division II,division.eq.NCAA Division II,division.eq.NCAA DII")
-      } else if (division === "DIII") {
-        query = query.or("division.eq.Division III,division.eq.NCAA Division III,division.eq.NCAA DIII")
-      } else {
-        query = query.eq("division", division)
-      }
-      console.log("[v0] Prospects API - Filtering by division:", division)
+      console.log("[v0] Prospects API - division filter requested but not applied (division now on colleges):", division)
     }
 
     const { data: prospects, error } = await query
