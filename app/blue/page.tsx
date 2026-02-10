@@ -144,6 +144,9 @@ export default async function BluePage() {
                 </CardContent>
               </Card>
             </div>
+            <p className="mt-6 leading-relaxed text-[#03154C]/90">
+              For all Blue members, national competition is the path to achieving the highest goals. The expectation is participation in tournaments at the caliber of NHSCA, Super32, Journeymen, Beast of the East, Ironman, and—where appropriate for age and weight—college opens.
+            </p>
           </section>
 
           {/* 5. Training Environment & College Partnerships */}
@@ -193,7 +196,7 @@ export default async function BluePage() {
           <section id="national-team">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">National Team Pipeline & Competition</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
-              The NC United National Team is among the most successful NC-based teams in state
+              The NC United National Team competes in <strong className="text-[#03154C]">dual</strong> format and is among the most successful NC-based teams in state
               history. Last year, the National Team went 7–1 at NHSCA Duals and reached the
               Round of 16 before losing to a multi-state all-star team.
             </p>
@@ -455,13 +458,10 @@ export default async function BluePage() {
               <Card className="flex-1 min-w-0 border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
                 <CardContent className="pt-6 space-y-4">
                   <p className="leading-relaxed text-[#03154C]/90">
-                    Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. It is not automatic, and it is not defined by a single tournament. Membership reflects an athlete&apos;s body of work, commitment to improvement, and alignment with the culture of NC United Blue.
+                    Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. Membership is invite-led, not automatic, and is not defined by a single tournament. Invitations are extended throughout the year based on an athlete&apos;s body of work, commitment to improvement, and alignment with the culture of NC United Blue.
                   </p>
                   <p className="leading-relaxed text-[#03154C]/90">
-                    Ahead of the State Championships, invitations are extended to athletes who have been identified as confirmed Blue members. These athletes are invited to stop by Suite 109 at States to formally register and pick up their Blue shirt, which serves as a symbol of membership in the program.
-                  </p>
-                  <p className="leading-relaxed text-[#03154C]/90">
-                    Athletes who have qualified for States but have not yet received an invitation are encouraged to express interest below. Expressing interest allows our staff to better understand an athlete&apos;s goals and follow up after the State Championships as we continue to evaluate, expand, and build the Blue program moving forward.
+                    In addition to year-round invitations, a wave of invitations will be extended to select 2026 State Qualifiers, with official registration and Blue shirt pickup taking place at the State Championships. Invited athletes are asked to stop by Suite 109 at States to complete registration and receive their Blue shirt, which serves as a symbol of membership in the program.
                   </p>
                 </CardContent>
               </Card>
