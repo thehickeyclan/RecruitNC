@@ -146,7 +146,12 @@ export default function AllProspectsPage() {
   const availableWeightClasses = useMemo(() => {
     const weights = new Set<string>()
     prospects.forEach((prospect) => {
-      const weight = (prospect.weightclass || prospect.weight?.toString() || "").trim()
+      const raw =
+        (prospect as any).weightclass ??
+        (prospect as any).weight_class ??
+        prospect.weight?.toString() ??
+        ""
+      const weight = String(raw).trim()
       if (weight) {
         weights.add(weight.replace(/\s*l?bs?\.?$/i, "").trim())
       }
@@ -231,11 +236,15 @@ export default function AllProspectsPage() {
 
     return prospects.filter((prospect) => {
       if (term) {
+        const name = prospect.name ?? ""
+        const highschool = (prospect as any).highschool ?? (prospect as any).highSchool ?? ""
+        const club = (prospect as any).wrestlingClub ?? (prospect as any).wrestlingclub ?? ""
+        const college = prospect.college ?? ""
         const matchesTerm =
-          prospect.name?.toLowerCase().includes(term) ||
-          prospect.highschool?.toLowerCase().includes(term) ||
-          prospect.wrestlingClub?.toLowerCase().includes(term) ||
-          prospect.college?.toLowerCase().includes(term)
+          name.toLowerCase().includes(term) ||
+          String(highschool).toLowerCase().includes(term) ||
+          String(club).toLowerCase().includes(term) ||
+          String(college).toLowerCase().includes(term)
         if (!matchesTerm) return false
       }
 
@@ -289,8 +298,13 @@ export default function AllProspectsPage() {
           (prospect as any).recruiting_status_display ??
           ""
         const summarized = summarizeStatus(statusRaw)
-        if (statusFilter === "committed" && summarized !== "committed") return false
-        if (statusFilter === "uncommitted" && summarized === "committed") return false
+        const hasCollege = !!(prospect.college && String(prospect.college).trim() !== "")
+        if (statusFilter === "committed") {
+          if (summarized !== "committed" || !hasCollege) return false
+        }
+        if (statusFilter === "uncommitted") {
+          if (summarized === "committed" && hasCollege) return false
+        }
         if (statusFilter === "verbal" && summarized !== "verbal") return false
       }
 
@@ -306,10 +320,15 @@ export default function AllProspectsPage() {
       }
 
       if (weightFilters.length > 0) {
-        const normalizedWeight = (prospect.weightclass || prospect.weight?.toString() || "")
+        const rawWeight =
+          (prospect as any).weightclass ??
+          (prospect as any).weight_class ??
+          prospect.weight?.toString() ??
+          ""
+        const normalizedWeight = String(rawWeight)
           .replace(/\s*l?bs?\.?$/i, "")
           .trim()
-        if (!weightFilters.includes(normalizedWeight)) return false
+        if (!normalizedWeight || !weightFilters.includes(normalizedWeight)) return false
       }
 
       if (achievementFilters.length > 0) {
@@ -780,7 +799,13 @@ export default function AllProspectsPage() {
               )}
               {statusFilter !== "all" && (
                 <Badge variant="secondary" className="gap-1">
-                  {statusFilter}
+                  {statusFilter === "committed"
+                    ? "Committed"
+                    : statusFilter === "verbal"
+                      ? "Verbal Commit"
+                      : statusFilter === "uncommitted"
+                        ? "Uncommitted"
+                        : statusFilter}
                   <button onClick={() => setStatusFilter("all")} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>

@@ -294,6 +294,7 @@ export const WRESTLING_CLUBS_LIST = [
   "Tar River",
   "The Factory",
   "The Wrestling Academy",
+  "Triangle Wrestling Academy",
   "Trinity Top Team",
   "Unaffiliated",
   "Wolfpack",
