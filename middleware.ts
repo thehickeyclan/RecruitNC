@@ -10,11 +10,20 @@ import { NextResponse, type NextRequest } from "next/server"
  * See AUTH_CONFIG_LOCKED.md for full documentation.
  */
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Never run middleware on static/public assets (avoids any chance of 401 on manifest, icons, etc.)
+  const staticPaths = ["/manifest.json", "/favicon.ico", "/icon-192", "/icon-512", "/icon.svg"]
+  if (staticPaths.some((p) => pathname === p || pathname.startsWith(p + "."))) {
+    return NextResponse.next({ request })
+  }
+  if (/\.(json|ico|png|jpg|jpeg|gif|webp|svg)$/i.test(pathname)) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
-
-  const pathname = request.nextUrl.pathname
 
   // Skip middleware entirely for public routes that don't need auth
   const publicRoutes = [

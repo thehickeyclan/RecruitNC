@@ -190,7 +190,7 @@ export default function AdminBluePage() {
                       )}
                       <ImageUpload
                         category="blue"
-                        entityName={key === "blue_shirt" ? "blue-shirt" : key.replace("blue_", "")}
+                        entityName={key.replace("blue_", "")}
                         existingImageUrl={url}
                         onUploadComplete={(newUrl) => saveSlot(key, newUrl)}
                         aspectRatio={key === "blue_banner_url" || key === "blue_pipeline" ? "wide" : "square"}

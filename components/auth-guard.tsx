@@ -24,14 +24,16 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const [directSessionCheck, setDirectSessionCheck] = useState<boolean | null>(null)
 
   useEffect(() => {
-    console.log("[v0] AuthGuard state:", {
-      pathname,
-      requireAdmin,
-      hasUser: !!user,
-      isLoading,
-      isAdmin,
-      hasProfile: !!profile,
-    })
+    if (process.env.NODE_ENV === "development") {
+      console.log("[v0] AuthGuard state:", {
+        pathname,
+        requireAdmin,
+        hasUser: !!user,
+        isLoading,
+        isAdmin,
+        hasProfile: !!profile,
+      })
+    }
   }, [user, isLoading, isAdmin, profile, pathname, requireAdmin])
 
   useEffect(() => {
@@ -73,12 +75,9 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   useEffect(() => {
     // Wait for component to mount, loading to complete, AND session check to complete
     if (!mounted || isLoading || !sessionCheckComplete || directSessionCheck === null) {
-      console.log("[v0] AuthGuard waiting:", { 
-        mounted, 
-        isLoading, 
-        sessionCheckComplete, 
-        directSessionCheck 
-      })
+      if (process.env.NODE_ENV === "development") {
+        console.log("[v0] AuthGuard waiting:", { mounted, isLoading, sessionCheckComplete, directSessionCheck })
+      }
       return
     }
 
