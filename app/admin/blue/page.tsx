@@ -80,9 +80,10 @@ export default function AdminBluePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, value: url }),
       })
+      const errBody = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || "Failed to save")
+        const msg = errBody.error || errBody.details || `HTTP ${res.status}`
+        throw new Error(msg)
       }
       setContent((prev) => (prev ? { ...prev, [key]: url } : null))
       toast({
@@ -90,9 +91,10 @@ export default function AdminBluePage() {
         description: `${SLOT_LABELS[key]} updated. Check the Blue page to see it.`,
       })
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown error"
       toast({
         title: "Could not save",
-        description: e instanceof Error ? e.message : "Unknown error",
+        description: msg,
         variant: "destructive",
       })
     }

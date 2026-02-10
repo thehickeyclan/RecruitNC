@@ -26,19 +26,6 @@ export function Navbar() {
     profile?.role === "coach" ||
     profile?.is_admin === true
 
-  useEffect(() => {
-    if (profile) {
-      console.log("[v0] Profile loaded:", {
-        role: profile.role,
-        is_admin: profile.is_admin,
-        showMyRecruits,
-      })
-    }
-  }, [profile, showMyRecruits])
-
-  useEffect(() => {
-    console.log("[v0] Mobile menu state changed:", isOpen)
-  }, [isOpen])
 
   const getRecruitingPortalUrl = () => {
     // Admins go to schools admin page to choose which portal to preview
@@ -289,10 +276,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    console.log("[v0] Menu button clicked, current state:", isOpen)
-                    setIsOpen(true)
-                  }}
+                  onClick={() => setIsOpen(true)}
                   className="mobile-optimized min-h-[44px] min-w-[44px] flex items-center gap-2 px-3 bg-red-600 text-white hover:bg-red-700 hover:text-white"
                 >
                   <Menu className="h-5 w-5" />

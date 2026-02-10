@@ -64,9 +64,9 @@ export default async function BluePage() {
           </div>
         </figure>
 
-        {/* Main Content */}
+        {/* Main Content — Identity → Standards → Experience → Proof → Access → Action */}
         <article className="space-y-16">
-          {/* 1. What Is NC United Blue */}
+          {/* 1. Hero + What Is NC United Blue */}
           <section id="what-is">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">What Is NC United Blue</h2>
             <p className="leading-relaxed text-[#03154C]/90 mb-4">
@@ -75,7 +75,6 @@ export default async function BluePage() {
             <p className="leading-relaxed text-[#03154C]/90">
               Blue is built on a simple idea: elite wrestlers grow faster when they train with other elite wrestlers. By setting shared expectations, demanding accountability, and competing together, NC United Blue creates a culture where North Carolina&apos;s best sharpen each other and represent the state with pride.
             </p>
-            <NextStepsCTA />
           </section>
 
           {/* 2. Mission & Vision */}
@@ -89,32 +88,30 @@ export default async function BluePage() {
             </p>
           </section>
 
-          {/* National Team Kids — Admin → Blue to upload/replace */}
-          <figure className="my-10">
-            <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/50 bg-white shadow-lg">
-              <Image
-                src={images.blue_national_team_kids}
-                alt="Tobin McNair, Mac Johnson, and Bentley Sly representing NC United National Team"
-                width={900}
-                height={600}
-                className="h-auto w-full object-contain"
-                unoptimized
-              />
+          {/* 3. What Makes Blue Different */}
+          <section id="what-makes-different">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">What Makes Blue Different</h2>
+            <ul className="space-y-4 text-[#03154C]/90">
+              <li>
+                <strong className="text-[#03154C]">Train With the Best</strong> — Blue practices feature high school
+                standouts alongside current NCAA wrestlers. You are in the room with people
+                who have been where you want to go.
+              </li>
+              <li>
+                <strong className="text-[#03154C]">College coaches in the room</strong> — Regularly, college coaches from
+                UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
+                practices so kids see a college-style cadence and environment. Coaches get to know athletes and huddle
+                with them for Q&A on recruiting, college transitions, expectations, and more.
+              </li>
+            </ul>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/50 bg-white shadow-md">
+                <Image src={images.blue_what_makes_1} alt="NC United Blue training" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+              </div>
+              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/50 bg-white shadow-md">
+                <Image src={images.blue_what_makes_2} alt="NC United Blue in action" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
+              </div>
             </div>
-            <figcaption className="mt-2 text-center text-sm text-[#03154C]/80">
-              Tobin McNair, Mac Johnson, and Bentley Sly (left to right) — NC United National Team
-            </figcaption>
-          </figure>
-
-          {/* 3. Recruiting Support & Exposure */}
-          <section id="recruiting">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Recruiting Support & Exposure</h2>
-            <p className="leading-relaxed text-[#03154C]/90 mb-4">
-              College recruiting can feel like a black hole for wrestlers and parents. NC United exists to bring clarity, education, and real opportunity to the process by first understanding each athlete&apos;s goals—academically, athletically, and personally. We educate Blue members on how college recruiting works, create meaningful exposure through RecruitNC, and actively connect college coaches with our athletes.
-            </p>
-            <p className="leading-relaxed text-[#03154C]/90 mb-4">
-              Local college programs are deeply engaged in our ecosystem and are familiar with NC United athletes long before recruiting decisions are made. To date, NC United has helped connect hundreds of wrestlers to college opportunities across all divisions. We host an annual College Coaches Lounge at the state championships, provide regular athlete updates to college staffs, and celebrate commitments through signing announcements and our Signing Day podcast—giving athletes a platform to share their recruiting journey while helping the next generation learn from those experiences.
-            </p>
           </section>
 
           {/* 4. Opportunity & Obligation */}
@@ -142,32 +139,6 @@ export default async function BluePage() {
                   </p>
                 </CardContent>
               </Card>
-            </div>
-          </section>
-
-          {/* 5. What Makes Blue Different */}
-          <section id="what-makes-different">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">What Makes Blue Different</h2>
-            <ul className="space-y-4 text-[#03154C]/90">
-              <li>
-                <strong className="text-[#03154C]">Train With the Best</strong> — Blue practices feature high school
-                standouts alongside current NCAA wrestlers. You are in the room with people
-                who have been where you want to go.
-              </li>
-              <li>
-                <strong className="text-[#03154C]">College coaches in the room</strong> — Regularly, college coaches from
-                UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
-                practices so kids see a college-style cadence and environment. Coaches get to know athletes and huddle
-                with them for Q&A on recruiting, college transitions, expectations, and more.
-              </li>
-            </ul>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/50 bg-white shadow-md">
-                <Image src={images.blue_what_makes_1} alt="NC United Blue training" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
-              </div>
-              <div className="overflow-hidden rounded-lg border-2 border-[#D3B574]/50 bg-white shadow-md">
-                <Image src={images.blue_what_makes_2} alt="NC United Blue in action" width={400} height={300} className="h-auto w-full object-contain" unoptimized />
-              </div>
             </div>
           </section>
 
@@ -214,9 +185,9 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 7. National Team Pipeline */}
+          {/* 6. National Team Pipeline & Competition (schedule links inside) */}
           <section id="national-team">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">National Team Pipeline</h2>
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">National Team Pipeline & Competition</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
               The NC United National Team is among the most successful NC-based teams in state
               history. Last year, the National Team went 7–1 at NHSCA Duals and reached the
@@ -237,9 +208,93 @@ export default async function BluePage() {
                 Learn more about the National Team →
               </Link>
             </p>
+            <div id="schedule">
+              <p className="mb-4 leading-relaxed text-[#03154C]/90">
+                Blue competes at national events throughout the year. The National Team schedule
+                and competition calendar are linked below.
+              </p>
+              <p className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                <Link
+                  href={NATIONAL_TEAM_SCHEDULE_URL}
+                  className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
+                >
+                  National Team Schedule →
+                </Link>
+                <Link
+                  href={COMPETITION_CALENDAR_URL}
+                  className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
+                >
+                  Competition Calendar →
+                </Link>
+                <Link
+                  href={NATIONAL_TEAM_INTEREST_FORM_URL}
+                  className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
+                >
+                  National Team Interest Form →
+                </Link>
+              </p>
+            </div>
           </section>
 
-          {/* 8. Coaching Excellence */}
+          {/* National Team Kids — Admin → Blue to upload/replace */}
+          <figure className="my-10">
+            <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/50 bg-white shadow-lg">
+              <Image
+                src={images.blue_national_team_kids}
+                alt="Tobin McNair, Mac Johnson, and Bentley Sly representing NC United National Team"
+                width={900}
+                height={600}
+                className="h-auto w-full object-contain"
+                unoptimized
+              />
+            </div>
+            <figcaption className="mt-2 text-center text-sm text-[#03154C]/80">
+              Tobin McNair, Mac Johnson, and Bentley Sly (left to right) — NC United National Team
+            </figcaption>
+          </figure>
+
+          {/* 7. Recruiting Support & Exposure */}
+          <section id="recruiting">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Recruiting Support & Exposure</h2>
+            <p className="leading-relaxed text-[#03154C]/90 mb-4">
+              College recruiting can feel like a black hole for wrestlers and parents. NC United exists to bring clarity, education, and real opportunity to the process by first understanding each athlete&apos;s goals—academically, athletically, and personally. We educate Blue members on how college recruiting works, create meaningful exposure through RecruitNC, and actively connect college coaches with our athletes.
+            </p>
+            <p className="leading-relaxed text-[#03154C]/90 mb-4">
+              Local college programs are deeply engaged in our ecosystem and are familiar with NC United athletes long before recruiting decisions are made. To date, NC United has helped connect hundreds of wrestlers to college opportunities across all divisions. We host an annual College Coaches Lounge at the state championships, provide regular athlete updates to college staffs, and celebrate commitments through signing announcements and our Signing Day podcast—giving athletes a platform to share their recruiting journey while helping the next generation learn from those experiences.
+            </p>
+          </section>
+
+          {/* 8. Blue Roster (Current Members) */}
+          <section id="roster">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Roster (Current Members)</h2>
+            <p className="mb-6 leading-relaxed text-[#03154C]/90">
+              The current squad includes 40+ state titles, 70+ state qualifiers, 15 NHSCA /
+              Super32 / Ironman All-Americans, and commits across D1, D2, D3, NAIA, and Juco.
+            </p>
+            <div className="overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
+              <Image
+                src={images.blue_team_photo}
+                alt="NC United Blue Team"
+                width={900}
+                height={600}
+                className="h-auto w-full object-contain"
+                unoptimized
+              />
+            </div>
+          </section>
+
+          {/* 9. Blue Alumni */}
+          <section id="alumni">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Alumni</h2>
+            <p className="mb-6 leading-relaxed text-[#03154C]/90">
+              Alumni matter. They return during breaks and summer, scrap live with current
+              members, and mentor the next generation. Blue is a program, not a one-time
+              experience—alumni stay connected and give back.
+            </p>
+            <BlueAlumniTable alumni={alumni} />
+          </section>
+
+          {/* 10. Coaching Excellence */}
           <section id="coaching-excellence">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Coaching Excellence</h2>
             <p className="mb-6 text-[#03154C]/90">
@@ -270,7 +325,7 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 9. Testimonials */}
+          {/* 11. Testimonials */}
           <section id="testimonials">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Testimonials</h2>
             <p className="mb-6 text-[#03154C]/90">
@@ -351,7 +406,7 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 10. Qualification & Selection */}
+          {/* 12. Qualification & Selection */}
           <section id="qualification">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Qualification & Selection</h2>
             <p className="mb-4 leading-relaxed text-[#03154C]/90">
@@ -370,7 +425,18 @@ export default async function BluePage() {
             </p>
           </section>
 
-          {/* 11. Blue Membership & Registration at States */}
+          {/* 13. State Qualifier Interest (primary CTA) */}
+          <section id="state-qualifier">
+            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">State Qualifier Interest</h2>
+            <p className="mb-6 leading-relaxed text-[#03154C]/90">
+              State qualifiers are determined the weekend before States. If you qualified for
+              states and want to express interest in Blue, use the button below. We will review
+              submissions and extend invites to those who fit the program.
+            </p>
+            <StateQualifierInterestCTA />
+          </section>
+
+          {/* 14. Blue Membership & Registration at States */}
           <section id="membership">
             <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Membership & Registration at States</h2>
             <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
@@ -400,76 +466,12 @@ export default async function BluePage() {
             </div>
           </section>
 
-          {/* 12. Blue Roster — team photo */}
-          <section id="roster">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Roster (Current Members)</h2>
-            <p className="mb-6 leading-relaxed text-[#03154C]/90">
-              The current squad includes 40+ state titles, 70+ state qualifiers, 15 NHSCA /
-              Super32 / Ironman All-Americans, and commits across D1, D2, D3, NAIA, and Juco.
-            </p>
-            <div className="overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
-              <Image
-                src={images.blue_team_photo}
-                alt="NC United Blue Team"
-                width={900}
-                height={600}
-                className="h-auto w-full object-contain"
-                unoptimized
-              />
-            </div>
+          {/* 15. Next Steps (Learn / Train / Join) */}
+          <section id="next-steps" className="mt-10">
+            <NextStepsCTA />
           </section>
 
-          {/* 13. Blue Alumni */}
-          <section id="alumni">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Blue Alumni</h2>
-            <p className="mb-6 leading-relaxed text-[#03154C]/90">
-              Alumni matter. They return during breaks and summer, scrap live with current
-              members, and mentor the next generation. Blue is a program, not a one-time
-              experience—alumni stay connected and give back.
-            </p>
-            <BlueAlumniTable alumni={alumni} />
-          </section>
-
-          {/* 14. Competition & Schedule */}
-          <section id="schedule">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">Competition & Schedule</h2>
-            <p className="mb-4 leading-relaxed text-[#03154C]/90">
-              Blue competes at national events throughout the year. The National Team schedule
-              and competition calendar are linked below.
-            </p>
-            <p className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              <Link
-                href={NATIONAL_TEAM_SCHEDULE_URL}
-                className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
-              >
-                National Team Schedule →
-              </Link>
-              <Link
-                href={COMPETITION_CALENDAR_URL}
-                className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
-              >
-                Competition Calendar →
-              </Link>
-              <Link
-                href={NATIONAL_TEAM_INTEREST_FORM_URL}
-                className="font-medium text-[#03154C] hover:text-[#B31B1B] hover:underline"
-              >
-                National Team Interest Form →
-              </Link>
-            </p>
-          </section>
-
-          {/* 15. State Qualifier Interest */}
-          <section id="state-qualifier">
-            <h2 className="mb-4 text-2xl font-bold text-[#03154C]">State Qualifier Interest</h2>
-            <p className="mb-6 leading-relaxed text-[#03154C]/90">
-              State qualifiers are determined the weekend before States. If you qualified for
-              states and want to express interest in Blue, use the button below. We will review
-              submissions and extend invites to those who fit the program.
-            </p>
-            <StateQualifierInterestCTA />
-          </section>
-
+          {/* 16. Explore Blue / footer navigation */}
           <ExploreBlue />
         </article>
 

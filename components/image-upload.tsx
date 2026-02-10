@@ -97,12 +97,12 @@ export function ImageUpload({
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Upload failed")
+        const errorData = await response.json().catch(() => ({}))
+        const msg = errorData.details || errorData.error || `Upload failed (${response.status})`
+        throw new Error(msg)
       }
 
       const data = await response.json()
-      console.log("Image uploaded successfully:", data.url)
 
       if (data.url && typeof data.url === "string" && data.url.startsWith("http")) {
         // Update the preview URL to the uploaded image
