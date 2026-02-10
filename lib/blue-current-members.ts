@@ -2,8 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getNCHSAAResults } from "@/lib/nchsaa-results"
 
 const CURRENT_YEAR = new Date().getFullYear()
-/** Current roster = class of 2025 and later (still in program). Min year so 2025 shows until you have 2026+ Blue. */
-const CURRENT_ROSTER_MIN_GRAD_YEAR = Math.min(2025, CURRENT_YEAR)
+/** Current roster = still in high school: graduation year >= current year. Class of 2025 and older = alumni only. */
+const CURRENT_ROSTER_MIN_GRAD_YEAR = CURRENT_YEAR
 
 export type BlueCurrentMember = {
   id: string
