@@ -781,9 +781,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       <Image
                         src={instagramLogo}
                         alt="Instagram"
-                        width={28}
-                        height={28}
-                        className="w-7 h-7 object-contain"
+                        width={84}
+                        height={84}
+                        className="w-[84px] h-[84px] object-contain"
                       />
                     </a>
                   )}
@@ -947,9 +947,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                           <Image
                             src={instagramLogo}
                             alt="Instagram"
-                            width={28}
-                            height={28}
-                            className="w-7 h-7 object-contain"
+                            width={84}
+                            height={84}
+                            className="w-[84px] h-[84px] object-contain"
                           />
                         </a>
                       )}
