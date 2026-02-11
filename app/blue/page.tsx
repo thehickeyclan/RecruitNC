@@ -400,7 +400,7 @@ export default async function BluePage() {
                       {[1, 2, 3, 4, 5].map((i) => <Star key={i} className="h-5 w-5 fill-current" />)}
                     </div>
                     <blockquote className="text-[#03154C]/90 italic mb-4 text-sm">
-                      &ldquo;Being part of NC United has been the <span className="bg-[#D3B574]/25 px-1 rounded not-italic font-medium text-[#03154C]">highlight</span> of my wrestling career. The coaching, the
+                      &ldquo;Being part of NC United has been <span className="bg-[#D3B574]/25 px-1 rounded not-italic font-medium text-[#03154C]">the</span> highlight of my wrestling career. The coaching, the
                       competition, and the camaraderie with teammates from across the state have all helped me improve
                       tremendously.&rdquo;
                     </blockquote>

@@ -983,12 +983,22 @@ export default function MatchManagerPage() {
       .filter(Boolean) as { month: number; day: number; year: number }[]
 
     const years = dates.map((d) => d.year)
-    const minYear = Math.min(...years)
-    const maxYear = Math.max(...years)
+    const minYear = years.length ? Math.min(...years) : NaN
+    const maxYear = years.length ? Math.max(...years) : NaN
 
+    // Season can be from a single calendar year (e.g. all Dec 2022) or span two years
     let season = ""
     if (Number.isFinite(minYear) && Number.isFinite(maxYear)) {
-      season = minYear === maxYear ? `${minYear - 1}-${minYear.toString().slice(-2)}` : `${minYear}-${maxYear.toString().slice(-2)}`
+      if (minYear === maxYear) {
+        // All matches in one calendar year: use month to pick correct season
+        // Aug–Dec => season Y-(Y+1); Jan–Jul => season (Y-1)-Y
+        const hasLateYear = dates.some((d) => d.month >= 8)
+        season = hasLateYear
+          ? `${minYear}-${(minYear + 1).toString().slice(-2)}`
+          : `${minYear - 1}-${minYear.toString().slice(-2)}`
+      } else {
+        season = `${minYear}-${maxYear.toString().slice(-2)}`
+      }
     }
 
     const currentYear = new Date().getFullYear()
@@ -1321,7 +1331,8 @@ export default function MatchManagerPage() {
             <CardHeader>
               <CardTitle>Raw Text Parser</CardTitle>
               <p className="text-sm text-gray-600">
-                Paste your raw match data (tab-separated format) and it will be automatically converted to JSON
+                Paste your raw match data (tab-separated format) and it will be automatically converted to JSON.
+                Matches in a single calendar year (e.g. all Dec 2022) are supported — season is inferred from the dates.
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
