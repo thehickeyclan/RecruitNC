@@ -34,6 +34,25 @@ export async function getLogoUrlServer(type: string, entityName: string): Promis
       return DIRECT_URL_MAPPINGS[normalizedEntityName]
     }
 
+    // Known high-school logo fallbacks when not in DB
+    const HIGH_SCHOOL_LOGO_FALLBACKS: Record<string, string> = {
+      "green level":
+        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
+      "green level high school":
+        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
+      "green hope":
+        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/pPaUHAqalF1e9SF-xslhG-Green%20Hope.png",
+      "green hope high school":
+        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/pPaUHAqalF1e9SF-xslhG-Green%20Hope.png",
+    }
+    if (type === "highschool" && HIGH_SCHOOL_LOGO_FALLBACKS[normalizedEntityName]) {
+      return HIGH_SCHOOL_LOGO_FALLBACKS[normalizedEntityName]
+    }
+    const withoutHighSchool = normalizedEntityName.replace(/\s+high\s+school$/i, "").trim()
+    if (type === "highschool" && withoutHighSchool && HIGH_SCHOOL_LOGO_FALLBACKS[withoutHighSchool]) {
+      return HIGH_SCHOOL_LOGO_FALLBACKS[withoutHighSchool]
+    }
+
     // Try exact match first
     const { data: exactData, error: exactError } = await supabase
       .from("logo_mappings")

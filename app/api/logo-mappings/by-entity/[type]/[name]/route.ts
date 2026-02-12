@@ -70,6 +70,27 @@ export async function GET(request: Request, { params }: { params: { type: string
       }
     }
 
+    // Known high-school logo fallbacks when not in DB
+    const HIGH_SCHOOL_LOGO_FALLBACKS: Record<string, string> = {
+      "green level": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
+      "green level high school": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
+      "green hope": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/pPaUHAqalF1e9SF-xslhG-Green%20Hope.png",
+      "green hope high school": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/pPaUHAqalF1e9SF-xslhG-Green%20Hope.png",
+    }
+    if (normalizedType === "highschool") {
+      const key = decodedName.toLowerCase().trim()
+      const fallbackUrl = HIGH_SCHOOL_LOGO_FALLBACKS[key] ?? HIGH_SCHOOL_LOGO_FALLBACKS[key.replace(/\s+high\s+school$/i, "")?.trim() ?? ""]
+      if (fallbackUrl) {
+        return NextResponse.json({
+          success: true,
+          logo_url: fallbackUrl,
+          entity_name: decodedName,
+          matched_entity_type: normalizedType,
+          match_type: "fallback",
+        })
+      }
+    }
+
     // Get debugging info
     const { data: allEntries } = await supabase
       .from("logo_mappings")
