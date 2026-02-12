@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,12 +56,14 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient()
+    const canonicalName = normalizeEntityName(entity_name)
+    const canonicalType = normalizeEntityType(entity_type)
 
     const { data, error } = await supabase
       .from("logo_mappings")
       .insert({
-        entity_name,
-        entity_type,
+        entity_name: canonicalName,
+        entity_type: canonicalType,
         logo_url,
         aliases: aliases || null,
         division: division || null,

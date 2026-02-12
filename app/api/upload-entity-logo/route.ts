@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { put } from "@vercel/blob"
+import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,15 +35,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Either file or logoUrl is required" }, { status: 400 })
     }
 
-    // Save to database
+    // Save to database (canonical name/type so lookups always match)
     console.log("Saving to database...")
     const supabase = createClient()
+    const canonicalName = normalizeEntityName(entityName)
+    const canonicalType = normalizeEntityType(entityType)
 
     const { data, error } = await supabase
       .from("logo_mappings")
       .upsert({
-        entity_name: entityName,
-        entity_type: entityType,
+        entity_name: canonicalName,
+        entity_type: canonicalType,
         logo_url: finalLogoUrl,
         updated_at: new Date().toISOString(),
       })

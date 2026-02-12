@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -55,12 +56,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       division: division || null,
     })
 
+    const canonicalName = normalizeEntityName(entity_name)
+    const canonicalType = normalizeEntityType(entity_type)
     console.log("[v0] PATCH - Executing database update...")
     const { data, error } = await supabase
       .from("logo_mappings")
       .update({
-        entity_name,
-        entity_type,
+        entity_name: canonicalName,
+        entity_type: canonicalType,
         logo_url,
         aliases: aliases || null,
         division: division || null,

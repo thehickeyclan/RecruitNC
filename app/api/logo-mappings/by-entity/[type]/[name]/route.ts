@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function GET(
   request: Request,
@@ -7,30 +8,18 @@ export async function GET(
 ) {
   try {
     const { type, name } = await Promise.resolve(params)
-
-    // Decode the URL-encoded name
     const decodedName = decodeURIComponent(name)
+    const normalizedName = normalizeEntityName(decodedName)
+    const normalizedType = normalizeEntityType(type)
 
     const supabase = await createClient()
 
-    // Normalize the entity type to match your database exactly
-    let normalizedType = type.toLowerCase()
-    if (normalizedType === "high_school" || normalizedType === "high-school") {
-      normalizedType = "highschool"
-    }
-    if (normalizedType === "colleges") {
-      normalizedType = "college"
-    }
-    if (normalizedType === "clubs") {
-      normalizedType = "club"
-    }
-
-    // Try exact match first
+    // Try exact match first (same normalization as save path so profile name matches logo manager)
     const { data: exactMatch, error: exactError } = await supabase
       .from("logo_mappings")
       .select("*")
       .eq("entity_type", normalizedType)
-      .ilike("entity_name", decodedName)
+      .ilike("entity_name", normalizedName)
       .maybeSingle()
 
     if (!exactError && exactMatch) {
@@ -43,12 +32,12 @@ export async function GET(
       })
     }
 
-    // Try partial match with various patterns
+    // Try partial match with various patterns (use normalized name)
     const searchPatterns = [
-      `%${decodedName}%`,
-      `%${decodedName.replace(/\s+/g, "%")}%`,
-      `${decodedName}%`,
-      `%${decodedName}`,
+      `%${normalizedName}%`,
+      `%${normalizedName.replace(/\s+/g, "%")}%`,
+      `${normalizedName}%`,
+      `%${normalizedName}`,
     ]
 
     for (const pattern of searchPatterns) {
@@ -80,7 +69,7 @@ export async function GET(
       millbrook: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/ndVl5fY7GMNQIapSPvjnd-Millbrook.jpg",
     }
     if (normalizedType === "highschool") {
-      const key = decodedName.toLowerCase().replace(/\s+/g, " ").trim()
+      const key = normalizedName.toLowerCase()
       const withoutSuffix = key.replace(/\s+high\s+school$/i, "").replace(/\s+hs$/i, "").trim()
       const fallbackUrl =
         HIGH_SCHOOL_FALLBACKS[key] ??
@@ -92,7 +81,7 @@ export async function GET(
         return NextResponse.json({
           success: true,
           logo_url: fallbackUrl,
-          entity_name: decodedName,
+          entity_name: normalizedName || decodedName,
           matched_entity_type: normalizedType,
           match_type: "fallback",
         })
@@ -113,9 +102,9 @@ export async function GET(
 
     return NextResponse.json({
       success: false,
-      error: `No logo found for ${normalizedType}: ${decodedName}`,
+      error: `No logo found for ${normalizedType}: ${normalizedName}`,
       searched_type: normalizedType,
-      searched_name: decodedName,
+      searched_name: normalizedName,
       raw_name: name,
       available_entity_types: availableTypes,
       sample_names_for_type: sampleNames,

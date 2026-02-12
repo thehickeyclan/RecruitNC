@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
+import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
-// Server-side logo fetching function
+// Server-side logo fetching function. Uses same normalization as save path so profile name matches logo manager.
 export async function getLogoUrlServer(type: string, entityName: string): Promise<string | null> {
   try {
     if (!entityName) {
@@ -8,8 +9,10 @@ export async function getLogoUrlServer(type: string, entityName: string): Promis
     }
 
     const supabase = createClient()
+    const canonicalName = normalizeEntityName(entityName)
+    const normalizedType = normalizeEntityType(type)
 
-    // Direct URL mappings for specific cases
+    // Direct URL mappings for specific cases (keyed by lowercase)
     const DIRECT_URL_MAPPINGS: Record<string, string> = {
       "appalachian state": "/appalachian-state-mountains.png",
       "appalachian state university": "/appalachian-state-mountains.png",
@@ -28,18 +31,11 @@ export async function getLogoUrlServer(type: string, entityName: string): Promis
       "university of north carolina at pembroke": "/unc-pembroke-seal.png",
       "greensboro college": "/Greensboro-College-Seal.png",
     }
-
-    const normalizedEntityName = entityName.toLowerCase().replace(/\s+/g, " ").trim()
-    if (DIRECT_URL_MAPPINGS[normalizedEntityName]) {
-      return DIRECT_URL_MAPPINGS[normalizedEntityName]
+    if (DIRECT_URL_MAPPINGS[canonicalName.toLowerCase()]) {
+      return DIRECT_URL_MAPPINGS[canonicalName.toLowerCase()]
     }
 
-    let normalizedType = type.toLowerCase()
-    if (normalizedType === "high_school" || normalizedType === "high-school") normalizedType = "highschool"
-    if (normalizedType === "colleges") normalizedType = "college"
-    if (normalizedType === "clubs") normalizedType = "club"
-
-    // Known high-school logo fallbacks (match flexibly: "Green Level", "Millbrook", etc.)
+    // Known high-school logo fallbacks when not in DB
     const HIGH_SCHOOL_FALLBACKS: Record<string, string> = {
       "green level":
         "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
@@ -49,35 +45,35 @@ export async function getLogoUrlServer(type: string, entityName: string): Promis
         "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/ndVl5fY7GMNQIapSPvjnd-Millbrook.jpg",
     }
     if (normalizedType === "highschool") {
-      const norm = normalizedEntityName
-      const withoutSuffix = norm.replace(/\s+high\s+school$/i, "").replace(/\s+hs$/i, "").trim()
+      const key = canonicalName.toLowerCase()
+      const withoutSuffix = key.replace(/\s+high\s+school$/i, "").replace(/\s+hs$/i, "").trim()
       const url =
-        HIGH_SCHOOL_FALLBACKS[norm] ??
+        HIGH_SCHOOL_FALLBACKS[key] ??
         HIGH_SCHOOL_FALLBACKS[withoutSuffix] ??
-        (norm.includes("green level") ? HIGH_SCHOOL_FALLBACKS["green level"] : null) ??
-        (norm.includes("green hope") ? HIGH_SCHOOL_FALLBACKS["green hope"] : null) ??
-        (norm.includes("millbrook") ? HIGH_SCHOOL_FALLBACKS.millbrook : null)
+        (key.includes("green level") ? HIGH_SCHOOL_FALLBACKS["green level"] : null) ??
+        (key.includes("green hope") ? HIGH_SCHOOL_FALLBACKS["green hope"] : null) ??
+        (key.includes("millbrook") ? HIGH_SCHOOL_FALLBACKS.millbrook : null)
       if (url) return url
     }
 
-    // Try exact match first
+    // Exact match (DB stores canonical name from logo manager)
     const { data: exactData, error: exactError } = await supabase
       .from("logo_mappings")
       .select("logo_url")
       .eq("entity_type", normalizedType)
-      .ilike("entity_name", entityName)
+      .ilike("entity_name", canonicalName)
       .maybeSingle()
 
     if (!exactError && exactData) {
       return exactData.logo_url
     }
 
-    // Try partial match
+    // Partial match
     const { data: partialData, error: partialError } = await supabase
       .from("logo_mappings")
       .select("logo_url, entity_name")
       .eq("entity_type", normalizedType)
-      .or(`entity_name.ilike.%${normalizedEntityName}%, entity_name.ilike.%${normalizedEntityName.replace(" ", "%")}%`)
+      .or(`entity_name.ilike.%${canonicalName}%, entity_name.ilike.%${canonicalName.replace(" ", "%")}%`)
       .limit(1)
 
     if (!partialError && partialData && partialData.length > 0) {
