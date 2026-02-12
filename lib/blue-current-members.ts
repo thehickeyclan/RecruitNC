@@ -73,7 +73,7 @@ export async function getBlueCurrentMembers(): Promise<BlueCurrentMember[]> {
     for (const row of blueRows) {
       const id = String(row.id ?? "")
       const name = String(row.name ?? "").trim() || [row.firstname, row.lastname].filter(Boolean).join(" ").trim()
-      const highschool = String(row.highschool ?? "").trim()
+      const highschool = String(row.highschool ?? row.high_school ?? "").trim()
       const weight = String(row.weightclass ?? "").trim() ? `${row.weightclass} lbs` : "—"
 
       const accolades: string[] = []

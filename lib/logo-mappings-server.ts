@@ -29,35 +29,42 @@ export async function getLogoUrlServer(type: string, entityName: string): Promis
       "greensboro college": "/Greensboro-College-Seal.png",
     }
 
-    const normalizedEntityName = entityName.toLowerCase().trim()
+    const normalizedEntityName = entityName.toLowerCase().replace(/\s+/g, " ").trim()
     if (DIRECT_URL_MAPPINGS[normalizedEntityName]) {
       return DIRECT_URL_MAPPINGS[normalizedEntityName]
     }
 
-    // Known high-school logo fallbacks when not in DB
-    const HIGH_SCHOOL_LOGO_FALLBACKS: Record<string, string> = {
+    let normalizedType = type.toLowerCase()
+    if (normalizedType === "high_school" || normalizedType === "high-school") normalizedType = "highschool"
+    if (normalizedType === "colleges") normalizedType = "college"
+    if (normalizedType === "clubs") normalizedType = "club"
+
+    // Known high-school logo fallbacks (match flexibly: "Green Level", "Millbrook", etc.)
+    const HIGH_SCHOOL_FALLBACKS: Record<string, string> = {
       "green level":
-        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
-      "green level high school":
         "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/XcmZnv2MqXA5sMIzKpJQy-Green%20Level.png",
       "green hope":
         "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/pPaUHAqalF1e9SF-xslhG-Green%20Hope.png",
-      "green hope high school":
-        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/pPaUHAqalF1e9SF-xslhG-Green%20Hope.png",
+      millbrook:
+        "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/ndVl5fY7GMNQIapSPvjnd-Millbrook.jpg",
     }
-    if (type === "highschool" && HIGH_SCHOOL_LOGO_FALLBACKS[normalizedEntityName]) {
-      return HIGH_SCHOOL_LOGO_FALLBACKS[normalizedEntityName]
-    }
-    const withoutHighSchool = normalizedEntityName.replace(/\s+high\s+school$/i, "").trim()
-    if (type === "highschool" && withoutHighSchool && HIGH_SCHOOL_LOGO_FALLBACKS[withoutHighSchool]) {
-      return HIGH_SCHOOL_LOGO_FALLBACKS[withoutHighSchool]
+    if (normalizedType === "highschool") {
+      const norm = normalizedEntityName
+      const withoutSuffix = norm.replace(/\s+high\s+school$/i, "").replace(/\s+hs$/i, "").trim()
+      const url =
+        HIGH_SCHOOL_FALLBACKS[norm] ??
+        HIGH_SCHOOL_FALLBACKS[withoutSuffix] ??
+        (norm.includes("green level") ? HIGH_SCHOOL_FALLBACKS["green level"] : null) ??
+        (norm.includes("green hope") ? HIGH_SCHOOL_FALLBACKS["green hope"] : null) ??
+        (norm.includes("millbrook") ? HIGH_SCHOOL_FALLBACKS.millbrook : null)
+      if (url) return url
     }
 
     // Try exact match first
     const { data: exactData, error: exactError } = await supabase
       .from("logo_mappings")
       .select("logo_url")
-      .eq("entity_type", type)
+      .eq("entity_type", normalizedType)
       .ilike("entity_name", entityName)
       .maybeSingle()
 
@@ -69,7 +76,7 @@ export async function getLogoUrlServer(type: string, entityName: string): Promis
     const { data: partialData, error: partialError } = await supabase
       .from("logo_mappings")
       .select("logo_url, entity_name")
-      .eq("entity_type", type)
+      .eq("entity_type", normalizedType)
       .or(`entity_name.ilike.%${normalizedEntityName}%, entity_name.ilike.%${normalizedEntityName.replace(" ", "%")}%`)
       .limit(1)
 
