@@ -60,6 +60,16 @@ const top20Data = [
 const PROFILE_IDS_2028: Record<string, string> = {
   "Jacob Perry": "ddea34af-ae6a-4880-8a1c-687576bef1fe",
   "Stephen Cross": "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c",
+  "Ryan Thompson": "6a3c422a-ee87-42f4-b2ab-2b87d8a67bad",
+  "Connor Reece": "270fcf81-8337-4581-8a17-ff0093a1b6af",
+  "Mitchell Rowland": "088023a8-b9df-4d84-94b5-40bf59535ed2",
+  "Luke Richards": "1a2d638e-5978-45d4-b6c8-bc95ba754367",
+  "Jake Amiott": "7bb99ea9-a0ff-4cd0-91f8-217327959105",
+  "Drew Teeter": "5d34ba2f-5111-45ee-8536-cb1bb759cea1",
+  "Aaron Ruiz-Angel": "a045087f-22be-466d-a4f5-81fc8d5cdd5c",
+  "Joseph Shook": "92d9d56f-3268-45c8-896c-5c3801b29041",
+  "Joe Shook": "92d9d56f-3268-45c8-896c-5c3801b29041",
+  "Paxton Kearns": "d206b724-e587-4721-a1e2-2d23a57f79c2",
 }
 
 function norm(s: string) {
@@ -217,7 +227,15 @@ export default function Class2028RankingsPage() {
   while (merged.length < NEEDED) {
     merged.push(displayTop3[merged.length])
   }
-  const finalTop3 = merged.slice(0, NEEDED)
+  // Resolve profile id for each card so "View Profile" links work (API may not return id for static fallbacks)
+  const finalTop3 = merged.slice(0, NEEDED).map((a) => {
+    if (a.id) return a
+    const resolved =
+      PROFILE_IDS_2028[a.name] ??
+      Object.entries(PROFILE_IDS_2028).find(([k]) => norm(k) === norm(a.name || ""))?.[1] ??
+      linkResolution.find((r) => norm(r.name) === norm(a.name || "") && (!(a.school as string)?.trim() || norm(r.highschool || "").includes(norm(a.school as string)) || norm(a.school as string).includes(norm(r.highschool || ""))))?.id
+    return { ...a, id: resolved || undefined }
+  })
 
   return (
     <AuthGuard>
