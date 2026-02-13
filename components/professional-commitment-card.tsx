@@ -215,25 +215,39 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             Senior: `Senior (${gradYear - 1}-${String(gradYear).slice(-2)})`,
           }
 
-          // Group by grade to handle multiple records per season
+          // Normalize grade string to canonical key for grouping and chronological sort (Freshman → Senior)
+          const gradeOrder = ["Freshman", "Sophomore", "Junior", "Senior"] as const
+          const toCanonicalGrade = (raw: string): string => {
+            const lower = raw.toLowerCase()
+            if (lower.includes("freshman")) return "Freshman"
+            if (lower.includes("sophomore")) return "Sophomore"
+            if (lower.includes("junior")) return "Junior"
+            if (lower.includes("senior")) return "Senior"
+            if (gradeOrder.includes(raw as any)) return raw
+            return raw
+          }
+
+          // Group by canonical grade to handle multiple records per season
           const gradeGroups: { [key: string]: { wins: number; losses: number } } = {}
-          
+
           data.matches.forEach((season: any) => {
-            const grade = (season.grade || season.year || "Unknown").trim()
-            if (!grade || grade === "Unknown") return
-            
+            const raw = (season.grade || season.year || "Unknown").trim()
+            if (!raw || raw === "Unknown") return
+            const grade = toCanonicalGrade(raw)
+
             if (!gradeGroups[grade]) {
               gradeGroups[grade] = { wins: 0, losses: 0 }
             }
-            
+
             gradeGroups[grade].wins += Number(season.wins) || 0
             gradeGroups[grade].losses += Number(season.losses) || 0
           })
 
-          // Convert to array and sort by grade order
-          const gradeOrder = ["Freshman", "Sophomore", "Junior", "Senior"]
-          const seasons: SeasonRecord[] = Object.entries(gradeGroups)
-            .map(([grade, stats]) => {
+          // Convert to array and sort by grade order (Freshman first, then Sophomore, Junior, Senior)
+          const seasons: SeasonRecord[] = gradeOrder
+            .filter((grade) => gradeGroups[grade])
+            .map((grade) => {
+              const stats = gradeGroups[grade]
               const wins = stats.wins
               const losses = stats.losses
               const total = wins + losses
@@ -246,11 +260,10 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 wins,
                 losses,
                 winPercentage: Math.round(winPercentage * 10) / 10,
-                sortOrder: gradeOrder.indexOf(grade) >= 0 ? gradeOrder.indexOf(grade) : 999,
+                sortOrder: gradeOrder.indexOf(grade),
               }
             })
             .filter((s: SeasonRecord) => s.wins > 0 || s.losses > 0)
-            .sort((a: any, b: any) => (a.sortOrder || 999) - (b.sortOrder || 999))
 
           const totalWins = seasons.reduce((sum, s) => sum + s.wins, 0)
           const totalLosses = seasons.reduce((sum, s) => sum + s.losses, 0)
