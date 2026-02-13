@@ -10,10 +10,14 @@ interface WorkingEntityLogoProps {
   className?: string
 }
 
+const isExternalUrl = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://")
+
 export function WorkingEntityLogo({ entityName, entityType, size = 24, className = "" }: WorkingEntityLogoProps) {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [imageLoadError, setImageLoadError] = useState(false)
 
   useEffect(() => {
     async function fetchLogo() {
@@ -35,6 +39,7 @@ export function WorkingEntityLogo({ entityName, entityType, size = 24, className
           console.log(`✅ WorkingEntityLogo: Found logo for ${entityName}:`, data.logo_url)
           setLogoUrl(data.logo_url)
           setError(null)
+          setImageLoadError(false)
         } else {
           console.log(`❌ WorkingEntityLogo: No logo found for ${entityName}`)
           setError(data.error || "No logo found")
@@ -76,20 +81,32 @@ export function WorkingEntityLogo({ entityName, entityType, size = 24, className
     }
   }
 
-  // Use logo URL if available, otherwise use fallback
-  const imageToShow = logoUrl || getFallback()
+  const fallbackSrc = getFallback()
+  const showFallback = !logoUrl || imageLoadError
+
+  if (showFallback) {
+    return (
+      <Image
+        src={fallbackSrc}
+        alt=""
+        width={size}
+        height={size}
+        className={`object-contain ${className}`}
+      />
+    )
+  }
 
   return (
     <Image
-      src={imageToShow || "/placeholder.svg"}
-      alt={`${entityName} logo`}
+      src={logoUrl}
+      alt=""
       width={size}
       height={size}
       className={`object-contain ${className}`}
-      onError={(e) => {
-        console.log(`❌ WorkingEntityLogo: Image failed to load for ${entityName}`)
-        const target = e.target as HTMLImageElement
-        target.src = getFallback()
+      unoptimized={isExternalUrl(logoUrl)}
+      onError={() => {
+        console.log(`❌ WorkingEntityLogo: Image failed to load for ${entityName}, showing fallback`)
+        setImageLoadError(true)
       }}
     />
   )

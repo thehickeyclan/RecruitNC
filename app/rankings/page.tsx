@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -361,7 +362,15 @@ export default function ClassOf2027RankingsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{athlete.name}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {athlete.id ? (
+                                <Link href={`/unified-profile/${athlete.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                                  {athlete.name}
+                                </Link>
+                              ) : (
+                                athlete.name
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-500">{athlete.highschool}</div>

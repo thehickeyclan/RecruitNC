@@ -58,7 +58,9 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   const [isFlipped, setIsFlipped] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogoUrl, setHighSchoolLogoUrl] = useState<string | null>(null)
+  const [highSchoolLogoError, setHighSchoolLogoError] = useState(false)
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null)
+  const [clubLogoError, setClubLogoError] = useState(false)
   const [collegeLogoUrl, setCollegeLogoUrl] = useState<string | null>(null)
   const [displayClubName, setDisplayClubName] = useState<string>("")
   const [careerStats, setCareerStats] = useState<{
@@ -105,6 +107,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               const data = await response.json()
               if (data.success && data.logo_url) {
                 setHighSchoolLogoUrl(data.logo_url)
+                setHighSchoolLogoError(false)
               }
             }
           } catch (error) {
@@ -143,6 +146,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               console.log(`[v0] Club logo API response for "${finalClubName}":`, data)
               if (data.success && data.logo_url) {
                 setClubLogoUrl(data.logo_url)
+                setClubLogoError(false)
                 console.log(`✅ Club logo found for "${finalClubName}": ${data.logo_url}`)
               } else {
                 console.log(`❌ No club logo found for "${finalClubName}". Response:`, data)
@@ -596,16 +600,15 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               >
                 <div className="text-center">
                   <div className="h-10 w-10 mx-auto mb-1 rounded-full bg-white p-1 flex items-center justify-center border border-gray-200">
-                    {highSchoolLogoUrl ? (
+                    {highSchoolLogoUrl && !highSchoolLogoError ? (
                       <Image
-                        src={highSchoolLogoUrl || "/placeholder.svg"}
-                        alt="High School"
+                        src={highSchoolLogoUrl}
+                        alt=""
                         width={28}
                         height={28}
                         className="object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none"
-                        }}
+                        unoptimized={highSchoolLogoUrl.startsWith("http")}
+                        onError={() => setHighSchoolLogoError(true)}
                       />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-gray-300"></div>
@@ -620,16 +623,15 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 {hasValidClub() && (
                   <div className="text-center">
                     <div className="h-10 w-10 mx-auto mb-1 rounded-full bg-white p-1 flex items-center justify-center border border-gray-200">
-                      {clubLogoUrl ? (
+                      {clubLogoUrl && !clubLogoError ? (
                         <Image
-                          src={clubLogoUrl || "/placeholder.svg"}
-                          alt="Club"
+                          src={clubLogoUrl}
+                          alt=""
                           width={28}
                           height={28}
                           className="object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none"
-                          }}
+                          unoptimized={clubLogoUrl.startsWith("http")}
+                          onError={() => setClubLogoError(true)}
                         />
                       ) : (
                         <div className="w-7 h-7 rounded-full bg-gray-300"></div>

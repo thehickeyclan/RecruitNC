@@ -466,7 +466,12 @@ export function RankingsTableView({
                             {athlete.name}
                           </Link>
                         ) : (
-                          <span className="font-semibold text-gray-900">{athlete.name}</span>
+                          <Link
+                            href="/create-profile"
+                            className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
+                          >
+                            {athlete.name}
+                          </Link>
                         )}
                       </div>
                     </TableCell>

@@ -325,7 +325,17 @@ export default function Class2028RankingsPage() {
                               <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1">#{rank}</Badge>
                             </div>
                           </div>
-                          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">{athlete.name}</h3>
+                          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
+                            {athlete.id ? (
+                              <Link href={`/unified-profile/${athlete.id}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                                {athlete.name}
+                              </Link>
+                            ) : (
+                              <Link href={getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                                {athlete.name}
+                              </Link>
+                            )}
+                          </h3>
                           <p className="text-sm text-gray-600 mb-2">{athlete.school}</p>
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
                             {athlete.weight}
@@ -532,7 +542,11 @@ export default function Class2028RankingsPage() {
                               <td className="px-4 py-3">
                                 <Badge className="bg-[#D3B574] text-gray-900">#{athlete.rank}</Badge>
                               </td>
-                              <td className="px-4 py-3 font-medium">{athlete.name}</td>
+                              <td className="px-4 py-3 font-medium">
+                                <Link href={profileUrl} className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium">
+                                  {athlete.name}
+                                </Link>
+                              </td>
                               <td className="px-4 py-3">{athlete.school}</td>
                               <td className="px-4 py-3">{athlete.weight}</td>
                               <td className="px-4 py-3">
@@ -560,7 +574,12 @@ export default function Class2028RankingsPage() {
                         <div className="flex items-start gap-3">
                           <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1 flex-shrink-0">#{athlete.rank}</Badge>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{athlete.name} - {athlete.school} ({athlete.weight})</h4>
+                            <h4 className="font-semibold text-gray-900">
+                              <Link href={getProfileUrl(athlete.name, athlete.school, linkResolution)} className="text-[#03154C] hover:text-[#D3B574] hover:underline">
+                                {athlete.name}
+                              </Link>
+                              {" - "}{athlete.school} ({athlete.weight})
+                            </h4>
                             {athlete.achievements && (
                               <p className="text-sm text-gray-600 mt-1">{athlete.achievements}</p>
                             )}

@@ -126,8 +126,10 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   const { isAdmin, isVerifiedCoach } = useAuth()
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
+  const [highSchoolLogoLoadError, setHighSchoolLogoLoadError] = useState(false)
   const [collegeLogo, setCollegeLogo] = useState<string | null>(null)
   const [clubLogo, setClubLogo] = useState<string | null>(null)
+  const [clubLogoLoadError, setClubLogoLoadError] = useState(false)
   const [instagramLogo, setInstagramLogo] = useState<string | null>(null)
   const [floLogo, setFloLogo] = useState<string | null>(null)
   const [trackWrestlingLogo, setTrackWrestlingLogo] = useState<string | null>(null)
@@ -285,6 +287,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
               const data = await response.json()
               if (data.success && data.logo_url) {
                 setHighSchoolLogo(data.logo_url)
+                setHighSchoolLogoLoadError(false)
               }
             }
           }
@@ -303,12 +306,14 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         const clubLogoUrl = athlete?.wrestlingClubLogoUrl ?? athlete?.wrestlingclublogourl ?? (athlete as any)?.wrestling_club_logo_url
         if (clubLogoUrl) {
           setClubLogo(clubLogoUrl)
+          setClubLogoLoadError(false)
         } else if (wrestlingClub && wrestlingClub !== "Not specified") {
           const response = await fetch(`/api/logo-mappings/by-entity/club/${encodeURIComponent(wrestlingClub)}`)
           if (response.ok) {
             const data = await response.json()
             if (data.success && data.logo_url) {
               setClubLogo(data.logo_url)
+              setClubLogoLoadError(false)
             }
           }
         }
@@ -1104,13 +1109,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 {highSchool && highSchool !== "Not specified" && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
-                      {highSchoolLogo ? (
+                      {highSchoolLogo && !highSchoolLogoLoadError ? (
                         <Image
                           src={highSchoolLogo}
-                          alt={`${highSchool} logo`}
+                          alt=""
                           width={48}
                           height={48}
                           className="object-contain"
+                          unoptimized={highSchoolLogo.startsWith("http")}
+                          onError={() => setHighSchoolLogoLoadError(true)}
                         />
                       ) : (
                         <WorkingEntityLogo entityName={highSchool} entityType="highschool" size={48} />
@@ -1123,13 +1130,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                     <div className="w-16 h-16 rounded-lg bg-gray-50 p-2 flex items-center justify-center mb-3 border border-gray-200 overflow-hidden">
-                      {clubLogo ? (
+                      {clubLogo && !clubLogoLoadError ? (
                         <Image
                           src={clubLogo}
-                          alt={`${wrestlingClub} logo`}
+                          alt=""
                           width={48}
                           height={48}
                           className="object-contain"
+                          unoptimized={clubLogo.startsWith("http")}
+                          onError={() => setClubLogoLoadError(true)}
                         />
                       ) : (
                         <WorkingEntityLogo entityName={wrestlingClub} entityType="club" size={48} />

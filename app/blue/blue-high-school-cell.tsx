@@ -38,6 +38,7 @@ export function BlueHighSchoolCell({ schoolName }: Props) {
           height={24}
           className="h-6 w-6 rounded object-contain flex-shrink-0"
           unoptimized
+          onError={() => setLogoUrl(null)}
         />
       ) : null}
       <span>{schoolName || "—"}</span>

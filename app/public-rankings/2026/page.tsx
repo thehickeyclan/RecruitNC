@@ -123,7 +123,9 @@ export default function ClassOf2026RankingsPage() {
                         )}
                       </div>
                       <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                        {index === 0 && athlete.name.includes("Alston") ? "Lorenzo Alston" : athlete.name}
+                        <Link href={`/unified-profile/${athlete.id}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                          {index === 0 && athlete.name.includes("Alston") ? "Lorenzo Alston" : athlete.name}
+                        </Link>
                       </h3>
                       <p className="text-sm text-gray-600 mb-2">{athlete.highschool}</p>
                       <Badge className="bg-[#D3B574] text-gray-900">#{index + 1} Ranked</Badge>
