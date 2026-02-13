@@ -70,6 +70,7 @@ const PROFILE_IDS_2028: Record<string, string> = {
   "Joseph Shook": "92d9d56f-3268-45c8-896c-5c3801b29041",
   "Joe Shook": "92d9d56f-3268-45c8-896c-5c3801b29041",
   "Paxton Kearns": "d206b724-e587-4721-a1e2-2d23a57f79c2",
+  "Jackson D'Ettore": "2be076e9-5400-4238-a245-b4e4fb640d48",
 }
 
 function norm(s: string) {

@@ -4,10 +4,11 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AdminHeader } from "@/components/admin-header"
-import { Loader2, ArrowLeft } from "lucide-react"
+import { Loader2, ArrowLeft, Plus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { COLLEGE_DIVISION_OPTIONS } from "@/types/college"
 
@@ -32,6 +33,9 @@ export default function AdminCollegesPage() {
   const [colleges, setColleges] = useState<CollegeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [newDivision, setNewDivision] = useState("")
   const { toast } = useToast()
 
   useEffect(() => {
@@ -77,11 +81,40 @@ export default function AdminCollegesPage() {
     }
   }
 
+  async function addCollege() {
+    const name = newName.trim()
+    if (!name) {
+      toast({ title: "Error", description: "Enter a college name", variant: "destructive" })
+      return
+    }
+    try {
+      setAdding(true)
+      const res = await fetch("/api/admin/colleges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, division: newDivision }),
+      })
+      const data = await res.json()
+      if (data.success && data.college) {
+        setColleges((prev) => [...prev, data.college].sort((a, b) => a.name.localeCompare(b.name)))
+        setNewName("")
+        setNewDivision("")
+        toast({ title: "Added", description: `${name} is now in the college list and will appear in the dropdown on admin profiles.` })
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to add college", variant: "destructive" })
+      }
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to add college", variant: "destructive" })
+    } finally {
+      setAdding(false)
+    }
+  }
+
   return (
     <div className="container mx-auto py-6 px-4">
       <AdminHeader />
       <h1 className="text-2xl font-bold mb-2">Colleges (divisions)</h1>
-      <p className="text-sm text-muted-foreground mb-4">Set division for each college. This is the source of truth for the app.</p>
+      <p className="text-sm text-muted-foreground mb-4">Add colleges and set division. The list here is the same one used in the college dropdown on admin profiles (College tab).</p>
       <div className="mb-4">
         <Link href="/admin">
           <Button variant="ghost" size="sm">
@@ -90,6 +123,47 @@ export default function AdminCollegesPage() {
           </Button>
         </Link>
       </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Add new college</CardTitle>
+          <p className="text-sm text-muted-foreground">New colleges will appear in the College dropdown when editing athlete profiles.</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-2 min-w-[200px]">
+              <Label htmlFor="new-college-name">College name</Label>
+              <Input
+                id="new-college-name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="e.g. Ferrum College"
+                disabled={adding}
+              />
+            </div>
+            <div className="space-y-2 min-w-[200px]">
+              <Label htmlFor="new-college-division">Division</Label>
+              <Select value={newDivision || NONE_VALUE} onValueChange={(v) => setNewDivision(v === NONE_VALUE ? "" : v)} disabled={adding}>
+                <SelectTrigger id="new-college-division" className="w-[220px]">
+                  <SelectValue placeholder="Optional" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COLLEGE_DIVISION_OPTIONS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={NONE_VALUE}>— None —</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={addCollege} disabled={adding || !newName.trim()}>
+              {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+              Add college
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
