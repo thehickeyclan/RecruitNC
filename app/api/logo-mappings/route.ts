@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { entity_name, entity_type, logo_url, aliases, division } = body
 
-    if (!entity_name || !entity_type || !logo_url) {
+    if (!entity_name || !entity_type) {
       return NextResponse.json(
-        { success: false, error: "Entity name, type, and logo URL are required" },
+        { success: false, error: "Entity name and type are required" },
         { status: 400 },
       )
     }
@@ -58,13 +58,26 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const canonicalName = normalizeEntityName(entity_name)
     const canonicalType = normalizeEntityType(entity_type)
+    // Clubs can be created without a logo; use default placeholder so DB constraint is satisfied
+    const resolvedLogoUrl =
+      logo_url && logo_url.trim() !== ""
+        ? logo_url.trim()
+        : canonicalType === "club"
+          ? "/wrestling-club-logo.png"
+          : null
+    if (!resolvedLogoUrl && canonicalType !== "club") {
+      return NextResponse.json(
+        { success: false, error: "Logo URL is required for non-club entities" },
+        { status: 400 },
+      )
+    }
 
     const { data, error } = await supabase
       .from("logo_mappings")
       .insert({
         entity_name: canonicalName,
         entity_type: canonicalType,
-        logo_url,
+        logo_url: resolvedLogoUrl,
         aliases: aliases || null,
         division: division || null,
       })

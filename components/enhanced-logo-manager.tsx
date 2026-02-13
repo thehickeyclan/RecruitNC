@@ -220,9 +220,15 @@ export default function EnhancedLogoManager() {
   const handleCreateMapping = async () => {
     console.log("[v0] Create mapping clicked", newMappingForm)
 
-    if (!newMappingForm.entityName || !newMappingForm.logoUrl) {
+    if (!newMappingForm.entityName) {
       setSaveStatus("error")
-      alert("Please fill in both Entity Name and Logo URL")
+      alert("Please fill in Entity Name")
+      setTimeout(() => setSaveStatus(null), 3000)
+      return
+    }
+    if (newMappingForm.entityType !== "club" && !newMappingForm.logoUrl) {
+      setSaveStatus("error")
+      alert("Logo URL is required for high school, college, and other entities")
       setTimeout(() => setSaveStatus(null), 3000)
       return
     }
@@ -237,7 +243,7 @@ export default function EnhancedLogoManager() {
         body: JSON.stringify({
           entity_name: newMappingForm.entityName,
           entity_type: newMappingForm.entityType,
-          logo_url: newMappingForm.logoUrl,
+          logo_url: newMappingForm.logoUrl?.trim() || undefined,
           aliases: newMappingForm.aliases,
           division: newMappingForm.division,
         }),
@@ -591,7 +597,11 @@ export default function EnhancedLogoManager() {
               <Button
                 onClick={handleCreateMapping}
                 className="w-full"
-                disabled={!newMappingForm.entityName || !newMappingForm.logoUrl || saveStatus === "saving"}
+                disabled={
+                  !newMappingForm.entityName ||
+                  (newMappingForm.entityType !== "club" && !newMappingForm.logoUrl) ||
+                  saveStatus === "saving"
+                }
               >
                 <Plus className="h-4 w-4 mr-2" />
                 {saveStatus === "saving" ? "Creating..." : "Create Mapping"}
