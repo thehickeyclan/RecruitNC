@@ -218,6 +218,9 @@ export default function CardAnalyticsPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Recent Views</p>
                 <p className="text-2xl font-bold">{cardViews.length}</p>
+                {totalViews > cardViews.length && (
+                  <p className="text-xs text-gray-500">of {totalViews.toLocaleString()} total</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -391,7 +394,11 @@ export default function CardAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Profile Views</CardTitle>
-          <CardDescription>Latest profile page visits (one per visit)</CardDescription>
+          <CardDescription>
+            {totalViews > cardViews.length
+              ? `Showing ${cardViews.length.toLocaleString()} most recent of ${totalViews.toLocaleString()} total`
+              : "Latest profile page visits (one per visit)"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 max-h-96 overflow-y-auto">
