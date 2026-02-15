@@ -23,12 +23,15 @@ const ACHIEVEMENT_OPTIONS = [
 
 const GRADUATION_YEARS = ["2026", "2027", "2028", "2029", "2030"]
 
+const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
+
 export function BlueExpressInterestForm() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [cell, setCell] = useState("")
   const [graduationYear, setGraduationYear] = useState("")
   const [highestAchievement, setHighestAchievement] = useState("")
+  const [weightClass, setWeightClass] = useState("none")
   const [highSchool, setHighSchool] = useState("")
   const [club, setClub] = useState("")
   const [comments, setComments] = useState("")
@@ -73,6 +76,7 @@ export function BlueExpressInterestForm() {
           cell: cell.trim(),
           graduationYear,
           highestAchievement,
+          weightClass: weightClass && weightClass !== "none" ? weightClass : undefined,
           highSchool: highSchool.trim() || undefined,
           club: club.trim() || undefined,
           comments: comments.trim() || undefined,
@@ -91,6 +95,7 @@ export function BlueExpressInterestForm() {
       setCell("")
       setGraduationYear("")
       setHighestAchievement("")
+      setWeightClass("none")
       setHighSchool("")
       setClub("")
       setComments("")
@@ -228,6 +233,24 @@ export function BlueExpressInterestForm() {
               {ACHIEVEMENT_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="blue-weight-class" className="text-[#03154C]">
+            Weight class (optional)
+          </Label>
+          <Select value={weightClass} onValueChange={setWeightClass} disabled={isSubmitting}>
+            <SelectTrigger id="blue-weight-class" className="border-[#03154C]/30 bg-white">
+              <SelectValue placeholder="Select lbs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {WEIGHT_CLASSES.map((w) => (
+                <SelectItem key={w} value={w}>
+                  {w} lbs
                 </SelectItem>
               ))}
             </SelectContent>

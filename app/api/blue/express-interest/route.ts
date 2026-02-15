@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     const cell = body.cell?.trim()
     const graduationYear = body.graduationYear?.trim()
     const highestAchievement = body.highestAchievement?.trim()
+    const weightClass = body.weightClass?.trim() || null
     const highSchool = body.highSchool?.trim() || null
     const club = body.club?.trim() || null
     const comments = body.comments?.trim() || null
@@ -25,20 +26,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: "Highest achievement is required" }, { status: 400 })
     }
 
+    const row: Record<string, unknown> = {
+      first_name: firstName,
+      last_name: lastName,
+      cell_phone: cell,
+      graduation_year: graduationYear,
+      highest_achievement: highestAchievement,
+      high_school: highSchool,
+      club: club,
+      comments: comments,
+    }
+    if (weightClass) row.weight_class = weightClass
+
     const { error: dbError } = await adminClient
       .from("blue_express_interest")
-      .insert([
-        {
-          first_name: firstName,
-          last_name: lastName,
-          cell_phone: cell,
-          graduation_year: graduationYear,
-          highest_achievement: highestAchievement,
-          high_school: highSchool,
-          club: club,
-          comments: comments,
-        },
-      ])
+      .insert([row])
 
     if (dbError) {
       console.error("[Blue express-interest] DB error:", dbError)

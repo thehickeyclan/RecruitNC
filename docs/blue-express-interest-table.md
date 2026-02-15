@@ -39,5 +39,15 @@ If the table already exists, add the new columns:
 alter table public.blue_express_interest
   add column if not exists high_school text,
   add column if not exists club text,
-  add column if not exists comments text;
+  add column if not exists comments text,
+  add column if not exists weight_class text;
 ```
+
+**Weight class:** To add weight class support, run this in Supabase SQL editor before deploying:
+
+```sql
+alter table public.blue_express_interest
+  add column if not exists weight_class text;
+```
+
+Until the column exists, submissions without weight class will still work; submissions with weight class will fail.

@@ -22,6 +22,7 @@ type Submission = {
   cell_phone: string
   graduation_year: string
   highest_achievement: string
+  weight_class: string | null
   high_school: string | null
   club: string | null
   comments: string | null
@@ -105,6 +106,7 @@ export default function BlueInterestPage() {
                       <TableHead>Name</TableHead>
                       <TableHead>High school</TableHead>
                       <TableHead>Club</TableHead>
+                      <TableHead>Weight</TableHead>
                       <TableHead>Cell</TableHead>
                       <TableHead>Grad year</TableHead>
                       <TableHead>Highest achievement</TableHead>
@@ -124,6 +126,7 @@ export default function BlueInterestPage() {
                         <TableCell className="max-w-[120px] truncate" title={row.club ?? ""}>
                           {row.club || "—"}
                         </TableCell>
+                        <TableCell>{row.weight_class ? `${row.weight_class} lbs` : "—"}</TableCell>
                         <TableCell>{row.cell_phone}</TableCell>
                         <TableCell>{row.graduation_year}</TableCell>
                         <TableCell>
