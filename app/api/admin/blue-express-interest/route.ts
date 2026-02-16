@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
+export const dynamic = "force-dynamic"
+
 async function requireAdmin() {
   const supabase = await createClient()
   const {
@@ -32,7 +34,7 @@ export async function GET(_request: NextRequest) {
       .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("[Admin API] GET blue_express_interest:", error?.message)
+      console.error("[Admin API] GET blue_express_interest error:", error?.message, "code:", error?.code)
       if (error.code === "42P01") {
         return NextResponse.json(
           { ok: false, error: "Table blue_express_interest does not exist. See docs/blue-express-interest-table.md" },
@@ -42,7 +44,11 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, submissions: data ?? [], count: data?.length ?? 0 })
+    const submissions = data ?? []
+    console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
+    const response = NextResponse.json({ ok: true, submissions, count: submissions.length })
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+    return response
   } catch (err: unknown) {
     console.error("[Admin API] blue-express-interest:", err)
     return NextResponse.json(

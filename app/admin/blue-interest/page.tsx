@@ -38,12 +38,18 @@ export default function BlueInterestPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/admin/blue-express-interest", { credentials: "include" })
+      const res = await fetch("/api/admin/blue-express-interest", {
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
+      })
       const data = await res.json()
+      console.log("[Blue Interest] API response:", { ok: data.ok, count: data.count, status: res.status })
       if (!data.ok) {
         throw new Error(data.error || "Failed to load")
       }
-      setSubmissions(data.submissions ?? [])
+      const list = Array.isArray(data.submissions) ? data.submissions : []
+      setSubmissions(list)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load submissions")
     } finally {
