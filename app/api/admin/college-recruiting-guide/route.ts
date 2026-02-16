@@ -46,25 +46,25 @@ export async function GET(request: NextRequest) {
       .from("athletes")
       .select("*")
       .eq("graduationyear", yearNum)
-      .not("college", "is", null)
-      .neq("college", "")
-      .neq("college", "Uncommitted")
-      .neq("college", "TBD")
-      .order("weightclass", { ascending: true })
+      .not("prospect_ranking", "is", null)
+      .order("prospect_ranking", { ascending: true })
       .order("name", { ascending: true })
 
     if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
 
-    const rows = (athletes || []).map((a: any) => ({
+    const rows = (athletes || []).map((a: any) => {
+      const displayName = a.wrestling_name || a.name || [a.firstName ?? a.firstname, a.lastName ?? a.lastname].filter(Boolean).join(" ").trim() || ""
+      return {
       id: a.id,
-      name: a.name || "",
+      name: displayName,
       weight: a.weightclass || a.weight_class || "—",
-      college: a.college || "—",
+      college: a.college && !["", "Uncommitted", "TBD"].includes(String(a.college)) ? a.college : "—",
       highschool: a.highschool || a.high_school || "—",
       cell: (a as any).cell_number ?? (a as any).phone ?? (a as any).cell ?? "—",
       gpa: a.academic_gpa != null ? String(a.academic_gpa) : "—",
       accomplishments: formatAccomplishments(a.achievements, a.additional_achievements),
-    }))
+    }
+    })
 
     const res = NextResponse.json({ ok: true, year: yearNum, athletes: rows })
     res.headers.set("Cache-Control", "no-store, max-age=0")

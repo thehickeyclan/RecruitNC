@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, BookOpen, Copy, Loader2 } from "lucide-react"
+import { ArrowLeft, Copy, Loader2, Printer } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 type AthleteRow = {
@@ -23,7 +22,6 @@ export default function CollegeRecruitingGuidePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [athletes, setAthletes] = useState<AthleteRow[]>([])
-  const [logos, setLogos] = useState<Record<string, string>>({})
   const { toast } = useToast()
 
   const loadData = useCallback(async () => {
@@ -48,26 +46,10 @@ export default function CollegeRecruitingGuidePage() {
     loadData()
   }, [loadData])
 
-  // Fetch college logos
-  useEffect(() => {
-    const colleges = [...new Set(athletes.map((a) => a.college).filter(Boolean))] as string[]
-    colleges.forEach(async (college) => {
-      if (college === "—") return
-      try {
-        const res = await fetch(`/api/logo-mappings/by-entity/college/${encodeURIComponent(college)}`)
-        const json = await res.json()
-        if (json.success && json.logo_url) {
-          setLogos((prev) => ({ ...prev, [college]: json.logo_url }))
-        }
-      } catch {
-        /* ignore */
-      }
-    })
-  }, [athletes])
-
   const copyTableForSlides = useCallback(() => {
-    const header = ["Name", "Weight", "College", "High School", "Cell", "GPA", "Accomplishments"]
-    const rows = athletes.map((a) => [
+    const header = ["#", "Name", "Wt", "College", "High School", "Cell", "GPA", "Accomplishments"]
+    const rows = athletes.map((a, i) => [
+      String(i + 1),
       a.name,
       a.weight,
       a.college,
@@ -83,107 +65,87 @@ export default function CollegeRecruitingGuidePage() {
   }, [athletes, toast])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="min-h-screen bg-white">
+      {/* Admin controls - hidden when printing */}
+      <div className="print:hidden border-b border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Link href="/admin">
               <Button variant="outline" size="icon">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-[#13294B] flex items-center gap-2">
-                <BookOpen className="h-7 w-7 text-[#C8102E]" />
-                College Recruiting Guide
-              </h1>
-              <p className="text-sm text-gray-600">Printable guide for coaches — Class of 2026, 2027, 2028</p>
-            </div>
+            <span className="text-sm text-gray-600">College Recruiting Guide</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium bg-white"
+              className="rounded border border-gray-300 px-3 py-1.5 text-sm bg-white"
             >
               <option value={2026}>Class of 2026</option>
               <option value={2027}>Class of 2027</option>
               <option value={2028}>Class of 2028</option>
             </select>
-            <Button onClick={copyTableForSlides} disabled={loading || athletes.length === 0} variant="outline">
-              <Copy className="h-4 w-4 mr-2" />
-              Copy for slides
+            <Button onClick={copyTableForSlides} disabled={loading || athletes.length === 0} variant="outline" size="sm">
+              <Copy className="h-4 w-4 mr-1" />
+              Copy
+            </Button>
+            <Button onClick={() => window.print()} disabled={loading || athletes.length === 0} variant="outline" size="sm">
+              <Printer className="h-4 w-4 mr-1" />
+              Print
             </Button>
           </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Class of {year} — Committed Athletes</CardTitle>
-            <CardDescription>
-              {athletes.length} athlete{athletes.length !== 1 ? "s" : ""}. Copy table to paste into PowerPoint,
-              Google Slides, or Excel.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-            {loading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
-              </div>
-            ) : athletes.length === 0 ? (
-              <p className="py-12 text-center text-gray-500">No committed athletes for Class of {year}.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm" id="recruiting-guide-table">
-                  <thead>
-                    <tr className="border-b-2 border-[#13294B] bg-[#13294B]/5">
-                      <th className="text-left p-2 font-semibold">Name</th>
-                      <th className="text-left p-2 font-semibold">Weight</th>
-                      <th className="text-left p-2 font-semibold">College</th>
-                      <th className="text-left p-2 font-semibold">High School</th>
-                      <th className="text-left p-2 font-semibold">Cell #</th>
-                      <th className="text-left p-2 font-semibold">GPA</th>
-                      <th className="text-left p-2 font-semibold">Accomplishments</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {athletes.map((row) => (
-                      <tr key={row.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="p-2 font-medium">{row.name}</td>
-                        <td className="p-2">{row.weight}</td>
-                        <td className="p-2">
-                          <div className="flex items-center gap-2">
-                            {logos[row.college] ? (
-                              <img
-                                src={logos[row.college]}
-                                alt=""
-                                width={28}
-                                height={28}
-                                className="object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none"
-                                }}
-                              />
-                            ) : (
-                              <span className="w-7 h-7 bg-gray-200 rounded flex-shrink-0" />
-                            )}
-                            <span>{row.college}</span>
-                          </div>
-                        </td>
-                        <td className="p-2">{row.highschool}</td>
-                        <td className="p-2 font-mono text-xs">{row.cell}</td>
-                        <td className="p-2">{row.gpa}</td>
-                        <td className="p-2 text-gray-700">{row.accomplishments}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Print-optimized content */}
+      <div className="mx-auto max-w-6xl px-6 py-8 print:py-4">
+        {error && <p className="mb-4 text-sm text-red-600 print:hidden">{error}</p>}
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
+          </div>
+        ) : athletes.length === 0 ? (
+          <p className="py-16 text-center text-gray-500">No ranked prospects for Class of {year}.</p>
+        ) : (
+          <div id="recruiting-guide-print">
+            <div className="mb-6 text-center">
+              <h1 className="text-xl font-bold text-[#13294B] tracking-tight">NC Wrestling Recruiting Guide</h1>
+              <p className="mt-1 text-base text-gray-700">Class of {year}</p>
+            </div>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border border-gray-300 bg-[#13294B] text-white">
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">#</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">Name</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">Wt</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">College</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">High School</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">Cell</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">GPA</th>
+                  <th className="border border-gray-300 px-3 py-2.5 text-left font-semibold">Accomplishments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {athletes.map((row, idx) => (
+                  <tr key={row.id} className="border border-gray-300 hover:bg-gray-50 print:hover:bg-transparent">
+                    <td className="border border-gray-300 px-3 py-2 text-gray-600">{idx + 1}</td>
+                    <td className="border border-gray-300 px-3 py-2 font-medium">{row.name}</td>
+                    <td className="border border-gray-300 px-3 py-2">{row.weight}</td>
+                    <td className="border border-gray-300 px-3 py-2">{row.college}</td>
+                    <td className="border border-gray-300 px-3 py-2">{row.highschool}</td>
+                    <td className="border border-gray-300 px-3 py-2 font-mono text-xs">{row.cell}</td>
+                    <td className="border border-gray-300 px-3 py-2">{row.gpa}</td>
+                    <td className="border border-gray-300 px-3 py-2 text-gray-700">{row.accomplishments}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
