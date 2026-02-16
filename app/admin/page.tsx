@@ -20,17 +20,6 @@ interface AdminStats {
   pendingSubmissions: number
 }
 
-interface NHSCAStats {
-  totalParticipants: number
-  totalPlacers: number
-  overallWinPercentage: number
-  bestYear?: {
-    year: number
-    winPercentage: number
-  }
-  bestYearByDivision?: Record<string, { year: number; allAmericans: number }>
-}
-
 export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats>({
     totalAthletes: 0,
@@ -40,7 +29,6 @@ export default function AdminDashboard() {
     totalCoaches: 0,
     pendingSubmissions: 0,
   })
-  const [nhscaStats, setNhscaStats] = useState<NHSCAStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -74,26 +62,6 @@ export default function AdminDashboard() {
           setStats(data)
         } else if (response.status === 429) {
           console.warn("[Admin] Rate limited on stats API")
-        }
-
-        // Fetch NHSCA analytics
-        const nhscaResponse = await fetch("/api/admin/nhsca-placements/analytics?state=NC&startYear=2020", {
-          credentials: "include"
-        })
-        if (nhscaResponse.ok) {
-          const nhscaData = await nhscaResponse.json()
-          if (nhscaData.success && nhscaData.stats) {
-            setNhscaStats({
-              totalParticipants: nhscaData.stats.overall.totalParticipants,
-              totalPlacers: nhscaData.stats.overall.totalPlacers,
-              overallWinPercentage: nhscaData.stats.overall.overallWinPercentage,
-              bestYear: nhscaData.stats.bestYears?.[0] ? {
-                year: nhscaData.stats.bestYears[0].year,
-                winPercentage: nhscaData.stats.bestYears[0].winPercentage,
-              } : undefined,
-              bestYearByDivision: nhscaData.stats.bestYearByDivision,
-            })
-          }
         }
       } catch (error) {
         console.error("Error fetching admin stats:", error)
@@ -204,91 +172,6 @@ export default function AdminDashboard() {
             </Card>
           </div>
         </div>
-
-        {/* NHSCA Analytics Section */}
-        {nhscaStats && (
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-[#13294B] flex items-center gap-2">
-                <Trophy className="h-6 w-6 text-[#D3B574]" />
-                NHSCA Analytics
-              </h2>
-              <Link href="/admin/nhsca-analytics">
-                <Button variant="outline" size="sm">
-                  View Full Analytics
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="border-l-4 border-l-[#D3B574]">
-                <CardContent className="p-4">
-                  <div className="text-sm text-gray-600 mb-1">Total Participants</div>
-                  <div className="text-2xl font-bold text-[#13294B]">
-                    {nhscaStats.totalParticipants.toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-l-4 border-l-[#D3B574]">
-                <CardContent className="p-4">
-                  <div className="text-sm text-gray-600 mb-1">All-Americans</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {nhscaStats.totalPlacers.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {nhscaStats.totalParticipants > 0
-                      ? Math.round((nhscaStats.totalPlacers / nhscaStats.totalParticipants) * 100 * 100) / 100
-                      : 0}% placement rate
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-l-4 border-l-[#D3B574]">
-                <CardContent className="p-4">
-                  <div className="text-sm text-gray-600 mb-1">Overall Win %</div>
-                  <div className="text-2xl font-bold text-[#13294B]">
-                    {nhscaStats.overallWinPercentage.toFixed(1)}%
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-l-4 border-l-[#D3B574]">
-                <CardContent className="p-4">
-                  <div className="text-sm text-gray-600 mb-1">Best Year</div>
-                  {nhscaStats.bestYear ? (
-                    <>
-                      <div className="text-2xl font-bold text-[#13294B]">{nhscaStats.bestYear.year}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {nhscaStats.bestYear.winPercentage.toFixed(1)}% win rate
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-gray-400">No data</div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-            {nhscaStats.bestYearByDivision && Object.keys(nhscaStats.bestYearByDivision).length > 0 && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle className="text-lg">Best Year by Division (Most All-Americans)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(nhscaStats.bestYearByDivision)
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([division, stats]) => (
-                        <div key={division} className="text-center p-3 bg-gray-50 rounded">
-                          <div className="text-sm font-medium text-gray-600">{division}</div>
-                          <div className="text-xl font-bold text-[#13294B] mt-1">{stats.year}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {stats.allAmericans} All-American{stats.allAmericans !== 1 ? "s" : ""}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
 
         {/* Quick Actions */}
         <div className="mb-8">
