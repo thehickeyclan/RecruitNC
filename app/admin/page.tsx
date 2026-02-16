@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database
+  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen
 } from "lucide-react"
 
 interface AdminStats {
@@ -234,6 +234,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Blue Interest Forms</span>
               </Button>
             </Link>
+            <Link href="/admin/college-recruiting-guide">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+                <BookOpen className="h-6 w-6" />
+                <span className="text-sm font-semibold">College Recruiting Guide</span>
+              </Button>
+            </Link>
             <Link href="/admin/super32-tools">
               <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
                 <RefreshCw className="h-6 w-6" />
@@ -335,6 +341,17 @@ export default function AdminDashboard() {
                   <FileText className="h-10 w-10 text-[#D3B574] mb-3" />
                   <h3 className="font-bold text-[#13294B] mb-1">Blue Interest Forms</h3>
                   <p className="text-xs text-gray-600">State qualifier express interest</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* College Recruiting Guide */}
+            <Link href="/admin/college-recruiting-guide">
+              <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <BookOpen className="h-10 w-10 text-[#1a5f4a] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">College Recruiting Guide</h3>
+                  <p className="text-xs text-gray-600">Printable guide for coaches (2026–2028)</p>
                 </CardContent>
               </Card>
             </Link>

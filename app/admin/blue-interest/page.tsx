@@ -34,7 +34,8 @@ export default function BlueInterestPage() {
   const [error, setError] = useState<string | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
 
-  const loadSubmissions = useCallback(async () => {
+  const loadSubmissions = useCallback(async (retryCount = 0) => {
+    const maxRetries = 2
     setLoading(true)
     setError(null)
     try {
@@ -44,7 +45,16 @@ export default function BlueInterestPage() {
         headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
       })
       const data = await res.json()
-      console.log("[Blue Interest] API response:", { ok: data.ok, count: data.count, status: res.status })
+
+      // Retry on auth or server errors (handles cookie/session timing)
+      const shouldRetry =
+        retryCount < maxRetries &&
+        (res.status === 401 || res.status === 403 || res.status === 500 || (res.status === 200 && !data.ok))
+      if (shouldRetry) {
+        await new Promise((r) => setTimeout(r, 600 + retryCount * 800))
+        return loadSubmissions(retryCount + 1)
+      }
+
       if (!data.ok) {
         throw new Error(data.error || "Failed to load")
       }
@@ -58,8 +68,21 @@ export default function BlueInterestPage() {
   }, [])
 
   useEffect(() => {
-    loadSubmissions()
+    // Brief delay so auth cookies propagate after navigation
+    const t = setTimeout(() => loadSubmissions(), 80)
+    return () => clearTimeout(t)
   }, [loadSubmissions])
+
+  // Retry on tab focus if previous load failed (fixes intermittent auth timing)
+  useEffect(() => {
+    const onFocus = () => {
+      if (document.visibilityState === "visible" && error && !loading) {
+        loadSubmissions()
+      }
+    }
+    window.addEventListener("visibilitychange", onFocus)
+    return () => window.removeEventListener("visibilitychange", onFocus)
+  }, [loadSubmissions, error, loading])
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
