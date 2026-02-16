@@ -132,7 +132,7 @@ export default function BlueInterestPage() {
                         <TableCell>
                           {ACHIEVEMENT_LABELS[row.highest_achievement] ?? row.highest_achievement}
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm" title={row.comments ?? ""}>
+                        <TableCell className="min-w-[200px] max-w-[400px] whitespace-normal text-sm align-top">
                           {row.comments || "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
