@@ -4,18 +4,30 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Save, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { ACADEMIC_INTEREST_GROUPS } from "@/lib/academic-interest-options"
 
 interface InlineAcademicsEditorProps {
   athleteId: string
   gpa?: number
   sat?: number
   act?: number
+  academicInterest?: string | null
   onSave: (updates: {
     academic_gpa?: number | null
     academic_sat?: number | null
     academic_act?: number | null
+    academic_interest?: string | null
   }) => Promise<void>
   onCancel: () => void
 }
@@ -25,12 +37,14 @@ export function InlineAcademicsEditor({
   gpa,
   sat,
   act,
+  academicInterest,
   onSave,
   onCancel,
 }: InlineAcademicsEditorProps) {
   const [gpaValue, setGpaValue] = useState(gpa ? String(gpa) : "")
   const [satValue, setSatValue] = useState(sat ? String(sat) : "")
   const [actValue, setActValue] = useState(act ? String(act) : "")
+  const [academicInterestValue, setAcademicInterestValue] = useState(academicInterest || "")
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
 
@@ -41,6 +55,7 @@ export function InlineAcademicsEditor({
         academic_gpa: gpaValue ? parseFloat(gpaValue) : null,
         academic_sat: satValue ? parseInt(satValue) : null,
         academic_act: actValue ? parseInt(actValue) : null,
+        academic_interest: academicInterestValue || null,
       })
       toast({
         title: "Success",
@@ -98,6 +113,27 @@ export function InlineAcademicsEditor({
           max="36"
           className="mt-1"
         />
+      </div>
+      <div>
+        <Label htmlFor="academic-interest">Academic Interest (Intended Major)</Label>
+        <Select value={academicInterestValue || "none"} onValueChange={(v) => setAcademicInterestValue(v === "none" ? "" : v)}>
+          <SelectTrigger id="academic-interest" className="mt-1">
+            <SelectValue placeholder="Select intended major (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None / Undecided</SelectItem>
+            {ACADEMIC_INTEREST_GROUPS.map((group) => (
+              <SelectGroup key={group.label}>
+                <SelectLabel>{group.label}</SelectLabel>
+                {group.options.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={saving} size="sm">

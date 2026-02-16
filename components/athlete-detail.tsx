@@ -1311,6 +1311,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 gpa={effectiveGpa}
                 sat={effectiveSat}
                 act={effectiveAct}
+                academicInterest={athleteData?.academic_interest}
                 onSave={handleInlineSave}
                 onCancel={() => setEditingSection(null)}
               />

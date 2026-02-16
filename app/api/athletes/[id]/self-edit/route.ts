@@ -30,7 +30,7 @@ const ALLOWED_UPDATE_COLUMNS = new Set([
   "cell", "cell_number", "phone", "contact_email", "contactEmail", "socialMedia", "social_media",
   "highlight_video_url", "updated_at", "bio", "bio_headline", "highschool", "wrestlingClub",
   "weightclass", "weight_class",
-  "academic_gpa", "academic_sat", "academic_act", "academic_summary",
+  "academic_gpa", "academic_sat", "academic_act", "academic_summary", "academic_interest",
   "college_opens_experience", "achievements", "additional_achievements",
 ])
 
@@ -127,6 +127,7 @@ export async function POST(
         highlightVideoUrl: "highlight_video_url", additionalAchievements: "additional_achievements",
         academicGPA: "academic_gpa", academicGpa: "academic_gpa", academicSAT: "academic_sat", academicSat: "academic_sat",
         academicACT: "academic_act", academicAct: "academic_act", academicSummary: "academic_summary",
+        academicInterest: "academic_interest",
       }
       for (const [key, val] of Object.entries(updates)) {
         if (val === undefined) continue
@@ -140,6 +141,7 @@ export async function POST(
         highlightVideoUrl: "highlight_video_url", additionalAchievements: "additional_achievements",
         academicGPA: "academic_gpa", academicGpa: "academic_gpa", academicSAT: "academic_sat", academicSat: "academic_sat",
         academicACT: "academic_act", academicAct: "academic_act", academicSummary: "academic_summary",
+        academicInterest: "academic_interest",
       }
       for (const key of Object.keys(updates)) {
         if (CONTACT_FIELDS.has(key)) continue

@@ -43,11 +43,10 @@ alter table public.blue_express_interest
   add column if not exists weight_class text;
 ```
 
-**Weight class:** To add weight class support, run this in Supabase SQL editor before deploying:
+**Weight class:** Run this in Supabase SQL editor if needed:
 
 ```sql
-alter table public.blue_express_interest
-  add column if not exists weight_class text;
+alter table public.blue_express_interest add column if not exists weight_class text;
 ```
 
-Until the column exists, submissions without weight class will still work; submissions with weight class will fail.
+Until the column exists, submissions without weight class will still work.
