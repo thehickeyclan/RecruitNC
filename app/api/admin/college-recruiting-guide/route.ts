@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
         weightclass,
         college,
         highschool,
-        cell,
         cell_number,
         phone,
         academic_gpa,
@@ -73,7 +72,7 @@ export async function GET(request: NextRequest) {
       weight: a.weightclass || a.weight_class || "—",
       college: a.college || "—",
       highschool: a.highschool || a.high_school || "—",
-      cell: a.cell || a.cell_number || a.phone || "—",
+      cell: a.cell_number || a.phone || "—",
       gpa: a.academic_gpa != null ? String(a.academic_gpa) : "—",
       accomplishments: formatAccomplishments(a.achievements, a.additional_achievements),
     }))
