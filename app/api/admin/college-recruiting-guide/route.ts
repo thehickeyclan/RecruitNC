@@ -44,18 +44,7 @@ export async function GET(request: NextRequest) {
     const admin = createAdminClient()
     const { data: athletes, error } = await admin
       .from("athletes")
-      .select(`
-        id,
-        name,
-        weightclass,
-        college,
-        highschool,
-        cell_number,
-        phone,
-        academic_gpa,
-        achievements,
-        additional_achievements
-      `)
+      .select("*")
       .eq("graduationyear", yearNum)
       .not("college", "is", null)
       .neq("college", "")
@@ -72,7 +61,7 @@ export async function GET(request: NextRequest) {
       weight: a.weightclass || a.weight_class || "—",
       college: a.college || "—",
       highschool: a.highschool || a.high_school || "—",
-      cell: a.cell_number || a.phone || "—",
+      cell: (a as any).cell_number ?? (a as any).phone ?? (a as any).cell ?? "—",
       gpa: a.academic_gpa != null ? String(a.academic_gpa) : "—",
       accomplishments: formatAccomplishments(a.achievements, a.additional_achievements),
     }))
