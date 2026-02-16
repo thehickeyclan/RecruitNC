@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { getNHSCAFromTables } from "@/lib/tournament-tables"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
   if (!graduationYear || isNaN(graduationYear)) {
@@ -10,22 +11,6 @@ async function getNCHSAAResults(supabase: any, athleteName: string, graduationYe
     .from("wrestling_nchsaa_results")
     .select("*")
     .ilike("wrestler_name", `%${athleteName}%`)
-    .gte("year", graduationYear - 4) // Get results from high school years
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
-
-  return results || []
-}
-
-async function getNHSCAResults(supabase: any, athleteName: string, graduationYear: number) {
-  if (!graduationYear || isNaN(graduationYear)) {
-    return []
-  }
-
-  const { data: results } = await supabase
-    .from("wrestling_nhsca_results")
-    .select("*")
-    .ilike("athlete_name", `%${athleteName}%`)
     .gte("year", graduationYear - 4) // Get results from high school years
     .lte("year", graduationYear)
     .order("year", { ascending: false })
@@ -47,6 +32,11 @@ export async function GET(request: Request) {
       .select(`
         id,
         name,
+        wrestling_name,
+        firstname,
+        lastname,
+        firstName,
+        lastName,
         graduationyear,
         gender,
         highschool,
@@ -89,25 +79,26 @@ export async function GET(request: Request) {
 
     const athletesWithResults = []
     for (const athlete of athletes || []) {
-      const [nchsaaResults, nhscaResults] = await Promise.all([
-        getNCHSAAResults(supabase, athlete.name, athlete.graduationyear),
-        getNHSCAResults(supabase, athlete.name, athlete.graduationyear),
+      const athleteName = athlete.wrestling_name || athlete.name || [athlete.firstName ?? athlete.firstname, athlete.lastName ?? athlete.lastname].filter(Boolean).join(" ").trim()
+      const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+      const [nchsaaResults, nhscaFromTables] = await Promise.all([
+        getNCHSAAResults(supabase, athleteName, gradYear),
+        getNHSCAFromTables(supabase, athleteName, gradYear),
       ])
 
       athletesWithResults.push({
         ...athlete,
-        nchsaa_results: nchsaaResults.map((result) => ({
+        nchsaa_results: nchsaaResults.map((result: any) => ({
           year: result.year,
           place: result.place,
           classification: result.classification,
           weight_class: result.weight_class,
           school: result.school,
         })),
-        nhsca_results: nhscaResults.map((result) => ({
-          year: result.year,
-          placement: result.placement,
-          athlete_name: result.athlete_name,
-          weight_class: result.weight_class,
+        nhsca_results: nhscaFromTables.map((r) => ({
+          year: r.year,
+          placement: r.placement,
+          record: r.record,
         })),
       })
     }

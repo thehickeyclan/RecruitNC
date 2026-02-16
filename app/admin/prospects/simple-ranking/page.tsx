@@ -54,6 +54,7 @@ interface Athlete {
   nhsca_results?: Array<{
     year: number
     placement: string
+    record?: string
   }>
 }
 
@@ -440,16 +441,17 @@ export default function SimpleRankingPage() {
                   <TableCell className="text-xs">
                     {(athlete.nhsca_2025_placement || athlete.nhsca_2025_record || 
                       athlete.nhsca_2024_placement || athlete.nhsca_2024_record || 
-                      athlete.nhsca_2023_placement || athlete.nhsca_2023_record) ? (
+                      athlete.nhsca_2023_placement || athlete.nhsca_2023_record || 
+                      (athlete.nhsca_results && athlete.nhsca_results.length > 0)) ? (
                       <div className="space-y-1">
                         {(athlete.nhsca_2025_placement || athlete.nhsca_2025_record) && (
                           <div className="text-xs text-gray-700">
                             {athlete.nhsca_2025_placement && (
                               <>
-                                {athlete.nhsca_2025_placement <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2025_placement}
-                                {athlete.nhsca_2025_placement === 1 ? "st" : 
-                                 athlete.nhsca_2025_placement === 2 ? "nd" : 
-                                 athlete.nhsca_2025_placement === 3 ? "rd" : "th"}
+                                {Number(athlete.nhsca_2025_placement) <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2025_placement}
+                                {athlete.nhsca_2025_placement === 1 || athlete.nhsca_2025_placement === "1" ? "st" : 
+                                 athlete.nhsca_2025_placement === 2 || athlete.nhsca_2025_placement === "2" ? "nd" : 
+                                 athlete.nhsca_2025_placement === 3 || athlete.nhsca_2025_placement === "3" ? "rd" : "th"}
                               </>
                             )}
                             {athlete.nhsca_2025_record && (
@@ -462,10 +464,10 @@ export default function SimpleRankingPage() {
                           <div className="text-xs text-gray-700">
                             {athlete.nhsca_2024_placement && (
                               <>
-                                {athlete.nhsca_2024_placement <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2024_placement}
-                                {athlete.nhsca_2024_placement === 1 ? "st" : 
-                                 athlete.nhsca_2024_placement === 2 ? "nd" : 
-                                 athlete.nhsca_2024_placement === 3 ? "rd" : "th"}
+                                {Number(athlete.nhsca_2024_placement) <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2024_placement}
+                                {athlete.nhsca_2024_placement === 1 || athlete.nhsca_2024_placement === "1" ? "st" : 
+                                 athlete.nhsca_2024_placement === 2 || athlete.nhsca_2024_placement === "2" ? "nd" : 
+                                 athlete.nhsca_2024_placement === 3 || athlete.nhsca_2024_placement === "3" ? "rd" : "th"}
                               </>
                             )}
                             {athlete.nhsca_2024_record && (
@@ -478,10 +480,10 @@ export default function SimpleRankingPage() {
                           <div className="text-xs text-gray-700">
                             {athlete.nhsca_2023_placement && (
                               <>
-                                {athlete.nhsca_2023_placement <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2023_placement}
-                                {athlete.nhsca_2023_placement === 1 ? "st" : 
-                                 athlete.nhsca_2023_placement === 2 ? "nd" : 
-                                 athlete.nhsca_2023_placement === 3 ? "rd" : "th"}
+                                {Number(athlete.nhsca_2023_placement) <= 8 ? "🥇" : "🏅"} {athlete.nhsca_2023_placement}
+                                {athlete.nhsca_2023_placement === 1 || athlete.nhsca_2023_placement === "1" ? "st" : 
+                                 athlete.nhsca_2023_placement === 2 || athlete.nhsca_2023_placement === "2" ? "nd" : 
+                                 athlete.nhsca_2023_placement === 3 || athlete.nhsca_2023_placement === "3" ? "rd" : "th"}
                               </>
                             )}
                             {athlete.nhsca_2023_record && (
@@ -489,6 +491,15 @@ export default function SimpleRankingPage() {
                             )}
                             {" '23"}
                           </div>
+                        )}
+                        {(!athlete.nhsca_2025_placement && !athlete.nhsca_2024_placement && !athlete.nhsca_2023_placement) &&
+                         athlete.nhsca_results && athlete.nhsca_results.length > 0 && (
+                          athlete.nhsca_results.slice(0, 3).map((r, idx) => (
+                            <div key={idx} className="text-xs text-gray-700">
+                              {r.placement ? "🏅 " : ""}{r.placement}{r.record ? ` • Record: ${r.record}` : ""} {" '"}
+                              {String(r.year).slice(-2)}
+                            </div>
+                          ))
                         )}
                       </div>
                     ) : (
