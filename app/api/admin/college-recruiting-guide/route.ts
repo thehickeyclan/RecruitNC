@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
 
     const admin = createAdminClient()
     const supabase = await createClient()
+    const db = admin // use admin for tournament tables too (bypasses RLS, ensures we see all Super32/NHSCA data)
 
     const { data: athletes, error } = await admin
       .from("athletes")
@@ -94,13 +95,13 @@ export async function GET(request: NextRequest) {
 
       const hs = a.highschool || a.high_school || ""
       let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
-        getNCHSAAResults(supabase, athleteName, gradYear),
-        getNHSCAFromTables(supabase, athleteName, gradYear),
-        getSuper32FromTable(supabase, athleteName, gradYear, { highSchool: hs }),
+        getNCHSAAResults(db, athleteName, gradYear),
+        getNHSCAFromTables(db, athleteName, gradYear),
+        getSuper32FromTable(db, athleteName, gradYear, { highSchool: hs }),
       ])
       // If no Super 32 (possible name/school mismatch), retry without school filter
       if (super32FromTable.length === 0 && hs) {
-        super32FromTable = await getSuper32FromTable(supabase, athleteName, gradYear)
+        super32FromTable = await getSuper32FromTable(db, athleteName, gradYear)
       }
       // If still no NHSCA/Super32, try "LastName FirstName" (some tables store names that way)
       if (nhscaFromTables.length === 0 || super32FromTable.length === 0) {
@@ -108,10 +109,10 @@ export async function GET(request: NextRequest) {
         if (parts.length >= 2) {
           const altName = [parts[parts.length - 1], ...parts.slice(0, -1)].join(" ")
           if (nhscaFromTables.length === 0) {
-            nhscaFromTables = await getNHSCAFromTables(supabase, altName, gradYear)
+            nhscaFromTables = await getNHSCAFromTables(db, altName, gradYear)
           }
           if (super32FromTable.length === 0) {
-            super32FromTable = await getSuper32FromTable(supabase, altName, gradYear)
+            super32FromTable = await getSuper32FromTable(db, altName, gradYear)
           }
         }
       }

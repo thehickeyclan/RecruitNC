@@ -14,6 +14,19 @@ export interface TournamentResultRow {
   division?: string
 }
 
+/** Return alternate spellings to try (e.g. Zach/Zack, Ammon/Amon). Ensures we find tournament data even when DB spellings differ. */
+function getNameVariants(name: string): string[] {
+  const t = (name ?? "").trim()
+  if (!t) return []
+  const variants: string[] = [t]
+  const lower = t.toLowerCase()
+  if (lower.includes("zach ") && !lower.includes("zack ")) variants.push(t.replace(/\bZach\b/gi, "Zack"))
+  if (lower.includes("zack ") && !lower.includes("zach ")) variants.push(t.replace(/\bZack\b/gi, "Zach"))
+  if (lower.includes("ammon ") && !lower.includes("amon ")) variants.push(t.replace(/\bAmmon\b/gi, "Amon"))
+  if (lower.includes("amon ") && !lower.includes("ammon ")) variants.push(t.replace(/\bAmon\b/gi, "Ammon"))
+  return [...new Set(variants)]
+}
+
 function formatPlacement(p: number | string | null | undefined): string {
   if (p == null || p === "") return ""
   const n = typeof p === "number" ? p : parseInt(String(p), 10)
@@ -35,44 +48,49 @@ export async function getNHSCAFromTables(
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim() || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
+  const namesToTry = getNameVariants(athleteName)
 
-  // 1. Try nhsca_placements (has record data per user)
-  const { data: placements } = await supabase
-    .from("nhsca_placements")
-    .select("*")
-    .ilike("athlete_name", `%${athleteName.trim()}%`)
-    .gte("year", startYear)
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
+  for (const searchName of namesToTry) {
+    // 1. Try nhsca_placements (has record data per user)
+    const { data: placements } = await supabase
+      .from("nhsca_placements")
+      .select("*")
+      .ilike("athlete_name", `%${searchName}%`)
+      .gte("year", startYear)
+      .lte("year", graduationYear)
+      .order("year", { ascending: false })
 
-  if (placements?.length) {
-    return placements.map((p: any) => ({
-      year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
-      placement: formatPlacement(p.placement),
-      record: (p.record ?? "").toString().trim(),
-      weight: (p.weight_class ?? p.weight ?? "").toString().trim(),
-      division: (p.division ?? "").toString().trim(),
-    }))
+    if (placements?.length) {
+      return placements.map((p: any) => ({
+        year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
+        placement: formatPlacement(p.placement),
+        record: (p.record ?? "").toString().trim(),
+        weight: (p.weight_class ?? p.weight ?? "").toString().trim(),
+        division: (p.division ?? "").toString().trim(),
+      }))
+    }
+
+    // 2. Fallback: wrestling_nhsca_results
+    const { data: results } = await supabase
+      .from("wrestling_nhsca_results")
+      .select("*")
+      .ilike("athlete_name", `%${searchName}%`)
+      .gte("year", startYear)
+      .lte("year", graduationYear)
+      .order("year", { ascending: false })
+
+    if (results?.length) {
+      return results.map((r: any) => ({
+        year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+        placement: formatPlacement(r.placement ?? r.place),
+        record: (r.record ?? r.record_text ?? "").toString().trim(),
+        weight: (r.weight ?? "").toString().trim(),
+        division: (r.division ?? "").toString().trim(),
+      }))
+    }
   }
 
-  // 2. Fallback: wrestling_nhsca_results
-  const { data: results } = await supabase
-    .from("wrestling_nhsca_results")
-    .select("*")
-    .ilike("athlete_name", `%${athleteName.trim()}%`)
-    .gte("year", startYear)
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
-
-  if (!results?.length) return []
-
-  return results.map((r: any) => ({
-    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
-    placement: formatPlacement(r.placement ?? r.place),
-    record: (r.record ?? r.record_text ?? "").toString().trim(),
-    weight: (r.weight ?? "").toString().trim(),
-    division: (r.division ?? "").toString().trim(),
-  }))
+  return []
 }
 
 /**
@@ -88,9 +106,8 @@ export async function getSuper32FromTable(
   if ((!athleteName?.trim() && !options?.highSchool?.trim()) || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
 
-  // Try athlete_name; when high_school is provided, only return rows that match school (avoid wrong-athlete / wrong-school data)
-  if (athleteName?.trim()) {
-    const namePattern = `%${athleteName.trim()}%`
+  for (const searchName of getNameVariants(athleteName)) {
+    const namePattern = `%${searchName}%`
     const { data: byName } = await supabase
       .from("super32_results")
       .select("*")
@@ -104,15 +121,14 @@ export async function getSuper32FromTable(
       const school = options.highSchool.trim().toLowerCase()
       const filtered = rows.filter((r: any) => {
         const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
-        return rowSchool.includes(school) || school.includes(rowSchool)
+        // Allow rows with null/empty school (e.g. not resolved during import)
+        return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
       })
-      // Only use rows that match this athlete's school; otherwise return none (avoid showing another school's data)
       rows = filtered
     }
     if (rows.length) return dedupeSuper32ByYear(mapSuper32Rows(rows))
   }
 
-  // Do NOT fall back to high_school only — that showed other kids' Super32 (e.g. Adair Panama) on this athlete's profile. Only show rows that match this athlete's name.
   return []
 }
 

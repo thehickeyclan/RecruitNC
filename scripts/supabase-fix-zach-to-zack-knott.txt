@@ -1,0 +1,21 @@
+-- Fix "Zach Knott" → "Zack Knott" across tables
+-- Copy and run in Supabase SQL Editor
+
+-- 1. Athletes
+UPDATE athletes
+SET name = 'Zack Knott', wrestling_name = 'Zack Knott'
+WHERE name ILIKE '%Zach Knott%' OR wrestling_name ILIKE '%Zach Knott%';
+
+-- 2. Super32
+UPDATE super32_results
+SET athlete_name = 'Zack Knott'
+WHERE athlete_name ILIKE '%Zach Knott%';
+
+-- 3. NHSCA (skip if table doesn't exist)
+UPDATE nhsca_placements
+SET athlete_name = 'Zack Knott'
+WHERE athlete_name ILIKE '%Zach Knott%';
+
+UPDATE wrestling_nhsca_results
+SET athlete_name = 'Zack Knott'
+WHERE athlete_name ILIKE '%Zach Knott%';
