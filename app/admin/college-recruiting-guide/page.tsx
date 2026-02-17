@@ -44,6 +44,14 @@ function formatPlaceSuffix(p: number | string | null | undefined): string {
   return "th"
 }
 
+/** Placement from tournament tables is already formatted (e.g. "7th All-American", "Champion"). Don't append suffix. */
+function placementEmoji(placement: string | null | undefined): string {
+  if (!placement) return "🏅"
+  const n = parseInt(String(placement), 10)
+  if (!isNaN(n) && n <= 8) return "🥇"
+  return "🏅"
+}
+
 export default function CollegeRecruitingGuidePage() {
   const [year, setYear] = useState(2026)
   const [loading, setLoading] = useState(true)
@@ -77,19 +85,16 @@ export default function CollegeRecruitingGuidePage() {
     const header = ["#", "Name", "School", "Div", "Weight", "Status", "Cell", "State", "NHSCA", "Super 32", "GPA"]
     const rows = athletes.map((a, i) => {
       const state = a.nchsaa_results?.slice(0, 2).map((r) => `${r.place}${formatPlaceSuffix(r.place)} • ${r.classification || ""} ${r.weight_class || ""} '${String(r.year).slice(-2)}`).join(" | ") || "—"
-      const nhsca = [
-        (a.nhsca_2025_placement || a.nhsca_2025_record) && `'25: ${a.nhsca_2025_placement ? a.nhsca_2025_placement + formatPlaceSuffix(a.nhsca_2025_placement) : ""} ${a.nhsca_2025_record ? `Record: ${a.nhsca_2025_record}` : ""}`,
-        (a.nhsca_2024_placement || a.nhsca_2024_record) && `'24: ${a.nhsca_2024_placement ? a.nhsca_2024_placement + formatPlaceSuffix(a.nhsca_2024_placement) : ""} ${a.nhsca_2024_record ? `Record: ${a.nhsca_2024_record}` : ""}`,
-        ...(a.nhsca_results || []).slice(0, 2).map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`),
-      ].filter(Boolean).join(" | ") || "—"
-      const hasAthleteSuper32 = a.super_32_2025_placement || a.super_32_2025_record || a.super_32_2024_placement || a.super_32_2024_record || a.super_32_2023_placement || a.super_32_2023_record
-      const super32 = hasAthleteSuper32
-        ? [
-            (a.super_32_2025_placement || a.super_32_2025_record) && `'25: ${a.super_32_2025_placement ? a.super_32_2025_placement + formatPlaceSuffix(a.super_32_2025_placement) : ""} ${a.super_32_2025_record ? `Record: ${a.super_32_2025_record}` : ""}`,
-            (a.super_32_2024_placement || a.super_32_2024_record) && `'24: ${a.super_32_2024_placement ? a.super_32_2024_placement + formatPlaceSuffix(a.super_32_2024_placement) : ""} ${a.super_32_2024_record ? `Record: ${a.super_32_2024_record}` : ""}`,
-            (a.super_32_2023_placement || a.super_32_2023_record) && `'23: ${a.super_32_2023_placement ? a.super_32_2023_placement + formatPlaceSuffix(a.super_32_2023_placement) : ""} ${a.super_32_2023_record ? `Record: ${a.super_32_2023_record}` : ""}`,
-          ].filter(Boolean).join(" | ")
-        : (a.super32_results || []).slice(0, 3).map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`).join(" | ") || "—"
+      const nhsca = (a.nhsca_results || [])
+        .filter((r) => r.placement || r.record)
+        .slice(0, 3)
+        .map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`.trim())
+        .join(" | ") || "—"
+      const super32 = (a.super32_results || [])
+        .filter((r) => r.placement || r.record)
+        .slice(0, 3)
+        .map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`.trim())
+        .join(" | ") || "—"
       return [
         String(i + 1),
         a.name,
@@ -229,72 +234,40 @@ export default function CollegeRecruitingGuidePage() {
                       )}
                     </td>
                     <td className="border border-gray-300 px-2 py-1.5 text-xs">
-                      {(row.nhsca_2025_placement || row.nhsca_2025_record || row.nhsca_2024_placement || row.nhsca_2024_record || row.nhsca_2023_placement || row.nhsca_2023_record || (row.nhsca_results && row.nhsca_results.length > 0)) ? (
+                      {row.nhsca_results && row.nhsca_results.filter((r) => r.placement || r.record).length > 0 ? (
                         <div className="space-y-0.5">
-                          {(row.nhsca_2025_placement || row.nhsca_2025_record) && (
-                            <div className="text-gray-700">
-                              {row.nhsca_2025_placement && <>{(Number(row.nhsca_2025_placement) <= 8 ? "🥇" : "🏅")} {row.nhsca_2025_placement}{formatPlaceSuffix(row.nhsca_2025_placement)}</>}
-                              {row.nhsca_2025_record && <>{row.nhsca_2025_placement ? " • " : ""}Record: {row.nhsca_2025_record}</>}
-                              {" '25"}
-                            </div>
-                          )}
-                          {(row.nhsca_2024_placement || row.nhsca_2024_record) && (
-                            <div className="text-gray-700">
-                              {row.nhsca_2024_placement && <>{(Number(row.nhsca_2024_placement) <= 8 ? "🥇" : "🏅")} {row.nhsca_2024_placement}{formatPlaceSuffix(row.nhsca_2024_placement)}</>}
-                              {row.nhsca_2024_record && <>{row.nhsca_2024_placement ? " • " : ""}Record: {row.nhsca_2024_record}</>}
-                              {" '24"}
-                            </div>
-                          )}
-                          {(row.nhsca_2023_placement || row.nhsca_2023_record) && (
-                            <div className="text-gray-700">
-                              {row.nhsca_2023_placement && <>{(Number(row.nhsca_2023_placement) <= 8 ? "🥇" : "🏅")} {row.nhsca_2023_placement}{formatPlaceSuffix(row.nhsca_2023_placement)}</>}
-                              {row.nhsca_2023_record && <>{row.nhsca_2023_placement ? " • " : ""}Record: {row.nhsca_2023_record}</>}
-                              {" '23"}
-                            </div>
-                          )}
-                          {!row.nhsca_2025_placement && !row.nhsca_2024_placement && !row.nhsca_2023_placement && row.nhsca_results && row.nhsca_results.length > 0 && (
-                            row.nhsca_results.slice(0, 3).map((r, i) => (
+                          {row.nhsca_results
+                            .filter((r) => r.placement || r.record)
+                            .slice(0, 3)
+                            .map((r, i) => (
                               <div key={i} className="text-gray-700">
-                                {r.placement ? "🏅 " : ""}{r.placement}{r.record ? ` • Record: ${r.record}` : ""} &apos;{String(r.year).slice(-2)}
+                                {placementEmoji(r.placement)}
+                                {r.placement && ` ${r.placement}`}
+                                {r.record && (r.placement ? ` • Record: ${r.record}` : ` Record: ${r.record}`)}
+                                {" '"}
+                                {String(r.year).slice(-2)}
                               </div>
-                            ))
-                          )}
+                            ))}
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
                     </td>
                     <td className="border border-gray-300 px-2 py-1.5 text-xs">
-                      {(row.super_32_2025_placement || row.super_32_2025_record || row.super_32_2024_placement || row.super_32_2024_record || row.super_32_2023_placement || row.super_32_2023_record || (row.super32_results && row.super32_results.length > 0)) ? (
+                      {row.super32_results && row.super32_results.filter((r) => r.placement || r.record).length > 0 ? (
                         <div className="space-y-0.5">
-                          {(row.super_32_2025_placement || row.super_32_2025_record) && (
-                            <div className="text-gray-700">
-                              {row.super_32_2025_placement && <>{(Number(row.super_32_2025_placement) <= 8 ? "🥇" : "🏅")} {row.super_32_2025_placement}{formatPlaceSuffix(row.super_32_2025_placement)}</>}
-                              {row.super_32_2025_record && <>{row.super_32_2025_placement ? " • " : ""}Record: {row.super_32_2025_record}</>}
-                              {" '25"}
-                            </div>
-                          )}
-                          {(row.super_32_2024_placement || row.super_32_2024_record) && (
-                            <div className="text-gray-700">
-                              {row.super_32_2024_placement && <>{(Number(row.super_32_2024_placement) <= 8 ? "🥇" : "🏅")} {row.super_32_2024_placement}{formatPlaceSuffix(row.super_32_2024_placement)}</>}
-                              {row.super_32_2024_record && <>{row.super_32_2024_placement ? " • " : ""}Record: {row.super_32_2024_record}</>}
-                              {" '24"}
-                            </div>
-                          )}
-                          {(row.super_32_2023_placement || row.super_32_2023_record) && (
-                            <div className="text-gray-700">
-                              {row.super_32_2023_placement && <>{(Number(row.super_32_2023_placement) <= 8 ? "🥇" : "🏅")} {row.super_32_2023_placement}{formatPlaceSuffix(row.super_32_2023_placement)}</>}
-                              {row.super_32_2023_record && <>{row.super_32_2023_placement ? " • " : ""}Record: {row.super_32_2023_record}</>}
-                              {" '23"}
-                            </div>
-                          )}
-                          {!row.super_32_2025_placement && !row.super_32_2024_placement && !row.super_32_2023_placement && row.super32_results && row.super32_results.length > 0 && (
-                            row.super32_results.slice(0, 3).map((r, i) => (
+                          {row.super32_results
+                            .filter((r) => r.placement || r.record)
+                            .slice(0, 3)
+                            .map((r, i) => (
                               <div key={i} className="text-gray-700">
-                                {r.placement ? "🏅 " : ""}{r.placement}{r.record ? ` • Record: ${r.record}` : ""} &apos;{String(r.year).slice(-2)}
+                                {placementEmoji(r.placement)}
+                                {r.placement && ` ${r.placement}`}
+                                {r.record && (r.placement ? ` • Record: ${r.record}` : ` Record: ${r.record}`)}
+                                {" '"}
+                                {String(r.year).slice(-2)}
                               </div>
-                            ))
-                          )}
+                            ))}
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>
