@@ -267,6 +267,7 @@ export default function SimpleRankingPage() {
                     <SelectItem value="2025">Class of 2025</SelectItem>
                     <SelectItem value="2026">Class of 2026</SelectItem>
                     <SelectItem value="2027">Class of 2027</SelectItem>
+                    <SelectItem value="2028">Class of 2028</SelectItem>
                   </SelectContent>
                 </Select>
 
