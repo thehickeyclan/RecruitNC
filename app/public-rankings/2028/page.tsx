@@ -32,30 +32,6 @@ interface PublicRanking {
   college?: string
 }
 
-// Top 20 data for Class of 2028
-const top20Data = [
-  { rank: 1, name: "Aaron Ellison", school: "Lumberton", weight: "150 lbs", achievements: "NHSCA 4th (2024) + Fargo AA • State 4th (2025) • Super32 2-2 (2025) • 45-0 perfect record" },
-  { rank: 2, name: "Connor Reece", school: "Northwest Guilford", weight: "144 lbs", achievements: "NHSCA 7th AA (2025) • State 4th (2025) • Super32 2-2 (2025) • 36-3 record" },
-  { rank: 3, name: "Ryan Thompson", school: "Cardinal Gibbons", weight: "165 lbs", achievements: "NHSCA 6th AA (2025) • State 5th (2025) • 44-3 record • Beat #29 in 2027" },
-  { rank: 4, name: "Hayden Smith", school: "White Oak", weight: "150 lbs", achievements: "State 2nd (2025) • NHSCA 0-2 (2025) • Super32 0-2 (2024) • 41-2, 82.5% pin rate" },
-  { rank: 5, name: "Jacob Perry", school: "New Bern", weight: "150 lbs", achievements: "NHSCA 8th AA (2025) • State: Injured • Super32 0-2 (2025) • 52-3 record" },
-  { rank: 6, name: "Mitchell Rowland", school: "Pinecrest", weight: "144 lbs", achievements: "NHSCA 8th AA (2025) • State Qualifier • 29-3 record" },
-  { rank: 7, name: "Luke Richards", school: "Cardinal Gibbons", weight: "120 lbs", achievements: "Journeymen Finalist (2nd) • State 5th (2025) • NHSCA 1-2 (2025) • 35-2 record" },
-  { rank: 8, name: "Jake Amiott", school: "Topsail", weight: "138 lbs", achievements: "State 5th (2025) • Super32 1-2 (2025) • 37-1 record" },
-  { rank: 9, name: "Jackson D'Ettore", school: "Charlotte Catholic", weight: "126 lbs", achievements: "State 2nd (2025) • 34-2 record" },
-  { rank: 10, name: "Drew Teeter", school: "Mooresville", weight: "190 lbs", achievements: "State 6th (2025) • NHSCA 2-2 (2025) • 33-4 record • Beat #9 in 2027" },
-  { rank: 11, name: "Aaron Ruiz-Angel", school: "Mount Airy", weight: "215 lbs", achievements: "NHSCA 5th AA (2025) • State 2nd (2025) • 39-3 record" },
-  { rank: 12, name: "Stephen Cross", school: "Trinity", weight: "120 lbs", achievements: "State 5th (2025) • 49-1 record (most wins) • 67.35% pin rate" },
-  { rank: 13, name: "Adrian Feliciano", school: "William Amos Hough", weight: "120 lbs", achievements: "State 4th (2025) • Super32 0-2 (2024, 2025) • 36-3, 69.44% pin rate" },
-  { rank: 14, name: "Christian Riddick", school: "First Flight", weight: "132 lbs", achievements: "State Qualifier (injured) • 33-1 record • 68.97% pin rate" },
-  { rank: 15, name: "Joseph Shook", school: "Union Pines", weight: "138 lbs", achievements: "NHSCA 2-2 (2025) • 35-4 record • Beat #17 in 2027" },
-  { rank: 16, name: "Matthew Akins", school: "Pinecrest", weight: "120 lbs", achievements: "State Qualifier • 37-6 record • 64.86% pin rate" },
-  { rank: 17, name: "Paxton Kearns", school: "Uwharrie Charter", weight: "126 lbs", achievements: "State Qualifier (2025) • 44-4 record • Beat #18 H2H" },
-  { rank: 18, name: "Sheppard Homan", school: "Enka", weight: "126 lbs", achievements: "State Qualifier • 47-2 record • 55.56% pin rate" },
-  { rank: 19, name: "Caleb Edwards", school: "Piedmont", weight: "132 lbs", achievements: "State Qualifier • 47-5 record • Beat multiple 99%+ wrestlers" },
-  { rank: 20, name: "Vincent Grack", school: "William Amos Hough", weight: "157 lbs", achievements: "State Qualifier • 39-6 record • 64.29% pin rate" },
-]
-
 // Profile ID map for 2028 - use direct IDs when by-name lookup fails (name/school spelling can differ)
 const PROFILE_IDS_2028: Record<string, string> = {
   "Jacob Perry": "ddea34af-ae6a-4880-8a1c-687576bef1fe",
@@ -521,75 +497,6 @@ export default function Class2028RankingsPage() {
                     <p className="text-sm text-gray-600 italic">Scroll right to see more data and profile links →</p>
                   </div>
                 )}
-
-                {/* Static Top 20 Table */}
-                <div className="mb-8">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-[#03154C] text-white">
-                          <th className="px-4 py-3 text-left font-semibold">Rank</th>
-                          <th className="px-4 py-3 text-left font-semibold">Name</th>
-                          <th className="px-4 py-3 text-left font-semibold">School</th>
-                          <th className="px-4 py-3 text-left font-semibold">Weight</th>
-                          <th className="px-4 py-3 text-left font-semibold">Profile</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {top20Data.map((athlete) => {
-                          const profileUrl = getProfileUrl(athlete.name, athlete.school, linkResolution)
-                          return (
-                            <tr key={athlete.rank} className="border-b hover:bg-gray-50">
-                              <td className="px-4 py-3">
-                                <Badge className="bg-[#D3B574] text-gray-900">#{athlete.rank}</Badge>
-                              </td>
-                              <td className="px-4 py-3 font-medium">
-                                <Link href={profileUrl} className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium">
-                                  {athlete.name}
-                                </Link>
-                              </td>
-                              <td className="px-4 py-3">{athlete.school}</td>
-                              <td className="px-4 py-3">{athlete.weight}</td>
-                              <td className="px-4 py-3">
-                                <Link
-                                  href={profileUrl}
-                                  className="text-[#03154C] hover:text-[#D3B574] hover:underline font-medium transition-colors"
-                                >
-                                  View Profile
-                                </Link>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Top 20 Details Section */}
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Top 20 Details</h3>
-                  <div className="space-y-3">
-                    {top20Data.map((athlete) => (
-                      <div key={athlete.rank} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-start gap-3">
-                          <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1 flex-shrink-0">#{athlete.rank}</Badge>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">
-                              <Link href={getProfileUrl(athlete.name, athlete.school, linkResolution)} className="text-[#03154C] hover:text-[#D3B574] hover:underline">
-                                {athlete.name}
-                              </Link>
-                              {" - "}{athlete.school} ({athlete.weight})
-                            </h4>
-                            {athlete.achievements && (
-                              <p className="text-sm text-gray-600 mt-1">{athlete.achievements}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {viewMode === "table" ? (
                   <RankingsTableView athletes={filteredRankings} />

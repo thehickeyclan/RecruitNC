@@ -29,7 +29,9 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const db = createAdminClient()
 
-    let query = supabase
+    // Use admin client for athletes query so we see all prospects (same as public rankings).
+    // createClient() is subject to RLS and can return fewer rows.
+    let query = db
       .from("athletes")
       .select("*")
       .eq("graduationyear", year)
