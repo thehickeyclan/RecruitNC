@@ -92,6 +92,7 @@ export async function GET(request: NextRequest) {
     for (const a of athletes || []) {
       const athleteName = (a.wrestling_name || a.name || "").trim()
       const gradYear = Number(a.graduationyear) || yearNum
+      const hs = a.highschool || a.high_school || ""
 
       let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
         getNCHSAAResults(db, athleteName, gradYear),
