@@ -62,36 +62,7 @@ export async function GET(request: NextRequest) {
 
     const { data: athletes, error } = await admin
       .from("athletes")
-      .select(`
-        id,
-        name,
-        wrestling_name,
-        firstname,
-        lastname,
-        firstName,
-        lastName,
-        graduationyear,
-        highschool,
-        weight,
-        weightclass,
-        college,
-        academic_gpa,
-        high_school_division,
-        highSchoolDivision,
-        cell_number,
-        phone,
-        cell,
-        nhsca_2023_record,
-        nhsca_2023_placement,
-        nhsca_2024_record,
-        nhsca_2024_placement,
-        nhsca_2025_record,
-        nhsca_2025_placement,
-        super_32_2024_record,
-        super_32_2024_placement,
-        super_32_2025_record,
-        super_32_2025_placement
-      `)
+      .select("*")
       .eq("graduationyear", yearNum)
       .not("prospect_ranking", "is", null)
       .lte("prospect_ranking", 30)
@@ -115,11 +86,7 @@ export async function GET(request: NextRequest) {
 
     const athletesWithResults = []
     for (const a of athletes || []) {
-      const athleteName =
-        a.wrestling_name ||
-        a.name ||
-        [a.firstName ?? a.firstname, a.lastName ?? a.lastname].filter(Boolean).join(" ").trim() ||
-        ""
+      const athleteName = (a.wrestling_name || a.name || "").trim()
       const gradYear = Number(a.graduationyear) || yearNum
 
       const [nchsaaResults, nhscaFromTables] = await Promise.all([
@@ -136,7 +103,7 @@ export async function GET(request: NextRequest) {
         id: a.id,
         name: athleteName,
         highschool: a.highschool || a.high_school || "—",
-        division: a.high_school_division || a.highSchoolDivision || null,
+        division: a.high_school_division || null,
         weight: a.weight ?? a.weightclass ?? null,
         college,
         college_logo_url: college ? logoMap[college] ?? null : null,

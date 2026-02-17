@@ -29,36 +29,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("athletes")
-      .select(`
-        id,
-        name,
-        wrestling_name,
-        firstname,
-        lastname,
-        firstName,
-        lastName,
-        graduationyear,
-        gender,
-        highschool,
-        weight,
-        college,
-        prospect_ranking,
-        previous_ranking,
-        academic_gpa,
-        nationally_ranked_wins,
-        college_opens_experience,
-        nhsca_2023_record,
-        nhsca_2023_placement,
-        nhsca_2024_record,
-        nhsca_2024_placement,
-        nhsca_2025_record,
-        nhsca_2025_placement,
-        super_32_2024_record,
-        super_32_2024_placement,
-        super_32_2025_record,
-        super_32_2025_placement,
-        highSchoolLogoUrl
-      `)
+      .select("*")
       .eq("graduationyear", year)
       .eq("gender", gender)
 
@@ -79,7 +50,7 @@ export async function GET(request: Request) {
 
     const athletesWithResults = []
     for (const athlete of athletes || []) {
-      const athleteName = athlete.wrestling_name || athlete.name || [athlete.firstName ?? athlete.firstname, athlete.lastName ?? athlete.lastname].filter(Boolean).join(" ").trim()
+      const athleteName = (athlete.wrestling_name || athlete.name || "").trim()
       const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
       const [nchsaaResults, nhscaFromTables] = await Promise.all([
         getNCHSAAResults(supabase, athleteName, gradYear),
