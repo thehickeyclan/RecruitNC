@@ -86,9 +86,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
   const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
 
   let nhscaResults = await getNHSCAFromTables(supabase, athleteName, gradYear)
-  const super32Results = await getSuper32FromTable(supabase, athleteName, gradYear, {
-    highSchool: athlete.highschool ?? athlete.highSchool ?? "",
-  })
+  const super32Results = await getSuper32FromTable(supabase, athleteName, gradYear)
   if (nhscaResults.length === 0) {
     const fromAthlete = buildPublicProfileTournamentData(athlete)
     nhscaResults = fromAthlete.nhscaResults

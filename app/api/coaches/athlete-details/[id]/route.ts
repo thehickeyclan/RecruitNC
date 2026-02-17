@@ -79,7 +79,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
       const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
       const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
-      const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear, { highSchool })
+      const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear)
       let athleteToReturn = {
         ...athlete,
         is_starred: false,
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
     const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
     const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
-    const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear, { highSchool })
+    const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear)
     const athleteToReturn = {
       ...athleteWithTracking,
       nhsca_results: nhsca.length ? nhsca : athleteWithTracking.nhsca_results ?? athlete.nhsca_results ?? [],

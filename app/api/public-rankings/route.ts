@@ -153,7 +153,7 @@ export async function GET(request: Request) {
       const gradYear = Number.parseInt(athlete.graduationyear, 10) || new Date().getFullYear()
       const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
       let nhscaToUse = await getNHSCAFromTables(supabase, athleteName, gradYear)
-      let super32ToUse = await getSuper32FromTable(supabase, athleteName, gradYear, { highSchool })
+      let super32ToUse = await getSuper32FromTable(supabase, athleteName, gradYear)
       if (nhscaToUse.length === 0 || super32ToUse.length === 0) {
         const fromAthlete = buildPublicProfileTournamentData(athlete)
         if (nhscaToUse.length === 0) nhscaToUse = fromAthlete.nhscaResults

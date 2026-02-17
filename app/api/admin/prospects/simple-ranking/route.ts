@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import { getNHSCAFromTables } from "@/lib/tournament-tables"
+import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
   if (!graduationYear || isNaN(graduationYear)) {
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
     const division = searchParams.get("division") || "all"
 
     const supabase = await createClient()
+    const db = createAdminClient()
 
     let query = supabase
       .from("athletes")
@@ -52,13 +54,24 @@ export async function GET(request: Request) {
     for (const athlete of athletes || []) {
       const athleteName = (athlete.wrestling_name || athlete.name || "").trim()
       const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
-      const [nchsaaResults, nhscaFromTables] = await Promise.all([
-        getNCHSAAResults(supabase, athleteName, gradYear),
-        getNHSCAFromTables(supabase, athleteName, gradYear),
+      const [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
+        getNCHSAAResults(db, athleteName, gradYear),
+        getNHSCAFromTables(db, athleteName, gradYear),
+        getSuper32FromTable(db, athleteName, gradYear),
       ])
+
+      const s3223 = super32FromTable.find((r) => r.year === 2023)
+      const s3224 = super32FromTable.find((r) => r.year === 2024)
+      const s3225 = super32FromTable.find((r) => r.year === 2025)
 
       athletesWithResults.push({
         ...athlete,
+        super_32_2023_record: s3223?.record || athlete.super_32_2023_record,
+        super_32_2023_placement: s3223?.placement || athlete.super_32_2023_placement,
+        super_32_2024_record: s3224?.record || athlete.super_32_2024_record,
+        super_32_2024_placement: s3224?.placement || athlete.super_32_2024_placement,
+        super_32_2025_record: s3225?.record || athlete.super_32_2025_record,
+        super_32_2025_placement: s3225?.placement || athlete.super_32_2025_placement,
         nchsaa_results: nchsaaResults.map((result: any) => ({
           year: result.year,
           place: result.place,
