@@ -1,0 +1,10 @@
+-- DIAGNOSTIC: Check if Zack Knott and Ammon Scott data exists
+-- Run in Supabase SQL Editor (one query at a time if needed)
+
+SELECT * FROM super32_results
+WHERE athlete_name ILIKE '%Knott%' OR athlete_name ILIKE '%Scott%'
+ORDER BY year DESC;
+
+SELECT * FROM wrestling_nhsca_results
+WHERE athlete_name ILIKE '%Knott%' OR athlete_name ILIKE '%Scott%'
+ORDER BY year DESC;

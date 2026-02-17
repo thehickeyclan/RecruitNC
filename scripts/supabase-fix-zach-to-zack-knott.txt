@@ -1,6 +1,10 @@
 -- Fix "Zach Knott" → "Zack Knott" across tables
 -- Copy and run in Supabase SQL Editor
 
+-- DIAGNOSTIC (run first to see what exists):
+-- SELECT 'super32' as tbl, year, athlete_name, record FROM super32_results WHERE athlete_name ILIKE '%Knott%' OR athlete_name ILIKE '%Scott%' ORDER BY year DESC;
+-- SELECT 'nhsca' as tbl, year, athlete_name, record FROM wrestling_nhsca_results WHERE athlete_name ILIKE '%Knott%' OR athlete_name ILIKE '%Scott%' ORDER BY year DESC;
+
 -- 1. Athletes
 UPDATE athletes
 SET name = 'Zack Knott', wrestling_name = 'Zack Knott'

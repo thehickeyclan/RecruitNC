@@ -18,7 +18,7 @@ import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 export const metadata = {
   title: "NC Wrestling Commits | Prospect Rankings",
   description: "North Carolina wrestling prospect rankings and college commitments",
-  manifest: "/manifest.json",
+  manifest: "/api/manifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

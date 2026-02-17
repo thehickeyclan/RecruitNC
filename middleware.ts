@@ -38,6 +38,7 @@ export async function middleware(request: NextRequest) {
     '/api/auth/reset-password',
     '/api/auth/clear-cooldown',
     '/api/debug',
+    '/api/manifest',
   ]
   
   if (publicRoutes.some(route => pathname.startsWith(route))) {
