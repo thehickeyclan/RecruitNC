@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     for (const a of athletes || []) {
       const athleteName = (a.wrestling_name || a.name || "").trim()
       const gradYear = Number(a.graduationyear) || yearNum
-      const hs = a.highschool || a.high_school || ""
+      const highschool = (a.highschool || a.high_school || "").trim()
 
       let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
         getNCHSAAResults(db, athleteName, gradYear),
@@ -166,12 +166,12 @@ export async function GET(request: NextRequest) {
           ? a.college
           : null
       const divFromLogo = a.highSchoolLogoUrl && /^[12345678]A(\/2A)?$/i.test(String(a.highSchoolLogoUrl)) ? a.highSchoolLogoUrl : null
-      const division = a.high_school_division || divFromLogo || schoolClassMap[hs] || null
+      const division = a.high_school_division || divFromLogo || schoolClassMap[highschool] || null
 
       athletesWithResults.push({
         id: a.id,
         name: athleteName,
-        highschool: hs || "—",
+        highschool: highschool || "—",
         division,
         weight: a.weight ?? a.weightclass ?? null,
         college,
