@@ -1,67 +1,28 @@
-// School division lookup utility
+// School classification lookup (NCHSAA 1A–8A). Uses school_classifications table.
+import { findSchoolClassification } from "@/lib/classification-data"
+import { createClient } from "@/lib/supabase/server"
+
+/**
+ * Look up a school's NCHSAA classification (1A–8A, 1A/2A) from school_classifications table.
+ */
 export async function getSchoolDivision(schoolName: string): Promise<string | null> {
   if (!schoolName) return null
-
   try {
-    const { createServerClient } = await import("@supabase/ssr")
-    const { cookies } = await import("next/headers")
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookies().get(name)?.value
-          },
-        },
-      },
-    )
-
-    // Try exact match first
-    let { data } = await supabase
-      .from("nc_school_divisions")
-      .select("division")
-      .ilike("school_name", schoolName)
-      .single()
-
-    if (data) return data.division
-
-    // Try fuzzy matching for common variations
-    const cleanSchoolName = schoolName.replace(/\s+(high\s+school|hs|academy|charter|prep|school)$/i, "").trim()
-    ;({ data } = await supabase
-      .from("nc_school_divisions")
-      .select("division")
-      .ilike("school_name", `%${cleanSchoolName}%`)
-      .single())
-
-    return data?.division || null
+    const supabase = await createClient()
+    return await findSchoolClassification(supabase, schoolName)
   } catch (error) {
-    console.error("Error looking up school division:", error)
+    console.error("Error looking up school classification:", error)
     return null
   }
 }
 
 export async function updateAthleteDivisionFromSchool(athleteId: string, schoolName: string) {
-  const division = await getSchoolDivision(schoolName)
-
-  if (division) {
-    const { createServerClient } = await import("@supabase/ssr")
-    const { cookies } = await import("next/headers")
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookies().get(name)?.value
-          },
-        },
-      },
-    )
-
-    // Update the highSchoolLogoUrl field to store division
-    await supabase.from("athletes").update({ highSchoolLogoUrl: division }).eq("id", athleteId)
+  const classification = await getSchoolDivision(schoolName)
+  if (!classification) return
+  try {
+    const supabase = await createClient()
+    await supabase.from("athletes").update({ high_school_division: classification }).eq("id", athleteId)
+  } catch (error) {
+    console.error("Error updating athlete classification:", error)
   }
 }

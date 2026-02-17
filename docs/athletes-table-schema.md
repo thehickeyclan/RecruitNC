@@ -31,7 +31,7 @@ Single source of truth for `athletes` columns. Update this when the DB schema ch
 - `wrestlingClub` / `wrestling_club` – text
 - `contact_email` / `contactEmail` / `email` – text
 - `phone` / `cell` / `cell_number` – text
-- `high_school_division` – text (1A, 2A, 3A, 4A)
+- `high_school_division` – text (NCHSAA 1A–8A, 1A/2A; from `school_classifications` table)
 
 **Columns that do NOT exist** (cause "column does not exist" errors):
 

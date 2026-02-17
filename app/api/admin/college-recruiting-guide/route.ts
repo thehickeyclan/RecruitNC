@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getNHSCAFromTables } from "@/lib/tournament-tables"
 import { normalizeEntityName } from "@/lib/logo-mappings-normalize"
+import { buildSchoolClassificationMap } from "@/lib/classification-data"
 
 export const dynamic = "force-dynamic"
 
@@ -76,6 +77,8 @@ export async function GET(request: NextRequest) {
         a.college &&
         !["", "Uncommitted", "TBD", "Undecided"].includes(String(a.college)),
     )
+    const schoolNames = (athletes || []).map((a: any) => a.highschool || a.high_school).filter(Boolean)
+    const schoolClassMap = await buildSchoolClassificationMap(supabase, schoolNames)
     const logoMap: Record<string, string | null> = {}
     await Promise.all(
       committed.map(async (a: any) => {
@@ -99,11 +102,15 @@ export async function GET(request: NextRequest) {
           ? a.college
           : null
 
+      const hs = a.highschool || a.high_school || ""
+      const divFromLogo = a.highSchoolLogoUrl && /^[12345678]A(\/2A)?$/i.test(String(a.highSchoolLogoUrl)) ? a.highSchoolLogoUrl : null
+      const division = a.high_school_division || divFromLogo || schoolClassMap[hs] || null
+
       athletesWithResults.push({
         id: a.id,
         name: athleteName,
-        highschool: a.highschool || a.high_school || "—",
-        division: a.high_school_division || null,
+        highschool: hs || "—",
+        division,
         weight: a.weight ?? a.weightclass ?? null,
         college,
         college_logo_url: college ? logoMap[college] ?? null : null,
