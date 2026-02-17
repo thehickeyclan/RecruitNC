@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNHSCAFromTables } from "@/lib/tournament-tables"
+import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 import { normalizeEntityName } from "@/lib/logo-mappings-normalize"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
 
@@ -92,17 +92,82 @@ export async function GET(request: NextRequest) {
       const athleteName = (a.wrestling_name || a.name || "").trim()
       const gradYear = Number(a.graduationyear) || yearNum
 
-      const [nchsaaResults, nhscaFromTables] = await Promise.all([
+      const hs = a.highschool || a.high_school || ""
+      let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
         getNCHSAAResults(supabase, athleteName, gradYear),
         getNHSCAFromTables(supabase, athleteName, gradYear),
+        getSuper32FromTable(supabase, athleteName, gradYear, { highSchool: hs }),
       ])
+      // If no Super 32 (possible name/school mismatch), retry without school filter
+      if (super32FromTable.length === 0 && hs) {
+        super32FromTable = await getSuper32FromTable(supabase, athleteName, gradYear)
+      }
+      // If still no NHSCA/Super32, try "LastName FirstName" (some tables store names that way)
+      if (nhscaFromTables.length === 0 || super32FromTable.length === 0) {
+        const parts = athleteName.trim().split(/\s+/)
+        if (parts.length >= 2) {
+          const altName = [parts[parts.length - 1], ...parts.slice(0, -1)].join(" ")
+          if (nhscaFromTables.length === 0) {
+            nhscaFromTables = await getNHSCAFromTables(supabase, altName, gradYear)
+          }
+          if (super32FromTable.length === 0) {
+            super32FromTable = await getSuper32FromTable(supabase, altName, gradYear)
+          }
+        }
+      }
+
+      // Merge NHSCA: table data first, fill missing years from athlete row
+      const nhscaByYear = new Map<number, { placement: string; record: string }>()
+      for (const r of nhscaFromTables) {
+        const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
+        if (!nhscaByYear.has(y)) nhscaByYear.set(y, { placement: r.placement || "", record: r.record || "" })
+      }
+      for (const y of [2023, 2024, 2025]) {
+        if (!nhscaByYear.has(y)) {
+          const rec = a[`nhsca_${y}_record`]
+          const place = a[`nhsca_${y}_placement`]
+          if (rec || place != null) {
+            const placeStr = place != null ? (typeof place === "number" ? String(place) : String(place)) : ""
+            nhscaByYear.set(y, { placement: placeStr, record: (rec || "").toString().trim() })
+          }
+        }
+      }
+      const mergedNhsca = Array.from(nhscaByYear.entries())
+        .sort((a, b) => b[0] - a[0])
+        .map(([year, v]) => ({ year, placement: v.placement, record: v.record }))
+
+      // Merge Super 32: table data first, fill missing years from athlete row
+      const super32ByYear = new Map<number, { placement: string; record: string }>()
+      for (const r of super32FromTable) {
+        const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
+        if (!super32ByYear.has(y)) super32ByYear.set(y, { placement: r.placement || "", record: r.record || "" })
+      }
+      for (const y of [2023, 2024, 2025]) {
+        if (!super32ByYear.has(y)) {
+          const rec = a[`super_32_${y}_record`]
+          const place = a[`super_32_${y}_placement`]
+          if (rec || place != null) {
+            const placeStr = place != null ? (typeof place === "number" ? String(place) : String(place)) : ""
+            super32ByYear.set(y, { placement: placeStr, record: (rec || "").toString().trim() })
+          }
+        }
+      }
+      const mergedSuper32 = Array.from(super32ByYear.entries())
+        .sort((a, b) => b[0] - a[0])
+        .map(([year, v]) => ({ year, placement: v.placement, record: v.record }))
+
+      // Derive athlete-row style fields from merged (for page display)
+      const nh2023 = mergedNhsca.find((r) => r.year === 2023)
+      const nh2024 = mergedNhsca.find((r) => r.year === 2024)
+      const nh2025 = mergedNhsca.find((r) => r.year === 2025)
+      const s322023 = mergedSuper32.find((r) => r.year === 2023)
+      const s322024 = mergedSuper32.find((r) => r.year === 2024)
+      const s322025 = mergedSuper32.find((r) => r.year === 2025)
 
       const college =
         a.college && !["", "Uncommitted", "TBD"].includes(String(a.college))
           ? a.college
           : null
-
-      const hs = a.highschool || a.high_school || ""
       const divFromLogo = a.highSchoolLogoUrl && /^[12345678]A(\/2A)?$/i.test(String(a.highSchoolLogoUrl)) ? a.highSchoolLogoUrl : null
       const division = a.high_school_division || divFromLogo || schoolClassMap[hs] || null
 
@@ -116,16 +181,18 @@ export async function GET(request: NextRequest) {
         college_logo_url: college ? logoMap[college] ?? null : null,
         cell: college ? "—" : formatPhone(a.cell_number ?? a.phone ?? a.cell),
         academic_gpa: a.academic_gpa,
-        nhsca_2023_record: a.nhsca_2023_record,
-        nhsca_2023_placement: a.nhsca_2023_placement,
-        nhsca_2024_record: a.nhsca_2024_record,
-        nhsca_2024_placement: a.nhsca_2024_placement,
-        nhsca_2025_record: a.nhsca_2025_record,
-        nhsca_2025_placement: a.nhsca_2025_placement,
-        super_32_2024_record: a.super_32_2024_record,
-        super_32_2024_placement: a.super_32_2024_placement,
-        super_32_2025_record: a.super_32_2025_record,
-        super_32_2025_placement: a.super_32_2025_placement,
+        nhsca_2023_record: nh2023?.record || a.nhsca_2023_record,
+        nhsca_2023_placement: nh2023?.placement || a.nhsca_2023_placement,
+        nhsca_2024_record: nh2024?.record || a.nhsca_2024_record,
+        nhsca_2024_placement: nh2024?.placement || a.nhsca_2024_placement,
+        nhsca_2025_record: nh2025?.record || a.nhsca_2025_record,
+        nhsca_2025_placement: nh2025?.placement || a.nhsca_2025_placement,
+        super_32_2023_record: s322023?.record || a.super_32_2023_record,
+        super_32_2023_placement: s322023?.placement || a.super_32_2023_placement,
+        super_32_2024_record: s322024?.record || a.super_32_2024_record,
+        super_32_2024_placement: s322024?.placement || a.super_32_2024_placement,
+        super_32_2025_record: s322025?.record || a.super_32_2025_record,
+        super_32_2025_placement: s322025?.placement || a.super_32_2025_placement,
         nchsaa_results: nchsaaResults.map((r: any) => ({
           year: r.year,
           place: r.place,
@@ -133,7 +200,12 @@ export async function GET(request: NextRequest) {
           weight_class: r.weight_class,
           school: r.school,
         })),
-        nhsca_results: nhscaFromTables.map((r) => ({
+        nhsca_results: mergedNhsca.map((r) => ({
+          year: r.year,
+          placement: r.placement,
+          record: r.record,
+        })),
+        super32_results: mergedSuper32.map((r) => ({
           year: r.year,
           placement: r.placement,
           record: r.record,

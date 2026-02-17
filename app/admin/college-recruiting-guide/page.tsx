@@ -23,12 +23,15 @@ type AthleteRow = {
   nhsca_2024_placement: number | string | null
   nhsca_2025_record: string | null
   nhsca_2025_placement: number | string | null
+  super_32_2023_record: string | null
+  super_32_2023_placement: number | string | null
   super_32_2024_record: string | null
   super_32_2024_placement: number | string | null
   super_32_2025_record: string | null
   super_32_2025_placement: number | string | null
   nchsaa_results?: Array<{ year: number; place: number; classification?: string; weight_class?: string }>
   nhsca_results?: Array<{ year: number; placement: string; record?: string }>
+  super32_results?: Array<{ year: number; placement: string; record?: string }>
 }
 
 function formatPlaceSuffix(p: number | string | null | undefined): string {
@@ -79,10 +82,14 @@ export default function CollegeRecruitingGuidePage() {
         (a.nhsca_2024_placement || a.nhsca_2024_record) && `'24: ${a.nhsca_2024_placement ? a.nhsca_2024_placement + formatPlaceSuffix(a.nhsca_2024_placement) : ""} ${a.nhsca_2024_record ? `Record: ${a.nhsca_2024_record}` : ""}`,
         ...(a.nhsca_results || []).slice(0, 2).map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`),
       ].filter(Boolean).join(" | ") || "—"
-      const super32 = [
-        (a.super_32_2025_placement || a.super_32_2025_record) && `'25: ${a.super_32_2025_placement ? a.super_32_2025_placement + formatPlaceSuffix(a.super_32_2025_placement) : ""} ${a.super_32_2025_record ? `Record: ${a.super_32_2025_record}` : ""}`,
-        (a.super_32_2024_placement || a.super_32_2024_record) && `'24: ${a.super_32_2024_placement ? a.super_32_2024_placement + formatPlaceSuffix(a.super_32_2024_placement) : ""} ${a.super_32_2024_record ? `Record: ${a.super_32_2024_record}` : ""}`,
-      ].filter(Boolean).join(" | ") || "—"
+      const hasAthleteSuper32 = a.super_32_2025_placement || a.super_32_2025_record || a.super_32_2024_placement || a.super_32_2024_record || a.super_32_2023_placement || a.super_32_2023_record
+      const super32 = hasAthleteSuper32
+        ? [
+            (a.super_32_2025_placement || a.super_32_2025_record) && `'25: ${a.super_32_2025_placement ? a.super_32_2025_placement + formatPlaceSuffix(a.super_32_2025_placement) : ""} ${a.super_32_2025_record ? `Record: ${a.super_32_2025_record}` : ""}`,
+            (a.super_32_2024_placement || a.super_32_2024_record) && `'24: ${a.super_32_2024_placement ? a.super_32_2024_placement + formatPlaceSuffix(a.super_32_2024_placement) : ""} ${a.super_32_2024_record ? `Record: ${a.super_32_2024_record}` : ""}`,
+            (a.super_32_2023_placement || a.super_32_2023_record) && `'23: ${a.super_32_2023_placement ? a.super_32_2023_placement + formatPlaceSuffix(a.super_32_2023_placement) : ""} ${a.super_32_2023_record ? `Record: ${a.super_32_2023_record}` : ""}`,
+          ].filter(Boolean).join(" | ")
+        : (a.super32_results || []).slice(0, 3).map((r) => `'${String(r.year).slice(-2)}: ${r.placement} ${r.record ? `Record: ${r.record}` : ""}`).join(" | ") || "—"
       return [
         String(i + 1),
         a.name,
@@ -258,7 +265,7 @@ export default function CollegeRecruitingGuidePage() {
                       )}
                     </td>
                     <td className="border border-gray-300 px-2 py-1.5 text-xs">
-                      {(row.super_32_2025_placement || row.super_32_2025_record || row.super_32_2024_placement || row.super_32_2024_record) ? (
+                      {(row.super_32_2025_placement || row.super_32_2025_record || row.super_32_2024_placement || row.super_32_2024_record || row.super_32_2023_placement || row.super_32_2023_record || (row.super32_results && row.super32_results.length > 0)) ? (
                         <div className="space-y-0.5">
                           {(row.super_32_2025_placement || row.super_32_2025_record) && (
                             <div className="text-gray-700">
@@ -273,6 +280,20 @@ export default function CollegeRecruitingGuidePage() {
                               {row.super_32_2024_record && <>{row.super_32_2024_placement ? " • " : ""}Record: {row.super_32_2024_record}</>}
                               {" '24"}
                             </div>
+                          )}
+                          {(row.super_32_2023_placement || row.super_32_2023_record) && (
+                            <div className="text-gray-700">
+                              {row.super_32_2023_placement && <>{(Number(row.super_32_2023_placement) <= 8 ? "🥇" : "🏅")} {row.super_32_2023_placement}{formatPlaceSuffix(row.super_32_2023_placement)}</>}
+                              {row.super_32_2023_record && <>{row.super_32_2023_placement ? " • " : ""}Record: {row.super_32_2023_record}</>}
+                              {" '23"}
+                            </div>
+                          )}
+                          {!row.super_32_2025_placement && !row.super_32_2024_placement && !row.super_32_2023_placement && row.super32_results && row.super32_results.length > 0 && (
+                            row.super32_results.slice(0, 3).map((r, i) => (
+                              <div key={i} className="text-gray-700">
+                                {r.placement ? "🏅 " : ""}{r.placement}{r.record ? ` • Record: ${r.record}` : ""} &apos;{String(r.year).slice(-2)}
+                              </div>
+                            ))
                           )}
                         </div>
                       ) : (

@@ -51,7 +51,7 @@ export async function GET() {
       .select("*", { count: "exact", head: true })
       .not("school_id", "is", null)
 
-    // Get pending submissions across all types
+    // Get pending submissions (excludes athlete self-edits - those are auto-approved and in athlete_audit_log)
     let pendingSubmissions = 0
 
     // Commitment submissions

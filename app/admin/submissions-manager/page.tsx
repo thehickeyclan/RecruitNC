@@ -210,7 +210,7 @@ export default function SubmissionsManagerPage() {
         setAthleteData(athleteDataMap)
       }
 
-      // Calculate stats
+      // Calculate stats (excludes self-edits - those are auto-approved, separate tab)
       const pendingCommitments = (commitmentsData.submissions || []).filter(
         (s: CommitmentSubmission) => s.status === "pending"
       ).length
