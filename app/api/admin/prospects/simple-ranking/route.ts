@@ -31,11 +31,14 @@ export async function GET(request: Request) {
 
     // Use admin client for athletes query so we see all prospects (same as public rankings).
     // createClient() is subject to RLS and can return fewer rows.
+    // Match public-rankings API: year as string, case-insensitive gender
+    const yearParam = String(year || "").trim() || "2025"
+
     let query = db
       .from("athletes")
       .select("*")
-      .eq("graduationyear", year)
-      .eq("gender", gender)
+      .eq("graduationyear", yearParam)
+      .ilike("gender", String(gender || "Male"))
 
     if (division !== "all") {
       if (division === "") {
@@ -89,7 +92,10 @@ export async function GET(request: Request) {
       })
     }
 
-    return NextResponse.json({ athletes: athletesWithResults })
+    return NextResponse.json({
+      athletes: athletesWithResults,
+      meta: { year, gender, division, count: athletesWithResults.length },
+    })
   } catch (error) {
     console.error("Database error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

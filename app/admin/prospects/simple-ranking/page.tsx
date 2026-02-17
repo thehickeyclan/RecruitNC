@@ -73,6 +73,7 @@ export default function SimpleRankingPage() {
     try {
       const response = await fetch(
         `/api/admin/prospects/simple-ranking?year=${selectedYear}&gender=${selectedGender}&division=${selectedDivision}`,
+        { credentials: "include", cache: "no-store" },
       )
       const data = await response.json()
       setAthletes(data.athletes || [])
