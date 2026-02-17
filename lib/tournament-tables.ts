@@ -124,7 +124,7 @@ export async function getSuper32FromTable(
         // Allow rows with null/empty school (e.g. not resolved during import)
         return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
       })
-      rows = filtered
+      rows = filtered.length > 0 ? filtered : rows
     }
     if (rows.length) return dedupeSuper32ByYear(mapSuper32Rows(rows))
   }

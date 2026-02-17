@@ -93,16 +93,11 @@ export async function GET(request: NextRequest) {
       const athleteName = (a.wrestling_name || a.name || "").trim()
       const gradYear = Number(a.graduationyear) || yearNum
 
-      const hs = a.highschool || a.high_school || ""
       let [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
         getNCHSAAResults(db, athleteName, gradYear),
         getNHSCAFromTables(db, athleteName, gradYear),
-        getSuper32FromTable(db, athleteName, gradYear, { highSchool: hs }),
+        getSuper32FromTable(db, athleteName, gradYear),
       ])
-      // If no Super 32 (possible name/school mismatch), retry without school filter
-      if (super32FromTable.length === 0 && hs) {
-        super32FromTable = await getSuper32FromTable(db, athleteName, gradYear)
-      }
       // If still no NHSCA/Super32, try "LastName FirstName" (some tables store names that way)
       if (nhscaFromTables.length === 0 || super32FromTable.length === 0) {
         const parts = athleteName.trim().split(/\s+/)
