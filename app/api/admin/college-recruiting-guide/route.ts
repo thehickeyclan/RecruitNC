@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
         weight: a.weight ?? a.weightclass ?? null,
         college,
         college_logo_url: college ? logoMap[college] ?? null : null,
-        cell: formatPhone(a.cell_number ?? a.phone ?? a.cell),
+        cell: college ? "—" : formatPhone(a.cell_number ?? a.phone ?? a.cell),
         academic_gpa: a.academic_gpa,
         nhsca_2023_record: a.nhsca_2023_record,
         nhsca_2023_placement: a.nhsca_2023_placement,
