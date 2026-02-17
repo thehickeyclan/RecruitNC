@@ -151,26 +151,37 @@ export default function CollegeRecruitingGuidePage() {
               <h1 className="text-xl font-bold text-[#13294B] tracking-tight">NC Wrestling Recruiting Guide</h1>
               <p className="mt-1 text-base text-gray-700">Class of {year}</p>
             </div>
-            <table className="w-full border-collapse text-sm min-w-[900px]">
-              <thead>
-                <tr className="border border-gray-300 bg-[#13294B] text-white">
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-10">#</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[120px]">Name</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold">School</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-14">Div</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-16">Weight</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-14">Status</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-28">Cell</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[100px]">State</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[100px]">NHSCA</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[90px]">Super 32</th>
-                  <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-12">GPA</th>
-                </tr>
-              </thead>
-              <tbody>
-                {athletes.map((row, idx) => (
+            {Array.from({ length: Math.ceil(athletes.length / 10) }, (_, chunkIdx) => {
+              const chunk = athletes.slice(chunkIdx * 10, chunkIdx * 10 + 10)
+              const start = chunkIdx * 10 + 1
+              const end = Math.min(chunkIdx * 10 + 10, athletes.length)
+              return (
+                <div key={chunkIdx} className={`mb-8 print:mb-0 ${chunkIdx < Math.ceil(athletes.length / 10) - 1 ? "print:break-after-page" : ""}`}>
+                  <div className="mb-2 text-sm font-semibold text-[#13294B]">
+                    NC Wrestling Recruiting Guide · Class of {year} · Rankings {start}–{end}
+                  </div>
+                  <table className="w-full border-collapse text-sm min-w-[900px]">
+                    <thead>
+                      <tr className="border border-gray-300 bg-[#13294B] text-white">
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-10">#</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[120px]">Name</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold">School</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-14">Div</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-16">Weight</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-14">Status</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-28">Cell</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[100px]">State</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[100px]">NHSCA</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold min-w-[90px]">Super 32</th>
+                        <th className="border border-gray-300 px-2 py-2 text-left font-semibold w-12">GPA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {chunk.map((row, idx) => {
+                        const rank = start + idx
+                        return (
                   <tr key={row.id} className="border border-gray-300 hover:bg-gray-50 print:hover:bg-transparent">
-                    <td className="border border-gray-300 px-2 py-1.5 text-gray-600 font-medium">#{idx + 1}</td>
+                    <td className="border border-gray-300 px-2 py-1.5 text-gray-600 font-medium">#{rank}</td>
                     <td className="border border-gray-300 px-2 py-1.5 font-medium text-[#13294B]">{row.name}</td>
                     <td className="border border-gray-300 px-2 py-1.5">{row.highschool}</td>
                     <td className="border border-gray-300 px-2 py-1.5 text-gray-600">
@@ -276,9 +287,13 @@ export default function CollegeRecruitingGuidePage() {
                       )}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
