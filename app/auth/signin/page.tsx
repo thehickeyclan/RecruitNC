@@ -55,87 +55,59 @@ export default function SignInPage() {
 
     console.log("[v0] Sign in attempt for:", email)
 
-    // For admin routes: use admin-login API so session is set via server cookies.
-    // Chrome desktop often fails with client-side session persistence after redirect.
     const isAdminTarget = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
+
+    // For admin: use server-side login so cookies are set reliably (client-side session often doesn't survive nav)
     if (isAdminTarget) {
       try {
-        const adminLoginRes = await fetch("/api/auth/admin-login", {
+        const res = await fetch("/api/auth/admin-login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, password }),
         })
-
-        if (adminLoginRes.ok) {
-          console.log("[v0] Admin login successful via API (server-set cookies), redirecting...")
-          setTimeout(() => {
-            window.location.href = "/auth/callback-admin"
-          }, 800)
+        if (res.ok) {
+          setTimeout(() => { window.location.href = "/auth/callback-admin" }, 600)
           return
         }
-        const errBody = await adminLoginRes.json().catch(() => ({}))
-        const errMsg = errBody.error || "Login failed"
-        if (adminLoginRes.status === 403) {
-          setError(errMsg)
-        } else if (adminLoginRes.status === 401) {
-          setError(errMsg || "Invalid email or password.")
-        } else {
-          // Fall back to regular sign-in (e.g. API error)
-          console.log("[v0] Admin API failed, falling back to client signIn")
-          await doRegularSignIn()
-        }
-      } catch (adminErr: any) {
-        console.warn("[v0] Admin login API error, falling back to client signIn:", adminErr)
-        await doRegularSignIn()
+        const err = await res.json().catch(() => ({}))
+        if (res.status === 401) setError(err.error || "Invalid email or password.")
+        else if (res.status === 403) setError(err.error || "Admin access required.")
+        else setError(err.error || "Login failed")
+        setLoading(false)
+        return
+      } catch {
+        // Fallback to regular sign-in
+        const result = await signIn(email, password)
+        if (result.error) setError(result.error.message || "Login failed")
+        else setTimeout(() => { window.location.href = "/auth/callback-admin" }, 2500)
+        setLoading(false)
+        return
       }
+    }
+
+    // Non-admin: regular sign in
+    const result = await signIn(email, password)
+    if (result.error && (result.error.message?.includes("rate limit") || result.error.message?.includes("429"))) {
+      try {
+        const res = await fetch("/api/auth/admin-login", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          credentials: "include", body: JSON.stringify({ email, password }),
+        })
+        if (res.ok) {
+          setTimeout(() => { window.location.href = returnTo || "/" }, 1000)
+          return
+        }
+      } catch {}
+      setError("Rate limited. Please wait a few minutes.")
       setLoading(false)
       return
     }
-
-    await doRegularSignIn()
-    setLoading(false)
-  }
-
-  async function doRegularSignIn() {
-    const result = await signIn(email, password)
-
-    // If rate limited, try admin login API (bypasses rate limits)
-    if (result.error && (result.error.message?.includes("rate limit") || result.error.message?.includes("429") || result.error.message?.includes("Too many"))) {
-      console.log("[v0] Rate limited, trying admin login API...")
-      try {
-        const adminLoginRes = await fetch("/api/auth/admin-login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        })
-        if (adminLoginRes.ok) {
-          setTimeout(() => {
-            const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
-              ? "/auth/callback-admin"
-              : (returnTo || "/")
-            window.location.href = redirectUrl
-          }, 1000)
-          return
-        }
-        const adminError = await adminLoginRes.json()
-        setError(adminError.error || "Login failed. Please try again later.")
-      } catch {
-        setError("Rate limited. Please wait a few minutes and try again.")
-      }
-      return
-    }
-
     if (result.error) {
-      setError(result.error.message || "Invalid email or password. Please try again.")
+      setError(result.error.message || "Invalid email or password.")
+      setLoading(false)
     } else {
-      const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
-        ? "/auth/callback-admin"
-        : (returnTo || "/")
-      setTimeout(() => {
-        window.location.href = redirectUrl
-      }, 2500)
+      setTimeout(() => { window.location.href = returnTo || "/" }, 2500)
     }
   }
 
