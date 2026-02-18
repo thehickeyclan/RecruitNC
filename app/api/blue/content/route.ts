@@ -5,5 +5,7 @@ export const dynamic = "force-dynamic"
 
 export async function GET() {
   const content = await getBlueContent()
-  return NextResponse.json(content)
+  const res = NextResponse.json(content)
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+  return res
 }

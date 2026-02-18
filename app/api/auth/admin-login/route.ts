@@ -28,10 +28,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError || !authData?.user || !authData?.session) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: authError?.message || "Invalid credentials" },
         { status: 401 }
       )
+      res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=0")
+      return res
     }
 
     // Verify user is admin
@@ -42,10 +44,12 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!profile?.is_admin) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         { error: "Admin access required" },
         { status: 403 }
       )
+      res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=0")
+      return res
     }
 
     // Now use SSR client to set the session cookies properly
@@ -93,13 +97,16 @@ export async function POST(request: NextRequest) {
       refresh_token: authData.session.refresh_token,
     })
 
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=0")
     return response
   } catch (error: any) {
     console.error("Admin login error:", error)
-    return NextResponse.json(
+    const res = NextResponse.json(
       { error: error.message || "Login failed" },
       { status: 500 }
     )
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=0")
+    return res
   }
 }
 

@@ -55,7 +55,49 @@ export default function SignInPage() {
 
     console.log("[v0] Sign in attempt for:", email)
 
-    // Try regular sign in first
+    // For admin routes: use admin-login API so session is set via server cookies.
+    // Chrome desktop often fails with client-side session persistence after redirect.
+    const isAdminTarget = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
+    if (isAdminTarget) {
+      try {
+        const adminLoginRes = await fetch("/api/auth/admin-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email, password }),
+        })
+
+        if (adminLoginRes.ok) {
+          console.log("[v0] Admin login successful via API (server-set cookies), redirecting...")
+          setTimeout(() => {
+            window.location.href = "/auth/callback-admin"
+          }, 800)
+          return
+        }
+        const errBody = await adminLoginRes.json().catch(() => ({}))
+        const errMsg = errBody.error || "Login failed"
+        if (adminLoginRes.status === 403) {
+          setError(errMsg)
+        } else if (adminLoginRes.status === 401) {
+          setError(errMsg || "Invalid email or password.")
+        } else {
+          // Fall back to regular sign-in (e.g. API error)
+          console.log("[v0] Admin API failed, falling back to client signIn")
+          await doRegularSignIn()
+        }
+      } catch (adminErr: any) {
+        console.warn("[v0] Admin login API error, falling back to client signIn:", adminErr)
+        await doRegularSignIn()
+      }
+      setLoading(false)
+      return
+    }
+
+    await doRegularSignIn()
+    setLoading(false)
+  }
+
+  async function doRegularSignIn() {
     const result = await signIn(email, password)
 
     // If rate limited, try admin login API (bypasses rate limits)
@@ -68,43 +110,30 @@ export default function SignInPage() {
           credentials: "include",
           body: JSON.stringify({ email, password }),
         })
-
         if (adminLoginRes.ok) {
-          const adminData = await adminLoginRes.json()
-          console.log("[v0] Admin login successful via API, waiting for cookies...")
-          // Wait for cookies to be set, then reload
           setTimeout(() => {
-            const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard") 
-              ? "/auth/callback-admin" 
+            const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
+              ? "/auth/callback-admin"
               : (returnTo || "/")
-            console.log("[v0] Admin login redirecting to:", redirectUrl)
             window.location.href = redirectUrl
           }, 1000)
           return
-        } else {
-          const adminError = await adminLoginRes.json()
-          setError(adminError.error || "Login failed. Please try again later.")
         }
-      } catch (adminError: any) {
-        console.error("[v0] Admin login API error:", adminError)
+        const adminError = await adminLoginRes.json()
+        setError(adminError.error || "Login failed. Please try again later.")
+      } catch {
         setError("Rate limited. Please wait a few minutes and try again.")
       }
-      setLoading(false)
       return
     }
 
     if (result.error) {
-      console.error("[v0] Sign in error:", result.error)
       setError(result.error.message || "Invalid email or password. Please try again.")
-      setLoading(false)
     } else {
-      console.log("[v0] Sign in successful, waiting for session to be fully set...")
-      // Wait 2.5s so session is in storage and AuthGuard won't redirect back to signin
       const redirectUrl = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
         ? "/auth/callback-admin"
         : (returnTo || "/")
       setTimeout(() => {
-        console.log("[v0] Redirecting to:", redirectUrl)
         window.location.href = redirectUrl
       }, 2500)
     }

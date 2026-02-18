@@ -11,15 +11,15 @@ export default function AdminCallbackPage() {
   useEffect(() => {
     if (!isLoading) {
       if (session) {
+        // Full navigation so admin layout gets cookies; avoids Chrome client-nav cookie issues
         setTimeout(() => {
-          router.push("/admin")
-          router.refresh()
-        }, 100)
+          window.location.href = "/admin"
+        }, 400)
       } else {
-        router.push("/auth/signin")
+        window.location.href = "/auth/signin"
       }
     }
-  }, [session, isLoading, router])
+  }, [session, isLoading])
 
   return (
     <div className="flex min-h-screen items-center justify-center">

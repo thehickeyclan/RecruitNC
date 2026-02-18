@@ -38,23 +38,23 @@ export default function BlueInterestPage() {
   const { toast } = useToast()
 
   const loadSubmissions = useCallback(async (retryCount = 0) => {
-    const maxRetries = 2
+    const maxRetries = 4
     setLoading(true)
     setError(null)
     try {
       const res = await fetch("/api/admin/blue-express-interest", {
         credentials: "include",
         cache: "no-store",
-        headers: { "Cache-Control": "no-cache, no-store, must-revalidate" },
+        headers: { "Cache-Control": "no-cache, no-store, must-revalidate", Pragma: "no-cache" },
       })
       const data = await res.json()
 
-      // Retry on auth or server errors (handles cookie/session timing)
+      // Retry on auth or server errors (handles cookie/session timing on Chrome)
       const shouldRetry =
         retryCount < maxRetries &&
         (res.status === 401 || res.status === 403 || res.status === 500 || (res.status === 200 && !data.ok))
       if (shouldRetry) {
-        await new Promise((r) => setTimeout(r, 600 + retryCount * 800))
+        await new Promise((r) => setTimeout(r, 500 + retryCount * 600))
         return loadSubmissions(retryCount + 1)
       }
 
@@ -71,8 +71,8 @@ export default function BlueInterestPage() {
   }, [])
 
   useEffect(() => {
-    // Brief delay so auth cookies propagate after navigation
-    const t = setTimeout(() => loadSubmissions(), 80)
+    // Delay so auth cookies are available after admin navigation (Chrome needs more time)
+    const t = setTimeout(() => loadSubmissions(), 400)
     return () => clearTimeout(t)
   }, [loadSubmissions])
 

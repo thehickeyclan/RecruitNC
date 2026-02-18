@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -46,23 +46,31 @@ export default function AdminBluePage() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  const loadContent = async () => {
+  const loadContent = useCallback(async (retryCount = 0) => {
     setLoading(true)
     try {
-      const res = await fetch("/api/blue/content")
+      const res = await fetch("/api/blue/content", {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache, no-store" },
+      })
       if (!res.ok) throw new Error("Failed to load")
       const data = await res.json()
       setContent(data)
     } catch {
+      if (retryCount < 2) {
+        await new Promise((r) => setTimeout(r, 600 + retryCount * 400))
+        return loadContent(retryCount + 1)
+      }
       setContent(null)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    loadContent()
-  }, [])
+    const t = setTimeout(() => loadContent(), 300)
+    return () => clearTimeout(t)
+  }, [loadContent])
 
   const saveSlot = async (key: BlueImageKey, url: string) => {
     // "Remove" sends empty string; API requires a valid URL, so reset to default locally

@@ -20,12 +20,14 @@ export async function GET() {
         college: a.college,
       })),
     })
-    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
     return res
   } catch (e) {
-    return NextResponse.json({
+    const res = NextResponse.json({
       ok: false,
       error: e instanceof Error ? e.message : String(e),
     }, { status: 500 })
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+    return res
   }
 }
