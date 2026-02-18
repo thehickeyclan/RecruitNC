@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/use-toast"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { RefreshCw, Loader2, Users, ArrowLeft } from "lucide-react"
+import { RefreshCw, Loader2, Users, ArrowLeft, FileSpreadsheet } from "lucide-react"
 
 const ACHIEVEMENT_LABELS: Record<string, string> = {
   all_american: "All American",
@@ -33,6 +34,8 @@ export default function BlueInterestPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [exporting, setExporting] = useState(false)
+  const { toast } = useToast()
 
   const loadSubmissions = useCallback(async (retryCount = 0) => {
     const maxRetries = 2
@@ -73,6 +76,38 @@ export default function BlueInterestPage() {
     return () => clearTimeout(t)
   }, [loadSubmissions])
 
+  const handleExportSpreadsheet = async () => {
+    setExporting(true)
+    try {
+      const res = await fetch("/api/admin/blue-express-interest/export-csv", {
+        method: "GET",
+        credentials: "include",
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to export" }))
+        throw new Error(err.error || "Failed to export")
+      }
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `blue-interest-export-${new Date().toISOString().split("T")[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast({ title: "Export complete", description: "Submissions exported as CSV" })
+    } catch (e) {
+      toast({
+        title: "Export failed",
+        description: e instanceof Error ? e.message : "Could not export",
+        variant: "destructive",
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
+
   // Retry on tab focus if previous load failed (fixes intermittent auth timing)
   useEffect(() => {
     const onFocus = () => {
@@ -104,10 +139,24 @@ export default function BlueInterestPage() {
               </p>
             </div>
           </div>
-          <Button onClick={loadSubmissions} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            <span className="ml-2">Refresh</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportSpreadsheet}
+              disabled={exporting || submissions.length === 0}
+            >
+              {exporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="h-4 w-4" />
+              )}
+              <span className="ml-2">Export to Spreadsheet</span>
+            </Button>
+            <Button onClick={loadSubmissions} disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              <span className="ml-2">Refresh</span>
+            </Button>
+          </div>
         </div>
 
         <Card>
