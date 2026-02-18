@@ -88,8 +88,8 @@ export async function GET(request: Request) {
 
     console.log("[v0] Found athletes:", athletes?.length || 0)
 
-    // Link resolution: ALL athletes in this graduation year (no gender filter) so "View Profile" works for every static name (e.g. Jacob Perry) regardless of DB gender casing or prospect_ranking
     const yearNum = parseInt(year, 10) || year
+
     const { data: allForYear } = await supabase
       .from("athletes")
       .select("id, name, firstname, lastname, wrestling_name, highschool")
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
         (a.wrestling_name as string)?.trim() ||
         [a.firstName ?? a.firstname, a.lastName ?? a.lastname].filter(Boolean).join(" ").trim() ||
         ""
-      const name = raw.replace(/\s+/g, " ").trim()
+      const name = String(raw).replace(/\s+/g, " ").trim()
       return {
         id: a.id as string,
         name,
@@ -117,87 +117,85 @@ export async function GET(request: Request) {
       })
     }
 
-    const rankings = []
-    for (const athlete of athletes) {
-      const athleteName = `${athlete.firstName} ${athlete.lastName}`
+    const gradYearNum = yearNum
+    const rankings = await Promise.all(
+      athletes.map(async (athlete) => {
+        const athleteName = `${athlete.firstName} ${athlete.lastName}`
 
-      const nchsaaResults = await getNCHSAAResults(supabase, athleteName, Number.parseInt(athlete.graduationyear, 10))
+        const [nchsaaResults, nhscaToUse, super32ToUse] = await Promise.all([
+          getNCHSAAResults(supabase, athleteName, Number.parseInt(athlete.graduationyear, 10)),
+          getNHSCAFromTables(supabase, athleteName, gradYearNum),
+          getSuper32FromTable(supabase, athleteName, gradYearNum),
+        ])
 
-      let stateResults = []
-      if (nchsaaResults.length > 0) {
-        stateResults = nchsaaResults.map((result) => {
-          const { year, place, classification } = result
-          if (place === 1) {
-            return { text: `${year} ${classification} State Champion`, placement: 1, year }
-          } else if (place <= 8) {
+        let nhscaFinal = nhscaToUse
+        let super32Final = super32ToUse
+        if (nhscaFinal.length === 0 || super32Final.length === 0) {
+          const fromAthlete = buildPublicProfileTournamentData(athlete)
+          if (nhscaFinal.length === 0) nhscaFinal = fromAthlete.nhscaResults
+          if (super32Final.length === 0) super32Final = fromAthlete.super32Results
+        }
+
+        let stateResults = nchsaaResults.map((result: { year: number; place: number; classification?: string }) => {
+          const { year: y, place, classification } = result
+          if (place === 1) return { text: `${y} ${classification || ""} State Champion`, placement: 1, year: y }
+          if (place <= 8) {
             const ordinal = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-            return { text: `${year} ${classification} State ${ordinal}`, placement: place, year }
-          } else {
-            return { text: `${year} ${classification} State Qualifier`, placement: null, year }
+            return { text: `${y} ${classification || ""} State ${ordinal}`, placement: place, year: y }
           }
+          return { text: `${y} ${classification || ""} State Qualifier`, placement: null, year: y }
         })
-      }
+        stateResults.sort((a, b) => b.year - a.year)
 
-      stateResults.sort((a, b) => b.year - a.year)
+        const stateChampionships = stateResults.filter((r) => r.placement === 1)
+        const championshipCount = stateChampionships.length
+        const stateChampionshipSummary =
+          championshipCount >= 2 && championshipCount <= 4
+            ? `${championshipCount}x State Champion`
+            : stateResults.length > 0
+              ? stateResults.map((r) => r.text).join(", ")
+              : "No State Placement"
 
-      // Calculate state championship summary - check for 2x, 3x, or 4x state champion
-      const stateChampionships = stateResults.filter((r) => r.placement === 1)
-      const championshipCount = stateChampionships.length
-      const stateChampionshipSummary = championshipCount >= 2 && championshipCount <= 4
-        ? `${championshipCount}x State Champion`
-        : stateResults.length > 0
-        ? stateResults.map((r) => r.text).join(", ")
-        : "No State Placement"
+        const toApiResult = (r: { year: number; placement: string; record: string }) => {
+          const text = `${r.year}${r.placement ? ` ${r.placement}` : ""}${r.record ? ` (${r.record})` : ""}`.trim()
+          const placement = r.placement === "Champion" ? 1 : parseInt(r.placement) || null
+          return { text, placement, year: r.year }
+        }
+        const nhscaResults_processed = nhscaFinal.map(toApiResult)
+        const super32Results = super32Final.map(toApiResult)
 
-      // Primary: nhsca_placements + super32_results tables. Fallback: athlete row.
-      const gradYear = Number.parseInt(athlete.graduationyear, 10) || new Date().getFullYear()
-      const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
-      let nhscaToUse = await getNHSCAFromTables(supabase, athleteName, gradYear)
-      let super32ToUse = await getSuper32FromTable(supabase, athleteName, gradYear)
-      if (nhscaToUse.length === 0 || super32ToUse.length === 0) {
-        const fromAthlete = buildPublicProfileTournamentData(athlete)
-        if (nhscaToUse.length === 0) nhscaToUse = fromAthlete.nhscaResults
-        if (super32ToUse.length === 0) super32ToUse = fromAthlete.super32Results
-      }
-      const toApiResult = (r: { year: number; placement: string; record: string }) => {
-        const text = `${r.year}${r.placement ? ` ${r.placement}` : ""}${r.record ? ` (${r.record})` : ""}`.trim()
-        const placement = r.placement === "Champion" ? 1 : parseInt(r.placement) || null
-        return { text, placement, year: r.year }
-      }
-      const nhscaResults_processed = nhscaToUse.map(toApiResult)
-      const super32Results = super32ToUse.map(toApiResult)
+        const hasRankedWin = !!(
+          athlete.nationally_ranked_wins &&
+          typeof athlete.nationally_ranked_wins === "string" &&
+          athlete.nationally_ranked_wins.trim() !== "" &&
+          athlete.nationally_ranked_wins.toLowerCase() !== "none" &&
+          athlete.nationally_ranked_wins !== "0"
+        )
 
-      const hasRankedWin = !!(
-        athlete.nationally_ranked_wins &&
-        typeof athlete.nationally_ranked_wins === "string" &&
-        athlete.nationally_ranked_wins.trim() !== "" &&
-        athlete.nationally_ranked_wins.toLowerCase() !== "none" &&
-        athlete.nationally_ranked_wins !== "0"
-      )
-
-      rankings.push({
-        id: athlete.id,
-        name: athlete.wrestling_name || athleteName,
-        graduationyear: athlete.graduationyear,
-        gender: athlete.gender,
-        highschool: athlete.highschool || "-",
-        weight_display: athlete.weightclass ? `${athlete.weightclass} lbs` : "TBD",
-        prospect_ranking: athlete.prospect_ranking,
-        academic_gpa: athlete.academic_gpa,
-        photourl: athlete.photourl || athlete.headshot_url,
-        has_ranked_win: hasRankedWin,
-        nationally_ranked_wins: athlete.nationally_ranked_wins,
-        recruiting_status: athlete.recruiting_status,
-        college: athlete.college,
-        nhsca_results: nhscaResults_processed,
-        nhsca_record_display:
-          nhscaResults_processed.length > 0 ? nhscaResults_processed.map((r) => r.text).join(", ") : "No Record",
-        super_32_results: super32Results,
-        super_32_record_display: super32Results.length > 0 ? super32Results.map((r) => r.text).join(", ") : "No Record",
-        state_results: stateResults,
-        state_championship_summary: stateChampionshipSummary,
-      })
-    }
+        return {
+          id: athlete.id,
+          name: athlete.wrestling_name || athleteName,
+          graduationyear: athlete.graduationyear,
+          gender: athlete.gender,
+          highschool: athlete.highschool || "-",
+          weight_display: athlete.weightclass ? `${athlete.weightclass} lbs` : "TBD",
+          prospect_ranking: athlete.prospect_ranking,
+          academic_gpa: athlete.academic_gpa,
+          photourl: athlete.photourl || athlete.headshot_url,
+          has_ranked_win: hasRankedWin,
+          nationally_ranked_wins: athlete.nationally_ranked_wins,
+          recruiting_status: athlete.recruiting_status,
+          college: athlete.college,
+          nhsca_results: nhscaResults_processed,
+          nhsca_record_display:
+            nhscaResults_processed.length > 0 ? nhscaResults_processed.map((r) => r.text).join(", ") : "No Record",
+          super_32_results: super32Results,
+          super_32_record_display: super32Results.length > 0 ? super32Results.map((r) => r.text).join(", ") : "No Record",
+          state_results: stateResults,
+          state_championship_summary: stateChampionshipSummary,
+        }
+      }),
+    )
 
     // Calculate the most recent updated_at timestamp from all athletes
     const lastUpdated = athletes && athletes.length > 0
@@ -214,7 +212,7 @@ export async function GET(request: Request) {
       ? `/rankings/updates?year=${year}&date=${lastUpdated.toISOString().split("T")[0]}`
       : null
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       rankings,
       linkResolution,
       metadata: {
@@ -225,6 +223,8 @@ export async function GET(request: Request) {
         update_post_url: updatePostUrl,
       },
     })
+    res.headers.set("Cache-Control", "public, s-maxage=120, stale-while-revalidate=300")
+    return res
   } catch (error) {
     console.error("[v0] Public rankings API error:", error)
     return NextResponse.json(

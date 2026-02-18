@@ -55,42 +55,43 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 })
     }
 
-    const athletesWithResults = []
-    for (const athlete of athletes || []) {
-      const athleteName = (athlete.wrestling_name || athlete.name || "").trim()
-      const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
-      const [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
-        getNCHSAAResults(db, athleteName, gradYear),
-        getNHSCAFromTables(db, athleteName, gradYear),
-        getSuper32FromTable(db, athleteName, gradYear),
-      ])
+    const athletesWithResults = await Promise.all(
+      (athletes || []).map(async (athlete) => {
+        const athleteName = (athlete.wrestling_name || athlete.name || "").trim()
+        const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+        const [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
+          getNCHSAAResults(db, athleteName, gradYear),
+          getNHSCAFromTables(db, athleteName, gradYear),
+          getSuper32FromTable(db, athleteName, gradYear),
+        ])
 
-      const s3223 = super32FromTable.find((r) => r.year === 2023)
-      const s3224 = super32FromTable.find((r) => r.year === 2024)
-      const s3225 = super32FromTable.find((r) => r.year === 2025)
+        const s3223 = super32FromTable.find((r) => r.year === 2023)
+        const s3224 = super32FromTable.find((r) => r.year === 2024)
+        const s3225 = super32FromTable.find((r) => r.year === 2025)
 
-      athletesWithResults.push({
-        ...athlete,
-        super_32_2023_record: s3223?.record || athlete.super_32_2023_record,
-        super_32_2023_placement: s3223?.placement || athlete.super_32_2023_placement,
-        super_32_2024_record: s3224?.record || athlete.super_32_2024_record,
-        super_32_2024_placement: s3224?.placement || athlete.super_32_2024_placement,
-        super_32_2025_record: s3225?.record || athlete.super_32_2025_record,
-        super_32_2025_placement: s3225?.placement || athlete.super_32_2025_placement,
-        nchsaa_results: nchsaaResults.map((result: any) => ({
-          year: result.year,
-          place: result.place,
-          classification: result.classification,
-          weight_class: result.weight_class,
-          school: result.school,
-        })),
-        nhsca_results: nhscaFromTables.map((r) => ({
-          year: r.year,
-          placement: r.placement,
-          record: r.record,
-        })),
-      })
-    }
+        return {
+          ...athlete,
+          super_32_2023_record: s3223?.record || athlete.super_32_2023_record,
+          super_32_2023_placement: s3223?.placement || athlete.super_32_2023_placement,
+          super_32_2024_record: s3224?.record || athlete.super_32_2024_record,
+          super_32_2024_placement: s3224?.placement || athlete.super_32_2024_placement,
+          super_32_2025_record: s3225?.record || athlete.super_32_2025_record,
+          super_32_2025_placement: s3225?.placement || athlete.super_32_2025_placement,
+          nchsaa_results: nchsaaResults.map((result: any) => ({
+            year: result.year,
+            place: result.place,
+            classification: result.classification,
+            weight_class: result.weight_class,
+            school: result.school,
+          })),
+          nhsca_results: nhscaFromTables.map((r) => ({
+            year: r.year,
+            placement: r.placement,
+            record: r.record,
+          })),
+        }
+      }),
+    )
 
     return NextResponse.json({
       athletes: athletesWithResults,

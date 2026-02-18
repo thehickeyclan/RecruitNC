@@ -382,7 +382,7 @@ export function RankingsTableView({
                 <Fragment key={athlete.id}>
                   {shouldRenderDivider && (
                     <TableRow className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                      <TableCell colSpan={canSeeWatchList ? 9 : 8} className="py-2 text-center">
+                      <TableCell colSpan={canSeeWatchList ? 8 : 7} className="py-2 text-center">
                         <div className="flex items-center justify-center gap-3">
                           <div className="h-px bg-gray-300 flex-1 max-w-xs"></div>
                           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">
@@ -474,6 +474,9 @@ export function RankingsTableView({
                           </Link>
                         )}
                       </div>
+                    </TableCell>
+                    <TableCell className="text-center text-gray-700 font-medium">
+                      {athlete.graduation_year ?? "—"}
                     </TableCell>
                     <TableCell className="text-center">
                       {athlete.recruiting_status === "Committed" &&
