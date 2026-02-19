@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink } from "lucide-react"
 
 interface UserProfile {
   id: string
@@ -33,17 +33,59 @@ export function ProfileClient() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [blueMemberships, setBlueMemberships] = useState<{ athleteId: string; athleteName: string; status: string; startedAt: string; stripeCustomerId: string | null }[]>([])
+  const [blueLoading, setBlueLoading] = useState(true)
+  const [portalLoading, setPortalLoading] = useState<string | null>(null)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
     if (!authLoading && isAuthenticated) {
       console.log("[v0] Fetching profile from API")
       fetchProfile()
+      fetchBlueMemberships()
     } else if (!authLoading && !isAuthenticated) {
       console.log("[v0] Not authenticated, stopping loading")
       setIsLoading(false)
+      setBlueLoading(false)
     }
   }, [authLoading, isAuthenticated])
+
+  const fetchBlueMemberships = async () => {
+    setBlueLoading(true)
+    try {
+      const res = await fetch("/api/blue/my-memberships", { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        setBlueMemberships(data.memberships ?? [])
+      }
+    } catch {
+      setBlueMemberships([])
+    } finally {
+      setBlueLoading(false)
+    }
+  }
+
+  const openBillingPortal = async (customerId: string) => {
+    setPortalLoading(customerId)
+    try {
+      const res = await fetch("/api/blue/billing-portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ customerId }),
+      })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+        return
+      }
+      setError(data.error || "Could not open billing portal")
+    } catch {
+      setError("Could not open billing portal")
+    } finally {
+      setPortalLoading(null)
+    }
+  }
 
   const fetchProfile = async () => {
     try {
@@ -287,6 +329,45 @@ export function ProfileClient() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* NC United Blue memberships — only when user is payer for at least one */}
+            {!blueLoading && blueMemberships.length > 0 && (
+              <Card className="border-[#03154C]/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                    <CreditCard className="h-5 w-5" />
+                    NC United Blue
+                  </CardTitle>
+                  <CardDescription>Your Blue memberships and billing</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {blueMemberships.map((m) => (
+                    <div key={m.athleteId} className="rounded-lg border bg-gray-50/50 p-3">
+                      <p className="font-medium text-gray-900">{m.athleteName}</p>
+                      <p className="text-sm text-gray-500 capitalize">{m.status.replace("_", " ")}</p>
+                      <p className="text-xs text-gray-400 mt-1">Since {new Date(m.startedAt).toLocaleDateString()}</p>
+                      {m.stripeCustomerId && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 w-full text-[#03154C] border-[#03154C]/30 hover:bg-[#03154C]/5"
+                          onClick={() => openBillingPortal(m.stripeCustomerId!)}
+                          disabled={!!portalLoading}
+                        >
+                          {portalLoading === m.stripeCustomerId ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                          )}
+                          Manage billing
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-500">Update payment method, pause, or cancel in Stripe&apos;s secure portal.</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Athlete Profile Upload - Only show if user has an associated athlete profile */}
             {profile.athlete_id && profile.athlete_name && (

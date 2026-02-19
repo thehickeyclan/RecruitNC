@@ -11,7 +11,7 @@ export default function BlueRegisterCancelledPage() {
         <CardHeader>
           <CardTitle className="text-[#03154C]">Payment cancelled</CardTitle>
           <CardDescription>
-            You didn’t complete payment. Your registration is saved. If you want to join Blue, contact us for a new payment link or try again with your original invite link.
+            You didn’t complete payment. Your spot is reserved for a short time. To try again or get a new link, contact us at info@ncwrestlingunited.com or use a new invite link if you have one.
           </CardDescription>
         </CardHeader>
         <CardContent>

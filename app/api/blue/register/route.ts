@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
         athlete_id: athleteId,
         payer_user_id: payerUserId,
         status: "pending_payment",
-        source: "recruitnc_onboarding",
+        source: "invite",
       })
       .select("id")
       .single()
