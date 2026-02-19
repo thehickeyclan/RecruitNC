@@ -220,3 +220,55 @@ alter table public.blue_memberships alter column status set default 'pending_pay
 | **“Unauthorized” or “Admin required”** | Be signed in as an admin (account with `is_admin: true` in `user_profiles`). |
 | **“Table blue_invites does not exist”** | Run the SQL in **Section 1** above in the Supabase SQL Editor. |
 | List is blank or create does nothing | Use **Retry** on the invites page to reload; check the red error box or toast for the exact message. |
+
+---
+
+## Step-by-step test (admin + test account, Gavin)
+
+Use these accounts for a full test:
+
+- **Admin:** thickeyclan@gmail.com  
+- **Test parent account:** matt.hickey@getmaxiq.com  
+- **Athlete:** Gavin Hickey (your son)
+
+### A. Password reset (verify the link goes to reset page)
+
+1. Sign out (or use an incognito window).
+2. Go to **Sign in** → click **“Forgot your password?”**.
+3. Enter **matt.hickey@getmaxiq.com** (or any account email) → **Send reset link**.
+4. Check that email; open the **reset link** in the same browser.
+5. You should land on **Reset Your Password** (new password + confirm), not the homepage.
+6. Enter a new password, submit → success message → redirect to sign in.
+
+If the link still goes to the homepage, in **Supabase Dashboard** → **Authentication** → **URL Configuration** add this to **Redirect URLs**:  
+`https://YOUR_VERCEL_OR_DOMAIN/auth/callback`  
+(Password reset now uses the callback with `?next=/auth/reset-password` so the app can send you to the reset page.)
+
+### B. Blue signup (Gavin with test parent account)
+
+1. **Create invite (as admin)**  
+   - Log in as **thickeyclan@gmail.com**.  
+   - Go to **Admin** → **Blue** → **Invites**.  
+   - Click **Create invite** (email optional).  
+   - Copy the **registration link** (e.g. `https://yoursite.com/blue/register?invite=...`).
+
+2. **Open link as parent**  
+   - Open that link in **incognito** or another browser (or sign out first).  
+   - You’ll see the Blue registration form.
+
+3. **Fill form and sign in**  
+   - **Parent:** First name, Last name, **Email** = `matt.hickey@getmaxiq.com`.  
+   - **Already have an account?** Sign in with matt.hickey@getmaxiq.com, then return to this link and **leave password blank**.  
+   - Or enter a password to create the account.  
+   - **Athlete:** First name **Gavin**, Last name **Hickey**, Graduation year, High school, etc.  
+   - Optional: promo code, phone.  
+   - Check the **waiver** box.
+
+4. **Submit and pay**  
+   - Click **Complete registration**.  
+   - You should be redirected to **Stripe Checkout**.  
+   - Use test card **4242 4242 4242 4242** if Stripe is in test mode.  
+   - After payment you should land on **Blue registration success**.
+
+5. **Confirm**  
+   - Sign in as matt.hickey@getmaxiq.com and check **Blue** area (e.g. “My memberships” or dashboard) to see Gavin’s Blue membership.

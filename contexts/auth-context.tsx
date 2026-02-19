@@ -417,13 +417,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
-    // Redirect directly to reset-password page. Supabase may use implicit flow (tokens in
-    // URL fragment #) which the server never receives—only a client page can read the hash.
+    // Send user to callback with next=/auth/reset-password so they land on reset page (not homepage).
+    // Email link will be: /auth/callback?next=/auth/reset-password&code=... (or token_hash&type=recovery).
     const base =
       typeof window !== "undefined"
         ? window.location.origin
         : process.env.NEXT_PUBLIC_SITE_URL || ""
-    const redirectUrl = `${base}/auth/reset-password`
+    const redirectUrl = `${base}/auth/callback?next=/auth/reset-password`
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,

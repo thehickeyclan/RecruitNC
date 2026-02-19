@@ -271,7 +271,20 @@ export async function POST(request: NextRequest) {
       allow_promotion_codes: true,
     }
     if (stripeCouponId) sessionParams.discounts = [{ coupon: stripeCouponId }]
-    const session = await stripe.checkout.sessions.create(sessionParams)
+    let session: Stripe.Checkout.Session
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams)
+    } catch (stripeErr: unknown) {
+      const err = stripeErr as { type?: string; statusCode?: number; message?: string }
+      if (err?.type === "StripeAuthenticationError" || err?.statusCode === 401) {
+        console.error("[blue/register] Stripe auth failed (invalid or wrong API key):", err?.message ?? stripeErr)
+        return NextResponse.json(
+          { error: "Payment configuration error. Please contact support." },
+          { status: 503 }
+        )
+      }
+      throw stripeErr
+    }
 
     if (promoRowId) {
       await admin.from("blue_promo_codes").update({ redemptions_count: promoRedemptions }).eq("id", promoRowId)
