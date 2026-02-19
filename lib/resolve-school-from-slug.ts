@@ -39,6 +39,10 @@ export async function resolveSchoolFromSlug(slug: string): Promise<ResolvedSchoo
     candidates.forEach((candidate) => {
       if (candidate) {
         slugMap.set(candidate, { id, label: row.school_name ?? row.name })
+        const firstPart = candidate.split("-")[0]
+        if (firstPart && firstPart !== candidate) {
+          slugMap.set(firstPart, { id, label: row.school_name ?? row.name })
+        }
       }
     })
   })

@@ -445,6 +445,16 @@ export default function SchoolsManagementPage() {
                     >
                       Preview Portal
                     </Button>
+                    {school.name?.toLowerCase().includes("campbell") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-transparent border-orange-300 text-orange-700 hover:bg-orange-50"
+                        onClick={() => window.open("/colleges/campbell", "_blank")}
+                      >
+                        My Recruits
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
