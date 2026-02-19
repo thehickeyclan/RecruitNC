@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useParams } from "next/navigation"
 import { ArrowLeft, Users, GraduationCap, Scale, Building2, ExternalLink, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const CAMPBELL_ORANGE = "#E86100"
-const CAMPBELL_BLACK = "#000000"
+const DEFAULT_PRIMARY = "#2563eb"
+const DEFAULT_SECONDARY = "#0f172a"
 
 type School = {
   id: string
@@ -30,19 +31,26 @@ type Recruit = {
   pipeline_stage?: string | null
 }
 
-export default function CampbellMyRecruitsPage() {
+export default function CollegeMyRecruitsPage() {
+  const params = useParams()
+  const slug = (params?.slug as string) ?? ""
   const [school, setSchool] = useState<School | null>(null)
   const [recruits, setRecruits] = useState<Recruit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!slug) {
+      setError("Invalid school")
+      setLoading(false)
+      return
+    }
     let cancelled = false
     async function fetchData() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch("/api/colleges/campbell/recruits", { credentials: "include" })
+        const res = await fetch(`/api/colleges/${encodeURIComponent(slug)}/recruits`, { credentials: "include" })
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
         if (!res.ok) {
@@ -59,17 +67,18 @@ export default function CampbellMyRecruitsPage() {
     }
     fetchData()
     return () => { cancelled = true }
-  }, [])
+  }, [slug])
 
-  const primary = school?.primary_color || CAMPBELL_ORANGE
-  const secondary = school?.secondary_color || CAMPBELL_BLACK
+  const primary = school?.primary_color || DEFAULT_PRIMARY
+  const secondary = school?.secondary_color || DEFAULT_SECONDARY
+  const schoolName = school?.name ?? "School"
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: CAMPBELL_BLACK }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: secondary }}>
         <div className="flex flex-col items-center gap-3 text-white">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: CAMPBELL_ORANGE }} />
-          <p>Loading Campbell recruits…</p>
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: primary }} />
+          <p>Loading {schoolName} recruits…</p>
         </div>
       </div>
     )
@@ -88,8 +97,8 @@ export default function CampbellMyRecruitsPage() {
               <Button asChild variant="outline">
                 <Link href="/admin/schools">Back to Schools</Link>
               </Button>
-              <Button asChild style={{ backgroundColor: CAMPBELL_ORANGE }}>
-                <Link href="/colleges/campbell">Retry</Link>
+              <Button asChild style={{ backgroundColor: primary }}>
+                <Link href={`/colleges/${slug}`}>Retry</Link>
               </Button>
             </div>
           </CardContent>
@@ -100,7 +109,6 @@ export default function CampbellMyRecruitsPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0f0f0f" }}>
-      {/* Header — orange and black */}
       <header
         className="border-b"
         style={{
@@ -129,13 +137,13 @@ export default function CampbellMyRecruitsPage() {
                       className="object-contain"
                     />
                   ) : (
-                    <span className="text-xl font-bold text-black flex items-center justify-center w-full h-full">C</span>
+                    <span className="text-xl font-bold text-black flex items-center justify-center w-full h-full">
+                      {schoolName.charAt(0).toUpperCase()}
+                    </span>
                   )}
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-black">
-                    {school?.name ?? "Campbell University"}
-                  </h1>
+                  <h1 className="text-xl font-bold text-black">{schoolName}</h1>
                   <p className="text-black/80 text-sm">My Recruits</p>
                 </div>
               </div>
@@ -156,7 +164,7 @@ export default function CampbellMyRecruitsPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Users className="h-5 w-5" style={{ color: CAMPBELL_ORANGE }} />
+            <Users className="h-5 w-5" style={{ color: primary }} />
             Recruits ({recruits.length})
           </h2>
         </div>
@@ -167,7 +175,7 @@ export default function CampbellMyRecruitsPage() {
               <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No recruits yet.</p>
               <p className="text-sm mt-1">Star athletes in the portal to add them here.</p>
-              <Button asChild className="mt-4" style={{ backgroundColor: CAMPBELL_ORANGE }}>
+              <Button asChild className="mt-4" style={{ backgroundColor: primary }}>
                 <Link href={school?.id ? `/schools/${school.id}/portal` : "/admin/schools"}>
                   Open portal
                 </Link>
@@ -234,7 +242,7 @@ export default function CampbellMyRecruitsPage() {
                         )}
                       </div>
                     )}
-                    <Button asChild size="sm" className="mt-2" style={{ backgroundColor: CAMPBELL_ORANGE }}>
+                    <Button asChild size="sm" className="mt-2" style={{ backgroundColor: primary }}>
                       <Link href={`/unified-profile/${r.id}`}>
                         View profile
                         <ExternalLink className="h-3 w-3 ml-1" />

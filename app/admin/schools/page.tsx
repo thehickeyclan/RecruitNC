@@ -84,6 +84,26 @@ export default function SchoolsManagementPage() {
   const [selectedSchoolId, setSelectedSchoolId] = useState<string | null>(null)
   const [analyticsData, setAnalyticsData] = useState<any>(null)
 
+  // Schools list filter: all | colleges | high_schools
+  const [schoolListFilter, setSchoolListFilter] = useState<"all" | "colleges" | "high_schools">("all")
+
+  // Classify school by name for Colleges vs High Schools filter (heuristic; no DB type)
+  const getSchoolKind = (name: string): "college" | "high_school" | "other" => {
+    const n = (name ?? "").toLowerCase()
+    const looksCollege = /\b(university|college|institute)\b|state\s|tech\b|nc state|app state/i.test(n)
+    const looksHighSchool = /high\s*school|\bhs\b|prep\b|charter\b/i.test(n) || (/academy\b/i.test(n) && !looksCollege)
+    if (looksCollege) return "college"
+    if (looksHighSchool) return "high_school"
+    return "other"
+  }
+
+  const filteredSchools =
+    schoolListFilter === "all"
+      ? schools
+      : schoolListFilter === "colleges"
+        ? schools.filter((s) => getSchoolKind(s.name) === "college")
+        : schools.filter((s) => getSchoolKind(s.name) === "high_school")
+
   useEffect(() => {
     console.log("[v0] SchoolsManagementPage mounted, fetching schools...")
     fetchSchools()
@@ -246,9 +266,33 @@ export default function SchoolsManagementPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Schools Management</h1>
             <p className="text-gray-600">Manage college programs and their portals</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setAddProgramOpen(true)}>
-            + Add Program
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+              onClick={() => {
+                setNewProgram({
+                  name: "Campbell University",
+                  logoUrl: "",
+                  primaryColor: "#E86100",
+                  secondaryColor: "#000000",
+                })
+                setAddProgramOpen(true)
+              }}
+            >
+              Add Campbell University
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                setNewProgram({ name: "", logoUrl: "", primaryColor: "", secondaryColor: "" })
+                setAddProgramOpen(true)
+              }}
+            >
+              + Add Program
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -266,13 +310,37 @@ export default function SchoolsManagementPage() {
 
         <TabsContent value="schools" className="mt-6">
 
+      {/* Toggle: All | Colleges | High Schools */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="text-sm font-medium text-gray-700">Show:</span>
+        <div className="flex rounded-lg border border-gray-300 p-0.5 bg-gray-50">
+          {(["all", "colleges", "high_schools"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setSchoolListFilter(value)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                schoolListFilter === value
+                  ? "bg-white text-gray-900 shadow border border-gray-200"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {value === "all" ? "All" : value === "colleges" ? "Colleges" : "High Schools"}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm text-gray-500">
+          {filteredSchools.length} {filteredSchools.length === 1 ? "school" : "schools"}
+        </span>
+      </div>
+
       {loading ? (
         <div className="text-center py-12">
           <p className="text-gray-600">Loading schools...</p>
         </div>
-      ) : (
+      ) : filteredSchools.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {schools.map((school) => (
+          {filteredSchools.map((school) => (
             <Card key={school.id} className="border-2 hover:border-blue-300 transition-colors">
               <CardHeader>
                 <div className="flex items-center gap-4">
@@ -445,23 +513,27 @@ export default function SchoolsManagementPage() {
                     >
                       Preview Portal
                     </Button>
-                    {school.name?.toLowerCase().includes("campbell") && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 bg-transparent border-orange-300 text-orange-700 hover:bg-orange-50"
-                        onClick={() => window.open("/colleges/campbell", "_blank")}
-                      >
-                        My Recruits
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 bg-transparent"
+                      onClick={() => {
+                        const slug = (school.name ?? "")
+                          .toLowerCase()
+                          .replace(/[^a-z0-9]+/g, "-")
+                          .replace(/(^-|-$)/g, "")
+                        if (slug) window.open(`/colleges/${slug}`, "_blank")
+                      }}
+                    >
+                      My Recruits
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-      )}
+      ) : null}
 
       {addCoachModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -539,6 +611,18 @@ export default function SchoolsManagementPage() {
           <CardContent className="py-12 text-center">
             <p className="text-gray-600 mb-4">No schools configured yet</p>
             <Button onClick={() => setAddProgramOpen(true)}>Add First Program</Button>
+          </CardContent>
+        </Card>
+      )}
+      {!loading && schools.length > 0 && filteredSchools.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-gray-600 mb-4">
+              No {schoolListFilter === "colleges" ? "colleges" : "high schools"} match the filter. Try &quot;All&quot; or add programs with names like &quot;X University&quot; or &quot;Y High School&quot;.
+            </p>
+            <Button variant="outline" onClick={() => setSchoolListFilter("all")}>
+              Show all schools
+            </Button>
           </CardContent>
         </Card>
       )}
