@@ -404,7 +404,16 @@ export default function BlueRegisterPage() {
               </div>
 
               {error && (
-                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
+                <div className="space-y-2">
+                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
+                  {(error.includes("already registered") || error.includes("Sign in first")) && token && (
+                    <Link href={signInUrl}>
+                      <Button type="button" variant="outline" className="w-full border-[#03154C] text-[#03154C] hover:bg-[#03154C]/10">
+                        Sign in, then return here (leave password blank)
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               )}
               <Button
                 type="submit"

@@ -46,11 +46,17 @@ export default function CollegeMyRecruitsPage() {
       return
     }
     let cancelled = false
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
+
     async function fetchData() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`/api/colleges/${encodeURIComponent(slug)}/recruits`, { credentials: "include" })
+        const res = await fetch(`/api/colleges/${encodeURIComponent(slug)}/recruits`, {
+          credentials: "include",
+          signal: controller.signal,
+        })
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
         if (!res.ok) {
@@ -60,13 +66,19 @@ export default function CollegeMyRecruitsPage() {
         setSchool(data.school ?? null)
         setRecruits(data.recruits ?? [])
       } catch (e) {
-        if (!cancelled) setError("Failed to load recruits")
+        if (cancelled) return
+        setError(e instanceof Error && e.name === "AbortError" ? "Request timed out" : "Failed to load recruits")
       } finally {
+        clearTimeout(timeoutId)
         if (!cancelled) setLoading(false)
       }
     }
     fetchData()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+      controller.abort()
+    }
   }, [slug])
 
   const primary = school?.primary_color || DEFAULT_PRIMARY

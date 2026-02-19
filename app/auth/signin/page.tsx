@@ -99,6 +99,12 @@ export default function SignInPage() {
           return
         }
       } catch {}
+      // Set cooldown so we stop hitting Supabase from this browser (helps Chrome desktop)
+      const cooldownUntil = Date.now()
+      if (typeof document !== "undefined") {
+        document.cookie = `rate_limit_cooldown=${cooldownUntil}; path=/; max-age=120; SameSite=Lax`
+        try { sessionStorage.setItem("rate_limit_cooldown", String(cooldownUntil)) } catch {}
+      }
       setError("Rate limited. Please wait a few minutes.")
       setLoading(false)
       return

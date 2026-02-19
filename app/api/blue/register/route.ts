@@ -58,10 +58,25 @@ export async function POST(request: NextRequest) {
     // 2) Resolve or create parent
     let payerUserId: string
 
+    const parentEmailNorm = parent.email.trim().toLowerCase()
+
     const { data: { user: existingUser } } = await supabase.auth.getUser()
-    if (existingUser && existingUser.email?.toLowerCase() === parent.email.trim().toLowerCase()) {
+    if (existingUser && existingUser.email?.toLowerCase() === parentEmailNorm) {
       payerUserId = existingUser.id
     } else if (parent.password && parent.password.length >= 8) {
+      // Avoid createUser when email already exists — common for existing RecruitNC users
+      const { data: existingProfiles } = await admin
+        .from("user_profiles")
+        .select("user_id")
+        .ilike("email", parentEmailNorm)
+        .limit(1)
+      const existingProfile = Array.isArray(existingProfiles) ? existingProfiles[0] : existingProfiles
+      if (existingProfile) {
+        return NextResponse.json({
+          error: "This email is already registered with RecruitNC. Sign in first, then return to this registration link and submit the form again with the password field left blank — we'll link your existing account to this Blue registration.",
+          code: "EMAIL_ALREADY_REGISTERED",
+        }, { status: 400 })
+      }
       const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
         email: parent.email.trim(),
         password: parent.password,
@@ -74,7 +89,14 @@ export async function POST(request: NextRequest) {
         },
       })
       if (createErr || !newUser.user) {
-        return NextResponse.json({ error: createErr?.message || "Could not create account. Email may already be in use." }, { status: 400 })
+        const msg = createErr?.message ?? ""
+        const alreadyRegistered = /already been registered|already in use|already exists|duplicate/i.test(msg)
+        return NextResponse.json({
+          error: alreadyRegistered
+            ? "This email is already registered with RecruitNC. Sign in first, then return to this registration link and submit the form again with the password field left blank — we'll link your existing account to this Blue registration."
+            : (createErr?.message || "Could not create account. Please try again or sign in if you already have an account."),
+          ...(alreadyRegistered ? { code: "EMAIL_ALREADY_REGISTERED" } : {}),
+        }, { status: 400 })
       }
       payerUserId = newUser.user.id
       const { error: profileErr } = await admin.from("user_profiles").insert({

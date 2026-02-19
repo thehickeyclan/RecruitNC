@@ -47,11 +47,24 @@ export async function GET(
       return NextResponse.json({ error: "School not found" }, { status: 404 })
     }
 
-    const { data: coaches } = await admin
+    const { data: coaches, error: coachesErr } = await admin
       .from("user_profiles")
       .select("user_id")
       .eq("school_id", resolved.id)
       .in("role", ["coach", "college_coach", "admin"])
+    if (coachesErr) {
+      console.warn("[colleges recruits] coaches query failed:", coachesErr.message)
+      return NextResponse.json({
+        school: {
+          id: school.id,
+          name: school.school_name ?? school.name,
+          logo_url: school.logo_url,
+          primary_color: school.primary_color,
+          secondary_color: school.secondary_color,
+        },
+        recruits: [],
+      })
+    }
     const coachUserIds = (coaches ?? []).map((c: { user_id: string }) => c.user_id).filter(Boolean)
     if (coachUserIds.length === 0) {
       return NextResponse.json({

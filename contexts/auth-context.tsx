@@ -250,9 +250,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }, 2000)
           return () => clearTimeout(retryTimer)
         }
+        // Prevent concurrent getSession calls (Chrome desktop / Strict Mode double-mount)
+        if (typeof (globalThis as any).__authGetSessionInFlight === "boolean" && (globalThis as any).__authGetSessionInFlight) {
+          setIsLoading(false)
+          return
+        }
         console.log("[v0] Cookies or storage present, checking session ONCE on mount")
         const getSessionOnce = async () => {
           try {
+            ;(globalThis as any).__authGetSessionInFlight = true
             const { data: { session }, error } = await supabase.auth.getSession()
             if (error) {
               console.warn("[v0] getSession error (non-fatal):", error.message)
@@ -281,7 +287,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfile(null)
             // Don't clear cookies on exception — can be transient (e.g. Chrome desktop)
           } finally {
-        setIsLoading(false)
+            ;(globalThis as any).__authGetSessionInFlight = false
+            setIsLoading(false)
           }
         }
         
