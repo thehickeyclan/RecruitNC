@@ -193,7 +193,11 @@ export function ProfileClient() {
     try {
       console.log("[v0] ProfileClient fetchProfile called")
       setIsLoading(true)
-      const response = await fetch("/api/profile")
+      setError("")
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 15000)
+      const response = await fetch("/api/profile", { credentials: "include", signal: controller.signal })
+      clearTimeout(timeoutId)
 
       console.log("[v0] Profile API response status:", response.status)
 
@@ -203,12 +207,21 @@ export function ProfileClient() {
         setProfile(data)
       } else {
         const errorText = await response.text()
-        console.error("[v0] Profile API error:", errorText)
-        setError("Failed to load profile")
+        console.error("[v0] Profile API error:", response.status, errorText)
+        if (response.status === 401) {
+          setError("Session expired or not available. Please sign in again.")
+        } else {
+          setError("Failed to load profile")
+        }
       }
     } catch (error) {
-      console.error("[v0] Error fetching profile:", error)
-      setError("An error occurred while loading your profile")
+      if (error instanceof Error && error.name === "AbortError") {
+        console.error("[v0] Profile fetch timed out")
+        setError("Request timed out. Check your connection and try again.")
+      } else {
+        console.error("[v0] Error fetching profile:", error)
+        setError("An error occurred while loading your profile")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -293,10 +306,22 @@ export function ProfileClient() {
             <CardTitle>Profile Not Found</CardTitle>
             <CardDescription>We couldn't find your profile information</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={fetchProfile} className="w-full">
-              Try Again
-            </Button>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div className="flex flex-col gap-2">
+              <Button onClick={fetchProfile} className="w-full">
+                Try Again
+              </Button>
+              {error?.toLowerCase().includes("session") && (
+                <Button asChild variant="outline" className="w-full">
+                  <a href="/auth/signin">Sign in again</a>
+                </Button>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
