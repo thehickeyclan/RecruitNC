@@ -25,6 +25,14 @@ export default function SignInPage() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
 
+  // Show friendly message when redirected here after a failed reset-link exchange
+  useEffect(() => {
+    const err = searchParams.get("error")
+    if (err === "exchange_failed" || err === "no_session") {
+      setError("That reset link didn’t work. It may have expired or already been used. Request a new one below.")
+    }
+  }, [searchParams])
+
   // Chrome desktop blocks cookies in iframes (e.g. app embedded in ncwrestlingunited.com).
   // Break out so sign-in loads first-party and login works.
   useEffect(() => {
@@ -264,6 +272,13 @@ export default function SignInPage() {
                       <p className="mt-2 text-xs">
                         <Link href="/auth/clear-cooldown" className="text-blue-600 hover:underline">
                           Clear rate limit cooldown and try again
+                        </Link>
+                      </p>
+                    )}
+                    {error.includes("reset link") && (
+                      <p className="mt-2 text-xs">
+                        <Link href="/auth/forgot-password" className="text-blue-600 hover:underline font-medium">
+                          Request a new reset link
                         </Link>
                       </p>
                     )}

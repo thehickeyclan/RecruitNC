@@ -231,6 +231,17 @@ Use these accounts for a full test:
 - **Test parent account:** matt.hickey@getmaxiq.com  
 - **Athlete:** Gavin Hickey (your son)
 
+### Unblock Blue test (skip broken password reset)
+
+If you can’t sign in as the test parent because you don’t know the password and reset is broken:
+
+1. **Supabase Dashboard** → **Authentication** → **Users**.
+2. Find **matt.hickey@getmaxiq.com** (or the test parent email).
+3. Click the user → **⋮** or **Edit** → **Send password recovery** is the broken path; instead use **Update user** if available, or create a **new user** with the same email (then delete the old one) so you set a password on signup.  
+   **Easier:** Create a **new test user** in Supabase with a known password: Authentication → Users → **Add user** → email e.g. `blue-test@getmaxiq.com`, set a password you know. Use that email as the parent on the Blue form so you can sign in and test Blue without touching password reset.
+
+Then run **B. Blue signup** below (create invite as admin → open link in incognito → sign in with the account that has the known password → fill athlete → Stripe).
+
 ### A. Password reset (verify the link goes to reset page)
 
 1. Sign out (or use an incognito window).

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { formatPhoneInput, normalizePhoneForStorage } from "@/lib/phone-format"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,7 @@ I acknowledge that I have read and understand this Waiver and Release of Liabili
 export default function BlueRegisterPage() {
   const searchParams = useSearchParams()
   const token = searchParams.get("invite")?.trim() || ""
+  const { user, profile } = useAuth()
 
   const [validating, setValidating] = useState(!!token)
   const [valid, setValid] = useState<boolean | null>(null)
@@ -62,6 +64,18 @@ export default function BlueRegisterPage() {
   const [athlete, setAthlete] = useState({ firstName: "", lastName: "", graduationYear: "", highSchool: "", weightClass: "" })
   const [promoCode, setPromoCode] = useState("")
   const [waiverAccepted, setWaiverAccepted] = useState(false)
+
+  // Pre-fill parent from logged-in user so they don't have to re-enter email/password
+  useEffect(() => {
+    if (!user?.email) return
+    setParent((p) => ({
+      ...p,
+      email: user.email ?? p.email,
+      firstName: profile?.first_name || (user.user_metadata?.first_name as string) || p.firstName,
+      lastName: profile?.last_name || (user.user_metadata?.last_name as string) || p.lastName,
+      phone: profile?.cell_phone || (user.user_metadata?.cell_phone as string) || p.phone || "",
+    }))
+  }, [user?.id, user?.email, user?.user_metadata, profile?.first_name, profile?.last_name, profile?.cell_phone])
 
   useEffect(() => {
     if (!token) {
@@ -249,6 +263,11 @@ export default function BlueRegisterPage() {
             <CardDescription>Your account will manage this athlete’s Blue membership.</CardDescription>
           </CardHeader>
           <CardContent>
+            {user && (
+              <div className="mb-6 rounded-md bg-[#03154C]/10 border border-[#03154C]/30 p-3 text-sm text-[#03154C]">
+                You’re signed in as <strong>{user.email}</strong>. We’ll use this account — leave password blank.
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -284,19 +303,21 @@ export default function BlueRegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="parentPassword">Password</Label>
+                <Label htmlFor="parentPassword">Password (leave blank if you’re signed in)</Label>
                 <Input
                   id="parentPassword"
                   type="password"
                   value={parent.password}
                   onChange={(e) => setParent((p) => ({ ...p, password: e.target.value }))}
-                  placeholder="New account: min 8 characters"
+                  placeholder={user ? "Leave blank — you're signed in" : "New account: min 8 characters"}
                   disabled={loading}
-                  minLength={8}
+                  minLength={user ? undefined : 8}
                 />
-                <p className="text-xs text-gray-500">
-                  Already have an account? <Link href={signInUrl} className="text-[#03154C] font-medium hover:underline">Sign in</Link>, then return to this link and leave password blank.
-                </p>
+                {!user && (
+                  <p className="text-xs text-gray-500">
+                    Already have an account? <Link href={signInUrl} className="text-[#03154C] font-medium hover:underline">Sign in</Link>, then return to this link and leave password blank.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="parentPhone">Phone (optional)</Label>
