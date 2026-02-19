@@ -14,6 +14,7 @@ import { IframeResizer } from "@/components/iframe-resizer"
 import { StorageAccessPrompt } from "@/components/storage-access-prompt"
 import { IframeSignInBanner } from "@/components/iframe-signin-banner"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
+import { RecoveryRedirect } from "@/components/recovery-redirect"
 
 export const metadata = {
   title: "NC Wrestling Commits | Prospect Rankings",
@@ -71,6 +72,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
+            <RecoveryRedirect />
             <IframeResizer />
             <StorageAccessPrompt />
             <IframeSignInBanner />
