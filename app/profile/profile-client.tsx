@@ -11,7 +11,16 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles } from "lucide-react"
+
+const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
+  bio: "Bio",
+  achievements: "Achievements",
+  academic: "Academic info",
+  highlightVideo: "Highlight video",
+  photo: "Photo",
+}
 
 interface UserProfile {
   id: string
@@ -36,6 +45,10 @@ export function ProfileClient() {
   const [blueMemberships, setBlueMemberships] = useState<{ athleteId: string; athleteName: string; status: string; startedAt: string; stripeCustomerId: string | null }[]>([])
   const [blueLoading, setBlueLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState<string | null>(null)
+  const [linkedAthletes, setLinkedAthletes] = useState<{ id: string; name: string; profileVerified: boolean; updatedAt: string | null }[]>([])
+  const [linkedLoading, setLinkedLoading] = useState(true)
+  const [athleteCompleteness, setAthleteCompleteness] = useState<Record<string, { percent: number; completed: string[]; missing: string[] }>>({})
+  const [completenessLoading, setCompletenessLoading] = useState(false)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -43,12 +56,54 @@ export function ProfileClient() {
       console.log("[v0] Fetching profile from API")
       fetchProfile()
       fetchBlueMemberships()
+      fetchLinkedAthletes()
     } else if (!authLoading && !isAuthenticated) {
-      console.log("[v0] Not authenticated, stopping loading")
       setIsLoading(false)
       setBlueLoading(false)
+      setLinkedLoading(false)
     }
   }, [authLoading, isAuthenticated])
+
+  useEffect(() => {
+    if (!profile || linkedLoading) return
+    const ids = [...new Set([profile.athlete_id, ...linkedAthletes.map((a) => a.id)].filter(Boolean) as string[])]
+    if (ids.length > 0) fetchAthleteCompleteness(ids)
+  }, [profile?.athlete_id, linkedLoading, linkedAthletes])
+
+  const fetchLinkedAthletes = async () => {
+    setLinkedLoading(true)
+    try {
+      const res = await fetch("/api/profile/linked-athletes", { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        setLinkedAthletes(data.athletes ?? [])
+      }
+    } catch {
+      setLinkedAthletes([])
+    } finally {
+      setLinkedLoading(false)
+    }
+  }
+
+  const fetchAthleteCompleteness = async (athleteIds: string[]) => {
+    if (athleteIds.length === 0) return
+    setCompletenessLoading(true)
+    try {
+      const res = await fetch(`/api/profile/athlete-completeness?ids=${athleteIds.join(",")}`, { credentials: "include" })
+      if (res.ok) {
+        const data = await res.json()
+        const map: Record<string, { percent: number; completed: string[]; missing: string[] }> = {}
+        for (const a of data.athletes ?? []) {
+          map[a.id] = { percent: a.percent, completed: a.completed ?? [], missing: a.missing ?? [] }
+        }
+        setAthleteCompleteness(map)
+      }
+    } catch {
+      setAthleteCompleteness({})
+    } finally {
+      setCompletenessLoading(false)
+    }
+  }
 
   const fetchBlueMemberships = async () => {
     setBlueLoading(true)
@@ -310,6 +365,101 @@ export function ProfileClient() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* What to do next — recommendations */}
+            <Card className="border-amber-200/60 bg-amber-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-900">
+                  <Sparkles className="h-5 w-5" />
+                  What to do next
+                </CardTitle>
+                <CardDescription>Make your profile and athlete pages more engaging</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {!profile.cell_phone?.trim() && (
+                  <p className="flex items-center gap-2">
+                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+                    <span>Add your cell phone above so coaches can reach you.</span>
+                  </p>
+                )}
+                {!profile.bio?.trim() && (
+                  <p className="flex items-center gap-2">
+                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+                    <span>Add a short bio to introduce yourself.</span>
+                  </p>
+                )}
+                {!blueLoading && blueMemberships.length === 0 && (
+                  <p className="flex items-center gap-2">
+                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+                    <a href="/blue" className="text-[#03154C] font-medium hover:underline">Interested in NC United Blue?</a> Learn more.
+                  </p>
+                )}
+                {!linkedLoading && linkedAthletes.length > 0 && linkedAthletes.some((a) => !a.profileVerified) && (
+                  <p className="flex items-center gap-2">
+                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+                    <span>Get your athlete&apos;s profile public so coaches can find them — use Request Profile Edit or Edit profile below.</span>
+                  </p>
+                )}
+                {!linkedLoading && linkedAthletes.length > 0 && (
+                  <p className="flex items-center gap-2">
+                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+                    <span>Keep achievements and stats up to date — edit athlete profile below.</span>
+                  </p>
+                )}
+                {profile.cell_phone?.trim() && profile.bio?.trim() && (linkedAthletes.length === 0 || linkedAthletes.every((a) => a.profileVerified)) && (blueMemberships.length > 0 || linkedAthletes.length > 0) && (
+                  <p className="text-gray-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Your athletes — linked kids with status and last edit */}
+            {!linkedLoading && linkedAthletes.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Your athletes
+                  </CardTitle>
+                  <CardDescription>Status and last update for linked profiles</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {linkedAthletes.map((a) => {
+                    const comp = athleteCompleteness[a.id]
+                    return (
+                      <div key={a.id} className="rounded-lg border bg-gray-50/50 p-3">
+                        <p className="font-medium text-gray-900">{a.name}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Public profile: {a.profileVerified ? <span className="text-green-600 inline-flex items-center gap-1"><CheckCircle className="h-3 w-3 shrink-0" /> Live</span> : "Not yet public"}
+                        </p>
+                        {a.updatedAt && (
+                          <p className="text-xs text-gray-400">Last updated: {new Date(a.updatedAt).toLocaleDateString()}</p>
+                        )}
+                        {/* Profile completeness progress */}
+                        {completenessLoading && !comp ? (
+                          <p className="text-xs text-gray-400 mt-2">Loading profile completeness…</p>
+                        ) : comp ? (
+                          <div className="mt-2">
+                            <p className="text-xs font-medium text-gray-600 mb-1">Profile completeness: {comp.percent}%</p>
+                            <Progress value={comp.percent} className="h-2" />
+                            {comp.missing.length > 0 && comp.missing.length < 5 && (
+                              <p className="text-xs text-gray-500 mt-1">Add: {comp.missing.map((m) => ATHLETE_COMPLETENESS_LABELS[m] ?? m).join(", ")}</p>
+                            )}
+                          </div>
+                        ) : null}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Button asChild variant="outline" size="sm">
+                            <a href={`/unified-profile/${a.id}`}>View</a>
+                          </Button>
+                          <Button asChild variant="outline" size="sm">
+                            <a href={`/edit-profile/${a.id}`}>Edit profile</a>
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Account Info */}
             <Card>
               <CardHeader>
@@ -380,6 +530,23 @@ export function ProfileClient() {
                   <CardDescription>Upload your own photo for your athlete profile</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Profile completeness for own athlete */}
+                  {(() => {
+                    const comp = athleteCompleteness[profile.athlete_id!]
+                    return completenessLoading && !comp ? (
+                      <p className="text-xs text-gray-400">Loading profile completeness…</p>
+                    ) : comp ? (
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-1">Profile completeness: {comp.percent}%</p>
+                        <Progress value={comp.percent} className="h-2" />
+                        {comp.missing.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Full bar = Bio, Achievements, Academic info, Highlight video, Photo. Add: {comp.missing.map((m) => ATHLETE_COMPLETENESS_LABELS[m] ?? m).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    ) : null
+                  })()}
                   <PublicImageUpload
                     athleteId={profile.athlete_id}
                     athleteName={profile.athlete_name}
