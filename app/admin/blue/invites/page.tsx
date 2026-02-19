@@ -23,6 +23,7 @@ type InviteRow = {
 export default function AdminBlueInvitesPage() {
   const [invites, setInvites] = useState<InviteRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [listError, setListError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newEmail, setNewEmail] = useState("")
   const [newInviteeName, setNewInviteeName] = useState("")
@@ -57,11 +58,19 @@ ${registerUrl}
 
   const loadInvites = async () => {
     setLoading(true)
+    setListError(null)
     try {
       const res = await fetch("/api/admin/blue/invites", { credentials: "include" })
       const data = await res.json()
-      if (res.ok) setInvites(data.invites ?? [])
+      if (res.ok) {
+        setInvites(data.invites ?? [])
+      } else {
+        setListError(data.error || `Failed to load (${res.status})`)
+        setInvites([])
+      }
     } catch {
+      setListError("Network error. Check connection and retry.")
+      setInvites([])
       toast({ title: "Failed to load invites", variant: "destructive" })
     } finally {
       setLoading(false)
@@ -283,12 +292,23 @@ ${registerUrl}
             <CardDescription>Links expire in 14 days. Used invites cannot be reused.</CardDescription>
           </CardHeader>
           <CardContent>
+            {listError && (
+              <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                <p className="font-medium">Could not load invites</p>
+                <p className="mt-1">{listError}</p>
+                <Button variant="outline" size="sm" className="mt-3 border-red-300 text-red-700 hover:bg-red-100" onClick={loadInvites}>
+                  Retry
+                </Button>
+              </div>
+            )}
             {loading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
               </div>
-            ) : invites.length === 0 ? (
+            ) : invites.length === 0 && !listError ? (
               <p className="py-8 text-center text-gray-500">No invites yet. Create one above.</p>
+            ) : invites.length === 0 ? (
+              null
             ) : (
               <div className="overflow-x-auto">
                 <Table>

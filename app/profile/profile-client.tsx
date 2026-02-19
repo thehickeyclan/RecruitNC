@@ -564,15 +564,25 @@ export function ProfileClient() {
                         {a.updatedAt && (
                           <p className="text-xs text-gray-400">Last updated: {new Date(a.updatedAt).toLocaleDateString()}</p>
                         )}
-                        {/* Profile completeness progress */}
+                        {/* Profile completeness progress + what's missing / suggestions */}
                         {completenessLoading && !comp ? (
                           <p className="text-xs text-gray-400 mt-2">Loading profile completeness…</p>
                         ) : comp ? (
                           <div className="mt-2">
                             <p className="text-xs font-medium text-gray-600 mb-1">Profile completeness: {comp.percent}%</p>
                             <Progress value={comp.percent} className="h-2" />
-                            {comp.missing.length > 0 && comp.missing.length < 5 && (
-                              <p className="text-xs text-gray-500 mt-1">Add: {comp.missing.map((m) => ATHLETE_COMPLETENESS_LABELS[m] ?? m).join(", ")}</p>
+                            {comp.missing.length > 0 ? (
+                              <div className="mt-2">
+                                <p className="text-xs font-medium text-amber-800 mb-0.5">To reach 100%, add:</p>
+                                <ul className="text-xs text-gray-600 space-y-0.5 list-disc list-inside">
+                                  {comp.missing.map((m) => (
+                                    <li key={m}>{ATHLETE_COMPLETENESS_LABELS[m] ?? m}</li>
+                                  ))}
+                                </ul>
+                                <p className="text-xs text-gray-500 mt-1">Use &quot;Edit profile&quot; below to fill these in.</p>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-green-600 mt-1">All sections complete — bio, achievements, academics, highlight video, and photo are filled.</p>
                             )}
                           </div>
                         ) : null}

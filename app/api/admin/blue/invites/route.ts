@@ -29,6 +29,7 @@ export async function GET() {
     .from("blue_invites")
     .select("id, token, email, expires_at, used_at, created_at, notes")
     .order("created_at", { ascending: false })
+    .limit(5000)
 
   if (error) {
     if (error.code === "42P01") return NextResponse.json({ error: "Table blue_invites does not exist. Run SQL in docs/blue-membership-tables.md" }, { status: 503 })
@@ -64,15 +65,22 @@ export async function POST(request: NextRequest) {
   }
   if (body.interestId?.trim()) insertPayload.interest_id = body.interestId.trim()
 
-  const { data: row, error } = await admin
-    .from("blue_invites")
-    .insert(insertPayload)
-    .select("id, token, expires_at, email")
-    .single()
-
-  if (error) {
-    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_invites does not exist. Run SQL in docs/blue-membership-tables.md" }, { status: 503 })
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  let row: { id: string; token: string; expires_at: string; email: string | null }
+  try {
+    const result = await admin
+      .from("blue_invites")
+      .insert(insertPayload)
+      .select("id, token, expires_at, email")
+      .single()
+    if (result.error) throw result.error
+    if (!result.data) throw new Error("No data returned from insert")
+    row = result.data
+  } catch (err: unknown) {
+    const e = err as { code?: string; message?: string }
+    if (e?.code === "42P01") return NextResponse.json({ error: "Table blue_invites does not exist. Run SQL in docs/blue-membership-tables.md" }, { status: 503 })
+    if (e?.code === "23503") return NextResponse.json({ error: "Invalid created_by (auth user). Sign in again and retry." }, { status: 400 })
+    if (e?.code === "23505") return NextResponse.json({ error: "Token collision (rare). Please try again." }, { status: 409 })
+    return NextResponse.json({ error: e?.message ?? "Failed to create invite" }, { status: 500 })
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin

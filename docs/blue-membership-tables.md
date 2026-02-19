@@ -188,3 +188,35 @@ alter table public.blue_memberships add column if not exists stripe_customer_id 
 alter table public.blue_memberships add column if not exists stripe_subscription_id text;
 alter table public.blue_memberships alter column status set default 'pending_payment';
 ```
+
+---
+
+## Blue invites flow and testing
+
+### What’s going on (flow)
+
+1. **Admin:** In **Admin → Blue → Invites**, create an invite (optional email). You get a private link like `https://yourapp.com/blue/register?invite=TOKEN`.
+2. **Parent:** Opens that link (incognito, other browser, or after signing out). Fills the Blue registration form (parent + athlete, waiver, optional promo), then either signs in (existing RecruitNC account) or creates an account (email + password). Submits, then completes payment via Stripe and lands on the success page.
+
+### How to test
+
+- **Yes:** Create an invite with your **admin** account, then use your **other (non-admin)** account to go through the flow.
+- **Steps:**
+  1. Log in as admin → **Admin → Blue → Invites** → Create invite (optional email), copy the registration link.
+  2. Open that link in incognito or another browser (or after signing out).
+  3. Either sign in with your other account and submit with password left blank, or enter a new email + password to create an account, then submit.
+  4. Accept waiver, complete form, then Stripe checkout (use test card if Stripe is in test mode).
+
+### Recent behavior fixes
+
+- **Invites list:** Shows more rows (up to 5000). On list failure, a red box shows the API error and a **Retry** button.
+- **Create invite:** Clearer errors in the toast (e.g. table missing, invalid auth, token collision).
+- **Blue register:** If the parent email is already in RecruitNC, we tell them to sign in and return with password blank instead of “user already registered.”
+
+### If it still fails
+
+| What you see | What to do |
+|--------------|------------|
+| **“Unauthorized” or “Admin required”** | Be signed in as an admin (account with `is_admin: true` in `user_profiles`). |
+| **“Table blue_invites does not exist”** | Run the SQL in **Section 1** above in the Supabase SQL Editor. |
+| List is blank or create does nothing | Use **Retry** on the invites page to reload; check the red error box or toast for the exact message. |
