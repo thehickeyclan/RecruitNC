@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -55,9 +55,12 @@ export default function AdminBlueInterestPage() {
   const [createInviteNote, setCreateInviteNote] = useState("")
   const [creatingInvite, setCreatingInvite] = useState(false)
   const { toast } = useToast()
+  const loadIdRef = useRef(0)
+  const lastCountRef = useRef(0)
 
-  const loadSubmissions = useCallback(async (retryCount = 0) => {
-    const maxRetries = 5
+  const loadSubmissions = useCallback(async (retryCount = 0, retryOnEmpty = false) => {
+    const thisLoadId = loadIdRef.current + 1
+    loadIdRef.current = thisLoadId
     setLoading(true)
     setError(null)
     try {
@@ -69,7 +72,7 @@ export default function AdminBlueInterestPage() {
       const data = await res.json()
 
       const shouldRetry =
-        retryCount < maxRetries &&
+        retryCount < 5 &&
         (res.status === 401 ||
           res.status === 403 ||
           res.status === 500 ||
@@ -77,24 +80,35 @@ export default function AdminBlueInterestPage() {
           (res.status === 200 && !data.ok))
       if (shouldRetry) {
         await new Promise((r) => setTimeout(r, 600 + retryCount * 800))
-        return loadSubmissions(retryCount + 1)
+        return loadSubmissions(retryCount + 1, false)
       }
 
       if (!data.ok) {
         throw new Error(data.error || "Failed to load")
       }
       const list = Array.isArray(data.submissions) ? data.submissions : []
+      if (thisLoadId !== loadIdRef.current) return
+
+      if (list.length === 0 && !retryOnEmpty) {
+        await new Promise((r) => setTimeout(r, 1500))
+        if (loadIdRef.current !== thisLoadId) return
+        loadSubmissions(0, true)
+        return
+      }
+      if (list.length === 0 && retryOnEmpty && lastCountRef.current > 0) return
+      lastCountRef.current = list.length
       setSubmissions(list)
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load submissions")
+      if (thisLoadId !== loadIdRef.current) return
+      const err = e instanceof Error ? e : new Error("Failed to load submissions")
+      setError(err.message)
     } finally {
-      setLoading(false)
+      if (thisLoadId === loadIdRef.current) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(() => loadSubmissions(), 600)
-    return () => clearTimeout(t)
+    loadSubmissions()
   }, [loadSubmissions])
 
   useEffect(() => {
@@ -230,7 +244,51 @@ export default function AdminBlueInterestPage() {
           </CardHeader>
           <CardContent>
             {error && (
-              <p className="mb-4 text-sm text-red-600">{error}</p>
+              <>
+                <p className="mb-4 text-sm text-red-600">{error}</p>
+                {error.includes("does not exist") && (
+                  <Card className="mb-6 border-amber-200 bg-amber-50">
+                    <CardHeader>
+                      <CardTitle className="text-base">Create the table in Supabase</CardTitle>
+                      <CardDescription>
+                        In Supabase Dashboard go to SQL Editor and run the following. Then click Refresh above.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <pre className="overflow-x-auto rounded bg-white p-4 text-xs border border-amber-200 whitespace-pre-wrap">
+{`create table if not exists public.blue_express_interest (
+  id uuid primary key default gen_random_uuid(),
+  first_name text not null,
+  last_name text not null,
+  cell_phone text not null,
+  graduation_year text not null,
+  highest_achievement text not null check (highest_achievement in (
+    'all_american', 'state_champion', 'state_placer', 'state_qualifier', 'na'
+  )),
+  high_school text,
+  club text,
+  comments text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.blue_express_interest enable row level security;
+
+create policy "Allow anonymous insert for express interest form"
+  on public.blue_express_interest for insert to anon with check (true);
+
+create policy "Service role can read all"
+  on public.blue_express_interest for select to service_role using (true);
+
+alter table public.blue_express_interest
+  add column if not exists high_school text,
+  add column if not exists club text,
+  add column if not exists comments text,
+  add column if not exists weight_class text;`}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
             {loading ? (
               <div className="flex items-center justify-center py-12">

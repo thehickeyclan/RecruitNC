@@ -32,12 +32,13 @@ export async function GET(_request: NextRequest) {
       .from("blue_express_interest")
       .select("*")
       .order("created_at", { ascending: false })
+      .limit(5000)
 
     if (error) {
       console.error("[Admin API] GET blue_express_interest error:", error?.message, "code:", error?.code)
       if (error.code === "42P01") {
         return NextResponse.json(
-          { ok: false, error: "Table blue_express_interest does not exist. See docs/blue-express-interest-table.md" },
+          { ok: false, error: "Table blue_express_interest does not exist. Run the SQL in docs/blue-express-interest-table.md (or Blue tables doc) in Supabase SQL Editor.", code: "TABLE_MISSING" },
           { status: 503 }
         )
       }

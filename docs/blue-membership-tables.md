@@ -2,6 +2,8 @@
 
 Run this in the **Supabase SQL Editor** to create the tables for Blue invite-only registration and membership tracking.
 
+**Blue Interest Forms (Admin → Blue → Interest):** If that page shows “0” or “table does not exist”, create the `blue_express_interest` table. The admin page shows the SQL when the table is missing, or see **docs/blue-express-interest-table.md**.
+
 ## 1. `blue_invites`
 
 Stores invite tokens for the private registration link. Admin creates an invite; parent uses the link to register.
