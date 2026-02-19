@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "customerId required" }, { status: 400 })
   }
 
-  // Ensure this Stripe customer belongs to a Blue membership where current user is payer
+  // Billing access is only for the payer (payer_user_id). Linking an athlete via parent_athlete_links does NOT grant access to manage their Blue subscription.
   const admin = createAdminClient()
   const { data: membership } = await admin
     .from("blue_memberships")

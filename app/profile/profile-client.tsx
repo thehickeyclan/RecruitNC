@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2 } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -49,6 +49,10 @@ export function ProfileClient() {
   const [linkedLoading, setLinkedLoading] = useState(true)
   const [athleteCompleteness, setAthleteCompleteness] = useState<Record<string, { percent: number; completed: string[]; missing: string[] }>>({})
   const [completenessLoading, setCompletenessLoading] = useState(false)
+  const [athleteSearchQuery, setAthleteSearchQuery] = useState("")
+  const [athleteSearchResults, setAthleteSearchResults] = useState<{ id: string; name: string; highschool: string | null; graduationyear: number | null; alreadyLinked: boolean }[]>([])
+  const [athleteSearchLoading, setAthleteSearchLoading] = useState(false)
+  const [linkAthleteLoading, setLinkAthleteLoading] = useState<string | null>(null)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -69,6 +73,49 @@ export function ProfileClient() {
     const ids = [...new Set([profile.athlete_id, ...linkedAthletes.map((a) => a.id)].filter(Boolean) as string[])]
     if (ids.length > 0) fetchAthleteCompleteness(ids)
   }, [profile?.athlete_id, linkedLoading, linkedAthletes])
+
+  useEffect(() => {
+    if (athleteSearchQuery.trim().length < 2) {
+      setAthleteSearchResults([])
+      return
+    }
+    const t = setTimeout(async () => {
+      setAthleteSearchLoading(true)
+      try {
+        const res = await fetch(`/api/profile/search-athletes?q=${encodeURIComponent(athleteSearchQuery.trim())}`, { credentials: "include" })
+        const data = await res.json().catch(() => ({}))
+        setAthleteSearchResults(data.athletes ?? [])
+      } catch {
+        setAthleteSearchResults([])
+      } finally {
+        setAthleteSearchLoading(false)
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [athleteSearchQuery])
+
+  const linkAthlete = async (athleteId: string) => {
+    setLinkAthleteLoading(athleteId)
+    setError("")
+    try {
+      const res = await fetch("/api/profile/link-athlete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Could not link")
+      setAthleteSearchQuery("")
+      setAthleteSearchResults([])
+      setSuccess(data.message ?? "Athlete linked.")
+      fetchLinkedAthletes()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not link athlete")
+    } finally {
+      setLinkAthleteLoading(null)
+    }
+  }
 
   const fetchLinkedAthletes = async () => {
     setLinkedLoading(true)
@@ -407,6 +454,60 @@ export function ProfileClient() {
                 )}
                 {profile.cell_phone?.trim() && profile.bio?.trim() && (linkedAthletes.length === 0 || linkedAthletes.every((a) => a.profileVerified)) && (blueMemberships.length > 0 || linkedAthletes.length > 0) && (
                   <p className="text-gray-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Link your athlete — search and link as parent */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link2 className="h-5 w-5" />
+                  Link your athlete
+                </CardTitle>
+                <CardDescription>Search for your wrestler to link them to your account. They’ll appear under Your athletes.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder="Search by name (e.g. Liam Hickey)"
+                    value={athleteSearchQuery}
+                    onChange={(e) => setAthleteSearchQuery(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                {athleteSearchLoading && <p className="text-xs text-gray-500">Searching…</p>}
+                {!athleteSearchLoading && athleteSearchQuery.trim().length >= 2 && athleteSearchResults.length === 0 && (
+                  <p className="text-xs text-gray-500">No athletes found. Try a different name.</p>
+                )}
+                {!athleteSearchLoading && athleteSearchResults.length > 0 && (
+                  <ul className="space-y-2 max-h-48 overflow-y-auto rounded border bg-gray-50/50 p-2">
+                    {athleteSearchResults.map((a) => (
+                      <li key={a.id} className="flex items-center justify-between gap-2 text-sm">
+                        <span>
+                          <span className="font-medium text-gray-900">{a.name}</span>
+                          {(a.highschool || a.graduationyear) && (
+                            <span className="text-gray-500 ml-1">
+                              {[a.highschool, a.graduationyear != null ? `’${String(a.graduationyear).slice(-2)}` : null].filter(Boolean).join(" · ")}
+                            </span>
+                          )}
+                        </span>
+                        {a.alreadyLinked ? (
+                          <span className="text-xs text-green-600 shrink-0">Linked</span>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={linkAthleteLoading === a.id}
+                            onClick={() => linkAthlete(a.id)}
+                          >
+                            {linkAthleteLoading === a.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Link"}
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </CardContent>
             </Card>
