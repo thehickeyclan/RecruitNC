@@ -75,6 +75,8 @@ export async function GET(_request: NextRequest) {
     console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
     const response = NextResponse.json({ ok: true, submissions, count: submissions.length })
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+    response.headers.set("Pragma", "no-cache")
+    response.headers.set("Expires", "0")
     return response
   } catch (err: unknown) {
     console.error("[Admin API] blue-express-interest:", err)

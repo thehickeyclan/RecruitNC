@@ -33,7 +33,11 @@ export async function GET() {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 })
     }
 
-    return NextResponse.json(profile)
+    const row = profile as Record<string, unknown>
+    return NextResponse.json({
+      ...row,
+      name: row.full_name ?? row.name ?? "",
+    })
   } catch (error: any) {
     console.error("[v0] Profile API: Unexpected error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

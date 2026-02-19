@@ -66,6 +66,12 @@ alter table public.parent_athlete_links enable row level security;
 
 create policy "Service role full access parent_athlete_links"
   on public.parent_athlete_links for all to service_role using (true) with check (true);
+
+-- Authenticated users can link themselves as parent (so "Link your athlete" works without service role)
+create policy "Authenticated insert own parent_athlete_links"
+  on public.parent_athlete_links for insert to authenticated with check (auth.uid() = user_id);
+create policy "Authenticated select own parent_athlete_links"
+  on public.parent_athlete_links for select to authenticated using (auth.uid() = user_id);
 ```
 
 ## 3. `blue_memberships`

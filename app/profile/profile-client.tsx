@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
+import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
 import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2 } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -204,7 +205,10 @@ export function ProfileClient() {
       if (response.ok) {
         const data = await response.json()
         console.log("[v0] Profile data received:", !!data)
-        setProfile(data)
+        setProfile({
+          ...data,
+          name: data.name ?? data.full_name ?? "",
+        })
       } else {
         const errorText = await response.text()
         console.error("[v0] Profile API error:", response.status, errorText)
@@ -243,7 +247,7 @@ export function ProfileClient() {
         },
         body: JSON.stringify({
           name: profile.name,
-          cell_phone: profile.cell_phone,
+          cell_phone: normalizePhoneForStorage(profile.cell_phone),
           location: profile.location,
           bio: profile.bio,
         }),
@@ -251,6 +255,7 @@ export function ProfileClient() {
 
       if (response.ok) {
         setSuccess("Profile updated successfully!")
+        fetchProfile()
       } else {
         const data = await response.json()
         setError(data.error || "Failed to update profile")
@@ -390,7 +395,7 @@ export function ProfileClient() {
                           id="cell_phone"
                           type="tel"
                           value={profile.cell_phone || ""}
-                          onChange={(e) => handleInputChange("cell_phone", e.target.value)}
+                          onChange={(e) => handleInputChange("cell_phone", formatPhoneInput(e.target.value))}
                           placeholder="(555) 123-4567"
                         />
                       </div>

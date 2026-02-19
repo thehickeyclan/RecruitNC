@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 async function handleUpdate(request: Request) {
   const supabase = await createClient()
@@ -19,7 +20,7 @@ async function handleUpdate(request: Request) {
   const updatePayload: Record<string, unknown> = {}
   if (name !== undefined) updatePayload.full_name = name
   if (role !== undefined) updatePayload.role = role
-  if (cell_phone !== undefined) updatePayload.cell_phone = cell_phone
+  if (cell_phone !== undefined) updatePayload.cell_phone = normalizePhoneForStorage(cell_phone)
   if (location !== undefined) updatePayload.location = location
   if (bio !== undefined) updatePayload.bio = bio
 
@@ -38,10 +39,10 @@ async function handleUpdate(request: Request) {
   if (error) {
     const msg = String(error.message || "").toLowerCase()
     const maybeMissingColumn = msg.includes("column") && (msg.includes("does not exist") || msg.includes("undefined"))
-    if (maybeMissingColumn && (updatePayload.location !== undefined || updatePayload.bio !== undefined || updatePayload.role !== undefined)) {
+      if (maybeMissingColumn && (updatePayload.location !== undefined || updatePayload.bio !== undefined || updatePayload.role !== undefined)) {
       const safePayload: Record<string, unknown> = {}
       if (name !== undefined) safePayload.full_name = name
-      if (cell_phone !== undefined) safePayload.cell_phone = cell_phone
+      if (cell_phone !== undefined) safePayload.cell_phone = normalizePhoneForStorage(cell_phone)
       if (Object.keys(safePayload).length > 0) {
         const retry = await supabase
           .from("user_profiles")

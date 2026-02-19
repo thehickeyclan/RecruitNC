@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { formatPhoneInput, normalizePhoneForStorage } from "@/lib/phone-format"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -108,7 +109,7 @@ export default function BlueRegisterPage() {
             password: parent.password || undefined,
             firstName: parent.firstName,
             lastName: parent.lastName,
-            phone: parent.phone || undefined,
+            phone: parent.phone ? normalizePhoneForStorage(parent.phone) : undefined,
           },
           athlete: {
             firstName: athlete.firstName,
@@ -303,7 +304,8 @@ export default function BlueRegisterPage() {
                   id="parentPhone"
                   type="tel"
                   value={parent.phone}
-                  onChange={(e) => setParent((p) => ({ ...p, phone: e.target.value }))}
+                  onChange={(e) => setParent((p) => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
+                  placeholder="(555) 123-4567"
                   disabled={loading}
                 />
               </div>

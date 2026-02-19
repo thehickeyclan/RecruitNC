@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 // Match athlete-utils mapAthleteToDb: admin uses contactEmail, phone (camelCase)
 const ADD_COLUMNS_SQL = `
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       achievements: formData.achievements ? [formData.achievements] : [],
       photourl: formData.photoUrl || null,
       contactEmail: formData.email || null,
-      phone: formData.phone || null,
+      phone: formData.phone ? normalizePhoneForStorage(formData.phone) : null,
       claimed_by_user_id: user.id,
       claimed_at: now,
       profile_verified: true,

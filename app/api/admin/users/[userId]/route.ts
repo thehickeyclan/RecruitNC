@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 export const dynamic = "force-dynamic"
 
@@ -43,16 +44,7 @@ export async function PATCH(
       },
     )
 
-    // Format phone number if provided
-    let formattedPhone = cell_phone
-    if (cell_phone) {
-      const cleaned = cell_phone.replace(/\D/g, "")
-      if (cleaned.length === 10) {
-        formattedPhone = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
-      } else if (cleaned.length === 11 && cleaned[0] === "1") {
-        formattedPhone = `(${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
-      }
-    }
+    const formattedPhone = cell_phone !== undefined ? normalizePhoneForStorage(cell_phone) : undefined
 
     // Build update object - match original working pattern
     const updateData: any = {}

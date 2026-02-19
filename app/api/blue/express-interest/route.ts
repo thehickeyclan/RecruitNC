@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 const ACHIEVEMENT_VALUES = ["all_american", "state_champion", "state_placer", "state_qualifier", "na"] as const
 
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
     const row: Record<string, unknown> = {
       first_name: firstName,
       last_name: lastName,
-      cell_phone: cell,
+      cell_phone: normalizePhoneForStorage(cell),
       graduation_year: graduationYear,
       highest_achievement: highestAchievement,
       high_school: highSchool,

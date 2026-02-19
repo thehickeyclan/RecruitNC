@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
         full_name: `${parent.firstName} ${parent.lastName}`.trim(),
         first_name: parent.firstName.trim(),
         last_name: parent.lastName.trim(),
-        cell_phone: parent.phone?.trim() || null,
+        cell_phone: parent.phone ? normalizePhoneForStorage(parent.phone) : null,
         profile_type: "parent",
         role: "user",
         is_admin: false,

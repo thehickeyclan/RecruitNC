@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
   }
 
-  const { error: linkErr } = await admin.from("parent_athlete_links").upsert(
+  // Insert with the user's client so RLS allows it (policy: authenticated can insert where user_id = auth.uid())
+  const { error: linkErr } = await supabase.from("parent_athlete_links").upsert(
     { user_id: user.id, athlete_id: athleteId },
     { onConflict: "user_id,athlete_id", ignoreDuplicates: true }
   )

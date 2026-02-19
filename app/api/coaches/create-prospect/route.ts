@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
         gender: gender || "Male",
         birthdate: birthdate || null,
         contactEmail: email || null,
-        phone: phone || null,
+        phone: phone ? normalizePhoneForStorage(phone) : null,
         socialMedia: instagram ? { instagram: instagram } : null,
         recruiting_status: "Prospect",
         is_nc_athlete: isNCathlete,

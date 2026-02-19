@@ -13,18 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-function formatPhoneToDisplay(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(-10)
-  if (digits.length < 3) return digits
-  if (digits.length < 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-}
-
-function formatPhoneForSubmit(value: string): string {
-  const digits = value.replace(/\D/g, "").slice(-10)
-  if (digits.length !== 10) return value
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-}
+import { formatPhoneInput, normalizePhoneForStorage } from "@/lib/phone-format"
 
 const ACHIEVEMENT_OPTIONS = [
   { value: "all_american", label: "All American" },
@@ -86,7 +75,7 @@ export function BlueExpressInterestForm() {
         body: JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          cell: formatPhoneForSubmit(cell.trim()),
+          cell: normalizePhoneForStorage(cell.trim()),
           graduationYear,
           highestAchievement,
           weightClass: weightClass && weightClass !== "none" ? weightClass : undefined,
@@ -178,7 +167,7 @@ export function BlueExpressInterestForm() {
           id="blue-cell"
           type="tel"
           value={cell}
-          onChange={(e) => setCell(formatPhoneToDisplay(e.target.value))}
+          onChange={(e) => setCell(formatPhoneInput(e.target.value))}
           className="border-[#03154C]/30 bg-white"
           placeholder="(555) 123-4567"
           disabled={isSubmitting}

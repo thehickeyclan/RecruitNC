@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 import { normalizeEntityName } from "@/lib/logo-mappings-normalize"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 
 export const dynamic = "force-dynamic"
 
@@ -16,12 +17,6 @@ async function requireAdmin() {
   return { ok: true as const }
 }
 
-function formatPhone(val: string | null | undefined): string {
-  if (!val) return "—"
-  const digits = val.replace(/\D/g, "").slice(-10)
-  if (digits.length === 10) return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
-  return val
-}
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
   if (!graduationYear || isNaN(graduationYear)) return []
@@ -176,7 +171,7 @@ export async function GET(request: NextRequest) {
         weight: a.weight ?? a.weightclass ?? null,
         college,
         college_logo_url: college ? logoMap[college] ?? null : null,
-        cell: college ? "—" : formatPhone(a.cell_number ?? a.phone ?? a.cell),
+        cell: college ? "—" : (formatPhoneForDisplay(a.cell_number ?? a.phone ?? a.cell) || "—"),
         academic_gpa: a.academic_gpa,
         nhsca_2023_record: nh2023?.record || a.nhsca_2023_record,
         nhsca_2023_placement: nh2023?.placement || a.nhsca_2023_placement,

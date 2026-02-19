@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mapAthleteToDb } from "@/lib/athlete-utils"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 // Normalize for comparison: lowercase, no underscores (so careerRecord and career_record both match)
 const norm = (s: string) => s.toLowerCase().replace(/_/g, "")
@@ -155,7 +156,7 @@ export async function POST(
       // Merge contact fields for mixed updates (e.g. contact + bio)
       if (updates.cell !== undefined || updates.cell_number !== undefined) {
         const val = updates.cell ?? updates.cell_number
-        updatePayload[phoneCol] = val === "" ? null : val
+        updatePayload[phoneCol] = val === "" ? null : normalizePhoneForStorage(val)
         if (!payloadKeys.includes(phoneCol)) payloadKeys.push(phoneCol)
       }
       if (updates.email !== undefined || updates.contact_email !== undefined || updates.email_address !== undefined) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 
 export const dynamic = "force-dynamic"
 
@@ -78,7 +79,7 @@ export async function GET() {
     const rows = submissions.map((row: any) => [
       escapeCsv(row.first_name),
       escapeCsv(row.last_name),
-      escapeCsv(row.cell_phone),
+      escapeCsv(formatPhoneForDisplay(row.cell_phone)),
       escapeCsv(row.graduation_year),
       escapeCsv(ACHIEVEMENT_LABELS[row.highest_achievement] ?? row.highest_achievement),
       escapeCsv(row.weight_class),

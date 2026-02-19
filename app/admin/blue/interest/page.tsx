@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { RefreshCw, Loader2, Users, ArrowLeft, FileSpreadsheet, Mail, Check } from "lucide-react"
 
 const ACHIEVEMENT_LABELS: Record<string, string> = {
@@ -56,11 +57,11 @@ export default function AdminBlueInterestPage() {
   const { toast } = useToast()
 
   const loadSubmissions = useCallback(async (retryCount = 0) => {
-    const maxRetries = 4
+    const maxRetries = 5
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/admin/blue-express-interest", {
+      const res = await fetch(`/api/admin/blue-express-interest?t=${Date.now()}`, {
         credentials: "include",
         cache: "no-store",
         headers: { "Cache-Control": "no-cache, no-store, must-revalidate", Pragma: "no-cache" },
@@ -69,9 +70,13 @@ export default function AdminBlueInterestPage() {
 
       const shouldRetry =
         retryCount < maxRetries &&
-        (res.status === 401 || res.status === 403 || res.status === 500 || (res.status === 200 && !data.ok))
+        (res.status === 401 ||
+          res.status === 403 ||
+          res.status === 500 ||
+          res.status === 503 ||
+          (res.status === 200 && !data.ok))
       if (shouldRetry) {
-        await new Promise((r) => setTimeout(r, 500 + retryCount * 600))
+        await new Promise((r) => setTimeout(r, 600 + retryCount * 800))
         return loadSubmissions(retryCount + 1)
       }
 
@@ -88,19 +93,19 @@ export default function AdminBlueInterestPage() {
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(() => loadSubmissions(), 400)
+    const t = setTimeout(() => loadSubmissions(), 600)
     return () => clearTimeout(t)
   }, [loadSubmissions])
 
   useEffect(() => {
     const onFocus = () => {
-      if (document.visibilityState === "visible" && error && !loading) {
+      if (document.visibilityState === "visible" && !loading) {
         loadSubmissions()
       }
     }
     window.addEventListener("visibilitychange", onFocus)
     return () => window.removeEventListener("visibilitychange", onFocus)
-  }, [loadSubmissions, error, loading])
+  }, [loadSubmissions, loading])
 
   const handleExportSpreadsheet = async () => {
     setExporting(true)
@@ -279,7 +284,7 @@ export default function AdminBlueInterestPage() {
                           {row.club || "—"}
                         </TableCell>
                         <TableCell>{row.weight_class ? `${row.weight_class} lbs` : "—"}</TableCell>
-                        <TableCell>{row.cell_phone}</TableCell>
+                        <TableCell>{formatPhoneForDisplay(row.cell_phone)}</TableCell>
                         <TableCell>{row.graduation_year}</TableCell>
                         <TableCell>
                           {ACHIEVEMENT_LABELS[row.highest_achievement] ?? row.highest_achievement}

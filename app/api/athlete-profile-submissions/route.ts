@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 // No review process: create athlete in athletes table immediately and publish.
 // If an athlete with same name + graduation year (and school) already exists, we link the user to that profile instead of creating a duplicate.
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       wrestling_club: body.wrestlingClub || null,
       location: body.location || null,
       contact_email: body.email,
-      phone: body.phone || null,
+      phone: body.phone ? normalizePhoneForStorage(body.phone) : null,
       bio_headline: body.bioHeadline || null,
       bio: body.bio || null,
       achievements: body.achievements || null,

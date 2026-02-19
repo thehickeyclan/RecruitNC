@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
           first_name: body.firstName.trim(),
           last_name: body.lastName.trim(),
           email: body.email.trim(),
-          cell_phone: body.cellPhone.trim(),
+          cell_phone: body.cellPhone?.trim() ? normalizePhoneForStorage(body.cellPhone.trim()) : "",
           high_school: body.highSchool.trim(),
           club_team: body.clubTeam.trim(),
           graduation_year: body.graduationYear,

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -58,18 +59,6 @@ type UserProfile = {
   school_name: string | null
 }
 
-// Format phone to (XXX) XXX-XXXX
-function formatPhone(phone: string | null): string {
-  if (!phone) return "N/A"
-  const cleaned = phone.replace(/\D/g, "")
-  if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
-  }
-  if (cleaned.length === 11 && cleaned[0] === "1") {
-    return `(${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
-  }
-  return phone
-}
 
 // Relative time formatting
 function getRelativeTime(date: string | null): string {
@@ -551,7 +540,7 @@ export default function UsersDashboardPage() {
           </Badge>
         </td>
         <td className="px-4 py-3 text-sm">
-          {formatPhone(user.cell_phone)}
+          {formatPhoneForDisplay(user.cell_phone) || "N/A"}
         </td>
         {isCoach && (
           <>
@@ -1030,7 +1019,7 @@ export default function UsersDashboardPage() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          {formatPhone(user.cell_phone)}
+                          {formatPhoneForDisplay(user.cell_phone) || "N/A"}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-500">
                           {getRelativeTime(user.last_sign_in_at)}
