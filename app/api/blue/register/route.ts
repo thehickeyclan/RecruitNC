@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       return NextResponse.json({
-        error: "Sign in with this email first, or provide a password (min 8 characters) to create an account.",
+        error: "You're not signed in, or this email doesn't match your account. Sign in first and return to this link (then leave password blank), or enter a password here to create a new account.",
       }, { status: 400 })
     }
 

@@ -90,7 +90,7 @@ export default function BlueRegisterPage() {
       .then((data) => {
         if (cancelled) return
         setValid(data.valid === true)
-        if (data.email) setParent((p) => ({ ...p, email: data.email }))
+        if (data.email && !user?.email) setParent((p) => ({ ...p, email: data.email }))
         setError(data.error || null)
       })
       .catch(() => {
@@ -98,7 +98,7 @@ export default function BlueRegisterPage() {
       })
       .finally(() => { if (!cancelled) setValidating(false) })
     return () => { cancelled = true }
-  }, [token])
+  }, [token, user?.email])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,6 +114,7 @@ export default function BlueRegisterPage() {
       const res = await fetch("/api/blue/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           token,
           waiverAccepted,
@@ -255,19 +256,22 @@ export default function BlueRegisterPage() {
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-[#03154C]">NC United Blue — Registration</h1>
-          <p className="text-gray-600 mt-1">One form for everyone. New or existing RecruitNC accounts, new or existing athlete profiles — we’ll link them.</p>
+          <p className="text-gray-600 mt-1">
+            {user ? "Fill in your wrestler’s info below." : "Enter your info, then your wrestler’s. Have an account? Sign in first — you’ll come back here."}
+          </p>
         </div>
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Parent / guardian</CardTitle>
-            <CardDescription>Your account will manage this athlete’s Blue membership.</CardDescription>
+            <CardDescription>
+              {user ? (
+                <>Signed in as <strong>{user.email}</strong>. This account will manage Blue.</>
+              ) : (
+                <>Your account will manage this athlete’s Blue membership.</>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {user && (
-              <div className="mb-6 rounded-md bg-[#03154C]/10 border border-[#03154C]/30 p-3 text-sm text-[#03154C]">
-                You’re signed in as <strong>{user.email}</strong>. We’ll use this account — leave password blank.
-              </div>
-            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -302,23 +306,23 @@ export default function BlueRegisterPage() {
                   disabled={loading}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="parentPassword">Password (leave blank if you’re signed in)</Label>
-                <Input
-                  id="parentPassword"
-                  type="password"
-                  value={parent.password}
-                  onChange={(e) => setParent((p) => ({ ...p, password: e.target.value }))}
-                  placeholder={user ? "Leave blank — you're signed in" : "New account: min 8 characters"}
-                  disabled={loading}
-                  minLength={user ? undefined : 8}
-                />
-                {!user && (
+              {!user && (
+                <div className="space-y-2">
+                  <Label htmlFor="parentPassword">Password</Label>
+                  <Input
+                    id="parentPassword"
+                    type="password"
+                    value={parent.password}
+                    onChange={(e) => setParent((p) => ({ ...p, password: e.target.value }))}
+                    placeholder="Min 8 characters"
+                    disabled={loading}
+                    minLength={8}
+                  />
                   <p className="text-xs text-gray-500">
-                    Already have an account? <Link href={signInUrl} className="text-[#03154C] font-medium hover:underline">Sign in</Link>, then return to this link and leave password blank.
+                    Have a RecruitNC account? <Link href={signInUrl} className="text-[#03154C] font-medium hover:underline">Sign in first</Link> — you’ll return to this page.
                   </p>
-                )}
-              </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="parentPhone">Phone (optional)</Label>
                 <Input
@@ -427,19 +431,22 @@ export default function BlueRegisterPage() {
               {error && (
                 <div className="space-y-2">
                   <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
-                  {(error.includes("already registered") || error.includes("Sign in first")) && token && (
+                  {(error.includes("already registered") || error.includes("Sign in") || error.includes("not signed in")) && token && (
                     <Link href={signInUrl}>
                       <Button type="button" variant="outline" className="w-full border-[#03154C] text-[#03154C] hover:bg-[#03154C]/10">
-                        Sign in, then return here (leave password blank)
+                        Sign in, then return here
                       </Button>
                     </Link>
                   )}
                 </div>
               )}
+              {!user && !parent.password && (
+                <p className="text-sm text-gray-500">Enter a password above, or sign in to use your existing account.</p>
+              )}
               <Button
                 type="submit"
                 className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white"
-                disabled={loading || !waiverAccepted}
+                disabled={loading || !waiverAccepted || (!user && !parent.password)}
               >
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting...</> : "Complete registration"}
               </Button>
