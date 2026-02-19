@@ -29,7 +29,9 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     '/auth/signin',
     '/auth/signup',
+    '/auth/forgot-password',
     '/auth/reset-password',
+    '/auth/verification',
     '/auth/clear-session',
     '/auth/clear-cooldown',
     '/auth/callback',

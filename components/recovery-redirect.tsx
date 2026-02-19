@@ -23,10 +23,12 @@ export function RecoveryRedirect() {
       window.location.replace(`/auth/reset-password${window.location.hash}`)
       return
     }
+    // Send code/token_hash to reset page so it can exchange client-side (server callback often fails redirect_uri)
     if (code || (tokenHash && type === "recovery")) {
       const params = new URLSearchParams(url.searchParams)
-      params.set("next", "/auth/reset-password")
-      window.location.replace(`/auth/callback?${params.toString()}`)
+      params.delete("next")
+      const qs = params.toString()
+      window.location.replace(`/auth/reset-password${qs ? `?${qs}` : ""}`)
     }
   }, [])
   return null

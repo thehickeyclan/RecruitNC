@@ -417,13 +417,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
-    // Send user to callback with next=/auth/reset-password so they land on reset page (not homepage).
-    // Email link will be: /auth/callback?next=/auth/reset-password&code=... (or token_hash&type=recovery).
+    // Send user straight to reset page so the link is /auth/reset-password?code=... (client exchanges there).
     const base =
       typeof window !== "undefined"
         ? window.location.origin
         : process.env.NEXT_PUBLIC_SITE_URL || ""
-    const redirectUrl = `${base}/auth/callback?next=/auth/reset-password`
+    const redirectUrl = `${base}/auth/reset-password`
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
