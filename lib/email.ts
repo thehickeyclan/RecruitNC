@@ -1,7 +1,62 @@
 /**
  * Email utility for sending transactional emails
- * Uses Resend for email delivery
+ * Uses Resend for email delivery (from: info@ncwrestlingunited.com)
  */
+
+const FROM_BLUE = "NC Wrestling United <info@ncwrestlingunited.com>"
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
+
+export async function sendBlueInviteEmail(to: string, registerUrl: string): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping Blue invite email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #13294B 0%, #0D1A4D 100%); padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Blue</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>You’re invited to join <strong>NC United Blue</strong> — our invite-only wrestling program.</p>
+    <p>Use the link below to complete registration and payment. The link is private and will expire in 14 days.</p>
+    <p style="margin: 24px 0;">
+      <a href="${registerUrl}" style="display: inline-block; background: #13294B; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Register for Blue</a>
+    </p>
+    <p style="color: #6b7280; font-size: 14px;">If the button doesn’t work, copy and paste this link into your browser:</p>
+    <p style="color: #6b7280; font-size: 13px; word-break: break-all;">${registerUrl}</p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="color: #6b7280; font-size: 14px;">Questions? Reply to this email or contact <a href="mailto:info@ncwrestlingunited.com" style="color: #13294B;">info@ncwrestlingunited.com</a></p>
+  </div>
+</body>
+</html>
+    `
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [to.trim()],
+      subject: "You're invited to join NC United Blue",
+      html,
+    })
+
+    if (result.error) {
+      console.error("Resend Blue invite error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendBlueInviteEmail:", err)
+    return { success: false, error: message }
+  }
+}
 
 interface SendEditRequestNotificationParams {
   to: string
@@ -92,7 +147,7 @@ export async function sendEditRequestNotification({
     `
 
     const result = await resend.emails.send({
-      from: "NC Wrestling United <info@ncwrestlingunited.com>",
+      from: FROM_BLUE,
       to: [to],
       subject,
       html,

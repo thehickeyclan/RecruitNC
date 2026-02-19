@@ -8,7 +8,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen
+  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard
 } from "lucide-react"
 
 interface AdminStats {
@@ -228,10 +228,10 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">National Team Submissions</span>
               </Button>
             </Link>
-            <Link href="/admin/blue-interest">
+            <Link href="/admin/blue">
               <Button className="w-full h-20 bg-gradient-to-br from-[#03154C] to-[#0a2571] hover:from-[#0a2571] hover:to-[#03154C] text-white shadow-lg flex flex-col items-center justify-center gap-2">
-                <FileText className="h-6 w-6" />
-                <span className="text-sm font-semibold">Blue Interest Forms</span>
+                <CreditCard className="h-6 w-6" />
+                <span className="text-sm font-semibold">Blue Program</span>
               </Button>
             </Link>
             <Link href="/admin/college-recruiting-guide">
@@ -334,13 +334,13 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* Blue Interest Forms */}
-            <Link href="/admin/blue-interest">
-              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+            {/* Blue Program — hub for subscriptions, invites, reports, promo codes, images, interest */}
+            <Link href="/admin/blue">
+              <Card className="border-t-4 border-t-[#03154C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <FileText className="h-10 w-10 text-[#D3B574] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Blue Interest Forms</h3>
-                  <p className="text-xs text-gray-600">State qualifier express interest</p>
+                  <CreditCard className="h-10 w-10 text-[#03154C] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">Blue Program</h3>
+                  <p className="text-xs text-gray-600">Memberships, invites, reports, images, interest</p>
                 </CardContent>
               </Card>
             </Link>
@@ -429,17 +429,6 @@ export default function AdminDashboard() {
                   <Database className="h-10 w-10 text-[#13294B] mb-3" />
                   <h3 className="font-bold text-[#13294B] mb-1">College division mappings</h3>
                   <p className="text-xs text-gray-600">Seed division lookup table</p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            {/* Blue Page Images */}
-            <Link href="/admin/blue">
-              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
-                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Settings className="h-10 w-10 text-[#D3B574] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Blue Page Images</h3>
-                  <p className="text-xs text-gray-600">Upload & edit banner</p>
                 </CardContent>
               </Card>
             </Link>

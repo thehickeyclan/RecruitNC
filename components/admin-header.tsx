@@ -47,9 +47,9 @@ const adminNavItems = [
     icon: "🎨",
   },
   {
-    title: "Blue Page",
+    title: "Blue Program",
     href: "/admin/blue",
-    icon: "🖼️",
+    icon: "💳",
   },
 ]
 

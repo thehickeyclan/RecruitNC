@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest) {
     }
 
     const adminClient = createAdminClient()
-    const { data, error } = await adminClient
+    const { data: rows, error } = await adminClient
       .from("blue_express_interest")
       .select("*")
       .order("created_at", { ascending: false })
@@ -44,7 +44,34 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
 
-    const submissions = data ?? []
+    const list = rows ?? []
+    const ids = list.map((r: { id: string }) => r.id)
+
+    // If blue_invites has interest_id, attach invite sent / enrolled status per submission
+    let invitesByInterest: Record<string, { invite_id: string; used_at: string | null }> = {}
+    if (ids.length > 0) {
+      const { data: invites, error: invError } = await adminClient
+        .from("blue_invites")
+        .select("id, interest_id, used_at")
+        .in("interest_id", ids)
+      if (!invError && Array.isArray(invites)) {
+        for (const inv of invites) {
+          const iid = (inv as { interest_id?: string }).interest_id
+          if (iid) invitesByInterest[iid] = { invite_id: (inv as { id: string }).id, used_at: (inv as { used_at: string | null }).used_at }
+        }
+      }
+      // If interest_id column doesn't exist, invError is set; submissions still return without link
+    }
+
+    const submissions = list.map((row: Record<string, unknown> & { id: string }) => {
+      const link = invitesByInterest[row.id]
+      return {
+        ...row,
+        invite_id: link?.invite_id ?? null,
+        invite_sent: !!link,
+        enrolled: !!link?.used_at,
+      }
+    })
     console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
     const response = NextResponse.json({ ok: true, submissions, count: submissions.length })
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")

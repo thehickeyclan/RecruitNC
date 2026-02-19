@@ -53,21 +53,51 @@ export async function getBlueCurrentMembers(): Promise<BlueCurrentMember[]> {
   try {
     const supabase = createAdminClient()
 
-    // Use select("*") so we get the team column whatever its DB name (ncUnitedTeam vs ncunitedteam vs nc_united_team)
-    const { data, error } = await supabase
-      .from("athletes")
-      .select("*")
-      .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
-      .lte("graduationyear", CURRENT_YEAR + 6)
-      .order("graduationyear", { ascending: true })
-      .order("name", { ascending: true })
+    // Roster = paid members only: athletes with an active blue_membership (status = 'active')
+    const { data: membershipRows, error: membershipError } = await supabase
+      .from("blue_memberships")
+      .select("athlete_id")
+      .eq("status", "active")
+
+    let athleteIds: string[] = []
+    if (!membershipError && membershipRows?.length) {
+      athleteIds = [...new Set(membershipRows.map((r) => r.athlete_id).filter(Boolean))]
+    }
+    // Fallback: if no blue_memberships table or no rows, use legacy logic (athletes with ncUnitedTeam = blue)
+    const useLegacy = athleteIds.length === 0
+
+    let data: Record<string, unknown>[] | null = null
+    let error: { message: string } | null = null
+
+    if (useLegacy) {
+      const result = await supabase
+        .from("athletes")
+        .select("*")
+        .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
+        .lte("graduationyear", CURRENT_YEAR + 6)
+        .order("graduationyear", { ascending: true })
+        .order("name", { ascending: true })
+      data = result.data
+      error = result.error
+    } else {
+      const result = await supabase
+        .from("athletes")
+        .select("*")
+        .in("id", athleteIds)
+        .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
+        .lte("graduationyear", CURRENT_YEAR + 6)
+        .order("graduationyear", { ascending: true })
+        .order("name", { ascending: true })
+      data = result.data
+      error = result.error
+    }
 
     if (error) {
       console.error("[blue-current-members] query error:", error)
       return []
     }
 
-    const blueRows = (data ?? []).filter(isBlue)
+    const blueRows = useLegacy ? (data ?? []).filter((row) => isBlue(row as Record<string, unknown>)) : (data ?? [])
     const members: BlueCurrentMember[] = []
 
     for (const row of blueRows) {
