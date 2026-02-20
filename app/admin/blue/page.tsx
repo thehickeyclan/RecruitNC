@@ -28,8 +28,8 @@ const sections = [
   },
   {
     href: "/admin/blue/promo-codes",
-    title: "Scholarship codes",
-    description: "Create and manage promo codes for checkout.",
+    title: "Scholarship / promo codes",
+    description: "Create 100% off, 20% family discount, or other codes. Applied at checkout.",
     icon: Ticket,
   },
   {

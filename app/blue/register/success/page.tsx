@@ -4,6 +4,8 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "https://app.ncwrestlingunited.com")
+
 export default function BlueRegisterSuccessPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -57,12 +59,12 @@ export default function BlueRegisterSuccessPage() {
               </p>
             </div>
             <div className="border-t pt-4 flex flex-col gap-2">
-              <Link href="/auth/signin">
+              <a href={`${APP_URL}/auth/signin`} target="_top" rel="noopener noreferrer">
                 <Button className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white">Sign in to RecruitNC</Button>
-              </Link>
-              <Link href="/blue">
+              </a>
+              <a href={`${APP_URL}/blue`} target="_top" rel="noopener noreferrer">
                 <Button variant="outline" className="w-full">Back to Blue program</Button>
-              </Link>
+              </a>
             </div>
           </CardContent>
         </Card>

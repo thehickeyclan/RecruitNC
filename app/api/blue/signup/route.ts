@@ -98,16 +98,19 @@ export async function POST(request: NextRequest) {
     }
 
     let stripeCouponId: string | null = null
+    let promoIdToIncrement: string | null = null
     if (promoCodeRaw) {
       const now = new Date().toISOString()
       const { data: promos } = await admin
         .from("blue_promo_codes")
-        .select("id, stripe_coupon_id, max_redemptions, redemptions_count, valid_until")
+        .select("id, stripe_coupon_id, max_redemptions, redemptions_count, valid_from, valid_until")
         .ilike("code", promoCodeRaw.trim())
-        .lte("valid_from", now)
-      const promo = (promos ?? []).find((p) => !p.valid_until || p.valid_until >= now)
-      if (promo?.stripe_coupon_id && (promo.max_redemptions == null || (promo.redemptions_count ?? 0) < promo.max_redemptions)) {
+      const promo = (promos ?? []).find(
+        (p) => (!p.valid_from || p.valid_from <= now) && (!p.valid_until || p.valid_until >= now) && (p.max_redemptions == null || (p.redemptions_count ?? 0) < p.max_redemptions)
+      )
+      if (promo?.stripe_coupon_id) {
         stripeCouponId = promo.stripe_coupon_id
+        promoIdToIncrement = promo.id
       }
     }
 
@@ -128,6 +131,11 @@ export async function POST(request: NextRequest) {
     const session = await stripe.checkout.sessions.create(sessionParams)
     if (!session.url) return NextResponse.json({ error: "Could not create checkout session." }, { status: 500 })
 
+    if (promoIdToIncrement) {
+      const { data: row } = await admin.from("blue_promo_codes").select("redemptions_count").eq("id", promoIdToIncrement).single()
+      const next = (row?.redemptions_count ?? 0) + 1
+      await admin.from("blue_promo_codes").update({ redemptions_count: next }).eq("id", promoIdToIncrement)
+    }
     return NextResponse.json({ success: true, checkoutUrl: session.url })
   } catch (e) {
     console.error("[blue/signup]", e)

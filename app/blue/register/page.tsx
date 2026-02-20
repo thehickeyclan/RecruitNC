@@ -15,8 +15,8 @@ import { Loader2 } from "lucide-react"
 
 const NAVY = "#03154C"
 const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
-/** NC United Blue shirt image (same as on Blue page). */
-const BLUE_SHIRT_IMAGE_URL = "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/eNZzhlbUPjwSpRAahxEPt-Blue%20Team%20Photo.png"
+/** Fallback if API fails — matches Blue page default. */
+const BLUE_SHIRT_FALLBACK = "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/eNZzhlbUPjwSpRAahxEPt-Blue%20Team%20Photo.png"
 
 const WAIVER_TEXT = `WAIVER AND RELEASE OF LIABILITY
 
@@ -67,6 +67,14 @@ export default function BlueRegisterPage() {
   const [promoCode, setPromoCode] = useState("")
   const [waiverAccepted, setWaiverAccepted] = useState(false)
   const [tshirtSize, setTshirtSize] = useState<string>("")
+  const [blueShirtUrl, setBlueShirtUrl] = useState<string>(BLUE_SHIRT_FALLBACK)
+
+  useEffect(() => {
+    fetch("/api/blue/content")
+      .then((r) => r.json())
+      .then((data) => { if (data?.blue_shirt) setBlueShirtUrl(data.blue_shirt) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!token) {
@@ -214,7 +222,7 @@ export default function BlueRegisterPage() {
         <div className="mb-6 flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border-2 border-[#D3B574]/50 bg-white">
           <div className="flex-shrink-0 w-full sm:w-[180px] overflow-hidden rounded-lg">
             <Image
-              src={BLUE_SHIRT_IMAGE_URL}
+              src={blueShirtUrl}
               alt="NC United Blue shirt — symbol of membership"
               width={180}
               height={200}

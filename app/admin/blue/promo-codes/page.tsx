@@ -120,7 +120,7 @@ export default function AdminBluePromoCodesPage() {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Create code</CardTitle>
-            <CardDescription>Code is created in Stripe as a coupon and applied when the parent enters it at checkout.</CardDescription>
+            <CardDescription>Create a 100% off (full scholarship), 20% family discount, or other code. Code is created in Stripe and applied when the parent enters it on the registration form.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleCreate} className="space-y-4">
