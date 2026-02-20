@@ -70,6 +70,7 @@ export default function AdminBlueInterestPage() {
   const [createInviteNote, setCreateInviteNote] = useState("")
   const [creatingInvite, setCreatingInvite] = useState(false)
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
+  const [zeroRowsHint, setZeroRowsHint] = useState(false)
   const { toast } = useToast()
   const loadIdRef = useRef(0)
   const lastCountRef = useRef(0)
@@ -103,6 +104,7 @@ export default function AdminBlueInterestPage() {
         throw new Error(data.error || "Failed to load")
       }
       const list = Array.isArray(data.submissions) ? data.submissions : []
+      setZeroRowsHint(list.length === 0 && !!data.zeroRowsHint)
       if (thisLoadId !== loadIdRef.current) return
 
       if (list.length === 0 && !retryOnEmpty) {
@@ -337,7 +339,15 @@ alter table public.blue_express_interest
                 <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
               </div>
             ) : submissions.length === 0 ? (
-              <p className="py-8 text-center text-gray-500">No submissions yet.</p>
+              <div className="py-8 space-y-4">
+                <p className="text-center text-gray-500">No submissions yet.</p>
+                {zeroRowsHint && (
+                  <div className="max-w-xl mx-auto rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                    <p className="font-medium">Seeing zero rows but you have data in Supabase?</p>
+                    <p className="mt-2">In <strong>Vercel → Project → Settings → Environment Variables</strong>, set <code className="bg-amber-100 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> to the <strong>service role</strong> key (Supabase Dashboard → Settings → API → <code className="bg-amber-100 px-1 rounded">service_role</code> secret), not the anon key. Use the same Supabase project as your data. Then redeploy and refresh.</p>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>

@@ -28,24 +28,37 @@ export async function GET(_request: NextRequest) {
     }
 
     const adminClient = createAdminClient()
-    const { data: rows, error } = await adminClient
-      .from("blue_express_interest")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(5000)
 
-    if (error) {
-      console.error("[Admin API] GET blue_express_interest error:", error?.message, "code:", error?.code)
-      if (error.code === "42P01") {
+    async function fetchRows(): Promise<{ rows: unknown[]; error: { message: string; code?: string } | null }> {
+      const { data, error } = await adminClient
+        .from("blue_express_interest")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5000)
+      return { rows: data ?? [], error }
+    }
+
+    let result = await fetchRows()
+    if (result.error) {
+      console.error("[Admin API] GET blue_express_interest error:", result.error?.message, "code:", result.error?.code)
+      if (result.error.code === "42P01") {
         return NextResponse.json(
           { ok: false, error: "Table blue_express_interest does not exist. Run the SQL in docs/blue-express-interest-table.md (or Blue tables doc) in Supabase SQL Editor.", code: "TABLE_MISSING" },
           { status: 503 }
         )
       }
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 })
     }
 
-    const list = rows ?? []
+    if (result.rows.length === 0) {
+      await new Promise((r) => setTimeout(r, 1200))
+      result = await fetchRows()
+      if (result.error) {
+        return NextResponse.json({ ok: false, error: result.error.message }, { status: 500 })
+      }
+    }
+
+    const list = result.rows as { id: string; status?: string }[]
     const ids = list.map((r: { id: string }) => r.id)
 
     // If blue_invites has interest_id, attach invite sent / enrolled status per submission
@@ -75,8 +88,17 @@ export async function GET(_request: NextRequest) {
         enrolled: !!link?.used_at,
       }
     })
-    console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
-    const response = NextResponse.json({ ok: true, submissions, count: submissions.length })
+    if (submissions.length === 0) {
+      console.warn("[Admin API] blue_express_interest: 0 rows. If table has data, set SUPABASE_SERVICE_ROLE_KEY to the service role key (not anon) in Vercel for this environment.")
+    } else {
+      console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
+    }
+    const response = NextResponse.json({
+      ok: true,
+      submissions,
+      count: submissions.length,
+      zeroRowsHint: submissions.length === 0,
+    })
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
     response.headers.set("Pragma", "no-cache")
     response.headers.set("Expires", "0")
