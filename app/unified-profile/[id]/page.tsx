@@ -16,9 +16,9 @@ const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
 
 const PUBLIC_PROFILE_IDS = new Set(rawPublicIds)
 
-/** Max time to wait for profile data before returning error (avoid Vercel hang). */
-const PROFILE_FETCH_TIMEOUT_MS = 20000
-const SECONDARY_DATA_TIMEOUT_MS = 10000
+/** Keep under Vercel serverless limit (~10s). */
+const PROFILE_FETCH_TIMEOUT_MS = 8000
+const SECONDARY_DATA_TIMEOUT_MS = 8000
 
 interface UnifiedProfilePageProps {
   params: Promise<{ id: string }>
@@ -135,11 +135,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
       nhscaResults = fromAthlete.nhscaResults
     }
     const athleteRowNational = getNationalTeamResults(athlete)
-    let ucdFromTable = ucdFromTable1
-    if (ucdFromTable.length === 0 && athlete.wrestling_name?.trim() && athlete.wrestling_name.trim() !== athleteName) {
-      ucdFromTable = await getUltimateClubDualsFromTables(supabase, athlete.wrestling_name.trim(), hs)
-    }
-    const nationalTeamResults = mergeNationalTeamResults(ucdFromTable, athleteRowNational)
+    const nationalTeamResults = mergeNationalTeamResults(ucdFromTable1, athleteRowNational)
 
     return (
       <div className="min-h-screen bg-gray-50">
