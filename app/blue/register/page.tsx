@@ -71,8 +71,7 @@ export default function BlueRegisterPage() {
   useEffect(() => {
     if (!token) {
       setValidating(false)
-      setValid(false)
-      setError("Missing invite link.")
+      setValid(true)
       return
     }
     let cancelled = false
@@ -114,7 +113,7 @@ export default function BlueRegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token,
+          token: token || undefined,
           waiverAccepted,
           tshirtSize,
           promoCode: promoCode.trim() || undefined,
@@ -163,7 +162,7 @@ export default function BlueRegisterPage() {
     )
   }
 
-  if (!valid || !token) {
+  if (!valid && token) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <Card className="max-w-md w-full">
@@ -172,8 +171,11 @@ export default function BlueRegisterPage() {
             <CardDescription>{error || "This registration link is invalid or has already been used."}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/blue">
-              <Button variant="outline" className="w-full">Back to Blue program</Button>
+            <Link href="/blue/register">
+              <Button variant="outline" className="w-full">Use main registration link</Button>
+            </Link>
+            <Link href="/blue" className="block mt-2">
+              <Button variant="ghost" className="w-full">Back to Blue program</Button>
             </Link>
           </CardContent>
         </Card>

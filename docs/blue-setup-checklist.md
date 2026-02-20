@@ -50,7 +50,7 @@ STRIPE_BLUE_PRICE_ID=price_xxxxxxxxxxxx
 ## 3. Stripe webhook
 
 1. **Stripe Dashboard** → Developers → Webhooks → **Add endpoint**.
-2. **Endpoint URL:** `https://YOUR-DOMAIN/api/webhooks/stripe` (must match `NEXT_PUBLIC_APP_URL`).
+2. **Endpoint URL:** `https://app.ncwrestlingunited.com/api/webhooks/stripe` (must match `NEXT_PUBLIC_APP_URL`).
 3. **Events:** select **`checkout.session.completed`**.
 4. After saving, copy the **Signing secret** (`whsec_...`) and set:
 
@@ -78,7 +78,7 @@ If you skip Resend, invites still work: create an invite, copy the registration 
 Do this in **Stripe Test mode** (test keys and test card).
 
 1. **Create an invite**  
-   Admin → Blue Program → Invites. Create one; optionally add an email (if Resend is set, the email sends). Copy the **registration link**.
+   Admin → Blue Program → Invites. Copy the **registration link** (same for everyone): `https://app.ncwrestlingunited.com/blue/register`. Optionally create an invite and send by email.
 
 2. **Open the link** in an incognito/private window. You should see the Blue registration form (parent + athlete, waiver, optional promo).
 
@@ -141,7 +141,7 @@ After sign-in, parents can go to **Profile** (nav or `/profile`). If they pay fo
 |-------|--------|
 | Create invite / send email | Admin → Blue Program → Invites |
 | Interest forms (invite sent / enrolled) | Admin → Blue Program → Interest forms |
-| Registration form | `/blue/register?invite=TOKEN` |
+| Registration form | `https://app.ncwrestlingunited.com/blue/register` (optional `?invite=TOKEN`) |
 | After payment | `/blue/register/success` |
 | Cancelled payment | `/blue/register/cancelled` |
 | Subscriptions list | Admin → Blue Program → Subscriptions |

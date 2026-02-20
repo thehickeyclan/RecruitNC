@@ -7,8 +7,8 @@
 **What the parent does:**
 
 1. **Sign in** to RecruitNC (same email they’ll use for Blue).
-2. Get the **Blue registration link** (from admin, coach, or email). It looks like:  
-   `https://yoursite.com/blue/register?invite=XXXXX`
+2. Get the **Blue registration link** (from admin or email):  
+   `https://app.ncwrestlingunited.com/blue/register` (or with optional `?invite=TOKEN` to pre-fill email).
 3. **Open that link** in the same browser where they’re signed in (or sign in first, then open the link).
 4. On the Blue form they’ll see: **“You’re signed in as [their email]. We’ll use this account — leave password blank.”**  
    Name/email are pre-filled. They **leave the password field blank**.
@@ -35,7 +35,7 @@
 
 1. User goes to **Sign in** → **Forgot your password?** → enters email → **Send reset link**.
 2. App calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: base + "/auth/reset-password" })`. Supabase sends an email.
-3. Link in email goes to `https://YOUR_SITE/auth/reset-password?code=...` (or Supabase may send to Site URL; then **RecoveryRedirect** on any page detects `code` / `token_hash` and redirects to `/auth/reset-password` with the same params).
+3. Link in email goes to `https://app.ncwrestlingunited.com/auth/reset-password?code=...` (or Supabase may send to Site URL; then **RecoveryRedirect** on any page detects `code` / `token_hash` and redirects to `/auth/reset-password` with the same params).
 4. **Reset-password page** (client): reads `code` (or token_hash + type) from URL, calls `exchangeCodeForSession(code)` (or verifyOtp), then shows the “new password” form. User submits → `updateUser({ password })` → success.
 5. **Supabase:** Site URL and Redirect URLs must include your production origin (e.g. `https://YOUR_DOMAIN/**`) so the link is allowed.
 
@@ -45,7 +45,7 @@
 
 ## Blue registration (invite → parent → athlete)
 
-1. **Admin** creates an invite in **Admin → Blue → Invites**. That creates a row in `blue_invites` with a **token**. The registration link is `https://YOUR_SITE/blue/register?invite=TOKEN`.
+1. **Admin** creates an invite in **Admin → Blue → Invites** (optional). Share the same link for everyone: `https://app.ncwrestlingunited.com/blue/register`. Optional per-invite link: `https://app.ncwrestlingunited.com/blue/register?invite=TOKEN`.
 2. **Parent** opens that link. The page validates the token via `/api/blue/invites/validate?token=TOKEN`. If the invite had an optional email, it can pre-fill; **if the user is already signed in**, the form pre-fills from the session and does **not** overwrite with invite email (so the session user is used).
 3. Parent submits the form. Frontend sends `credentials: "include"` so the request includes the session cookies.
 4. **API** `/api/blue/register`:

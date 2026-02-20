@@ -1,7 +1,7 @@
 Public Athlete Profile: What to query and how to link
 
 If you want your separate project (sharing the same DB) to open the public profile you see here, use the athlete's id from the athletes table and link to:
-- {YOUR_SITE_URL}/athletes/{id}
+- https://app.ncwrestlingunited.com/athletes/{id}
 
 Primary tables used by the profile page
 - athletes (primary source of truth for each profile)

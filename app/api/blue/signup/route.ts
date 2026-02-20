@@ -14,14 +14,12 @@ const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as co
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const token = body.token?.trim()
+    const token = body.token?.trim() || null
     const parent = body.parent
     const athlete = body.athlete
     const tshirtSizeRaw = typeof body.tshirtSize === "string" ? body.tshirtSize.trim() : undefined
     const promoCodeRaw = body.promoCode?.trim()
     const waiverAccepted = body.waiverAccepted === true
-
-    if (!token) return NextResponse.json({ error: "Missing invite link." }, { status: 400 })
     if (!parent?.email?.trim() || !parent?.firstName?.trim() || !parent?.lastName?.trim()) {
       return NextResponse.json({ error: "Missing parent email, first name, or last name." }, { status: 400 })
     }
@@ -44,20 +42,23 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient()
 
-    const { data: invite, error: inviteErr } = await admin
-      .from("blue_invites")
-      .select("id, expires_at, used_at")
-      .eq("token", token)
-      .maybeSingle()
-
-    if (inviteErr || !invite) return NextResponse.json({ error: "Invalid invite link." }, { status: 400 })
-    if (invite.used_at) return NextResponse.json({ error: "This invite has already been used." }, { status: 400 })
-    if (new Date(invite.expires_at) < new Date()) return NextResponse.json({ error: "This invite has expired." }, { status: 400 })
+    let inviteId: string | null = null
+    if (token) {
+      const { data: invite, error: inviteErr } = await admin
+        .from("blue_invites")
+        .select("id, expires_at, used_at")
+        .eq("token", token)
+        .maybeSingle()
+      if (inviteErr || !invite) return NextResponse.json({ error: "Invalid invite link." }, { status: 400 })
+      if (invite.used_at) return NextResponse.json({ error: "This invite has already been used." }, { status: 400 })
+      if (new Date(invite.expires_at) < new Date()) return NextResponse.json({ error: "This invite has expired." }, { status: 400 })
+      inviteId = invite.id
+    }
 
     const { data: signup, error: signupErr } = await admin
       .from("blue_signups")
       .insert({
-        invite_id: invite.id,
+        invite_id: inviteId,
         parent_email: parent.email.trim().toLowerCase(),
         parent_first_name: parent.firstName.trim(),
         parent_last_name: parent.lastName.trim(),
@@ -88,7 +89,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to save registration." }, { status: 500 })
     }
 
-    await admin.from("blue_invites").update({ used_at: new Date().toISOString() }).eq("id", invite.id)
+    if (inviteId) {
+      await admin.from("blue_invites").update({ used_at: new Date().toISOString() }).eq("id", inviteId)
+    }
 
     if (!stripeSecret || !bluePriceId) {
       return NextResponse.json({ error: "Payment is not configured yet. Please contact support." }, { status: 503 })

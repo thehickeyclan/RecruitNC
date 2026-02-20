@@ -212,7 +212,7 @@ Allowed values: `YS`, `YM`, `YL`, `S`, `M`, `L`, `XL`, `2XL`, `3XL`.
 
 ### What’s going on (flow)
 
-1. **Admin:** In **Admin → Blue → Invites**, create an invite (optional email). You get a private link like `https://yourapp.com/blue/register?invite=TOKEN`.
+1. **Admin:** Share the registration link `https://app.ncwrestlingunited.com/blue/register`. Optionally create an invite in **Admin → Blue → Invites** to get a link with `?invite=TOKEN` (pre-fills email).
 2. **Parent:** Opens that link. Enters email; if we already have that email we prompt to log in (no duplicate account).
 3. **One form:** Parent (or "Signed in as X") + athlete (name, grad year, school, weight, t-shirt) + waiver + optional promo. Submit.
 4. **Backend:** Finds existing athlete by name + grad year + school or creates one; links parent; adds Blue; redirects to Stripe. No duplicate profiles — we merge on match.
@@ -280,7 +280,7 @@ If the link still goes to the homepage, in **Supabase Dashboard** → **Authenti
    - Log in as **thickeyclan@gmail.com**.  
    - Go to **Admin** → **Blue** → **Invites**.  
    - Click **Create invite** (email optional).  
-   - Copy the **registration link** (e.g. `https://yoursite.com/blue/register?invite=...`).
+   - Copy the **registration link**: `https://app.ncwrestlingunited.com/blue/register` (or the invite-specific link from the table).
 
 2. **Open link as parent**  
    - Open that link in **incognito** or another browser (or sign out first).  

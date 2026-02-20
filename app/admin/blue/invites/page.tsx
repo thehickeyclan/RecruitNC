@@ -24,6 +24,7 @@ export default function AdminBlueInvitesPage() {
   const [invites, setInvites] = useState<InviteRow[]>([])
   const [loading, setLoading] = useState(true)
   const [listError, setListError] = useState<string | null>(null)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [newEmail, setNewEmail] = useState("")
   const [newInviteeName, setNewInviteeName] = useState("")
@@ -35,14 +36,16 @@ export default function AdminBlueInvitesPage() {
   const [copiedDraftPart, setCopiedDraftPart] = useState<"subject" | "body" | "all" | null>(null)
   const { toast } = useToast()
 
+  const mainRegisterUrl = typeof window !== "undefined" ? `${window.location.origin}/blue/register` : ""
+
   function buildDraftEmail(registerUrl: string, inviteeName: string, personalNote: string): { subject: string; body: string } {
     const name = inviteeName.trim() || "there"
     const greeting = `Hi ${name},`
     let body = `${greeting}
 
-You're invited to join NC United Blue — our invite-only wrestling program.
+You're invited to join NC United Blue — our wrestling program.
 
-Use the link below to complete registration and payment. The link is private and will expire in 14 days.
+Use the link below to complete registration and payment.
 
 ${registerUrl}
 `
@@ -83,6 +86,7 @@ ${registerUrl}
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    setCreateError(null)
     setCreating(true)
     try {
       const res = await fetch("/api/admin/blue/invites", {
@@ -97,7 +101,9 @@ ${registerUrl}
       })
       const data = await res.json()
       if (!res.ok) {
-        toast({ title: data.error || "Failed to create invite", variant: "destructive" })
+        const msg = data.error || `Failed to create invite (${res.status})`
+        setCreateError(msg)
+        toast({ title: msg, variant: "destructive" })
         setCreating(false)
         return
       }
@@ -106,11 +112,12 @@ ${registerUrl}
       } else {
         toast({ title: "Invite created", description: "Copy the email draft below or use the link." })
       }
-      if (data.registerUrl) {
-        setEmailDraft(buildDraftEmail(data.registerUrl, newInviteeName, newPersonalNote))
-        setCopiedUrl(data.registerUrl)
+      const linkToShare = mainRegisterUrl || data.registerUrl || ""
+      if (linkToShare) {
+        setEmailDraft(buildDraftEmail(linkToShare, newInviteeName, newPersonalNote))
+        setCopiedUrl(linkToShare)
         try {
-          await navigator.clipboard.writeText(data.registerUrl)
+          await navigator.clipboard.writeText(linkToShare)
           setTimeout(() => setCopiedUrl(null), 2000)
         } catch {}
       }
@@ -120,6 +127,7 @@ ${registerUrl}
       setNewNotes("")
       loadInvites()
     } catch {
+      setCreateError("Network or unexpected error. Check connection and retry.")
       toast({ title: "Failed to create invite", variant: "destructive" })
     } finally {
       setCreating(false)
@@ -183,9 +191,37 @@ ${registerUrl}
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">Blue program invites</h1>
-            <p className="text-sm text-gray-600">Create private registration links for new Blue members.</p>
+            <p className="text-sm text-gray-600">One registration link for everyone. Optionally create invites to track or pre-fill email.</p>
           </div>
         </div>
+
+        <Card className="mb-6 border-[#13294B]/30">
+          <CardHeader>
+            <CardTitle className="text-lg">Registration link (share this)</CardTitle>
+            <CardDescription>Same link for all parents. Send by text, email, or post — no per-person link needed.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <code className="flex-1 min-w-0 text-sm bg-gray-100 px-3 py-2 rounded break-all">{mainRegisterUrl || "…"}</code>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if (!mainRegisterUrl) return
+                try {
+                  await navigator.clipboard.writeText(mainRegisterUrl)
+                  setCopiedUrl(mainRegisterUrl)
+                  setTimeout(() => setCopiedUrl(null), 2000)
+                  toast({ title: "Link copied" })
+                } catch {
+                  toast({ title: "Copy failed", variant: "destructive" })
+                }
+              }}
+            >
+              {copiedUrl === mainRegisterUrl ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+              <span className="ml-1">Copy</span>
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card className="mb-8">
           <CardHeader>
@@ -193,6 +229,14 @@ ${registerUrl}
             <CardDescription>Generate a link to send to a parent. They’ll use it to register their athlete for Blue.</CardDescription>
           </CardHeader>
           <CardContent>
+            {createError && (
+              <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                <p className="font-medium">Create failed</p>
+                <p className="mt-1">{createError}</p>
+                <p className="mt-2 text-xs">If it says the table does not exist, run the SQL in docs/blue-membership-tables.md (blue_invites) in your Supabase SQL Editor.</p>
+                <Button variant="outline" size="sm" className="mt-3 border-red-300 text-red-700 hover:bg-red-100" onClick={() => setCreateError(null)}>Dismiss</Button>
+              </div>
+            )}
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="flex flex-wrap gap-4">
                 <div className="space-y-2 min-w-[200px]">
@@ -296,6 +340,7 @@ ${registerUrl}
               <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
                 <p className="font-medium">Could not load invites</p>
                 <p className="mt-1">{listError}</p>
+                <p className="mt-2 text-xs">If it says the table does not exist, run the SQL in docs/blue-membership-tables.md (Section 1: blue_invites) in your Supabase SQL Editor.</p>
                 <Button variant="outline" size="sm" className="mt-3 border-red-300 text-red-700 hover:bg-red-100" onClick={loadInvites}>
                   Retry
                 </Button>
