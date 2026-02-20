@@ -14,17 +14,34 @@ const bluePriceId = process.env.STRIPE_BLUE_PRICE_ID
 type ParentInput = { email: string; password?: string; firstName: string; lastName: string; phone?: string }
 type AthleteInput = { firstName: string; lastName: string; graduationYear: number; highSchool: string; weightClass?: string }
 
+/** T-shirt sizes we accept for Blue signup (stored on blue_memberships.tshirt_size). */
+const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const token = body.token?.trim()
     const parent: ParentInput | undefined = body.parent
     const athlete: AthleteInput | undefined = body.athlete
+    const tshirtSizeRaw = typeof body.tshirtSize === "string" ? body.tshirtSize.trim() : undefined
     const promoCodeRaw = body.promoCode?.trim()
 
-    if (!token || !parent?.email || !parent?.firstName || !parent?.lastName || !athlete?.firstName || !athlete?.lastName || !athlete?.graduationYear || !athlete?.highSchool) {
+    if (!token || !parent?.email || !parent?.firstName || !parent?.lastName) {
       return NextResponse.json(
-        { error: "Missing required fields: token, parent (email, firstName, lastName), athlete (firstName, lastName, graduationYear, highSchool)" },
+        { error: "Missing required fields: token, parent (email, firstName, lastName)" },
+        { status: 400 }
+      )
+    }
+    if (!athlete?.firstName || !athlete?.lastName || !athlete?.graduationYear || !athlete?.highSchool) {
+      return NextResponse.json(
+        { error: "Missing required fields: athlete (firstName, lastName, graduationYear, highSchool)" },
+        { status: 400 }
+      )
+    }
+    const tshirtSize = tshirtSizeRaw && TSHIRT_SIZES.includes(tshirtSizeRaw as (typeof TSHIRT_SIZES)[number]) ? tshirtSizeRaw : null
+    if (!tshirtSize) {
+      return NextResponse.json(
+        { error: "Please select a t-shirt size for the athlete." },
         { status: 400 }
       )
     }
@@ -34,11 +51,6 @@ export async function POST(request: NextRequest) {
         { error: "You must accept the Waiver and Release of Liability to continue." },
         { status: 400 }
       )
-    }
-
-    const gradYear = Number(athlete.graduationYear)
-    if (!Number.isFinite(gradYear) || gradYear < 2020 || gradYear > 2040) {
-      return NextResponse.json({ error: "Invalid graduation year" }, { status: 400 })
     }
 
     const admin = createAdminClient()
@@ -119,19 +131,21 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // 3) Resolve or create athlete (handles existing athletes in RecruitNC)
+    // 3) Resolve or create athlete (find by name + grad year + school to avoid duplicates; link parent)
+    const gradYear = Number(athlete.graduationYear)
+    if (!Number.isFinite(gradYear) || gradYear < 2020 || gradYear > 2040) {
+      return NextResponse.json({ error: "Invalid graduation year" }, { status: 400 })
+    }
     const athleteName = `${athlete.firstName.trim()} ${athlete.lastName.trim()}`
-    let athleteId: string
-
     const existing = await findExistingAthlete(admin, {
       name: athleteName,
       graduationYear: gradYear,
       school: athlete.highSchool?.trim(),
     })
 
+    let athleteId: string
     if (existing) {
       athleteId = existing.id
-      // Ensure Blue flag is set on existing athlete
       const cols = await getAthletesColumnNames(admin)
       const updatePayload = filterPayloadToSchema({ ncUnitedTeam: "blue", updated_at: new Date().toISOString() }, cols)
       if (Object.keys(updatePayload).length > 0) {
@@ -215,14 +229,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const membershipInsert: Record<string, unknown> = {
+      athlete_id: athleteId,
+      payer_user_id: payerUserId,
+      status: "pending_payment",
+      source: "invite",
+      tshirt_size: tshirtSize,
+    }
     const { data: newMembership, error: membershipErr } = await admin
       .from("blue_memberships")
-      .insert({
-        athlete_id: athleteId,
-        payer_user_id: payerUserId,
-        status: "pending_payment",
-        source: "invite",
-      })
+      .insert(membershipInsert)
       .select("id")
       .single()
 

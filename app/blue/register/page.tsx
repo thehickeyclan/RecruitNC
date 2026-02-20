@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 
 const NAVY = "#03154C"
+const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
 const GOLD = "#D3B574"
 
 const WAIVER_TEXT = `WAIVER AND RELEASE OF LIABILITY
@@ -64,6 +66,9 @@ export default function BlueRegisterPage() {
   const [athlete, setAthlete] = useState({ firstName: "", lastName: "", graduationYear: "", highSchool: "", weightClass: "" })
   const [promoCode, setPromoCode] = useState("")
   const [waiverAccepted, setWaiverAccepted] = useState(false)
+  const [tshirtSize, setTshirtSize] = useState<string>("")
+  const [emailRegistered, setEmailRegistered] = useState<boolean | null>(null)
+  const [emailChecking, setEmailChecking] = useState(false)
 
   // Pre-fill parent from logged-in user so they don't have to re-enter email/password
   useEffect(() => {
@@ -100,17 +105,49 @@ export default function BlueRegisterPage() {
     return () => { cancelled = true }
   }, [token, user?.email])
 
+  const checkEmailRegistered = async (emailVal: string) => {
+    const e = emailVal?.trim()?.toLowerCase()
+    if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+      setEmailRegistered(null)
+      return
+    }
+    setEmailChecking(true)
+    setEmailRegistered(null)
+    try {
+      const r = await fetch(`/api/blue/check-email?email=${encodeURIComponent(e)}`)
+      const data = await r.json()
+      setEmailRegistered(data.registered === true)
+    } catch {
+      setEmailRegistered(null)
+    } finally {
+      setEmailChecking(false)
+    }
+  }
+
+  const handleParentEmailBlur = () => {
+    if (user) return
+    checkEmailRegistered(parent.email)
+  }
+
+  const handleParentEmailChange = (value: string) => {
+    setParent((p) => ({ ...p, email: value }))
+    setEmailRegistered(null)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    const gradYear = parseInt(athlete.graduationYear, 10)
+    if (!Number.isFinite(gradYear)) {
+      setError("Enter a valid graduation year.")
+      return
+    }
+    if (!tshirtSize || !TSHIRT_SIZES.includes(tshirtSize as (typeof TSHIRT_SIZES)[number])) {
+      setError("Please select a t-shirt size.")
+      return
+    }
     setLoading(true)
     try {
-      const gradYear = parseInt(athlete.graduationYear, 10)
-      if (!Number.isFinite(gradYear)) {
-        setError("Enter a valid graduation year.")
-        setLoading(false)
-        return
-      }
       const res = await fetch("/api/blue/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,6 +155,7 @@ export default function BlueRegisterPage() {
         body: JSON.stringify({
           token,
           waiverAccepted,
+          tshirtSize,
           promoCode: promoCode.trim() || undefined,
           parent: {
             email: parent.email,
@@ -273,130 +311,177 @@ export default function BlueRegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="parentFirstName">First name</Label>
-                  <Input
-                    id="parentFirstName"
-                    value={parent.firstName}
-                    onChange={(e) => setParent((p) => ({ ...p, firstName: e.target.value }))}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="parentLastName">Last name</Label>
-                  <Input
-                    id="parentLastName"
-                    value={parent.lastName}
-                    onChange={(e) => setParent((p) => ({ ...p, lastName: e.target.value }))}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="parentEmail">Email</Label>
-                <Input
-                  id="parentEmail"
-                  type="email"
-                  value={parent.email}
-                  onChange={(e) => setParent((p) => ({ ...p, email: e.target.value }))}
-                  required
-                  disabled={loading}
-                />
-              </div>
-              {!user && (
-                <div className="space-y-2">
-                  <Label htmlFor="parentPassword">Password</Label>
-                  <Input
-                    id="parentPassword"
-                    type="password"
-                    value={parent.password}
-                    onChange={(e) => setParent((p) => ({ ...p, password: e.target.value }))}
-                    placeholder="Min 8 characters"
-                    disabled={loading}
-                    minLength={8}
-                  />
-                  <p className="text-xs text-gray-500">
-                    Have a RecruitNC account? <Link href={signInUrl} className="text-[#03154C] font-medium hover:underline">Sign in first</Link> — you’ll return to this page.
+              {user ? (
+                <>
+                  <p className="text-sm text-gray-700">
+                    Signed in as <strong>{user.email}</strong>. This account will manage Blue. We’ll use your saved name and phone.
                   </p>
-                </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parentPhone">Phone (optional — update if needed)</Label>
+                    <Input
+                      id="parentPhone"
+                      type="tel"
+                      value={parent.phone}
+                      onChange={(e) => setParent((p) => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
+                      placeholder="(555) 123-4567"
+                      disabled={loading}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="parentFirstName">First name</Label>
+                      <Input
+                        id="parentFirstName"
+                        value={parent.firstName}
+                        onChange={(e) => setParent((p) => ({ ...p, firstName: e.target.value }))}
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="parentLastName">Last name</Label>
+                      <Input
+                        id="parentLastName"
+                        value={parent.lastName}
+                        onChange={(e) => setParent((p) => ({ ...p, lastName: e.target.value }))}
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parentEmail">Email</Label>
+                    <Input
+                      id="parentEmail"
+                      type="email"
+                      value={parent.email}
+                      onChange={(e) => handleParentEmailChange(e.target.value)}
+                      onBlur={handleParentEmailBlur}
+                      required
+                      disabled={loading}
+                    />
+                    {emailChecking && <p className="text-xs text-gray-500">Checking...</p>}
+                    {!emailChecking && emailRegistered === true && (
+                      <div className="rounded-md border border-[#03154C]/30 bg-[#03154C]/5 p-3 text-sm text-[#03154C]">
+                        <p className="font-medium">This email is already registered.</p>
+                        <p className="mt-1">Please sign in first — you’ll return here to finish registration.</p>
+                        <Link href={signInUrl}>
+                          <Button type="button" variant="outline" size="sm" className="mt-2 border-[#03154C] text-[#03154C] hover:bg-[#03154C]/10">
+                            Sign in
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parentPassword">Password</Label>
+                    <Input
+                      id="parentPassword"
+                      type="password"
+                      value={parent.password}
+                      onChange={(e) => setParent((p) => ({ ...p, password: e.target.value }))}
+                      placeholder="Min 8 characters"
+                      disabled={loading}
+                      minLength={8}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Have a RecruitNC account? <Link href={signInUrl} className="text-[#03154C] font-medium hover:underline">Sign in first</Link> — you’ll return to this page.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parentPhone">Phone (optional)</Label>
+                    <Input
+                      id="parentPhone"
+                      type="tel"
+                      value={parent.phone}
+                      onChange={(e) => setParent((p) => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
+                      placeholder="(555) 123-4567"
+                      disabled={loading}
+                    />
+                  </div>
+                </>
               )}
-              <div className="space-y-2">
-                <Label htmlFor="parentPhone">Phone (optional)</Label>
-                <Input
-                  id="parentPhone"
-                  type="tel"
-                  value={parent.phone}
-                  onChange={(e) => setParent((p) => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
-                  placeholder="(555) 123-4567"
-                  disabled={loading}
-                />
-              </div>
 
               <div className="border-t pt-6">
-                <CardTitle className="text-lg mb-2">Athlete (your wrestler)</CardTitle>
-                <CardDescription className="mb-4">If they’re already in RecruitNC, we’ll link them — just enter their info.</CardDescription>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="athleteFirstName">First name</Label>
-                    <Input
-                      id="athleteFirstName"
-                      value={athlete.firstName}
-                      onChange={(e) => setAthlete((a) => ({ ...a, firstName: e.target.value }))}
-                      required
-                      disabled={loading}
-                    />
+                  <CardTitle className="text-lg mb-2">Athlete (your wrestler)</CardTitle>
+                  <CardDescription className="mb-4">Enter their info. If they already have a RecruitNC profile we will link to it — no duplicate profiles.</CardDescription>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="athleteFirstName">First name</Label>
+                      <Input
+                        id="athleteFirstName"
+                        value={athlete.firstName}
+                        onChange={(e) => setAthlete((a) => ({ ...a, firstName: e.target.value }))}
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="athleteLastName">Last name</Label>
+                      <Input
+                        id="athleteLastName"
+                        value={athlete.lastName}
+                        onChange={(e) => setAthlete((a) => ({ ...a, lastName: e.target.value }))}
+                        required
+                        disabled={loading}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="athleteLastName">Last name</Label>
+                  <div className="grid gap-4 sm:grid-cols-2 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="graduationYear">Graduation year</Label>
+                      <Input
+                        id="graduationYear"
+                        type="number"
+                        min={2024}
+                        max={2035}
+                        value={athlete.graduationYear}
+                        onChange={(e) => setAthlete((a) => ({ ...a, graduationYear: e.target.value }))}
+                        required
+                        disabled={loading}
+                        placeholder="e.g. 2028"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weightClass">Weight class (optional)</Label>
+                      <Input
+                        id="weightClass"
+                        value={athlete.weightClass}
+                        onChange={(e) => setAthlete((a) => ({ ...a, weightClass: e.target.value }))}
+                        disabled={loading}
+                        placeholder="e.g. 132"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Label htmlFor="highSchool">High school</Label>
                     <Input
-                      id="athleteLastName"
-                      value={athlete.lastName}
-                      onChange={(e) => setAthlete((a) => ({ ...a, lastName: e.target.value }))}
+                      id="highSchool"
+                      value={athlete.highSchool}
+                      onChange={(e) => setAthlete((a) => ({ ...a, highSchool: e.target.value }))}
                       required
                       disabled={loading}
+                      placeholder="School name"
                     />
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="graduationYear">Graduation year</Label>
-                    <Input
-                      id="graduationYear"
-                      type="number"
-                      min={2024}
-                      max={2035}
-                      value={athlete.graduationYear}
-                      onChange={(e) => setAthlete((a) => ({ ...a, graduationYear: e.target.value }))}
-                      required
-                      disabled={loading}
-                      placeholder="e.g. 2028"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weightClass">Weight class (optional)</Label>
-                    <Input
-                      id="weightClass"
-                      value={athlete.weightClass}
-                      onChange={(e) => setAthlete((a) => ({ ...a, weightClass: e.target.value }))}
-                      disabled={loading}
-                      placeholder="e.g. 132"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="highSchool">High school</Label>
-                  <Input
-                    id="highSchool"
-                    value={athlete.highSchool}
-                    onChange={(e) => setAthlete((a) => ({ ...a, highSchool: e.target.value }))}
-                    required
-                    disabled={loading}
-                    placeholder="School name"
-                  />
-                </div>
+              </div>
+
+              <div className="border-t pt-6 space-y-2">
+                <Label>T-shirt size (required)</Label>
+                <Select value={tshirtSize} onValueChange={setTshirtSize} disabled={loading}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TSHIRT_SIZES.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="border-t pt-6 space-y-2">
@@ -443,10 +528,13 @@ export default function BlueRegisterPage() {
               {!user && !parent.password && (
                 <p className="text-sm text-gray-500">Enter a password above, or sign in to use your existing account.</p>
               )}
+              {!user && emailRegistered === true && (
+                <p className="text-sm text-amber-700">Sign in above to use your existing account, then submit.</p>
+              )}
               <Button
                 type="submit"
                 className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white"
-                disabled={loading || !waiverAccepted || (!user && !parent.password)}
+                disabled={loading || !waiverAccepted || !tshirtSize || (!user && !parent.password) || (!user && emailRegistered === true)}
               >
                 {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting...</> : "Complete registration"}
               </Button>

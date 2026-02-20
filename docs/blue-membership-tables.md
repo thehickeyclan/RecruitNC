@@ -191,14 +191,31 @@ alter table public.blue_memberships add column if not exists stripe_subscription
 alter table public.blue_memberships alter column status set default 'pending_payment';
 ```
 
+## T-shirt size (Blue signup)
+
+For Blue registration we collect the athlete’s t-shirt size and store it on the membership:
+
+```sql
+alter table public.blue_memberships add column if not exists tshirt_size text;
+```
+
+Allowed values: `YS`, `YM`, `YL`, `S`, `M`, `L`, `XL`, `2XL`, `3XL`.
+
 ---
 
 ## Blue invites flow and testing
 
+### User scenarios (no duplication)
+
+- **One simple form:** Parent opens invite link, enters email (we prompt to log in if already registered), then fills one form: their info (or "Signed in as X"), wrestler name / grad year / school / weight / t-shirt, waiver, optional promo. Submit goes to payment.
+- **Backend handles matching:** We find an existing athlete by name + graduation year + school; if found we link the parent and attach Blue to that profile. If not found we create one and link. No duplicate athletes; parent is always linked via parent_athlete_links.
+
 ### What’s going on (flow)
 
 1. **Admin:** In **Admin → Blue → Invites**, create an invite (optional email). You get a private link like `https://yourapp.com/blue/register?invite=TOKEN`.
-2. **Parent:** Opens that link (incognito, other browser, or after signing out). Fills the Blue registration form (parent + athlete, waiver, optional promo), then either signs in (existing RecruitNC account) or creates an account (email + password). Submits, then completes payment via Stripe and lands on the success page.
+2. **Parent:** Opens that link. Enters email; if we already have that email we prompt to log in (no duplicate account).
+3. **One form:** Parent (or "Signed in as X") + athlete (name, grad year, school, weight, t-shirt) + waiver + optional promo. Submit.
+4. **Backend:** Finds existing athlete by name + grad year + school or creates one; links parent; adds Blue; redirects to Stripe. No duplicate profiles — we merge on match.
 
 ### How to test
 
