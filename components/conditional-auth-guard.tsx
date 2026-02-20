@@ -4,14 +4,8 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Wraps children in AuthGuard for all routes except:
- * - Homepage (/)
- * - Auth flow routes (/auth/*)
- * - NC United Blue program page (/blue, /blue/*)
- * - Public athlete profiles (/unified-profile/*)
- * - Prospects list and profile redirects (/prospects, /prospects/*)
- * - Athletes (commitments) list and profile redirects (/athletes, /athletes/*)
- * - Public rankings (/public-rankings, /public-rankings/*)
+ * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /public-rankings*.
+ * Everything else (admin, profile, coach-portal) requires AuthGuard.
  */
 export function ConditionalAuthGuard({
   children,

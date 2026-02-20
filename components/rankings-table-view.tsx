@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
+import { isValidProfileId } from "@/lib/profile-id"
 
 interface NHSCAResult {
   text: string
@@ -398,7 +399,7 @@ export function RankingsTableView({
                   >
                     {canSeeWatchList && (
                       <TableCell className="text-center">
-                        {athlete.id ? (
+                        {isValidProfileId(athlete.id) ? (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -458,7 +459,7 @@ export function RankingsTableView({
                     )}
                     <TableCell className="pl-4">
                       <div className="flex items-center gap-3 leading-tight">
-                        {athlete.id ? (
+                        {isValidProfileId(athlete.id) ? (
                           <Link
                             href={`/unified-profile/${athlete.id}`}
                             className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
@@ -513,7 +514,7 @@ export function RankingsTableView({
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
                     <TableCell>
-                      {athlete.id ? (
+                      {isValidProfileId(athlete.id) ? (
                         <Link href={`/unified-profile/${athlete.id}`}>
                           <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
                             <ExternalLink className="w-3 h-3 text-gray-700" />
