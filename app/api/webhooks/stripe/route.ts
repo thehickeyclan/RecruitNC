@@ -36,29 +36,43 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
-    const membershipId = session.metadata?.membership_id
-    if (!membershipId) {
-      console.warn("[webhooks/stripe] checkout.session.completed missing metadata.membership_id")
-      return NextResponse.json({ received: true })
-    }
-
     const admin = createAdminClient()
     const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null
     const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null
 
-    const { error } = await admin
-      .from("blue_memberships")
-      .update({
-        status: "active",
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscriptionId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", membershipId)
+    const signupId = session.metadata?.signup_id
+    if (signupId) {
+      const { error } = await admin
+        .from("blue_signups")
+        .update({
+          status: "paid",
+          stripe_session_id: session.id,
+          stripe_customer_id: customerId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", signupId)
+      if (error) {
+        console.error("[webhooks/stripe] Failed to update blue_signups:", error.message)
+        return NextResponse.json({ error: "Update failed" }, { status: 500 })
+      }
+      return NextResponse.json({ received: true })
+    }
 
-    if (error) {
-      console.error("[webhooks/stripe] Failed to update blue_memberships:", error.message)
-      return NextResponse.json({ error: "Update failed" }, { status: 500 })
+    const membershipId = session.metadata?.membership_id
+    if (membershipId) {
+      const { error } = await admin
+        .from("blue_memberships")
+        .update({
+          status: "active",
+          stripe_customer_id: customerId,
+          stripe_subscription_id: subscriptionId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", membershipId)
+      if (error) {
+        console.error("[webhooks/stripe] Failed to update blue_memberships:", error.message)
+        return NextResponse.json({ error: "Update failed" }, { status: 500 })
+      }
     }
   }
 
