@@ -131,9 +131,12 @@ export async function POST(request: NextRequest) {
       cancel_url: `${baseUrl}/blue/register/cancelled`,
       metadata: { signup_id: signup.id },
       subscription_data: { metadata: { signup_id: signup.id } },
-      allow_promotion_codes: true,
     }
-    if (stripeCouponId) sessionParams.discounts = [{ coupon: stripeCouponId }]
+    if (stripeCouponId) {
+      sessionParams.discounts = [{ coupon: stripeCouponId }]
+    } else {
+      sessionParams.allow_promotion_codes = true
+    }
 
     const session = await stripe.checkout.sessions.create(sessionParams)
     if (!session.url) return NextResponse.json({ error: "Could not create checkout session." }, { status: 500 })

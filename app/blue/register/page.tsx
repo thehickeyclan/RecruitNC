@@ -217,6 +217,18 @@ export default function BlueRegisterPage() {
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-[#03154C]">NC United Blue — Registration</h1>
           <p className="text-gray-600 mt-1">Enter parent and athlete info below. No account required.</p>
+          <p className="mt-3">
+            <Link href="/blue" className="text-sm font-medium text-[#03154C] hover:text-[#0a2571] hover:underline">
+              Learn more about the Blue program →
+            </Link>
+          </p>
+        </div>
+
+        <div className="mb-6 rounded-xl border-2 border-[#03154C]/20 bg-[#03154C]/5 p-4 text-center">
+          <p className="font-semibold text-[#03154C]">$55/month</p>
+          <p className="text-sm text-[#03154C]/90 mt-1">
+            Joins NC&apos;s elite community: training with top wrestlers and college coaches, national competition, mentorship, and year-round development.
+          </p>
         </div>
 
         <div className="mb-6 flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl border-2 border-[#D3B574]/50 bg-white">
