@@ -54,6 +54,11 @@ export function Navbar() {
     { href: "/public-rankings", label: "Rankings" },
     { href: "/blue", label: "Blue Program" },
   ]
+  const blueProgramHref =
+    (typeof window !== "undefined" ? window.location.origin : null) ||
+    (process.env.NEXT_PUBLIC_APP_URL || "") ||
+    "/blue"
+  const blueProgramUrl = blueProgramHref.startsWith("http") ? `${blueProgramHref.replace(/\/$/, "")}/blue` : "/blue"
 
   const prospectsItems = [
     { href: "/prospects/all", label: "Athlete Profiles" },
@@ -138,15 +143,27 @@ export function Navbar() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              {mainNavLinks.slice(1).map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {mainNavLinks.slice(1).map((item) =>
+                item.href === "/blue" ? (
+                  <a
+                    key={item.href}
+                    href={blueProgramUrl}
+                    target="_top"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   National Team
@@ -328,16 +345,29 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
-                  {mainNavLinks.slice(1).map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  {mainNavLinks.slice(1).map((item) =>
+                    item.href === "/blue" ? (
+                      <a
+                        key={item.href}
+                        href={blueProgramUrl || "/blue"}
+                        target="_top"
+                        rel="noopener noreferrer"
+                        className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  )}
                   <div className="px-3">
                     <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
                     <div className="pl-4 space-y-2">

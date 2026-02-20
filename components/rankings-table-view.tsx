@@ -517,7 +517,7 @@ export function RankingsTableView({
                       >
                         <ExternalLink className="w-3 h-3 text-gray-700" />
                       </a>
-                    </TableCell>
+                 </TableCell>
                   </TableRow>
                 </Fragment>
               )
