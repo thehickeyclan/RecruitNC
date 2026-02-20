@@ -17,8 +17,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { RefreshCw, Loader2, Users, ArrowLeft, FileSpreadsheet, Mail, Check } from "lucide-react"
+
+const STATUS_OPTIONS = [
+  { value: "text_sent", label: "Text sent" },
+  { value: "invite_sent", label: "Invite sent" },
+  { value: "registered", label: "Registered" },
+  { value: "declined", label: "Declined" },
+] as const
 
 const ACHIEVEMENT_LABELS: Record<string, string> = {
   all_american: "All American",
@@ -40,6 +54,7 @@ type Submission = {
   club: string | null
   comments: string | null
   created_at: string
+  status?: string
   invite_id: string | null
   invite_sent: boolean
   enrolled: boolean
@@ -54,6 +69,7 @@ export default function AdminBlueInterestPage() {
   const [createInviteEmail, setCreateInviteEmail] = useState("")
   const [createInviteNote, setCreateInviteNote] = useState("")
   const [creatingInvite, setCreatingInvite] = useState(false)
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
   const { toast } = useToast()
   const loadIdRef = useRef(0)
   const lastCountRef = useRef(0)
@@ -157,6 +173,28 @@ export default function AdminBlueInterestPage() {
     setCreateInviteRow(row)
     setCreateInviteEmail("")
     setCreateInviteNote("")
+  }
+
+  const handleStatusChange = async (id: string, status: string) => {
+    setUpdatingStatusId(id)
+    try {
+      const res = await fetch("/api/admin/blue-express-interest", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, status }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: data.error || "Failed to update status", variant: "destructive" })
+        return
+      }
+      setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+    } catch {
+      toast({ title: "Failed to update status", variant: "destructive" })
+    } finally {
+      setUpdatingStatusId(null)
+    }
   }
 
   const handleCreateInvite = async () => {
@@ -279,11 +317,15 @@ create policy "Allow anonymous insert for express interest form"
 create policy "Service role can read all"
   on public.blue_express_interest for select to service_role using (true);
 
+create policy "Service role can update all"
+  on public.blue_express_interest for update to service_role using (true) with check (true);
+
 alter table public.blue_express_interest
   add column if not exists high_school text,
   add column if not exists club text,
   add column if not exists comments text,
-  add column if not exists weight_class text;`}
+  add column if not exists weight_class text,
+  add column if not exists status text default 'text_sent';`}
                       </pre>
                     </CardContent>
                   </Card>
@@ -301,6 +343,7 @@ alter table public.blue_express_interest
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[120px]">Status</TableHead>
                       <TableHead className="w-10 text-center">Invite sent</TableHead>
                       <TableHead className="w-10 text-center">Enrolled</TableHead>
                       <TableHead>Name</TableHead>
@@ -318,6 +361,25 @@ alter table public.blue_express_interest
                   <TableBody>
                     {submissions.map((row) => (
                       <TableRow key={row.id}>
+                        <TableCell>
+                          <Select
+                            value={row.status || "text_sent"}
+                            onValueChange={(value) => handleStatusChange(row.id, value)}
+                            disabled={updatingStatusId === row.id}
+                          >
+                            <SelectTrigger className="h-8 w-[120px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {updatingStatusId === row.id && <Loader2 className="ml-1 inline h-3 w-3 animate-spin" />}
+                        </TableCell>
                         <TableCell className="text-center">
                           {row.invite_sent ? (
                             <Checkbox checked disabled className="pointer-events-none" />

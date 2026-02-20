@@ -27,6 +27,7 @@ export async function middleware(request: NextRequest) {
 
   // Skip middleware entirely for public routes that don't need auth
   const publicRoutes = [
+    '/blue',
     '/auth/signin',
     '/auth/signup',
     '/auth/forgot-password',

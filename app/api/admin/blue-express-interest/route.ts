@@ -64,10 +64,12 @@ export async function GET(_request: NextRequest) {
       // If interest_id column doesn't exist, invError is set; submissions still return without link
     }
 
-    const submissions = list.map((row: Record<string, unknown> & { id: string }) => {
+    const submissions = list.map((row: Record<string, unknown> & { id: string; status?: string }) => {
       const link = invitesByInterest[row.id]
+      const status = row.status && STATUS_VALUES.includes(row.status as (typeof STATUS_VALUES)[number]) ? row.status : "text_sent"
       return {
         ...row,
+        status,
         invite_id: link?.invite_id ?? null,
         invite_sent: !!link,
         enrolled: !!link?.used_at,
@@ -83,6 +85,47 @@ export async function GET(_request: NextRequest) {
     console.error("[Admin API] blue-express-interest:", err)
     return NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : "Failed to fetch submissions" },
+      { status: 500 }
+    )
+  }
+}
+
+const STATUS_VALUES = ["text_sent", "invite_sent", "registered", "declined"] as const
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const auth = await requireAdmin()
+    if (!auth.ok) {
+      return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
+    }
+    const body = await request.json()
+    const id = body.id
+    const status = body.status
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ ok: false, error: "Missing id" }, { status: 400 })
+    }
+    if (!status || !STATUS_VALUES.includes(status)) {
+      return NextResponse.json({ ok: false, error: "Invalid status. Use: text_sent, invite_sent, registered, declined" }, { status: 400 })
+    }
+    const adminClient = createAdminClient()
+    const { error } = await adminClient
+      .from("blue_express_interest")
+      .update({ status })
+      .eq("id", id)
+    if (error) {
+      if (error.code === "42P01") {
+        return NextResponse.json({ ok: false, error: "Table blue_express_interest does not exist" }, { status: 503 })
+      }
+      if (error.message?.includes("violates check constraint") || error.message?.includes("status")) {
+        return NextResponse.json({ ok: false, error: "Add status column. Run SQL in docs/blue-express-interest-table.md" }, { status: 400 })
+      }
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
+  } catch (err: unknown) {
+    console.error("[Admin API] blue-express-interest PATCH:", err)
+    return NextResponse.json(
+      { ok: false, error: err instanceof Error ? err.message : "Failed to update" },
       { status: 500 }
     )
   }

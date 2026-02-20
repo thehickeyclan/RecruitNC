@@ -17,7 +17,7 @@ export function ConditionalAuthGuard({
   const pathname = usePathname()
   const isHomepage = pathname === "/"
   const isAuthRoute = pathname?.startsWith("/auth/") ?? false
-  const isBluePage = pathname === "/blue"
+  const isBluePage = pathname === "/blue" || pathname?.startsWith("/blue/")
   const isPublic = isHomepage || isAuthRoute || isBluePage
 
   if (isPublic) {

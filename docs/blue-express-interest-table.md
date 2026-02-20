@@ -29,6 +29,20 @@ create policy "Allow anonymous insert for express interest form"
 
 create policy "Service role can read all"
   on public.blue_express_interest for select to service_role using (true);
+
+create policy "Service role can update all"
+  on public.blue_express_interest for update to service_role using (true) with check (true);
+```
+
+**Status column (admin dropdown):** Add and use for tracking: text sent, invite sent, registered, declined.
+
+```sql
+alter table public.blue_express_interest
+  add column if not exists status text default 'text_sent'
+  check (status in ('text_sent', 'invite_sent', 'registered', 'declined'));
+
+-- Allow service role to update (if not already created above)
+-- create policy "Service role can update all" on public.blue_express_interest for update to service_role using (true) with check (true);
 ```
 
 Form fields: first name, last name, cell, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments.
@@ -40,7 +54,9 @@ alter table public.blue_express_interest
   add column if not exists high_school text,
   add column if not exists club text,
   add column if not exists comments text,
-  add column if not exists weight_class text;
+  add column if not exists weight_class text,
+  add column if not exists status text default 'text_sent';
+-- If adding status, add check: alter table public.blue_express_interest drop constraint if exists blue_express_interest_status_check; alter table public.blue_express_interest add constraint blue_express_interest_status_check check (status in ('text_sent', 'invite_sent', 'registered', 'declined'));
 ```
 
 **Weight class:** Run this in Supabase SQL editor if needed:

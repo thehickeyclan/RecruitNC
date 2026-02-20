@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { Metadata } from "next"
 import { Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { getBlueContent } from "@/lib/blue-content"
+import { getBlueContent, BLUE_IMAGE_KEYS, type BlueContent } from "@/lib/blue-content"
 import { BlueAlumniTable } from "./blue-alumni-table"
 import { getBlueAlumni } from "@/lib/blue-alumni"
 import { BlueExpressInterestForm } from "./blue-express-interest-form"
@@ -34,17 +34,27 @@ export const metadata: Metadata = {
 
 export default async function BluePage() {
   unstable_noStore()
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
   let isAdmin = false
-  if (user) {
-    const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-    isAdmin = !!profile?.is_admin
+  let images: Awaited<ReturnType<typeof getBlueContent>>
+  let alumni: Awaited<ReturnType<typeof getBlueAlumni>>
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
+      isAdmin = !!profile?.is_admin
+    }
+    const [imagesRes, alumniRes] = await Promise.all([
+      getBlueContent(),
+      getBlueAlumni(),
+    ])
+    images = imagesRes
+    alumni = alumniRes
+  } catch (e) {
+    console.error("[blue page] load error:", e)
+    images = BLUE_IMAGE_KEYS as unknown as BlueContent
+    alumni = []
   }
-  const [images, alumni] = await Promise.all([
-    getBlueContent(),
-    getBlueAlumni(),
-  ])
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
