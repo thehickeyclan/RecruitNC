@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { AthleteForm } from "@/components/athlete-form"
 import { TournamentResultsEditor } from "@/components/tournament-results-editor"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { getAthleteByIdAction, updateAthleteAction } from "@/lib/athlete-actions"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -15,7 +15,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-export default function EditAthletePage({ params }: { params: { id: string } }) {
+export default function EditAthletePage() {
+  const params = useParams()
+  const id = typeof params?.id === "string" ? params.id : ""
   const [athlete, setAthlete] = useState<any>(null)
   const [originalAthlete, setOriginalAthlete] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -30,9 +32,12 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
   const [editableHeadline, setEditableHeadline] = useState("")
   const router = useRouter()
   const { toast } = useToast()
-  const { id } = params
 
   useEffect(() => {
+    if (!id) {
+      setLoading(false)
+      return
+    }
     async function fetchAthlete() {
       try {
         setLoading(true)
