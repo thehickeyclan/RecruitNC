@@ -27,8 +27,10 @@ import {
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { RefreshCw, Loader2, Users, ArrowLeft, FileSpreadsheet, Mail, Check } from "lucide-react"
 
+const BLANK_VALUE = "__none__"
+
 const STATUS_OPTIONS = [
-  { value: "", label: "—" },
+  { value: BLANK_VALUE, label: "—" },
   { value: "text_sent", label: "Text sent" },
   { value: "invite_sent", label: "Invite sent" },
   { value: "registered", label: "Registered" },
@@ -36,7 +38,7 @@ const STATUS_OPTIONS = [
 ] as const
 
 const REGIONAL_OPTIONS = [
-  { value: "", label: "—" },
+  { value: BLANK_VALUE, label: "—" },
   { value: "1A", label: "1A" },
   { value: "2A", label: "2A" },
   { value: "3A", label: "3A" },
@@ -48,7 +50,7 @@ const REGIONAL_OPTIONS = [
 ] as const
 
 const PLACEMENT_OPTIONS = [
-  { value: "", label: "—" },
+  { value: BLANK_VALUE, label: "—" },
   { value: "1st", label: "1st" },
   { value: "2nd", label: "2nd" },
   { value: "3rd", label: "3rd" },
@@ -222,9 +224,9 @@ export default function AdminBlueInterestPage() {
     }
   }
 
-  const handleStatusChange = (id: string, value: string) => patchField(id, "status", value || null)
-  const handleRegionalChange = (id: string, value: string) => patchField(id, "regional", value || null)
-  const handlePlacementChange = (id: string, value: string) => patchField(id, "placement", value || null)
+  const handleStatusChange = (id: string, value: string) => patchField(id, "status", value === BLANK_VALUE ? null : value)
+  const handleRegionalChange = (id: string, value: string) => patchField(id, "regional", value === BLANK_VALUE ? null : value)
+  const handlePlacementChange = (id: string, value: string) => patchField(id, "placement", value === BLANK_VALUE ? null : value)
 
   const handleCreateInvite = async () => {
     if (!createInviteRow || !createInviteEmail.trim()) {
@@ -404,7 +406,7 @@ alter table public.blue_express_interest
                       <TableRow key={row.id}>
                         <TableCell>
                           <Select
-                            value={row.status ?? ""}
+                            value={row.status ?? BLANK_VALUE}
                             onValueChange={(value) => handleStatusChange(row.id, value)}
                             disabled={updatingFieldId === row.id}
                           >
@@ -413,7 +415,7 @@ alter table public.blue_express_interest
                             </SelectTrigger>
                             <SelectContent>
                               {STATUS_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value || "_blank"} value={opt.value}>
+                                <SelectItem key={opt.value} value={opt.value}>
                                   {opt.label}
                                 </SelectItem>
                               ))}
@@ -423,7 +425,7 @@ alter table public.blue_express_interest
                         </TableCell>
                         <TableCell>
                           <Select
-                            value={row.regional ?? ""}
+                            value={row.regional ?? BLANK_VALUE}
                             onValueChange={(value) => handleRegionalChange(row.id, value)}
                             disabled={updatingFieldId === row.id}
                           >
@@ -432,7 +434,7 @@ alter table public.blue_express_interest
                             </SelectTrigger>
                             <SelectContent>
                               {REGIONAL_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value || "_blank"} value={opt.value}>
+                                <SelectItem key={opt.value} value={opt.value}>
                                   {opt.label}
                                 </SelectItem>
                               ))}
@@ -441,7 +443,7 @@ alter table public.blue_express_interest
                         </TableCell>
                         <TableCell>
                           <Select
-                            value={row.placement ?? ""}
+                            value={row.placement ?? BLANK_VALUE}
                             onValueChange={(value) => handlePlacementChange(row.id, value)}
                             disabled={updatingFieldId === row.id}
                           >
@@ -450,7 +452,7 @@ alter table public.blue_express_interest
                             </SelectTrigger>
                             <SelectContent>
                               {PLACEMENT_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value || "_blank"} value={opt.value}>
+                                <SelectItem key={opt.value} value={opt.value}>
                                   {opt.label}
                                 </SelectItem>
                               ))}
