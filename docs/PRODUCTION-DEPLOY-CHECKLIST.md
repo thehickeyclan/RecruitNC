@@ -15,7 +15,7 @@ Use this right before or after you deploy.
 - **Site URL:** Your production origin, e.g. `https://app.ncwrestlingunited.com`  
 - **Redirect URLs:** Include at least:
   - `https://app.ncwrestlingunited.com/**`
-  - (If you use Vercel for this app) `https://v0-new-college-commits.vercel.app/**`
+  - Your Vercel preview URL if you use one (e.g. `https://your-project.vercel.app/**`)
 
 No need to add `/auth/reset-password` or `/auth/callback` separately if you have the `/**` wildcard.
 

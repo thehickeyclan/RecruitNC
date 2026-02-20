@@ -301,6 +301,10 @@ export function RankingsTableView({
 
   return (
     <div className="bg-white rounded-lg shadow">
+      {/* Deploy check: remove this bar after confirming production shows it */}
+      <div className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium text-center rounded-t-lg">
+        ✓ Deploy verified — you’re on the latest build
+      </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
