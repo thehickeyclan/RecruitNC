@@ -10,13 +10,19 @@ export function createAdminClient(): SupabaseClient {
   if (adminClient) return adminClient
 
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  // Use override if set (so you can add an editable env var in Vercel when the integration key is locked)
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY_OVERRIDE || process.env.SUPABASE_SERVICE_ROLE_KEY
+  const keySource = process.env.SUPABASE_SERVICE_ROLE_KEY_OVERRIDE ? "OVERRIDE" : process.env.SUPABASE_SERVICE_ROLE_KEY ? "integration" : "none"
+  console.log("[supabase/admin] key source:", keySource, "url:", url ? "set" : "missing")
 
   if (!url) {
     throw new Error("Supabase URL is not configured. Set SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL.")
   }
   if (!key) {
-    throw new Error("Supabase service role key is not configured. Set SUPABASE_SERVICE_ROLE_KEY.")
+    throw new Error(
+      "Supabase service role key is not configured. Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE."
+    )
   }
 
   adminClient = createClient(url, key, {
