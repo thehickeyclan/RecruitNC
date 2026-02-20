@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
@@ -10,13 +10,15 @@ type AthleteRecord = Record<string, unknown>
 
 export default function UnifiedProfilePage() {
   const params = useParams()
-  const searchParams = useSearchParams()
   const id = typeof params?.id === "string" ? params.id : ""
-  const debug = searchParams?.get("debug") === "1"
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [debugResponse, setDebugResponse] = useState<{ status: number; body: string } | null>(null)
+  const [debug, setDebug] = useState(false)
+  useEffect(() => {
+    if (typeof window !== "undefined") setDebug(new URLSearchParams(window.location.search).get("debug") === "1")
+  }, [])
 
   useEffect(() => {
     if (!id?.trim()) {
@@ -40,7 +42,7 @@ export default function UnifiedProfilePage() {
     fetch(apiUrl, { credentials: "include", signal: controller.signal })
       .then(async (res) => {
         const text = await res.text()
-        if (debug) setDebugResponse({ status: res.status, body: text })
+        if (!cancelled) setDebugResponse({ status: res.status, body: text })
         console.log("[profile-debug] Response", { status: res.status, ok: res.ok, bodyLength: text.length, bodyPreview: text.slice(0, 200) })
         let data: { ok?: boolean; athlete?: unknown; error?: string } = {}
         try {
@@ -81,7 +83,7 @@ export default function UnifiedProfilePage() {
       clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [id, debug])
+  }, [id])
 
   if (loading) {
     return (
