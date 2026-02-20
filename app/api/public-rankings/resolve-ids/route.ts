@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
 
 function normalize(s: string): string {
@@ -35,10 +35,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ids: {} })
     }
 
-    const supabase = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase = createAdminClient()
 
     const yearNum = parseInt(year, 10)
     // Match year as number or string (DB may store 2028 or "2028")

@@ -50,10 +50,10 @@ export default function ClassOf2027RankingsPage() {
   useEffect(() => {
     const fetchAthletes = async () => {
       try {
-        const response = await fetch("/api/public-rankings/2027")
+        const response = await fetch("/api/public-rankings?year=2027&gender=Male")
         if (response.ok) {
           const data = await response.json()
-          setAthletes(data.athletes || [])
+          setAthletes(data.rankings || [])
         }
       } catch (error) {
         console.error("Error fetching athletes:", error)

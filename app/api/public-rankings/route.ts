@@ -1,4 +1,4 @@
-import { createClient as createAdminClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2026"
     const gender = searchParams.get("gender") || "Male"
 
-    const supabase = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const supabase = createAdminClient()
 
     console.log("[v0] Fetching public rankings for:", { year, gender })
 
