@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getCollegesByIds } from "@/lib/colleges"
 
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const supabase = createAdminClient()
 
 function normalizeDivision(division: string | null): string {
   if (!division) return "Unknown"

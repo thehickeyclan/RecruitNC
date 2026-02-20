@@ -196,6 +196,13 @@ export function RankingsCardView({
                     <a
                       href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                       className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50"
+                      onClick={(e) => {
+                        const href = (e.currentTarget.getAttribute("href") ?? "").trim()
+                        if (href.startsWith("/unified-profile/") || href === "/create-profile") {
+                          e.preventDefault()
+                          window.location.href = href
+                        }
+                      }}
                     >
                       <ExternalLink className="w-3 h-3" />
                     </a>
@@ -206,6 +213,13 @@ export function RankingsCardView({
               <a
                 href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                 className="block"
+                onClick={(e) => {
+                  const href = (e.currentTarget.getAttribute("href") ?? "").trim()
+                  if (href.startsWith("/unified-profile/") || href === "/create-profile") {
+                    e.preventDefault()
+                    window.location.href = href
+                  }
+                }}
               >
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">

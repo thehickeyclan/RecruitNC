@@ -465,6 +465,13 @@ export function RankingsTableView({
                         <a
                           href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                           className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
+                          onClick={(e) => {
+                            const href = (e.currentTarget.getAttribute("href") ?? "").trim()
+                            if (href.startsWith("/unified-profile/") || href === "/create-profile") {
+                              e.preventDefault()
+                              window.location.href = href
+                            }
+                          }}
                         >
                           {athlete.name}
                         </a>
@@ -511,6 +518,13 @@ export function RankingsTableView({
                       <a
                         href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                         className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100"
+                        onClick={(e) => {
+                          const href = (e.currentTarget.getAttribute("href") ?? "").trim()
+                          if (href.startsWith("/unified-profile/") || href === "/create-profile") {
+                            e.preventDefault()
+                            window.location.href = href
+                          }
+                        }}
                       >
                         <ExternalLink className="w-3 h-3 text-gray-700" />
                       </a>

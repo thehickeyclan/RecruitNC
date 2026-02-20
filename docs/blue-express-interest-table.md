@@ -85,3 +85,5 @@ Until the column exists, submissions without weight class will still work.
 ## Deployment (admin list shows 0 rows)
 
 The admin page `/admin/blue/interest` reads via the **service role** client. In **Vercel → Settings → Environment Variables**, set `SUPABASE_SERVICE_ROLE_KEY` to the **service role** key from Supabase (Dashboard → Settings → API → `service_role` secret), **not** the anon key. Use the same Supabase project for Production and Preview so the table data is visible. If the key is wrong or the project differs, the API returns 0 rows and the interest page shows a hint to fix this.
+
+**Verify after changing env vars:** Hit `GET /api/health` on your deployed URL. It returns whether Supabase is configured and the DB is reachable (no secrets in the response), so you can confirm one deploy without guessing.

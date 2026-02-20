@@ -364,7 +364,14 @@ export default function ClassOf2027RankingsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">
                               {athlete.id ? (
-                                <a href={`/unified-profile/${athlete.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                                <a
+                                  href={`/unified-profile/${athlete.id}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    window.location.href = `/unified-profile/${athlete.id}`
+                                  }}
+                                >
                                   {athlete.name}
                                 </a>
                               ) : (
