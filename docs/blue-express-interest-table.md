@@ -34,15 +34,28 @@ create policy "Service role can update all"
   on public.blue_express_interest for update to service_role using (true) with check (true);
 ```
 
-**Status column (admin dropdown):** Add and use for tracking: text sent, invite sent, registered, declined.
+**Status (default blank), Regional, Placement (admin dropdowns):** Add columns. Status default is null (blank); optional values: text sent, invite sent, registered, declined. Regional: 1A–8A. Placement: 1st, 2nd, 3rd, 4th.
 
 ```sql
 alter table public.blue_express_interest
-  add column if not exists status text default 'text_sent'
-  check (status in ('text_sent', 'invite_sent', 'registered', 'declined'));
+  add column if not exists status text
+  check (status is null or status in ('text_sent', 'invite_sent', 'registered', 'declined'));
 
--- Allow service role to update (if not already created above)
--- create policy "Service role can update all" on public.blue_express_interest for update to service_role using (true) with check (true);
+alter table public.blue_express_interest
+  add column if not exists regional text
+  check (regional is null or regional in ('1A','2A','3A','4A','5A','6A','7A','8A'));
+
+alter table public.blue_express_interest
+  add column if not exists placement text
+  check (placement is null or placement in ('1st','2nd','3rd','4th'));
+```
+
+**If status already exists with a non-null default or check:** to allow blank as default, run:
+
+```sql
+alter table public.blue_express_interest drop constraint if exists blue_express_interest_status_check;
+alter table public.blue_express_interest alter column status drop default;
+alter table public.blue_express_interest add constraint blue_express_interest_status_check check (status is null or status in ('text_sent', 'invite_sent', 'registered', 'declined'));
 ```
 
 Form fields: first name, last name, cell, graduation year, highest level achievement, high school, club, freeform (comments). Optional: high school, club, comments.
@@ -55,8 +68,10 @@ alter table public.blue_express_interest
   add column if not exists club text,
   add column if not exists comments text,
   add column if not exists weight_class text,
-  add column if not exists status text default 'text_sent';
--- If adding status, add check: alter table public.blue_express_interest drop constraint if exists blue_express_interest_status_check; alter table public.blue_express_interest add constraint blue_express_interest_status_check check (status in ('text_sent', 'invite_sent', 'registered', 'declined'));
+  add column if not exists status text,
+  add column if not exists regional text,
+  add column if not exists placement text;
+-- Optional checks: status (null or text_sent/invite_sent/registered/declined), regional (null or 1A-8A), placement (null or 1st-4th). See block above.
 ```
 
 **Weight class:** Run this in Supabase SQL editor if needed:

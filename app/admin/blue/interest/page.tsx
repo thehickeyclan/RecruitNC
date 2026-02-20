@@ -28,10 +28,31 @@ import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { RefreshCw, Loader2, Users, ArrowLeft, FileSpreadsheet, Mail, Check } from "lucide-react"
 
 const STATUS_OPTIONS = [
+  { value: "", label: "—" },
   { value: "text_sent", label: "Text sent" },
   { value: "invite_sent", label: "Invite sent" },
   { value: "registered", label: "Registered" },
   { value: "declined", label: "Declined" },
+] as const
+
+const REGIONAL_OPTIONS = [
+  { value: "", label: "—" },
+  { value: "1A", label: "1A" },
+  { value: "2A", label: "2A" },
+  { value: "3A", label: "3A" },
+  { value: "4A", label: "4A" },
+  { value: "5A", label: "5A" },
+  { value: "6A", label: "6A" },
+  { value: "7A", label: "7A" },
+  { value: "8A", label: "8A" },
+] as const
+
+const PLACEMENT_OPTIONS = [
+  { value: "", label: "—" },
+  { value: "1st", label: "1st" },
+  { value: "2nd", label: "2nd" },
+  { value: "3rd", label: "3rd" },
+  { value: "4th", label: "4th" },
 ] as const
 
 const ACHIEVEMENT_LABELS: Record<string, string> = {
@@ -54,7 +75,9 @@ type Submission = {
   club: string | null
   comments: string | null
   created_at: string
-  status?: string
+  status?: string | null
+  regional?: string | null
+  placement?: string | null
   invite_id: string | null
   invite_sent: boolean
   enrolled: boolean
@@ -69,7 +92,7 @@ export default function AdminBlueInterestPage() {
   const [createInviteEmail, setCreateInviteEmail] = useState("")
   const [createInviteNote, setCreateInviteNote] = useState("")
   const [creatingInvite, setCreatingInvite] = useState(false)
-  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
+  const [updatingFieldId, setUpdatingFieldId] = useState<string | null>(null)
   const [zeroRowsHint, setZeroRowsHint] = useState(false)
   const { toast } = useToast()
   const loadIdRef = useRef(0)
@@ -177,27 +200,31 @@ export default function AdminBlueInterestPage() {
     setCreateInviteNote("")
   }
 
-  const handleStatusChange = async (id: string, status: string) => {
-    setUpdatingStatusId(id)
+  const patchField = async (id: string, field: "status" | "regional" | "placement", value: string | null) => {
+    setUpdatingFieldId(id)
     try {
       const res = await fetch("/api/admin/blue-express-interest", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, [field]: value === "" ? null : value }),
       })
       const data = await res.json()
       if (!res.ok) {
-        toast({ title: data.error || "Failed to update status", variant: "destructive" })
+        toast({ title: data.error || `Failed to update ${field}`, variant: "destructive" })
         return
       }
-      setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+      setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value || null } : s)))
     } catch {
-      toast({ title: "Failed to update status", variant: "destructive" })
+      toast({ title: `Failed to update ${field}`, variant: "destructive" })
     } finally {
-      setUpdatingStatusId(null)
+      setUpdatingFieldId(null)
     }
   }
+
+  const handleStatusChange = (id: string, value: string) => patchField(id, "status", value || null)
+  const handleRegionalChange = (id: string, value: string) => patchField(id, "regional", value || null)
+  const handlePlacementChange = (id: string, value: string) => patchField(id, "placement", value || null)
 
   const handleCreateInvite = async () => {
     if (!createInviteRow || !createInviteEmail.trim()) {
@@ -327,7 +354,9 @@ alter table public.blue_express_interest
   add column if not exists club text,
   add column if not exists comments text,
   add column if not exists weight_class text,
-  add column if not exists status text default 'text_sent';`}
+  add column if not exists status text,
+  add column if not exists regional text,
+  add column if not exists placement text;`}
                       </pre>
                     </CardContent>
                   </Card>
@@ -354,6 +383,8 @@ alter table public.blue_express_interest
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[120px]">Status</TableHead>
+                      <TableHead className="w-[90px]">Regional</TableHead>
+                      <TableHead className="w-[90px]">Placement</TableHead>
                       <TableHead className="w-10 text-center">Invite sent</TableHead>
                       <TableHead className="w-10 text-center">Enrolled</TableHead>
                       <TableHead>Name</TableHead>
@@ -373,22 +404,58 @@ alter table public.blue_express_interest
                       <TableRow key={row.id}>
                         <TableCell>
                           <Select
-                            value={row.status || "text_sent"}
+                            value={row.status ?? ""}
                             onValueChange={(value) => handleStatusChange(row.id, value)}
-                            disabled={updatingStatusId === row.id}
+                            disabled={updatingFieldId === row.id}
                           >
                             <SelectTrigger className="h-8 w-[120px]">
-                              <SelectValue />
+                              <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
                               {STATUS_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
+                                <SelectItem key={opt.value || "_blank"} value={opt.value}>
                                   {opt.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          {updatingStatusId === row.id && <Loader2 className="ml-1 inline h-3 w-3 animate-spin" />}
+                          {updatingFieldId === row.id && <Loader2 className="ml-1 inline h-3 w-3 animate-spin" />}
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.regional ?? ""}
+                            onValueChange={(value) => handleRegionalChange(row.id, value)}
+                            disabled={updatingFieldId === row.id}
+                          >
+                            <SelectTrigger className="h-8 w-[90px]">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {REGIONAL_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value || "_blank"} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.placement ?? ""}
+                            onValueChange={(value) => handlePlacementChange(row.id, value)}
+                            disabled={updatingFieldId === row.id}
+                          >
+                            <SelectTrigger className="h-8 w-[90px]">
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PLACEMENT_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value || "_blank"} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-center">
                           {row.invite_sent ? (

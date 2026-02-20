@@ -73,6 +73,9 @@ export async function GET() {
       "High School",
       "Club",
       "Comments",
+      "Status",
+      "Regional",
+      "Placement",
       "Submitted At",
     ]
 
@@ -86,6 +89,9 @@ export async function GET() {
       escapeCsv(row.high_school),
       escapeCsv(row.club),
       escapeCsv(row.comments),
+      escapeCsv(row.status),
+      escapeCsv(row.regional),
+      escapeCsv(row.placement),
       escapeCsv(row.created_at ? new Date(row.created_at).toISOString() : null),
     ])
 

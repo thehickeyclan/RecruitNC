@@ -77,12 +77,14 @@ export async function GET(_request: NextRequest) {
       // If interest_id column doesn't exist, invError is set; submissions still return without link
     }
 
-    const submissions = list.map((row: Record<string, unknown> & { id: string; status?: string }) => {
+    const submissions = list.map((row: Record<string, unknown> & { id: string; status?: string | null; regional?: string | null; placement?: string | null }) => {
       const link = invitesByInterest[row.id]
-      const status = row.status && STATUS_VALUES.includes(row.status as (typeof STATUS_VALUES)[number]) ? row.status : "text_sent"
+      const status = row.status != null && row.status !== "" && STATUS_VALUES.includes(row.status as (typeof STATUS_VALUES)[number]) ? row.status : null
       return {
         ...row,
-        status,
+        status: status ?? null,
+        regional: row.regional ?? null,
+        placement: row.placement ?? null,
         invite_id: link?.invite_id ?? null,
         invite_sent: !!link,
         enrolled: !!link?.used_at,
@@ -113,6 +115,21 @@ export async function GET(_request: NextRequest) {
 }
 
 const STATUS_VALUES = ["text_sent", "invite_sent", "registered", "declined"] as const
+const REGIONAL_VALUES = ["1A", "2A", "3A", "4A", "5A", "6A", "7A", "8A"] as const
+const PLACEMENT_VALUES = ["1st", "2nd", "3rd", "4th"] as const
+
+function isValidStatus(v: unknown): v is (typeof STATUS_VALUES)[number] | "" | null {
+  if (v === "" || v === null || v === undefined) return true
+  return typeof v === "string" && STATUS_VALUES.includes(v as (typeof STATUS_VALUES)[number])
+}
+function isValidRegional(v: unknown): v is (typeof REGIONAL_VALUES)[number] | "" | null {
+  if (v === "" || v === null || v === undefined) return true
+  return typeof v === "string" && REGIONAL_VALUES.includes(v as (typeof REGIONAL_VALUES)[number])
+}
+function isValidPlacement(v: unknown): v is (typeof PLACEMENT_VALUES)[number] | "" | null {
+  if (v === "" || v === null || v === undefined) return true
+  return typeof v === "string" && PLACEMENT_VALUES.includes(v as (typeof PLACEMENT_VALUES)[number])
+}
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -122,24 +139,42 @@ export async function PATCH(request: NextRequest) {
     }
     const body = await request.json()
     const id = body.id
-    const status = body.status
     if (!id || typeof id !== "string") {
       return NextResponse.json({ ok: false, error: "Missing id" }, { status: 400 })
     }
-    if (!status || !STATUS_VALUES.includes(status)) {
-      return NextResponse.json({ ok: false, error: "Invalid status. Use: text_sent, invite_sent, registered, declined" }, { status: 400 })
+    const updates: Record<string, string | null> = {}
+    if (body.hasOwnProperty("status")) {
+      if (!isValidStatus(body.status)) {
+        return NextResponse.json({ ok: false, error: "Invalid status. Use: (blank), text_sent, invite_sent, registered, declined" }, { status: 400 })
+      }
+      updates.status = body.status === "" || body.status == null ? null : body.status
+    }
+    if (body.hasOwnProperty("regional")) {
+      if (!isValidRegional(body.regional)) {
+        return NextResponse.json({ ok: false, error: "Invalid regional. Use: (blank), 1A–8A" }, { status: 400 })
+      }
+      updates.regional = body.regional === "" || body.regional == null ? null : body.regional
+    }
+    if (body.hasOwnProperty("placement")) {
+      if (!isValidPlacement(body.placement)) {
+        return NextResponse.json({ ok: false, error: "Invalid placement. Use: (blank), 1st, 2nd, 3rd, 4th" }, { status: 400 })
+      }
+      updates.placement = body.placement === "" || body.placement == null ? null : body.placement
+    }
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ ok: false, error: "Provide at least one of: status, regional, placement" }, { status: 400 })
     }
     const adminClient = createAdminClient()
     const { error } = await adminClient
       .from("blue_express_interest")
-      .update({ status })
+      .update(updates)
       .eq("id", id)
     if (error) {
       if (error.code === "42P01") {
         return NextResponse.json({ ok: false, error: "Table blue_express_interest does not exist" }, { status: 503 })
       }
-      if (error.message?.includes("violates check constraint") || error.message?.includes("status")) {
-        return NextResponse.json({ ok: false, error: "Add status column. Run SQL in docs/blue-express-interest-table.md" }, { status: 400 })
+      if (error.message?.includes("violates check constraint")) {
+        return NextResponse.json({ ok: false, error: "Column or constraint missing. Run SQL in docs/blue-express-interest-table.md" }, { status: 400 })
       }
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
