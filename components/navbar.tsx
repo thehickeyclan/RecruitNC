@@ -54,6 +54,9 @@ export function Navbar() {
     { href: "/public-rankings", label: "Rankings" },
     { href: "/blue", label: "Blue Program" },
   ]
+  // Same as blue/register/success: full app URL + target=_top so Blue link works when app is embedded
+  const appUrl = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "")
+  const blueHref = appUrl ? `${appUrl.replace(/\/$/, "")}/blue` : "/blue"
   const prospectsItems = [
     { href: "/prospects/all", label: "Athlete Profiles" },
   ]
@@ -141,9 +144,10 @@ export function Navbar() {
                 item.href === "/blue" ? (
                   <a
                     key={item.href}
-                    href="/blue"
-                    onClick={(e) => { e.preventDefault(); window.location.href = "/blue" }}
-                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized cursor-pointer"
+                    href={blueHref}
+                    target="_top"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
                   >
                     {item.label}
                   </a>
@@ -342,9 +346,11 @@ export function Navbar() {
                     item.href === "/blue" ? (
                       <a
                         key={item.href}
-                        href="/blue"
-                        onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/blue" }}
-                        className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center cursor-pointer"
+                        href={blueHref}
+                        target="_top"
+                        rel="noopener noreferrer"
+                        onClick={() => setIsOpen(false)}
+                        className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
                       >
                         {item.label}
                       </a>
