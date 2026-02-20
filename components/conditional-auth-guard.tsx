@@ -6,8 +6,12 @@ import { AuthGuard } from "@/components/auth-guard"
 /**
  * Wraps children in AuthGuard for all routes except:
  * - Homepage (/)
- * - Auth flow routes (/auth/*) so signin, signup, forgot-password, reset-password, callback, etc. work without a session
- * - NC United Blue program page (/blue) - public-facing flagship page
+ * - Auth flow routes (/auth/*)
+ * - NC United Blue program page (/blue, /blue/*)
+ * - Public athlete profiles (/unified-profile/*)
+ * - Prospects list and profile redirects (/prospects, /prospects/*)
+ * - Athletes (commitments) list and profile redirects (/athletes, /athletes/*)
+ * - Public rankings (/public-rankings, /public-rankings/*)
  */
 export function ConditionalAuthGuard({
   children,
@@ -18,7 +22,18 @@ export function ConditionalAuthGuard({
   const isHomepage = pathname === "/"
   const isAuthRoute = pathname?.startsWith("/auth/") ?? false
   const isBluePage = pathname === "/blue" || pathname?.startsWith("/blue/")
-  const isPublic = isHomepage || isAuthRoute || isBluePage
+  const isUnifiedProfile = pathname?.startsWith("/unified-profile")
+  const isProspects = pathname === "/prospects" || pathname?.startsWith("/prospects/")
+  const isAthletes = pathname === "/athletes" || pathname?.startsWith("/athletes/")
+  const isPublicRankings = pathname?.startsWith("/public-rankings")
+  const isPublic =
+    isHomepage ||
+    isAuthRoute ||
+    isBluePage ||
+    isUnifiedProfile ||
+    isProspects ||
+    isAthletes ||
+    isPublicRankings
 
   if (isPublic) {
     return <>{children}</>

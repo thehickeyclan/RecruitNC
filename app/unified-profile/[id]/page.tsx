@@ -17,9 +17,7 @@ const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
 const PUBLIC_PROFILE_IDS = new Set(rawPublicIds)
 
 interface UnifiedProfilePageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{ id: string }>
 }
 
 async function getAthlete(id: string, supabase: SupabaseClient) {
@@ -54,7 +52,8 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
 }
 
 export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
-  const isPublicProfile = PUBLIC_PROFILE_IDS.has(params.id)
+  const { id } = await params
+  const isPublicProfile = PUBLIC_PROFILE_IDS.has(id)
   // Use admin client for athlete fetch - same data source as 2026/2027 pages (public-rankings API)
   const supabase = createAdminClient()
 
@@ -67,7 +66,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     currentUserId = user?.id ?? null
   }
 
-  const athlete = await getAthlete(params.id, supabase)
+  const athlete = await getAthlete(id, supabase)
 
   if (!athlete) {
     notFound()

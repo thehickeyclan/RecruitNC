@@ -1,11 +1,10 @@
 import { redirect } from "next/navigation"
 
 interface AthletePageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{ id: string }>
 }
 
 export default async function AthletePage({ params }: AthletePageProps) {
-  redirect(`/unified-profile/${params.id}`)
+  const { id } = await params
+  redirect(`/unified-profile/${id}`)
 }

@@ -5,11 +5,10 @@ import { redirect } from "next/navigation"
  * Redirect /prospects/[id] to /unified-profile/[id] so there's one code path for all kids.
  */
 interface ProspectPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{ id: string }>
 }
 
 export default async function ProspectPage({ params }: ProspectPageProps) {
-  redirect(`/unified-profile/${params.id}`)
+  const { id } = await params
+  redirect(`/unified-profile/${id}`)
 }
