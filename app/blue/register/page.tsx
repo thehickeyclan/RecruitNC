@@ -468,7 +468,6 @@ export default function BlueRegisterPage() {
                     />
                   </div>
                 </div>
-              </div>
 
               <div className="border-t pt-6 space-y-2">
                 <Label>T-shirt size (required)</Label>
