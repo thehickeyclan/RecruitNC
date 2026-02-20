@@ -129,7 +129,7 @@ export default function AthletesTable({ athletes }: AthletesTableProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/admin/athletes/edit/${athlete.id}`}>
+                        <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </Link>

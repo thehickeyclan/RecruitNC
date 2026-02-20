@@ -135,7 +135,7 @@ export default function AdminBlueSubscriptionsPage() {
                     {filtered.map((sub) => (
                       <TableRow key={sub.id}>
                         <TableCell className="font-medium">
-                          <Link href={`/admin/athletes/edit/${sub.athlete_id}`} className="text-[#13294B] hover:underline">
+                          <Link href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`} className="text-[#13294B] hover:underline">
                             {sub.athlete_name}
                           </Link>
                         </TableCell>
@@ -167,7 +167,7 @@ export default function AdminBlueSubscriptionsPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/admin/athletes/edit/${sub.athlete_id}`}>View athlete</Link>
+                              <Link href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`}>View athlete</Link>
                             </Button>
                             {sub.stripe_subscription_id && (
                               <a

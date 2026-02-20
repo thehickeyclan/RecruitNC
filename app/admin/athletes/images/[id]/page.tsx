@@ -188,7 +188,7 @@ export default function AthleteImagesPage({ params }: { params: { id: string } }
           </Button>
 
           <Button variant="outline" asChild>
-            <Link href={`/admin/athletes/edit/${athlete.id}`}>Edit Athlete Details</Link>
+            <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`}>Edit Athlete Details</Link>
           </Button>
         </div>
       </div>

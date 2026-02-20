@@ -414,7 +414,7 @@ export default function AthletesPage() {
                             <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} target="_blank" rel="noopener noreferrer">View profile</Link>
                           </Button>
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
-                            <Link href={`/admin/athletes/edit/${athlete.id}`}>Edit</Link>
+                            <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`}>Edit</Link>
                           </Button>
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
                             <Link href={`/admin/athletes/images/${athlete.id}`}>Images</Link>

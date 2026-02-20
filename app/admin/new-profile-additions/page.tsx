@@ -170,7 +170,7 @@ export default function NewProfileAdditionsPage() {
                               Publish
                             </Button>
                           )}
-                          <Link href={`/admin/athletes/edit/${a.id}`}>
+                          <Link href={`/admin/athletes/edit?id=${encodeURIComponent(a.id)}`}>
                             <Button size="sm" variant="outline">
                               <Pencil className="h-4 w-4 mr-1" />
                               Edit

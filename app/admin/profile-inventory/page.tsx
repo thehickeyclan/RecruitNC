@@ -250,7 +250,7 @@ export default function ProfileInventoryPage() {
                           </td>
                           <td className="p-3 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <Link href={`/admin/athletes/edit/${a.id}`}>
+                              <Link href={`/admin/athletes/edit?id=${encodeURIComponent(a.id)}`}>
                                 <Button size="sm" variant="outline">
                                   <Pencil className="h-4 w-4 mr-1" />
                                   Edit

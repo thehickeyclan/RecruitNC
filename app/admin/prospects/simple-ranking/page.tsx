@@ -398,7 +398,7 @@ export default function SimpleRankingPage() {
 
                   {/* Name */}
                   <TableCell>
-                    <Link href={`/admin/athletes/edit/${athlete.id}`} className="hover:text-[#CC0000] transition-colors">
+                    <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`} className="hover:text-[#CC0000] transition-colors">
                       <div className="font-semibold text-[#13294B]">{athlete.name}</div>
                     </Link>
                   </TableCell>

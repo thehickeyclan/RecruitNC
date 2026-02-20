@@ -82,7 +82,7 @@ export function ImageUpload({
       formData.append("name", entityName.replace(/\s+/g, "-").toLowerCase())
 
       // If we're editing an athlete, include the entity information
-      if (window.location.pathname.includes("/admin/athletes/edit/")) {
+      if (window.location.pathname.startsWith("/admin/athletes/edit")) {
         const athleteId = window.location.pathname.split("/").pop()
         if (athleteId) {
           formData.append("entityId", athleteId)
