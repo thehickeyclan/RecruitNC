@@ -304,13 +304,13 @@ export default function Class2028RankingsPage() {
                           </div>
                           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
                             {athlete.id ? (
-                              <Link href={`/unified-profile/${athlete.id}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                              <a href={`/unified-profile/${athlete.id}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
                                 {athlete.name}
-                              </Link>
+                              </a>
                             ) : (
-                              <Link href={getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                              <a href={getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)} className="text-gray-900 hover:text-[#D3B574] hover:underline">
                                 {athlete.name}
-                              </Link>
+                              </a>
                             )}
                           </h3>
                           <p className="text-sm text-gray-600 mb-2">{athlete.school}</p>
@@ -318,12 +318,12 @@ export default function Class2028RankingsPage() {
                             {athlete.weight}
                           </Badge>
                           <div className="mt-2">
-                            <Link
+                            <a
                               href={athlete.id ? `/unified-profile/${athlete.id}` : getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)}
                               className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
                             >
                               View Profile →
-                            </Link>
+                            </a>
                           </div>
                         </div>
                       )

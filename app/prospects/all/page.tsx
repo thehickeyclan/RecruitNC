@@ -420,7 +420,9 @@ export default function AllProspectsPage() {
     })
 
     if (mapped.length > 0) {
-      console.log("[prospects/all] tableAthletes sample", mapped.slice(0, 3))
+      const sample = mapped.slice(0, 3)
+      console.log("[prospects/all] tableAthletes sample", sample)
+      console.log("[prospects/all] first 3 athlete ids (must be UUIDs for profile links to work):", sample.map((a) => ({ name: a.name, id: a.id, isUuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(a.id)) })))
     }
     return mapped
   }, [sortedProspects])

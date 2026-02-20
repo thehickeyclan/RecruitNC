@@ -701,27 +701,17 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               )}
             </div>
 
-            <Link
+            <a
               href={athlete.id ? `/unified-profile/${athlete.id}` : `/athletes/${athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
-              className="block"
+              className="block w-full font-bold py-2 flex items-center justify-center gap-2 shadow-md text-sm transition-colors rounded-md hover:opacity-95"
+              style={{
+                backgroundColor: "#D3B574",
+                color: "#0D1A4D",
+              }}
             >
-              <Button
-                className="w-full font-bold py-2 flex items-center justify-center gap-2 shadow-md text-sm transition-colors"
-                style={{
-                  backgroundColor: "#D3B574",
-                  color: "#0D1A4D",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#CBAF5D"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#D3B574"
-                }}
-              >
-                View Full Profile
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </Link>
+              View Full Profile
+              <ExternalLink className="h-4 w-4" />
+            </a>
           </div>
         </Card>
       </div>

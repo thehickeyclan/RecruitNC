@@ -460,15 +460,13 @@ export function ProspectCard({ athlete }: ProspectCardProps) {
               </div>
             </div>
 
-            <Link
+            <a
               href={`/athletes/${athlete.id || athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
-              className="block"
+              className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 flex items-center justify-center gap-2 shadow-md text-lg rounded-md"
             >
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 flex items-center justify-center gap-2 shadow-md text-lg">
-                View Full Profile
-                <ExternalLink className="h-5 w-5" />
-              </Button>
-            </Link>
+              View Full Profile
+              <ExternalLink className="h-5 w-5" />
+            </a>
           </div>
         </Card>
       </div>

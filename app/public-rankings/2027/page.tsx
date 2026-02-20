@@ -265,9 +265,9 @@ export default function Class2027RankingsPage() {
                               <Badge className="bg-[#D3B574] text-gray-900 font-semibold px-3 py-1">#{athlete.prospect_ranking}</Badge>
                             </div>
                           </div>
-                          <Link href={profileHref} className="hover:text-[#D3B574] transition-colors">
+                          <a href={profileHref} className="hover:text-[#D3B574] transition-colors">
                             <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">{athlete.name}</h3>
-                          </Link>
+                          </a>
                           <p className="text-sm text-gray-600 mb-2">{athlete.highschool || "High School TBD"}</p>
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574]">
                             {athlete.weight_display}

@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ExternalLink, Star } from "lucide-react"
-import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
+import { isValidProfileId } from "@/lib/profile-id"
 
 interface Athlete {
   id?: string
@@ -163,7 +163,6 @@ export function RankingsCardView({
             key={athlete.id ?? `athlete-${index}`}
           className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
         >
-          <Link href={athlete.id ? `/unified-profile/${athlete.id}` : "/create-profile"}>
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
@@ -178,72 +177,79 @@ export function RankingsCardView({
                     </Badge>
                   )}
                   <div className="flex items-center gap-2">
-                    {canSeeWatchList && athlete.id && (
+                    {canSeeWatchList && isValidProfileId(athlete.id) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={(e) => handleStarToggle(athlete.id, e)}
-                        disabled={starringInProgress.has(athlete.id)}
+                        type="button"
+                        onClick={(e) => handleStarToggle(athlete.id!, e)}
+                        disabled={starringInProgress.has(athlete.id!)}
                         className="h-7 w-7 p-0 hover:bg-white/50"
                       >
                         <Star
                           className={`w-4 h-4 ${
-                            starredAthletes.has(athlete.id) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
+                            starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
                           }`}
                         />
                       </Button>
                     )}
-                    <Button size="sm" variant="outline" className="h-7 w-7 p-0 bg-white">
+                    <a
+                      href={isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50"
+                    >
                       <ExternalLink className="w-3 h-3" />
-                    </Button>
+                    </a>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4">
-                {/* Athlete info with photo */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-shrink-0">
-                    {athlete.photourl ? (
-                      <img
-                        src={athlete.photourl || "/placeholder.svg"}
-                        alt={athlete.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                        onError={(e) => {
-                          e.currentTarget.src = "/diverse-wrestlers.png"
-                        }}
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-500 font-bold text-sm">
-                          {athlete.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </span>
-                      </div>
-                    )}
+              <a
+                href={isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                className="block"
+              >
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex-shrink-0">
+                      {athlete.photourl ? (
+                        <img
+                          src={athlete.photourl || "/placeholder.svg"}
+                          alt={athlete.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          onError={(e) => {
+                            e.currentTarget.src = "/diverse-wrestlers.png"
+                          }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-500 font-bold text-sm">
+                            {athlete.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                              .slice(0, 2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1 hover:text-[#D3B574] transition-colors">
+                        {athlete.name}
+                      </h3>
+                      <p className="text-gray-600 font-medium text-sm mb-1">{athlete.highschool}</p>
+                      <Badge variant="secondary" className="text-xs font-medium">
+                        {athlete.weight_display} lbs
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1 hover:text-[#D3B574] transition-colors">
-                      {athlete.name}
-                    </h3>
-                    <p className="text-gray-600 font-medium text-sm mb-1">{athlete.highschool}</p>
-                    <Badge variant="secondary" className="text-xs font-medium">
-                      {athlete.weight_display} lbs
-                    </Badge>
-                  </div>
-                </div>
 
-                <div className="text-center pt-2 border-t border-gray-100">
-                  <span className="text-xs text-gray-500">
-                    {athlete.id ? "Tap to view full profile & achievements" : "New profile — tap to create"}
-                  </span>
+                  <div className="text-center pt-2 border-t border-gray-100">
+                    <span className="text-xs text-gray-500">
+                      {isValidProfileId(athlete.id) ? "Tap to view full profile & achievements" : "New profile — tap to create"}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </a>
             </CardContent>
-          </Link>
         </Card>
         </>
       ))}

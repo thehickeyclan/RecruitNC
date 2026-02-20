@@ -15,6 +15,7 @@ import { StorageAccessPrompt } from "@/components/storage-access-prompt"
 import { IframeSignInBanner } from "@/components/iframe-signin-banner"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 import { RecoveryRedirect } from "@/components/recovery-redirect"
+import { ProfileLinkDebug } from "@/components/profile-link-debug"
 
 export const metadata = {
   title: "NC Wrestling Commits | Prospect Rankings",
@@ -72,6 +73,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
+            <ProfileLinkDebug />
             <RecoveryRedirect />
             <IframeResizer />
             <StorageAccessPrompt />

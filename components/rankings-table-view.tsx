@@ -2,10 +2,10 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExternalLink, ChevronUp, ChevronDown, Star } from 'lucide-react'
-import Link from "next/link"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
+import { isValidProfileId } from "@/lib/profile-id"
 
 interface NHSCAResult {
   text: string
@@ -103,7 +103,11 @@ export function RankingsTableView({
           if (starredResponse.ok) {
             const starredData = await starredResponse.json()
             console.log("[v0] Starred athletes data:", starredData)
-            const starredIds = new Set(starredData.athletes?.map((a: any) => a.athlete_id) || [])
+            const starredIds = new Set<string>(
+              (starredData.athletes?.map((a: { athlete_id?: string }) => a.athlete_id) || []).filter(
+                (id: unknown): id is string => typeof id === "string"
+              )
+            )
             console.log("[v0] Starred athlete IDs:", Array.from(starredIds))
             setStarredAthletes(starredIds)
           }
@@ -398,17 +402,17 @@ export function RankingsTableView({
                   >
                     {canSeeWatchList && (
                       <TableCell className="text-center">
-                        {athlete.id ? (
+                        {isValidProfileId(athlete.id) ? (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleStarToggle(athlete.id)}
-                            disabled={starringInProgress.has(athlete.id)}
+                            onClick={() => handleStarToggle(athlete.id!)}
+                            disabled={starringInProgress.has(athlete.id!)}
                             className="h-8 w-8 p-0 hover:bg-gray-100"
                           >
                             <Star
                               className={`w-5 h-5 ${
-                                starredAthletes.has(athlete.id) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
+                                starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : "text-gray-400"
                               }`}
                             />
                           </Button>
@@ -458,20 +462,22 @@ export function RankingsTableView({
                     )}
                     <TableCell className="pl-4">
                       <div className="flex items-center gap-3 leading-tight">
-                        {athlete.id ? (
-                          <Link
+                        {isValidProfileId(athlete.id) ? (
+                          <a
                             href={`/unified-profile/${athlete.id}`}
                             className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
                           >
                             {athlete.name}
-                          </Link>
-                        ) : (
-                          <Link
+                          </a>
+                        ) : athlete.id ? (
+                          <a
                             href="/create-profile"
                             className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
                           >
                             {athlete.name}
-                          </Link>
+                          </a>
+                        ) : (
+                          <span className="font-semibold text-gray-900">{athlete.name}</span>
                         )}
                       </div>
                     </TableCell>
@@ -513,18 +519,20 @@ export function RankingsTableView({
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
                     <TableCell>
-                      {athlete.id ? (
-                        <Link href={`/unified-profile/${athlete.id}`}>
-                          <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100">
-                            <ExternalLink className="w-3 h-3 text-gray-700" />
-                          </Button>
-                        </Link>
+                      {isValidProfileId(athlete.id) ? (
+                        <a
+                          href={`/unified-profile/${athlete.id}`}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100"
+                        >
+                          <ExternalLink className="w-3 h-3 text-gray-700" />
+                        </a>
                       ) : (
-                        <Link href="/create-profile">
-                          <Button size="sm" variant="outline" className="h-8 w-8 p-0 bg-transparent hover:bg-gray-100 text-xs px-2">
-                            New profile
-                          </Button>
-                        </Link>
+                        <a
+                          href="/create-profile"
+                          className="inline-flex h-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100 px-2 text-xs"
+                        >
+                          New profile
+                        </a>
                       )}
                     </TableCell>
                   </TableRow>
