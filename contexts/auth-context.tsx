@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { Session, User } from "@supabase/supabase-js"
-import { getUserProfile } from "@/app/actions/get-user-profile"
 
 interface UserProfile {
   id: string
@@ -145,22 +144,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isVerifiedCoach = profile?.verified_coach === true || isAdmin
   const isAuthenticated = !!user && !!session
 
-  const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const fetchUserProfile = async (_userId: string): Promise<UserProfile | null> => {
     try {
-      console.log("[v0] Fetching profile for user:", userId)
-      const data = (await getUserProfile(userId)) as any
-
+      console.log("[v0] Fetching profile for user:", _userId)
+      const res = await fetch("/api/profile", { credentials: "include" })
+      if (!res.ok) {
+        if (res.status === 401) return null
+        console.error("[v0] Profile fetch returned", res.status)
+        return null
+      }
+      const data = (await res.json()) as any
       if (!data) {
         console.error("[v0] Profile fetch returned null")
         return null
       }
-
       console.log("[v0] Profile fetched successfully:", {
         user_id: data.user_id,
         is_admin: data.is_admin,
         role: data.role,
       })
-
       return data as UserProfile
     } catch (error: any) {
       console.error("[v0] Profile fetch exception:", error.message || error)
