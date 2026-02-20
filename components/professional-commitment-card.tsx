@@ -702,7 +702,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             </div>
 
             <Link
-              href={`/athletes/${athlete.id || athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
+              href={athlete.id ? `/unified-profile/${athlete.id}` : `/athletes/${athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
               className="block"
             >
               <Button

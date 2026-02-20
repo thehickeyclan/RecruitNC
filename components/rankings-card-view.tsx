@@ -9,7 +9,6 @@ import { ExternalLink, Star } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { isValidProfileId } from "@/lib/profile-id"
 
 interface Athlete {
   id?: string
@@ -164,7 +163,7 @@ export function RankingsCardView({
             key={athlete.id ?? `athlete-${index}`}
           className="hover:shadow-lg transition-all duration-200 border border-gray-200 bg-white rounded-lg overflow-hidden cursor-pointer"
         >
-          <Link href={isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}>
+          <Link href={athlete.id ? `/unified-profile/${athlete.id}` : "/create-profile"}>
             <CardContent className="p-0">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 border-b border-gray-100">
                 <div className="flex items-center justify-between">
@@ -179,7 +178,7 @@ export function RankingsCardView({
                     </Badge>
                   )}
                   <div className="flex items-center gap-2">
-                    {canSeeWatchList && isValidProfileId(athlete.id) && (
+                    {canSeeWatchList && athlete.id && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -239,7 +238,7 @@ export function RankingsCardView({
 
                 <div className="text-center pt-2 border-t border-gray-100">
                   <span className="text-xs text-gray-500">
-                    {isValidProfileId(athlete.id) ? "Tap to view full profile & achievements" : "New profile — tap to create"}
+                    {athlete.id ? "Tap to view full profile & achievements" : "New profile — tap to create"}
                   </span>
                 </div>
               </div>

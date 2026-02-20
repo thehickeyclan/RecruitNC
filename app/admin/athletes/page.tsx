@@ -286,7 +286,11 @@ export default function AthletesPage() {
                           alt={`${athlete.name || "Athlete"} photo`}
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{athlete.name || "N/A"}</TableCell>
+                      <TableCell className="font-medium">
+                        <Link href={`/unified-profile/${athlete.id}`} className="text-[#002147] hover:underline" target="_blank" rel="noopener noreferrer">
+                          {athlete.name || "N/A"}
+                        </Link>
+                      </TableCell>
                       <TableCell>{athlete.highschool || "N/A"}</TableCell>
                       <TableCell>{athlete.state || athlete.state_abbreviation || athlete.hometown_state || "N/A"}</TableCell>
                       <TableCell>{athlete.college || "N/A"}</TableCell>
@@ -315,7 +319,10 @@ export default function AthletesPage() {
                         {athlete.commitmentdate ? new Date(athlete.commitmentdate).toLocaleDateString() : "N/A"}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
+                            <Link href={`/unified-profile/${athlete.id}`} target="_blank" rel="noopener noreferrer">View profile</Link>
+                          </Button>
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
                             <Link href={`/admin/athletes/edit/${athlete.id}`}>Edit</Link>
                           </Button>
