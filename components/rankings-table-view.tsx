@@ -462,12 +462,8 @@ export function RankingsTableView({
                     )}
                     <TableCell className="pl-4">
                       <a
-                        href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                        href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
                         className="flex items-center gap-3 leading-tight font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
-                        onClick={() => {
-                          const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                          console.log("[profile-debug] Profile link clicked", { href, athleteId: athlete.id, athleteName: athlete.name })
-                        }}
                       >
                         {athlete.name}
                       </a>
@@ -511,13 +507,9 @@ export function RankingsTableView({
                     </TableCell>
                     <TableCell>
                       <a
-                        href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                        href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
                         className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100 cursor-pointer"
                         aria-label={`View ${athlete.name} profile`}
-                        onClick={() => {
-                          const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                          console.log("[profile-debug] Profile link clicked", { href, athleteId: athlete.id })
-                        }}
                       >
                         <ExternalLink className="w-3 h-3 text-gray-700" />
                       </a>

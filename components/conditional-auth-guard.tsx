@@ -17,6 +17,7 @@ export function ConditionalAuthGuard({
   const isAuthRoute = pathname?.startsWith("/auth/") ?? false
   const isBluePage = pathname === "/blue" || pathname?.startsWith("/blue/")
   const isUnifiedProfile = pathname?.startsWith("/unified-profile")
+  const isViewProfile = pathname === "/view-profile"
   const isProspects = pathname === "/prospects" || pathname?.startsWith("/prospects/")
   const isAthletes = pathname === "/athletes" || pathname?.startsWith("/athletes/")
   const isPublicRankings = pathname?.startsWith("/public-rankings")
@@ -25,6 +26,7 @@ export function ConditionalAuthGuard({
     isAuthRoute ||
     isBluePage ||
     isUnifiedProfile ||
+    isViewProfile ||
     isProspects ||
     isAthletes ||
     isPublicRankings

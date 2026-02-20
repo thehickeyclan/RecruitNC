@@ -194,13 +194,9 @@ export function RankingsCardView({
                       </Button>
                     )}
                     <a
-                      href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                      href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
                       className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50 cursor-pointer"
                       aria-label={`View ${athlete.name} profile`}
-                      onClick={() => {
-                        const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                        console.log("[profile-debug] Profile link clicked", { href, athleteId: athlete.id })
-                      }}
                     >
                       <ExternalLink className="w-3 h-3" />
                     </a>
@@ -209,12 +205,8 @@ export function RankingsCardView({
               </div>
 
               <a
-                href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
                 className="block cursor-pointer"
-                onClick={() => {
-                  const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                  console.log("[profile-debug] Profile link clicked", { href, athleteId: athlete.id, athleteName: athlete.name })
-                }}
               >
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
