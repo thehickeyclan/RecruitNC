@@ -383,7 +383,6 @@ export default function BlueRegisterPage() {
                   id="promoCode"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. BLUE50"
                   disabled={loading}
                 />
               </div>

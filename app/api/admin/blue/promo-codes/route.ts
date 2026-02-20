@@ -94,23 +94,25 @@ export async function POST(request: NextRequest) {
   }
 
   const validUntil = body.valid_until?.trim() ? new Date(body.valid_until).toISOString() : null
+  const insertPayload: Record<string, unknown> = {
+    code,
+    type,
+    value,
+    stripe_coupon_id: stripeCouponId,
+    max_redemptions: body.max_redemptions != null && Number.isInteger(body.max_redemptions) ? body.max_redemptions : null,
+    valid_until: validUntil,
+    notes: body.notes?.trim() || null,
+    created_by: auth.user.id,
+  }
   const { data: row, error } = await admin
     .from("blue_promo_codes")
-    .insert({
-      code,
-      type,
-      value,
-      stripe_coupon_id: stripeCouponId,
-      max_redemptions: body.max_redemptions != null && Number.isInteger(body.max_redemptions) ? body.max_redemptions : null,
-      valid_until: validUntil,
-      notes: body.notes?.trim() || null,
-      created_by: auth.user.id,
-    })
+    .insert(insertPayload)
     .select("id, code, type, value, stripe_coupon_id, max_redemptions, valid_until, notes, created_at")
     .single()
 
   if (error) {
-    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_promo_codes does not exist." }, { status: 503 })
+    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_promo_codes does not exist. Run the SQL in chat (blue_promo_codes) in Supabase SQL Editor." }, { status: 503 })
+    console.error("[blue/promo-codes] insert error:", error.code, error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 

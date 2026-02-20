@@ -84,9 +84,13 @@ export default function AdminBluePromoCodesPage() {
           notes: notes.trim() || undefined,
         }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        toast({ title: data.error || "Failed to create code", variant: "destructive" })
+        toast({
+          title: data.error || "Failed to create code",
+          description: res.status === 503 ? "Create the blue_promo_codes table in Supabase (see SQL in chat)." : (data.error ? String(data.error) : undefined),
+          variant: "destructive",
+        })
         setCreating(false)
         return
       }
