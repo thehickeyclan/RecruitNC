@@ -461,26 +461,12 @@ export function RankingsTableView({
                       </TableCell>
                     )}
                     <TableCell className="pl-4">
-                      <div
-                        className="flex items-center gap-3 leading-tight cursor-pointer"
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                          window.location.assign(href)
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault()
-                            const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                            window.location.assign(href)
-                          }
-                        }}
+                      <a
+                        href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                        className="flex items-center gap-3 leading-tight font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
                       >
-                        <span className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline">
-                          {athlete.name}
-                        </span>
-                      </div>
+                        {athlete.name}
+                      </a>
                     </TableCell>
                     <TableCell className="text-center text-gray-700 font-medium">
                       {athlete.graduation_year ?? "—"}
@@ -520,19 +506,13 @@ export function RankingsTableView({
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
                     <TableCell>
-                      <button
-                        type="button"
+                      <a
+                        href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                         className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100 cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                          window.location.assign(href)
-                        }}
                         aria-label={`View ${athlete.name} profile`}
                       >
                         <ExternalLink className="w-3 h-3 text-gray-700" />
-                      </button>
+                      </a>
                     </TableCell>
                   </TableRow>
                 </Fragment>

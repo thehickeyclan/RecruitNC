@@ -193,40 +193,20 @@ export function RankingsCardView({
                         />
                       </Button>
                     )}
-                    <button
-                      type="button"
+                    <a
+                      href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                       className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50 cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                        window.location.assign(href)
-                      }}
                       aria-label={`View ${athlete.name} profile`}
                     >
                       <ExternalLink className="w-3 h-3" />
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
 
-              <div
-                role="button"
-                tabIndex={0}
+              <a
+                href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                 className="block cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                  window.location.assign(href)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
-                    window.location.assign(href)
-                  }
-                }}
               >
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
@@ -269,7 +249,7 @@ export function RankingsCardView({
                     </span>
                   </div>
                 </div>
-              </div>
+              </a>
             </CardContent>
         </Card>
         </>
