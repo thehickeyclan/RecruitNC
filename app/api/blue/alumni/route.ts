@@ -18,6 +18,7 @@ export async function GET() {
         graduationyear: a.graduationyear,
         highschool: a.highschool,
         college: a.college,
+        division: a.division ?? "",
       })),
     })
     res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
