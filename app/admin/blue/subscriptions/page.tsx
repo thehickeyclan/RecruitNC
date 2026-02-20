@@ -19,6 +19,7 @@ export default function AdminBlueSubscriptionsPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>("good_standing")
   const [signupFilter, setSignupFilter] = useState<"all" | "paid" | "pending">("all")
+  const [signupsError, setSignupsError] = useState<string | null>(null)
 
   const filteredSignups =
     signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
@@ -31,6 +32,7 @@ export default function AdminBlueSubscriptionsPage() {
         if (cancelled) return
         setSubscriptions(data.subscriptions ?? [])
         setSignups(data.signups ?? [])
+        setSignupsError(data.signupsError ?? null)
         setStats(data.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
       })
       .catch(() => {
@@ -72,6 +74,12 @@ export default function AdminBlueSubscriptionsPage() {
               <div className="flex justify-center py-6">
                 <Loader2 className="h-6 w-6 animate-spin text-[#13294B]" />
               </div>
+            ) : signupsError ? (
+              <div className="py-6 px-4 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="font-medium text-amber-800">Signups could not be loaded</p>
+                <p className="mt-2 text-sm text-amber-700 whitespace-pre-wrap">{signupsError}</p>
+                <p className="mt-2 text-xs text-amber-600">Run the SQL above in Supabase SQL Editor, then refresh this page.</p>
+              </div>
             ) : signups.length === 0 ? (
               <p className="py-6 text-center text-gray-500">No signups yet.</p>
             ) : (
@@ -107,8 +115,12 @@ export default function AdminBlueSubscriptionsPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Athlete</TableHead>
+                        <TableHead>High school</TableHead>
+                        <TableHead>Club</TableHead>
+                        <TableHead>Weight</TableHead>
+                        <TableHead>T-shirt</TableHead>
                         <TableHead>Parent</TableHead>
-                        <TableHead>Email</TableHead>
+                        <TableHead>Contact</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Signed up</TableHead>
                       </TableRow>
@@ -117,10 +129,17 @@ export default function AdminBlueSubscriptionsPage() {
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
                           <TableCell className="font-medium">{s.athlete_name}</TableCell>
-                          <TableCell>{[s.parent_first_name, s.parent_last_name].filter(Boolean).join(" ").trim() || "—"}</TableCell>
-                          <TableCell className="text-sm">{s.parent_email}</TableCell>
+                          <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.athlete_weight_class || "—"}</TableCell>
+                          <TableCell className="text-sm font-medium">{s.tshirt_size || "—"}</TableCell>
                           <TableCell>
-                            <span className={s.status === "paid" ? "text-green-600" : "text-amber-600"}>{s.status === "paid" ? "Paid" : "Pending payment"}</span>
+                            <span className="block">{[s.parent_first_name, s.parent_last_name].filter(Boolean).join(" ").trim() || "—"}</span>
+                            <span className="block text-xs text-gray-500">{s.parent_email}</span>
+                          </TableCell>
+                          <TableCell className="text-sm">{s.parent_phone || "—"}</TableCell>
+                          <TableCell>
+                            <span className={s.status === "paid" ? "text-green-600" : "text-amber-600"}>{s.status === "paid" ? "Paid" : "Pending"}</span>
                           </TableCell>
                           <TableCell className="text-sm text-gray-600">{new Date(s.created_at).toLocaleDateString()}</TableCell>
                         </TableRow>

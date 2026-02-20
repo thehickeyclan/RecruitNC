@@ -18,7 +18,7 @@ type PromoRow = {
   stripe_coupon_id: string | null
   max_redemptions: number | null
   redemptions_count: number
-  valid_until: string | null
+  valid_until?: string | null
   notes: string | null
   created_at: string
 }

@@ -24,7 +24,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("blue_promo_codes")
-    .select("id, code, type, value, stripe_coupon_id, max_redemptions, redemptions_count, valid_until, notes, created_at")
+    .select("id, code, type, value, stripe_coupon_id, max_redemptions, redemptions_count, notes, created_at")
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -95,24 +95,27 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const validUntil = body.valid_until?.trim() ? new Date(body.valid_until).toISOString() : null
   const insertPayload: Record<string, unknown> = {
     code,
     type,
     value,
     stripe_coupon_id: stripeCouponId,
     max_redemptions: body.max_redemptions != null && Number.isInteger(body.max_redemptions) ? body.max_redemptions : null,
-    valid_until: validUntil,
     notes: body.notes?.trim() || null,
   }
   const { data: row, error } = await admin
     .from("blue_promo_codes")
     .insert(insertPayload)
-    .select("id, code, type, value, stripe_coupon_id, max_redemptions, valid_until, notes, created_at")
+    .select("id, code, type, value, stripe_coupon_id, max_redemptions, notes, created_at")
     .single()
 
   if (error) {
-    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_promo_codes does not exist. Run the SQL in chat (blue_promo_codes) in Supabase SQL Editor." }, { status: 503 })
+    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_promo_codes does not exist. Run the blue_promo_codes SQL in Supabase SQL Editor." }, { status: 503 })
+    if (error.code === "42501") {
+      return NextResponse.json({
+        error: "Row-level security is blocking the insert. In Supabase SQL Editor run: DROP POLICY IF EXISTS \"Service role full access blue_promo_codes\" ON public.blue_promo_codes; CREATE POLICY \"Service role full access blue_promo_codes\" ON public.blue_promo_codes FOR ALL TO service_role USING (true) WITH CHECK (true);",
+      }, { status: 500 })
+    }
     console.error("[blue/promo-codes] insert error:", error.code, error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

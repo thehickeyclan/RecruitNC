@@ -32,9 +32,14 @@ export type BlueSignupRow = {
   athlete_first_name: string
   athlete_last_name: string
   athlete_name: string
+  athlete_high_school: string
+  athlete_wrestling_club: string | null
+  athlete_weight_class: string | null
+  tshirt_size: string
   parent_email: string
   parent_first_name: string
   parent_last_name: string
+  parent_phone: string | null
   status: string
   created_at: string
   stripe_customer_id: string | null
@@ -120,24 +125,37 @@ export async function GET() {
   }
 
   let signups: BlueSignupRow[] = []
+  let signupsError: string | null = null
   const { data: signupRows, error: signupError } = await admin
     .from("blue_signups")
-    .select("id, athlete_first_name, athlete_last_name, parent_email, parent_first_name, parent_last_name, status, created_at, stripe_customer_id")
+    .select("id, athlete_first_name, athlete_last_name, athlete_high_school, athlete_wrestling_club, athlete_weight_class, tshirt_size, parent_email, parent_first_name, parent_last_name, parent_phone, status, created_at, stripe_customer_id")
     .order("created_at", { ascending: false })
-  if (!signupError && signupRows) {
+  if (signupError) {
+    console.error("[admin/blue/subscriptions] blue_signups select:", signupError.code, signupError.message)
+    if (signupError.code === "42501") {
+      signupsError = "RLS is blocking read. In Supabase SQL Editor run: DROP POLICY IF EXISTS \"Service role full access blue_signups\" ON public.blue_signups; CREATE POLICY \"Service role full access blue_signups\" ON public.blue_signups FOR ALL TO service_role USING (true) WITH CHECK (true);"
+    } else {
+      signupsError = signupError.message
+    }
+  } else if (signupRows) {
     signups = signupRows.map((r) => ({
-    id: r.id,
-    athlete_first_name: r.athlete_first_name ?? "",
-    athlete_last_name: r.athlete_last_name ?? "",
-    athlete_name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" ").trim() || "—",
-    parent_email: r.parent_email ?? "",
-    parent_first_name: r.parent_first_name ?? "",
-    parent_last_name: r.parent_last_name ?? "",
-    status: r.status ?? "pending_payment",
-    created_at: r.created_at ?? "",
-    stripe_customer_id: r.stripe_customer_id ?? null,
-  }))
+      id: r.id,
+      athlete_first_name: r.athlete_first_name ?? "",
+      athlete_last_name: r.athlete_last_name ?? "",
+      athlete_name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" ").trim() || "—",
+      athlete_high_school: r.athlete_high_school ?? "",
+      athlete_wrestling_club: r.athlete_wrestling_club ?? null,
+      athlete_weight_class: r.athlete_weight_class ?? null,
+      tshirt_size: r.tshirt_size ?? "",
+      parent_email: r.parent_email ?? "",
+      parent_first_name: r.parent_first_name ?? "",
+      parent_last_name: r.parent_last_name ?? "",
+      parent_phone: r.parent_phone ?? null,
+      status: r.status ?? "pending_payment",
+      created_at: r.created_at ?? "",
+      stripe_customer_id: r.stripe_customer_id ?? null,
+    }))
   }
 
-  return NextResponse.json({ subscriptions, stats, signups })
+  return NextResponse.json({ subscriptions, stats, signups, signupsError })
 }
