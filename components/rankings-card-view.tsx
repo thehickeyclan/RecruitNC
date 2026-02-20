@@ -194,7 +194,7 @@ export function RankingsCardView({
                       </Button>
                     )}
                     <a
-                      href={isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                      href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                       className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50"
                     >
                       <ExternalLink className="w-3 h-3" />
@@ -204,7 +204,7 @@ export function RankingsCardView({
               </div>
 
               <a
-                href={isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
                 className="block"
               >
                 <div className="p-4">

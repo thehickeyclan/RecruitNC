@@ -462,23 +462,12 @@ export function RankingsTableView({
                     )}
                     <TableCell className="pl-4">
                       <div className="flex items-center gap-3 leading-tight">
-                        {isValidProfileId(athlete.id) ? (
-                          <a
-                            href={`/unified-profile/${athlete.id}`}
-                            className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
-                          >
-                            {athlete.name}
-                          </a>
-                        ) : athlete.id ? (
-                          <a
-                            href="/create-profile"
-                            className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
-                          >
-                            {athlete.name}
-                          </a>
-                        ) : (
-                          <span className="font-semibold text-gray-900">{athlete.name}</span>
-                        )}
+                        <a
+                          href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                          className="font-semibold text-gray-900 hover:text-[#D3B574] transition-colors underline"
+                        >
+                          {athlete.name}
+                        </a>
                       </div>
                     </TableCell>
                     <TableCell className="text-center text-gray-700 font-medium">
@@ -519,21 +508,12 @@ export function RankingsTableView({
                       <span className="font-semibold text-gray-900">{athlete.weight_display || "-"}</span>
                     </TableCell>
                     <TableCell>
-                      {isValidProfileId(athlete.id) ? (
-                        <a
-                          href={`/unified-profile/${athlete.id}`}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100"
-                        >
-                          <ExternalLink className="w-3 h-3 text-gray-700" />
-                        </a>
-                      ) : (
-                        <a
-                          href="/create-profile"
-                          className="inline-flex h-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100 px-2 text-xs"
-                        >
-                          New profile
-                        </a>
-                      )}
+                      <a
+                        href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent hover:bg-gray-100"
+                      >
+                        <ExternalLink className="w-3 h-3 text-gray-700" />
+                      </a>
                     </TableCell>
                   </TableRow>
                 </Fragment>
