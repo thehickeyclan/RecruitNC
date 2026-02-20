@@ -142,7 +142,8 @@ export function Navbar() {
                   <a
                     key={item.href}
                     href="/blue"
-                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                    onClick={(e) => { e.preventDefault(); window.location.href = "/blue" }}
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized cursor-pointer"
                   >
                     {item.label}
                   </a>
@@ -342,8 +343,8 @@ export function Navbar() {
                       <a
                         key={item.href}
                         href="/blue"
-                        className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
-                        onClick={() => setIsOpen(false)}
+                        onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/blue" }}
+                        className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center cursor-pointer"
                       >
                         {item.label}
                       </a>
