@@ -3,17 +3,17 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 let adminClient: SupabaseClient | null = null
 
 /**
- * Single source of truth for Supabase URL used by admin (DB) and auth.
- * Root cause of profile outages: two different URLs (auth vs admin) = hangs/405.
+ * Single source of truth for Supabase URL. Prefer SUPABASE_URL; fallback NEXT_PUBLIC_SUPABASE_URL.
+ * If both are set and different, log warning and use SUPABASE_URL (do not throw — was breaking production).
  * See docs/ROOT_CAUSE_PROFILE_FAILURE.md.
  */
 function getSupabaseUrl(): string {
   const primary = process.env.SUPABASE_URL
   const fallback = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (primary && fallback && primary !== fallback) {
-    throw new Error(
-      "Supabase URL mismatch: SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL must be the same project. " +
-        "Using two projects causes profile/auth failures. See docs/ROOT_CAUSE_PROFILE_FAILURE.md."
+    console.warn(
+      "[Supabase] URL mismatch: SUPABASE_URL and NEXT_PUBLIC_SUPABASE_URL differ. Using SUPABASE_URL. " +
+        "For consistent behavior set both to the same project. See docs/ROOT_CAUSE_PROFILE_FAILURE.md."
     )
   }
   const url = primary || fallback

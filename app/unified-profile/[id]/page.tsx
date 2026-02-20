@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
@@ -10,17 +10,24 @@ type AthleteRecord = Record<string, unknown>
 
 export default function UnifiedProfilePage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const id = typeof params?.id === "string" ? params.id : ""
+  const debug = searchParams?.get("debug") === "1"
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [debugResponse, setDebugResponse] = useState<{ status: number; body: string } | null>(null)
 
   useEffect(() => {
     if (!id?.trim()) {
+      console.log("[profile-debug] Profile page mount: no id in params", { params: params ?? {} })
       setLoading(false)
       setError("Missing profile id")
       return
     }
+    console.log("[profile-debug] Profile page mount", { id })
+    const apiUrl = `/api/athlete/${encodeURIComponent(id)}`
+    console.log("[profile-debug] Fetching", apiUrl)
     const FETCH_TIMEOUT_MS = 12000
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
@@ -28,12 +35,28 @@ export default function UnifiedProfilePage() {
     let cancelled = false
     setLoading(true)
     setError(null)
+    setDebugResponse(null)
 
-    fetch(`/api/athlete/${encodeURIComponent(id)}`, { credentials: "include", signal: controller.signal })
-      .then((res) => res.json())
-      .then((data) => {
+    fetch(apiUrl, { credentials: "include", signal: controller.signal })
+      .then(async (res) => {
+        const text = await res.text()
+        if (debug) setDebugResponse({ status: res.status, body: text })
+        console.log("[profile-debug] Response", { status: res.status, ok: res.ok, bodyLength: text.length, bodyPreview: text.slice(0, 200) })
+        let data: { ok?: boolean; athlete?: unknown; error?: string } = {}
+        try {
+          data = JSON.parse(text)
+        } catch {
+          clearTimeout(timeoutId)
+          console.log("[profile-debug] Response not JSON", { status: res.status })
+          if (!cancelled) {
+            setAthlete(null)
+            setError(res.ok ? "Invalid response." : res.status === 500 ? "Server error. Try again." : `Error ${res.status}`)
+          }
+          return
+        }
         if (cancelled) return
         clearTimeout(timeoutId)
+        console.log("[profile-debug] Parsed", { ok: data?.ok, hasAthlete: !!data?.athlete, error: data?.error })
         if (data?.ok && data?.athlete) {
           setAthlete(data.athlete as AthleteRecord)
           setError(null)
@@ -45,6 +68,7 @@ export default function UnifiedProfilePage() {
       .catch((err) => {
         if (cancelled) return
         clearTimeout(timeoutId)
+        console.log("[profile-debug] Fetch failed", { name: err?.name, message: err?.message })
         setAthlete(null)
         setError(err?.name === "AbortError" ? "Request timed out. Refresh or try again." : err?.message ?? "Failed to load profile")
       })
@@ -57,7 +81,7 @@ export default function UnifiedProfilePage() {
       clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [id])
+  }, [id, debug])
 
   if (loading) {
     return (
@@ -74,8 +98,15 @@ export default function UnifiedProfilePage() {
         <div className="max-w-lg w-full bg-white rounded-lg shadow p-6">
           <h1 className="text-xl font-bold text-gray-900 mb-2">Profile not found</h1>
           <p className="text-sm text-red-600 font-mono mb-4">{error ?? "No data"}</p>
+          {debug && debugResponse && (
+            <div className="mb-4 p-3 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-48">
+              <div className="font-bold text-gray-700">[profile-debug] API response (status={debugResponse.status})</div>
+              <pre className="whitespace-pre-wrap break-all mt-1">{debugResponse.body}</pre>
+            </div>
+          )}
           <div className="flex flex-wrap gap-4">
             <a href={profileHref} className="text-[#002147] underline">Try again</a>
+            <a href={`${profileHref}?debug=1`} className="text-[#002147] underline">Try again with ?debug=1</a>
             <a href="/prospects/all" className="text-[#002147] underline">View all prospects</a>
           </div>
         </div>
