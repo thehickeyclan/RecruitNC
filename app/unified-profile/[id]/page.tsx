@@ -16,6 +16,9 @@ const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
 
 const PUBLIC_PROFILE_IDS = new Set(rawPublicIds)
 
+/** Max time to wait for profile data before returning error (avoid Vercel "---" hang). */
+const PROFILE_FETCH_TIMEOUT_MS = 20000
+
 interface UnifiedProfilePageProps {
   params: Promise<{ id: string }>
 }
@@ -28,7 +31,7 @@ async function getAthlete(id: string, supabase: SupabaseClient) {
     .single()
 
   if (error || !athlete) {
-    console.log("[v0] Athlete not found or error:", error)
+    console.log("[unified-profile] Athlete not found or error:", id, error?.message ?? "no data")
     return null
   }
 
@@ -51,55 +54,70 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
   return results || []
 }
 
-export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
-  const { id } = await params
-  const isPublicProfile = PUBLIC_PROFILE_IDS.has(id)
-  // Use admin client for athlete fetch - same data source as 2026/2027 pages (public-rankings API)
-  const supabase = createAdminClient()
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`[unified-profile] timeout: ${label} (${ms}ms)`)), ms)
+    ),
+  ])
+}
 
-  let currentUserId: string | null = null
-  if (!isPublicProfile) {
+async function getCurrentUserIdIfNeeded(isPublicProfile: boolean): Promise<string | null> {
+  if (isPublicProfile) return null
+  try {
     const authClient = await createClient()
-    const {
-      data: { user },
-    } = await authClient.auth.getUser()
-    currentUserId = user?.id ?? null
+    const { data: { user } } = await authClient.auth.getUser()
+    return user?.id ?? null
+  } catch {
+    return null
   }
+}
 
-  const athlete = await getAthlete(id, supabase)
+export default async function UnifiedProfilePage({ params }: UnifiedProfilePageProps) {
+  try {
+    const { id } = await params
+    const isPublicProfile = PUBLIC_PROFILE_IDS.has(id)
+    const supabase = createAdminClient()
 
-  if (!athlete) {
-    notFound()
-  }
+    // Fetch athlete first so page never blocks on auth
+    const athlete = await withTimeout(getAthlete(id, supabase), PROFILE_FETCH_TIMEOUT_MS, "getAthlete")
+    if (!athlete) {
+      notFound()
+    }
 
-  const rawNchsaa = await getNCHSAAResults(athlete.name, athlete.graduationyear, supabase)
-  const nchsaaResults = (rawNchsaa || []).map((r: any) => ({
-    year: r.year,
-    place: r.place ?? r.place_finished ?? null,
-    classification: r.classification ?? r.division ?? "",
-    weight_class: r.weight_class ?? r.weight ?? "",
-  }))
-
-  // Primary: nhsca_placements + super32_results tables (source of truth). Fallback: athlete row.
-  const athleteName = athlete.name ?? `${athlete.firstName || ""} ${athlete.lastName || ""}`.trim()
-  const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
-
-  let nhscaResults = await getNHSCAFromTables(supabase, athleteName, gradYear)
-  const super32Results = await getSuper32FromTable(supabase, athleteName, gradYear)
-  if (nhscaResults.length === 0) {
-    const fromAthlete = buildPublicProfileTournamentData(athlete)
-    nhscaResults = fromAthlete.nhscaResults
-  }
-  // Super32: only from super32_results table (no athlete-row fallback) to avoid wrong/duplicate data
-    const athleteRowNational = getNationalTeamResults(athlete)
+    const athleteName = athlete.name ?? `${athlete.firstName || ""} ${athlete.lastName || ""}`.trim()
+    const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
     const hs = athlete.highschool ?? athlete.highSchool ?? ""
-    let ucdFromTable = await getUltimateClubDualsFromTables(supabase, athleteName, hs)
+
+    // Auth + all other data in parallel so auth can't hang the page
+    const [currentUserId, rawNchsaa, nhscaFromTable, super32Results, ucdFromTable1] = await Promise.all([
+      getCurrentUserIdIfNeeded(isPublicProfile),
+      getNCHSAAResults(athlete.name, athlete.graduationyear, supabase),
+      getNHSCAFromTables(supabase, athleteName, gradYear),
+      getSuper32FromTable(supabase, athleteName, gradYear),
+      getUltimateClubDualsFromTables(supabase, athleteName, hs),
+    ])
+    const nchsaaResults = (rawNchsaa || []).map((r: any) => ({
+      year: r.year,
+      place: r.place ?? r.place_finished ?? null,
+      classification: r.classification ?? r.division ?? "",
+      weight_class: r.weight_class ?? r.weight ?? "",
+    }))
+
+    let nhscaResults = nhscaFromTable
+    if (nhscaResults.length === 0) {
+      const fromAthlete = buildPublicProfileTournamentData(athlete)
+      nhscaResults = fromAthlete.nhscaResults
+    }
+    const athleteRowNational = getNationalTeamResults(athlete)
+    let ucdFromTable = ucdFromTable1
     if (ucdFromTable.length === 0 && athlete.wrestling_name?.trim() && athlete.wrestling_name.trim() !== athleteName) {
       ucdFromTable = await getUltimateClubDualsFromTables(supabase, athlete.wrestling_name.trim(), hs)
     }
     const nationalTeamResults = mergeNationalTeamResults(ucdFromTable, athleteRowNational)
 
-  return (
+    return (
     <div className="min-h-screen bg-gray-50">
       <ProfileViewTracker athleteId={athlete.id} athleteName={athlete.name || "Unknown"} />
       <AthleteDetail 
@@ -120,4 +138,12 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
       />
     </div>
   )
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("[unified-profile] Page error:", message, err)
+    if (message.includes("not found") || (err as any)?.digest === "NEXT_NOT_FOUND") {
+      notFound()
+    }
+    throw err
+  }
 }
