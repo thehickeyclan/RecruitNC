@@ -160,8 +160,8 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   // Profile owner can see their own private info (cell, GPA, ACT, SAT)
   const isViewingOwnProfile = Boolean(currentUserId && athlete.claimed_by_user_id === currentUserId)
-  // Any logged-in user can edit; we track who made changes via audit log
-  const canEdit = Boolean(currentUserId)
+  // Owner, or admin, can edit (admins can edit any profile on public or when viewing)
+  const canEdit = Boolean(currentUserId) || isAdmin
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
   const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
 

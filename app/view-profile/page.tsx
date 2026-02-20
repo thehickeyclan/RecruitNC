@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
+import { useAuth } from "@/contexts/auth-context"
 
 type AthleteRecord = Record<string, unknown>
 
@@ -12,6 +13,7 @@ type AthleteRecord = Record<string, unknown>
  * Use this until GET /unified-profile/[id] stops hanging on Vercel.
  */
 export default function ViewProfilePage() {
+  const { user } = useAuth()
   const [id, setId] = useState("")
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -113,7 +115,7 @@ export default function ViewProfilePage() {
       <AthleteDetail
         athlete={athlete}
         nchsaaResults={nchsaaResults}
-        currentUserId={null}
+        currentUserId={user?.id ?? null}
         tournamentResultsComponent={
           <div className="w-full">
             <TournamentResultsDisplay
