@@ -23,19 +23,24 @@ interface UnifiedProfilePageProps {
   params: Promise<{ id: string }>
 }
 
-async function getAthlete(id: string, supabase: SupabaseClient) {
+async function getAthlete(id: string, supabase: SupabaseClient): Promise<{
+  athlete: Record<string, unknown> | null
+  error: string | null
+}> {
   const { data: athlete, error } = await supabase
     .from("athletes")
     .select("*")
     .eq("id", id)
     .single()
 
-  if (error || !athlete) {
-    console.log("[unified-profile] Athlete not found or error:", id, error?.message ?? "no data")
-    return null
+  if (error) {
+    console.log("[unified-profile] Athlete error:", id, error.code, error.message)
+    return { athlete: null, error: `${error.code}: ${error.message}` }
   }
-
-  return athlete
+  if (!athlete) {
+    return { athlete: null, error: "No row returned" }
+  }
+  return { athlete: athlete as Record<string, unknown>, error: null }
 }
 
 async function getNCHSAAResults(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
@@ -81,7 +86,19 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     const supabase = createAdminClient()
 
     // Fetch athlete first so page never blocks on auth
-    const athlete = await withTimeout(getAthlete(id, supabase), PROFILE_FETCH_TIMEOUT_MS, "getAthlete")
+    const result = await withTimeout(getAthlete(id, supabase), PROFILE_FETCH_TIMEOUT_MS, "getAthlete")
+    if (result.error) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+          <div className="max-w-lg w-full bg-white rounded-lg shadow p-6">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Profile not found</h1>
+            <p className="text-sm text-red-600 font-mono mb-4">Supabase: {result.error}</p>
+            <a href="/prospects/all" className="text-[#002147] underline">View all prospects</a>
+          </div>
+        </div>
+      )
+    }
+    const athlete = result.athlete
     if (!athlete) {
       notFound()
     }
