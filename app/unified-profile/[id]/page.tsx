@@ -16,7 +16,7 @@ const rawPublicIds = (process.env.PUBLIC_PROFILE_IDS || "")
 
 const PUBLIC_PROFILE_IDS = new Set(rawPublicIds)
 
-/** Max time to wait for profile data before returning error (avoid Vercel "---" hang). */
+/** Max time to wait for profile data before returning error (avoid Vercel hang). */
 const PROFILE_FETCH_TIMEOUT_MS = 20000
 
 interface UnifiedProfilePageProps {
@@ -37,17 +37,12 @@ async function getAthlete(id: string, supabase: SupabaseClient): Promise<{
     console.log("[unified-profile] Athlete error:", id, error.code, error.message)
     return { athlete: null, error: `${error.code}: ${error.message}` }
   }
-  if (!athlete) {
-    return { athlete: null, error: "No row returned" }
-  }
+  if (!athlete) return { athlete: null, error: "No row returned" }
   return { athlete: athlete as Record<string, unknown>, error: null }
 }
 
 async function getNCHSAAResults(athleteName: string, graduationYear: number, supabase: SupabaseClient) {
-  if (!graduationYear || isNaN(graduationYear)) {
-    return []
-  }
-
+  if (!graduationYear || isNaN(graduationYear)) return []
   const { data: results } = await supabase
     .from("wrestling_nchsaa_results")
     .select("*")
@@ -55,7 +50,6 @@ async function getNCHSAAResults(athleteName: string, graduationYear: number, sup
     .gte("year", graduationYear - 4)
     .lte("year", graduationYear)
     .order("year", { ascending: false })
-
   return results || []
 }
 
@@ -85,7 +79,6 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     const isPublicProfile = PUBLIC_PROFILE_IDS.has(id)
     const supabase = createAdminClient()
 
-    // Fetch athlete first so page never blocks on auth
     const result = await withTimeout(getAthlete(id, supabase), PROFILE_FETCH_TIMEOUT_MS, "getAthlete")
     if (result.error) {
       return (
@@ -99,15 +92,13 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
       )
     }
     const athlete = result.athlete
-    if (!athlete) {
-      notFound()
-    }
+    if (!athlete) notFound()
 
     const athleteName = athlete.name ?? `${athlete.firstName || ""} ${athlete.lastName || ""}`.trim()
     const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
     const hs = athlete.highschool ?? athlete.highSchool ?? ""
 
-    // Auth + all other data in parallel so auth can't hang the page
+    // Auth + all other data in parallel so auth can't block the page
     const [currentUserId, rawNchsaa, nhscaFromTable, super32Results, ucdFromTable1] = await Promise.all([
       getCurrentUserIdIfNeeded(isPublicProfile),
       getNCHSAAResults(athlete.name, athlete.graduationyear, supabase),
@@ -115,6 +106,7 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
       getSuper32FromTable(supabase, athleteName, gradYear),
       getUltimateClubDualsFromTables(supabase, athleteName, hs),
     ])
+
     const nchsaaResults = (rawNchsaa || []).map((r: any) => ({
       year: r.year,
       place: r.place ?? r.place_finished ?? null,
@@ -135,26 +127,26 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     const nationalTeamResults = mergeNationalTeamResults(ucdFromTable, athleteRowNational)
 
     return (
-    <div className="min-h-screen bg-gray-50">
-      <ProfileViewTracker athleteId={athlete.id} athleteName={athlete.name || "Unknown"} />
-      <AthleteDetail 
-        athlete={athlete} 
-        nchsaaResults={nchsaaResults} 
-        currentUserId={currentUserId}
-        tournamentResultsComponent={
-          <div className="w-full">
-            <TournamentResultsDisplay
-              nchsaaResults={nchsaaResults}
-              nhscaResults={nhscaResults}
-              super32Results={super32Results}
-              nationalTeamResults={nationalTeamResults}
-              alwaysShowStructure={true}
-            />
-          </div>
-        }
-      />
-    </div>
-  )
+      <div className="min-h-screen bg-gray-50">
+        <ProfileViewTracker athleteId={athlete.id} athleteName={athlete.name || "Unknown"} />
+        <AthleteDetail
+          athlete={athlete}
+          nchsaaResults={nchsaaResults}
+          currentUserId={currentUserId}
+          tournamentResultsComponent={
+            <div className="w-full">
+              <TournamentResultsDisplay
+                nchsaaResults={nchsaaResults}
+                nhscaResults={nhscaResults}
+                super32Results={super32Results}
+                nationalTeamResults={nationalTeamResults}
+                alwaysShowStructure={true}
+              />
+            </div>
+          }
+        />
+      </div>
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     console.error("[unified-profile] Page error:", message, err)

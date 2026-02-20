@@ -193,31 +193,38 @@ export function RankingsCardView({
                         />
                       </Button>
                     )}
-                    <a
-                      href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50"
+                    <button
+                      type="button"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded border bg-white hover:bg-gray-50 cursor-pointer"
                       onClick={(e) => {
-                        const href = (e.currentTarget.getAttribute("href") ?? "").trim()
-                        if (href.startsWith("/unified-profile/") || href === "/create-profile") {
-                          e.preventDefault()
-                          window.location.href = href
-                        }
+                        e.preventDefault()
+                        e.stopPropagation()
+                        const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
+                        window.location.assign(href)
                       }}
+                      aria-label={`View ${athlete.name} profile`}
                     >
                       <ExternalLink className="w-3 h-3" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <a
-                href={athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"}
-                className="block"
+              <div
+                role="button"
+                tabIndex={0}
+                className="block cursor-pointer"
                 onClick={(e) => {
-                  const href = (e.currentTarget.getAttribute("href") ?? "").trim()
-                  if (href.startsWith("/unified-profile/") || href === "/create-profile") {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
+                  window.location.assign(href)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()
-                    window.location.href = href
+                    const href = athlete.id && isValidProfileId(athlete.id) ? `/unified-profile/${athlete.id}` : "/create-profile"
+                    window.location.assign(href)
                   }
                 }}
               >
@@ -262,7 +269,7 @@ export function RankingsCardView({
                     </span>
                   </div>
                 </div>
-              </a>
+              </div>
             </CardContent>
         </Card>
         </>
