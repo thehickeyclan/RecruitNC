@@ -18,6 +18,7 @@ const PUBLIC_PROFILE_IDS = new Set(rawPublicIds)
 
 /** Max time to wait for profile data before returning error (avoid Vercel hang). */
 const PROFILE_FETCH_TIMEOUT_MS = 20000
+const SECONDARY_DATA_TIMEOUT_MS = 10000
 
 interface UnifiedProfilePageProps {
   params: Promise<{ id: string }>
@@ -98,14 +99,28 @@ export default async function UnifiedProfilePage({ params }: UnifiedProfilePageP
     const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
     const hs = athlete.highschool ?? athlete.highSchool ?? ""
 
-    // Auth + all other data in parallel so auth can't block the page
-    const [currentUserId, rawNchsaa, nhscaFromTable, super32Results, ucdFromTable1] = await Promise.all([
-      getCurrentUserIdIfNeeded(isPublicProfile),
-      getNCHSAAResults(athlete.name, athlete.graduationyear, supabase),
-      getNHSCAFromTables(supabase, athleteName, gradYear),
-      getSuper32FromTable(supabase, athleteName, gradYear),
-      getUltimateClubDualsFromTables(supabase, athleteName, hs),
-    ])
+    // Skip server-side auth to avoid hang (createClient/getUser can block). Pass null; edit UI can use client auth.
+    const currentUserId: string | null = null
+
+    // Tournament data with timeout so page never hangs; on timeout use empty data
+    let rawNchsaa: any[] = []
+    let nhscaFromTable: any[] = []
+    let super32Results: any[] = []
+    let ucdFromTable1: any[] = []
+    try {
+      ;[rawNchsaa, nhscaFromTable, super32Results, ucdFromTable1] = await withTimeout(
+        Promise.all([
+          getNCHSAAResults(athlete.name, athlete.graduationyear, supabase),
+          getNHSCAFromTables(supabase, athleteName, gradYear),
+          getSuper32FromTable(supabase, athleteName, gradYear),
+          getUltimateClubDualsFromTables(supabase, athleteName, hs),
+        ]),
+        SECONDARY_DATA_TIMEOUT_MS,
+        "profileSecondaryData"
+      )
+    } catch (e) {
+      console.warn("[unified-profile] Secondary data timeout, rendering with empty tournament data:", e instanceof Error ? e.message : e)
+    }
 
     const nchsaaResults = (rawNchsaa || []).map((r: any) => ({
       year: r.year,
