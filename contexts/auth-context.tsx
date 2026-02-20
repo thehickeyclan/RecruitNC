@@ -179,7 +179,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    console.log("[v0] AuthProvider initializing")
 
     // CRITICAL: Don't call getSession() on mount - this triggers auth calls
     // Even with all checks, calling getSession with stale cookies causes rate limits
@@ -315,7 +314,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // const { data: { subscription } } = supabase.auth.onAuthStateChange(...)  // ❌ NEVER DO THIS
     //
     // See AUTH_CONFIG_LOCKED.md for full documentation
-    console.log("[v0] NOT setting up onAuthStateChange - it causes automatic auth calls")
     const { data: { subscription } } = { data: { subscription: null } }
 
     return () => {

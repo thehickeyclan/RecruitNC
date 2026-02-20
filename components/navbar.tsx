@@ -48,11 +48,10 @@ export function Navbar() {
     }
   }
 
-  // Top-level nav: Home, Prospects (dropdown), Rankings, Blue, National Team (dropdown). About/Contact in footer only.
+  // Top-level nav: Home, Prospects (dropdown), Rankings, Blue (plain <a>), National Team (dropdown).
   const mainNavLinks = [
     { href: "/", label: "Home" },
     { href: "/public-rankings", label: "Rankings" },
-    { href: "/blue", label: "Blue Program" },
   ]
   const prospectsItems = [
     { href: "/prospects/all", label: "Athlete Profiles" },
@@ -146,6 +145,12 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
+              <a
+                href="/blue"
+                className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+              >
+                Blue Program
+              </a>
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   National Team
@@ -337,6 +342,13 @@ export function Navbar() {
                       {item.label}
                     </Link>
                   ))}
+                  <a
+                    href="/blue"
+                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Blue Program
+                  </a>
                   <div className="px-3">
                     <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
                     <div className="pl-4 space-y-2">

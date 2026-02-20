@@ -118,17 +118,6 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         const finalClubName = getClubName()
         setDisplayClubName(finalClubName)
 
-        console.log(`[v0] Club Logo Debug for ${athlete.name}:`, {
-          finalClubName,
-          rawClubField: athlete.wrestling_club || athlete.wrestlingClub || athlete.wrestlingclub || athlete.club,
-          allClubFields: {
-            wrestling_club: athlete.wrestling_club,
-            wrestlingClub: athlete.wrestlingClub,
-            wrestlingclub: athlete.wrestlingclub,
-            club: athlete.club,
-          },
-        })
-
         if (
           finalClubName &&
           finalClubName.trim() &&
@@ -138,27 +127,18 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         ) {
           try {
             const clubUrl = `/api/logo-mappings/by-entity/club/${encodeURIComponent(finalClubName)}`
-            console.log(`[v0] Fetching club logo from: ${clubUrl}`)
             const response = await fetch(clubUrl)
 
             if (response.ok) {
               const data = await response.json()
-              console.log(`[v0] Club logo API response for "${finalClubName}":`, data)
               if (data.success && data.logo_url) {
                 setClubLogoUrl(data.logo_url)
                 setClubLogoError(false)
-                console.log(`✅ Club logo found for "${finalClubName}": ${data.logo_url}`)
-              } else {
-                console.log(`❌ No club logo found for "${finalClubName}". Response:`, data)
               }
-            } else {
-              console.log(`❌ Club logo API returned non-OK status for "${finalClubName}":`, response.status)
             }
           } catch (error) {
             console.error(`❌ Club logo: Error loading logo for "${finalClubName}":`, error)
           }
-        } else {
-          console.log(`[v0] Skipping club logo fetch - invalid club name: "${finalClubName}"`)
         }
 
         if (athlete.college) {

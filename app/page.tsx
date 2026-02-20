@@ -73,16 +73,11 @@ export default function HomePage() {
 
         const data = await response.json()
 
-        console.log("[v0] Featured athletes API response:", data)
-        console.log("[v0] First athlete college_weight_class:", data.athletes?.[0]?.college_weight_class)
-
         if (!data.success) {
           throw new Error(data.error || "API returned unsuccessful response")
         }
 
         const athletes = Array.isArray(data.athletes) ? data.athletes : []
-
-        console.log("[v0] Normalized athletes:", normalizeAthleteList(athletes))
 
         setFeaturedAthletes(normalizeAthleteList(athletes))
         setError(null)
