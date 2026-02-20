@@ -54,12 +54,6 @@ export function Navbar() {
     { href: "/public-rankings", label: "Rankings" },
     { href: "/blue", label: "Blue Program" },
   ]
-  const blueProgramHref =
-    (typeof window !== "undefined" ? window.location.origin : null) ||
-    (process.env.NEXT_PUBLIC_APP_URL || "") ||
-    "/blue"
-  const blueProgramUrl = blueProgramHref.startsWith("http") ? `${blueProgramHref.replace(/\/$/, "")}/blue` : "/blue"
-
   const prospectsItems = [
     { href: "/prospects/all", label: "Athlete Profiles" },
   ]
@@ -147,9 +141,7 @@ export function Navbar() {
                 item.href === "/blue" ? (
                   <a
                     key={item.href}
-                    href={blueProgramUrl}
-                    target="_top"
-                    rel="noopener noreferrer"
+                    href="/blue"
                     className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
                   >
                     {item.label}
@@ -349,9 +341,7 @@ export function Navbar() {
                     item.href === "/blue" ? (
                       <a
                         key={item.href}
-                        href={blueProgramUrl || "/blue"}
-                        target="_top"
-                        rel="noopener noreferrer"
+                        href="/blue"
                         className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
                         onClick={() => setIsOpen(false)}
                       >
