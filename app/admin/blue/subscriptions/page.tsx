@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Loader2, ExternalLink } from "lucide-react"
-import type { BlueSubscriptionRow } from "@/app/api/admin/blue/subscriptions/route"
+import type { BlueSubscriptionRow, BlueSignupRow } from "@/app/api/admin/blue/subscriptions/route"
 
 type Tab = "good_standing" | "paused" | "canceled"
 
@@ -14,9 +14,14 @@ const STRIPE_DASHBOARD_SUB = "https://dashboard.stripe.com/subscriptions"
 
 export default function AdminBlueSubscriptionsPage() {
   const [subscriptions, setSubscriptions] = useState<BlueSubscriptionRow[]>([])
+  const [signups, setSignups] = useState<BlueSignupRow[]>([])
   const [stats, setStats] = useState({ active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>("good_standing")
+  const [signupFilter, setSignupFilter] = useState<"all" | "paid" | "pending">("all")
+
+  const filteredSignups =
+    signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
 
   useEffect(() => {
     let cancelled = false
@@ -25,6 +30,7 @@ export default function AdminBlueSubscriptionsPage() {
       .then((data) => {
         if (cancelled) return
         setSubscriptions(data.subscriptions ?? [])
+        setSignups(data.signups ?? [])
         setStats(data.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
       })
       .catch(() => {
@@ -51,10 +57,81 @@ export default function AdminBlueSubscriptionsPage() {
             <Link href="/admin/blue"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[#13294B]">NC United Blue</h1>
-            <p className="text-sm text-gray-600">Recurring subscriptions · synced to Blue roster</p>
+            <h1 className="text-2xl font-bold text-[#13294B]">Blue member cockpit</h1>
+            <p className="text-sm text-gray-600">All Blue members and subscriptions in one view</p>
           </div>
         </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">All Blue members (registration form)</CardTitle>
+            <CardDescription>Everyone who signed up via the Blue registration link. Paid = active subscription.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin text-[#13294B]" />
+              </div>
+            ) : signups.length === 0 ? (
+              <p className="py-6 text-center text-gray-500">No signups yet.</p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Button
+                    variant={signupFilter === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSignupFilter("all")}
+                    className={signupFilter === "all" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                  >
+                    All ({signups.length})
+                  </Button>
+                  <Button
+                    variant={signupFilter === "paid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSignupFilter("paid")}
+                    className={signupFilter === "paid" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                  >
+                    Paid ({signups.filter((s) => s.status === "paid").length})
+                  </Button>
+                  <Button
+                    variant={signupFilter === "pending" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSignupFilter("pending")}
+                    className={signupFilter === "pending" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                  >
+                    Pending ({signups.filter((s) => s.status !== "paid").length})
+                  </Button>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Athlete</TableHead>
+                        <TableHead>Parent</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Signed up</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSignups.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell className="font-medium">{s.athlete_name}</TableCell>
+                          <TableCell>{[s.parent_first_name, s.parent_last_name].filter(Boolean).join(" ").trim() || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.parent_email}</TableCell>
+                          <TableCell>
+                            <span className={s.status === "paid" ? "text-green-600" : "text-amber-600"}>{s.status === "paid" ? "Paid" : "Pending payment"}</span>
+                          </TableCell>
+                          <TableCell className="text-sm text-gray-600">{new Date(s.created_at).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="mb-6">
           <CardHeader>

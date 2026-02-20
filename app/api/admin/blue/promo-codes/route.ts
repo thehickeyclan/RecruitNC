@@ -24,11 +24,12 @@ export async function GET() {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("blue_promo_codes")
-    .select("id, code, type, value, stripe_coupon_id, max_redemptions, redemptions_count, valid_from, valid_until, notes, created_at")
+    .select("id, code, type, value, stripe_coupon_id, max_redemptions, redemptions_count, valid_until, notes, created_at")
     .order("created_at", { ascending: false })
 
   if (error) {
-    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_promo_codes does not exist. Run SQL in docs/blue-membership-tables.md" }, { status: 503 })
+    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_promo_codes does not exist. Run the blue_promo_codes SQL in Supabase SQL Editor." }, { status: 503 })
+    console.error("[blue/promo-codes] GET error:", error.code, error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
@@ -37,6 +38,7 @@ export async function GET() {
 
 /** POST: Create a new scholarship/promo code (and Stripe Coupon) */
 export async function POST(request: NextRequest) {
+  try {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -102,7 +104,6 @@ export async function POST(request: NextRequest) {
     max_redemptions: body.max_redemptions != null && Number.isInteger(body.max_redemptions) ? body.max_redemptions : null,
     valid_until: validUntil,
     notes: body.notes?.trim() || null,
-    created_by: auth.user.id,
   }
   const { data: row, error } = await admin
     .from("blue_promo_codes")
@@ -117,4 +118,9 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ code: row })
+  } catch (err) {
+    console.error("[blue/promo-codes] POST error:", err)
+    const message = err instanceof Error ? err.message : "Server error"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

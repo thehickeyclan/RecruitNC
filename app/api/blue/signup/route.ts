@@ -103,14 +103,21 @@ export async function POST(request: NextRequest) {
       const now = new Date().toISOString()
       const { data: promos } = await admin
         .from("blue_promo_codes")
-        .select("id, stripe_coupon_id, max_redemptions, redemptions_count, valid_from, valid_until")
+        .select("id, stripe_coupon_id, max_redemptions, redemptions_count, valid_until")
         .ilike("code", promoCodeRaw.trim())
       const promo = (promos ?? []).find(
-        (p) => (!p.valid_from || p.valid_from <= now) && (!p.valid_until || p.valid_until >= now) && (p.max_redemptions == null || (p.redemptions_count ?? 0) < p.max_redemptions)
+        (p) => (!p.valid_until || p.valid_until >= now) && (p.max_redemptions == null || (p.redemptions_count ?? 0) < p.max_redemptions)
       )
-      if (promo?.stripe_coupon_id) {
-        stripeCouponId = promo.stripe_coupon_id
-        promoIdToIncrement = promo.id
+      if (promo) {
+        if (promo.stripe_coupon_id) {
+          stripeCouponId = promo.stripe_coupon_id
+          promoIdToIncrement = promo.id
+        } else {
+          return NextResponse.json(
+            { error: "This scholarship code is not set up for checkout yet. Please contact info@ncwrestlingunited.com." },
+            { status: 400 }
+          )
+        }
       }
     }
 

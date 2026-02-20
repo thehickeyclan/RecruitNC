@@ -27,6 +27,19 @@ export type BlueSubscriptionRow = {
   stripe_subscription_id: string | null
 }
 
+export type BlueSignupRow = {
+  id: string
+  athlete_first_name: string
+  athlete_last_name: string
+  athlete_name: string
+  parent_email: string
+  parent_first_name: string
+  parent_last_name: string
+  status: string
+  created_at: string
+  stripe_customer_id: string | null
+}
+
 /** GET: List Blue subscriptions (memberships) with athlete and payer info */
 export async function GET() {
   const auth = await requireAdmin()
@@ -106,5 +119,25 @@ export async function GET() {
     pending_payment: subscriptions.filter((s) => s.status === "pending_payment").length,
   }
 
-  return NextResponse.json({ subscriptions, stats })
+  let signups: BlueSignupRow[] = []
+  const { data: signupRows, error: signupError } = await admin
+    .from("blue_signups")
+    .select("id, athlete_first_name, athlete_last_name, parent_email, parent_first_name, parent_last_name, status, created_at, stripe_customer_id")
+    .order("created_at", { ascending: false })
+  if (!signupError && signupRows) {
+    signups = signupRows.map((r) => ({
+    id: r.id,
+    athlete_first_name: r.athlete_first_name ?? "",
+    athlete_last_name: r.athlete_last_name ?? "",
+    athlete_name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" ").trim() || "—",
+    parent_email: r.parent_email ?? "",
+    parent_first_name: r.parent_first_name ?? "",
+    parent_last_name: r.parent_last_name ?? "",
+    status: r.status ?? "pending_payment",
+    created_at: r.created_at ?? "",
+    stripe_customer_id: r.stripe_customer_id ?? null,
+  }))
+  }
+
+  return NextResponse.json({ subscriptions, stats, signups })
 }

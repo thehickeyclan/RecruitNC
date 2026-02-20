@@ -10,8 +10,8 @@ const GOLD = "#D3B574"
 const sections = [
   {
     href: "/admin/blue/subscriptions",
-    title: "Subscriptions",
-    description: "Active, paused, and canceled members. Stripe sync.",
+    title: "Member cockpit",
+    description: "All Blue members and subscriptions in one view. Signups + legacy subs.",
     icon: CreditCard,
   },
   {
