@@ -70,7 +70,7 @@ export default async function UnifiedProfileByNamePage({
   })
 
   const id = match ? (match as Record<string, unknown>).id as string : null
-  if (id) redirect(`/unified-profile/${id}`)
+  if (id) redirect(`/view-profile?id=${encodeURIComponent(id)}`)
 
   return (
     <div className="container mx-auto p-8 text-center">

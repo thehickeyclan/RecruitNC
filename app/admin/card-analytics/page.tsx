@@ -254,7 +254,7 @@ export default function CardAnalyticsPage() {
                     </div>
                     <div className="min-w-0">
                       <Link
-                        href={`/unified-profile/${row.athlete_id}`}
+                        href={`/view-profile?id=${encodeURIComponent(row.athlete_id)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-blue-600 hover:underline truncate block"
@@ -306,7 +306,7 @@ export default function CardAnalyticsPage() {
                     </div>
                     <div className="min-w-0">
                       <Link
-                        href={`/unified-profile/${row.athlete_id}`}
+                        href={`/view-profile?id=${encodeURIComponent(row.athlete_id)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-medium text-blue-600 hover:underline truncate block"

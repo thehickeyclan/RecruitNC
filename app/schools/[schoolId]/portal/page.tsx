@@ -3900,7 +3900,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                     <div className="bg-card rounded-lg p-3 md:p-4 border border-border transition-colors">
                       <h3 className="font-semibold text-foreground mb-2 md:mb-3">Public Profile</h3>
                       <a
-                        href={`/unified-profile/${selectedAthlete.id}`}
+                        href={`/view-profile?id=${encodeURIComponent(selectedAthlete.id)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm"

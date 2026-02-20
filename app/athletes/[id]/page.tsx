@@ -6,5 +6,5 @@ interface AthletePageProps {
 
 export default async function AthletePage({ params }: AthletePageProps) {
   const { id } = await params
-  redirect(`/unified-profile/${id}`)
+  redirect(`/view-profile?id=${encodeURIComponent(id)}`)
 }

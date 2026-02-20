@@ -588,7 +588,7 @@ export function ProfileClient() {
                         ) : null}
                         <div className="flex flex-wrap gap-2 mt-2">
                           <Button asChild variant="outline" size="sm">
-                            <a href={`/unified-profile/${a.id}`}>View</a>
+                            <a href={`/view-profile?id=${encodeURIComponent(a.id)}`}>View</a>
                           </Button>
                           <Button asChild variant="outline" size="sm">
                             <a href={`/edit-profile/${a.id}`}>Edit profile</a>
@@ -698,7 +698,7 @@ export function ProfileClient() {
                   />
                   <div className="flex flex-wrap gap-2 pt-2 border-t">
                     <Button asChild variant="default" size="sm">
-                      <a href={`/unified-profile/${profile.athlete_id}`}>View {profile.athlete_name}&apos;s profile</a>
+                      <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id)}`}>View {profile.athlete_name}&apos;s profile</a>
                     </Button>
                     <Button asChild variant="outline" size="sm">
                       <a href={`/edit-profile/${profile.athlete_id}`}>Edit profile</a>

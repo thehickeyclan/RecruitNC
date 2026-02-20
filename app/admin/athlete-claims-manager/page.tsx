@@ -381,7 +381,7 @@ export default function AthleteClaimsManager() {
                           </Button>
                         </Link>
 
-                        <Link href={`/unified-profile/${claim.id}`}>
+                        <Link href={`/view-profile?id=${encodeURIComponent(claim.id)}`}>
                           <Button variant="outline" size="sm" className="bg-transparent">
                             <ExternalLink className="h-4 w-4 mr-2" />
                             Unified Profile

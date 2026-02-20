@@ -123,7 +123,7 @@ export default function ClassOf2026RankingsPage() {
                         )}
                       </div>
                       <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
-                        <a href={`/unified-profile/${athlete.id}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                        <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
                           {index === 0 && athlete.name.includes("Alston") ? "Lorenzo Alston" : athlete.name}
                         </a>
                       </h3>

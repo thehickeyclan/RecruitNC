@@ -249,7 +249,7 @@ export default function Class2027RankingsPage() {
                   {topRankedAthletes.length > 0 ? (
                     topRankedAthletes.map((athlete, index) => {
                       const photo = athlete.photourl && athlete.photourl.trim() !== "" ? athlete.photourl : "/diverse-wrestlers.png"
-                      const profileHref = `/unified-profile/${athlete.id}`
+                      const profileHref = `/view-profile?id=${encodeURIComponent(athlete.id)}`
                       return (
                         <div key={athlete.id} className="text-center">
                           <div className="relative mb-3 sm:mb-4 mx-auto w-full h-[220px] sm:h-[280px] rounded-lg overflow-hidden shadow-lg bg-gray-100">

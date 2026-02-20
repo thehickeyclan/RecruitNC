@@ -22,13 +22,17 @@ function stripAsterisks(text: string): string {
 
 /**
  * Convert markdown links [text](url) and plain URLs to clickable <a> tags.
- * Relative URLs (e.g. /unified-profile/xxx) are turned into full RecruitNC app URLs.
+ * Relative URLs (e.g. /view-profile?id=xxx) are turned into full RecruitNC app URLs.
+ * Legacy /unified-profile/[id] links are rewritten to /view-profile?id=[id].
  */
 export function renderLinks(text: string): string {
   const linkPlaceholders = new Map<string, string>()
   let placeholderIndex = 0
 
-  let result = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, linkText: string, url: string) => {
+  // Rewrite legacy unified-profile links so they work (view-profile is the working route)
+  let result = text.replace(/\/unified-profile\/([a-f0-9-]{36})/gi, (_m, id) => `/view-profile?id=${encodeURIComponent(id)}`)
+
+  result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, linkText: string, url: string) => {
     const placeholder = `__LINK_PLACEHOLDER_${placeholderIndex++}__`
     const href = url.startsWith("/") ? RECRUITNC_APP_URL + url : url
     linkPlaceholders.set(

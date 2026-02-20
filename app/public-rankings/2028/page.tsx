@@ -64,7 +64,7 @@ function getProfileUrl(
   const hardcoded = PROFILE_IDS_2028[name] ?? Object.entries(PROFILE_IDS_2028).find(
     ([k]) => norm(k) === n
   )?.[1]
-  if (hardcoded) return `/unified-profile/${hardcoded}`
+  if (hardcoded) return `/view-profile?id=${encodeURIComponent(hardcoded)}`
   // 2. API linkResolution - match name + school
   const fromApi = linkRes.find((r) => {
     if (norm(r.name) !== n) return false
@@ -72,7 +72,7 @@ function getProfileUrl(
     const hs = norm(r.highschool || "")
     return hs === s || hs.includes(s) || s.includes(hs)
   })
-  if (fromApi) return `/unified-profile/${fromApi.id}`
+  if (fromApi) return `/view-profile?id=${encodeURIComponent(fromApi.id)}`
   // 3. Fallback: by-name lookup
   return `/unified-profile/by-name?${new URLSearchParams({ name, school, year: "2028" }).toString()}`
 }
@@ -304,7 +304,7 @@ export default function Class2028RankingsPage() {
                           </div>
                           <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1">
                             {athlete.id ? (
-                              <a href={`/unified-profile/${athlete.id}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
+                              <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-gray-900 hover:text-[#D3B574] hover:underline">
                                 {athlete.name}
                               </a>
                             ) : (
@@ -319,7 +319,7 @@ export default function Class2028RankingsPage() {
                           </Badge>
                           <div className="mt-2">
                             <a
-                              href={athlete.id ? `/unified-profile/${athlete.id}` : getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)}
+                              href={athlete.id ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)}
                               className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
                             >
                               View Profile →

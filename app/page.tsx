@@ -465,11 +465,11 @@ export default function HomePage() {
                     .map((athlete) => (
                       <a
                         key={athlete.id}
-                        href={`/unified-profile/${athlete.id}`}
+                        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
                         className="block"
                         onClick={(e) => {
                           e.preventDefault()
-                          window.location.href = `/unified-profile/${athlete.id}`
+                          window.location.href = `/view-profile?id=${encodeURIComponent(athlete.id)}`
                         }}
                       >
                         <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">
@@ -529,11 +529,11 @@ export default function HomePage() {
                     .map((athlete) => (
                       <a
                         key={athlete.id}
-                        href={`/unified-profile/${athlete.id}`}
+                        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
                         className="block"
                         onClick={(e) => {
                           e.preventDefault()
-                          window.location.href = `/unified-profile/${athlete.id}`
+                          window.location.href = `/view-profile?id=${encodeURIComponent(athlete.id)}`
                         }}
                       >
                         <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer">

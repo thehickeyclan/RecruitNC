@@ -184,7 +184,7 @@ export default function AthleteImagesPage({ params }: { params: { id: string } }
 
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/unified-profile/${athlete.id}`}>Unified Profile</Link>
+            <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}>View profile</Link>
           </Button>
 
           <Button variant="outline" asChild>

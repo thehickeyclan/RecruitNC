@@ -176,7 +176,7 @@ export default function NewProfileAdditionsPage() {
                               Edit
                             </Button>
                           </Link>
-                          <Link href={`/unified-profile/${a.id}`} target="_blank" rel="noopener noreferrer">
+                          <Link href={`/view-profile?id=${encodeURIComponent(a.id)}`} target="_blank" rel="noopener noreferrer">
                             <Button size="sm" variant="ghost">
                               <Eye className="h-4 w-4 mr-1" />
                               View

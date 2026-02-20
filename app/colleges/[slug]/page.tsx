@@ -215,7 +215,7 @@ export default function CollegeMyRecruitsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <Link
-                      href={`/unified-profile/${r.id}`}
+                      href={`/view-profile?id=${encodeURIComponent(r.id)}`}
                       className="font-medium text-white hover:underline block truncate"
                     >
                       {r.name}
@@ -255,7 +255,7 @@ export default function CollegeMyRecruitsPage() {
                       </div>
                     )}
                     <Button asChild size="sm" className="mt-2" style={{ backgroundColor: primary }}>
-                      <Link href={`/unified-profile/${r.id}`}>
+                      <Link href={`/view-profile?id=${encodeURIComponent(r.id)}`}>
                         View profile
                         <ExternalLink className="h-3 w-3 ml-1" />
                       </Link>

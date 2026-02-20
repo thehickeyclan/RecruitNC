@@ -307,9 +307,9 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
                  </a>
                </Button>
                <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
-                 <a href={`/unified-profile/${id}`} target="_blank" rel="noopener noreferrer">
-                   Unified Profile
-                 </a>
+<a href={`/view-profile?id=${encodeURIComponent(id)}`} target="_blank" rel="noopener noreferrer">
+                  View profile
+                </a>
                </Button>
              </div>
           </div>
@@ -546,7 +546,7 @@ export default function EditAthletePage({ params }: { params: { id: string } }) 
                   asChild
                   className="hover:bg-[#002147] hover:text-white"
                 >
-                  <a href={`/unified-profile/${id}`}>Unified Profile</a>
+                  <a href={`/view-profile?id=${encodeURIComponent(id)}`}>View profile</a>
                 </Button>
               </div>
             </CardContent>

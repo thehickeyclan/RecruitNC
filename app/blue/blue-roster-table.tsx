@@ -36,7 +36,7 @@ export function BlueRosterTable({ members }: Props) {
               <tr key={row.id} className="hover:bg-[#03154C]/5 transition-colors">
                 <td className="px-4 py-3">
                   <Link
-                    href={`/unified-profile/${row.id}`}
+                    href={`/view-profile?id=${encodeURIComponent(row.id)}`}
                     className="font-medium text-[#03154C] hover:text-[#D3B574] hover:underline"
                   >
                     {row.name}

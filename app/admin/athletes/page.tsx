@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import AthleteImage from "@/components/athlete-image"
@@ -19,6 +20,8 @@ export default function AthletesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [recruitingStatusFilter, setRecruitingStatusFilter] = useState<string>("all")
   const [yearFilter, setYearFilter] = useState<string>("all")
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkDeleting, setBulkDeleting] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -120,6 +123,55 @@ export default function AthletesPage() {
           variant: "destructive",
         })
       }
+    }
+  }
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedIds(new Set(filteredAthletes.map((a) => a.id)))
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const handleBulkDelete = async () => {
+    const count = selectedIds.size
+    if (count === 0) return
+    const message = `Permanently delete ${count} athlete${count === 1 ? "" : "s"}? This cannot be undone.`
+    if (!window.confirm(message)) return
+    setBulkDeleting(true)
+    let deleted = 0
+    let failed = 0
+    try {
+      for (const id of selectedIds) {
+        try {
+          const res = await fetch(`/api/athletes/${id}`, { method: "DELETE" })
+          if (res.ok) deleted++
+          else failed++
+        } catch {
+          failed++
+        }
+      }
+      setAthletes((prev) => prev.filter((a) => !selectedIds.has(a.id)))
+      setSelectedIds(new Set())
+      if (failed === 0) {
+        toast({ title: "Deleted", description: `${deleted} athlete${deleted === 1 ? "" : "s"} deleted.` })
+      } else {
+        toast({
+          title: "Bulk delete finished",
+          description: `Deleted ${deleted}, failed ${failed}. Refresh the list to see current state.`,
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setBulkDeleting(false)
     }
   }
 
@@ -252,9 +304,33 @@ export default function AthletesPage() {
       {!loading && !error && filteredAthletes.length > 0 && (
         <Card className="shadow-lg border-t-4 border-t-[#B31B1B]">
           <CardHeader className="bg-gradient-to-r from-[#002147] to-[#003366] text-white">
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between flex-wrap gap-2">
               <span>Athletes Results</span>
-              <span className="text-sm font-normal text-blue-200">{filteredAthletes.length} athletes</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-normal text-blue-200">{filteredAthletes.length} athletes</span>
+                {selectedIds.size > 0 && (
+                  <>
+                    <span className="text-sm text-gray-600">({selectedIds.size} selected)</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSelection}
+                      disabled={bulkDeleting}
+                    >
+                      Clear selection
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="bg-[#B31B1B] hover:bg-[#8B1515]"
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                    >
+                      {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.size})`}
+                    </Button>
+                  </>
+                )}
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -262,6 +338,13 @@ export default function AthletesPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 hover:bg-gray-50">
+                    <TableHead className="w-10 font-semibold text-gray-700">
+                      <Checkbox
+                        checked={filteredAthletes.length > 0 && filteredAthletes.every((a) => selectedIds.has(a.id))}
+                        onCheckedChange={(checked) => (checked ? selectAllFiltered() : clearSelection())}
+                        aria-label="Select all on page"
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold text-gray-700">Photo</TableHead>
                     <TableHead className="font-semibold text-gray-700">Name</TableHead>
                     <TableHead className="font-semibold text-gray-700">High School</TableHead>
@@ -279,6 +362,13 @@ export default function AthletesPage() {
                   {filteredAthletes.map((athlete) => (
                     <TableRow key={athlete.id}>
                       <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(athlete.id)}
+                          onCheckedChange={() => toggleSelection(athlete.id)}
+                          aria-label={`Select ${athlete.name || athlete.id}`}
+                        />
+                      </TableCell>
+                      <TableCell>
                         <AthleteImage
                           photoUrl={athlete.photourl}
                           name={athlete.name}
@@ -287,7 +377,7 @@ export default function AthletesPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        <Link href={`/unified-profile/${athlete.id}`} className="text-[#002147] hover:underline" target="_blank" rel="noopener noreferrer">
+                        <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-[#002147] hover:underline" target="_blank" rel="noopener noreferrer">
                           {athlete.name || "N/A"}
                         </Link>
                       </TableCell>
@@ -321,7 +411,7 @@ export default function AthletesPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
-                            <Link href={`/unified-profile/${athlete.id}`} target="_blank" rel="noopener noreferrer">View profile</Link>
+                            <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} target="_blank" rel="noopener noreferrer">View profile</Link>
                           </Button>
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
                             <Link href={`/admin/athletes/edit/${athlete.id}`}>Edit</Link>

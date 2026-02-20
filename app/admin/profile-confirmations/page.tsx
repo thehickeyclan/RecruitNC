@@ -222,7 +222,7 @@ Thanks! 🤼‍♂️`
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(`/unified-profile/${athlete.id}`, "_blank")}
+                        onClick={() => window.open(`/view-profile?id=${encodeURIComponent(athlete.id)}`, "_blank")}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Unified Profile
@@ -282,7 +282,7 @@ Thanks! 🤼‍♂️`
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(`/unified-profile/${athlete.id}`, "_blank")}
+                      onClick={() => window.open(`/view-profile?id=${encodeURIComponent(athlete.id)}`, "_blank")}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Unified Profile

@@ -702,7 +702,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
             </div>
 
             <a
-              href={athlete.id ? `/unified-profile/${athlete.id}` : `/athletes/${athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
+              href={athlete.id ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : `/athletes/${athlete.name?.toLowerCase().replace(/\s+/g, "-")}`}
               className="block w-full font-bold py-2 flex items-center justify-center gap-2 shadow-md text-sm transition-colors rounded-md hover:opacity-95"
               style={{
                 backgroundColor: "#D3B574",

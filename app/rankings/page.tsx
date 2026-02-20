@@ -365,11 +365,11 @@ export default function ClassOf2027RankingsPage() {
                             <div className="text-sm font-medium text-gray-900">
                               {athlete.id ? (
                                 <a
-                                  href={`/unified-profile/${athlete.id}`}
+                                  href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
                                   className="text-blue-600 hover:text-blue-800 hover:underline"
                                   onClick={(e) => {
                                     e.preventDefault()
-                                    window.location.href = `/unified-profile/${athlete.id}`
+                                    window.location.href = `/view-profile?id=${encodeURIComponent(athlete.id)}`
                                   }}
                                 >
                                   {athlete.name}

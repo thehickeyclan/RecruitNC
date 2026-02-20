@@ -276,7 +276,7 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsC
                   {athlete.careerRecord && <Badge variant="outline">{athlete.careerRecord}</Badge>}
                 </div>
               </div>
-              <Link href={`/unified-profile/${athlete.id}`} target="_blank">
+              <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} target="_blank">
                 <Button variant="outline" size="sm">
                   Full Profile
                 </Button>

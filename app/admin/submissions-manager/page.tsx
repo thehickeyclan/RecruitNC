@@ -951,7 +951,7 @@ export default function SubmissionsManagerPage() {
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject
                         </Button>
-                        <Link href={`/unified-profile/${request.athlete_id}`} target="_blank">
+                        <Link href={`/view-profile?id=${encodeURIComponent(request.athlete_id)}`} target="_blank">
                           <Button variant="outline">
                             <ExternalLink className="h-4 w-4 mr-2" />
                             View Profile
@@ -1522,7 +1522,7 @@ export default function SubmissionsManagerPage() {
                                       )}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                      <Link href={`/unified-profile/${request.athlete_id}`} target="_blank">
+                                      <Link href={`/view-profile?id=${encodeURIComponent(request.athlete_id)}`} target="_blank">
                                         <Button variant="outline" size="sm">
                                           <ExternalLink className="h-3 w-3 mr-1" />
                                           View
@@ -1669,7 +1669,7 @@ export default function SubmissionsManagerPage() {
                                 )}
                                 Reject & Revert
                               </Button>
-                              <Link href={`/unified-profile/${edit.athlete_id}`} target="_blank">
+                              <Link href={`/view-profile?id=${encodeURIComponent(edit.athlete_id)}`} target="_blank">
                                 <Button variant="outline" size="sm">
                                   <ExternalLink className="h-4 w-4 mr-1" />
                                   View Profile

@@ -66,24 +66,26 @@ export async function POST(request: NextRequest) {
       // Get the current domain from the request
       const origin = request.headers.get("origin") || request.nextUrl.origin
       
-      // Replace incorrect athlete profile URLs with correct RecruitNC format
-      // Pattern: https://v0-new-college-commits.vercel.app/athletes/[id]
-      // Should be: /unified-profile/[id] (relative URL works best)
+      // Replace incorrect athlete profile URLs with working view-profile format
       data.answer = data.answer.replace(
         /https?:\/\/[^\s]+\/athletes\/([a-f0-9-]+)/gi,
-        (match: string, athleteId: string) => {
-          return `/unified-profile/${athleteId}`
+        (_match: string, athleteId: string) => {
+          return `/view-profile?id=${encodeURIComponent(athleteId)}`
         }
       )
       
-      // Also fix any other legacy domain references
+      // Also fix any other legacy domain references to use view-profile
       data.answer = data.answer.replace(
         /https?:\/\/v0-new-college-commits\.vercel\.app\/[^\s)]+/gi,
         (match: string) => {
-          // Extract the path and convert to RecruitNC format
           const path = match.replace(/https?:\/\/[^\/]+/, "")
           if (path.startsWith("/athletes/")) {
-            return path.replace("/athletes/", "/unified-profile/")
+            const id = path.replace("/athletes/", "")
+            return `/view-profile?id=${encodeURIComponent(id)}`
+          }
+          if (path.startsWith("/unified-profile/")) {
+            const id = path.replace("/unified-profile/", "")
+            return `/view-profile?id=${encodeURIComponent(id)}`
           }
           return path
         }
