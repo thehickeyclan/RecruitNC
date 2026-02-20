@@ -92,10 +92,26 @@ export default function BlueRegisterPage() {
     let cancelled = false
     fetch(`/api/blue/invites/validate?token=${encodeURIComponent(token)}`)
       .then((r) => r.json())
-      .then((data) => {
+      .then(async (data) => {
         if (cancelled) return
         setValid(data.valid === true)
-        if (data.email && !user?.email) setParent((p) => ({ ...p, email: data.email }))
+        if (data.email && !user?.email) {
+          setParent((p) => ({ ...p, email: data.email }))
+          // If invite was sent to an email, check immediately if they already have an account
+          const e = data.email.trim().toLowerCase()
+          if (e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+            setEmailChecking(true)
+            try {
+              const r = await fetch(`/api/blue/check-email?email=${encodeURIComponent(e)}`)
+              const check = await r.json()
+              if (!cancelled) setEmailRegistered(check.registered === true)
+            } catch {
+              if (!cancelled) setEmailRegistered(null)
+            } finally {
+              if (!cancelled) setEmailChecking(false)
+            }
+          }
+        }
         setError(data.error || null)
       })
       .catch(() => {
@@ -160,8 +176,8 @@ export default function BlueRegisterPage() {
           parent: {
             email: parent.email,
             password: parent.password || undefined,
-            firstName: parent.firstName,
-            lastName: parent.lastName,
+            firstName: parent.firstName || (user ? (profile?.first_name ?? (user.user_metadata?.first_name as string)) : undefined) || "",
+            lastName: parent.lastName || (user ? (profile?.last_name ?? (user.user_metadata?.last_name as string)) : undefined) || "",
             phone: parent.phone ? normalizePhoneForStorage(parent.phone) : undefined,
           },
           athlete: {

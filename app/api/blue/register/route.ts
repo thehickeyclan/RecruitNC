@@ -26,9 +26,20 @@ export async function POST(request: NextRequest) {
     const tshirtSizeRaw = typeof body.tshirtSize === "string" ? body.tshirtSize.trim() : undefined
     const promoCodeRaw = body.promoCode?.trim()
 
-    if (!token || !parent?.email || !parent?.firstName || !parent?.lastName) {
+    if (!token || !parent?.email) {
       return NextResponse.json(
-        { error: "Missing required fields: token, parent (email, firstName, lastName)" },
+        { error: "Missing required fields: token and parent email." },
+        { status: 400 }
+      )
+    }
+    const admin = createAdminClient()
+    const supabase = await createClient()
+    const { data: { user: existingUser } } = await supabase.auth.getUser()
+    const parentEmailNorm = parent.email.trim().toLowerCase()
+    const isSessionUser = existingUser && existingUser.email?.toLowerCase() === parentEmailNorm
+    if (!isSessionUser && (!parent.firstName?.trim() || !parent.lastName?.trim())) {
+      return NextResponse.json(
+        { error: "Missing required fields: parent firstName and lastName (or sign in so we can use your account name)." },
         { status: 400 }
       )
     }
@@ -53,9 +64,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const admin = createAdminClient()
-    const supabase = await createClient()
-
     // 1) Load and validate invite
     const { data: invite, error: inviteErr } = await admin
       .from("blue_invites")
@@ -70,9 +78,6 @@ export async function POST(request: NextRequest) {
     // 2) Resolve or create parent
     let payerUserId: string
 
-    const parentEmailNorm = parent.email.trim().toLowerCase()
-
-    const { data: { user: existingUser } } = await supabase.auth.getUser()
     if (existingUser && existingUser.email?.toLowerCase() === parentEmailNorm) {
       payerUserId = existingUser.id
     } else if (parent.password && parent.password.length >= 8) {
@@ -178,7 +183,25 @@ export async function POST(request: NextRequest) {
       athleteId = newAthlete.id
     }
 
-    const signerName = `${parent.firstName.trim()} ${parent.lastName.trim()}`
+    let signerFirstName = parent.firstName?.trim() || ""
+    let signerLastName = parent.lastName?.trim() || ""
+    if (payerUserId && (!signerFirstName || !signerLastName)) {
+      const { data: profileRow } = await admin
+        .from("user_profiles")
+        .select("first_name, last_name")
+        .eq("user_id", payerUserId)
+        .maybeSingle()
+      if (profileRow) {
+        signerFirstName = signerFirstName || (profileRow.first_name as string)?.trim() || ""
+        signerLastName = signerLastName || (profileRow.last_name as string)?.trim() || ""
+      }
+      if (!signerFirstName && !signerLastName && existingUser?.user_metadata) {
+        const meta = existingUser.user_metadata as Record<string, unknown>
+        signerFirstName = (meta.first_name as string)?.trim() || ""
+        signerLastName = (meta.last_name as string)?.trim() || ""
+      }
+    }
+    const signerName = `${signerFirstName} ${signerLastName}`.trim() || null
     const { error: waiverErr } = await admin.from("liability_waivers").upsert(
       {
         user_id: payerUserId,
