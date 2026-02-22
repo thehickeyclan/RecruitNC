@@ -6,10 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Loader2, Trophy } from "lucide-react"
-import type { BlueMember2026Row } from "@/app/api/admin/blue/members-2026/route"
+import type { BlueMember2026Row, BlueMembers2026Stats } from "@/app/api/admin/blue/members-2026/route"
+
+const defaultStats: BlueMembers2026Stats = {
+  totalMembers: 0,
+  stateChamps2026: 0,
+  statePlacers2026: 0,
+  stateQualifiers2026: 0,
+  twoXStateChamps: 0,
+  threeXStateChamps: 0,
+  fourXStateChamps: 0,
+  allAmericans: 0,
+}
 
 export default function AdminBlueMembers2026Page() {
   const [rows, setRows] = useState<BlueMember2026Row[]>([])
+  const [stats, setStats] = useState<BlueMembers2026Stats>(defaultStats)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,15 +34,18 @@ export default function AdminBlueMembers2026Page() {
         if (data.error) {
           setError(data.error)
           setRows([])
+          setStats(defaultStats)
         } else {
           setError(null)
           setRows(data.rows ?? [])
+          setStats(data.stats ?? defaultStats)
         }
       })
       .catch(() => {
         if (!cancelled) {
           setError("Failed to load")
           setRows([])
+          setStats(defaultStats)
         }
       })
       .finally(() => {
@@ -53,6 +68,59 @@ export default function AdminBlueMembers2026Page() {
             <p className="text-sm text-gray-600">Members (active subscription or athlete Blue flag) and their 2026 state result</p>
           </div>
         </div>
+
+        {!loading && !error && (
+          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4">
+            <Card className="border-t-4 border-t-[#03154C]">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Blue members</p>
+                <p className="text-2xl font-bold text-[#13294B]">{stats.totalMembers}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-amber-500">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State champs</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.stateChamps2026}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-blue-500">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State placers</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.statePlacers2026}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-gray-500">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State qualifiers (SQ)</p>
+                <p className="text-2xl font-bold text-gray-700">{stats.stateQualifiers2026}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-amber-400">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2× State champs</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.twoXStateChamps}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-amber-600">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">3× State champs</p>
+                <p className="text-2xl font-bold text-amber-700">{stats.threeXStateChamps}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-amber-700">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">4× State champs</p>
+                <p className="text-2xl font-bold text-amber-800">{stats.fourXStateChamps}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-purple-500">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">All-Americans</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.allAmericans}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <Card className="border-t-4 border-t-[#03154C]">
           <CardHeader>

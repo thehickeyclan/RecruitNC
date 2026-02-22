@@ -16,6 +16,17 @@ export type BlueMember2026Row = {
   state_school: string
 }
 
+export type BlueMembers2026Stats = {
+  totalMembers: number
+  stateChamps2026: number
+  statePlacers2026: number
+  stateQualifiers2026: number
+  twoXStateChamps: number
+  threeXStateChamps: number
+  fourXStateChamps: number
+  allAmericans: number
+}
+
 async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -82,13 +93,23 @@ export async function GET() {
   if (athletesError) return NextResponse.json({ error: athletesError.message }, { status: 500 })
   if (!athletes?.length) return NextResponse.json({ rows: [] })
 
-  const { data: nchsaa2026, error: nchsaaError } = await admin
-    .from("wrestling_nchsaa_results")
-    .select("year, classification, weight_class, place, school, wrestler_name")
-    .eq("year", 2026)
-
-  if (nchsaaError) return NextResponse.json({ error: nchsaaError.message }, { status: 500 })
-  const nchsaaRows = nchsaa2026 ?? []
+  const tableNames = ["NCHSAA_results", "nchsaa_results", "wrestling_nchsaa_results"] as const
+  let nchsaaTableUsed: string = tableNames[0]
+  let nchsaaRows: Array<{ year: number; classification: string; weight_class: string; place: number | null; school: string; wrestler_name: string }> = []
+  for (const tableName of tableNames) {
+    const { data, error } = await admin
+      .from(tableName)
+      .select("year, classification, weight_class, place, school, wrestler_name")
+      .eq("year", 2026)
+    if (!error && data?.length !== undefined) {
+      nchsaaTableUsed = tableName
+      nchsaaRows = data as typeof nchsaaRows
+      break
+    }
+    if (error?.code !== "42P01") {
+      return NextResponse.json({ error: `NCHSAA (${tableName}): ${error?.message}` }, { status: 500 })
+    }
+  }
 
   const rows: BlueMember2026Row[] = []
 
@@ -162,5 +183,87 @@ export async function GET() {
     return (a.state_weight || "").localeCompare(b.state_weight || "")
   })
 
-  return NextResponse.json({ rows })
+  const uniqueMemberNames = [...new Set(rows.map((r) => r.member_name))].filter((n) => n && n !== "—")
+  const memberNamesSet = new Set(uniqueMemberNames)
+
+  const stats = {
+    totalMembers: uniqueMemberNames.length,
+    stateChamps2026: 0,
+    statePlacers2026: 0,
+    stateQualifiers2026: 0,
+    twoXStateChamps: 0,
+    threeXStateChamps: 0,
+    fourXStateChamps: 0,
+    allAmericans: 0,
+  }
+
+  const membersWith2026Champ = new Set<string>()
+  const membersWith2026Placer = new Set<string>()
+  const membersWith2026SQ = new Set<string>()
+  for (const r of rows) {
+    if (!r.member_name || r.member_name === "—") continue
+    if (r.state_year === 2026) {
+      if (r.placement === "Champion") membersWith2026Champ.add(r.member_name)
+      if (r.placement === "SQ") membersWith2026SQ.add(r.member_name)
+      if (["Champion", "2nd", "3rd", "4th"].includes(r.placement)) membersWith2026Placer.add(r.member_name)
+    }
+  }
+  stats.stateChamps2026 = membersWith2026Champ.size
+  stats.statePlacers2026 = membersWith2026Placer.size
+  stats.stateQualifiers2026 = membersWith2026SQ.size
+
+  const { data: allNchsaa } = await admin
+    .from(nchsaaTableUsed)
+    .select("year, place, wrestler_name")
+    .gte("year", 2018)
+    .lte("year", 2026)
+  const champYearsByMember = new Map<string, Set<number>>()
+  for (const row of allNchsaa ?? []) {
+    if (row.place !== 1) continue
+    const rName = (row.wrestler_name ?? "").toString().trim()
+    for (const a of athletes) {
+      const aname = (a.name ?? "").toString().trim()
+      if (!memberNamesSet.has(aname)) continue
+      const variants = nameVariants(aname)
+      const ok = variants.some((v) => rName.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(rName.toLowerCase()))
+      if (!ok) continue
+      let set = champYearsByMember.get(aname)
+      if (!set) {
+        set = new Set()
+        champYearsByMember.set(aname, set)
+      }
+      set.add(Number(row.year))
+    }
+  }
+  for (const [, years] of champYearsByMember) {
+    const c = years.size
+    if (c >= 4) stats.fourXStateChamps++
+    else if (c === 3) stats.threeXStateChamps++
+    else if (c === 2) stats.twoXStateChamps++
+  }
+
+  const nhscaTableNames = ["wrestling_nhsca_results", "nhsca_results"] as const
+  let nhscaRows: Array<{ athlete_name?: string; wrestler_name?: string; placement?: number; place?: number }> = []
+  for (const t of nhscaTableNames) {
+    const { data, error } = await admin.from(t).select("athlete_name, wrestler_name, placement, place").limit(5000)
+    if (!error && data?.length !== undefined) {
+      nhscaRows = data as typeof nhscaRows
+      break
+    }
+  }
+  const allAmericanMembers = new Set<string>()
+  for (const row of nhscaRows) {
+    const place = row.placement ?? row.place
+    if (place == null || place < 1 || place > 8) continue
+    const name = (row.athlete_name ?? row.wrestler_name ?? "").toString().trim()
+    const variants = nameVariants(name)
+    for (const a of athletes) {
+      const aname = (a.name ?? "").toString().trim()
+      if (!variants.some((v) => aname.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(aname.toLowerCase()))) continue
+      if (memberNamesSet.has(aname)) allAmericanMembers.add(aname)
+    }
+  }
+  stats.allAmericans = allAmericanMembers.size
+
+  return NextResponse.json({ rows, stats })
 }
