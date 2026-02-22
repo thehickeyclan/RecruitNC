@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CreditCard, Link2, BarChart3, Ticket, Image, FileText, ArrowRight } from "lucide-react"
+import { CreditCard, Link2, BarChart3, Ticket, Image, FileText, ArrowRight, Trophy } from "lucide-react"
 
 const NAVY = "#03154C"
 const GOLD = "#D3B574"
@@ -43,6 +43,12 @@ const sections = [
     title: "Interest forms",
     description: "State qualifier interest. Create invites and track invited / enrolled.",
     icon: FileText,
+  },
+  {
+    href: "/admin/blue/members-2026",
+    title: "Blue members – 2026 NCHSAA",
+    description: "List of Blue members (active or athlete flag) and their 2026 state placement.",
+    icon: Trophy,
   },
 ]
 
