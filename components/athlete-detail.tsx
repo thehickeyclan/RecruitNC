@@ -483,6 +483,11 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         badges.push({ color: "bg-yellow-600 text-white", text: "STATE CHAMPION" })
       }
 
+      const stateQualifier = (athlete?.state_qualifier ?? athleteData?.state_qualifier ?? "").toString().trim()
+      if (stateQualifier) {
+        badges.push({ color: "bg-green-600 text-white", text: "STATE QUALIFIER" })
+      }
+
       const allAmericanStatus = getALLAmericanStatus()
       if (allAmericanStatus) {
         badges.push({ color: "bg-yellow-600 text-white", text: "ALL-AMERICAN" })
@@ -1500,6 +1505,15 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 />
               ) : (
                 <>
+                  {(() => {
+                    const stateQualifierText = (athleteData?.state_qualifier ?? athlete?.state_qualifier ?? "").toString().trim()
+                    return stateQualifierText ? (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3">State Qualifier</h3>
+                        <p className="text-gray-700">{stateQualifierText}</p>
+                      </div>
+                    ) : null
+                  })()}
                   {achievements.length > 0 && (
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">Achievements</h3>
@@ -1524,7 +1538,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                       </ul>
                     </div>
                   )}
-                  {achievements.length === 0 && additionalAchievements.length === 0 && (
+                  {achievements.length === 0 && additionalAchievements.length === 0 && !(athleteData?.state_qualifier ?? athlete?.state_qualifier)?.toString().trim() && (
                     <p className="text-gray-500 italic">{canEdit ? "No achievements yet. Click Edit to add." : "No achievements listed."}</p>
                   )}
                 </>

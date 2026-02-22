@@ -196,7 +196,8 @@ export function TournamentResultsDisplay({
                   {nchsaaResults.length > 0 ? (
                     nchsaaResults.map((result, index) => {
                       let placementText: string
-                      if (result.place === null || result.place === undefined) {
+                      // place 0 = State Qualifier (SQ) per wrestling_nchsaa_results; 2026 uses 1–4 placers
+                      if (result.place === null || result.place === undefined || result.place === 0) {
                         placementText = "SQ"
                       } else if (result.place === 1) {
                         placementText = "Champion"
@@ -204,6 +205,8 @@ export function TournamentResultsDisplay({
                         placementText = "2nd Place"
                       } else if (result.place === 3) {
                         placementText = "3rd Place"
+                      } else if (result.place === 4) {
+                        placementText = "4th Place"
                       } else {
                         placementText = `${result.place}th Place`
                       }
