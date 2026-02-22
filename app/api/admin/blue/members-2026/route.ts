@@ -93,23 +93,23 @@ export async function GET() {
   if (athletesError) return NextResponse.json({ error: athletesError.message }, { status: 500 })
   if (!athletes?.length) return NextResponse.json({ rows: [] })
 
-  const tableNames = ["NCHSAA_results", "nchsaa_results", "wrestling_nchsaa_results"] as const
-  let nchsaaTableUsed: string = tableNames[0]
-  let nchsaaRows: Array<{ year: number; classification: string; weight_class: string; place: number | null; school: string; wrestler_name: string }> = []
-  for (const tableName of tableNames) {
-    const { data, error } = await admin
-      .from(tableName)
-      .select("year, classification, weight_class, place, school, wrestler_name")
-      .eq("year", 2026)
-    if (!error && data?.length !== undefined) {
-      nchsaaTableUsed = tableName
-      nchsaaRows = data as typeof nchsaaRows
-      break
-    }
-    if (error?.code !== "42P01") {
-      return NextResponse.json({ error: `NCHSAA (${tableName}): ${error?.message}` }, { status: 500 })
-    }
+  // Source of truth: wrestling_nchsaa_results. 2026: placers 1–4, SQ place=0; prior years placers 1–6.
+  // See scripts/01-create-wrestling-tables.sql, scripts/463-add-nchsaa-qualifying-regional-columns.sql,
+  // docs/2026-state-qualifier-data.md.
+  const NCHSAA_TABLE = "wrestling_nchsaa_results"
+  const { data: nchsaaRows, error: nchsaaError } = await admin
+    .from(NCHSAA_TABLE)
+    .select("year, classification, weight_class, place, school, wrestler_name")
+    .eq("year", 2026)
+
+  if (nchsaaError) {
+    return NextResponse.json(
+      { error: `${NCHSAA_TABLE}: ${nchsaaError.message}. Ensure the table exists and has 2026 data.` },
+      { status: 500 }
+    )
   }
+  type NchsaaRow = { year: number; classification: string; weight_class: string; place: number | null; school: string; wrestler_name: string }
+  const nchsaaRowsList: NchsaaRow[] = (nchsaaRows ?? []) as NchsaaRow[]
 
   const rows: BlueMember2026Row[] = []
 
@@ -117,7 +117,7 @@ export async function GET() {
     const name = (a.name ?? "").toString().trim()
     const variants = nameVariants(name)
     const matched: Array<{ classification: string; weight_class: string; place: number | null; school: string }> = []
-    for (const row of nchsaaRows) {
+    for (const row of nchsaaRowsList) {
       const rName = (row.wrestler_name ?? "").toString().trim()
       const ok = variants.some((v) => rName.toLowerCase().includes(v.toLowerCase()) || v.toLowerCase().includes(rName.toLowerCase()))
       if (!ok) continue
@@ -205,6 +205,7 @@ export async function GET() {
     if (r.state_year === 2026) {
       if (r.placement === "Champion") membersWith2026Champ.add(r.member_name)
       if (r.placement === "SQ") membersWith2026SQ.add(r.member_name)
+      // 2026 NCHSAA: placers are 1–4 only; prior years 1–6
       if (["Champion", "2nd", "3rd", "4th"].includes(r.placement)) membersWith2026Placer.add(r.member_name)
     }
   }
@@ -213,7 +214,7 @@ export async function GET() {
   stats.stateQualifiers2026 = membersWith2026SQ.size
 
   const { data: allNchsaa } = await admin
-    .from(nchsaaTableUsed)
+    .from(NCHSAA_TABLE)
     .select("year, place, wrestler_name")
     .gte("year", 2018)
     .lte("year", 2026)

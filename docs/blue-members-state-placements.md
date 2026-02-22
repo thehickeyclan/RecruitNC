@@ -1,5 +1,7 @@
 # Blue kids and their 2026 NCHSAA placement
 
+**Data source (single source of truth):** Supabase table **`wrestling_nchsaa_results`**. Columns include `year`, `classification`, `weight_class`, `place`, `wrestler_name`, `school`; 2026: placers are place 1–4 only, state qualifiers place = 0. Prior to 2026: placers 1–6. See `scripts/01-create-wrestling-tables.sql`, `scripts/463-add-nchsaa-qualifying-regional-columns.sql`, `docs/2026-state-qualifier-data.md`. The in-app Admin Blue “Blue members – 2026 NCHSAA” page and API `GET /api/admin/blue/members-2026` use this table only.
+
 Run in **Supabase → SQL Editor**. Copy the SQL below (do not copy the line with backticks).
 
 **What it does:** List of active Blue members and their 2026 state result. One row per kid per weight; if they placed, that row is shown (not the SQ row).
