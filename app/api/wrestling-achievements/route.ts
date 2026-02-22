@@ -54,6 +54,7 @@ export async function GET(request: Request) {
 
     let nchsaaResults: any[] = []
     let nchsaaError = null
+    const seenNchsaaKeys = new Set<string>()
 
     for (const nameVariation of nameVariations) {
       console.log("[v0] Trying NCHSAA query with name variation:", nameVariation)
@@ -74,13 +75,17 @@ export async function GET(request: Request) {
         break
       }
 
-      if (data && data.length > 0) {
-        nchsaaResults = data
-        console.log("[v0] Found NCHSAA results with name variation:", nameVariation)
-        console.log("[v0] Full results:", JSON.stringify(data, null, 2))
-        break
+      if (data?.length) {
+        for (const row of data) {
+          const key = `${row.year}-${row.classification}-${row.weight_class}-${row.wrestler_name}`
+          if (!seenNchsaaKeys.has(key)) {
+            seenNchsaaKeys.add(key)
+            nchsaaResults.push(row)
+          }
+        }
       }
     }
+    nchsaaResults.sort((a, b) => (b.year - a.year) || 0)
 
     console.log("[v0] NCHSAA query result:", {
       resultsCount: nchsaaResults?.length || 0,
