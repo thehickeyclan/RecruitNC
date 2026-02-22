@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/auth-context"
 
 type AthleteRecord = Record<string, unknown>
 
+type NchsaaResult = { year: number; place: number | null; classification: string; weight_class: string }
+
 /**
  * Profile by ?id= — no dynamic segment, so the document request can complete.
  * Use this until GET /unified-profile/[id] stops hanging on Vercel.
@@ -16,6 +18,7 @@ export default function ViewProfilePage() {
   const { user } = useAuth()
   const [id, setId] = useState("")
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
+  const [nchsaaResults, setNchsaaResults] = useState<NchsaaResult[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -81,6 +84,33 @@ export default function ViewProfilePage() {
     }
   }, [id])
 
+  useEffect(() => {
+    if (!athlete?.name || typeof athlete.name !== "string") {
+      setNchsaaResults([])
+      return
+    }
+    let cancelled = false
+    fetch(`/api/wrestling-achievements?name=${encodeURIComponent(athlete.name as string)}`)
+      .then((res) => res.json())
+      .then((data: { success?: boolean; achievements?: { all_results?: { nchsaa?: any[] } } }) => {
+        if (cancelled || !data?.success || !data?.achievements?.all_results?.nchsaa?.length) {
+          if (!cancelled) setNchsaaResults([])
+          return
+        }
+        const mapped: NchsaaResult[] = data.achievements.all_results.nchsaa.map((r: any) => ({
+          year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || 0,
+          place: r.place != null ? Number(r.place) : null,
+          classification: (r.division ?? r.classification ?? "").toString(),
+          weight_class: (r.weight_class ?? r.weight ?? "").toString(),
+        }))
+        if (!cancelled) setNchsaaResults(mapped)
+      })
+      .catch(() => {
+        if (!cancelled) setNchsaaResults([])
+      })
+    return () => { cancelled = true }
+  }, [athlete?.name])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -104,10 +134,9 @@ export default function ViewProfilePage() {
     )
   }
 
-  const nchsaaResults: Array<{ year: number; place: number | null; classification: string; weight_class: string }> = []
-  const nhscaResults: unknown[] = []
-  const super32Results: unknown[] = []
-  const nationalTeamResults: unknown[] = []
+  const nhscaResults = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
+  const super32Results = Array.isArray(athlete.super32_results) ? athlete.super32_results : []
+  const nationalTeamResults = Array.isArray(athlete.national_team_results) ? athlete.national_team_results : []
 
   return (
     <div className="min-h-screen bg-gray-50">
