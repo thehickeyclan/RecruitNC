@@ -87,6 +87,20 @@ export async function GET(request: Request) {
     }
     nchsaaResults.sort((a, b) => (b.year - a.year) || 0)
 
+    // Don't show SQ (place=0) when we have a placer (place>=1) for same year/classification/weight
+    const placerKeys = new Set(
+      nchsaaResults
+        .filter((r) => r.place != null && Number(r.place) >= 1)
+        .map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
+    )
+    nchsaaResults = nchsaaResults.filter((r) => {
+      if (r.place != null && Number(r.place) === 0) {
+        const key = `${r.year}-${r.classification}-${r.weight_class}`
+        if (placerKeys.has(key)) return false
+      }
+      return true
+    })
+
     console.log("[v0] NCHSAA query result:", {
       resultsCount: nchsaaResults?.length || 0,
       error: nchsaaError,
