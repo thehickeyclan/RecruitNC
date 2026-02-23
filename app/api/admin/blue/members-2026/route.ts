@@ -22,6 +22,10 @@ export type BlueMembers2026Stats = {
   stateChamps2026: number
   statePlacers2026: number
   stateQualifiers2026: number
+  /** Unique members who ever won state (any year). For All-time view. */
+  stateChampsAllTime: number
+  statePlacersAllTime: number
+  stateQualifiersAllTime: number
   twoXStateChamps: number
   threeXStateChamps: number
   fourXStateChamps: number
@@ -87,6 +91,7 @@ export async function GET(request: Request) {
 
   const emptyStats: BlueMembers2026Stats = {
     totalMembers: 0, stateChamps2026: 0, statePlacers2026: 0, stateQualifiers2026: 0,
+    stateChampsAllTime: 0, statePlacersAllTime: 0, stateQualifiersAllTime: 0,
     twoXStateChamps: 0, threeXStateChamps: 0, fourXStateChamps: 0, allAmericans: 0,
     super32Placers: 0, nhscaRecordWins: 0, nhscaRecordLosses: 0, super32RecordWins: 0, super32RecordLosses: 0,
   }
@@ -213,6 +218,9 @@ export async function GET(request: Request) {
     stateChamps2026: 0,
     statePlacers2026: 0,
     stateQualifiers2026: 0,
+    stateChampsAllTime: 0,
+    statePlacersAllTime: 0,
+    stateQualifiersAllTime: 0,
     twoXStateChamps: 0,
     threeXStateChamps: 0,
     fourXStateChamps: 0,
@@ -226,6 +234,9 @@ export async function GET(request: Request) {
   stats.stateChamps2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && r.placement === "Champion").map((r) => r.member_name)).size
   stats.statePlacers2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
   stats.stateQualifiers2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && r.placement === "SQ").map((r) => r.member_name)).size
+  stats.stateChampsAllTime = new Set(rowsAllYears.filter((r) => r.placement === "Champion").map((r) => r.member_name)).size
+  stats.statePlacersAllTime = new Set(rowsAllYears.filter((r) => ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
+  stats.stateQualifiersAllTime = new Set(rowsAllYears.filter((r) => r.placement === "SQ").map((r) => r.member_name)).size
 
   for (const [, years] of champYearsByMember) {
     const c = years.size
@@ -273,6 +284,9 @@ export async function GET(request: Request) {
     stateChamps2026: stats.stateChamps2026,
     statePlacers2026: stats.statePlacers2026,
     stateQualifiers2026: stats.stateQualifiers2026,
+    stateChampsAllTime: 0,
+    statePlacersAllTime: 0,
+    stateQualifiersAllTime: 0,
     twoXStateChamps: 0,
     threeXStateChamps: 0,
     fourXStateChamps: 0,
