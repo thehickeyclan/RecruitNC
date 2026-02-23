@@ -87,15 +87,15 @@ No shared components. No API routes.
 
 1. **Supabase** — Same as Dave Schultz — use RecruitNC's browser client.
 2. **Profile link** — Legacy uses `https://v0-new-college-commits.vercel.app/athletes/${id}`. Change to `/unified-profile/${id}`.
-3. **Assets** — `public/nc-united-logo.png`; `public/images/image.png` (Tricia Saunders image). Copy from Legacy or substitute.
+3. **Assets** — Hero: `public/images/nc-united-logo.png` (same as Phase 1). About section: `public/images/image.png` (Tricia Saunders image). Copy from Legacy NC or add your own image at that path.
 4. **Auth** — No AuthGuard; public.
 
 ### 2.5 Checklist — Tricia Saunders
 
 - [x] Copy / implement `app/tricia-saunders-award/page.tsx`.
-- [x] Point Supabase to RecruitNC client.
-- [x] Update "View Profile" href to RecruitNC profile URL.
-- [ ] Copy `public/nc-united-logo.png` and `public/images/image.png` (or substitute).
+- [x] Point Supabase to RecruitNC client (`@/lib/supabase`).
+- [x] Update "View Profile" href to RecruitNC profile URL (`/unified-profile/${id}`).
+- [x] Hero logo: `public/images/nc-united-logo.png` (in use). Tricia image: copy `public/images/image.png` from Legacy or add your own at that path when ready.
 - [x] Add nav: **Tricia Saunders Award** → `/tricia-saunders-award`.
 
 ---
