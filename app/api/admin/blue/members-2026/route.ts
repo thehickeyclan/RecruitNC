@@ -206,8 +206,6 @@ export async function GET(request: Request) {
   sortRows(rowsAllYears)
 
   const uniqueMemberNames = [...new Set(rows2026Only.map((r) => r.member_name))].filter((n) => n && n !== "—")
-
-  const uniqueMemberNames = [...new Set(rows.map((r) => r.member_name))].filter((n) => n && n !== "—")
   const memberNamesSet = new Set(uniqueMemberNames)
 
   const stats: BlueMembers2026Stats = {
