@@ -1,9 +1,9 @@
 /**
  * Script to fix committed athletes missing from school portals
- * 
+ *
  * Usage:
  *   npx tsx scripts/fix-committed-athletes.ts "Kavan Wilson" "Reinhardt University"
- * 
+ *
  * Or to list all committed athletes:
  *   npx tsx scripts/fix-committed-athletes.ts --list
  */

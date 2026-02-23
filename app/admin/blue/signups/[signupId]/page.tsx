@@ -1,88 +1,53 @@
-"use client"
-
-import { useState, useEffect } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { notFound } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Loader2, User } from "lucide-react"
+import { ArrowLeft, User } from "lucide-react"
 
-export default function AdminBlueSignupDetailPage() {
-  const params = useParams()
-  const signupId = params?.signupId as string
-  const [data, setData] = useState<{
-    parent_first_name: string
-    parent_last_name: string
-    parent_email: string
-    parent_phone: string | null
-    athlete_first_name: string
-    athlete_last_name: string
-    athlete_graduation_year: number | null
-    athlete_high_school: string
-    athlete_wrestling_club: string | null
-    athlete_weight_class: string | null
-    tshirt_size: string
-    status: string
-    created_at: string
-  } | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+async function getSignup(signupId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
+  if (!profile?.is_admin) return null
 
-  useEffect(() => {
-    if (!signupId) {
-      setLoading(false)
-      setError("Missing signup")
-      return
-    }
-    let cancelled = false
-    fetch(`/api/admin/blue/signups/${encodeURIComponent(signupId)}`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((res) => {
-        if (cancelled) return
-        if (res.error) {
-          setError(res.error)
-          setData(null)
-        } else {
-          setData(res)
-          setError(null)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError("Failed to load")
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [signupId])
+  const admin = createAdminClient()
+  const { data: row, error } = await admin
+    .from("blue_signups")
+    .select("id, parent_first_name, parent_last_name, parent_email, parent_phone, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, tshirt_size, status, created_at")
+    .eq("id", signupId)
+    .single()
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Loader2 className="h-10 w-10 animate-spin text-[#13294B]" />
-      </div>
-    )
-  }
+  if (error || !row) return null
+  return row
+}
 
-  if (error || !data) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-        <div className="max-w-lg mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-red-600">Error</CardTitle>
-              <CardDescription>{error ?? "Signup not found"}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" asChild>
-                <Link href="/admin/blue/subscriptions"><ArrowLeft className="h-4 w-4 mr-2" /> Back to cockpit</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
+export default async function AdminBlueSignupDetailPage({
+  params,
+}: {
+  params: Promise<{ signupId: string }>
+}) {
+  const { signupId } = await params
+  if (!signupId) notFound()
+
+  const data = await getSignup(signupId)
+  if (!data) notFound()
+
+  const parentFirstName = (data.parent_first_name ?? "").toString().trim() || "—"
+  const parentLastName = (data.parent_last_name ?? "").toString().trim() || "—"
+  const parentEmail = (data.parent_email ?? "").toString().trim() || "—"
+  const parentPhone = (data.parent_phone ?? "").toString().trim() || "—"
+  const athleteFirst = (data.athlete_first_name ?? "").toString().trim() || "—"
+  const athleteLast = (data.athlete_last_name ?? "").toString().trim() || "—"
+  const highSchool = (data.athlete_high_school ?? "").toString().trim() || "—"
+  const club = (data.athlete_wrestling_club ?? "").toString().trim() || "—"
+  const weight = (data.athlete_weight_class ?? "").toString().trim() || "—"
+  const tshirt = (data.tshirt_size ?? "").toString().trim() || "—"
+  const status = (data.status ?? "").toString()
+  const createdAt = (data.created_at ?? "").toString()
+  const gradYear = data.athlete_graduation_year ?? "—"
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -110,20 +75,20 @@ export default function AdminBlueSignupDetailPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">First name</p>
-                <p className="font-medium">{data.parent_first_name || "—"}</p>
+                <p className="font-medium">{parentFirstName}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Last name</p>
-                <p className="font-medium">{data.parent_last_name || "—"}</p>
+                <p className="font-medium">{parentLastName}</p>
               </div>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</p>
-              <p className="font-medium">{data.parent_email || "—"}</p>
+              <p className="font-medium">{parentEmail}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone (cell)</p>
-              <p className="font-medium">{data.parent_phone || "—"}</p>
+              <p className="font-medium">{parentPhone}</p>
             </div>
           </CardContent>
         </Card>
@@ -137,42 +102,42 @@ export default function AdminBlueSignupDetailPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">First name</p>
-                <p className="font-medium">{data.athlete_first_name || "—"}</p>
+                <p className="font-medium">{athleteFirst}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Last name</p>
-                <p className="font-medium">{data.athlete_last_name || "—"}</p>
+                <p className="font-medium">{athleteLast}</p>
               </div>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">High school</p>
-              <p className="font-medium">{data.athlete_high_school || "—"}</p>
+              <p className="font-medium">{highSchool}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Wrestling club</p>
-              <p className="font-medium">{data.athlete_wrestling_club || "—"}</p>
+              <p className="font-medium">{club}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Graduation year</p>
-                <p className="font-medium">{data.athlete_graduation_year ?? "—"}</p>
+                <p className="font-medium">{String(gradYear)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Weight class</p>
-                <p className="font-medium">{data.athlete_weight_class || "—"}</p>
+                <p className="font-medium">{weight}</p>
               </div>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">T-shirt size</p>
-              <p className="font-medium">{data.tshirt_size || "—"}</p>
+              <p className="font-medium">{tshirt}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Signed up</p>
-              <p className="font-medium">{data.created_at ? new Date(data.created_at).toLocaleString() : "—"}</p>
+              <p className="font-medium">{createdAt ? new Date(createdAt).toLocaleString() : "—"}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</p>
-              <p className="font-medium">{data.status === "paid" ? "Paid" : data.status}</p>
+              <p className="font-medium">{status === "paid" ? "Paid" : status}</p>
             </div>
           </CardContent>
         </Card>

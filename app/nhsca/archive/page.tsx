@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Archive, BarChart3, Filter, LineChartIcon, Search, Star, Table, TrendingUp } from "lucide-react"
+import { Archive, BarChart3, ChevronDown, ChevronUp, Filter, LineChartIcon, Search, Star, Table, TrendingUp } from "lucide-react"
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -89,6 +89,11 @@ export default function NHSCAArchive() {
   const [timeRange, setTimeRange] = useState<TimeRange>("all")
   const [activeTab, setActiveTab] = useState<ActiveTab>("Overall")
   const [viewMode, setViewMode] = useState<ViewMode>("chart")
+  const [expandedYears, setExpandedYears] = useState<Record<number, boolean>>({})
+
+  const toggleYearExpanded = (year: number) => {
+    setExpandedYears((prev) => ({ ...prev, [year]: !prev[year] }))
+  }
 
   const isMostOutstandingWrestler = (wrestlerName: string, year: number): boolean => {
     return mostOutstandingWrestlers.some((mow) => {
@@ -98,6 +103,9 @@ export default function NHSCAArchive() {
     })
   }
 
+  // Male divisions only (align with 2025 page: 24 All-Americans)
+  const MALE_DIVISIONS = ["Freshman", "Sophomore", "Junior", "Senior"]
+
   // Load data via RecruitNC Supabase client
   useEffect(() => {
     const load = async () => {
@@ -106,6 +114,7 @@ export default function NHSCAArchive() {
           supabase
             .from("wrestling_nhsca_results")
             .select("*")
+            .in("division", MALE_DIVISIONS)
             .gte("placement", 1)
             .lte("placement", 8)
             .order("year", { ascending: false })
@@ -339,6 +348,9 @@ export default function NHSCAArchive() {
             <CardTitle className="text-xl" style={{ color: NC_NAVY }}>
               North Carolina Wrestling Historical Analysis (1990-2025)
             </CardTitle>
+            <CardDescription className="mt-1">
+              Boys divisions only (Freshman, Sophomore, Junior, Senior). Totals align with 24 All-Americans in 2025.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-6">
@@ -771,39 +783,62 @@ export default function NHSCAArchive() {
                     <CardDescription>Divisions: {ys.divisions.join(", ")}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {wrestlers
-                        .filter((w) => w.year === ys.year)
-                        .slice(0, 6)
-                        .map((w) => {
-                          const badge = getPlacementBadge(w.placement)
-                          return (
-                            <div key={w.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
-                              <Badge
-                                style={{ backgroundColor: badge.bg, color: badge.text }}
-                                className="border-0"
-                              >
-                                {getOrdinal(w.placement)}
-                              </Badge>
-                              <div className="text-sm flex-1">
-                                <div className="font-medium">{w.athlete_name}</div>
-                                <div className="text-[#002147]/70">
-                                  {w.division} • {w.weight}
-                                </div>
-                              </div>
-                              {isMostOutstandingWrestler(w.athlete_name, w.year) && (
-                                <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#002147] text-xs">
-                                  <Star className="w-3 h-3 mr-1" />
-                                  MOW
+                    <div className="space-y-3">
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {wrestlers
+                          .filter((w) => w.year === ys.year)
+                          .slice(0, expandedYears[ys.year] ? undefined : 6)
+                          .map((w) => {
+                            const badge = getPlacementBadge(w.placement)
+                            return (
+                              <div key={w.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                                <Badge
+                                  style={{ backgroundColor: badge.bg, color: badge.text }}
+                                  className="border-0"
+                                >
+                                  {getOrdinal(w.placement)}
                                 </Badge>
-                              )}
-                            </div>
-                          )
-                        })}
+                                <div className="text-sm flex-1">
+                                  <div className="font-medium">{w.athlete_name}</div>
+                                  <div className="text-[#002147]/70">
+                                    {w.division} • {w.weight}
+                                  </div>
+                                </div>
+                                {isMostOutstandingWrestler(w.athlete_name, w.year) && (
+                                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#002147] text-xs">
+                                    <Star className="w-3 h-3 mr-1" />
+                                    MOW
+                                  </Badge>
+                                )}
+                              </div>
+                            )
+                          })}
+                      </div>
                       {wrestlers.filter((w) => w.year === ys.year).length > 6 && (
-                        <div className="flex items-center justify-center p-2 bg-slate-100 rounded text-sm text-[#002147]/70">
-                          +{wrestlers.filter((w) => w.year === ys.year).length - 6} more
-                        </div>
+                        <button
+                          key={`expand-${ys.year}`}
+                          type="button"
+                          aria-expanded={!!expandedYears[ys.year]}
+                          aria-label={expandedYears[ys.year] ? `Collapse ${ys.year}` : `Show all ${wrestlers.filter((w) => w.year === ys.year).length} wrestlers for ${ys.year}`}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            toggleYearExpanded(ys.year)
+                          }}
+                          className="flex items-center justify-center gap-2 min-h-[44px] w-full rounded-md border border-[#002147]/40 bg-transparent px-4 py-2 text-sm font-medium text-[#002147] hover:bg-[#002147]/10 cursor-pointer transition-colors"
+                        >
+                          {expandedYears[ys.year] ? (
+                            <>
+                              <ChevronUp className="h-4 w-4" />
+                              Show less
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="h-4 w-4" />
+                              +{wrestlers.filter((w) => w.year === ys.year).length - 6} more
+                            </>
+                          )}
+                        </button>
                       )}
                     </div>
                   </CardContent>
