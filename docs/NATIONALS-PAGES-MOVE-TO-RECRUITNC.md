@@ -191,7 +191,86 @@ Add to the NATIONALS section:
 
 ---
 
+## Phase 3: Digital Archive (`/nhsca/archive`)
+
+Copy the **Digital Archive** page: full NHSCA history (1990–2025), charts, search/filters, year-by-year view, and Most Outstanding Wrestler (MOW) badges.
+
+### 3.1 Files to copy (Legacy NC → RecruitNC)
+
+| Type   | Source (Legacy NC)           | Destination (RecruitNC)       |
+|--------|------------------------------|--------------------------------|
+| Page   | `app/nhsca/archive/page.tsx` | `app/nhsca/archive/page.tsx`   |
+| Loading| `app/nhsca/archive/loading.tsx` | `app/nhsca/archive/loading.tsx` |
+| UI     | `components/ui/chart.tsx`    | `components/ui/chart.tsx`      |
+
+**No API routes.** All data is fetched **client-side** via Supabase. No separate NHSCA components; the archive is a single page.
+
+### 3.2 Supabase (same DB)
+
+Uses the **browser Supabase client** only.
+
+| Table                      | Usage |
+|----------------------------|--------|
+| `wrestling_nhsca_results`  | All All-Americans: `placement` 1–8, all years, order by year desc, division, weight, placement. Page aggregates in JS for charts and year stats. |
+| `most_outstanding_wrestlers` | All rows, order by year desc. Used to show MOW badge next to wrestlers who match `name` + `year`. |
+
+**In RecruitNC:** Use RecruitNC’s **client-side Supabase**. Replace `import("@/lib/supabase")` with your app’s client. Same project = no schema/RLS change if already set for Phase 2.
+
+### 3.3 Data flow in Legacy NC
+
+- **`app/nhsca/archive/page.tsx`**
+  - `const { supabase } = await import("@/lib/supabase")`
+  - **Query 1:** `wrestling_nhsca_results` — `placement` 1–8, order year desc, division, weight, placement (no limit; full history).
+  - **Query 2:** `most_outstanding_wrestlers` — `select("*")`, order year desc.
+  - Client-side: aggregates by year for chart data and year stats; filters for search (wrestler name/club, high school, year, division, weight).
+
+### 3.4 Dependencies (RecruitNC must have)
+
+- **UI:** `Card`, `CardContent`, `CardDescription`, `CardHeader`, `CardTitle`, `Badge`, `Button`, `Input`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue`, `Tabs`, `TabsContent`, `TabsList`, `TabsTrigger` from `@/components/ui/`.
+- **Charts:** `components/ui/chart.tsx` exporting `ChartContainer`, `ChartTooltip`, `ChartTooltipContent` (Recharts wrapper). Plus **recharts**: `LineChart`, `Line`, `XAxis`, `YAxis`, `CartesianGrid`, `ResponsiveContainer`, `Legend`.
+- **Icons:** `lucide-react` — Archive, BarChart3, Filter, LineChartIcon, Search, Star, Table, TrendingUp.
+- **Next:** `Link`, `Image` from `next/link`, `next/image`.
+
+### 3.5 Import and path fixes in RecruitNC
+
+1. **Supabase**
+   - Replace `import("@/lib/supabase")` and use of `supabase` with RecruitNC’s browser client (same as Phase 2).
+
+2. **Chart**
+   - Ensure `@/components/ui/chart` exists. If RecruitNC uses a different chart lib, you’ll need to adapt the chart section (Recharts `LineChart` + `ChartContainer`/`ChartTooltipContent`) to your setup or copy Legacy’s `components/ui/chart.tsx`.
+
+3. **Assets**
+   - Copy `public/images/nhsca-logo.png` (same as Phase 1) if not already present.
+
+4. **Auth**
+   - Archive page has **no** `AuthGuard` in Legacy; it’s public. Keep public or add your auth as needed.
+
+### 3.6 Internal links on the page
+
+- “2025 Results” → `/nhsca/2025` (Phase 2).
+- “Back to NHSCA” → `/nhsca` (Phase 1).
+
+### 3.7 Nav in RecruitNC
+
+Add to NATIONALS:
+
+- **Digital Archive** → `/nhsca/archive`.
+
+*(Already present in RecruitNC navbar: Nationals dropdown includes “Digital Archive” → `/nhsca/archive`.)*
+
+### 3.8 Checklist — Digital Archive
+
+- [ ] Copy `app/nhsca/archive/page.tsx` and `app/nhsca/archive/loading.tsx`.
+- [ ] Copy or implement `components/ui/chart.tsx` (ChartContainer, ChartTooltip, ChartTooltipContent).
+- [ ] Ensure **recharts** is installed (`recharts`) — RecruitNC has it.
+- [ ] Point Supabase usage to RecruitNC’s client.
+- [ ] Verify `wrestling_nhsca_results` and `most_outstanding_wrestlers` are readable (same project; RLS if applicable).
+- [ ] Copy `public/images/nhsca-logo.png` if needed.
+- [ ] Add nav entry “Digital Archive” → `/nhsca/archive` (already done).
+- [ ] Test search, filters, chart/table/trends views, and MOW badges.
+
+---
+
 ## Later phases (short reference)
 
-- **Phase 3 — Digital Archive** (`/nhsca/archive`): Copy `app/nhsca/archive/`; page uses client Supabase (`wrestling_nhsca_results`, `most_outstanding_wrestlers`).
 - **Phase 4 — Super32 Champions** (`/super32`): Copy `app/super32/page.tsx` and `app/api/super32/champions/route.ts`; replace `getSupabaseAdmin()` with RecruitNC’s admin client in the API route.
