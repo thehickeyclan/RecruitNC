@@ -1,15 +1,53 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
-import { Search, Users, Trophy } from "lucide-react"
+import { Search, Users, Trophy, FileSearch } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
+import { supabase } from "@/lib/supabase"
+
+const NC_NAVY = "#002147"
+const LEGACY_SEARCH_DEBOUNCE_MS = 300
+const profileHref = (id: string) => `/unified-profile/${id}`
+
+/** Build name variations for Legacy search .or(ilike) — comma-free so Supabase .or() parsing is safe. */
+function getLegacySearchNameVariations(q: string): string[] {
+  const t = (q || "").trim()
+  if (!t) return []
+  const out: string[] = []
+  if (t.includes(",")) {
+    const [last, first] = t.split(",").map((s) => s.trim())
+    if (first && last) {
+      out.push(`${first} ${last}`, `${last} ${first}`)
+    } else {
+      out.push(t.replace(/,/g, " "))
+    }
+  } else {
+    out.push(t)
+    const parts = t.split(/\s+/).filter(Boolean)
+    if (parts.length >= 2) {
+      const first = parts[0]!
+      const last = parts.slice(1).join(" ")
+      out.push(`${last} ${first}`)
+    }
+  }
+  return [...new Set(out)]
+}
+
+/** Build .or(column.ilike.pattern1,column.ilike.pattern2) string; patterns are comma-free. */
+function buildOrIlike(column: string, q: string): string {
+  const variations = getLegacySearchNameVariations(q)
+  const patterns = variations.map((v) => `%${v}%`)
+  return patterns.map((p) => `${column}.ilike.${p}`).join(",")
+}
 
 interface Athlete {
   id: string
@@ -38,8 +76,62 @@ interface StatsData {
   }
 }
 
+/** Legacy Search: one row per source (NHSCA, NCHSAA, etc.) with display name and optional athlete id for profile link. */
+interface LegacyMatch {
+  name: string
+  athleteId?: string
+  detail?: string
+  year?: number
+}
+
+interface LegacyCommit {
+  name: string
+  athleteId?: string
+  college?: string
+  graduationyear?: number
+  detail?: string
+}
+
+interface LegacyResultsState {
+  athletes: LegacyMatch[]
+  commits: LegacyCommit[]
+  nhsca: LegacyMatch[]
+  nhscaPlacements: LegacyMatch[]
+  nchsaa: LegacyMatch[]
+  mow: LegacyMatch[]
+  daveSchultz: LegacyMatch[]
+  triciaSaunders: LegacyMatch[]
+  super32: LegacyMatch[]
+  winningest: LegacyMatch[]
+  careerWinningest: LegacyMatch[]
+}
+
+const emptyLegacyResults: LegacyResultsState = {
+  athletes: [],
+  commits: [],
+  nhsca: [],
+  nhscaPlacements: [],
+  nchsaa: [],
+  mow: [],
+  daveSchultz: [],
+  triciaSaunders: [],
+  super32: [],
+  winningest: [],
+  careerWinningest: [],
+}
+
+type AthletesTab = "commitments" | "legacy"
+
 export default function AthletesPage() {
+  const searchParams = useSearchParams()
+  const [tab, setTab] = useState<AthletesTab>("commitments")
   const [athletes, setAthletes] = useState<Athlete[]>([])
+
+  // Sync tab from URL: Legacy NC → "Wrestlers" uses /athletes?tab=legacy so we open Legacy Search
+  useEffect(() => {
+    if (searchParams.get("tab") === "legacy") setTab("legacy")
+    else if (searchParams.get("tab") === "commitments" || !searchParams.get("tab")) setTab("commitments")
+  }, [searchParams])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedGender, setSelectedGender] = useState<"all" | "male" | "female">("all")
@@ -52,6 +144,139 @@ export default function AthletesPage() {
     divisions: { D1: 0, D2: 0, D3: 0, NAIA: 0, NJCAA: 0 },
   })
   const [statsLoading, setStatsLoading] = useState(true)
+  // Legacy Search
+  const [legacyQuery, setLegacyQuery] = useState("")
+  const [legacySearchTerm, setLegacySearchTerm] = useState("")
+  const [legacyLoading, setLegacyLoading] = useState(false)
+  const [legacyResults, setLegacyResults] = useState<LegacyResultsState>(emptyLegacyResults)
+  const legacyDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const runLegacySearch = useCallback(async () => {
+    const q = (legacySearchTerm || legacyQuery || "").trim()
+    if (q.length < 2) {
+      setLegacyResults(emptyLegacyResults)
+      return
+    }
+    setLegacyLoading(true)
+    setLegacyQuery(q)
+    const nameToId = new Map<string, string>()
+    const orName = () => buildOrIlike("name", q)
+    const orAthleteName = () => buildOrIlike("athlete_name", q)
+    const orWrestlerName = () => buildOrIlike("wrestler_name", q)
+
+    try {
+      const [
+        athletesRes,
+        commitsRes,
+        nhscaRes,
+        nhscaPlacementsRes,
+        nchsaaRes,
+        mowRes,
+        daveRes,
+        triciaRes,
+        super32Res,
+        winningestRes,
+        careerRes,
+      ] = await Promise.all([
+        supabase.from("athletes").select("id, name").or(orName()).limit(200),
+        supabase.from("athletes").select("id, name, college, graduationyear").in("recruiting_status", ["Committed", "Signed", "College Athlete", "committed", "signed"]).or(orName()).limit(200),
+        supabase.from("wrestling_nhsca_results").select("athlete_name, year, placement, weight_class").or(orAthleteName()).order("year", { ascending: false }).limit(500),
+        supabase.from("nhsca_placements").select("athlete_name, year, placement, weight_class").in("match_status", ["auto_matched", "manually_matched", "merged"]).or(orAthleteName()).order("year", { ascending: false }).limit(300).catch(() => ({ data: null, error: null })),
+        supabase.from("wrestling_nchsaa_results").select("wrestler_name, year, place, school, weight_class").or(orWrestlerName()).order("year", { ascending: false }).limit(1000),
+        supabase.from("most_outstanding_wrestlers").select("name, year").or(orName()).order("year", { ascending: false }).limit(200),
+        supabase.from("dave_schultz_award").select("name, year, high_school").or(orName()).order("year", { ascending: false }).limit(100),
+        supabase.from("tricia_saunders_award").select("name, year, high_school").or(orName()).order("year", { ascending: false }).limit(100),
+        supabase.from("super32_results").select("athlete_name, year, weight_class, record").or(orAthleteName()).order("year", { ascending: false }).limit(300),
+        supabase.from("winningest_wrestlers").select("wrestler_name, year, wins").or(orWrestlerName()).order("wins", { ascending: false }).limit(100).catch(() => ({ data: null, error: null })),
+        supabase.from("career_winningest_wrestlers").select("wrestler_name, wins").or(orWrestlerName()).order("wins", { ascending: false }).limit(100).catch(() => ({ data: null, error: null })),
+      ])
+
+      const athleteRows = (athletesRes.data || []) as { id: string; name: string }[]
+      athleteRows.forEach((a) => {
+        if (a.name) nameToId.set(a.name.trim().toLowerCase(), a.id)
+      })
+      const getId = (name: string) => name ? nameToId.get(name.trim().toLowerCase()) : undefined
+
+      const toMatch = (name: string, athleteId?: string, detail?: string, year?: number): LegacyMatch =>
+        ({ name, athleteId, detail, year })
+
+      const commitRows = (commitsRes.data || []) as { id: string; name: string; college?: string; graduationyear?: number }[]
+      commitRows.forEach((a) => {
+        if (a.name) nameToId.set(a.name.trim().toLowerCase(), a.id)
+      })
+
+      setLegacyResults({
+        athletes: athleteRows.map((a) => toMatch(a.name, a.id)),
+        commits: commitRows.map((c) => ({
+          name: c.name,
+          athleteId: c.id,
+          college: c.college,
+          graduationyear: c.graduationyear,
+          detail: [c.college, c.graduationyear ? `Class of ${c.graduationyear}` : ""].filter(Boolean).join(" · "),
+        })),
+        nhsca: ((nhscaRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string }[]).map((r) => {
+          const n = (r.athlete_name ?? "").toString()
+          return toMatch(n, getId(n), [r.year, r.weight_class, r.placement != null ? `Place ${r.placement}` : ""].filter(Boolean).join(" · "), r.year)
+        }),
+        nhscaPlacements: ((nhscaPlacementsRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string }[]).map((r) => {
+          const n = (r.athlete_name ?? "").toString()
+          return toMatch(n, getId(n), [r.year, r.weight_class, r.placement != null ? `Place ${r.placement}` : ""].filter(Boolean).join(" · "), r.year)
+        }),
+        nchsaa: ((nchsaaRes.data || []) as { wrestler_name?: string; year?: number; place?: number; school?: string; weight_class?: string }[]).map((r) => {
+          const n = (r.wrestler_name ?? "").toString()
+          const detail = [r.year, r.school, r.weight_class, r.place != null ? (r.place === 1 ? "Champ" : `Place ${r.place}`) : ""].filter(Boolean).join(" · ")
+          return toMatch(n, getId(n), detail, r.year)
+        }),
+        mow: ((mowRes.data || []) as { name?: string; year?: number }[]).map((r) => {
+          const n = (r.name ?? "").toString()
+          return toMatch(n, getId(n), r.year != null ? `MOW ${r.year}` : "", r.year)
+        }),
+        daveSchultz: ((daveRes.data || []) as { name?: string; year?: number; high_school?: string }[]).map((r) => {
+          const n = (r.name ?? "").toString()
+          return toMatch(n, getId(n), [r.year, r.high_school].filter(Boolean).join(" · "), r.year)
+        }),
+        triciaSaunders: ((triciaRes.data || []) as { name?: string; year?: number; high_school?: string }[]).map((r) => {
+          const n = (r.name ?? "").toString()
+          return toMatch(n, getId(n), [r.year, r.high_school].filter(Boolean).join(" · "), r.year)
+        }),
+        super32: ((super32Res.data || []) as { athlete_name?: string; year?: number; weight_class?: string; record?: string }[]).map((r) => {
+          const n = (r.athlete_name ?? "").toString()
+          return toMatch(n, getId(n), [r.year, r.weight_class, r.record].filter(Boolean).join(" · "), r.year)
+        }),
+        winningest: ((winningestRes.data || []) as { wrestler_name?: string; year?: number; wins?: number }[]).map((r) => {
+          const n = (r.wrestler_name ?? "").toString()
+          return toMatch(n, getId(n), r.year != null && r.wins != null ? `${r.wins} wins (${r.year})` : "", r.year)
+        }),
+        careerWinningest: ((careerRes.data || []) as { wrestler_name?: string; wins?: number }[]).map((r) => {
+          const n = (r.wrestler_name ?? "").toString()
+          return toMatch(n, getId(n), r.wins != null ? `${r.wins} career wins` : "")
+        }),
+      })
+    } catch (e) {
+      console.error("Legacy search error:", e)
+      setLegacyResults(emptyLegacyResults)
+    } finally {
+      setLegacyLoading(false)
+    }
+  }, [legacySearchTerm, legacyQuery])
+
+  // 300ms debounce for Legacy search (per detailed migration plan)
+  useEffect(() => {
+    const term = (legacySearchTerm || "").trim()
+    if (term.length < 2) {
+      setLegacyResults(emptyLegacyResults)
+      setLegacyQuery("")
+      return
+    }
+    if (legacyDebounceRef.current) clearTimeout(legacyDebounceRef.current)
+    legacyDebounceRef.current = setTimeout(() => {
+      legacyDebounceRef.current = null
+      runLegacySearch()
+    }, LEGACY_SEARCH_DEBOUNCE_MS)
+    return () => {
+      if (legacyDebounceRef.current) clearTimeout(legacyDebounceRef.current)
+    }
+  }, [legacySearchTerm, runLegacySearch])
 
   useEffect(() => {
     async function fetchAthletes() {
@@ -136,16 +361,80 @@ export default function AthletesPage() {
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-2xl mx-auto">
               <div className="flex items-center gap-3 mb-4">
-                <Users className="h-8 w-8" style={{ color: "#002147" }} />
-                <h1 className="text-2xl font-bold" style={{ color: "#002147" }}>Recent College Commitments</h1>
+                <Users className="h-8 w-8" style={{ color: NC_NAVY }} />
+                <h1 className="text-2xl font-bold" style={{ color: NC_NAVY }}>Athletes</h1>
               </div>
-              <p className="text-gray-600">
-                Browse all North Carolina wrestlers who have committed to college wrestling programs
+              <p className="text-gray-600 mb-4">
+                {tab === "commitments"
+                  ? "Browse North Carolina wrestlers who have committed to college programs."
+                  : "Legacy NC: search by name across NHSCA, NCHSAA, awards, Super32, and more."}
               </p>
+              <div className="flex gap-2">
+                <Button
+                  variant={tab === "commitments" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTab("commitments")}
+                  style={tab === "commitments" ? { backgroundColor: NC_NAVY } : {}}
+                >
+                  <Trophy className="h-4 w-4 mr-1" />
+                  College Commitments
+                </Button>
+                <Button
+                  variant={tab === "legacy" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTab("legacy")}
+                  style={tab === "legacy" ? { backgroundColor: NC_NAVY } : {}}
+                >
+                  <FileSearch className="h-4 w-4 mr-1" />
+                  Wrestlers (Legacy NC)
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
+        {tab === "legacy" ? (
+          /* Legacy Search: name search across Legacy NC tables */
+          <div className="bg-white border-b">
+            <div className="container mx-auto px-4 py-6">
+              <div className="max-w-2xl mx-auto flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder="Search by athlete name..."
+                    value={legacySearchTerm}
+                    onChange={(e) => setLegacySearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && runLegacySearch()}
+                    className="pl-10"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (legacyDebounceRef.current) clearTimeout(legacyDebounceRef.current)
+                    legacyDebounceRef.current = null
+                    runLegacySearch()
+                  }}
+                  disabled={legacyLoading || (legacySearchTerm || "").trim().length < 2}
+                  style={{ backgroundColor: NC_NAVY }}
+                >
+                  {legacyLoading ? "Searching…" : "Search"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {tab === "legacy" && legacyQuery ? (
+          <LegacySearchResults results={legacyResults} loading={legacyLoading} query={legacyQuery} />
+        ) : tab === "legacy" ? (
+          <div className="container mx-auto px-4 py-8 text-center text-gray-500">
+            Enter at least 2 characters and click Search to find athletes across Legacy NC data.
+          </div>
+        ) : null}
+
+        {tab !== "legacy" ? (
+          <>
         {/* Stats Overview Section - Matches Home Page Style */}
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-8">
@@ -429,7 +718,77 @@ export default function AthletesPage() {
             </div>
           )}
         </div>
+          </>
+        ) : null}
       </div>
     </AuthGuard>
+  )
+}
+
+function LegacySearchResults({
+  results,
+  loading,
+  query,
+}: {
+  results: LegacyResultsState
+  loading: boolean
+  query: string
+}) {
+  const sections: { title: string; items: LegacyMatch[]; empty: string }[] = [
+    { title: "Profiles", items: results.athletes, empty: "No matching athlete profiles." },
+    { title: "College commits", items: results.commits as LegacyMatch[], empty: "No college commits." },
+    { title: "NHSCA", items: results.nhsca, empty: "No NHSCA results." },
+    { title: "NHSCA Placements (match-level)", items: results.nhscaPlacements, empty: "No NHSCA placements." },
+    { title: "NCHSAA (State)", items: results.nchsaa, empty: "No NCHSAA results." },
+    { title: "Most Outstanding Wrestler", items: results.mow, empty: "No MOW matches." },
+    { title: "Dave Schultz Award", items: results.daveSchultz, empty: "No Dave Schultz matches." },
+    { title: "Tricia Saunders Award", items: results.triciaSaunders, empty: "No Tricia Saunders matches." },
+    { title: "Super32", items: results.super32, empty: "No Super32 results." },
+    { title: "Single-season wins", items: results.winningest, empty: "No single-season wins." },
+    { title: "Career wins", items: results.careerWinningest, empty: "No career wins." },
+  ]
+  const total = sections.reduce((acc, s) => acc + s.items.length, 0)
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-12 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
+        <p className="mt-4 text-gray-600">Searching Legacy NC data…</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <p className="text-gray-600 mb-6">
+        Found <strong>{total}</strong> match{total !== 1 ? "es" : ""} for &quot;{query}&quot;
+      </p>
+      <div className="space-y-8">
+        {sections.map(({ title, items, empty }) => (
+          <Card key={title} className="border">
+            <CardContent className="p-4">
+              <h3 className="text-lg font-semibold mb-3" style={{ color: NC_NAVY }}>{title}</h3>
+              {items.length === 0 ? (
+                <p className="text-gray-500 text-sm">{empty}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {items.map((m, i) => (
+                    <li key={`${title}-${i}-${m.name}`} className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-medium">{m.name}</span>
+                      {m.detail ? <span className="text-gray-500">— {m.detail}</span> : null}
+                      {m.athleteId ? (
+                        <Link href={profileHref(m.athleteId)} className="text-blue-600 hover:underline">
+                          View Profile
+                        </Link>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }

@@ -14,6 +14,7 @@ interface Athlete {
   id?: string
   name: string
   highschool: string
+  high_school_division?: string | null
   weight_display: string
   state_championship_summary: string
   nhsca_record_display: string | null
@@ -236,7 +237,12 @@ export function RankingsCardView({
                       <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1 hover:text-[#D3B574] transition-colors">
                         {athlete.name}
                       </h3>
-                      <p className="text-gray-600 font-medium text-sm mb-1">{athlete.highschool}</p>
+                      <p className="text-gray-600 font-medium text-sm mb-1">
+                        {athlete.highschool}
+                        {athlete.high_school_division ? (
+                          <span className="text-gray-500 font-normal"> · {athlete.high_school_division}</span>
+                        ) : null}
+                      </p>
                       <Badge variant="secondary" className="text-xs font-medium">
                         {athlete.weight_display} lbs
                       </Badge>

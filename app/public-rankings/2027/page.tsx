@@ -16,6 +16,7 @@ interface PublicRanking {
   id: string
   name: string
   highschool: string
+  high_school_division?: string | null
   weight_display: string
   state_championship_summary: string
   nhsca_record_display: string
@@ -268,7 +269,12 @@ export default function Class2027RankingsPage() {
                           <a href={profileHref} className="hover:text-[#D3B574] transition-colors">
                             <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-1 cursor-pointer">{athlete.name}</h3>
                           </a>
-                          <p className="text-sm text-gray-600 mb-2">{athlete.highschool || "High School TBD"}</p>
+                          <p className="text-sm text-gray-600 mb-2">
+                          {athlete.highschool || "High School TBD"}
+                          {athlete.high_school_division ? (
+                            <span className="text-gray-500"> · {athlete.high_school_division}</span>
+                          ) : null}
+                        </p>
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574]">
                             {athlete.weight_display}
                           </Badge>

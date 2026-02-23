@@ -78,7 +78,7 @@ export function Navbar() {
   ]
 
   const legacyNcItems = [
-    { href: "/athletes", label: "Athletes", description: "College commitments & All-Americans", icon: Users },
+    { href: "/athletes?tab=legacy", label: "Wrestlers", description: "Search by name: NHSCA, NCHSAA, awards & more", icon: Users },
     { href: "/schools", label: "Schools", description: "NC high school wrestling", icon: Medal },
     { href: "/dave-schultz-award", label: "Dave Schultz Award", description: "NC male wrestler award winners", icon: Trophy },
     { href: "/tricia-saunders-award", label: "Tricia Saunders Award", description: "NC female wrestler award winners", icon: Trophy },

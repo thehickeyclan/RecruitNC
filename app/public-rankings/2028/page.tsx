@@ -18,6 +18,7 @@ interface PublicRanking {
   id: string
   name: string
   highschool: string
+  high_school_division?: string | null
   weight_display: string
   state_championship_summary: string
   nhsca_record_display: string

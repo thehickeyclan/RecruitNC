@@ -2,10 +2,10 @@
 
 **Scope:** Everything under the **LEGACYNC** dropdown on the Legacy NC navbar:
 
-| Nav item              | Route                   |
-|-----------------------|-------------------------|
-| Athletes              | `/athletes`             |
-| Schools               | `/schools`              |
+| Nav item              | Route                       |
+|-----------------------|-----------------------------|
+| Wrestlers             | `/athletes?tab=legacy`      |
+| Schools               | `/schools`                  |
 | Dave Schultz Award    | `/dave-schultz-award`   |
 | Tricia Saunders Award | `/tricia-saunders-award`|
 
@@ -143,7 +143,10 @@ No API routes. All data via client Supabase + optional RPC.
 
 ---
 
-## Phase 4: Athletes (`/athletes`)
+## Phase 4: Athletes / Wrestlers (Legacy NC search)
+
+**Step-by-step guide:** **`docs/ATHLETES-PAGE-MIGRATION-TO-RECRUITNC.md`** — 10-step implementation, tables, checklist, profile link and asset notes.  
+**Longer reference:** `docs/ATHLETES-PAGE-DETAILED-MIGRATION-PLAN.md` — query patterns, data flow, Clearbit logos.
 
 ### 4.1 Files to copy
 
@@ -180,12 +183,12 @@ No API routes. All data via client Supabase. College logos: Clearbit (`https://l
 
 ### 4.4 Checklist — Athletes
 
-- [ ] Copy `app/athletes/page.tsx` from Legacy NC (or keep RecruitNC commitments page and add Legacy search later).
-- [ ] If desired: copy `components/data-accuracy-form.tsx`.
-- [ ] Point Supabase to RecruitNC client.
-- [ ] Update athlete profile links to RecruitNC URLs.
-- [x] Add nav: **Athletes** → `/athletes`.
-- [ ] Verify RLS/anon read for all tables used by search.
+- [x] Add Legacy NC search to `app/athletes/page.tsx` (tab: College Commitments | Legacy Search; RecruitNC kept commitments view).
+- [ ] If desired: copy `components/data-accuracy-form.tsx` (optional).
+- [x] Point Supabase to RecruitNC client (`supabase` from `@/lib/supabase`) for Legacy search.
+- [x] Update athlete profile links to RecruitNC URLs (`/unified-profile/${id}`) in Legacy results.
+- [x] Add nav: **Wrestlers** (Legacy NC) → `/athletes?tab=legacy`. (College Commitments remain under main nav → **All Commitments** → `/athletes`.)
+- [ ] Verify RLS/anon read for all tables used by Legacy search (athletes, wrestling_nhsca_results, wrestling_nchsaa_results, most_outstanding_wrestlers, dave_schultz_award, tricia_saunders_award, super32_results, winningest_wrestlers, career_winningest_wrestlers).
 
 ---
 
@@ -193,10 +196,12 @@ No API routes. All data via client Supabase. College logos: Clearbit (`https://l
 
 RecruitNC navbar has a **Legacy NC** dropdown (desktop + mobile) with:
 
-- **Athletes** → `/athletes`
+- **Wrestlers** → `/athletes?tab=legacy` (Legacy NC search by name; distinct from **College Commitments** at `/athletes`)
 - **Schools** → `/schools`
 - **Dave Schultz Award** → `/dave-schultz-award`
 - **Tricia Saunders Award** → `/tricia-saunders-award`
+
+**Important:** “Athletes” under **Committed / All Commitments** = RecruitNC college commitments. “Wrestlers” under **Legacy NC** = Legacy search (NHSCA, NCHSAA, awards, etc.). Same route `/athletes` but different tab and intent.
 
 ---
 

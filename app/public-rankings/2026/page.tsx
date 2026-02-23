@@ -12,6 +12,7 @@ interface Athlete {
   id: string
   name: string
   highschool: string
+  high_school_division?: string | null
   weight_display: string
   nhsca_record_display: string | null
   nhsca_results?: any[]
@@ -127,7 +128,12 @@ export default function ClassOf2026RankingsPage() {
                           {index === 0 && athlete.name.includes("Alston") ? "Lorenzo Alston" : athlete.name}
                         </a>
                       </h3>
-                      <p className="text-sm text-gray-600 mb-2">{athlete.highschool}</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {athlete.highschool}
+                        {athlete.high_school_division ? (
+                          <span className="text-gray-500"> · {athlete.high_school_division}</span>
+                        ) : null}
+                      </p>
                       <Badge className="bg-[#D3B574] text-gray-900">#{index + 1} Ranked</Badge>
                     </div>
                   ))}
