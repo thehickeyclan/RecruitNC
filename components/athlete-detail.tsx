@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2 } from "lucide-react"
+import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2, Phone } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
@@ -667,6 +667,17 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   }
 
   const instagramUrl = getInstagramUrl()
+  const cellPhone = (athleteData.cell || athleteData.cell_number || athleteData.phone)?.trim() || null
+  const showHeroContactRow =
+    !!instagramUrl ||
+    !!athlete?.flo_profile_url ||
+    !!athlete?.track_wrestling_profile_url ||
+    (canSeePrivateInfo && !!cellPhone) ||
+    (canEdit && !cellPhone)
+  const scrollToContactAndEdit = () => {
+    setEditingSection("contact")
+    document.querySelector("[data-section=\"contact\"]")?.scrollIntoView({ behavior: "smooth" })
+  }
 
   return (
     <div className="space-y-8">
@@ -777,9 +788,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                 </div>
               </div>
 
-              {/* Social Media Icons - Below Stats */}
-              {(instagramUrl || athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
-                <div className="flex items-center gap-2 mt-4">
+              {/* Social / contact - Instagram, cell (coaches), Flo, Track; or prompt to add cell */}
+              {showHeroContactRow && (
+                <div className="flex flex-wrap items-center gap-2 mt-4">
                   {instagramUrl && instagramLogo && (
                     <a
                       href={instagramUrl}
@@ -795,6 +806,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         height={84}
                         className="w-[84px] h-[84px] object-contain"
                       />
+                    </a>
+                  )}
+                  {canSeePrivateInfo && cellPhone && (
+                    <a
+                      href={`tel:${cellPhone.replace(/\D/g, "")}`}
+                      className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
+                      aria-label="Call"
+                    >
+                      <Phone className="h-5 w-5 flex-shrink-0" />
+                      <span>{cellPhone}</span>
                     </a>
                   )}
                   {athlete?.flo_profile_url && floLogo && (
@@ -831,6 +852,19 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                         className="w-7 h-7 object-contain"
                       />
                     </a>
+                  )}
+                  {canEdit && !cellPhone && (
+                    <div className="flex items-center gap-2 rounded-lg bg-white/15 px-3 py-2">
+                      <p className="text-white/90 text-sm">Add your cell in Contact so coaches can reach you.</p>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="bg-white text-[#13294B] hover:bg-white/90 shrink-0"
+                        onClick={scrollToContactAndEdit}
+                      >
+                        Add cell
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -943,9 +977,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                     </div>
                   </div>
 
-                  {/* Social Media Icons - Below Stats */}
-                  {(instagramUrl || athlete?.flo_profile_url || athlete?.track_wrestling_profile_url) && (
-                    <div className="flex items-center gap-2 mt-4">
+                  {/* Social / contact - Instagram, cell (coaches), Flo, Track; or prompt to add cell */}
+                  {showHeroContactRow && (
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
                       {instagramUrl && instagramLogo && (
                         <a
                           href={instagramUrl}
@@ -961,6 +995,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                             height={84}
                             className="w-[84px] h-[84px] object-contain"
                           />
+                        </a>
+                      )}
+                      {canSeePrivateInfo && cellPhone && (
+                        <a
+                          href={`tel:${cellPhone.replace(/\D/g, "")}`}
+                          className="inline-flex items-center gap-2 rounded-lg bg-white/15 hover:bg-white/25 px-3 py-2 text-white text-sm font-medium transition-colors"
+                          aria-label="Call"
+                        >
+                          <Phone className="h-5 w-5 flex-shrink-0" />
+                          <span>{cellPhone}</span>
                         </a>
                       )}
                       {athlete?.flo_profile_url && floLogo && (
@@ -997,6 +1041,19 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                             className="w-7 h-7 object-contain"
                           />
                         </a>
+                      )}
+                      {canEdit && !cellPhone && (
+                        <div className="flex items-center gap-2 rounded-lg bg-white/15 px-3 py-2">
+                          <p className="text-white/90 text-sm">Add your cell in Contact so coaches can reach you.</p>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="bg-white text-[#13294B] hover:bg-white/90 shrink-0"
+                            onClick={scrollToContactAndEdit}
+                          >
+                            Add cell
+                          </Button>
+                        </div>
                       )}
                     </div>
                   )}
