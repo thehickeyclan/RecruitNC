@@ -130,9 +130,9 @@ export default function AdminBlueSubscriptionsPage() {
                         <TableRow key={s.id}>
                           <TableCell className="font-medium">
                             {s.id ? (
-                              <Link href={`/admin/blue/signups/${encodeURIComponent(s.id)}`} className="text-[#13294B] hover:underline">
+                              <a href={`/admin/blue/signups/${encodeURIComponent(s.id)}`} className="text-[#13294B] hover:underline cursor-pointer">
                                 {s.athlete_name}
-                              </Link>
+                              </a>
                             ) : (
                               <span>{s.athlete_name}</span>
                             )}
@@ -240,9 +240,9 @@ export default function AdminBlueSubscriptionsPage() {
                       <TableRow key={sub.id}>
                         <TableCell className="font-medium">
                           {sub.athlete_id ? (
-                            <Link href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-[#13294B] hover:underline">
+                            <a href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-[#13294B] hover:underline cursor-pointer">
                               {sub.athlete_name}
-                            </Link>
+                            </a>
                           ) : (
                             <span>{sub.athlete_name}</span>
                           )}
@@ -276,12 +276,8 @@ export default function AdminBlueSubscriptionsPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             {sub.athlete_id && (
                               <>
-                                <Button variant="ghost" size="sm" asChild>
-                                  <Link href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}>Registration</Link>
-                                </Button>
-                                <Button variant="ghost" size="sm" asChild>
-                                  <Link href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`}>View athlete</Link>
-                                </Button>
+                                <a href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#13294B] hover:underline">Registration</a>
+                                <a href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#13294B] hover:underline">View athlete</a>
                               </>
                             )}
                             {sub.stripe_subscription_id && (
