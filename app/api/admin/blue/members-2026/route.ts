@@ -234,9 +234,9 @@ export async function GET(request: Request) {
   stats.stateChamps2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && r.placement === "Champion").map((r) => r.member_name)).size
   stats.statePlacers2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
   stats.stateQualifiers2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && r.placement === "SQ").map((r) => r.member_name)).size
-  stats.stateChampsAllTime = new Set(rowsAllYears.filter((r) => r.placement === "Champion").map((r) => r.member_name)).size
-  stats.statePlacersAllTime = new Set(rowsAllYears.filter((r) => ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
-  stats.stateQualifiersAllTime = new Set(rowsAllYears.filter((r) => r.placement === "SQ").map((r) => r.member_name)).size
+  stats.stateChampsAllTime = rowsAllYears.filter((r) => r.placement === "Champion").length
+  stats.statePlacersAllTime = rowsAllYears.filter((r) => ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).length
+  stats.stateQualifiersAllTime = rowsAllYears.filter((r) => r.placement === "SQ").length
 
   for (const [, years] of champYearsByMember) {
     const c = years.size

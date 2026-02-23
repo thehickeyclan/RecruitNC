@@ -163,19 +163,19 @@ export default function AdminBlueMembers2026Page() {
             </Card>
             <Card className="border-t-4 border-t-amber-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">State champs {scope === "allTime" ? "(all-time)" : "(this year)"}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{scope === "allTime" ? "State titles (all-time)" : "State champs (this year)"}</p>
                 <p className="text-2xl font-bold text-amber-600">{scope === "allTime" ? stats.stateChampsAllTime : stats.stateChamps2026}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-blue-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">State placers {scope === "allTime" ? "(all-time)" : "(this year)"}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{scope === "allTime" ? "State placements (all-time)" : "State placers (this year)"}</p>
                 <p className="text-2xl font-bold text-blue-600">{scope === "allTime" ? stats.statePlacersAllTime : stats.statePlacers2026}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-gray-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">State qualifiers (SQ) {scope === "allTime" ? "(all-time)" : "(this year)"}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{scope === "allTime" ? "State qualifiers SQ (all-time)" : "State qualifiers SQ (this year)"}</p>
                 <p className="text-2xl font-bold text-gray-700">{scope === "allTime" ? stats.stateQualifiersAllTime : stats.stateQualifiers2026}</p>
               </CardContent>
             </Card>

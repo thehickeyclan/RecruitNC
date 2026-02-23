@@ -1,8 +1,7 @@
 /**
- * Single loader for tournament data shown on unified profiles.
- * Same code path as: GET /api/athlete/[id] + GET /api/wrestling-achievements (NCHSAA).
- * Used by: Blue members 2026 (filter = Blue), rankings (filter = year/gender/ranking).
- * Add new consumers by filtering the same athlete list and calling loadProfileTournamentData per athlete.
+ * Single loader for NCHSAA + NHSCA + Super32. USE THIS for any new page that needs tournament data.
+ * See docs/TOURNAMENT-DATA-SINGLE-PATH.md — do not wire new features to getNHSCAFromTables / getSuper32FromTable / getNCHSAAResultsForProfile directly.
+ * Used by: Blue members 2026. Same data as profiles, rankings, commit cards; one entry point keeps new pages from re-discovering options and aggregation.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
