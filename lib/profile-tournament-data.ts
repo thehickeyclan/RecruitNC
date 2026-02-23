@@ -7,7 +7,12 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
-import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+import {
+  getNHSCAFromTables,
+  getNHSCAFromTablesAllTime,
+  getSuper32FromTable,
+  getSuper32FromTableAllTime,
+} from "@/lib/tournament-tables"
 
 export type NchsaaRowForProfile = Awaited<ReturnType<typeof getNCHSAAResultsForProfile>>[number]
 
@@ -26,22 +31,33 @@ export interface AthleteForProfile {
   weightclass?: string | null
 }
 
+export interface LoadProfileTournamentDataOptions {
+  /** If true, NHSCA and Super32 use all years (2000–2035); use for Blue page all-time tiles. */
+  allTime?: boolean
+}
+
 /**
- * Load NCHSAA, NHSCA, and Super32 for one athlete using the same fetchers as unified profile.
- * Call this for each athlete in your list (e.g. Blue members or rankings), then build your view from the result.
+ * Load NCHSAA, NHSCA, and Super32 for one athlete.
+ * allTime: true = NHSCA/Super32 over all years; false = grad-year window (unified profile default).
  */
 export async function loadProfileTournamentData(
   supabase: SupabaseClient,
-  athlete: AthleteForProfile
+  athlete: AthleteForProfile,
+  options?: LoadProfileTournamentDataOptions
 ): Promise<ProfileTournamentData> {
   const name = (athlete.name ?? "").toString().trim()
   const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
   const highSchool = (athlete.highschool ?? "").toString().trim()
+  const allTime = options?.allTime === true
 
   const [nchsaa, nhsca, super32] = await Promise.all([
     getNCHSAAResultsForProfile(supabase, name),
-    getNHSCAFromTables(supabase, name, gradYear),
-    getSuper32FromTable(supabase, name, gradYear, { highSchool: highSchool || undefined }),
+    allTime
+      ? getNHSCAFromTablesAllTime(supabase, name)
+      : getNHSCAFromTables(supabase, name, gradYear),
+    allTime
+      ? getSuper32FromTableAllTime(supabase, name, { highSchool: highSchool || undefined })
+      : getSuper32FromTable(supabase, name, gradYear, { highSchool: highSchool || undefined }),
   ])
 
   return { nchsaa, nhsca, super32 }

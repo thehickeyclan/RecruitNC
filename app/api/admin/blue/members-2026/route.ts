@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     twoXStateChamps: 0, threeXStateChamps: 0, fourXStateChamps: 0, allAmericans: 0,
     super32Placers: 0, nhscaRecordWins: 0, nhscaRecordLosses: 0, super32RecordWins: 0, super32RecordLosses: 0,
   }
-  if (blueAthleteIds.size === 0) return NextResponse.json({ rows: [], stats: emptyStats })
+  if (blueAthleteIds.size === 0) return NextResponse.json({ rows: [], statsAllTime: emptyStats, stats2026: emptyStats })
 
   const { data: athletesRaw, error: athletesError } = await admin
     .from("athletes")
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     const y = a.graduationyear != null ? Number(a.graduationyear) : null
     return y != null && gradYearSet.has(y)
   })
-  if (!athletes.length) return NextResponse.json({ rows: [], stats: emptyStats })
+  if (!athletes.length) return NextResponse.json({ rows: [], statsAllTime: emptyStats, stats2026: emptyStats })
 
   const rows: BlueMember2026Row[] = []
   const champYearsByMember = new Map<string, Set<number>>()
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     athletes.map(async (a) => {
       let data: Awaited<ReturnType<typeof loadProfileTournamentData>> = { nchsaa: [], nhsca: [], super32: [] }
       try {
-        data = await loadProfileTournamentData(admin, a)
+        data = await loadProfileTournamentData(admin, a, { allTime: true })
       } catch {
         // table missing or query error
       }
@@ -226,5 +226,44 @@ export async function GET(request: Request) {
   stats.super32RecordWins = super32Wins
   stats.super32RecordLosses = super32Losses
 
-  return NextResponse.json({ rows, stats })
+  const statsAllTime = { ...stats }
+
+  const stats2026: BlueMembers2026Stats = {
+    ...emptyStats,
+    totalMembers: stats.totalMembers,
+    stateChamps2026: stats.stateChamps2026,
+    statePlacers2026: stats.statePlacers2026,
+    stateQualifiers2026: stats.stateQualifiers2026,
+    twoXStateChamps: 0,
+    threeXStateChamps: 0,
+    fourXStateChamps: 0,
+    allAmericans: 0,
+    super32Placers: 0,
+    nhscaRecordWins: 0,
+    nhscaRecordLosses: 0,
+    super32RecordWins: 0,
+    super32RecordLosses: 0,
+  }
+  const nhsca2026 = (r: { year?: number }) => (r.year ?? 0) === 2026
+  const super322026 = (r: { year?: number }) => (r.year ?? 0) === 2026
+  for (const { name, nhsca, super32 } of results) {
+    if (!memberNamesSet.has(name)) continue
+    const isAA2026 = nhsca.filter(nhsca2026).some(
+      (r) => r.placement === "Champion" || /\d(st|nd|rd|th) All-American/.test(r.placement ?? "")
+    )
+    if (isAA2026) stats2026.allAmericans++
+    const hasSuper322026 = super32.filter(super322026).some((r) => (r.placement ?? "").toString().trim() !== "" && r.placement !== "DNP")
+    if (hasSuper322026) stats2026.super32Placers++
+    for (const r of nhsca.filter(nhsca2026)) {
+      const { wins, losses } = parseRecord(r.record)
+      stats2026.nhscaRecordWins += wins
+      stats2026.nhscaRecordLosses += losses
+    }
+    for (const r of super32.filter(super322026)) {
+      const { wins, losses } = parseRecord(r.record)
+      stats2026.super32RecordWins += wins
+      stats2026.super32RecordLosses += losses
+    }
+  }
+  return NextResponse.json({ rows, statsAllTime, stats2026 })
 }

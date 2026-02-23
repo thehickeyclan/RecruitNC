@@ -27,12 +27,18 @@ const defaultStats: BlueMembers2026Stats = {
 const ACTIVE_GRAD_YEARS = [2030, 2029, 2028, 2027, 2026]
 const PRIOR_GRAD_YEARS = [2025, 2024, 2023, 2022, 2021]
 
+type StatsScope = "allTime" | "2026"
+
 export default function AdminBlueMembers2026Page() {
   const [rows, setRows] = useState<BlueMember2026Row[]>([])
-  const [stats, setStats] = useState<BlueMembers2026Stats>(defaultStats)
+  const [statsAllTime, setStatsAllTime] = useState<BlueMembers2026Stats>(defaultStats)
+  const [stats2026, setStats2026] = useState<BlueMembers2026Stats>(defaultStats)
+  const [scope, setScope] = useState<StatsScope>("allTime")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [gradYears, setGradYears] = useState<number[]>(() => [...ACTIVE_GRAD_YEARS])
+
+  const stats = scope === "allTime" ? statsAllTime : stats2026
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -44,16 +50,19 @@ export default function AdminBlueMembers2026Page() {
         if (data.error) {
           setError(data.error)
           setRows([])
-          setStats(defaultStats)
+          setStatsAllTime(defaultStats)
+          setStats2026(defaultStats)
         } else {
           setRows(data.rows ?? [])
-          setStats(data.stats ?? defaultStats)
+          setStatsAllTime(data.statsAllTime ?? defaultStats)
+          setStats2026(data.stats2026 ?? defaultStats)
         }
       })
       .catch(() => {
         setError("Failed to load")
         setRows([])
-        setStats(defaultStats)
+        setStatsAllTime(defaultStats)
+        setStats2026(defaultStats)
       })
       .finally(() => setLoading(false))
   }, [gradYears])
@@ -117,7 +126,27 @@ export default function AdminBlueMembers2026Page() {
         </Card>
 
         {!loading && !error && (
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4">
+          <>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Stats:</span>
+              <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setScope("allTime")}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${scope === "allTime" ? "bg-[#13294B] text-white shadow" : "text-gray-600 hover:text-gray-900"}`}
+                >
+                  All-time
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScope("2026")}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${scope === "2026" ? "bg-[#13294B] text-white shadow" : "text-gray-600 hover:text-gray-900"}`}
+                >
+                  This year&apos;s results
+                </button>
+              </div>
+            </div>
+            <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4">
             <Card className="border-t-4 border-t-[#03154C]">
               <CardContent className="pt-4">
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Blue members</p>
@@ -162,19 +191,19 @@ export default function AdminBlueMembers2026Page() {
             </Card>
             <Card className="border-t-4 border-t-purple-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA All-Americans (all-time)</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA All-Americans {scope === "2026" ? "(this year)" : "(all-time)"}</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.allAmericans}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-emerald-600">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 placers (all-time)</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 placers {scope === "2026" ? "(this year)" : "(all-time)"}</p>
                 <p className="text-2xl font-bold text-emerald-700">{stats.super32Placers}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-indigo-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA all-time record</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA record {scope === "2026" ? "(this year)" : "(all-time)"}</p>
                 <p className="text-2xl font-bold text-indigo-600">
                   {stats.nhscaRecordWins}-{stats.nhscaRecordLosses}
                 </p>
@@ -182,13 +211,14 @@ export default function AdminBlueMembers2026Page() {
             </Card>
             <Card className="border-t-4 border-t-teal-600">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 all-time record</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 record {scope === "2026" ? "(this year)" : "(all-time)"}</p>
                 <p className="text-2xl font-bold text-teal-700">
                   {stats.super32RecordWins}-{stats.super32RecordLosses}
                 </p>
               </CardContent>
             </Card>
           </div>
+          </>
         )}
 
         <Card className="border-t-4 border-t-[#03154C]">

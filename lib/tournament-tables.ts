@@ -93,6 +93,60 @@ export async function getNHSCAFromTables(
   return []
 }
 
+const ALL_TIME_YEAR_MIN = 2000
+const ALL_TIME_YEAR_MAX = 2035
+
+/**
+ * Fetch NHSCA for all years (no grad-year window). Use for all-time stats (e.g. Blue page tiles).
+ */
+export async function getNHSCAFromTablesAllTime(
+  supabase: SupabaseClient,
+  athleteName: string
+): Promise<TournamentResultRow[]> {
+  if (!athleteName?.trim()) return []
+  const namesToTry = getNameVariants(athleteName)
+
+  for (const searchName of namesToTry) {
+    const { data: placements } = await supabase
+      .from("nhsca_placements")
+      .select("*")
+      .ilike("athlete_name", `%${searchName}%`)
+      .gte("year", ALL_TIME_YEAR_MIN)
+      .lte("year", ALL_TIME_YEAR_MAX)
+      .order("year", { ascending: false })
+
+    if (placements?.length) {
+      return placements.map((p: any) => ({
+        year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
+        placement: formatPlacement(p.placement),
+        record: (p.record ?? "").toString().trim(),
+        weight: (p.weight_class ?? p.weight ?? "").toString().trim(),
+        division: (p.division ?? "").toString().trim(),
+      }))
+    }
+
+    const { data: results } = await supabase
+      .from("wrestling_nhsca_results")
+      .select("*")
+      .ilike("athlete_name", `%${searchName}%`)
+      .gte("year", ALL_TIME_YEAR_MIN)
+      .lte("year", ALL_TIME_YEAR_MAX)
+      .order("year", { ascending: false })
+
+    if (results?.length) {
+      return results.map((r: any) => ({
+        year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+        placement: formatPlacement(r.placement ?? r.place),
+        record: (r.record ?? r.record_text ?? "").toString().trim(),
+        weight: (r.weight ?? "").toString().trim(),
+        division: (r.division ?? "").toString().trim(),
+      }))
+    }
+  }
+
+  return []
+}
+
 /**
  * Fetch Super32 from super32_results table.
  * Table has: uuid, wins, losses, record, high_school (and athlete_name, year if present).
@@ -122,6 +176,41 @@ export async function getSuper32FromTable(
       const filtered = rows.filter((r: any) => {
         const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
         // Allow rows with null/empty school (e.g. not resolved during import)
+        return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
+      })
+      rows = filtered.length > 0 ? filtered : rows
+    }
+    if (rows.length) return dedupeSuper32ByYear(mapSuper32Rows(rows))
+  }
+
+  return []
+}
+
+/**
+ * Fetch Super32 for all years (no grad-year window). Use for all-time stats (e.g. Blue page tiles).
+ */
+export async function getSuper32FromTableAllTime(
+  supabase: SupabaseClient,
+  athleteName: string,
+  options?: { highSchool?: string }
+): Promise<TournamentResultRow[]> {
+  if (!athleteName?.trim() && !options?.highSchool?.trim()) return []
+
+  for (const searchName of getNameVariants(athleteName)) {
+    const namePattern = `%${searchName}%`
+    const { data: byName } = await supabase
+      .from("super32_results")
+      .select("*")
+      .ilike("athlete_name", namePattern)
+      .gte("year", ALL_TIME_YEAR_MIN)
+      .lte("year", ALL_TIME_YEAR_MAX)
+      .order("year", { ascending: false })
+
+    let rows = byName ?? []
+    if (options?.highSchool?.trim() && rows.length > 0) {
+      const school = options.highSchool.trim().toLowerCase()
+      const filtered = rows.filter((r: any) => {
+        const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
         return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
       })
       rows = filtered.length > 0 ? filtered : rows
