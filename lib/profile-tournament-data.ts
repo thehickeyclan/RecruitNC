@@ -1,0 +1,48 @@
+/**
+ * Single loader for tournament data shown on unified profiles.
+ * Same code path as: GET /api/athlete/[id] + GET /api/wrestling-achievements (NCHSAA).
+ * Used by: Blue members 2026 (filter = Blue), rankings (filter = year/gender/ranking).
+ * Add new consumers by filtering the same athlete list and calling loadProfileTournamentData per athlete.
+ */
+
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
+import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+
+export type NchsaaRowForProfile = Awaited<ReturnType<typeof getNCHSAAResultsForProfile>>[number]
+
+export interface ProfileTournamentData {
+  nchsaa: NchsaaRowForProfile[]
+  nhsca: Awaited<ReturnType<typeof getNHSCAFromTables>>
+  super32: Awaited<ReturnType<typeof getSuper32FromTable>>
+}
+
+/** Athlete row minimal fields needed for loading profile tournament data */
+export interface AthleteForProfile {
+  id: string
+  name: string | null
+  highschool?: string | null
+  graduationyear?: number | string | null
+  weightclass?: string | null
+}
+
+/**
+ * Load NCHSAA, NHSCA, and Super32 for one athlete using the same fetchers as unified profile.
+ * Call this for each athlete in your list (e.g. Blue members or rankings), then build your view from the result.
+ */
+export async function loadProfileTournamentData(
+  supabase: SupabaseClient,
+  athlete: AthleteForProfile
+): Promise<ProfileTournamentData> {
+  const name = (athlete.name ?? "").toString().trim()
+  const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+  const highSchool = (athlete.highschool ?? "").toString().trim()
+
+  const [nchsaa, nhsca, super32] = await Promise.all([
+    getNCHSAAResultsForProfile(supabase, name),
+    getNHSCAFromTables(supabase, name, gradYear),
+    getSuper32FromTable(supabase, name, gradYear, { highSchool: highSchool || undefined }),
+  ])
+
+  return { nchsaa, nhsca, super32 }
+}

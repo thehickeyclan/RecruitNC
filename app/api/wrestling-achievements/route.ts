@@ -1,123 +1,36 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
+import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const athleteName = searchParams.get("name") || ""
 
-    console.log("[v0] Wrestling achievements API called with name:", athleteName)
-
     if (!athleteName) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Athlete name is required",
-        },
+        { success: false, error: "Athlete name is required" },
         { status: 400 },
       )
     }
 
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      cookies: {
-        get: () => null,
-        set: () => {},
-        remove: () => {},
-      },
+      cookies: { get: () => null, set: () => {}, remove: () => {} },
     })
 
-    const getNameVariations = (name: string): string[] => {
-      const variations = [name]
+    const nchsaaResults = await getNCHSAAResultsForProfile(supabase, athleteName)
 
-      // Handle "Last, First" format -> "First Last"
-      if (name.includes(",")) {
-        const [last, first] = name.split(",").map((s) => s.trim())
-        variations.push(`${first} ${last}`)
-      }
-      // Handle "First Last" format -> "Last, First"
-      else {
-        const parts = name.trim().split(/\s+/)
-        if (parts.length >= 2) {
-          const first = parts[0]
-          const last = parts.slice(1).join(" ")
-          variations.push(`${last}, ${first}`)
-        }
-      }
-
-      return variations
+    const nameVariations = [athleteName]
+    if (athleteName.includes(",")) {
+      const [last, first] = athleteName.split(",").map((s) => s.trim())
+      if (first && last) nameVariations.push(`${first} ${last}`)
+    } else {
+      const parts = athleteName.trim().split(/\s+/)
+      if (parts.length >= 2) nameVariations.push(`${parts.slice(1).join(" ")}, ${parts[0]}`)
     }
-
-    const nameVariations = getNameVariations(athleteName)
-    console.log("[v0] Searching with name variations:", nameVariations)
-
-    console.log("[v0] Querying NCHSAA results for:", athleteName)
-
-    let nchsaaResults: any[] = []
-    let nchsaaError = null
-    const seenNchsaaKeys = new Set<string>()
-
-    for (const nameVariation of nameVariations) {
-      console.log("[v0] Trying NCHSAA query with name variation:", nameVariation)
-      const { data, error } = await supabase
-        .from("wrestling_nchsaa_results")
-        .select("*")
-        .ilike("wrestler_name", `%${nameVariation}%`)
-        .order("year", { ascending: false })
-
-      console.log("[v0] NCHSAA query result for", nameVariation, ":", {
-        found: data?.length || 0,
-        error: error?.message,
-        sampleNames: data?.slice(0, 3).map((r) => r.wrestler_name),
-      })
-
-      if (error) {
-        nchsaaError = error
-        break
-      }
-
-      if (data?.length) {
-        for (const row of data) {
-          const key = `${row.year}-${row.classification}-${row.weight_class}-${row.wrestler_name}`
-          if (!seenNchsaaKeys.has(key)) {
-            seenNchsaaKeys.add(key)
-            nchsaaResults.push(row)
-          }
-        }
-      }
-    }
-    nchsaaResults.sort((a, b) => (b.year - a.year) || 0)
-
-    // Don't show SQ (place=0) when we have a placer (place>=1) for same year/classification/weight
-    const placerKeys = new Set(
-      nchsaaResults
-        .filter((r) => r.place != null && Number(r.place) >= 1)
-        .map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
-    )
-    nchsaaResults = nchsaaResults.filter((r) => {
-      if (r.place != null && Number(r.place) === 0) {
-        const key = `${r.year}-${r.classification}-${r.weight_class}`
-        if (placerKeys.has(key)) return false
-      }
-      return true
-    })
-
-    console.log("[v0] NCHSAA query result:", {
-      resultsCount: nchsaaResults?.length || 0,
-      error: nchsaaError,
-      sampleResult: nchsaaResults?.[0] || null,
-    })
-
-    if (nchsaaError) {
-      console.error("[v0] NCHSAA query error:", nchsaaError)
-      throw nchsaaError
-    }
-
-    console.log("[v0] Querying NHSCA results for:", athleteName)
 
     let nhscaResults: any[] = []
     let nhscaError = null
-
-    // Try each name variation until we find results
     for (const nameVariation of nameVariations) {
       const { data, error } = await supabase
         .from("wrestling_nhsca_results")
