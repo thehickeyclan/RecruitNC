@@ -30,7 +30,8 @@ const PRIOR_GRAD_YEARS = [2025, 2024, 2023, 2022, 2021]
 type StatsScope = "allTime" | "2026"
 
 export default function AdminBlueMembers2026Page() {
-  const [rows, setRows] = useState<BlueMember2026Row[]>([])
+  const [rows2026, setRows2026] = useState<BlueMember2026Row[]>([])
+  const [rowsAllYears, setRowsAllYears] = useState<BlueMember2026Row[]>([])
   const [statsAllTime, setStatsAllTime] = useState<BlueMembers2026Stats>(defaultStats)
   const [stats2026, setStats2026] = useState<BlueMembers2026Stats>(defaultStats)
   const [scope, setScope] = useState<StatsScope>("allTime")
@@ -39,6 +40,7 @@ export default function AdminBlueMembers2026Page() {
   const [gradYears, setGradYears] = useState<number[]>(() => [...ACTIVE_GRAD_YEARS])
 
   const stats = scope === "allTime" ? statsAllTime : stats2026
+  const rows = scope === "allTime" ? rowsAllYears : rows2026
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -49,18 +51,21 @@ export default function AdminBlueMembers2026Page() {
       .then((data) => {
         if (data.error) {
           setError(data.error)
-          setRows([])
+          setRows2026([])
+          setRowsAllYears([])
           setStatsAllTime(defaultStats)
           setStats2026(defaultStats)
         } else {
-          setRows(data.rows ?? [])
+          setRows2026(data.rows2026 ?? [])
+          setRowsAllYears(data.rowsAllYears ?? [])
           setStatsAllTime(data.statsAllTime ?? defaultStats)
           setStats2026(data.stats2026 ?? defaultStats)
         }
       })
       .catch(() => {
         setError("Failed to load")
-        setRows([])
+        setRows2026([])
+        setRowsAllYears([])
         setStatsAllTime(defaultStats)
         setStats2026(defaultStats)
       })
@@ -225,7 +230,7 @@ export default function AdminBlueMembers2026Page() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
-              Blue member list with 2026 NCHSAA placement
+              Blue member list — NCHSAA {scope === "allTime" ? "all years" : "2026 only"}
             </CardTitle>
             <CardDescription>
               One row per member per weight. Placer (Champion/2nd/3rd/4th) shown when they placed; SQ when qualifier only.

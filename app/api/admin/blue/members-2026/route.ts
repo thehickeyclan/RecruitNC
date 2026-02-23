@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     twoXStateChamps: 0, threeXStateChamps: 0, fourXStateChamps: 0, allAmericans: 0,
     super32Placers: 0, nhscaRecordWins: 0, nhscaRecordLosses: 0, super32RecordWins: 0, super32RecordLosses: 0,
   }
-  if (blueAthleteIds.size === 0) return NextResponse.json({ rows: [], statsAllTime: emptyStats, stats2026: emptyStats })
+  if (blueAthleteIds.size === 0) return NextResponse.json({ rows2026: [], rowsAllYears: [], statsAllTime: emptyStats, stats2026: emptyStats })
 
   const { data: athletesRaw, error: athletesError } = await admin
     .from("athletes")
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     const y = a.graduationyear != null ? Number(a.graduationyear) : null
     return y != null && gradYearSet.has(y)
   })
-  if (!athletes.length) return NextResponse.json({ rows: [], statsAllTime: emptyStats, stats2026: emptyStats })
+  if (!athletes.length) return NextResponse.json({ rows2026: [], rowsAllYears: [], statsAllTime: emptyStats, stats2026: emptyStats })
 
   const rows: BlueMember2026Row[] = []
   const champYearsByMember = new Map<string, Set<number>>()
@@ -120,6 +120,9 @@ export async function GET(request: Request) {
     })
   )
 
+  const rows2026Only: BlueMember2026Row[] = []
+  const rowsAllYears: BlueMember2026Row[] = []
+
   for (const { a, name, nchsaa, nhsca } of results) {
     const champYears = new Set<number>()
     for (const r of nchsaa) {
@@ -129,7 +132,7 @@ export async function GET(request: Request) {
 
     const year2026 = nchsaa.filter((r) => r.year === 2026)
     if (year2026.length === 0) {
-      rows.push({
+      rows2026Only.push({
         member_name: name || "—",
         grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
         high_school: (a.highschool ?? "").toString() || "—",
@@ -143,7 +146,7 @@ export async function GET(request: Request) {
     } else {
       year2026.sort((x, y) => (x.classification || "").localeCompare(y.classification || "") || (x.weight_class || "").localeCompare(y.weight_class || ""))
       for (const r of year2026) {
-        rows.push({
+        rows2026Only.push({
           member_name: name || "—",
           grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
           high_school: (a.highschool ?? "").toString() || "—",
@@ -156,15 +159,53 @@ export async function GET(request: Request) {
         })
       }
     }
+
+    const allYearsSorted = [...nchsaa].sort(
+      (x, y) => (y.year - x.year) || (x.classification || "").localeCompare(y.classification || "") || (x.weight_class || "").localeCompare(y.weight_class || "")
+    )
+    if (allYearsSorted.length === 0) {
+      rowsAllYears.push({
+        member_name: name || "—",
+        grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
+        high_school: (a.highschool ?? "").toString() || "—",
+        profile_weight: (a.weightclass ?? "").toString() || "—",
+        state_year: null,
+        state_classification: "—",
+        state_weight: "—",
+        placement: "—",
+        state_school: "—",
+      })
+    } else {
+      for (const r of allYearsSorted) {
+        rowsAllYears.push({
+          member_name: name || "—",
+          grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
+          high_school: (a.highschool ?? "").toString() || "—",
+          profile_weight: (a.weightclass ?? "").toString() || "—",
+          state_year: r.year,
+          state_classification: (r.classification ?? "").toString() || "—",
+          state_weight: (r.weight_class ?? "").toString() || "—",
+          placement: placementLabel(r.place),
+          state_school: (r.school ?? "").toString() || "—",
+        })
+      }
+    }
   }
 
-  rows.sort((a, b) => {
-    const n = (a.member_name || "").localeCompare(b.member_name || "")
-    if (n !== 0) return n
-    const c = (a.state_classification || "").localeCompare(b.state_classification || "")
-    if (c !== 0) return c
-    return (a.state_weight || "").localeCompare(b.state_weight || "")
-  })
+  const sortRows = (arr: BlueMember2026Row[]) =>
+    arr.sort((a, b) => {
+      const n = (a.member_name || "").localeCompare(b.member_name || "")
+      if (n !== 0) return n
+      const yr = (a.state_year ?? 0) - (b.state_year ?? 0)
+      if (yr !== 0) return -yr
+      const c = (a.state_classification || "").localeCompare(b.state_classification || "")
+      if (c !== 0) return c
+      return (a.state_weight || "").localeCompare(b.state_weight || "")
+    })
+  sortRows(rows2026Only)
+  sortRows(rowsAllYears)
+
+  const uniqueMemberNames = [...new Set(rows2026Only.map((r) => r.member_name))].filter((n) => n && n !== "—")
 
   const uniqueMemberNames = [...new Set(rows.map((r) => r.member_name))].filter((n) => n && n !== "—")
   const memberNamesSet = new Set(uniqueMemberNames)
@@ -184,9 +225,9 @@ export async function GET(request: Request) {
     super32RecordWins: 0,
     super32RecordLosses: 0,
   }
-  stats.stateChamps2026 = new Set(rows.filter((r) => r.state_year === 2026 && r.placement === "Champion").map((r) => r.member_name)).size
-  stats.statePlacers2026 = new Set(rows.filter((r) => r.state_year === 2026 && ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
-  stats.stateQualifiers2026 = new Set(rows.filter((r) => r.state_year === 2026 && r.placement === "SQ").map((r) => r.member_name)).size
+  stats.stateChamps2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && r.placement === "Champion").map((r) => r.member_name)).size
+  stats.statePlacers2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
+  stats.stateQualifiers2026 = new Set(rows2026Only.filter((r) => r.state_year === 2026 && r.placement === "SQ").map((r) => r.member_name)).size
 
   for (const [, years] of champYearsByMember) {
     const c = years.size
@@ -265,5 +306,5 @@ export async function GET(request: Request) {
       stats2026.super32RecordLosses += losses
     }
   }
-  return NextResponse.json({ rows, statsAllTime, stats2026 })
+  return NextResponse.json({ rows2026: rows2026Only, rowsAllYears, statsAllTime, stats2026 })
 }
