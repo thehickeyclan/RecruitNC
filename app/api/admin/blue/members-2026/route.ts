@@ -6,6 +6,7 @@ import { loadProfileTournamentData } from "@/lib/profile-tournament-data"
 export const dynamic = "force-dynamic"
 
 export type BlueMember2026Row = {
+  athlete_id: string
   member_name: string
   grad_year: number | null
   high_school: string
@@ -143,6 +144,7 @@ export async function GET(request: Request) {
     const year2026 = nchsaaInRange.filter((r) => r.year === 2026)
     if (year2026.length === 0) {
       rows2026Only.push({
+        athlete_id: a.id,
         member_name: name || "—",
         grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
         high_school: (a.highschool ?? "").toString() || "—",
@@ -157,6 +159,7 @@ export async function GET(request: Request) {
       year2026.sort((x, y) => (x.classification || "").localeCompare(y.classification || "") || (x.weight_class || "").localeCompare(y.weight_class || ""))
       for (const r of year2026) {
         rows2026Only.push({
+          athlete_id: a.id,
           member_name: name || "—",
           grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
           high_school: (a.highschool ?? "").toString() || "—",
@@ -175,6 +178,7 @@ export async function GET(request: Request) {
     )
     if (allYearsSorted.length === 0) {
       rowsAllYears.push({
+        athlete_id: a.id,
         member_name: name || "—",
         grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
         high_school: (a.highschool ?? "").toString() || "—",
@@ -188,6 +192,7 @@ export async function GET(request: Request) {
     } else {
       for (const r of allYearsSorted) {
         rowsAllYears.push({
+          athlete_id: a.id,
           member_name: name || "—",
           grad_year: a.graduationyear != null ? Number(a.graduationyear) : null,
           high_school: (a.highschool ?? "").toString() || "—",

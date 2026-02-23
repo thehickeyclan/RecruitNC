@@ -268,8 +268,15 @@ export default function AdminBlueMembers2026Page() {
                   </TableHeader>
                   <TableBody>
                     {rows.map((r, i) => (
-                      <TableRow key={`${r.member_name}-${r.state_classification}-${r.state_weight}-${i}`}>
-                        <TableCell className="font-medium">{r.member_name}</TableCell>
+                      <TableRow key={`${r.athlete_id}-${r.state_classification}-${r.state_weight}-${r.state_year}-${i}`}>
+                        <TableCell className="font-medium">
+                          <Link
+                            href={`/admin/athletes/edit?id=${encodeURIComponent(r.athlete_id)}`}
+                            className="text-[#13294B] hover:underline font-medium"
+                          >
+                            {r.member_name}
+                          </Link>
+                        </TableCell>
                         <TableCell>{r.grad_year ?? "—"}</TableCell>
                         <TableCell>{r.high_school}</TableCell>
                         <TableCell>{r.profile_weight}</TableCell>
