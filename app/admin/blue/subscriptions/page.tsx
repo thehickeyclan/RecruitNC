@@ -129,9 +129,13 @@ export default function AdminBlueSubscriptionsPage() {
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
                           <TableCell className="font-medium">
-                            <Link href={`/admin/blue/signups/${encodeURIComponent(s.id)}`} className="text-[#13294B] hover:underline">
-                              {s.athlete_name}
-                            </Link>
+                            {s.id ? (
+                              <Link href={`/admin/blue/signups/${encodeURIComponent(s.id)}`} className="text-[#13294B] hover:underline">
+                                {s.athlete_name}
+                              </Link>
+                            ) : (
+                              <span>{s.athlete_name}</span>
+                            )}
                           </TableCell>
                           <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
@@ -235,9 +239,13 @@ export default function AdminBlueSubscriptionsPage() {
                     {filtered.map((sub) => (
                       <TableRow key={sub.id}>
                         <TableCell className="font-medium">
-                          <Link href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-[#13294B] hover:underline">
-                            {sub.athlete_name}
-                          </Link>
+                          {sub.athlete_id ? (
+                            <Link href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-[#13294B] hover:underline">
+                              {sub.athlete_name}
+                            </Link>
+                          ) : (
+                            <span>{sub.athlete_name}</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <span className="block">{sub.payer_name}</span>
@@ -266,12 +274,16 @@ export default function AdminBlueSubscriptionsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-2">
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}>Registration</Link>
-                            </Button>
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`}>View athlete</Link>
-                            </Button>
+                            {sub.athlete_id && (
+                              <>
+                                <Button variant="ghost" size="sm" asChild>
+                                  <Link href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}>Registration</Link>
+                                </Button>
+                                <Button variant="ghost" size="sm" asChild>
+                                  <Link href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`}>View athlete</Link>
+                                </Button>
+                              </>
+                            )}
                             {sub.stripe_subscription_id && (
                               <a
                                 href={`${STRIPE_DASHBOARD_SUB}/${sub.stripe_subscription_id}`}
