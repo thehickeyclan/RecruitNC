@@ -129,13 +129,12 @@ export default function AdminBlueSubscriptionsPage() {
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
                           <TableCell className="font-medium">
-                            {s.id ? (
-                              <a href={`/admin/blue/signups/${encodeURIComponent(s.id)}`} className="text-[#13294B] hover:underline cursor-pointer">
-                                {s.athlete_name}
-                              </a>
-                            ) : (
-                              <span>{s.athlete_name}</span>
-                            )}
+                            <Link
+                              href={`/admin/blue/signups/${encodeURIComponent(s.id)}`}
+                              className="text-[#13294B] hover:underline cursor-pointer font-medium"
+                            >
+                              {s.athlete_name}
+                            </Link>
                           </TableCell>
                           <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
@@ -240,9 +239,12 @@ export default function AdminBlueSubscriptionsPage() {
                       <TableRow key={sub.id}>
                         <TableCell className="font-medium">
                           {sub.athlete_id ? (
-                            <a href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-[#13294B] hover:underline cursor-pointer">
+                            <Link
+                              href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}
+                              className="text-[#13294B] hover:underline cursor-pointer font-medium"
+                            >
                               {sub.athlete_name}
-                            </a>
+                            </Link>
                           ) : (
                             <span>{sub.athlete_name}</span>
                           )}
