@@ -107,10 +107,91 @@ Example structure (adapt to your navbar):
 
 ---
 
+## Phase 2: 2025 Results (`/nhsca/2025`)
+
+Copy the **2025 Results** page: current-year NHSCA All-Americans, performance stats, national comparison, college commitments, and multi-time champions/All-Americans tabs.
+
+### 2.1 Files to copy (Legacy NC → RecruitNC)
+
+| Type       | Source (Legacy NC)                     | Destination (RecruitNC)                |
+|------------|----------------------------------------|----------------------------------------|
+| Page       | `app/nhsca/2025/page.tsx`             | `app/nhsca/2025/page.tsx`              |
+| Loading    | `app/nhsca/2025/loading.tsx`           | `app/nhsca/2025/loading.tsx`           |
+| Component  | `components/nhsca-performance-charts.tsx` | `components/nhsca-performance-charts.tsx` |
+| Component  | `components/nhsca-champions-tabs.tsx`  | `components/nhsca-champions-tabs.tsx`  |
+
+**No API routes** are used by the 2025 page; all data is fetched **client-side** via Supabase.
+
+### 2.2 Supabase (same DB)
+
+The page and components use the **browser Supabase client** (not admin, not API routes). Same project as Legacy NC.
+
+| Table                    | Usage |
+|--------------------------|--------|
+| `wrestling_nhsca_results`| 2025 All-Americans (year=2025, placement 1–8); also used by `NHSCAChampionsTabs` for all years (placement 1–8, limit 100k). |
+| `athletes`               | College commitments: `id, name, firstName, lastName, college, collegeLogoUrl, recruiting_status` where `recruiting_status` in (`Committed`, `College Athlete`, `committed`, `college athlete`) and `college` not null. |
+
+**In RecruitNC:** Use RecruitNC’s existing **client-side Supabase** (e.g. from `@/lib/supabase` or your browser client). Replace any `import("@/lib/supabase")` / `supabase` usage so it points to RecruitNC’s client; no schema or RLS changes required if the same project is used.
+
+### 2.3 Data flow in Legacy NC
+
+- **`app/nhsca/2025/page.tsx`**
+  - `const { supabase: supabaseClient } = await import("@/lib/supabase")`
+  - **Query 1:** `wrestling_nhsca_results` — `year=2025`, `placement` 1–8, order by division, weight, placement.
+  - **Query 2:** `athletes` — college commitments (fields above).
+- **`components/nhsca-champions-tabs.tsx`**
+  - `const { supabase } = await import("@/lib/supabase")`
+  - **Query:** `wrestling_nhsca_results` — placement 1–8, all years, limit 100000; then groups in JS into 2x/3x/4x champions and All-Americans.
+
+### 2.4 Import and path fixes in RecruitNC
+
+1. **Supabase client**
+   - Replace `import("@/lib/supabase")` (and use of `supabase` / `supabaseClient`) with RecruitNC’s client. For example, if RecruitNC uses `createBrowserClient` from `@/lib/supabase/client` or a similar module, use that so both the 2025 page and `NHSCAChampionsTabs` read from the same DB.
+
+2. **UI and components**
+   - Ensure `@/components/ui/*` (Card, Button, Badge, Input, Select, Tabs) and `@/components/nhsca-performance-charts`, `@/components/nhsca-champions-tabs` resolve. Adjust paths if your app structure differs.
+
+3. **Assets**
+   - The 2025 page uses `src="/nc-united-logo.png"`. Copy `public/nc-united-logo.png` from Legacy NC to RecruitNC `public/`, or point the `Image` to your own logo path.
+
+4. **Auth**
+   - The 2025 page in Legacy NC has **no** `AuthGuard`; it’s public. You can keep it public in RecruitNC or wrap it in your auth if desired.
+
+### 2.5 Static data on the page
+
+The following are **hardcoded** in the 2025 page (no DB). Update or leave as-is for RecruitNC:
+
+- **`MULTI_TIME_AAS`** — Multi-time All-Americans (names, times, years).
+- **`STATE_DATA_2025`** — State comparison (All-Americans by state/division) for the National Comparison chart/table/summary.
+- **`DIVISION_STANDINGS`** — NC division standings (rank, All-American counts, highlights).
+
+`NHSCAPerformanceCharts` uses **static** `clubData` and `schoolData` (no API). The main page also derives **top clubs** and **top schools** from the loaded `wrestlers` (from DB); the charts component does not use that — it’s independent. You can later replace the static data in `NHSCAPerformanceCharts` with props from the page if you want charts to reflect live data.
+
+### 2.6 Internal links
+
+- “Back to NHSCA” → `/nhsca` (Tournament Overview). Requires Phase 1.
+
+### 2.7 Nav in RecruitNC
+
+Add to the NATIONALS section:
+
+- **2025 Results** → `/nhsca/2025`.
+
+*(Already present in RecruitNC navbar: Nationals dropdown includes “2025 Results” → `/nhsca/2025`.)*
+
+### 2.8 Checklist — 2025 Results
+
+- [ ] Copy `app/nhsca/2025/page.tsx` and `app/nhsca/2025/loading.tsx`.
+- [ ] Copy `components/nhsca-performance-charts.tsx` and `components/nhsca-champions-tabs.tsx`.
+- [ ] Point Supabase usage to RecruitNC’s client in the page and in `NHSCAChampionsTabs`.
+- [ ] Verify `wrestling_nhsca_results` and `athletes` are accessible (same project; check RLS if RecruitNC uses different policies).
+- [ ] Copy or replace `public/nc-united-logo.png`.
+- [ ] Add nav entry “2025 Results” → `/nhsca/2025` (already done).
+- [ ] Optionally refresh static data (multi-time AAs, state comparison, division standings) for future years.
+
+---
+
 ## Later phases (short reference)
 
-- **Phase 2 — 2025 Results** (`/nhsca/2025`): Copy `app/nhsca/2025/`, `NHSCAChampionsTabs`, `NHSCAPerformanceCharts`; pages use **client Supabase** (`wrestling_nhsca_results`). Same DB, so use RecruitNC’s Supabase client.
 - **Phase 3 — Digital Archive** (`/nhsca/archive`): Copy `app/nhsca/archive/`; page uses client Supabase (`wrestling_nhsca_results`, `most_outstanding_wrestlers`).
 - **Phase 4 — Super32 Champions** (`/super32`): Copy `app/super32/page.tsx` and `app/api/super32/champions/route.ts`; replace `getSupabaseAdmin()` with RecruitNC’s admin client in the API route.
-
-Full file lists and API details for phases 2–4 can be added to this doc once Phase 1 is done.
