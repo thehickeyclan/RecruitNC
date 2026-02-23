@@ -70,6 +70,13 @@ export function Navbar() {
     { href: "/national-team/interest-form", label: "Interest Form", description: "Express interest in Spring/Summer 2026 National Team", icon: Users },
   ]
 
+  const nationalsItems = [
+    { href: "/nhsca", label: "Tournament Overview", description: "About NHSCA Nationals & divisions", icon: Trophy },
+    { href: "/nhsca/2025", label: "2025 Results", description: "Current year results & All-Americans", icon: Medal },
+    { href: "/nhsca/archive", label: "Digital Archive", description: "Complete history 1990–2025", icon: Trophy },
+    { href: "/super32", label: "Super32 Champions", description: "All-time Super32 Champions from NC", icon: Medal },
+  ]
+
   const highlightNavItems = showMyRecruits
     ? [
         {
@@ -151,6 +158,38 @@ export function Navbar() {
               >
                 Blue Program
               </a>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                  Nationals
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-72">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Trophy className="h-4 w-4" />
+                      Nationals
+                    </div>
+                    <p className="text-xs text-muted-foreground font-normal mt-1">
+                      NHSCA Nationals &amp; Super32
+                    </p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {nationalsItems.map((sub) => {
+                    const Icon = sub.icon
+                    return (
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{sub.label}</span>
+                            <span className="text-xs text-muted-foreground">{sub.description}</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   National Team
@@ -349,6 +388,21 @@ export function Navbar() {
                   >
                     Blue Program
                   </a>
+                  <div className="px-3">
+                    <div className="text-gray-600 font-medium text-sm mb-2">Nationals</div>
+                    <div className="pl-4 space-y-2">
+                      {nationalsItems.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                   <div className="px-3">
                     <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
                     <div className="pl-4 space-y-2">
