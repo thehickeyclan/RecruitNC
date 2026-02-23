@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,42 +17,56 @@ const defaultStats: BlueMembers2026Stats = {
   threeXStateChamps: 0,
   fourXStateChamps: 0,
   allAmericans: 0,
+  super32Placers: 0,
+  nhscaRecordWins: 0,
+  nhscaRecordLosses: 0,
+  super32RecordWins: 0,
+  super32RecordLosses: 0,
 }
+
+const ACTIVE_GRAD_YEARS = [2030, 2029, 2028, 2027, 2026]
+const PRIOR_GRAD_YEARS = [2025, 2024, 2023, 2022, 2021]
 
 export default function AdminBlueMembers2026Page() {
   const [rows, setRows] = useState<BlueMember2026Row[]>([])
   const [stats, setStats] = useState<BlueMembers2026Stats>(defaultStats)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [gradYears, setGradYears] = useState<number[]>(() => [...ACTIVE_GRAD_YEARS])
 
-  useEffect(() => {
-    let cancelled = false
-    fetch("/api/admin/blue/members-2026", { credentials: "include" })
+  const fetchData = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    const q = gradYears.length ? `?gradYears=${gradYears.join(",")}` : ""
+    fetch(`/api/admin/blue/members-2026${q}`, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
-        if (cancelled) return
         if (data.error) {
           setError(data.error)
           setRows([])
           setStats(defaultStats)
         } else {
-          setError(null)
           setRows(data.rows ?? [])
           setStats(data.stats ?? defaultStats)
         }
       })
       .catch(() => {
-        if (!cancelled) {
-          setError("Failed to load")
-          setRows([])
-          setStats(defaultStats)
-        }
+        setError("Failed to load")
+        setRows([])
+        setStats(defaultStats)
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [])
+      .finally(() => setLoading(false))
+  }, [gradYears])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  const toggleGradYear = (y: number) => {
+    setGradYears((prev) =>
+      prev.includes(y) ? prev.filter((yr) => yr !== y) : [...prev, y].sort((a, b) => b - a)
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -65,9 +79,42 @@ export default function AdminBlueMembers2026Page() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">Blue members – 2026 NCHSAA placement</h1>
-            <p className="text-sm text-gray-600">Members (active subscription or athlete Blue flag) and their 2026 state result</p>
+            <p className="text-sm text-gray-600">Active Blue program members (default: class of 2026 and on). Add prior years with the filter below. Data from <code className="rounded bg-gray-200 px-1">wrestling_nchsaa_results</code>.</p>
           </div>
         </div>
+
+        <Card className="mb-6 border border-gray-200">
+          <CardContent className="pt-4">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Include graduation years</p>
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-sm text-gray-600">Active (2026+):</span>
+              {ACTIVE_GRAD_YEARS.map((y) => (
+                <label key={y} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gradYears.includes(y)}
+                    onChange={() => toggleGradYear(y)}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">{y}</span>
+                </label>
+              ))}
+              <span className="text-sm text-gray-400 mx-1">|</span>
+              <span className="text-sm text-gray-600">Prior:</span>
+              {PRIOR_GRAD_YEARS.map((y) => (
+                <label key={y} className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gradYears.includes(y)}
+                    onChange={() => toggleGradYear(y)}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">{y}</span>
+                </label>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {!loading && !error && (
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-4">
@@ -115,8 +162,30 @@ export default function AdminBlueMembers2026Page() {
             </Card>
             <Card className="border-t-4 border-t-purple-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">All-Americans</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA All-Americans</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.allAmericans}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-emerald-600">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 placers</p>
+                <p className="text-2xl font-bold text-emerald-700">{stats.super32Placers}</p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-indigo-500">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA all-time record</p>
+                <p className="text-2xl font-bold text-indigo-600">
+                  {stats.nhscaRecordWins}-{stats.nhscaRecordLosses}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="border-t-4 border-t-teal-600">
+              <CardContent className="pt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 all-time record</p>
+                <p className="text-2xl font-bold text-teal-700">
+                  {stats.super32RecordWins}-{stats.super32RecordLosses}
+                </p>
               </CardContent>
             </Card>
           </div>

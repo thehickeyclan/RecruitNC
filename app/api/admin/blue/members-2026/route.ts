@@ -26,6 +26,11 @@ export type BlueMembers2026Stats = {
   threeXStateChamps: number
   fourXStateChamps: number
   allAmericans: number
+  super32Placers: number
+  nhscaRecordWins: number
+  nhscaRecordLosses: number
+  super32RecordWins: number
+  super32RecordLosses: number
 }
 
 async function requireAdmin() {
@@ -46,10 +51,28 @@ function placementLabel(place: number | null | undefined): string {
   return `${place}th`
 }
 
-/** GET: Blue members and 2026 NCHSAA. Same code path as unified profile + rankings: loadProfileTournamentData per athlete, then Blue filter. */
-export async function GET() {
+/** Parse "5-2" or "4 - 3" to { wins, losses }. */
+function parseRecord(record: string | null | undefined): { wins: number; losses: number } {
+  const s = (record ?? "").toString().trim()
+  const match = s.match(/^\s*(\d+)\s*[-–]\s*(\d+)\s*$/)
+  if (!match) return { wins: 0, losses: 0 }
+  return { wins: parseInt(match[1]!, 10) || 0, losses: parseInt(match[2]!, 10) || 0 }
+}
+
+/** Default: active Blue program = class of 2026 and on. Use ?gradYears=2026,2027,2028,2029,2030 to include prior years (e.g. 2025, 2024). */
+const DEFAULT_GRAD_YEARS = [2026, 2027, 2028, 2029, 2030]
+
+/** GET: Blue members and 2026 NCHSAA. Same code path as unified profile + rankings. Optional ?gradYears=2026,2027,... (default: 2026–2030 = active program). */
+export async function GET(request: Request) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const { searchParams } = new URL(request.url)
+  const gradYearsParam = searchParams.get("gradYears") ?? ""
+  const allowedGradYears = gradYearsParam
+    ? gradYearsParam.split(",").map((s) => parseInt(s.trim(), 10)).filter((y) => !isNaN(y) && y >= 2018 && y <= 2035)
+    : DEFAULT_GRAD_YEARS
+  const gradYearSet = new Set(allowedGradYears.length ? allowedGradYears : DEFAULT_GRAD_YEARS)
 
   const admin = createAdminClient()
 
@@ -62,16 +85,24 @@ export async function GET() {
   const { data: athletesWithFlag } = await admin.from("athletes").select("id").ilike("ncUnitedTeam", "%blue%")
   if (athletesWithFlag?.length) athletesWithFlag.forEach((a) => blueAthleteIds.add(a.id))
 
-  const emptyStats = { totalMembers: 0, stateChamps2026: 0, statePlacers2026: 0, stateQualifiers2026: 0, twoXStateChamps: 0, threeXStateChamps: 0, fourXStateChamps: 0, allAmericans: 0 }
+  const emptyStats: BlueMembers2026Stats = {
+    totalMembers: 0, stateChamps2026: 0, statePlacers2026: 0, stateQualifiers2026: 0,
+    twoXStateChamps: 0, threeXStateChamps: 0, fourXStateChamps: 0, allAmericans: 0,
+    super32Placers: 0, nhscaRecordWins: 0, nhscaRecordLosses: 0, super32RecordWins: 0, super32RecordLosses: 0,
+  }
   if (blueAthleteIds.size === 0) return NextResponse.json({ rows: [], stats: emptyStats })
 
-  const { data: athletes, error: athletesError } = await admin
+  const { data: athletesRaw, error: athletesError } = await admin
     .from("athletes")
     .select("id, name, highschool, graduationyear, weightclass")
     .in("id", Array.from(blueAthleteIds))
 
   if (athletesError) return NextResponse.json({ error: athletesError.message }, { status: 500 })
-  if (!athletes?.length) return NextResponse.json({ rows: [], stats: emptyStats })
+  const athletes = (athletesRaw ?? []).filter((a) => {
+    const y = a.graduationyear != null ? Number(a.graduationyear) : null
+    return y != null && gradYearSet.has(y)
+  })
+  if (!athletes.length) return NextResponse.json({ rows: [], stats: emptyStats })
 
   const rows: BlueMember2026Row[] = []
   const champYearsByMember = new Map<string, Set<number>>()
@@ -137,7 +168,7 @@ export async function GET() {
   const uniqueMemberNames = [...new Set(rows.map((r) => r.member_name))].filter((n) => n && n !== "—")
   const memberNamesSet = new Set(uniqueMemberNames)
 
-  const stats = {
+  const stats: BlueMembers2026Stats = {
     totalMembers: uniqueMemberNames.length,
     stateChamps2026: 0,
     statePlacers2026: 0,
@@ -146,6 +177,11 @@ export async function GET() {
     threeXStateChamps: 0,
     fourXStateChamps: 0,
     allAmericans: 0,
+    super32Placers: 0,
+    nhscaRecordWins: 0,
+    nhscaRecordLosses: 0,
+    super32RecordWins: 0,
+    super32RecordLosses: 0,
   }
   stats.stateChamps2026 = new Set(rows.filter((r) => r.state_year === 2026 && r.placement === "Champion").map((r) => r.member_name)).size
   stats.statePlacers2026 = new Set(rows.filter((r) => r.state_year === 2026 && ["Champion", "2nd", "3rd", "4th"].includes(r.placement)).map((r) => r.member_name)).size
@@ -158,15 +194,36 @@ export async function GET() {
     else if (c === 2) stats.twoXStateChamps++
   }
 
+  let nhscaWins = 0, nhscaLosses = 0, super32Wins = 0, super32Losses = 0
   const allAmericanMembers = new Set<string>()
-  for (const { name, nhsca } of results) {
+  const super32PlacerMembers = new Set<string>()
+
+  for (const { name, nhsca, super32 } of results) {
     if (!memberNamesSet.has(name)) continue
     const isAllAmerican = nhsca.some(
       (r) => r.placement === "Champion" || /\d(st|nd|rd|th) All-American/.test(r.placement ?? "")
     )
     if (isAllAmerican) allAmericanMembers.add(name)
+    const hasSuper32Placement = super32.some((r) => (r.placement ?? "").toString().trim() !== "" && r.placement !== "DNP")
+    if (hasSuper32Placement) super32PlacerMembers.add(name)
+    for (const r of nhsca) {
+      const { wins, losses } = parseRecord(r.record)
+      nhscaWins += wins
+      nhscaLosses += losses
+    }
+    for (const r of super32) {
+      const { wins, losses } = parseRecord(r.record)
+      super32Wins += wins
+      super32Losses += losses
+    }
   }
+
   stats.allAmericans = allAmericanMembers.size
+  stats.super32Placers = super32PlacerMembers.size
+  stats.nhscaRecordWins = nhscaWins
+  stats.nhscaRecordLosses = nhscaLosses
+  stats.super32RecordWins = super32Wins
+  stats.super32RecordLosses = super32Losses
 
   return NextResponse.json({ rows, stats })
 }

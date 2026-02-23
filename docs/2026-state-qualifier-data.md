@@ -25,7 +25,7 @@ This is the single source of truth for NCHSAA state results (placers and state q
 | `year`               | integer | e.g. 2026   |
 | `classification`     | text    | Men: `1A/2A`, `3A`, `4A`, `5A`, `6A`, `7A`, `8A`. Women: `1-4A` |
 | `weight_class`       | text    | e.g. `106`, `113`, `120`, … |
-| `place`              | integer | **0 = State Qualifier (SQ)**. **2026+**: 1–4 = placers. **2025 and earlier**: 1–8 = placers. |
+| `place`              | integer | **0 = State Qualifier (SQ)** (state qualified; did not place). **2026+**: 1–4 = placers. **2025 and earlier**: 1–8 = placers. |
 | `wrestler_name`      | text    | Full name (often stored as "Last, First") |
 | `school`             | text    | High school name |
 | `qualifying_tournament` | text | Optional; regional identifier |
@@ -91,6 +91,16 @@ RecruitNC's "Blue members – 2026 NCHSAA placement" dashboard should use the fo
 | **All-Americans** | `wrestling_nhsca_results`: placement 1–8 = All-American. Filter by your Blue members (match `athlete_name` to your athletes); count distinct Blue members with at least one such row. |
 
 **Single source for 2026 NCHSAA:** Supabase table **`wrestling_nchsaa_results`** (same project as LegacyNC). Match to your athletes by normalizing names (e.g. "Last, First" ↔ "First Last") when joining to your Blue member list.
+
+### If the list shows SQ but the kid actually placed 2nd / 3rd / 4th
+
+The app only reads from the DB. If the row in `wrestling_nchsaa_results` has **place = 0** (SQ) and no placer row exists, we show SQ. Fix the data:
+
+- **Option A (admin API):** `POST /api/admin/blue/nchsaa-2026-place` with body:
+  `{ "wrestler_name": "Aaron Ellison", "classification": "7A", "weight_class": "150", "place": 2 }`
+  This updates the existing 2026 row to place = 2. Then refresh the Blue members 2026 page.
+- **Option B (Supabase SQL):**  
+  `UPDATE wrestling_nchsaa_results SET place = 2 WHERE year = 2026 AND classification = '7A' AND weight_class = '150' AND wrestler_name ILIKE '%Ellison%Aaron%';`
 
 ---
 
