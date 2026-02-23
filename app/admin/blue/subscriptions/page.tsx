@@ -20,23 +20,44 @@ export default function AdminBlueSubscriptionsPage() {
   const [tab, setTab] = useState<Tab>("good_standing")
   const [signupFilter, setSignupFilter] = useState<"all" | "paid" | "pending">("all")
   const [signupsError, setSignupsError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const filteredSignups =
     signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
 
   useEffect(() => {
     let cancelled = false
+    setLoadError(null)
     fetch("/api/admin/blue/subscriptions", { credentials: "include" })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) {
+          const msg =
+            r.status === 401
+              ? "Not signed in."
+              : r.status === 403
+                ? "Admin access required."
+                : `Could not load (${r.status}).`
+          throw new Error(msg)
+        }
+        return r.json()
+      })
       .then((data) => {
         if (cancelled) return
+        if (data?.error) {
+          setLoadError(data.error)
+          return
+        }
         setSubscriptions(data.subscriptions ?? [])
         setSignups(data.signups ?? [])
         setSignupsError(data.signupsError ?? null)
         setStats(data.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
       })
-      .catch(() => {
-        if (!cancelled) setSubscriptions([])
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err?.message ?? "Could not load subscriptions.")
+          setSubscriptions([])
+          setSignups([])
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -64,6 +85,13 @@ export default function AdminBlueSubscriptionsPage() {
           </div>
         </div>
 
+        {loadError && (
+          <div className="mb-6 py-4 px-4 rounded-lg bg-red-50 border border-red-200">
+            <p className="font-medium text-red-800">Could not load data</p>
+            <p className="mt-1 text-sm text-red-700">{loadError}</p>
+          </div>
+        )}
+
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">All Blue members (registration form)</CardTitle>
@@ -73,6 +101,11 @@ export default function AdminBlueSubscriptionsPage() {
             {loading ? (
               <div className="flex justify-center py-6">
                 <Loader2 className="h-6 w-6 animate-spin text-[#13294B]" />
+              </div>
+            ) : loadError ? (
+              <div className="py-6 px-4 rounded-lg bg-red-50 border border-red-200">
+                <p className="font-medium text-red-800">Could not load</p>
+                <p className="mt-2 text-sm text-red-700">{loadError}</p>
               </div>
             ) : signupsError ? (
               <div className="py-6 px-4 rounded-lg bg-amber-50 border border-amber-200">

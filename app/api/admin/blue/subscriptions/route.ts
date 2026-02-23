@@ -63,7 +63,38 @@ export async function GET() {
   }
 
   if (!rows?.length) {
-    return NextResponse.json({ subscriptions: [], stats: { active: 0, paused: 0, cancelled: 0, pending_payment: 0 } })
+    let signups: BlueSignupRow[] = []
+    let signupsError: string | null = null
+    const { data: signupRows, error: signupError } = await admin
+      .from("blue_signups")
+      .select("id, athlete_first_name, athlete_last_name, athlete_high_school, athlete_wrestling_club, athlete_weight_class, tshirt_size, parent_email, parent_first_name, parent_last_name, parent_phone, status, created_at, stripe_customer_id")
+      .order("created_at", { ascending: false })
+    if (!signupError && signupRows?.length) {
+      signups = signupRows.map((r) => ({
+        id: r.id,
+        athlete_first_name: r.athlete_first_name ?? "",
+        athlete_last_name: r.athlete_last_name ?? "",
+        athlete_name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" ").trim() || "—",
+        athlete_high_school: r.athlete_high_school ?? "",
+        athlete_wrestling_club: r.athlete_wrestling_club ?? null,
+        athlete_weight_class: r.athlete_weight_class ?? null,
+        tshirt_size: r.tshirt_size ?? "",
+        parent_email: r.parent_email ?? "",
+        parent_first_name: r.parent_first_name ?? "",
+        parent_last_name: r.parent_last_name ?? "",
+        parent_phone: r.parent_phone ?? null,
+        status: r.status ?? "pending_payment",
+        created_at: r.created_at ?? "",
+        stripe_customer_id: r.stripe_customer_id ?? null,
+      }))
+    }
+    if (signupError) signupsError = signupError.message
+    return NextResponse.json({
+      subscriptions: [],
+      stats: { active: 0, paused: 0, cancelled: 0, pending_payment: 0 },
+      signups,
+      signupsError,
+    })
   }
 
   const athleteIds = [...new Set(rows.map((r) => r.athlete_id))]

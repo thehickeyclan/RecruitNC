@@ -4,14 +4,48 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, User } from "lucide-react"
+import { ArrowLeft, User, AlertCircle } from "lucide-react"
 
-async function getSignup(signupId: string) {
+type SignupRow = {
+  id: string
+  parent_first_name: string | null
+  parent_last_name: string | null
+  parent_email: string | null
+  parent_phone: string | null
+  athlete_first_name: string | null
+  athlete_last_name: string | null
+  athlete_graduation_year: number | null
+  athlete_high_school: string | null
+  athlete_wrestling_club: string | null
+  athlete_weight_class: string | null
+  tshirt_size: string | null
+  status: string | null
+  created_at: string | null
+}
+
+async function getSignup(signupId: string): Promise<
+  | { ok: true; data: SignupRow }
+  | { ok: false; reason: string; detail?: string }
+> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
-  const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
-  if (!profile?.is_admin) return null
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError) {
+    return { ok: false, reason: "Auth error", detail: authError.message }
+  }
+  if (!user) {
+    return { ok: false, reason: "Not signed in", detail: "No user session. Sign in and try again." }
+  }
+  const { data: profile, error: profileError } = await supabase
+    .from("user_profiles")
+    .select("is_admin")
+    .eq("user_id", user.id)
+    .single()
+  if (profileError) {
+    return { ok: false, reason: "Profile lookup failed", detail: profileError.message }
+  }
+  if (!profile?.is_admin) {
+    return { ok: false, reason: "Not admin", detail: "Only admins can view Blue signup details." }
+  }
 
   const admin = createAdminClient()
   const { data: row, error } = await admin
@@ -20,8 +54,13 @@ async function getSignup(signupId: string) {
     .eq("id", signupId)
     .single()
 
-  if (error || !row) return null
-  return row
+  if (error) {
+    return { ok: false, reason: "DB error", detail: `${error.code ?? "unknown"}: ${error.message}` }
+  }
+  if (!row) {
+    return { ok: false, reason: "Not found", detail: `No blue_signups row for id: ${signupId}` }
+  }
+  return { ok: true, data: row as SignupRow }
 }
 
 export default async function AdminBlueSignupDetailPage({
@@ -32,8 +71,39 @@ export default async function AdminBlueSignupDetailPage({
   const { signupId } = await params
   if (!signupId) notFound()
 
-  const data = await getSignup(signupId)
-  if (!data) notFound()
+  const result = await getSignup(signupId)
+
+  if (!result.ok) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-6 flex items-center gap-4">
+            <Button variant="outline" size="icon" asChild>
+              <Link href="/admin/blue/subscriptions">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+          <Card className="border-amber-500 border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800">
+                <AlertCircle className="h-5 w-5" />
+                Could not load signup
+              </CardTitle>
+              <CardDescription>Use this to diagnose why the page failed instead of showing blank.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="font-medium text-gray-900">{result.reason}</p>
+              {result.detail && <p className="text-sm text-gray-600 font-mono bg-gray-100 p-3 rounded">{result.detail}</p>}
+              <p className="text-xs text-gray-500 mt-4">Signup ID from URL: {signupId}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  const data = result.data
 
   const parentFirstName = (data.parent_first_name ?? "").toString().trim() || "—"
   const parentLastName = (data.parent_last_name ?? "").toString().trim() || "—"
