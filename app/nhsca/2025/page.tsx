@@ -129,7 +129,9 @@ export default function NHSCA2025Page() {
   const [showAllStates, setShowAllStates] = useState(false)
   const [chartViewMode, setChartViewMode] = useState<"chart" | "table" | "summary">("chart")
 
-  // Load data via RecruitNC Supabase client
+  // Load data via RecruitNC Supabase client (male divisions only: Freshman, Sophomore, Junior, Senior)
+  const MALE_DIVISIONS = ["Freshman", "Sophomore", "Junior", "Senior"]
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -138,6 +140,7 @@ export default function NHSCA2025Page() {
             .from("wrestling_nhsca_results")
             .select("*")
             .eq("year", 2025)
+            .in("division", MALE_DIVISIONS)
             .gte("placement", 1)
             .lte("placement", 8)
             .order("division")
@@ -316,13 +319,13 @@ export default function NHSCA2025Page() {
         {/* Performance Analysis Header */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-[#002147] mb-2">NHSCA Performance Analysis</h2>
-          <p className="text-gray-600">Analyzing North Carolina&apos;s performance in producing All-American wrestlers</p>
+          <p className="text-gray-600">North Carolina&apos;s male All-Americans (Freshman, Sophomore, Junior, Senior divisions) at the 2025 NHSCA Nationals.</p>
         </div>
 
         {/* Key Stats Cards */}
         <Card className="mb-8">
           <CardHeader className="pb-2">
-            <CardTitle className="text-[#002147]">North Carolina NHSCA Performance 2025</CardTitle>
+            <CardTitle className="text-[#002147]">North Carolina NHSCA Performance 2025 (Boys)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
