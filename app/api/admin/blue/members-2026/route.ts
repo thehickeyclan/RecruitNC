@@ -106,6 +106,7 @@ export async function GET(request: Request) {
 
   const rows: BlueMember2026Row[] = []
   const champYearsByMember = new Map<string, Set<number>>()
+  // NCHSAA from getNCHSAAResultsForProfile has no year filter → all years; 2×/3×/4× = all-time career state titles
 
   const results = await Promise.all(
     athletes.map(async (a) => {

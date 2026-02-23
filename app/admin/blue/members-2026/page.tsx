@@ -126,49 +126,49 @@ export default function AdminBlueMembers2026Page() {
             </Card>
             <Card className="border-t-4 border-t-amber-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State champs</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State champs (this year)</p>
                 <p className="text-2xl font-bold text-amber-600">{stats.stateChamps2026}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-blue-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State placers</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State placers (this year)</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.statePlacers2026}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-gray-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State qualifiers (SQ)</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2026 State qualifiers (SQ, this year)</p>
                 <p className="text-2xl font-bold text-gray-700">{stats.stateQualifiers2026}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-amber-400">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2× State champs</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">2× State champs (all-time)</p>
                 <p className="text-2xl font-bold text-amber-600">{stats.twoXStateChamps}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-amber-600">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">3× State champs</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">3× State champs (all-time)</p>
                 <p className="text-2xl font-bold text-amber-700">{stats.threeXStateChamps}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-amber-700">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">4× State champs</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">4× State champs (all-time)</p>
                 <p className="text-2xl font-bold text-amber-800">{stats.fourXStateChamps}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-purple-500">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA All-Americans</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">NHSCA All-Americans (all-time)</p>
                 <p className="text-2xl font-bold text-purple-600">{stats.allAmericans}</p>
               </CardContent>
             </Card>
             <Card className="border-t-4 border-t-emerald-600">
               <CardContent className="pt-4">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 placers</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Super32 placers (all-time)</p>
                 <p className="text-2xl font-bold text-emerald-700">{stats.super32Placers}</p>
               </CardContent>
             </Card>
