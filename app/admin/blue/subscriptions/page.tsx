@@ -128,7 +128,11 @@ export default function AdminBlueSubscriptionsPage() {
                     <TableBody>
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
-                          <TableCell className="font-medium">{s.athlete_name}</TableCell>
+                          <TableCell className="font-medium">
+                            <Link href={`/admin/blue/signups/${encodeURIComponent(s.id)}`} className="text-[#13294B] hover:underline">
+                              {s.athlete_name}
+                            </Link>
+                          </TableCell>
                           <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_weight_class || "—"}</TableCell>

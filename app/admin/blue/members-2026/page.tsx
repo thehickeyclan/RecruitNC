@@ -271,7 +271,7 @@ export default function AdminBlueMembers2026Page() {
                       <TableRow key={`${r.athlete_id}-${r.state_classification}-${r.state_weight}-${r.state_year}-${i}`}>
                         <TableCell className="font-medium">
                           <Link
-                            href={`/admin/blue/members/${encodeURIComponent(r.athlete_id)}`}
+                            href={`/admin/athletes/edit?id=${encodeURIComponent(r.athlete_id)}`}
                             className="text-[#13294B] hover:underline font-medium"
                           >
                             {r.member_name}
