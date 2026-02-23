@@ -158,26 +158,28 @@ export default function AthletesPage() {
                   ? "Browse North Carolina wrestlers who have committed to college programs."
                   : "Legacy NC: search by name across NHSCA, NCHSAA, awards, Super32, and more."}
               </p>
-              <div className="flex gap-2">
-                <Button
-                  variant={tab === "commitments" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTab("commitments")}
-                  style={tab === "commitments" ? { backgroundColor: NC_NAVY } : {}}
-                >
-                  <Trophy className="h-4 w-4 mr-1" />
-                  College Commitments
-                </Button>
-                <Button
-                  variant={tab === "legacy" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTab("legacy")}
-                  style={tab === "legacy" ? { backgroundColor: NC_NAVY } : {}}
-                >
-                  <FileSearch className="h-4 w-4 mr-1" />
-                  Wrestlers (Legacy NC)
-                </Button>
-              </div>
+              {tab !== "legacy" ? (
+                <div className="flex gap-2">
+                  <Button
+                    variant={tab === "commitments" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTab("commitments")}
+                    style={tab === "commitments" ? { backgroundColor: NC_NAVY } : {}}
+                  >
+                    <Trophy className="h-4 w-4 mr-1" />
+                    College Commitments
+                  </Button>
+                  <Button
+                    variant={tab === "legacy" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTab("legacy")}
+                    style={tab === "legacy" ? { backgroundColor: NC_NAVY } : {}}
+                  >
+                    <FileSearch className="h-4 w-4 mr-1" />
+                    Wrestlers (Legacy NC)
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

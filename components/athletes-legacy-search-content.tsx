@@ -289,7 +289,7 @@ export function AthletesLegacySearchContent() {
               <div className="relative flex gap-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
-                  placeholder="Search for wrestlers to view NHSCA nationals, NCHSAA state results, college commitments, and career achievements"
+                  placeholder="Search by wrestler name for NHSCA nationals, NCHSAA state results, Super32, and awards"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   className="pl-10 flex-1"
@@ -299,7 +299,7 @@ export function AthletesLegacySearchContent() {
                 </Button>
               </div>
               <p className="text-center text-gray-500 mt-3 text-sm">
-                Enter at least 2 characters. Results merge NHSCA, NCHSAA, Super32, college commits, and awards.
+                Enter at least 2 characters. Results merge NHSCA, NCHSAA, Super32, and awards.
               </p>
             </div>
           </CardContent>
@@ -531,7 +531,7 @@ export function AthletesLegacySearchContent() {
 
         {!loading && q.trim().length < 2 && (
           <div className="text-center py-8 text-gray-500">
-            Enter at least 2 characters to search NHSCA, NCHSAA, Super32, college commitments, and awards.
+            Enter at least 2 characters to search NHSCA, NCHSAA, Super32, and awards.
           </div>
         )}
       </div>

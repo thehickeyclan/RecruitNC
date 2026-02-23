@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
+import { buildSchoolClassificationMap } from "@/lib/classification-data"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
@@ -117,6 +118,9 @@ export async function GET(request: Request) {
       })
     }
 
+    const schoolNames = [...new Set((athletes as { highschool?: string }[]).map((a) => a.highschool).filter(Boolean))] as string[]
+    const divisionMap = await buildSchoolClassificationMap(supabase, schoolNames)
+
     const gradYearNum = yearNum
     const rankings = await Promise.all(
       athletes.map(async (athlete) => {
@@ -178,7 +182,7 @@ export async function GET(request: Request) {
           graduationyear: athlete.graduationyear,
           gender: athlete.gender,
           highschool: athlete.highschool || "-",
-          high_school_division: (athlete as { high_school_division?: string | null }).high_school_division ?? null,
+          high_school_division: divisionMap[(athlete.highschool || "").trim()] ?? null,
           weight_display: athlete.weightclass ? `${athlete.weightclass} lbs` : "TBD",
           prospect_ranking: athlete.prospect_ranking,
           academic_gpa: athlete.academic_gpa,

@@ -172,6 +172,7 @@ export default function Class2028RankingsPage() {
         return {
           name: athlete.name,
           school: athlete.highschool,
+          high_school_division: athlete.high_school_division ?? null,
           weight: athlete.weight_display || "N/A",
           achievements: achievements.length > 0 ? achievements.join(" • ") : "Top ranked prospect",
           photourl: athlete.photourl,
@@ -314,7 +315,12 @@ export default function Class2028RankingsPage() {
                               </a>
                             )}
                           </h3>
-                          <p className="text-sm text-gray-600 mb-2">{athlete.school}</p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {athlete.school}
+                            {athlete.high_school_division ? (
+                              <span className="text-gray-500"> · {athlete.high_school_division}</span>
+                            ) : null}
+                          </p>
                           <Badge variant="outline" className="border-[#D3B574] text-[#D3B574] mb-2">
                             {athlete.weight}
                           </Badge>
