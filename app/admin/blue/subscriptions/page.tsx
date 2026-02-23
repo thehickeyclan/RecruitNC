@@ -147,13 +147,17 @@ export default function AdminBlueSubscriptionsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Athlete</TableHead>
+                        <TableHead>Athlete first</TableHead>
+                        <TableHead>Athlete last</TableHead>
+                        <TableHead>Grad year</TableHead>
                         <TableHead>High school</TableHead>
                         <TableHead>Club</TableHead>
                         <TableHead>Weight</TableHead>
                         <TableHead>T-shirt</TableHead>
-                        <TableHead>Parent</TableHead>
-                        <TableHead>Contact</TableHead>
+                        <TableHead>Parent first</TableHead>
+                        <TableHead>Parent last</TableHead>
+                        <TableHead>Parent email</TableHead>
+                        <TableHead>Parent phone</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Signed up</TableHead>
                       </TableRow>
@@ -161,22 +165,16 @@ export default function AdminBlueSubscriptionsPage() {
                     <TableBody>
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
-                          <TableCell className="font-medium">
-                            <Link
-                              href={`/admin/blue/signups/${encodeURIComponent(s.id)}`}
-                              className="text-[#13294B] hover:underline cursor-pointer font-medium"
-                            >
-                              {s.athlete_name}
-                            </Link>
-                          </TableCell>
+                          <TableCell className="text-sm">{s.athlete_first_name || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.athlete_last_name || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.athlete_graduation_year ?? "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_weight_class || "—"}</TableCell>
-                          <TableCell className="text-sm font-medium">{s.tshirt_size || "—"}</TableCell>
-                          <TableCell>
-                            <span className="block">{[s.parent_first_name, s.parent_last_name].filter(Boolean).join(" ").trim() || "—"}</span>
-                            <span className="block text-xs text-gray-500">{s.parent_email}</span>
-                          </TableCell>
+                          <TableCell className="text-sm">{s.tshirt_size || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.parent_first_name || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.parent_last_name || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.parent_email || "—"}</TableCell>
                           <TableCell className="text-sm">{s.parent_phone || "—"}</TableCell>
                           <TableCell>
                             <span className={s.status === "paid" ? "text-green-600" : "text-amber-600"}>{s.status === "paid" ? "Paid" : "Pending"}</span>
