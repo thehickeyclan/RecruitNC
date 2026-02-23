@@ -129,13 +129,18 @@ export async function GET(request: Request) {
   const rowsAllYears: BlueMember2026Row[] = []
 
   for (const { a, name, nchsaa, nhsca } of results) {
+    const gradYear = a.graduationyear != null ? Number(a.graduationyear) : new Date().getFullYear()
+    const minYear = gradYear - 4
+    const maxYear = gradYear
+    const nchsaaInRange = nchsaa.filter((r) => r.year >= minYear && r.year <= maxYear)
+
     const champYears = new Set<number>()
-    for (const r of nchsaa) {
+    for (const r of nchsaaInRange) {
       if (r.place === 1) champYears.add(r.year)
     }
     champYearsByMember.set(name, champYears)
 
-    const year2026 = nchsaa.filter((r) => r.year === 2026)
+    const year2026 = nchsaaInRange.filter((r) => r.year === 2026)
     if (year2026.length === 0) {
       rows2026Only.push({
         member_name: name || "—",
@@ -165,7 +170,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const allYearsSorted = [...nchsaa].sort(
+    const allYearsSorted = [...nchsaaInRange].sort(
       (x, y) => (y.year - x.year) || (x.classification || "").localeCompare(y.classification || "") || (x.weight_class || "").localeCompare(y.weight_class || "")
     )
     if (allYearsSorted.length === 0) {
