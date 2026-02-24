@@ -61,8 +61,11 @@ export async function POST(request: NextRequest) {
     
     console.log("[RecruitNC Proxy] Successfully proxied response from LegacyNC")
     
-    // Fix profile links in the answer to use RecruitNC domain and correct URL format
+    // Fix profile links and formatting in the answer
     if (data.answer) {
+      // Fix double "lbs" from LegacyNC (e.g. "140lbslbs" -> "140 lbs")
+      data.answer = data.answer.replace(/lbslbs/gi, "lbs")
+      data.answer = data.answer.replace(/(\d+)lbs(?!\s)/gi, "$1 lbs")
       // Get the current domain from the request
       const origin = request.headers.get("origin") || request.nextUrl.origin
       

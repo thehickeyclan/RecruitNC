@@ -488,7 +488,7 @@ export function Navbar() {
                         <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}

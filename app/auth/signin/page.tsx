@@ -19,6 +19,18 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [stuckInIframe, setStuckInIframe] = useState(false)
+  const [clearingCooldown, setClearingCooldown] = useState(false)
+
+  const clearRateLimitCooldown = async () => {
+    setClearingCooldown(true)
+    try {
+      sessionStorage.removeItem("rate_limit_cooldown")
+      document.cookie = "rate_limit_cooldown=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      await fetch("/api/auth/clear-cooldown", { method: "POST", credentials: "include" })
+      setError("")
+    } catch {}
+    setClearingCooldown(false)
+  }
 
   const { signIn, user, isLoading } = useAuth()
   const router = useRouter()
@@ -269,11 +281,21 @@ export default function SignInPage() {
                   <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">
                     {error}
                     {(error.includes("rate limit") || error.includes("429") || error.includes("Too many")) && (
-                      <p className="mt-2 text-xs">
-                        <Link href="/auth/clear-cooldown" className="text-blue-600 hover:underline">
-                          Clear rate limit cooldown and try again
-                        </Link>
-                      </p>
+                      <div className="mt-3 flex flex-col gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-blue-400 text-blue-700 hover:bg-blue-50"
+                          disabled={clearingCooldown}
+                          onClick={clearRateLimitCooldown}
+                        >
+                          {clearingCooldown ? "Clearing..." : "Clear cooldown & try again"}
+                        </Button>
+                        <a href="/auth/clear-cooldown" target="_top" rel="noopener" className="text-xs text-blue-600 hover:underline text-center">
+                          Or open clear-cooldown page
+                        </a>
+                      </div>
                     )}
                     {error.includes("reset link") && (
                       <p className="mt-2 text-xs">

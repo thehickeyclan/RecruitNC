@@ -55,8 +55,8 @@ export async function middleware(request: NextRequest) {
   if (rateLimitCooldown) {
     const cooldownTime = parseInt(rateLimitCooldown, 10)
     const now = Date.now()
-    // Cooldown is 2 minutes (120000ms) - reduced from 10 minutes
-    if (now < cooldownTime + 120000) {
+    // Cooldown 30 seconds so deploy/re-login isn't stuck long
+    if (now < cooldownTime + 30000) {
       // Still in cooldown - skip ALL auth attempts and clear cookies
       console.warn("[Middleware] Rate limit cooldown active, skipping ALL auth checks")
       

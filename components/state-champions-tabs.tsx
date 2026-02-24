@@ -33,14 +33,11 @@ export function StateChampionsTabs() {
   useEffect(() => {
     async function fetchChampions() {
       try {
-        // Fetch all state champions
+        // Fetch all state champions (no school filter — include everyone so we get all 17 4x champs)
         const { data: allChampions, error } = await supabase
           .from("wrestling_nchsaa_results")
           .select("wrestler_name, year, classification, weight_class, school, place")
           .eq("place", 1)
-          .not("school", "is", null)
-          .neq("school", "")
-          .not("school", "ilike", "unknown")
           .not("wrestler_name", "is", null)
           .neq("wrestler_name", "")
           .order("year", { ascending: false })
@@ -48,8 +45,12 @@ export function StateChampionsTabs() {
 
         if (error) throw error
 
-        // Normalize names and group by wrestler
-        const normalize = (s: string) => s?.trim().replace(/\s+/g, " ").toUpperCase() || ""
+        // Normalize names so same person isn't split: strip middle initials, collapse spaces
+        const normalize = (s: string) => {
+          const t = (s?.trim().replace(/\s+/g, " ") ?? "").toUpperCase()
+          if (!t) return ""
+          return t.replace(/\s+[A-Z]\.?\s+/g, " ").replace(/\s+/g, " ").trim() || t
+        }
         const groups: Record<string, {
           name: string
           champs: Array<{
@@ -156,7 +157,7 @@ export function StateChampionsTabs() {
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
                           <div>
-                            <span className="font-medium">School:</span> {champ.schools.join(", ")}
+                            <span className="font-medium">School:</span> {champ.schools.filter(Boolean).length ? champ.schools.filter(Boolean).join(", ") : "—"}
                           </div>
                           <div>
                             <span className="font-medium">Championships:</span>{" "}
