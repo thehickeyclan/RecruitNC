@@ -17,11 +17,18 @@ export function namesReferToSamePerson(nameA: string, nameB: string): boolean {
   return norm(nameA) === norm(nameB) && norm(nameA) !== ""
 }
 
-/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). */
+/** Escape single quotes for safe use in Supabase ilike (e.g. "D'Ettore" => "D''Ettore"). */
+export function escapeForIlike(s: string): string {
+  return (s ?? "").replace(/'/g, "''")
+}
+
+/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) so we match DB spellings either way. */
 export function getNameVariations(name: string): string[] {
   const n = (name ?? "").trim()
   if (!n) return []
   const variations = [n]
+  const noApostrophe = n.replace(/'/g, "").trim()
+  if (noApostrophe && noApostrophe !== n) variations.push(noApostrophe)
   if (n.includes(",")) {
     const [last, first] = n.split(",").map((s) => s.trim())
     if (first && last) variations.push(`${first} ${last}`)
@@ -60,10 +67,11 @@ export async function getNCHSAAResultsForProfile(
   const merged: NchsaaRowForProfile[] = []
 
   for (const v of variations) {
+    const pattern = "%" + escapeForIlike(v) + "%"
     const { data, error } = await supabase
       .from("wrestling_nchsaa_results")
       .select("year, classification, weight_class, place, school, wrestler_name")
-      .ilike("wrestler_name", `%${v}%`)
+      .ilike("wrestler_name", pattern)
       .order("year", { ascending: false })
     if (error) throw error
     if (!data?.length) continue
@@ -88,10 +96,11 @@ export async function getNCHSAAResultsForProfile(
     const firstName = parts[0] ?? ""
     const lastName = parts.slice(1).join(" ")
     if (firstName && lastName) {
+      const lastPattern = `%${escapeForIlike(lastName)}%`
       const { data: byLast, error: errLast } = await supabase
         .from("wrestling_nchsaa_results")
         .select("year, classification, weight_class, place, school, wrestler_name")
-        .ilike("wrestler_name", `%${lastName}%`)
+        .ilike("wrestler_name", lastPattern)
         .order("year", { ascending: false })
         .limit(100)
       if (!errLast && byLast?.length) {

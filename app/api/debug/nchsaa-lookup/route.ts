@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
+import { getNCHSAAResultsForProfile, escapeForIlike } from "@/lib/nchsaa-results"
 
 /**
  * GET /api/debug/nchsaa-lookup?name=Max+Davis&year=2026
@@ -31,10 +31,11 @@ export async function GET(request: Request) {
     const profileStyle = await getNCHSAAResultsForProfile(db, name)
 
     const lastWord = name.split(/\s+/).filter(Boolean).pop() || name
+    const lastPattern = "%" + escapeForIlike(lastWord) + "%"
     let rawQuery = db
       .from("wrestling_nchsaa_results")
       .select("wrestler_name, year, place, classification, weight_class, school")
-      .ilike("wrestler_name", `%${lastWord}%`)
+      .ilike("wrestler_name", lastPattern)
       .order("year", { ascending: false })
       .limit(50)
     if (yearParam) {
