@@ -9,6 +9,7 @@ import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye } from "lucid
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { notFound } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { TournamentBracketModal } from "@/components/tournament-bracket-modal"
 
@@ -79,6 +80,9 @@ export default function NCHSAAYearResults() {
   const params = useParams()
   const yearParam = params?.year as string
   const year = yearParam ? parseInt(yearParam, 10) : 2025
+  if (!yearParam || Number.isNaN(year) || year < 1990 || year > 2030) {
+    notFound()
+  }
 
   const [tournamentData, setTournamentData] = useState<Record<string, ClassificationData>>({})
   const [classifications, setClassifications] = useState<string[]>([])

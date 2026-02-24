@@ -1,0 +1,19 @@
+-- Insert missing 2026 1A/2A Most Outstanding Wrestler: Adair Panama
+-- Run in Supabase SQL Editor (Dashboard → SQL Editor → New query).
+
+-- Optional: see existing 2026 MOW rows
+-- SELECT * FROM most_outstanding_wrestlers WHERE year = 2026 ORDER BY division;
+
+INSERT INTO most_outstanding_wrestlers (name, school, division, year)
+VALUES (
+  'Adair Panama',
+  'Robbinsville',  -- 120 lbs, 1A/2A 2026
+  '1A/2A',
+  2026
+);
+
+-- If the table has an id SERIAL, the above is enough.
+-- If you get a duplicate key error (unique on year+division), use upsert instead:
+-- INSERT INTO most_outstanding_wrestlers (name, school, division, year)
+-- VALUES ('Adair Panama', 'Robbinsville', '1A/2A', 2026)
+-- ON CONFLICT (year, division) DO UPDATE SET name = EXCLUDED.name, school = EXCLUDED.school;
