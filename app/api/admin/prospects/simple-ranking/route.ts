@@ -3,20 +3,46 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
-async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
-  if (!graduationYear || isNaN(graduationYear)) {
-    return []
-  }
+function normalizeName(name: string): string {
+  if (!name) return ""
+  return name
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
 
-  const { data: results } = await supabase
-    .from("wrestling_nchsaa_results")
-    .select("*")
-    .ilike("wrestler_name", `%${athleteName}%`)
-    .gte("year", graduationYear - 4) // Get results from high school years
-    .lte("year", graduationYear)
-    .order("year", { ascending: false })
+function matchNCHSAAToAthlete(
+  nchsaaResults: { wrestler_name: string; year: number; place: number; classification?: string; weight_class?: string; school?: string }[],
+  athleteName: string,
+  wrestlingName: string,
+  gradYear: number
+) {
+  const minYear = gradYear - 4
+  const maxYear = gradYear
+  const athleteNorm = normalizeName(athleteName)
+  const wrestlingNorm = normalizeName(wrestlingName)
 
-  return results || []
+  return (nchsaaResults || []).filter((r) => {
+    if (r.year < minYear || r.year > maxYear) return false
+    const resultNorm = normalizeName(r.wrestler_name || "")
+    if (!resultNorm) return false
+    const exact = resultNorm === athleteNorm || resultNorm === wrestlingNorm
+    const contains =
+      (resultNorm && athleteNorm && (resultNorm.includes(athleteNorm) || athleteNorm.includes(resultNorm))) ||
+      (resultNorm && wrestlingNorm && (resultNorm.includes(wrestlingNorm) || wrestlingNorm.includes(resultNorm)))
+    const athleteParts = athleteNorm.split(" ").filter((p) => p.length > 1)
+    const wrestlingParts = wrestlingNorm.split(" ").filter((p) => p.length > 1)
+    const resultParts = resultNorm.split(" ").filter((p) => p.length > 1)
+    const partsMatch =
+      (athleteParts.length > 0 &&
+        resultParts.length > 0 &&
+        athleteParts.every((p) => resultParts.some((rp) => rp.includes(p) || p.includes(rp)))) ||
+      (wrestlingParts.length > 0 &&
+        resultParts.length > 0 &&
+        wrestlingParts.every((p) => resultParts.some((rp) => rp.includes(p) || p.includes(rp))))
+    return exact || contains || partsMatch
+  })
 }
 
 export async function GET(request: Request) {
@@ -55,14 +81,47 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 })
     }
 
+    const gradYearNum = Number(yearParam) || new Date().getFullYear()
+    const nchsaaMinYear = gradYearNum - 4
+    const nchsaaMaxYear = gradYearNum + 1
+
+    const { data: allNchsaa, error: nchsaaErr } = await db
+      .from("wrestling_nchsaa_results")
+      .select("wrestler_name, year, place, classification, weight_class, school")
+      .gte("year", nchsaaMinYear)
+      .lte("year", nchsaaMaxYear)
+      .order("year", { ascending: false })
+
+    if (nchsaaErr) {
+      console.error("[simple-ranking] NCHSAA fetch error:", nchsaaErr)
+    }
+
+    const nchsaaResults = allNchsaa || []
+
     const athletesWithResults = await Promise.all(
       (athletes || []).map(async (athlete) => {
-        const athleteName = (athlete.wrestling_name || athlete.name || "").trim()
-        const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
-        const [nchsaaResults, nhscaFromTables, super32FromTable] = await Promise.all([
-          getNCHSAAResults(db, athleteName, gradYear),
-          getNHSCAFromTables(db, athleteName, gradYear),
-          getSuper32FromTable(db, athleteName, gradYear),
+        const athleteName = (athlete.name || "").trim()
+        const wrestlingName = (athlete.wrestling_name || "").trim()
+        const gradYear = Number(athlete.graduationyear) || gradYearNum
+
+        const athleteNchsaa = matchNCHSAAToAthlete(
+          nchsaaResults,
+          athleteName,
+          wrestlingName,
+          gradYear
+        )
+          .sort((a, b) => b.year - a.year)
+          .map((r) => ({
+            year: r.year,
+            place: r.place,
+            classification: r.classification,
+            weight_class: r.weight_class,
+            school: r.school,
+          }))
+
+        const [nhscaFromTables, super32FromTable] = await Promise.all([
+          getNHSCAFromTables(db, wrestlingName || athleteName, gradYear),
+          getSuper32FromTable(db, wrestlingName || athleteName, gradYear),
         ])
 
         const s3223 = super32FromTable.find((r) => r.year === 2023)
@@ -77,13 +136,7 @@ export async function GET(request: Request) {
           super_32_2024_placement: s3224?.placement || athlete.super_32_2024_placement,
           super_32_2025_record: s3225?.record || athlete.super_32_2025_record,
           super_32_2025_placement: s3225?.placement || athlete.super_32_2025_placement,
-          nchsaa_results: nchsaaResults.map((result: any) => ({
-            year: result.year,
-            place: result.place,
-            classification: result.classification,
-            weight_class: result.weight_class,
-            school: result.school,
-          })),
+          nchsaa_results: athleteNchsaa,
           nhsca_results: nhscaFromTables.map((r) => ({
             year: r.year,
             placement: r.placement,

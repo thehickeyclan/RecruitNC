@@ -424,7 +424,7 @@ export default function SimpleRankingPage() {
                   <TableCell className="text-xs">
                     {athlete.nchsaa_results && athlete.nchsaa_results.length > 0 ? (
                       <div className="space-y-1">
-                        {athlete.nchsaa_results.slice(0, 2).map((result, idx) => {
+                        {athlete.nchsaa_results.slice(0, 6).map((result, idx) => {
                           const emoji = result.place === 1 ? "🥇" : result.place === 2 ? "🥈" : result.place === 3 ? "🥉" : "🏅"
                           const placeSuffix = result.place === 1 ? "st" : result.place === 2 ? "nd" : result.place === 3 ? "rd" : "th"
                           return (
