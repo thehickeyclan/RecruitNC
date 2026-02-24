@@ -1,7 +1,7 @@
 # Git push
 When the user says "push update" (or similar): stage and commit all relevant changes. The agent cannot run `git push` (no GitHub credentials in this environment). After committing, reply in one line that they should run `git push` locally—do not repeat long explanations.
 
-# Links and navigation (CRITICAL — has caused many hours of rework)
-- **Nav/dropdown links:** Use plain `<a href="...">`, not Next.js `<Link>`, so clicks actually navigate. Same pattern as the Blue Program link in the navbar. Radix dropdown + Link often blocks navigation.
-- **Before saying any nav or "we're good":** (1) Confirm every menu item has a real route (file exists for that path). (2) Use the same link pattern as existing working items (e.g. Blue, Rankings). (3) Do not assume links work; check how working links are implemented in this codebase first.
-- **New pages:** If adding a nav item, create the route first, then add the link using the working pattern.
+# Links and navigation (CRITICAL — recurring issue, has caused many hours of rework)
+- **EVERY nav/dropdown link:** Use plain `<a href="...">`, never Next.js `<Link>` and never `onSelect={() => router.push(...)}`. Radix dropdown + Link blocks navigation; this fails every time we add a new menu item if we forget. Pattern: `<DropdownMenuItem asChild><a href={item.href}>...</a></DropdownMenuItem>`.
+- **Before adding or changing any nav/dropdown item:** (1) Use `<a href="...">` for the clickable element. (2) Confirm the route exists (file for that path). (3) Copy the pattern from an existing working dropdown in navbar (e.g. States or Blue).
+- **New pages:** Create the route first, then add the link using the same pattern as working items.

@@ -58,17 +58,25 @@ export function StateChampionsTabs() {
   useEffect(() => {
     async function fetchChampions() {
       try {
-        // Fetch all state champions (no school filter — include everyone so we get all 17 4x champs)
-        const { data: allChampions, error } = await supabase
-          .from("wrestling_nchsaa_results")
-          .select("wrestler_name, year, classification, weight_class, school, place")
-          .eq("place", 1)
-          .not("wrestler_name", "is", null)
-          .neq("wrestler_name", "")
-          .order("year", { ascending: false })
-          .limit(100000)
-
-        if (error) throw error
+        // Fetch ALL state champions (Supabase defaults to 1000 max per request — paginate to get all for 17 4x champs)
+        const pageSize = 1000
+        const allChampions: Array<{ wrestler_name?: string; year: number; classification?: string; weight_class?: string; school?: string }> = []
+        let offset = 0
+        while (true) {
+          const { data: page, error } = await supabase
+            .from("wrestling_nchsaa_results")
+            .select("wrestler_name, year, classification, weight_class, school, place")
+            .eq("place", 1)
+            .not("wrestler_name", "is", null)
+            .neq("wrestler_name", "")
+            .order("year", { ascending: false })
+            .range(offset, offset + pageSize - 1)
+          if (error) throw error
+          if (!page?.length) break
+          allChampions.push(...page)
+          if (page.length < pageSize) break
+          offset += pageSize
+        }
 
         // Group by canonical name so "First Last", "Last, First", "First M. Last" = one person (17 4x champs)
         const groups: Record<string, {
@@ -161,7 +169,7 @@ export function StateChampionsTabs() {
           count: r.championship_count,
         }))
         setDebug({
-          rawRowCount: allChampions?.length ?? 0,
+          rawRowCount: allChampions.length,
           uniquePeopleCount: Object.keys(groups).length,
           fourXCount: fourX.length,
           threeXCount: threeX.length,
@@ -170,7 +178,7 @@ export function StateChampionsTabs() {
           fetchError: null,
         })
         console.debug("[StateChampionsTabs]", {
-          rawRowCount: allChampions?.length ?? 0,
+          rawRowCount: allChampions.length,
           uniquePeopleCount: Object.keys(groups).length,
           fourXCount: fourX.length,
           threeXCount: threeX.length,

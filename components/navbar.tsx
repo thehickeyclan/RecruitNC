@@ -118,7 +118,7 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation — Dropdown items that navigate MUST use <a href>, not Link (Radix blocks navigation otherwise). See .cursorrules. */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               <Link
@@ -139,9 +139,9 @@ export function Navbar() {
                   <DropdownMenuSeparator />
                   {prospectsItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="cursor-pointer">
+                      <a href={item.href} className="cursor-pointer">
                         {item.label}
-                      </Link>
+                      </a>
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
@@ -150,9 +150,9 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   {commitmentItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href} className="cursor-pointer">
+                      <a href={item.href} className="cursor-pointer">
                         {item.label}
-                      </Link>
+                      </a>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -192,13 +192,13 @@ export function Navbar() {
                     const Icon = sub.icon
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
-                        <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
-                        </Link>
+                        </a>
                       </DropdownMenuItem>
                     )
                   })}
@@ -256,13 +256,13 @@ export function Navbar() {
                     const Icon = sub.icon
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
-                        <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
-                        </Link>
+                        </a>
                       </DropdownMenuItem>
                     )
                   })}
@@ -288,13 +288,13 @@ export function Navbar() {
                     const Icon = sub.icon
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
-                        <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
-                        </Link>
+                        </a>
                       </DropdownMenuItem>
                     )
                   })}
@@ -427,25 +427,25 @@ export function Navbar() {
                     <div className="text-gray-600 font-medium text-sm mb-2">Prospects</div>
                     <div className="pl-4 space-y-2">
                       {prospectsItems.map((item) => (
-                        <Link
+                        <a
                           key={item.href}
                           href={item.href}
                           className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
                           onClick={() => setIsOpen(false)}
                         >
                           {item.label}
-                        </Link>
+                        </a>
                       ))}
                       <div className="text-gray-500 text-xs font-medium mt-3 mb-1">Commitments</div>
                       {commitmentItems.map((item) => (
-                        <Link
+                        <a
                           key={item.href}
                           href={item.href}
                           className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
                           onClick={() => setIsOpen(false)}
                         >
                           {item.label}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   </div>
@@ -470,14 +470,14 @@ export function Navbar() {
                     <div className="text-gray-600 font-medium text-sm mb-2">Nationals</div>
                     <div className="pl-4 space-y-2">
                       {nationalsItems.map((sub) => (
-                        <Link
+                        <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   </div>
@@ -500,14 +500,14 @@ export function Navbar() {
                     <div className="text-gray-600 font-medium text-sm mb-2">Legacy NC</div>
                     <div className="pl-4 space-y-2">
                       {legacyNcItems.map((sub) => (
-                        <Link
+                        <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   </div>
@@ -515,14 +515,14 @@ export function Navbar() {
                     <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
                     <div className="pl-4 space-y-2">
                       {nationalTeamItems.map((sub) => (
-                        <Link
+                        <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   </div>
