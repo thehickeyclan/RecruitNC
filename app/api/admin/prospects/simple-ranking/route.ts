@@ -1,63 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
+import { filterNchsaaResultsForProfile } from "@/lib/nchsaa-results"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
-
-function normalizeName(name: string): string {
-  if (!name) return ""
-  let s = name
-    .toLowerCase()
-    .replace(/\s*(jr\.?|sr\.?|ii|iii|iv|i v|2nd|3rd)\s*$/gi, "")
-    .replace(/[^a-z\s]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-  return s
-}
-
-/** Returns true if the two normalized name strings refer to the same person (allowing order and suffixes). */
-function namesMatch(a: string, b: string): boolean {
-  if (!a || !b) return false
-  if (a === b) return true
-  if (a.includes(b) || b.includes(a)) return true
-  const partsA = new Set(a.split(" ").filter((p) => p.length > 1))
-  const partsB = new Set(b.split(" ").filter((p) => p.length > 1))
-  if (partsA.size === 0 || partsB.size === 0) return false
-  if (partsA.size !== partsB.size) return false
-  for (const p of partsA) {
-    if (!partsB.has(p)) return false
-  }
-  return true
-}
-
-function matchNCHSAAToAthlete(
-  nchsaaResults: { wrestler_name: string; year: number; place: number; classification?: string; weight_class?: string; school?: string }[],
-  athleteName: string,
-  wrestlingName: string,
-  gradYear: number
-) {
-  const minYear = gradYear - 4
-  const maxYear = gradYear
-  const athleteNorm = normalizeName(athleteName)
-  const wrestlingNorm = normalizeName(wrestlingName)
-
-  return (nchsaaResults || []).filter((r) => {
-    if (r.year < minYear || r.year > maxYear) return false
-    const resultNorm = normalizeName(r.wrestler_name || "")
-    if (!resultNorm) return false
-    if (namesMatch(resultNorm, athleteNorm) || namesMatch(resultNorm, wrestlingNorm)) return true
-    const athleteParts = athleteNorm.split(" ").filter((p) => p.length > 1)
-    const wrestlingParts = wrestlingNorm.split(" ").filter((p) => p.length > 1)
-    const resultParts = resultNorm.split(" ").filter((p) => p.length > 1)
-    const partsMatch =
-      (athleteParts.length > 0 &&
-        resultParts.length > 0 &&
-        athleteParts.every((p) => resultParts.some((rp) => rp.includes(p) || p.includes(rp)))) ||
-      (wrestlingParts.length > 0 &&
-        resultParts.length > 0 &&
-        wrestlingParts.every((p) => resultParts.some((rp) => rp.includes(p) || p.includes(rp))))
-    return partsMatch
-  })
-}
 
 export async function GET(request: Request) {
   try {
@@ -97,7 +42,7 @@ export async function GET(request: Request) {
 
     const gradYearNum = Number(yearParam) || new Date().getFullYear()
 
-    // Fetch ALL NCHSAA results (no year filter) so we never miss a year; per-athlete filter below limits to gradYear-4..gradYear
+    // Fetch ALL NCHSAA results (no year filter); matching is same as unified profile (all years)
     const { data: allNchsaa, error: nchsaaErr } = await db
       .from("wrestling_nchsaa_results")
       .select("wrestler_name, year, place, classification, weight_class, school")
@@ -115,11 +60,11 @@ export async function GET(request: Request) {
         const wrestlingName = (athlete.wrestling_name || "").trim()
         const gradYear = Number(athlete.graduationyear) || gradYearNum
 
-        const athleteNchsaa = matchNCHSAAToAthlete(
+        // Same NCHSAA matching as unified public profile: all years, name variations + ilike-style
+        const athleteNchsaa = filterNchsaaResultsForProfile(
           nchsaaResults,
           athleteName,
-          wrestlingName,
-          gradYear
+          wrestlingName || undefined
         )
           .sort((a, b) => b.year - a.year)
           .map((r) => ({
