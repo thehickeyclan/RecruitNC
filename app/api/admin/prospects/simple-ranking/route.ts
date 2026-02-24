@@ -122,6 +122,7 @@ export async function GET(request: Request) {
               },
             }
           : {}),
+      },
     })
   } catch (error) {
     console.error("Database error:", error)
