@@ -38,6 +38,8 @@ This doc is the **master checklist** for the full menu. Existing phase docs cove
 |----------------|-----|-----------------|
 | **NATIONALS**  | `docs/NATIONALS-PAGES-MOVE-TO-RECRUITNC.md` | Phase 1: Tournament Overview. Phase 2: 2025 Results. Phase 3: Digital Archive. Phase 4: Super32 (short ref). Files, Supabase tables, checklists. |
 | **National Team** | `docs/NATIONAL-TEAM-MOVE-TO-RECRUITNC.md` | NC United / National Team hub, UCD/NHSCA result pages, interest form, APIs. Migration complete in RecruitNC. |
+| **LEGACYNC (phases)** | `docs/LEGACYNC-TAB-MIGRATION-TO-RECRUITNC.md` | Phased LEGACYNC migration; Phase 3 = Schools → points to full Schools doc. |
+| **Schools** | `docs/SCHOOLS-PAGE-MIGRATION-TO-RECRUITNC.md` | Step-by-step Schools migration: files to copy, tables used, implementation steps, RecruitNC fixes. |
 
 ---
 
@@ -62,6 +64,7 @@ This doc is the **master checklist** for the full menu. Existing phase docs cove
 - **Source:** `app/schools/page.tsx`; uses **client Supabase**, `AuthGuard`, `normalizeSchoolNameForSearch`, `createSchoolSearchPatterns` from `@/lib/school-normalization`.
 - **Data:** wrestling_nchsaa_results, tournament_champions, athletes, NHSCA/Super32 aggregates, etc.
 - **Copy to RecruitNC:** Copy page + `lib/school-normalization.ts` (or equivalent). Point Supabase to RecruitNC client. Replace AuthGuard. Same DB = same tables.
+- **Full migration plan:** **`docs/SCHOOLS-PAGE-MIGRATION-TO-RECRUITNC.md`** — step-by-step, tables, implementation steps, RecruitNC-specific fixes.
 
 ### Dave Schultz Award (`/dave-schultz-award`)
 
