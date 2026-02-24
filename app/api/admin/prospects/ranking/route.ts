@@ -48,12 +48,15 @@ export async function GET(request: NextRequest) {
     const { data: nchsaaResults, error: nchsaaError } = await supabase
       .from("wrestling_nchsaa_results")
       .select("wrestler_name, year, place, classification, weight_class, school")
+      .order("year", { ascending: false })
 
     if (nchsaaError) {
       console.error("[v0] NCHSAA query error:", nchsaaError)
     }
 
+    const nchsaa2026Count = nchsaaResults?.filter((r) => r.year === 2026).length ?? 0
     console.log("[v0] Total NCHSAA results found:", nchsaaResults?.length || 0)
+    console.log("[v0] NCHSAA 2026 results:", nchsaa2026Count)
     console.log("[v0] Sample NCHSAA results:", nchsaaResults?.slice(0, 3))
     console.log("[v0] Total athletes found:", athletes?.length || 0)
     console.log(

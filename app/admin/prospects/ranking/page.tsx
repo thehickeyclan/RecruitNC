@@ -526,6 +526,7 @@ export default function ProspectRankingPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Athlete Rankings</h1>
           <p className="text-muted-foreground mt-1">Drag and drop to reorder prospects and commits within each class</p>
+          <p className="text-muted-foreground text-sm mt-0.5">State results (NCHSAA) include all years in the database, including 2026 — use pills to align rankings.</p>
         </div>
 
         <div className="flex items-center gap-3">
