@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
-import { filterNchsaaResultsForProfile } from "@/lib/nchsaa-results"
+import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
 
 function getOrdinalSuffix(num: number): string {
   const j = num % 10
@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2025"
     const gender = searchParams.get("gender") || "Male"
+    const debug = searchParams.get("debug") === "1"
 
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
       cookies: {
@@ -46,55 +47,54 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch athletes" }, { status: 500 })
     }
 
-    const { data: nchsaaResults, error: nchsaaError } = await supabase
-      .from("wrestling_nchsaa_results")
-      .select("wrestler_name, year, place, classification, weight_class, school")
-      .order("year", { ascending: false })
-
-    if (nchsaaError) {
-      console.error("[v0] NCHSAA query error:", nchsaaError)
-    }
-
-    const nchsaa2026Count = nchsaaResults?.filter((r) => r.year === 2026).length ?? 0
-    console.log("[v0] Total NCHSAA results found:", nchsaaResults?.length || 0)
-    console.log("[v0] NCHSAA 2026 results:", nchsaa2026Count)
-    console.log("[v0] Sample NCHSAA results:", nchsaaResults?.slice(0, 3))
-    console.log("[v0] Total athletes found:", athletes?.length || 0)
-    console.log(
-      "[v0] Sample athlete names:",
-      athletes?.slice(0, 3).map((a) => a.name),
+    // Single source of truth: same getNCHSAAResultsForProfile used by unified profile & wrestling-achievements API
+    const athletesWithNchsaa = await Promise.all(
+      (athletes || []).map(async (athlete) => {
+        const byName = await getNCHSAAResultsForProfile(supabase, athlete.name || "")
+        const wrestlingName = (athlete.wrestling_name || "").trim()
+        const byWrestling =
+          wrestlingName && wrestlingName !== (athlete.name || "").trim()
+            ? await getNCHSAAResultsForProfile(supabase, wrestlingName)
+            : []
+        const nchsaa_results = mergeNchsaaResults(byName, byWrestling).map((r) => ({
+          year: r.year,
+          place: r.place,
+          classification: r.classification,
+          weight_class: r.weight_class,
+          school: r.school,
+        }))
+        const debugInfo = debug
+          ? {
+              name: athlete.name || "",
+              wrestling_name: wrestlingName || null,
+              nchsaa_queries: [athlete.name || "", ...(wrestlingName && wrestlingName !== (athlete.name || "").trim() ? [wrestlingName] : [])],
+              nchsaa_by_name_count: byName.length,
+              nchsaa_by_wrestling_count: byWrestling.length,
+              nchsaa_merged_count: nchsaa_results.length,
+              nchsaa_years: [...new Set(nchsaa_results.map((r) => r.year))].sort((a, b) => b - a),
+            }
+          : undefined
+        return { ...athlete, nchsaa_results, ...(debug && debugInfo ? { _debug: debugInfo } : {}) }
+      }),
     )
-
-    // Use same NCHSAA matching as unified public profile: name variations + ilike-style, all years
-    const athletesWithNchsaa =
-      athletes?.map((athlete) => {
-        const athleteNchsaaResults = filterNchsaaResultsForProfile(
-          nchsaaResults || [],
-          athlete.name || "",
-          athlete.wrestling_name || undefined
-        )
-
-        if (athleteNchsaaResults.length > 0) {
-          console.log(
-            `[v0] Found ${athleteNchsaaResults.length} NCHSAA results for ${athlete.name}:`,
-            athleteNchsaaResults,
-          )
-        }
-
-        return {
-          ...athlete,
-          nchsaa_results: athleteNchsaaResults,
-        }
-      }) || []
-
-    const athletesWithNchsaaData = athletesWithNchsaa.filter((a) => a.nchsaa_results && a.nchsaa_results.length > 0)
-    console.log(`[v0] Athletes with NCHSAA data: ${athletesWithNchsaaData.length}/${athletesWithNchsaa.length}`)
 
     return NextResponse.json(
       {
         prospects: athletesWithNchsaa,
         year: year,
         gender: gender,
+        ...(debug
+          ? {
+              _debug: {
+                source:
+                  "getNCHSAAResultsForProfile (lib/nchsaa-results.ts) — same as unified profile & /api/wrestling-achievements",
+                table: "wrestling_nchsaa_results",
+                total_athletes: athletesWithNchsaa.length,
+                athletes_with_nchsaa: athletesWithNchsaa.filter((a) => a.nchsaa_results?.length > 0).length,
+                per_athlete: athletesWithNchsaa.map((a) => (a as { _debug?: unknown })._debug).filter(Boolean),
+              },
+            }
+          : {}),
       },
       {
         headers: {

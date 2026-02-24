@@ -94,61 +94,21 @@ export async function getNCHSAAResultsForProfile(
   })
 }
 
-/** Row shape needed for profile-style NCHSAA matching (in-memory). */
-export type NchsaaRowLike = {
-  year: number
-  classification?: string
-  weight_class?: string
-  place: number | null
-  school?: string
-  wrestler_name: string
-}
-
-/**
- * In-memory filter: same matching as getNCHSAAResultsForProfile (name variations + ilike-style substring),
- * no year filter. Use this so ranking/simple-ranking show the same NCHSAA years as the unified public profile.
- */
-export function filterNchsaaResultsForProfile<T extends NchsaaRowLike>(
-  allRows: T[],
-  athleteName: string,
-  wrestlingName?: string
-): T[] {
-  const names = [athleteName, wrestlingName].filter(Boolean) as string[]
-  const variations = new Set<string>()
-  for (const n of names) {
-    for (const v of getNameVariations(n)) {
-      if (v.trim()) variations.add(v.trim().toLowerCase())
-    }
-  }
-  if (variations.size === 0) return []
-
-  const merged: T[] = []
+/** Merge two NCHSAA result lists (e.g. from name + wrestling_name), dedupe by year/classification/weight. */
+export function mergeNchsaaResults(
+  a: NchsaaRowForProfile[],
+  b: NchsaaRowForProfile[]
+): NchsaaRowForProfile[] {
   const seen = new Set<string>()
-  for (const row of allRows) {
-    const rn = (row.wrestler_name ?? "").trim().toLowerCase()
-    if (!rn) continue
-    const matches = [...variations].some(
-      (v) => rn.includes(v) || v.includes(rn)
-    )
-    if (!matches) continue
-    const key = `${row.year}-${row.classification ?? ""}-${row.weight_class ?? ""}-${rn}`
+  const out: NchsaaRowForProfile[] = []
+  for (const row of [...a, ...b]) {
+    const key = `${row.year}-${row.classification}-${row.weight_class}`
     if (seen.has(key)) continue
     seen.add(key)
-    merged.push(row)
+    out.push(row)
   }
-  merged.sort((a, b) => b.year - a.year)
-
-  const placerKeys = new Set(
-    merged
-      .filter((r) => r.place != null && r.place >= 1)
-      .map((r) => `${r.year}-${r.classification ?? ""}-${r.weight_class ?? ""}`)
-  )
-  return merged.filter((r) => {
-    if (r.place != null && r.place === 0) {
-      if (placerKeys.has(`${r.year}-${r.classification ?? ""}-${r.weight_class ?? ""}`)) return false
-    }
-    return true
-  })
+  out.sort((x, y) => y.year - x.year)
+  return out
 }
 
 /**

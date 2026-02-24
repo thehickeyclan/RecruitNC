@@ -67,16 +67,18 @@ export default function SimpleRankingPage() {
   const [saving, setSaving] = useState(false)
   const [calculatingScores, setCalculatingScores] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [debug, setDebug] = useState(false)
+  const [lastDebug, setLastDebug] = useState<Record<string, unknown> | null>(null)
 
   const loadAthletes = async () => {
     setLoading(true)
     try {
-      const response = await fetch(
-        `/api/admin/prospects/simple-ranking?year=${selectedYear}&gender=${selectedGender}&division=${selectedDivision}`,
-        { credentials: "include", cache: "no-store" },
-      )
+      const url = `/api/admin/prospects/simple-ranking?year=${selectedYear}&gender=${selectedGender}&division=${selectedDivision}${debug ? "&debug=1" : ""}`
+      const response = await fetch(url, { credentials: "include", cache: "no-store" })
       const data = await response.json()
       setAthletes(data.athletes || [])
+      if (debug && data.meta?._debug) setLastDebug(data.meta._debug as Record<string, unknown>)
+      else setLastDebug(null)
     } catch (error) {
       console.error("Failed to load athletes:", error)
     } finally {
@@ -86,7 +88,7 @@ export default function SimpleRankingPage() {
 
   useEffect(() => {
     loadAthletes()
-  }, [selectedYear, selectedGender, selectedDivision])
+  }, [selectedYear, selectedGender, selectedDivision, debug])
 
   const updateRanking = (athleteId: string, newRanking: number) => {
     setAthletes((prev) =>
@@ -103,16 +105,11 @@ export default function SimpleRankingPage() {
         current_ranking: athlete.prospect_ranking,
       }))
 
-      console.log("[v0] Frontend - About to save rankings:", rankings.length)
-      console.log("[v0] Frontend - Sample rankings:", rankings.slice(0, 3))
-
       const response = await fetch("/api/admin/prospects/simple-ranking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rankings }),
       })
-
-      console.log("[v0] Frontend - API response status:", response.status)
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -301,6 +298,16 @@ export default function SimpleRankingPage() {
                     <SelectItem value="NoDivision">No Division</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={debug}
+                    onChange={(e) => setDebug(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  Debug NCHSAA
+                </label>
               </div>
 
               <div className="flex items-center gap-2 ml-auto">
@@ -335,6 +342,17 @@ export default function SimpleRankingPage() {
             </div>
           </CardContent>
         </Card>
+
+        {lastDebug && (
+          <Card className="mb-6 border-amber-200 bg-amber-50/50">
+            <CardContent className="p-4">
+              <p className="text-sm font-medium text-amber-800 mb-2">NCHSAA debug (same source as unified profile)</p>
+              <pre className="text-xs text-gray-700 overflow-auto max-h-64 p-3 bg-white rounded border border-amber-200">
+                {JSON.stringify(lastDebug, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Table>

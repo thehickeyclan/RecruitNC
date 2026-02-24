@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import { filterNchsaaResultsForProfile } from "@/lib/nchsaa-results"
+import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2025"
     const gender = searchParams.get("gender") || "Male"
     const division = searchParams.get("division") || "all"
+    const debug = searchParams.get("debug") === "1"
 
     const supabase = await createClient()
     const db = createAdminClient()
@@ -42,38 +43,37 @@ export async function GET(request: Request) {
 
     const gradYearNum = Number(yearParam) || new Date().getFullYear()
 
-    // Fetch ALL NCHSAA results (no year filter); matching is same as unified profile (all years)
-    const { data: allNchsaa, error: nchsaaErr } = await db
-      .from("wrestling_nchsaa_results")
-      .select("wrestler_name, year, place, classification, weight_class, school")
-      .order("year", { ascending: false })
-
-    if (nchsaaErr) {
-      console.error("[simple-ranking] NCHSAA fetch error:", nchsaaErr)
-    }
-
-    const nchsaaResults = allNchsaa || []
-
+    // Single source of truth: same getNCHSAAResultsForProfile used by unified profile & wrestling-achievements API
     const athletesWithResults = await Promise.all(
       (athletes || []).map(async (athlete) => {
         const athleteName = (athlete.name || "").trim()
         const wrestlingName = (athlete.wrestling_name || "").trim()
         const gradYear = Number(athlete.graduationyear) || gradYearNum
 
-        // Same NCHSAA matching as unified public profile: all years, name variations + ilike-style
-        const athleteNchsaa = filterNchsaaResultsForProfile(
-          nchsaaResults,
-          athleteName,
-          wrestlingName || undefined
-        )
-          .sort((a, b) => b.year - a.year)
-          .map((r) => ({
-            year: r.year,
-            place: r.place,
-            classification: r.classification,
-            weight_class: r.weight_class,
-            school: r.school,
-          }))
+        const byName = await getNCHSAAResultsForProfile(db, athleteName)
+        const byWrestling =
+          wrestlingName && wrestlingName !== athleteName
+            ? await getNCHSAAResultsForProfile(db, wrestlingName)
+            : []
+        const athleteNchsaa = mergeNchsaaResults(byName, byWrestling).map((r) => ({
+          year: r.year,
+          place: r.place,
+          classification: r.classification,
+          weight_class: r.weight_class,
+          school: r.school,
+        }))
+
+        const debugInfo = debug
+          ? {
+              name: athleteName,
+              wrestling_name: wrestlingName || null,
+              nchsaa_queries: [athleteName, ...(wrestlingName && wrestlingName !== athleteName ? [wrestlingName] : [])],
+              nchsaa_by_name_count: byName.length,
+              nchsaa_by_wrestling_count: byWrestling.length,
+              nchsaa_merged_count: athleteNchsaa.length,
+              nchsaa_years: [...new Set(athleteNchsaa.map((r) => r.year))].sort((a, b) => b - a),
+            }
+          : undefined
 
         const [nhscaFromTables, super32FromTable] = await Promise.all([
           getNHSCAFromTables(db, wrestlingName || athleteName, gradYear),
@@ -86,6 +86,7 @@ export async function GET(request: Request) {
 
         return {
           ...athlete,
+          ...(debug && debugInfo ? { _debug: debugInfo } : {}),
           super_32_2023_record: s3223?.record || athlete.super_32_2023_record,
           super_32_2023_placement: s3223?.placement || athlete.super_32_2023_placement,
           super_32_2024_record: s3224?.record || athlete.super_32_2024_record,
@@ -104,7 +105,23 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       athletes: athletesWithResults,
-      meta: { year, gender, division, count: athletesWithResults.length },
+      meta: {
+        year,
+        gender,
+        division,
+        count: athletesWithResults.length,
+        ...(debug
+          ? {
+              _debug: {
+                source:
+                  "getNCHSAAResultsForProfile (lib/nchsaa-results.ts) — same as unified profile & /api/wrestling-achievements",
+                table: "wrestling_nchsaa_results",
+                total_athletes: athletesWithResults.length,
+                athletes_with_nchsaa: athletesWithResults.filter((a) => a.nchsaa_results?.length > 0).length,
+                per_athlete: athletesWithResults.map((a) => (a as { _debug?: unknown })._debug).filter(Boolean),
+              },
+            }
+          : {}),
     })
   } catch (error) {
     console.error("Database error:", error)
@@ -116,16 +133,9 @@ export async function POST(request: Request) {
   try {
     const { rankings } = await request.json()
 
-    console.log("[v0] Simple ranking API - Received rankings:", rankings?.length || 0)
-    console.log("[v0] Simple ranking API - Sample rankings:", rankings?.slice(0, 3))
-
-    const graduationYears = [...new Set(rankings?.map((r) => r.graduationYear || "unknown"))]
-    console.log("[v0] Simple ranking API - Graduation years being updated:", graduationYears)
-
     const supabase = await createClient()
 
     const updatePromises = rankings.map(async ({ id, ranking, current_ranking }) => {
-      console.log(`[v0] Updating athlete ${id} from ranking ${current_ranking} to ${ranking}`)
       const { data, error } = await supabase
         .from("athletes")
         .update({
@@ -139,17 +149,13 @@ export async function POST(request: Request) {
       if (error) {
         console.error(`[v0] Failed to update athlete ${id}:`, error)
         return { id, success: false, error }
-      } else {
-        console.log(`[v0] Successfully updated athlete ${id}:`, data?.[0])
-        return { id, success: true, data: data?.[0] }
       }
+      return { id, success: true, data: data?.[0] }
     })
 
     const results = await Promise.all(updatePromises)
     const successful = results.filter((r) => r.success).length
     const failed = results.filter((r) => !r.success).length
-
-    console.log(`[v0] Simple ranking API - Updates completed: ${successful} successful, ${failed} failed`)
 
     const { data: verification, error: verifyError } = await supabase
       .from("athletes")
@@ -158,9 +164,6 @@ export async function POST(request: Request) {
       .eq("gender", "Male")
       .not("prospect_ranking", "is", null)
       .order("prospect_ranking", { ascending: true })
-
-    console.log("[v0] Verification - 2026 athletes with rankings after update:", verification?.length || 0)
-    console.log("[v0] Verification - Sample 2026 ranked athletes:", verification?.slice(0, 3))
 
     return NextResponse.json({
       success: true,
