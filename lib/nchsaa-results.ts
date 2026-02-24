@@ -81,6 +81,40 @@ export async function getNCHSAAResultsForProfile(
       })
     }
   }
+
+  // Fallback: if nothing matched (e.g. "Max Davis" vs "Maxwell Davis" in DB), try last name + first-name substring
+  if (merged.length === 0) {
+    const parts = athleteName.trim().split(/\s+/).filter(Boolean)
+    const firstName = parts[0] ?? ""
+    const lastName = parts.slice(1).join(" ")
+    if (firstName && lastName) {
+      const { data: byLast, error: errLast } = await supabase
+        .from("wrestling_nchsaa_results")
+        .select("year, classification, weight_class, place, school, wrestler_name")
+        .ilike("wrestler_name", `%${lastName}%`)
+        .order("year", { ascending: false })
+        .limit(100)
+      if (!errLast && byLast?.length) {
+        const firstLower = firstName.toLowerCase()
+        for (const row of byLast) {
+          const rn = (row.wrestler_name ?? "").toString().toLowerCase()
+          if (!rn.includes(firstLower)) continue
+          const key = `${row.year}-${row.classification}-${row.weight_class}-${rn}`
+          if (seen.has(key)) continue
+          seen.add(key)
+          merged.push({
+            year: Number(row.year),
+            classification: (row.classification ?? "").toString(),
+            weight_class: (row.weight_class ?? "").toString(),
+            place: row.place != null ? Number(row.place) : null,
+            school: (row.school ?? "").toString(),
+            wrestler_name: (row.wrestler_name ?? "").toString(),
+          })
+        }
+      }
+    }
+  }
+
   merged.sort((a, b) => b.year - a.year)
 
   const placerKeys = new Set(
