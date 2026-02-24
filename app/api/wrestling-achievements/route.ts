@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
-import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
+import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const athleteName = searchParams.get("name") || ""
+    const athleteName = (searchParams.get("name") || "").trim()
+    const wrestlingName = (searchParams.get("wrestling_name") || "").trim()
 
     if (!athleteName) {
       return NextResponse.json(
@@ -18,7 +19,12 @@ export async function GET(request: Request) {
       cookies: { get: () => null, set: () => {}, remove: () => {} },
     })
 
-    const nchsaaResults = await getNCHSAAResultsForProfile(supabase, athleteName)
+    const byName = await getNCHSAAResultsForProfile(supabase, athleteName)
+    const byWrestling =
+      wrestlingName && wrestlingName !== athleteName
+        ? await getNCHSAAResultsForProfile(supabase, wrestlingName)
+        : []
+    const nchsaaResults = mergeNchsaaResults(byName, byWrestling)
 
     const nameVariations = [athleteName]
     if (athleteName.includes(",")) {

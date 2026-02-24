@@ -94,7 +94,13 @@ export default function UnifiedProfilePage() {
       return
     }
     let cancelled = false
-    fetch(`/api/wrestling-achievements?name=${encodeURIComponent(athlete.name as string)}`)
+    const name = (athlete.name as string).trim()
+    const wrestlingName = (athlete.wrestling_name as string)?.trim()
+    const url =
+      wrestlingName && wrestlingName !== name
+        ? `/api/wrestling-achievements?name=${encodeURIComponent(name)}&wrestling_name=${encodeURIComponent(wrestlingName)}`
+        : `/api/wrestling-achievements?name=${encodeURIComponent(name)}`
+    fetch(url)
       .then((res) => res.json())
       .then((data: { success?: boolean; achievements?: { all_results?: { nchsaa?: any[] } } }) => {
         if (cancelled || !data?.success || !data?.achievements?.all_results?.nchsaa?.length) {
@@ -113,7 +119,7 @@ export default function UnifiedProfilePage() {
         if (!cancelled) setNchsaaResults([])
       })
     return () => { cancelled = true }
-  }, [athlete?.name])
+  }, [athlete?.name, athlete?.wrestling_name])
 
   if (loading) {
     return (
