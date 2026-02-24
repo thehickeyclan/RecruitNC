@@ -13,6 +13,23 @@ const NC_NAVY = "#002147"
 const DEBOUNCE_MS = 300
 const profileHref = (id: string) => `/unified-profile/${id}`
 
+/** Build by-name profile URL when we don't have an athlete id (Legacy-only results). */
+function byNameProfileHref(name: string, school?: string) {
+  const params = new URLSearchParams({ name: name.trim() })
+  if (school?.trim()) params.set("school", school.trim())
+  return `/unified-profile/by-name?${params.toString()}`
+}
+
+function normalizeName(name: string): string {
+  return (name ?? "")
+    .toLowerCase()
+    .replace(/,/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .sort()
+    .join(" ")
+}
+
 function normalizeSchool(s: string | null | undefined): string {
   if (s == null || typeof s !== "string") return "unknown"
   const t = s.trim().toLowerCase()
@@ -76,25 +93,31 @@ function dedupeNchsaaResults(results: { year?: number; classification?: string; 
   return Object.values(byKey)
 }
 
-/** Comma-free name variations for .or(ilike). */
+/** Comma-free name variations for .or(ilike). Includes "John Mark" style for "JohnMark". */
 function getNameVariations(q: string): string[] {
   const t = (q || "").trim()
   if (!t) return []
   const out: string[] = []
+  const add = (s: string) => {
+    if (s) out.push(s)
+    const withSpace = s.replace(/([a-z])([A-Z])/g, "$1 $2").trim()
+    if (withSpace && withSpace !== s) out.push(withSpace)
+  }
   if (t.includes(",")) {
     const [last, first] = t.split(",").map((s) => s.trim())
     if (first && last) {
-      out.push(`${first} ${last}`, `${last} ${first}`)
+      add(`${first} ${last}`)
+      add(`${last} ${first}`)
     } else {
-      out.push(t.replace(/,/g, " "))
+      add(t.replace(/,/g, " "))
     }
   } else {
-    out.push(t)
+    add(t)
     const parts = t.split(/\s+/).filter(Boolean)
     if (parts.length >= 2) {
       const first = parts[0]!
       const last = parts.slice(1).join(" ")
-      out.push(`${last} ${first}`)
+      add(`${last} ${first}`)
     }
   }
   return [...new Set(out)]
@@ -108,7 +131,8 @@ function buildOrIlike(column: string, q: string): string {
 
 export interface LegacyAthleteAggregate {
   name: string
-  school: string
+  /** Comma-separated list of schools (from profile, NCHSAA, Super32, etc.) for display. */
+  schoolsDisplay: string
   profileId?: string
   profile?: { id: string; name: string; highschool?: string; graduationyear?: number; weightclass?: string; college?: string }
   commits: { id: string; name: string; college?: string; graduationyear?: number; weightclass?: string }[]
@@ -144,6 +168,7 @@ export function AthletesLegacySearchContent() {
         profilesRes,
         commitsRes,
         nhscaRes,
+        nhscaPlacementsRes,
         nchsaaRes,
         super32Res,
         mowRes,
@@ -153,6 +178,7 @@ export function AthletesLegacySearchContent() {
         Promise.resolve(supabase.from("athletes").select("id, name, highschool, graduationyear, weightclass, college").or(orName()).limit(300)),
         Promise.resolve(supabase.from("athletes").select("id, name, college, graduationyear, weightclass").in("recruiting_status", ["Committed", "Signed", "College Athlete", "committed", "signed"]).or(orName()).limit(300)),
         Promise.resolve(supabase.from("wrestling_nhsca_results").select("athlete_name, year, placement, weight_class, division, high_school").or(orAthleteName()).order("year", { ascending: false }).limit(500)),
+        Promise.resolve(supabase.from("nhsca_placements").select("athlete_name, year, placement, weight_class, division").or(orAthleteName()).order("year", { ascending: false }).limit(500)),
         Promise.resolve(supabase.from("wrestling_nchsaa_results").select("wrestler_name, year, place, school, weight_class, classification").or(orWrestlerName()).order("year", { ascending: false }).limit(1000)),
         Promise.resolve(supabase.from("super32_results").select("athlete_name, year, weight_class, record, high_school").or(orAthleteName()).order("year", { ascending: false }).limit(300)),
         Promise.resolve(supabase.from("most_outstanding_wrestlers").select("name, year").or(orName()).order("year", { ascending: false }).limit(200)),
@@ -163,6 +189,7 @@ export function AthletesLegacySearchContent() {
       const profiles = (profilesRes.data || []) as { id: string; name: string; highschool?: string; graduationyear?: number; weightclass?: string; college?: string }[]
       const commits = (commitsRes.data || []) as { id: string; name: string; college?: string; graduationyear?: number; weightclass?: string }[]
       const nhscaRows = (nhscaRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string; division?: string; high_school?: string }[]
+      const nhscaPlacementsRows = (nhscaPlacementsRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string; division?: string }[]
       const nchsaaRows = (nchsaaRes.data || []) as { wrestler_name?: string; year?: number; place?: number; school?: string; weight_class?: string; classification?: string }[]
       const super32Rows = (super32Res.data || []) as { athlete_name?: string; year?: number; weight_class?: string; record?: string; high_school?: string }[]
       const mowRows = (mowRes.data || []) as { name?: string; year?: number }[]
@@ -170,21 +197,36 @@ export function AthletesLegacySearchContent() {
       const triciaRows = (triciaRes.data || []) as { name?: string; year?: number; high_school?: string }[]
 
       const athleteMap = new Map<string, LegacyAthleteAggregate>()
+      const schoolSet = new Map<string, Set<string>>()
 
-      const getOrCreate = (name: string, schoolDisplay: string): LegacyAthleteAggregate => {
-        const schoolNorm = normalizeSchool(schoolDisplay)
-        const key = `${(name || "").trim().toLowerCase()}|${schoolNorm}`
+      const getOrCreate = (name: string): LegacyAthleteAggregate => {
+        const key = normalizeName(name)
         let agg = athleteMap.get(key)
         if (!agg) {
-          agg = { name: name.trim(), school: schoolDisplay || "—", commits: [], nhscaResults: [], nchsaaResults: [], super32Results: [] }
+          agg = {
+            name: name.trim(),
+            schoolsDisplay: "",
+            commits: [],
+            nhscaResults: [],
+            nchsaaResults: [],
+            super32Results: [],
+          }
           athleteMap.set(key, agg)
+          schoolSet.set(key, new Set())
         }
         return agg
       }
 
+      const addSchool = (name: string, school: string) => {
+        const key = normalizeName(name)
+        const set = schoolSet.get(key)
+        if (set && school?.trim()) set.add(school.trim())
+      }
+
       profiles.forEach((p) => {
-        const school = (p.highschool ?? "").toString().trim() || "—"
-        const agg = getOrCreate(p.name, school)
+        const agg = getOrCreate(p.name)
+        const school = (p.highschool ?? "").toString().trim() || ""
+        if (school) addSchool(p.name, school)
         if (!agg.profileId) {
           agg.profileId = p.id
           agg.profile = { id: p.id, name: p.name, highschool: p.highschool, graduationyear: p.graduationyear, weightclass: p.weightclass, college: p.college }
@@ -192,55 +234,105 @@ export function AthletesLegacySearchContent() {
       })
 
       commits.forEach((c) => {
-        const school = "—"
-        const agg = getOrCreate(c.name, school)
+        const agg = getOrCreate(c.name)
         if (!agg.commits.some((x) => x.id === c.id)) agg.commits.push(c)
       })
 
       nhscaRows.forEach((r) => {
         const name = (r.athlete_name ?? "").toString().trim()
-        const school = (r.high_school ?? "").toString().trim() || "—"
-        const agg = getOrCreate(name, school)
+        const school = (r.high_school ?? "").toString().trim() || ""
+        if (school) addSchool(name, school)
+        const agg = getOrCreate(name)
         if (!agg.nhscaResults.some((x) => x.year === r.year && x.weight_class === r.weight_class && x.division === r.division)) {
           agg.nhscaResults.push({ year: r.year, placement: r.placement, weight_class: r.weight_class, division: r.division, high_school: r.high_school })
         }
       })
 
+      nhscaPlacementsRows.forEach((r) => {
+        const name = (r.athlete_name ?? "").toString().trim()
+        const agg = getOrCreate(name)
+        if (!agg.nhscaResults.some((x) => x.year === r.year && x.weight_class === r.weight_class && x.division === r.division)) {
+          agg.nhscaResults.push({ year: r.year, placement: r.placement, weight_class: r.weight_class, division: r.division })
+        }
+      })
+
       nchsaaRows.forEach((r) => {
         const name = (r.wrestler_name ?? "").toString().trim()
-        const school = (r.school ?? "").toString().trim() || "—"
-        const agg = getOrCreate(name, school)
+        const school = (r.school ?? "").toString().trim() || ""
+        if (school) addSchool(name, school)
+        const agg = getOrCreate(name)
         agg.nchsaaResults.push({ year: r.year, place: r.place, school: r.school, weight_class: r.weight_class, classification: r.classification })
       })
 
       super32Rows.forEach((r) => {
         const name = (r.athlete_name ?? "").toString().trim()
-        const school = (r.high_school ?? "").toString().trim() || "—"
-        const agg = getOrCreate(name, school)
+        const school = (r.high_school ?? "").toString().trim() || ""
+        if (school) addSchool(name, school)
+        const agg = getOrCreate(name)
         agg.super32Results.push({ year: r.year, weight_class: r.weight_class, record: r.record, high_school: r.high_school })
       })
 
       mowRows.forEach((r) => {
         const name = (r.name ?? "").toString().trim()
-        const agg = getOrCreate(name, "—")
+        const agg = getOrCreate(name)
         if (!agg.mostOutstanding) agg.mostOutstanding = []
         if (!agg.mostOutstanding.some((x) => x.year === r.year)) agg.mostOutstanding.push({ year: r.year })
       })
 
       daveRows.forEach((r) => {
         const name = (r.name ?? "").toString().trim()
-        const agg = getOrCreate(name, (r.high_school ?? "").toString().trim() || "—")
+        const school = (r.high_school ?? "").toString().trim() || ""
+        if (school) addSchool(name, school)
+        const agg = getOrCreate(name)
         if (!agg.daveSchultz) agg.daveSchultz = { year: r.year, high_school: r.high_school }
       })
 
       triciaRows.forEach((r) => {
         const name = (r.name ?? "").toString().trim()
-        const agg = getOrCreate(name, (r.high_school ?? "").toString().trim() || "—")
+        const school = (r.high_school ?? "").toString().trim() || ""
+        if (school) addSchool(name, school)
+        const agg = getOrCreate(name)
         if (!agg.triciaSaunders) agg.triciaSaunders = { year: r.year, high_school: r.high_school }
       })
 
       let list = Array.from(athleteMap.values())
+      list.forEach((a) => {
+        const key = normalizeName(a.name)
+        const schools = schoolSet.get(key)
+        a.schoolsDisplay = schools && schools.size > 0 ? [...schools].filter(Boolean).join(", ") : "—"
+      })
       list = list.filter((a) => a.nhscaResults.length > 0 || a.nchsaaResults.length > 0 || a.super32Results.length > 0 || a.commits.length > 0 || a.profileId || a.daveSchultz || a.triciaSaunders)
+
+      const withProfile = list.filter((a): a is LegacyAthleteAggregate & { profileId: string } => !!a.profileId)
+      if (withProfile.length > 0) {
+        try {
+          const nhscaByProfile = await Promise.all(
+            withProfile.map((a) =>
+              Promise.resolve(
+                supabase
+                  .from("nhsca_placements")
+                  .select("year, placement, weight_class, division")
+                  .eq("athlete_id", a.profileId)
+                  .eq("state", "NC")
+                  .order("year", { ascending: false })
+                  .limit(50)
+              )
+            )
+          )
+          nhscaByProfile.forEach((res, i) => {
+            const a = withProfile[i]!
+            const rows = (res.data || []) as { year?: number; placement?: number; weight_class?: string; division?: string }[]
+            rows.forEach((r) => {
+              if (!a.nhscaResults.some((x) => x.year === r.year && x.weight_class === r.weight_class && x.division === r.division)) {
+                a.nhscaResults.push({ year: r.year, placement: r.placement, weight_class: r.weight_class, division: r.division })
+              }
+            })
+          })
+        } catch (_) {
+          // nhsca_placements may not have athlete_id or state column
+        }
+      }
+
       list.sort((a, b) => {
         const aScore = (a.profileId ? 1000 : 0) + a.commits.length * 100 + a.nchsaaResults.length * 10 + a.nhscaResults.length
         const bScore = (b.profileId ? 1000 : 0) + b.commits.length * 100 + b.nchsaaResults.length * 10 + b.nhscaResults.length
@@ -328,16 +420,21 @@ export function AthletesLegacySearchContent() {
             </div>
 
             <div className="space-y-6">
-              {results.map((athlete, idx) => (
-                <Card key={`${athlete.name}-${athlete.school}-${idx}`} className="border-2 shadow-md" style={{ borderColor: `${NC_NAVY}22` }}>
+              {results.map((athlete, idx) => {
+                const profileUrl = athlete.profileId ? profileHref(athlete.profileId) : byNameProfileHref(athlete.name, athlete.schoolsDisplay !== "—" ? athlete.schoolsDisplay.split(",")[0]?.trim() : undefined)
+                return (
+                <Card key={`${athlete.name}-${idx}`} className="border-2 shadow-md" style={{ borderColor: `${NC_NAVY}22` }}>
                   <CardHeader className="pb-2" style={{ backgroundColor: NC_NAVY }}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <CardTitle className="text-lg text-white">{athlete.name}</CardTitle>
                         <CardDescription className="text-blue-100 flex items-center gap-1 mt-1">
                           <MapPin className="w-4 h-4 flex-shrink-0" />
-                          {athlete.school}
+                          {athlete.schoolsDisplay}
                         </CardDescription>
+                        <Link href={profileUrl} className="inline-block mt-2 text-sm font-medium text-blue-200 hover:text-white underline">
+                          View Profile →
+                        </Link>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {athlete.commits.length > 0 && (
@@ -384,7 +481,7 @@ export function AthletesLegacySearchContent() {
                                     {athlete.profile.graduationyear ? ` • Class of ${athlete.profile.graduationyear}` : ""}
                                   </div>
                                   <div className="text-sm text-blue-600">
-                                    {athlete.profile.highschool ?? athlete.school} • {athlete.profile.weightclass ?? "—"}
+                                    {athlete.profile.highschool ?? athlete.schoolsDisplay} • {athlete.profile.weightclass ?? "—"}
                                   </div>
                                   {athlete.profile.college && (
                                     <div className="text-sm text-blue-600">Committed to: {athlete.profile.college}</div>
@@ -516,7 +613,7 @@ export function AthletesLegacySearchContent() {
                     )}
                   </CardContent>
                 </Card>
-              ))}
+              ); })}
             </div>
 
             {results.length === 0 && !loading && (

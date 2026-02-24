@@ -5,11 +5,28 @@ import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables
 
 function normalizeName(name: string): string {
   if (!name) return ""
-  return name
+  let s = name
     .toLowerCase()
+    .replace(/\s*(jr\.?|sr\.?|ii|iii|iv|i v|2nd|3rd)\s*$/gi, "")
     .replace(/[^a-z\s]/g, "")
     .replace(/\s+/g, " ")
     .trim()
+  return s
+}
+
+/** Returns true if the two normalized name strings refer to the same person (allowing order and suffixes). */
+function namesMatch(a: string, b: string): boolean {
+  if (!a || !b) return false
+  if (a === b) return true
+  if (a.includes(b) || b.includes(a)) return true
+  const partsA = new Set(a.split(" ").filter((p) => p.length > 1))
+  const partsB = new Set(b.split(" ").filter((p) => p.length > 1))
+  if (partsA.size === 0 || partsB.size === 0) return false
+  if (partsA.size !== partsB.size) return false
+  for (const p of partsA) {
+    if (!partsB.has(p)) return false
+  }
+  return true
 }
 
 function matchNCHSAAToAthlete(
@@ -27,10 +44,7 @@ function matchNCHSAAToAthlete(
     if (r.year < minYear || r.year > maxYear) return false
     const resultNorm = normalizeName(r.wrestler_name || "")
     if (!resultNorm) return false
-    const exact = resultNorm === athleteNorm || resultNorm === wrestlingNorm
-    const contains =
-      (resultNorm && athleteNorm && (resultNorm.includes(athleteNorm) || athleteNorm.includes(resultNorm))) ||
-      (resultNorm && wrestlingNorm && (resultNorm.includes(wrestlingNorm) || wrestlingNorm.includes(resultNorm)))
+    if (namesMatch(resultNorm, athleteNorm) || namesMatch(resultNorm, wrestlingNorm)) return true
     const athleteParts = athleteNorm.split(" ").filter((p) => p.length > 1)
     const wrestlingParts = wrestlingNorm.split(" ").filter((p) => p.length > 1)
     const resultParts = resultNorm.split(" ").filter((p) => p.length > 1)
@@ -41,7 +55,7 @@ function matchNCHSAAToAthlete(
       (wrestlingParts.length > 0 &&
         resultParts.length > 0 &&
         wrestlingParts.every((p) => resultParts.some((rp) => rp.includes(p) || p.includes(rp))))
-    return exact || contains || partsMatch
+    return partsMatch
   })
 }
 
@@ -82,14 +96,11 @@ export async function GET(request: Request) {
     }
 
     const gradYearNum = Number(yearParam) || new Date().getFullYear()
-    const nchsaaMinYear = gradYearNum - 4
-    const nchsaaMaxYear = gradYearNum + 1
 
+    // Fetch ALL NCHSAA results (no year filter) so we never miss a year; per-athlete filter below limits to gradYear-4..gradYear
     const { data: allNchsaa, error: nchsaaErr } = await db
       .from("wrestling_nchsaa_results")
       .select("wrestler_name, year, place, classification, weight_class, school")
-      .gte("year", nchsaaMinYear)
-      .lte("year", nchsaaMaxYear)
       .order("year", { ascending: false })
 
     if (nchsaaErr) {

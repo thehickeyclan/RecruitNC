@@ -64,14 +64,28 @@ export async function GET(request: NextRequest) {
       athletes?.slice(0, 3).map((a) => a.name),
     )
 
-    // Helper function to normalize names for better matching
+    // Helper: normalize names (strip suffixes, lowercase, letters+spaces only)
     const normalizeName = (name: string): string => {
       if (!name) return ""
       return name
         .toLowerCase()
-        .replace(/[^a-z\s]/g, "") // Remove non-alphabetic characters except spaces
-        .replace(/\s+/g, " ") // Normalize spaces
+        .replace(/\s*(jr\.?|sr\.?|ii|iii|iv|i v|2nd|3rd)\s*$/gi, "")
+        .replace(/[^a-z\s]/g, "")
+        .replace(/\s+/g, " ")
         .trim()
+    }
+
+    const namesMatch = (a: string, b: string): boolean => {
+      if (!a || !b) return false
+      if (a === b) return true
+      if (a.includes(b) || b.includes(a)) return true
+      const setA = new Set(a.split(" ").filter((p) => p.length > 1))
+      const setB = new Set(b.split(" ").filter((p) => p.length > 1))
+      if (setA.size === 0 || setB.size === 0 || setA.size !== setB.size) return false
+      for (const p of setA) {
+        if (!setB.has(p)) return false
+      }
+      return true
     }
 
     const athletesWithNchsaa =
@@ -82,33 +96,23 @@ export async function GET(request: NextRequest) {
         const athleteNchsaaResults =
           nchsaaResults?.filter((result) => {
             const resultName = normalizeName(result.wrestler_name || "")
-
-            // Try multiple matching strategies
-            const exactMatch = resultName === athleteName || resultName === wrestlingName
-            const containsMatch =
-              (resultName && athleteName && (resultName.includes(athleteName) || athleteName.includes(resultName))) ||
-              (resultName &&
-                wrestlingName &&
-                (resultName.includes(wrestlingName) || wrestlingName.includes(resultName)))
-
-            // Split names and check if all parts match
-            const athleteNameParts = athleteName.split(" ").filter((p) => p.length > 1)
-            const wrestlingNameParts = wrestlingName.split(" ").filter((p) => p.length > 1)
-            const resultNameParts = resultName.split(" ").filter((p) => p.length > 1)
-
-            const partsMatch =
-              (athleteNameParts.length > 0 &&
-                resultNameParts.length > 0 &&
-                athleteNameParts.every((part) =>
-                  resultNameParts.some((rPart) => rPart.includes(part) || part.includes(rPart)),
+            if (!resultName) return false
+            if (namesMatch(resultName, athleteName) || namesMatch(resultName, wrestlingName)) return true
+            const athleteParts = athleteName.split(" ").filter((p) => p.length > 1)
+            const wrestlingParts = wrestlingName.split(" ").filter((p) => p.length > 1)
+            const resultParts = resultName.split(" ").filter((p) => p.length > 1)
+            return (
+              (athleteParts.length > 0 &&
+                resultParts.length > 0 &&
+                athleteParts.every((part) =>
+                  resultParts.some((rPart) => rPart.includes(part) || part.includes(rPart)),
                 )) ||
-              (wrestlingNameParts.length > 0 &&
-                resultNameParts.length > 0 &&
-                wrestlingNameParts.every((part) =>
-                  resultNameParts.some((rPart) => rPart.includes(part) || part.includes(rPart)),
+              (wrestlingParts.length > 0 &&
+                resultParts.length > 0 &&
+                wrestlingParts.every((part) =>
+                  resultParts.some((rPart) => rPart.includes(part) || part.includes(rPart)),
                 ))
-
-            return exactMatch || containsMatch || partsMatch
+            )
           }) || []
 
         if (athleteNchsaaResults.length > 0) {
