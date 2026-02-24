@@ -224,13 +224,13 @@ export function Navbar() {
                     const Icon = sub.icon
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
-                        <Link href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
-                        </Link>
+                        </a>
                       </DropdownMenuItem>
                     )
                   })}
@@ -485,14 +485,14 @@ export function Navbar() {
                     <div className="text-gray-600 font-medium text-sm mb-2">States</div>
                     <div className="pl-4 space-y-2">
                       {statesItems.map((sub) => (
-                        <Link
+                        <a
                           key={sub.href}
                           href={sub.href}
                           className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center"
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   </div>
