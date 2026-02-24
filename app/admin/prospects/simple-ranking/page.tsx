@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AdminHeader } from "@/components/admin-header"
-import { ArrowUp, ArrowDown, Save, Rocket, Calculator, GripVertical } from 'lucide-react'
+import { ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Save, Rocket, Calculator, GripVertical } from 'lucide-react'
 import Link from "next/link"
 import Image from "next/image"
 
@@ -136,6 +137,11 @@ export default function SimpleRankingPage() {
     setAthletes(newAthletes)
   }
 
+  const handleDragEnd = (result: { destination?: { index: number }; source: { index: number } }) => {
+    if (!result.destination || result.destination.index === result.source.index) return
+    moveAthlete(result.source.index, result.destination.index)
+  }
+
   const calculateRecruitNCScores = async () => {
     try {
       setCalculatingScores(true)
@@ -248,7 +254,7 @@ export default function SimpleRankingPage() {
         <div className="mb-6">
           <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white rounded-lg p-6 shadow-lg">
             <h1 className="text-3xl font-bold mb-2">Prospect Rankings Manager</h1>
-            <p className="text-blue-100">Drag and drop athletes to reorder rankings, then save and publish</p>
+            <p className="text-blue-100">Drag the grip icon or use the arrows to move athletes up/down, then save and publish</p>
           </div>
         </div>
 
@@ -358,7 +364,7 @@ export default function SimpleRankingPage() {
           <Table>
             <TableHeader>
               <TableRow style={{ backgroundColor: "#0D1A4D" }} className="text-white hover:bg-[#0D1A4D]">
-                <TableHead className="w-20 text-white font-semibold text-center">Actions</TableHead>
+                <TableHead className="w-32 text-white font-semibold text-center">Move</TableHead>
                 <TableHead className="w-16 text-white font-semibold">Rank</TableHead>
                 <TableHead className="min-w-[200px] text-white font-semibold">Name</TableHead>
                 <TableHead className="text-white font-semibold">School</TableHead>
@@ -373,30 +379,70 @@ export default function SimpleRankingPage() {
                 )}
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {athletes.map((athlete, index) => (
-                <TableRow key={athlete.id} className="hover:bg-gray-50">
-                  {/* Actions */}
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => moveAthlete(index, Math.max(0, index - 1))}
-                        disabled={index === 0}
-                        className="h-7 w-7 p-0 hover:bg-blue-50"
-                      >
-                        <ArrowUp className="h-3 w-3 text-[#13294B]" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
-                        disabled={index === athletes.length - 1}
-                        className="h-7 w-7 p-0 hover:bg-blue-50"
-                      >
-                        <ArrowDown className="h-3 w-3 text-[#13294B]" />
-                      </Button>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="athletes">
+                {(provided) => (
+                  <TableBody ref={provided.innerRef} {...provided.droppableProps}>
+                    {athletes.map((athlete, index) => (
+                      <Draggable key={athlete.id} draggableId={athlete.id} index={index}>
+                        {(rowProvided) => (
+                          <TableRow
+                            ref={rowProvided.innerRef}
+                            {...rowProvided.draggableProps}
+                            className="hover:bg-gray-50"
+                          >
+                            {/* Move: drag handle + up/down + to top/bottom */}
+                            <TableCell className="align-middle">
+                              <div className="flex items-center justify-center gap-1">
+                                <span
+                                  {...rowProvided.dragHandleProps}
+                                  className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-200 text-gray-500 inline-flex"
+                                  title="Drag to reorder"
+                                >
+                                  <GripVertical className="h-5 w-5" />
+                                </span>
+                      <div className="flex flex-col gap-0.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveAthlete(index, 0)}
+                          disabled={index === 0}
+                          className="h-8 w-8 p-0"
+                          title="Move to top"
+                        >
+                          <ArrowUpToLine className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveAthlete(index, Math.max(0, index - 1))}
+                          disabled={index === 0}
+                          className="h-8 w-8 p-0"
+                          title="Move up one"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveAthlete(index, Math.min(athletes.length - 1, index + 1))}
+                          disabled={index === athletes.length - 1}
+                          className="h-8 w-8 p-0"
+                          title="Move down one"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveAthlete(index, athletes.length - 1)}
+                          disabled={index === athletes.length - 1}
+                          className="h-8 w-8 p-0"
+                          title="Move to bottom"
+                        >
+                          <ArrowDownToLine className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </TableCell>
 
@@ -592,8 +638,14 @@ export default function SimpleRankingPage() {
                     </TableCell>
                   )}
                 </TableRow>
-              ))}
-            </TableBody>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </TableBody>
+                )}
+              </Droppable>
+            </DragDropContext>
           </Table>
         </div>
 
