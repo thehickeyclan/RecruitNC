@@ -269,11 +269,11 @@ export default function ClassOf2026RankingsPage() {
             </CardContent>
           </Card>
 
-          {/* Top 30 Ranked Section */}
+          {/* Top 50 Ranked Section */}
           <div className="mb-8 sm:mb-12">
             <div className="mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-2">
-                Top 30 Ranked Prospects
+                Top 50 Ranked Prospects
               </h2>
               {lastUpdated && (
                 <div className="flex items-center justify-center gap-2 text-sm">
@@ -292,7 +292,7 @@ export default function ClassOf2026RankingsPage() {
               )}
             </div>
             <RankingsTableView 
-              athletes={athletes.filter(a => a.prospect_ranking && a.prospect_ranking <= 30)} 
+              athletes={athletes.filter(a => a.prospect_ranking && a.prospect_ranking <= 50)} 
               loading={loadingAthletes} 
             />
           </div>
