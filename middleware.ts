@@ -29,6 +29,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     '/view-profile',
     '/blue',
+    '/nchsaa',
     '/auth/signin',
     '/auth/signup',
     '/auth/forgot-password',

@@ -78,11 +78,13 @@ function sortClassifications(classes: string[]): string[] {
 
 export default function NCHSAAYearResults() {
   const params = useParams()
-  const yearParam = params?.year as string
-  const year = yearParam ? parseInt(yearParam, 10) : 2025
-  if (!yearParam || Number.isNaN(year) || year < 1990 || year > 2030) {
+  const yearParam = typeof params?.year === "string" ? params.year : ""
+  const year = yearParam ? parseInt(yearParam, 10) : NaN
+  const validYear = !Number.isNaN(year) && year >= 1990 && year <= 2030
+  if (!validYear && yearParam !== "") {
     notFound()
   }
+  const displayYear = validYear ? year : 2025
 
   const [tournamentData, setTournamentData] = useState<Record<string, ClassificationData>>({})
   const [classifications, setClassifications] = useState<string[]>([])
@@ -93,6 +95,15 @@ export default function NCHSAAYearResults() {
   const [bracketModal, setBracketModal] = useState({ isOpen: false, weightClass: "", classification: "" })
   const [selectedDivision, setSelectedDivision] = useState("")
   const [selectedWeight, setSelectedWeight] = useState("")
+  const [debug, setDebug] = useState<{
+    yearParam: string
+    displayYear: number
+    resultsRowCount: number
+    mowCount: number
+    teamPointsCount: number
+    classifications: string[]
+    error: string | null
+  } | null>(null)
 
   const openBracketModal = (classification: string, weightClass: string) => {
     setBracketModal({ isOpen: true, weightClass, classification })
@@ -107,13 +118,22 @@ export default function NCHSAAYearResults() {
         const { data: results, error } = await supabase
           .from("wrestling_nchsaa_results")
           .select("*")
-          .eq("year", year)
+          .eq("year", displayYear)
           .order("classification")
           .order("weight_class")
           .order("place")
 
         if (error) {
           console.error("[NCHSAA] Error fetching tournament data:", error)
+          setDebug({
+            yearParam,
+            displayYear,
+            resultsRowCount: 0,
+            mowCount: 0,
+            teamPointsCount: 0,
+            classifications: [],
+            error: error.message ?? String(error),
+          })
           setLoading(false)
           return
         }
@@ -121,22 +141,24 @@ export default function NCHSAAYearResults() {
         const { data: mowResults, error: mowError } = await supabase
           .from("most_outstanding_wrestlers")
           .select("*")
-          .eq("year", year)
+          .eq("year", displayYear)
           .order("division")
 
+        let mowCount = 0
         if (!mowError && mowResults?.length) {
           const uniqueMOW =
             mowResults?.reduce((acc: MostOutstandingWrestler[], current) => {
               if (!acc.find((item) => item.division === current.division)) acc.push(current)
               return acc
             }, []) || []
+          mowCount = uniqueMOW.length
           setMostOutstandingWrestlers(uniqueMOW)
         }
 
         const { data: teamPointsResults, error: teamPointsError } = await supabase
           .from("tournament_champions")
           .select("*")
-          .eq("year", year)
+          .eq("year", displayYear)
           .order("division")
 
         if (!teamPointsError && teamPointsResults?.length) {
@@ -147,7 +169,7 @@ export default function NCHSAAYearResults() {
         let totalMedalists = 0
         let ncUnitedCount = 0
 
-        const maxPlacerPlace = year >= 2026 ? 4 : 6 // 7-division (2026+): placers 1–4; 4-division: 1–6
+        const maxPlacerPlace = displayYear >= 2026 ? 4 : 6 // 7-division (2026+): placers 1–4; 4-division: 1–6
         results?.forEach((result: TournamentResult) => {
           const classification = result.classification
           const weightClass = result.weight_class
@@ -161,17 +183,46 @@ export default function NCHSAAYearResults() {
         })
 
         setTournamentData(groupedData)
-        setClassifications(sortClassifications(Object.keys(groupedData)))
+        const sortedClasses = sortClassifications(Object.keys(groupedData))
+        setClassifications(sortedClasses)
         setStats({ totalMedalists, ncUnitedMedalists: ncUnitedCount })
+
+        setDebug({
+          yearParam,
+          displayYear,
+          resultsRowCount: results?.length ?? 0,
+          mowCount,
+          teamPointsCount: teamPointsResults?.length ?? 0,
+          classifications: sortedClasses,
+          error: null,
+        })
+        console.debug("[NCHSAA year page]", {
+          yearParam,
+          displayYear,
+          resultsRowCount: results?.length ?? 0,
+          mowCount,
+          teamPointsCount: teamPointsResults?.length ?? 0,
+          classifications: sortedClasses,
+        })
       } catch (e) {
+        const errMsg = e instanceof Error ? e.message : String(e)
         console.error("[NCHSAA] Error:", e)
+        setDebug({
+          yearParam,
+          displayYear,
+          resultsRowCount: 0,
+          mowCount: 0,
+          teamPointsCount: 0,
+          classifications: [],
+          error: errMsg,
+        })
       } finally {
         setLoading(false)
       }
     }
 
     fetchTournamentData()
-  }, [year])
+  }, [displayYear])
 
   const getPlaceBadgeColor = (place: number) => {
     switch (place) {
@@ -185,7 +236,7 @@ export default function NCHSAAYearResults() {
     }
   }
 
-  const maxPlacerPlace = year >= 2026 ? 4 : 6 // 7-division: placers 1–4; 4-division: 1–6
+  const maxPlacerPlace = displayYear >= 2026 ? 4 : 6 // 7-division: placers 1–4; 4-division: 1–6
 
   const renderClassificationResults = (classification: string, data: ClassificationData) => {
     const weightClasses = Object.keys(data).sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
@@ -237,7 +288,7 @@ export default function NCHSAAYearResults() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C] mx-auto mb-4" />
-          <p className="text-slate-600">Loading {year} NCHSAA Results...</p>
+          <p className="text-slate-600">Loading {displayYear} NCHSAA Results...</p>
         </div>
       </div>
     )
@@ -256,7 +307,7 @@ export default function NCHSAAYearResults() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-4xl font-bold text-[#03154c]">{year} NCHSAA Results</h1>
+            <h1 className="text-4xl font-bold text-[#03154c]">{displayYear} NCHSAA Results</h1>
             <p className="text-slate-600">North Carolina State Wrestling Championships</p>
           </div>
         </div>
@@ -265,7 +316,7 @@ export default function NCHSAAYearResults() {
           <CardHeader className="bg-gradient-to-r from-[#B91C1C] to-[#7F1D1D] text-white">
             <CardTitle className="flex items-center gap-2">
               <Crown className="w-6 h-6" />
-              {year} Tournament Summary
+              {displayYear} Tournament Summary
             </CardTitle>
             <CardDescription className="text-red-100">
               State championship results and highlights
@@ -353,7 +404,7 @@ export default function NCHSAAYearResults() {
                 <Crown className="w-6 h-6" />
                 Most Outstanding Wrestlers
               </CardTitle>
-              <CardDescription className="text-yellow-100">{year} MOW by division</CardDescription>
+              <CardDescription className="text-yellow-100">{displayYear} MOW by division</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -378,7 +429,7 @@ export default function NCHSAAYearResults() {
                 <Trophy className="w-6 h-6" />
                 Team Points Champions
               </CardTitle>
-              <CardDescription className="text-red-100">{year} team points by division</CardDescription>
+              <CardDescription className="text-red-100">{displayYear} team points by division</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -403,12 +454,12 @@ export default function NCHSAAYearResults() {
               <Trophy className="w-6 h-6" />
               Results by Classification
             </CardTitle>
-            <CardDescription>{year} NCHSAA State Championship results</CardDescription>
+            <CardDescription>{displayYear} NCHSAA State Championship results</CardDescription>
           </CardHeader>
           <CardContent>
             {classifications.length === 0 ? (
               <div className="text-center py-12 text-slate-600">
-                No results for {year} yet. Upload data via Admin → NCHSAA State Results Upload.
+                No results for {displayYear} yet. Upload data via Admin → NCHSAA State Results Upload.
               </div>
             ) : (
               <Tabs defaultValue={classifications[0]?.toLowerCase().replace("/", "") ?? "4a"} className="w-full">
@@ -451,6 +502,17 @@ export default function NCHSAAYearResults() {
             </CardContent>
           </Card>
         </div>
+
+        {debug != null && (
+          <details className="mt-6 border border-amber-200 bg-amber-50 rounded-md overflow-hidden">
+            <summary className="px-4 py-2 cursor-pointer font-medium text-amber-900 bg-amber-100">
+              Debug: NCHSAA {displayYear} (2025/2026 results page)
+            </summary>
+            <pre className="p-4 text-xs text-left overflow-auto max-h-60 bg-white border-t border-amber-200">
+              {JSON.stringify(debug, null, 2)}
+            </pre>
+          </details>
+        )}
       </div>
 
       <TournamentBracketModal

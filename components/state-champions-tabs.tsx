@@ -6,6 +6,20 @@ import { Crown } from "lucide-react"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
+/** Canonical key so "First Last", "Last, First", "First M. Last" all group as one person. Matches lib/nchsaa-results name matching. */
+function canonicalNameKey(name: string): string {
+  const t = (name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ")
+  const tokens = t
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter((tok) => tok.length > 1 || !/^[a-z]$/.test(tok)) // drop single-letter (middle initial)
+  return [...tokens].sort().join(" ")
+}
+
 interface Champion {
   wrestler_name: string
   championship_count: number
@@ -24,11 +38,22 @@ interface ChampionsByYear {
   [year: number]: Champion[]
 }
 
+export type StateChampionsDebug = {
+  rawRowCount: number
+  uniquePeopleCount: number
+  fourXCount: number
+  threeXCount: number
+  twoXCount: number
+  fourXNames: Array<{ name: string; key: string; count: number }>
+  fetchError: string | null
+}
+
 export function StateChampionsTabs() {
   const [fourXChampions, setFourXChampions] = useState<ChampionsByYear>({})
   const [threeXChampions, setThreeXChampions] = useState<ChampionsByYear>({})
   const [twoXChampions, setTwoXChampions] = useState<ChampionsByYear>({})
   const [loading, setLoading] = useState(true)
+  const [debug, setDebug] = useState<StateChampionsDebug | null>(null)
 
   useEffect(() => {
     async function fetchChampions() {
@@ -45,14 +70,10 @@ export function StateChampionsTabs() {
 
         if (error) throw error
 
-        // Normalize names so same person isn't split: strip middle initials, collapse spaces
-        const normalize = (s: string) => {
-          const t = (s?.trim().replace(/\s+/g, " ") ?? "").toUpperCase()
-          if (!t) return ""
-          return t.replace(/\s+[A-Z]\.?\s+/g, " ").replace(/\s+/g, " ").trim() || t
-        }
+        // Group by canonical name so "First Last", "Last, First", "First M. Last" = one person (17 4x champs)
         const groups: Record<string, {
           name: string
+          nameVariants: Set<string>
           champs: Array<{
             year: number
             classification: string
@@ -65,28 +86,41 @@ export function StateChampionsTabs() {
         }> = {}
 
         allChampions?.forEach((c: { wrestler_name?: string; year: number; classification?: string; weight_class?: string; school?: string }) => {
-          const norm = normalize(c.wrestler_name ?? "")
-          if (!norm) return
+          const raw = (c.wrestler_name ?? "").trim()
+          const key = canonicalNameKey(raw)
+          if (!key) return
 
-          if (!groups[norm]) {
-            groups[norm] = {
-              name: c.wrestler_name ?? "",
+          if (!groups[key]) {
+            groups[key] = {
+              name: raw,
+              nameVariants: new Set(),
               champs: [],
               schools: new Set(),
               classes: new Set(),
               weights: new Set(),
             }
           }
-
-          groups[norm].champs.push({
+          const g = groups[key]
+          g.nameVariants.add(raw)
+          g.champs.push({
             year: c.year,
             classification: c.classification ?? "",
             weight_class: c.weight_class ?? "",
             school: c.school ?? "",
           })
-          if (c.school) groups[norm].schools.add(c.school)
-          if (c.classification) groups[norm].classes.add(c.classification)
-          if (c.weight_class) groups[norm].weights.add(c.weight_class)
+          if (c.school) g.schools.add(c.school)
+          if (c.classification) g.classes.add(c.classification)
+          if (c.weight_class) g.weights.add(c.weight_class)
+        })
+
+        // Prefer "First Last" display name (no comma) when we have it
+        Object.values(groups).forEach((g) => {
+          const noComma = [...g.nameVariants].find((n) => !n.includes(","))
+          if (noComma) g.name = noComma
+          else if (g.name.includes(",")) {
+            const [last, first] = g.name.split(",").map((s) => s.trim())
+            if (first && last) g.name = `${first} ${last}`
+          }
         })
 
         // Convert to champion objects and group by count
@@ -120,8 +154,41 @@ export function StateChampionsTabs() {
         setFourXChampions(groupByYear(fourX))
         setThreeXChampions(groupByYear(threeX))
         setTwoXChampions(groupByYear(twoX))
+
+        const fourXList = fourX.map((r) => ({
+          name: r.wrestler_name,
+          key: canonicalNameKey(r.wrestler_name),
+          count: r.championship_count,
+        }))
+        setDebug({
+          rawRowCount: allChampions?.length ?? 0,
+          uniquePeopleCount: Object.keys(groups).length,
+          fourXCount: fourX.length,
+          threeXCount: threeX.length,
+          twoXCount: twoX.length,
+          fourXNames: fourXList,
+          fetchError: null,
+        })
+        console.debug("[StateChampionsTabs]", {
+          rawRowCount: allChampions?.length ?? 0,
+          uniquePeopleCount: Object.keys(groups).length,
+          fourXCount: fourX.length,
+          threeXCount: threeX.length,
+          twoXCount: twoX.length,
+          fourXNames: fourXList,
+        })
       } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error)
         console.error("Error fetching champions:", error)
+        setDebug({
+          rawRowCount: 0,
+          uniquePeopleCount: 0,
+          fourXCount: 0,
+          threeXCount: 0,
+          twoXCount: 0,
+          fourXNames: [],
+          fetchError: msg,
+        })
       } finally {
         setLoading(false)
       }
@@ -213,6 +280,28 @@ export function StateChampionsTabs() {
             {renderChampionsList(twoXChampions)}
           </TabsContent>
         </Tabs>
+        {debug != null && (
+          <details className="mt-6 border border-amber-200 bg-amber-50 rounded-md overflow-hidden">
+            <summary className="px-4 py-2 cursor-pointer font-medium text-amber-900 bg-amber-100">
+              Debug: 4x state champs (expected 17)
+            </summary>
+            <pre className="p-4 text-xs text-left overflow-auto max-h-60 bg-white border-t border-amber-200">
+              {JSON.stringify(
+                {
+                  rawChampionRowsFromDb: debug.rawRowCount,
+                  uniquePeopleAfterGrouping: debug.uniquePeopleCount,
+                  fourXCount: debug.fourXCount,
+                  threeXCount: debug.threeXCount,
+                  twoXCount: debug.twoXCount,
+                  fetchError: debug.fetchError ?? undefined,
+                  fourXNames: debug.fourXNames,
+                },
+                null,
+                2
+              )}
+            </pre>
+          </details>
+        )}
       </CardContent>
     </Card>
   )
