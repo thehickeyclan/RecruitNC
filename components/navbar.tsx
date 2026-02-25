@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -18,19 +18,7 @@ import {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [statesOpen, setStatesOpen] = useState(false)
-  const statesMenuRef = useRef<HTMLDivElement>(null)
   const { user, signOut, isLoading, profile } = useAuth()
-
-  useEffect(() => {
-    if (!statesOpen) return
-    const onDocClick = (e: MouseEvent) => {
-      if (statesMenuRef.current?.contains(e.target as Node)) return
-      setStatesOpen(false)
-    }
-    document.addEventListener("mousedown", onDocClick)
-    return () => document.removeEventListener("mousedown", onDocClick)
-  }, [statesOpen])
 
   const showMyRecruits =
     profile?.role === "admin" ||
@@ -216,46 +204,12 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <div className="relative" ref={statesMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setStatesOpen((o) => !o)}
-                  className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1"
-                >
-                  States
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-                {statesOpen && (
-                  <div className="absolute left-0 top-full mt-1 z-50 min-w-[18rem] overflow-hidden rounded-md border bg-white p-1 text-popover-foreground shadow-md">
-                    <div className="px-2 py-1.5">
-                      <div className="flex items-center gap-2 font-semibold">
-                        <Trophy className="h-4 w-4" />
-                        States
-                      </div>
-                      <p className="text-xs text-muted-foreground font-normal mt-1">
-                        NCHSAA State Championships
-                      </p>
-                    </div>
-                    <div className="my-1 h-px bg-muted" />
-                    {statesItems.map((sub) => {
-                      const Icon = sub.icon
-                      return (
-                        <a
-                          key={sub.href}
-                          href={sub.href}
-                          className="flex cursor-pointer items-start gap-3 rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
-                        >
-                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{sub.label}</span>
-                            <span className="text-xs text-muted-foreground">{sub.description}</span>
-                          </div>
-                        </a>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+              <a
+                href="/nchsaa"
+                className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+              >
+                States
+              </a>
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   Legacy NC
@@ -504,20 +458,13 @@ export function Navbar() {
                   <div className="px-3">
                     <div className="text-gray-600 font-medium text-sm mb-2">States</div>
                     <div className="pl-4 space-y-2">
-                      {statesItems.map((sub) => (
-                        <a
-                          key={sub.href}
-                          href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            setIsOpen(false)
-                            window.location.href = sub.href
-                          }}
-                        >
-                          {sub.label}
-                        </a>
-                      ))}
+                      <a
+                        href="/nchsaa"
+                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        NCHSAA State Championships
+                      </a>
                     </div>
                   </div>
                   <div className="px-3">
