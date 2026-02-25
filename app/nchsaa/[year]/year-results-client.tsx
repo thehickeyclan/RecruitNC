@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
-import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User } from "lucide-react"
+import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User, FileText } from "lucide-react"
+import { NCHSAA_2026_ARTICLES } from "./news/articles"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
@@ -311,7 +312,7 @@ export function NCHSAAYearResultsClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-[#B91C1C] mb-2">{classifications.length}</div>
               <div className="text-sm text-slate-600">Classifications</div>
@@ -328,9 +329,48 @@ export function NCHSAAYearResultsClient({
               <div className="text-3xl font-bold text-[#012ECD] mb-2">{stats.ncUnitedMedalists ?? "0"}</div>
               <div className="text-sm text-slate-600">NC United Medalists</div>
             </div>
+            <div className="text-center col-span-2 md:col-span-1">
+              <div className="text-3xl font-bold text-slate-700 mb-2">{8 * 14 * (classifications.length || 7)}</div>
+              <div className="text-sm text-slate-600">State Qualifiers</div>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {displayYear === 2026 && NCHSAA_2026_ARTICLES.length > 0 && (
+        <Card className="mb-8 border-2 border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-[#03154c] flex items-center gap-2">
+              <FileText className="w-6 h-6" />
+              News & perspective
+            </CardTitle>
+            <CardDescription>Articles on structure, development, and the state of NC wrestling</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {NCHSAA_2026_ARTICLES.map((article) => (
+                <li key={article.slug}>
+                  {article.published ? (
+                    <a
+                      href={`/nchsaa/${displayYear}/news/${article.slug}`}
+                      className="block p-3 rounded-lg border border-slate-200 hover:border-[#B91C1C] hover:bg-red-50/50 transition-colors"
+                    >
+                      <span className="font-medium text-[#03154c]">{article.title}</span>
+                      {article.summary && <span className="block text-sm text-slate-600 mt-0.5">{article.summary}</span>}
+                    </a>
+                  ) : (
+                    <div className="block p-3 rounded-lg border border-slate-100 bg-slate-50 text-slate-500">
+                      <span className="font-medium text-slate-700">{article.title}</span>
+                      {article.summary && <span className="block text-sm text-slate-500 mt-0.5">{article.summary}</span>}
+                      <span className="block text-xs text-slate-400 mt-1">Coming soon</span>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="mb-8">
         <CardHeader>

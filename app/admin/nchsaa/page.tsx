@@ -183,7 +183,7 @@ function BracketUploadTab() {
             Bulk upload
           </CardTitle>
           <CardDescription>
-            Upload multiple bracket images. Same year for all.
+            Upload multiple bracket images. Same year for all. Name files with division and weight, e.g. <span className="font-mono text-xs">1A2A-106.png</span>, <span className="font-mono text-xs">3A-113.png</span>.
           </CardDescription>
         </CardHeader>
         <CardContent>
