@@ -124,7 +124,7 @@ export default function NCHSAAYearResults() {
           .order("place")
 
         if (error) {
-          console.error("[NCHSAA] Error fetching tournament data:", error)
+          console.error("[RecruitNC] NCHSAA fetch error:", error instanceof Error ? error.message : String(error), error)
           setDebug({
             yearParam,
             displayYear,
@@ -206,7 +206,7 @@ export default function NCHSAAYearResults() {
         })
       } catch (e) {
         const errMsg = e instanceof Error ? e.message : String(e)
-        console.error("[NCHSAA] Error:", e)
+        console.error("[RecruitNC] NCHSAA page error:", e instanceof Error ? e.message : String(e), e)
         setDebug({
           yearParam,
           displayYear,

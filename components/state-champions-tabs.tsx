@@ -187,7 +187,7 @@ export function StateChampionsTabs() {
         })
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
-        console.error("Error fetching champions:", error)
+        console.error("[RecruitNC] State champions fetch error:", error instanceof Error ? error.message : String(error), error)
         setDebug({
           rawRowCount: 0,
           uniquePeopleCount: 0,

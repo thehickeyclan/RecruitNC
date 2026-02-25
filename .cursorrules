@@ -5,3 +5,6 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **EVERY nav/dropdown link:** Use plain `<a href="...">`, never Next.js `<Link>` and never `onSelect={() => router.push(...)}`. Radix dropdown + Link blocks navigation; this fails every time we add a new menu item if we forget. Pattern: `<DropdownMenuItem asChild><a href={item.href}>...</a></DropdownMenuItem>`.
 - **Before adding or changing any nav/dropdown item:** (1) Use `<a href="...">` for the clickable element. (2) Confirm the route exists (file for that path). (3) Copy the pattern from an existing working dropdown in navbar (e.g. States or Blue).
 - **New pages:** Create the route first, then add the link using the same pattern as working items.
+
+# Debugging (F12)
+- Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.

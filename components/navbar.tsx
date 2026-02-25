@@ -44,7 +44,7 @@ export function Navbar() {
     try {
       await signOut()
     } catch (error) {
-      console.error("Error signing out:", error)
+      console.error("[RecruitNC] Sign out error:", error instanceof Error ? error.message : String(error))
     }
   }
 
@@ -221,7 +221,7 @@ export function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem key="/nchsaa" asChild>
-                    <a href="/nchsaa" className="cursor-pointer flex items-start gap-3 py-2">
+                    <a href="/nchsaa" className="cursor-pointer flex items-start gap-3 py-2" onClick={() => console.debug("[RecruitNC] Nav click: /nchsaa")}>
                       <Trophy className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Tournament Overview</span>
@@ -230,7 +230,7 @@ export function Navbar() {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem key="/nchsaa/2026" asChild>
-                    <a href="/nchsaa/2026" className="cursor-pointer flex items-start gap-3 py-2">
+                    <a href="/nchsaa/2026" className="cursor-pointer flex items-start gap-3 py-2" onClick={() => console.debug("[RecruitNC] Nav click: /nchsaa/2026")}>
                       <Medal className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">2026 Results</span>
@@ -239,7 +239,7 @@ export function Navbar() {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem key="/nchsaa/2025" asChild>
-                    <a href="/nchsaa/2025" className="cursor-pointer flex items-start gap-3 py-2">
+                    <a href="/nchsaa/2025" className="cursor-pointer flex items-start gap-3 py-2" onClick={() => console.debug("[RecruitNC] Nav click: /nchsaa/2025")}>
                       <Medal className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">2025 Results</span>
@@ -248,7 +248,7 @@ export function Navbar() {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem key="/nchsaa/archive" asChild>
-                    <a href="/nchsaa/archive" className="cursor-pointer flex items-start gap-3 py-2">
+                    <a href="/nchsaa/archive" className="cursor-pointer flex items-start gap-3 py-2" onClick={() => console.debug("[RecruitNC] Nav click: /nchsaa/archive")}>
                       <Trophy className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                       <div className="flex flex-col gap-0.5">
                         <span className="font-medium">Digital Archive</span>

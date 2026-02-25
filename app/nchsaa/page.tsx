@@ -569,7 +569,7 @@ export default function NCHSAAOverview() {
                     </p>
                   </div>
                 </div>
-                <Link href="/nchsaa/archive" className="w-full md:w-auto mt-2 md:mt-0">
+                <a href="/nchsaa/archive" className="w-full md:w-auto mt-2 md:mt-0 block">
                   <Button
                     size="lg"
                     className="bg-[#CBAF5D] hover:bg-[#b89c4a] text-[#002147] font-bold text-sm sm:text-base md:text-lg px-4 md:px-8 py-2 md:py-3 lg:py-6 shadow-lg w-full md:w-auto"
@@ -577,14 +577,14 @@ export default function NCHSAAOverview() {
                     <Archive className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     Browse Archive
                   </Button>
-                </Link>
+                </a>
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Link href="/nchsaa/2025">
+          <a href="/nchsaa/2025" className="block h-full">
             <Card className="border-2 border-[#B31B1B] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#B31B1B] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -601,8 +601,8 @@ export default function NCHSAAOverview() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
-          <Link href="/nchsaa/2026">
+          </a>
+          <a href="/nchsaa/2026" className="block h-full">
             <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -619,8 +619,8 @@ export default function NCHSAAOverview() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
-          <Link href="/nchsaa/archive">
+          </a>
+          <a href="/nchsaa/archive" className="block h-full">
             <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -637,7 +637,7 @@ export default function NCHSAAOverview() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
+          </a>
         </div>
 
         {/* Tournament Overview */}
