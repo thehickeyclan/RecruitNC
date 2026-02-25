@@ -21,6 +21,7 @@ export function ConditionalAuthGuard({
   const isProspects = pathname === "/prospects" || pathname?.startsWith("/prospects/")
   const isAthletes = pathname === "/athletes" || pathname?.startsWith("/athletes/")
   const isPublicRankings = pathname?.startsWith("/public-rankings")
+  const isNchsaa = pathname === "/nchsaa" || pathname?.startsWith("/nchsaa/")
   const isPublic =
     isHomepage ||
     isAuthRoute ||
@@ -29,7 +30,8 @@ export function ConditionalAuthGuard({
     isViewProfile ||
     isProspects ||
     isAthletes ||
-    isPublicRankings
+    isPublicRankings ||
+    isNchsaa
 
   if (isPublic) {
     return <>{children}</>
