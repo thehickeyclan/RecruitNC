@@ -14,7 +14,7 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { AthletesLegacySearchContent } from "@/components/athletes-legacy-search-content"
 
-const NC_NAVY = "#002147"
+const NC_NAVY = "#003366"
 interface Athlete {
   id: string
   name: string
@@ -200,26 +200,26 @@ export default function AthletesPage() {
             ) : (
               <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-7 lg:gap-6">
                 {/* Total Commitments Card */}
-                <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
-                  <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
+                <Card className="border overflow-hidden lg:col-span-2 border-blue-200" style={{ borderColor: "#003366", borderOpacity: 0.3 }}>
+                  <div className="h-2" style={{ backgroundColor: "#003366" }}></div>
                   <CardContent className="p-4">
-                    <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
+                    <h3 className="text-lg font-medium mb-1" style={{ color: "#003366" }}>
                       Total Commitments
                     </h3>
-                    <p className="text-xs mb-2" style={{ color: "#002147", opacity: 0.7 }}>
+                    <p className="text-xs mb-2" style={{ color: "#003366", opacity: 0.7 }}>
                       {selectedYear !== "all" ? `Class of ${selectedYear}` : "All Classes"}
                     </p>
                     <div className="flex justify-between items-center py-2">
                       <div className="flex flex-col items-center">
-                        <span className="text-xl font-semibold" style={{ color: "#002147" }}>
+                        <span className="text-xl font-semibold" style={{ color: "#003366" }}>
                           {stats.male}
                         </span>
-                        <span className="text-xs" style={{ color: "#002147", opacity: 0.7 }}>
+                        <span className="text-xs" style={{ color: "#003366", opacity: 0.7 }}>
                           Male
                         </span>
                       </div>
 
-                      <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#002147" }}>
+                      <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#003366" }}>
                         {stats.total}
                       </span>
 
@@ -248,18 +248,18 @@ export default function AthletesPage() {
                           <div
                             className="w-full transition-all duration-300"
                             style={{
-                              backgroundColor: "#002147",
+                              backgroundColor: "#003366",
                               height: `${stats.total ? Math.max((stats.divisions.D1 / stats.total) * 100, 8) : 0}%`,
                             }}
                           ></div>
                         </div>
                         <div
                           className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                          style={{ backgroundColor: "#002147" }}
+                          style={{ backgroundColor: "#003366" }}
                         >
                           {stats.divisions.D1}
                         </div>
-                        <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#003366" }}>
                           D1
                         </span>
                       </div>
@@ -290,18 +290,18 @@ export default function AthletesPage() {
                           <div
                             className="w-full transition-all duration-300"
                             style={{
-                              backgroundColor: "#002147",
+                              backgroundColor: "#003366",
                               height: `${stats.total ? Math.max((stats.divisions.D3 / stats.total) * 100, 8) : 0}%`,
                             }}
                           ></div>
                         </div>
                         <div
                           className="text-white font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                          style={{ backgroundColor: "#002147" }}
+                          style={{ backgroundColor: "#003366" }}
                         >
                           {stats.divisions.D3}
                         </div>
-                        <span className="text-xs font-medium mt-1" style={{ color: "#002147" }}>
+                        <span className="text-xs font-medium mt-1" style={{ color: "#003366" }}>
                           D3
                         </span>
                       </div>
@@ -318,7 +318,7 @@ export default function AthletesPage() {
                         </div>
                         <div
                           className="font-bold py-1 px-1 lg:px-2 rounded-b-md text-center w-full text-sm lg:text-base"
-                          style={{ backgroundColor: "#D3B574", color: "#002147" }}
+                          style={{ backgroundColor: "#D3B574", color: "#003366" }}
                         >
                           {stats.divisions.NAIA}
                         </div>
@@ -366,7 +366,7 @@ export default function AthletesPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 rounded-lg focus:ring-2"
-                  style={{ focusBorderColor: "#002147" }}
+                  style={{ focusBorderColor: "#003366" }}
                 />
               </div>
             </div>
@@ -377,8 +377,8 @@ export default function AthletesPage() {
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" style={{ color: "#002147" }} />
-                <span className="font-medium" style={{ color: "#002147" }}>Filter Athletes</span>
+                <Trophy className="h-5 w-5" style={{ color: "#003366" }} />
+                <span className="font-medium" style={{ color: "#003366" }}>Filter Athletes</span>
               </div>
 
               <div className="flex flex-wrap gap-4 flex-1">

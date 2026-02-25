@@ -170,11 +170,11 @@ export default function SignInPage() {
       <div className="w-full max-w-6xl mt-4 sm:mt-8">
         <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Prominent Registration Banner for New Users */}
-          <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden order-2 lg:order-1">
+          <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#003366] to-[#1e3a8a] text-white overflow-hidden order-2 lg:order-1">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none"></div>
             <CardContent className="relative p-4 sm:p-6 md:p-8">
               <div className="text-center mb-6">
-                <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
+                <Badge className="mb-4 bg-[#D3B574] text-[#003366] text-sm font-bold px-4 py-1">
                   100% FREE
                 </Badge>
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">
@@ -219,7 +219,7 @@ export default function SignInPage() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-[#D3B574] hover:bg-[#c4a151] text-[#03154C] font-bold text-base md:text-lg px-6 md:px-8 py-5 md:py-6 h-auto w-full"
+                  className="bg-[#D3B574] hover:bg-[#c4a151] text-[#003366] font-bold text-base md:text-lg px-6 md:px-8 py-5 md:py-6 h-auto w-full"
                 >
                   <Link href={`/auth/signup${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`} target="_top" rel="noopener">
                     Create Free Account

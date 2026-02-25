@@ -680,12 +680,12 @@ export default function SchoolsPage() {
   }
 
   const getPlacementBadge = (place: number) => {
-    if (place === 1) return <Badge className="bg-[#CBAF5D] text-[#002147]">1st</Badge>
+    if (place === 1) return <Badge className="bg-[#CBAF5D] text-[#003366]">1st</Badge>
     if (place === 2) return <Badge className="bg-[#6b7280] text-white">2nd</Badge>
     if (place === 3) return <Badge className="bg-[#B31B1B] text-white">3rd</Badge>
-    if (place <= 8) return <Badge className="bg-[#002147] text-white">{place}th</Badge>
+    if (place <= 8) return <Badge className="bg-[#003366] text-white">{place}th</Badge>
     return (
-      <Badge variant="outline" className="border-[#002147] text-[#002147]">
+      <Badge variant="outline" className="border-[#003366] text-[#003366]">
         {place}th
       </Badge>
     )
@@ -882,7 +882,7 @@ export default function SchoolsPage() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-white">
-        <div className="bg-[#002147] text-white">
+        <div className="bg-[#003366] text-white">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center max-w-4xl mx-auto">
             <div className="flex justify-center mb-6">
@@ -923,14 +923,14 @@ export default function SchoolsPage() {
 
       <div className="container mx-auto p-4 sm:p-6 space-y-6 pb-8">
         {/* Main Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#002147]/20 p-1">
+        <div className="bg-white rounded-xl shadow-sm border border-[#003366]/20 p-1">
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 sm:gap-2">
             <button
               onClick={() => handleTabSwitch("search")}
               className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-3 sm:py-4 rounded-lg text-xs sm:text-sm font-medium transition-all min-h-[44px] ${
                 activeTab === "search"
-                  ? "bg-[#002147] text-white shadow-sm"
-                  : "text-[#002147] hover:text-[#002147] hover:bg-[#002147]/10"
+                  ? "bg-[#003366] text-white shadow-sm"
+                  : "text-[#003366] hover:text-[#003366] hover:bg-[#003366]/10"
               }`}
             >
               <Search className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -940,8 +940,8 @@ export default function SchoolsPage() {
               onClick={() => handleTabSwitch("best")}
               className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-3 sm:py-4 rounded-lg text-xs sm:text-sm font-medium transition-all min-h-[44px] ${
                 activeTab === "best"
-                  ? "bg-[#002147] text-white shadow-sm"
-                  : "text-[#002147] hover:text-[#002147] hover:bg-[#002147]/10"
+                  ? "bg-[#003366] text-white shadow-sm"
+                  : "text-[#003366] hover:text-[#003366] hover:bg-[#003366]/10"
               }`}
             >
               <Trophy className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -951,8 +951,8 @@ export default function SchoolsPage() {
               onClick={() => handleTabSwitch("tournament")}
               className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-3 sm:py-4 rounded-lg text-xs sm:text-sm font-medium transition-all min-h-[44px] ${
                 activeTab === "tournament"
-                  ? "bg-[#002147] text-white shadow-sm"
-                  : "text-[#002147] hover:text-[#002147] hover:bg-[#002147]/10"
+                  ? "bg-[#003366] text-white shadow-sm"
+                  : "text-[#003366] hover:text-[#003366] hover:bg-[#003366]/10"
               }`}
             >
               <Crown className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -962,8 +962,8 @@ export default function SchoolsPage() {
               onClick={() => handleTabSwitch("dual")}
               className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-3 sm:py-4 rounded-lg text-xs sm:text-sm font-medium transition-all min-h-[44px] ${
                 activeTab === "dual"
-                  ? "bg-[#002147] text-white shadow-sm"
-                  : "text-[#002147] hover:text-[#002147] hover:bg-[#002147]/10"
+                  ? "bg-[#003366] text-white shadow-sm"
+                  : "text-[#003366] hover:text-[#003366] hover:bg-[#003366]/10"
               }`}
             >
               <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -979,8 +979,8 @@ export default function SchoolsPage() {
         )}
 
         {activeTab === "search" && (
-          <Card className="border-2 border-[#002147]/20 rounded-2xl shadow-lg overflow-hidden">
-            <CardHeader className="bg-[#002147] text-white rounded-t-2xl">
+          <Card className="border-2 border-[#003366]/20 rounded-2xl shadow-lg overflow-hidden">
+            <CardHeader className="bg-[#003366] text-white rounded-t-2xl">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                 <School className="h-5 w-5 sm:h-6 sm:w-6" />
                 Search High School Programs
@@ -993,12 +993,12 @@ export default function SchoolsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  className="flex-1 h-12 rounded-xl border-2 border-[#002147]/20 bg-white px-4 text-[#002147] placeholder:text-[#002147]/50 focus:border-[#002147] focus:ring-[#002147]"
+                  className="flex-1 h-12 rounded-xl border-2 border-[#003366]/20 bg-white px-4 text-[#003366] placeholder:text-[#003366]/50 focus:border-[#003366] focus:ring-[#003366]"
                 />
                 <Button
                   onClick={handleSearch}
                   disabled={loading}
-                  className="h-12 px-6 bg-[#B31B1B] hover:bg-[#002147] text-white rounded-xl font-medium shadow-lg w-full sm:w-auto"
+                  className="h-12 px-6 bg-[#B31B1B] hover:bg-[#003366] text-white rounded-xl font-medium shadow-lg w-full sm:w-auto"
                 >
                   {loading ? "Searching..." : "Search"}
                 </Button>
@@ -1006,9 +1006,9 @@ export default function SchoolsPage() {
 
               {selectedSchool && schoolDetails && (
                 <div className="mt-6 mb-8">
-                  <Card className="border-2 border-[#002147]/20 rounded-2xl shadow-sm">
-                    <CardHeader className="pb-4 bg-[#002147]/5 rounded-t-2xl">
-                      <CardTitle className="flex items-center gap-2 text-[#002147]">
+                  <Card className="border-2 border-[#003366]/20 rounded-2xl shadow-sm">
+                    <CardHeader className="pb-4 bg-[#003366]/5 rounded-t-2xl">
+                      <CardTitle className="flex items-center gap-2 text-[#003366]">
                         <School className="h-5 w-5" />
                         {selectedSchool}
                       </CardTitle>
@@ -1126,7 +1126,7 @@ export default function SchoolsPage() {
                                     {/* Current Commits Section */}
                                     {currentCommits.length > 0 && (
                                       <div>
-                                        <h4 className="text-sm font-semibold text-[#002147] mb-3 flex items-center gap-2">
+                                        <h4 className="text-sm font-semibold text-[#003366] mb-3 flex items-center gap-2">
                                           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                                           Current Commits ({currentCommits.length})
                                         </h4>
@@ -1170,8 +1170,8 @@ export default function SchoolsPage() {
                                     {/* College Athletes Section - Grouped by Year */}
                                     {sortedYears.length > 0 && (
                                       <div>
-                                        <h4 className="text-sm font-semibold text-[#002147] mb-3 flex items-center gap-2">
-                                          <span className="w-2 h-2 bg-[#002147] rounded-full"></span>
+                                        <h4 className="text-sm font-semibold text-[#003366] mb-3 flex items-center gap-2">
+                                          <span className="w-2 h-2 bg-[#003366] rounded-full"></span>
                                           College Athletes ({collegeAthletes.length})
                                         </h4>
                                         <div className="space-y-4">
@@ -1188,7 +1188,7 @@ export default function SchoolsPage() {
                                                         <h3 className="font-semibold text-gray-900">{result.name}</h3>
                                                         <Badge
                                                           variant="outline"
-                                                          className="border-[#002147] text-[#002147] text-xs px-2 py-1"
+                                                          className="border-[#003366] text-[#003366] text-xs px-2 py-1"
                                                         >
                                                           '${String(year).slice(-2)}
                                                         </Badge>
@@ -1240,7 +1240,7 @@ export default function SchoolsPage() {
 
         {activeTab === "best" && (
           <div className="space-y-6 mt-6">
-            <div className="bg-[#002147] rounded-2xl p-4 md:p-8 text-white shadow-lg">
+            <div className="bg-[#003366] rounded-2xl p-4 md:p-8 text-white shadow-lg">
               <div className="text-center">
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">HIGH SCHOOL WRESTLING EXCELLENCE</h1>
                 <p className="text-white/80 mb-4 md:mb-6 text-sm md:text-base">Combined NHSCA National and NCHSAA State Performance Rankings</p>
@@ -1276,34 +1276,34 @@ export default function SchoolsPage() {
                   <Badge className="bg-[#B31B1B] hover:bg-[#B31B1B] text-white px-4 py-2 text-sm font-medium shadow-lg">
                     {leaderboard.length} Total Schools
                   </Badge>
-                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D] text-[#002147] px-4 py-2 text-sm font-medium shadow-lg">
+                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D] text-[#003366] px-4 py-2 text-sm font-medium shadow-lg">
                     All-Time Rankings
                   </Badge>
                 </div>
               </div>
             </div>
 
-            <Card className="border-2 border-[#002147]/20 rounded-2xl shadow-lg overflow-hidden">
-              <CardHeader className="pb-4 bg-[#002147]/5 rounded-t-2xl border-b-2 border-[#002147]/20">
+            <Card className="border-2 border-[#003366]/20 rounded-2xl shadow-lg overflow-hidden">
+              <CardHeader className="pb-4 bg-[#003366]/5 rounded-t-2xl border-b-2 border-[#003366]/20">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <CardTitle className="flex items-center gap-2 text-[#002147]">
+                  <CardTitle className="flex items-center gap-2 text-[#003366]">
                     <Filter className="h-5 w-5" />
                     Filter by Division
                   </CardTitle>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="points-toggle" className="text-sm text-[#002147] cursor-pointer">
+                      <Label htmlFor="points-toggle" className="text-sm text-[#003366] cursor-pointer">
                         Show Points
                       </Label>
                       <Switch
                         id="points-toggle"
                         checked={showPoints}
                         onCheckedChange={setShowPoints}
-                        className="data-[state=checked]:bg-[#002147]"
+                        className="data-[state=checked]:bg-[#003366]"
                       />
                     </div>
                     <Select value={selectedTopSchoolsDivision} onValueChange={setSelectedTopSchoolsDivision}>
-                      <SelectTrigger className="w-48 border-2 border-[#002147]/20 focus:border-[#002147]">
+                      <SelectTrigger className="w-48 border-2 border-[#003366]/20 focus:border-[#003366]">
                         <SelectValue placeholder="Select division" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1319,15 +1319,15 @@ export default function SchoolsPage() {
               </CardHeader>
               <CardContent className="p-0">
                 {leaderboardLoading ? (
-                  <div className="text-center py-12 text-[#002147]/60">
-                    <TrendingUp className="h-8 w-8 mx-auto mb-4 text-[#002147]/40" />
+                  <div className="text-center py-12 text-[#003366]/60">
+                    <TrendingUp className="h-8 w-8 mx-auto mb-4 text-[#003366]/40" />
                     Loading leaderboard...
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-[#002147] hover:bg-[#002147] border-0">
+                        <TableRow className="bg-[#003366] hover:bg-[#003366] border-0">
                           <TableHead className="text-white font-semibold py-4 text-left whitespace-nowrap">
                             Rank
                           </TableHead>
@@ -1362,16 +1362,16 @@ export default function SchoolsPage() {
                         {filteredLeaderboard.map((school, index) => (
                           <TableRow
                             key={school.school}
-                            className={`border-b hover:bg-[#002147]/5 transition-colors ${
-                              index % 2 === 0 ? "bg-white" : "bg-[#002147]/5"
+                            className={`border-b hover:bg-[#003366]/5 transition-colors ${
+                              index % 2 === 0 ? "bg-white" : "bg-[#003366]/5"
                             }`}
                           >
-                            <TableCell className="font-bold text-[#002147] py-4">
-                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#CBAF5D] text-[#002147] text-sm font-bold">
+                            <TableCell className="font-bold text-[#003366] py-4">
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#CBAF5D] text-[#003366] text-sm font-bold">
                                 {index + 1}
                               </div>
                             </TableCell>
-                            <TableCell className="font-semibold text-[#002147] py-4 text-sm">
+                            <TableCell className="font-semibold text-[#003366] py-4 text-sm">
                               <a
                                 href={`/schools?q=${encodeURIComponent(school.school)}`}
                                 className="hover:underline hover:text-[#B31B1B] transition-colors cursor-pointer"
@@ -1407,12 +1407,12 @@ export default function SchoolsPage() {
                               </div>
                             </TableCell>
                             <TableCell className="text-center py-4">
-                              <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#002147] text-white text-xs font-bold">
+                              <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#003366] text-white text-xs font-bold">
                                 {showPoints ? school.nchsaa_champions * 3 : school.nchsaa_champions}
                               </div>
                             </TableCell>
                             <TableCell className="text-center py-4">
-                              <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#CBAF5D] text-[#002147] text-xs font-bold">
+                              <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#CBAF5D] text-[#003366] text-xs font-bold">
                                 {showPoints ? school.nchsaa_placers * 1 : school.nchsaa_placers}
                               </div>
                             </TableCell>
@@ -1422,7 +1422,7 @@ export default function SchoolsPage() {
                               </div>
                             </TableCell>
                             <TableCell className="text-center py-4">
-                              <div className="inline-flex items-center justify-center w-12 h-8 rounded-full bg-[#002147] text-white text-sm font-bold">
+                              <div className="inline-flex items-center justify-center w-12 h-8 rounded-full bg-[#003366] text-white text-sm font-bold">
                                 {school.total_score}
                               </div>
                             </TableCell>
@@ -1439,25 +1439,25 @@ export default function SchoolsPage() {
 
         {activeTab === "tournament" && (
           <div className="space-y-6 mt-6">
-            <div className="bg-[#CBAF5D] rounded-2xl p-4 md:p-8 text-[#002147] shadow-lg">
+            <div className="bg-[#CBAF5D] rounded-2xl p-4 md:p-8 text-[#003366] shadow-lg">
               <div className="text-center">
                 <h1 className="text-3xl font-bold mb-2">NCHSAA STATE TOURNAMENT CHAMPIONS</h1>
-                <p className="text-[#002147]/80 mb-6">
+                <p className="text-[#003366]/80 mb-6">
                   Team Championship Leaderboard - Individual Wrestling Tournament (1931-2025)
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="text-center bg-[#002147]/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="text-center bg-[#003366]/10 backdrop-blur-sm rounded-lg p-4">
                     <div className="text-2xl font-bold text-[#B31B1B]">95 Years</div>
-                    <div className="text-sm text-[#002147]/80">Tournament History</div>
+                    <div className="text-sm text-[#003366]/80">Tournament History</div>
                   </div>
-                  <div className="text-center bg-[#002147]/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="text-center bg-[#003366]/10 backdrop-blur-sm rounded-lg p-4">
                     <div className="text-2xl font-bold text-[#B31B1B]">{tournamentLeaderboard.length}</div>
-                    <div className="text-sm text-[#002147]/80">Championship Schools</div>
+                    <div className="text-sm text-[#003366]/80">Championship Schools</div>
                   </div>
-                  <div className="text-center bg-[#002147]/10 backdrop-blur-sm rounded-lg p-4">
+                  <div className="text-center bg-[#003366]/10 backdrop-blur-sm rounded-lg p-4">
                     <div className="text-2xl font-bold text-[#B31B1B]">{tournamentChampions.length}</div>
-                    <div className="text-sm text-[#002147]/80">Total Championships</div>
+                    <div className="text-sm text-[#003366]/80">Total Championships</div>
                   </div>
                 </div>
 
@@ -1465,28 +1465,28 @@ export default function SchoolsPage() {
                   <Badge className="bg-[#B31B1B] hover:bg-[#B31B1B] text-white px-4 py-2 text-sm font-medium shadow-lg">
                     NCHSAA Official
                   </Badge>
-                  <Badge className="bg-[#002147] hover:bg-[#002147] text-white px-4 py-2 text-sm font-medium shadow-lg">
+                  <Badge className="bg-[#003366] hover:bg-[#003366] text-white px-4 py-2 text-sm font-medium shadow-lg">
                     Team Champions
                   </Badge>
                 </div>
               </div>
             </div>
 
-            <Card className="border border-[#002147]/20 rounded-2xl shadow-sm overflow-hidden">
-              <CardHeader className="pb-4 bg-[#002147]/5 rounded-t-2xl border-b border-[#002147]/20">
+            <Card className="border border-[#003366]/20 rounded-2xl shadow-sm overflow-hidden">
+              <CardHeader className="pb-4 bg-[#003366]/5 rounded-t-2xl border-b border-[#003366]/20">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-[#002147]">
+                  <CardTitle className="flex items-center gap-2 text-[#003366]">
                     <Filter className="h-5 w-5" />
                     {tournamentViewType === "leaderboard" ? "Filter by Division" : "View Options"}
                   </CardTitle>
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-[#002147]/20">
+                    <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-[#003366]/20">
                       <button
                         onClick={() => setTournamentViewType("leaderboard")}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           tournamentViewType === "leaderboard"
-                            ? "bg-[#CBAF5D] text-[#002147]"
-                            : "text-[#002147] hover:bg-[#002147]/10"
+                            ? "bg-[#CBAF5D] text-[#003366]"
+                            : "text-[#003366] hover:bg-[#003366]/10"
                         }`}
                       >
                         Leaderboard
@@ -1495,8 +1495,8 @@ export default function SchoolsPage() {
                         onClick={() => setTournamentViewType("by-year")}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           tournamentViewType === "by-year"
-                            ? "bg-[#CBAF5D] text-[#002147]"
-                            : "text-[#002147] hover:bg-[#002147]/10"
+                            ? "bg-[#CBAF5D] text-[#003366]"
+                            : "text-[#003366] hover:bg-[#003366]/10"
                         }`}
                       >
                         By Year
@@ -1504,7 +1504,7 @@ export default function SchoolsPage() {
                     </div>
                     {tournamentViewType === "leaderboard" && (
                       <Select value={selectedTournamentDivision} onValueChange={setSelectedTournamentDivision}>
-                        <SelectTrigger className="w-48 border-[#002147]/20 focus:border-[#002147]">
+                        <SelectTrigger className="w-48 border-[#003366]/20 focus:border-[#003366]">
                           <SelectValue placeholder="Select division" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1531,19 +1531,19 @@ export default function SchoolsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-[#CBAF5D] hover:bg-[#CBAF5D] border-0">
-                          <TableHead className="text-[#002147] font-semibold py-4 text-left">Rank</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-left">School</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-center">
+                          <TableHead className="text-[#003366] font-semibold py-4 text-left">Rank</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-left">School</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-center">
                             Total Championships
                           </TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-center">Divisions</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-center">Most Recent</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-left">Championship Years</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-center">Divisions</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-center">Most Recent</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-left">Championship Years</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredTournamentLeaderboard.map((school, index) => (
-                          <TableRow key={school.school} className="hover:bg-[#002147]/10 border-b border-gray-100">
+                          <TableRow key={school.school} className="hover:bg-[#003366]/10 border-b border-gray-100">
                             <TableCell className="py-4">
                               <div className="flex items-center gap-2">
                                 {index === 0 && <Crown className="h-4 w-4 text-[#CBAF5D]" />}
@@ -1556,7 +1556,7 @@ export default function SchoolsPage() {
                               <span className="font-medium text-blue-600">{school.school}</span>
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#CBAF5D] text-[#002147] text-lg font-bold">
+                              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#CBAF5D] text-[#003366] text-lg font-bold">
                                 {school.total_championships}
                               </div>
                             </TableCell>
@@ -1566,7 +1566,7 @@ export default function SchoolsPage() {
                                   <Badge
                                     key={division}
                                     variant="outline"
-                                    className="border-[#CBAF5D] text-[#CBAF5D] bg-[#002147]/5 text-xs"
+                                    className="border-[#CBAF5D] text-[#CBAF5D] bg-[#003366]/5 text-xs"
                                   >
                                     {division}: {count}
                                   </Badge>
@@ -1593,12 +1593,12 @@ export default function SchoolsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-[#CBAF5D] hover:bg-[#CBAF5D] border-0">
-                          <TableHead className="text-[#002147] font-semibold py-4 text-center">Year</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-left">School</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-center">Division</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-left">Tournament Site</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-left">Coach</TableHead>
-                          <TableHead className="text-[#002147] font-semibold text-center">Points</TableHead>
+                          <TableHead className="text-[#003366] font-semibold py-4 text-center">Year</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-left">School</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-center">Division</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-left">Tournament Site</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-left">Coach</TableHead>
+                          <TableHead className="text-[#003366] font-semibold text-center">Points</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1659,31 +1659,31 @@ export default function SchoolsPage() {
                 </div>
 
                 <div className="flex justify-center gap-4">
-                  <Badge className="bg-[#002147] hover:bg-[#002147] text-white px-4 py-2 text-sm font-medium shadow-lg">
+                  <Badge className="bg-[#003366] hover:bg-[#003366] text-white px-4 py-2 text-sm font-medium shadow-lg">
                     NCHSAA Official
                   </Badge>
-                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D] text-[#002147] px-4 py-2 text-sm font-medium shadow-lg">
+                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D] text-[#003366] px-4 py-2 text-sm font-medium shadow-lg">
                     Dual Team Champions
                   </Badge>
                 </div>
               </div>
             </div>
 
-            <Card className="border border-[#002147]/20 rounded-2xl shadow-sm overflow-hidden">
-              <CardHeader className="pb-4 bg-[#002147]/5 rounded-t-2xl border-b border-[#002147]/20">
+            <Card className="border border-[#003366]/20 rounded-2xl shadow-sm overflow-hidden">
+              <CardHeader className="pb-4 bg-[#003366]/5 rounded-t-2xl border-b border-[#003366]/20">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-[#002147]">
+                  <CardTitle className="flex items-center gap-2 text-[#003366]">
                     <Filter className="h-5 w-5" />
                     {dualTeamViewType === "leaderboard" ? "Filter by Division" : "View Options"}
                   </CardTitle>
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-[#002147]/20">
+                    <div className="flex items-center gap-2 bg-white rounded-lg p-1 border border-[#003366]/20">
                       <button
                         onClick={() => setDualTeamViewType("leaderboard")}
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           dualTeamViewType === "leaderboard"
                             ? "bg-[#B31B1B] text-white"
-                            : "text-[#002147] hover:text-[#002147] hover:bg-[#002147]/10"
+                            : "text-[#003366] hover:text-[#003366] hover:bg-[#003366]/10"
                         }`}
                       >
                         Leaderboard
@@ -1693,7 +1693,7 @@ export default function SchoolsPage() {
                         className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                           dualTeamViewType === "by-year"
                             ? "bg-[#B31B1B] text-white"
-                            : "text-[#002147] hover:text-[#002147] hover:bg-[#002147]/10"
+                            : "text-[#003366] hover:text-[#003366] hover:bg-[#003366]/10"
                         }`}
                       >
                         By Year
@@ -1701,7 +1701,7 @@ export default function SchoolsPage() {
                     </div>
                     {dualTeamViewType === "leaderboard" && (
                       <Select value={selectedDualTeamDivision} onValueChange={setSelectedDualTeamDivision}>
-                        <SelectTrigger className="w-48 border-2 border-[#002147]/20 focus:border-[#002147]">
+                        <SelectTrigger className="w-48 border-2 border-[#003366]/20 focus:border-[#003366]">
                           <SelectValue placeholder="Select division" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1738,7 +1738,7 @@ export default function SchoolsPage() {
                       </TableHeader>
                       <TableBody>
                         {filteredDualTeamLeaderboard.map((school, index) => (
-                          <TableRow key={school.school} className="hover:bg-[#002147]/10 border-b border-gray-100">
+                          <TableRow key={school.school} className="hover:bg-[#003366]/10 border-b border-gray-100">
                             <TableCell className="py-4">
                               <div className="flex items-center gap-2">
                                 {index === 0 && <Award className="h-4 w-4 text-[#B31B1B]" />}
@@ -1761,7 +1761,7 @@ export default function SchoolsPage() {
                                   <Badge
                                     key={division}
                                     variant="outline"
-                                    className="border-[#B31B1B] text-[#B31B1B] bg-[#002147]/5 text-xs"
+                                    className="border-[#B31B1B] text-[#B31B1B] bg-[#003366]/5 text-xs"
                                   >
                                     {division}: {count}
                                   </Badge>

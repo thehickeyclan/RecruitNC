@@ -267,7 +267,7 @@ export default function HomePage() {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
           />
           {/* Brand-aligned navy + gold overlay - balanced for image visibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#002147]/60 via-[#002147]/70 to-[#002147]/60 transition-opacity duration-300" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#003366]/60 via-[#003366]/70 to-[#003366]/60 transition-opacity duration-300" />
           <div className="absolute inset-y-0 left-0 w-2/3 bg-gradient-to-tr from-[#D3B574]/20 via-transparent to-transparent pointer-events-none" />
         </div>
 
@@ -312,7 +312,7 @@ export default function HomePage() {
                 <Link href="/prospects/all">
                   <Button
                     className="min-h-[52px] px-6 md:px-8 text-base md:text-lg font-semibold text-white hover:opacity-95 transition-all hover:scale-105 shadow-lg"
-                    style={{ backgroundColor: "#002147" }}
+                    style={{ backgroundColor: "#003366" }}
                   >
                     Prospects
                   </Button>
@@ -348,7 +348,7 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="mb-12">
-        <h2 className="mb-6 text-2xl font-bold" style={{ color: "#002147" }}>
+        <h2 className="mb-6 text-2xl font-bold" style={{ color: "#003366" }}>
           Features
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -377,7 +377,7 @@ export default function HomePage() {
           </Link>
 
           <Link href="/colleges" className="block">
-            <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#002147" }}>
+            <Card className="overflow-hidden border-t-4 transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer" style={{ borderTopColor: "#003366" }}>
               <CardContent className="p-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
                   <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,7 +389,7 @@ export default function HomePage() {
                     />
                   </svg>
                 </div>
-                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#002147" }}>
+                <h3 className="mb-2 text-xl font-semibold" style={{ color: "#003366" }}>
                   College Insights
                 </h3>
                 <p className="text-gray-600">
@@ -427,7 +427,7 @@ export default function HomePage() {
       {/* Featured Rankings Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
+          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
             Featured Rankings
           </h2>
           <Link href="/public-rankings">
@@ -435,7 +435,7 @@ export default function HomePage() {
               variant="outline"
               size="sm"
               className="hover:opacity-80 bg-transparent"
-              style={{ borderColor: "#002147", color: "#002147" }}
+              style={{ borderColor: "#003366", color: "#003366" }}
             >
               View All Rankings
             </Button>
@@ -451,7 +451,7 @@ export default function HomePage() {
             {/* Class of 2026 Section */}
             {featuredRankings.filter((a) => a.graduationyear === 2026).length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: "#002147" }}>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: "#003366" }}>
                   Class of 2026
                 </h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -482,7 +482,7 @@ export default function HomePage() {
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-bold text-lg" style={{ color: "#002147" }}>
+                                  <h3 className="font-bold text-lg" style={{ color: "#003366" }}>
                                     {athlete.name}
                                   </h3>
                                   {athlete.prospect_ranking && (
@@ -515,7 +515,7 @@ export default function HomePage() {
             {/* Class of 2027 Section */}
             {featuredRankings.filter((a) => a.graduationyear === 2027).length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: "#002147" }}>
+                <h3 className="text-lg font-semibold mb-4" style={{ color: "#003366" }}>
                   Class of 2027
                 </h3>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -546,7 +546,7 @@ export default function HomePage() {
                               )}
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-bold text-lg" style={{ color: "#002147" }}>
+                                  <h3 className="font-bold text-lg" style={{ color: "#003366" }}>
                                     {athlete.name}
                                   </h3>
                                   {athlete.prospect_ranking && (
@@ -586,7 +586,7 @@ export default function HomePage() {
       {/* Latest Commits Section */}
       <section className="mb-12">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
+          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
             Latest Commits
           </h2>
           <Link href="/athletes">
@@ -594,7 +594,7 @@ export default function HomePage() {
               variant="outline"
               size="sm"
               className="hover:opacity-80 bg-transparent"
-              style={{ borderColor: "#002147", color: "#002147" }}
+              style={{ borderColor: "#003366", color: "#003366" }}
             >
               View All Athletes
             </Button>
@@ -624,7 +624,7 @@ export default function HomePage() {
 
         <div className="mt-6 flex justify-center">
           <Link href="/athletes">
-            <Button className="text-white hover:opacity-90" style={{ backgroundColor: "#002147" }}>
+            <Button className="text-white hover:opacity-90" style={{ backgroundColor: "#003366" }}>
               View All Commitments
             </Button>
           </Link>
@@ -634,7 +634,7 @@ export default function HomePage() {
       {/* Commitment Statistics - moved below Latest Commits */}
       <section className="mb-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-          <h2 className="text-2xl font-bold" style={{ color: "#002147" }}>
+          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
             Commitment Statistics
           </h2>
 
@@ -647,9 +647,9 @@ export default function HomePage() {
                 onClick={() => setYearFilter(year)}
                 className="text-xs sm:text-sm"
                 style={{
-                  backgroundColor: yearFilter === year ? "#002147" : "transparent",
-                  borderColor: "#002147",
-                  color: yearFilter === year ? "white" : "#002147",
+                  backgroundColor: yearFilter === year ? "#003366" : "transparent",
+                  borderColor: "#003366",
+                  color: yearFilter === year ? "white" : "#003366",
                 }}
               >
                 {year === "All" ? "All Years" : `Class of ${year}`}
@@ -664,26 +664,26 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-1 lg:max-w-md">
-            <Card className="border overflow-hidden border-blue-200" style={{ borderColor: "#002147", borderOpacity: 0.3 }}>
-              <div className="h-2" style={{ backgroundColor: "#002147" }}></div>
+            <Card className="border overflow-hidden border-blue-200" style={{ borderColor: "#003366", borderOpacity: 0.3 }}>
+              <div className="h-2" style={{ backgroundColor: "#003366" }}></div>
               <CardContent className="p-4">
-                <h3 className="text-lg font-medium mb-1" style={{ color: "#002147" }}>
+                <h3 className="text-lg font-medium mb-1" style={{ color: "#003366" }}>
                   Total Commitments
                 </h3>
-                <p className="text-xs mb-2" style={{ color: "#002147", opacity: 0.7 }}>
+                <p className="text-xs mb-2" style={{ color: "#003366", opacity: 0.7 }}>
                   Tracking Class of 2025 and beyond
                 </p>
                 <div className="flex justify-between items-center py-2">
                   <div className="flex flex-col items-center">
-                    <span className="text-xl font-semibold" style={{ color: "#002147" }}>
+                    <span className="text-xl font-semibold" style={{ color: "#003366" }}>
                       {stats.male}
                     </span>
-                    <span className="text-xs" style={{ color: "#002147", opacity: 0.7 }}>
+                    <span className="text-xs" style={{ color: "#003366", opacity: 0.7 }}>
                       Male
                     </span>
                   </div>
 
-                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#002147" }}>
+                  <span className="text-4xl lg:text-5xl font-bold text-center" style={{ color: "#003366" }}>
                     {stats.total}
                   </span>
 
@@ -703,7 +703,7 @@ export default function HomePage() {
       </section>
 
       {/* Information Banner */}
-      <div className="mb-12 rounded-lg p-4 text-white" style={{ backgroundColor: "#002147" }}>
+      <div className="mb-12 rounded-lg p-4 text-white" style={{ backgroundColor: "#003366" }}>
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <h2 className="text-xl font-bold">Submit or Update Wrestling Information</h2>

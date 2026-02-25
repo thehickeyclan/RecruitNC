@@ -8,6 +8,10 @@ const ARTICLE_CONTENT: Record<string, () => JSX.Element> = {
   "seven-divisions-98-brackets-784-qualifiers": SevenDivisionsArticleContent,
 }
 
+export async function generateStaticParams() {
+  return [{ year: "2026", slug: "seven-divisions-98-brackets-784-qualifiers" }]
+}
+
 export default async function NCHSAAArticlePage({
   params,
 }: {
@@ -31,7 +35,7 @@ export default async function NCHSAAArticlePage({
           </a>
         </div>
         <header className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-[#03154c]">{article.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#003366]">{article.title}</h1>
           {article.date && (
             <p className="text-slate-500 text-sm mt-2">{new Date(article.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
           )}

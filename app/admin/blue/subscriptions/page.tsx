@@ -80,7 +80,7 @@ export default function AdminBlueSubscriptionsPage() {
             <Link href="/admin/blue"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[#13294B]">Blue member cockpit</h1>
+            <h1 className="text-2xl font-bold text-[#003366]">Blue member cockpit</h1>
             <p className="text-sm text-gray-600">All Blue members and subscriptions in one view</p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function AdminBlueSubscriptionsPage() {
           <CardContent>
             {loading ? (
               <div className="flex justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-[#13294B]" />
+                <Loader2 className="h-6 w-6 animate-spin text-[#003366]" />
               </div>
             ) : loadError ? (
               <div className="py-6 px-4 rounded-lg bg-red-50 border border-red-200">
@@ -122,7 +122,7 @@ export default function AdminBlueSubscriptionsPage() {
                     variant={signupFilter === "all" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSignupFilter("all")}
-                    className={signupFilter === "all" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                    className={signupFilter === "all" ? "bg-[#003366] hover:bg-[#003366]/90" : ""}
                   >
                     All ({signups.length})
                   </Button>
@@ -130,7 +130,7 @@ export default function AdminBlueSubscriptionsPage() {
                     variant={signupFilter === "paid" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSignupFilter("paid")}
-                    className={signupFilter === "paid" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                    className={signupFilter === "paid" ? "bg-[#003366] hover:bg-[#003366]/90" : ""}
                   >
                     Paid ({signups.filter((s) => s.status === "paid").length})
                   </Button>
@@ -138,7 +138,7 @@ export default function AdminBlueSubscriptionsPage() {
                     variant={signupFilter === "pending" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSignupFilter("pending")}
-                    className={signupFilter === "pending" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                    className={signupFilter === "pending" ? "bg-[#003366] hover:bg-[#003366]/90" : ""}
                   >
                     Pending ({signups.filter((s) => s.status !== "paid").length})
                   </Button>
@@ -198,11 +198,11 @@ export default function AdminBlueSubscriptionsPage() {
           <CardContent>
             <div className="flex flex-wrap gap-8">
               <div>
-                <p className="text-2xl font-bold text-[#13294B]">{stats.active}</p>
+                <p className="text-2xl font-bold text-[#003366]">{stats.active}</p>
                 <p className="text-sm text-gray-600">Active</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-[#13294B]">{stats.paused}</p>
+                <p className="text-2xl font-bold text-[#003366]">{stats.paused}</p>
                 <p className="text-sm text-gray-600">Paused</p>
               </div>
               <div>
@@ -230,21 +230,21 @@ export default function AdminBlueSubscriptionsPage() {
                 variant={tab === "good_standing" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setTab("good_standing")}
-                className={tab === "good_standing" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}
+                className={tab === "good_standing" ? "bg-[#003366] hover:bg-[#003366]/90" : ""}
               >
                 Good Standing
               </Button>
-              <Button variant={tab === "paused" ? "default" : "ghost"} size="sm" onClick={() => setTab("paused")} className={tab === "paused" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}>
+              <Button variant={tab === "paused" ? "default" : "ghost"} size="sm" onClick={() => setTab("paused")} className={tab === "paused" ? "bg-[#003366] hover:bg-[#003366]/90" : ""}>
                 Paused
               </Button>
-              <Button variant={tab === "canceled" ? "default" : "ghost"} size="sm" onClick={() => setTab("canceled")} className={tab === "canceled" ? "bg-[#13294B] hover:bg-[#13294B]/90" : ""}>
+              <Button variant={tab === "canceled" ? "default" : "ghost"} size="sm" onClick={() => setTab("canceled")} className={tab === "canceled" ? "bg-[#003366] hover:bg-[#003366]/90" : ""}>
                 Canceled
               </Button>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#003366]" />
               </div>
             ) : filtered.length === 0 ? (
               <p className="py-8 text-center text-gray-500">
@@ -272,7 +272,7 @@ export default function AdminBlueSubscriptionsPage() {
                           {sub.athlete_id ? (
                             <Link
                               href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}
-                              className="text-[#13294B] hover:underline cursor-pointer font-medium"
+                              className="text-[#003366] hover:underline cursor-pointer font-medium"
                             >
                               {sub.athlete_name}
                             </Link>
@@ -309,8 +309,8 @@ export default function AdminBlueSubscriptionsPage() {
                           <div className="flex flex-wrap items-center gap-2">
                             {sub.athlete_id && (
                               <>
-                                <a href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#13294B] hover:underline">Registration</a>
-                                <a href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#13294B] hover:underline">View athlete</a>
+                                <a href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#003366] hover:underline">Registration</a>
+                                <a href={`/admin/athletes/edit?id=${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#003366] hover:underline">View athlete</a>
                               </>
                             )}
                             {sub.stripe_subscription_id && (
@@ -318,7 +318,7 @@ export default function AdminBlueSubscriptionsPage() {
                                 href={`${STRIPE_DASHBOARD_SUB}/${sub.stripe_subscription_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center text-sm text-[#13294B] hover:underline"
+                                className="inline-flex items-center text-sm text-[#003366] hover:underline"
                               >
                                 Stripe <ExternalLink className="h-3 w-3 ml-0.5" />
                               </a>

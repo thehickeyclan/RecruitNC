@@ -46,7 +46,7 @@ function GroupLinks({ links }: { links: readonly { href: string; label: string }
         <li key={link.href}>
           <Link
             href={link.href}
-            className="text-sm text-[#03154C] hover:text-[#D3B574] hover:underline"
+            className="text-sm text-[#003366] hover:text-[#D3B574] hover:underline"
           >
             {link.label}
           </Link>
@@ -61,8 +61,8 @@ export function ExploreBlue() {
 
   return (
     <section id="explore-blue" className="mb-14" aria-label="Explore Blue">
-      <h2 className="mb-1 text-lg font-semibold text-[#03154C]">Explore Blue</h2>
-      <p className="mb-6 text-sm text-[#03154C]/80">
+      <h2 className="mb-1 text-lg font-semibold text-[#003366]">Explore Blue</h2>
+      <p className="mb-6 text-sm text-[#003366]/80">
         More sections and links to dive deeper.
       </p>
 
@@ -74,7 +74,7 @@ export function ExploreBlue() {
             open={openGroup === group.id}
             onOpenChange={(open) => setOpenGroup(open ? group.id : null)}
           >
-            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border-2 border-[#D3B574]/40 bg-white px-4 py-3 text-left font-semibold text-[#03154C] hover:bg-[#03154C]/5">
+            <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border-2 border-[#D3B574]/40 bg-white px-4 py-3 text-left font-semibold text-[#003366] hover:bg-[#003366]/5">
               {group.label}
               <ChevronDown
                 className={`h-4 w-4 shrink-0 text-[#D3B574] transition-transform ${openGroup === group.id ? "rotate-180" : ""}`}
@@ -96,7 +96,7 @@ export function ExploreBlue() {
             key={group.id}
             className="rounded-lg border-2 border-[#D3B574]/40 bg-white/50 p-4"
           >
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#03154C]/70">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#003366]/70">
               {group.label}
             </h3>
             <GroupLinks links={group.links} />

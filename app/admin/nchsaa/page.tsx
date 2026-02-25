@@ -168,7 +168,7 @@ function BracketUploadTab() {
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
             </div>
-            <Button type="submit" disabled={singleLoading} className="bg-[#13294B] hover:bg-[#1a3a5c]">
+            <Button type="submit" disabled={singleLoading} className="bg-[#003366] hover:bg-[#004080]">
               {singleLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
               Upload one
             </Button>
@@ -201,7 +201,7 @@ function BracketUploadTab() {
                 onChange={(e) => setBulkFiles(Array.from(e.target.files ?? []))}
               />
             </div>
-            <Button type="submit" disabled={bulkLoading} className="bg-[#13294B] hover:bg-[#1a3a5c]">
+            <Button type="submit" disabled={bulkLoading} className="bg-[#003366] hover:bg-[#004080]">
               {bulkLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
               Upload {bulkFiles.length ? bulkFiles.length : "..."} files
             </Button>
@@ -221,7 +221,7 @@ function BracketUploadTab() {
       </Card>
 
       <p className="text-sm text-slate-500">
-        Brackets appear on the <Link href="/nchsaa/2026" className="text-[#13294B] underline">2026 NCHSAA states page</Link> when users select a division and weight and click “View Bracket”.
+        Brackets appear on the <Link href="/nchsaa/2026" className="text-[#003366] underline">2026 NCHSAA states page</Link> when users select a division and weight and click “View Bracket”.
       </p>
     </div>
   )
@@ -230,7 +230,7 @@ function BracketUploadTab() {
 export default function NCHSAAAdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-[#13294B] to-[#1a3a5c] text-white shadow-lg">
+      <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-3">
             <Trophy className="h-9 w-9 text-[#D3B574]" />

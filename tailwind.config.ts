@@ -20,11 +20,12 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // NC United Branding Colors
-        "nc-blue": "#002147", // NC United navy (footer, gradients)
+        // Fox News–style / NC United branding (primary blue = Fox blue)
+        "nc-blue": "#003366", // Fox blue (footer, nav, primary surfaces)
         "nc-navy": {
-          950: "#002147", // NC United Logo Navy Blue
+          950: "#003366",
         },
+        "fox-blue": "#003366",
         "nc-red": {
           DEFAULT: "#B31B1B",
           800: "#B31B1B", // Red

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Trophy, GraduationCap, Heart, Medal, Star, ExternalLink, School, MapPin, Calendar } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
-const NC_NAVY = "#002147"
+const NC_NAVY = "#003366"
 const NC_GOLD = "#B5985A"
 
 interface DaveSchultzWinner {

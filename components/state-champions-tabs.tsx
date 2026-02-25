@@ -220,14 +220,14 @@ export function StateChampionsTabs() {
           const champions = championsByYear[year]
           return (
             <div key={year} className="border-b border-gray-200 pb-6 last:border-b-0">
-              <h3 className="text-xl font-bold text-[#002147] mb-4">{year}</h3>
+              <h3 className="text-xl font-bold text-[#003366] mb-4">{year}</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 {champions
                   .sort((a, b) => a.wrestler_name.localeCompare(b.wrestler_name))
                   .map((champ) => (
                     <Card key={champ.wrestler_name} className="border border-gray-200">
                       <CardContent className="p-4">
-                        <div className="font-semibold text-[#002147] mb-2">
+                        <div className="font-semibold text-[#003366] mb-2">
                           {champ.wrestler_name}
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
@@ -255,7 +255,7 @@ export function StateChampionsTabs() {
 
   if (loading) {
     return (
-      <Card className="border-2 border-[#002147]">
+      <Card className="border-2 border-[#003366]">
         <CardContent className="p-6">
           <p className="text-center text-gray-500">Loading champions...</p>
         </CardContent>
@@ -264,8 +264,8 @@ export function StateChampionsTabs() {
   }
 
   return (
-    <Card className="border-2 border-[#002147]">
-      <CardHeader className="bg-[#002147] text-white">
+    <Card className="border-2 border-[#003366]">
+      <CardHeader className="bg-[#003366] text-white">
         <CardTitle className="flex items-center gap-2">
           <Crown className="w-6 h-6" />
           Multiple-Time State Champions

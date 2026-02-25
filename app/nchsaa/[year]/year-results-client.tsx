@@ -54,13 +54,13 @@ const DIVISION_BADGE_COLORS: Record<string, string> = {
   "1-4A": "bg-pink-500",
   "1A/2A": "bg-[#32cd32]",
   "1A": "bg-[#32cd32]",
-  "2A": "bg-[#012ECD]",
+  "2A": "bg-[#003366]",
   "3A": "bg-[#D3b574]",
   "4A": "bg-[#B91C1C]",
   "5A": "bg-[#6B21A8]",
   "6A": "bg-[#0D9488]",
   "7A": "bg-[#EA580C]",
-  "8A": "bg-[#002147]",
+  "8A": "bg-[#003366]",
 }
 
 function sortClassifications(classes: string[]): string[] {
@@ -241,7 +241,7 @@ export function NCHSAAYearResultsClient({
         <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-6 rounded-lg border border-gray-200">
           <div className="text-center py-8">
             <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h4 className="text-xl font-semibold text-[#03154c] mb-2">No Results Available</h4>
+            <h4 className="text-xl font-semibold text-[#003366] mb-2">No Results Available</h4>
             <p className="text-slate-600">No {classification} results have been uploaded yet.</p>
           </div>
         </div>
@@ -252,7 +252,7 @@ export function NCHSAAYearResultsClient({
       <div className="space-y-6">
         {weightClasses.map((weightClass) => (
           <div key={weightClass} className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="text-lg font-semibold text-[#03154c] mb-3">{weightClass} lbs</h4>
+            <h4 className="text-lg font-semibold text-[#003366] mb-3">{weightClass} lbs</h4>
             <div className="space-y-2">
               {data[weightClass]
                 .filter((r) => r.place != null && r.place >= 1 && r.place <= maxPlacerPlace)
@@ -263,7 +263,7 @@ export function NCHSAAYearResultsClient({
                         {result.place === 1 ? "1st" : result.place === 2 ? "2nd" : result.place === 3 ? "3rd" : result.place ? `${result.place}th` : "-"}
                       </Badge>
                       <div>
-                        <div className="font-medium text-[#03154c]">{result.wrestler_name}</div>
+                        <div className="font-medium text-[#003366]">{result.wrestler_name}</div>
                         <div className="text-sm text-slate-600">{result.school}</div>
                       </div>
                     </div>
@@ -313,6 +313,16 @@ export function NCHSAAYearResultsClient({
               const isLast = index === NCHSAA_2026_ARTICLES.length - 1
               const cardContent = (
                 <>
+                  {article.image && (
+                    <div className={`relative w-full overflow-hidden rounded-t-lg bg-slate-100 ${isHero ? "h-40 md:h-48 -mx-6 -mt-6 md:-mx-8 md:-mt-8" : "h-32 -mx-5 -mt-5"} shrink-0`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={article.image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between gap-2 mb-3">
                     {article.category && article.categoryBadgeClass && (
                       <span className={`${article.categoryBadgeClass} text-white text-[11px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider`}>
@@ -351,10 +361,11 @@ export function NCHSAAYearResultsClient({
               const wrapperClass = isHero ? heroClass : cardClass
               const gridClass = isHero ? "lg:col-span-2" : isLast ? "lg:col-span-2" : ""
               if (article.published) {
+                const articleHref = `/nchsaa/${displayYear}/news/${article.slug}`
                 return (
-                  <a key={article.slug} href={`/nchsaa/${displayYear}/news/${article.slug}`} className={`${wrapperClass} ${gridClass}`}>
+                  <Link key={article.slug} href={articleHref} className={`${wrapperClass} ${gridClass}`}>
                     {cardContent}
-                  </a>
+                  </Link>
                 )
               }
               return (
@@ -401,7 +412,7 @@ export function NCHSAAYearResultsClient({
 
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-[#03154c] flex items-center gap-2">
+          <CardTitle className="text-[#003366] flex items-center gap-2">
             <Trophy className="w-6 h-6" />
             Tournament Brackets
           </CardTitle>
@@ -410,7 +421,7 @@ export function NCHSAAYearResultsClient({
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-[#03154c]">Division</label>
+              <label className="text-sm font-medium text-[#003366]">Division</label>
               <Select value={selectedDivision} onValueChange={setSelectedDivision}>
                 <SelectTrigger className="border-[#B91C1C]">
                   <SelectValue placeholder="Choose division..." />
@@ -423,7 +434,7 @@ export function NCHSAAYearResultsClient({
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-[#03154c]">Weight Class</label>
+              <label className="text-sm font-medium text-[#003366]">Weight Class</label>
               <Select value={selectedWeight} onValueChange={setSelectedWeight} disabled={!selectedDivision}>
                 <SelectTrigger className="border-[#B91C1C]">
                   <SelectValue placeholder="Choose weight..." />
@@ -453,15 +464,15 @@ export function NCHSAAYearResultsClient({
       </Card>
 
       {mostOutstandingWrestlers.length > 0 && (
-        <Card className="mb-8 border-2 border-[#03154c] overflow-hidden">
-          <CardHeader className="bg-[#03154c] text-white">
+        <Card className="mb-8 border-2 border-[#003366] overflow-hidden">
+          <CardHeader className="bg-[#003366] text-white">
             <CardTitle className="flex items-center gap-2">
               <Crown className="w-6 h-6" />
               Most Outstanding Wrestlers
             </CardTitle>
             <CardDescription className="text-slate-300">{displayYear} MOW by division</CardDescription>
           </CardHeader>
-          <CardContent className="p-6 bg-[#03154c]">
+          <CardContent className="p-6 bg-[#003366]">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {mostOutstandingWrestlers.map((mow) => (
                 <div key={mow.id} className="bg-white/5 p-4 rounded-lg border border-white/20">
@@ -508,7 +519,7 @@ export function NCHSAAYearResultsClient({
                 <div key={w.id} className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-[#B91C1C] mb-2">{w.division}</div>
-                    <div className="text-lg font-semibold text-[#03154c] mb-1">{w.champion_school}</div>
+                    <div className="text-lg font-semibold text-[#003366] mb-1">{w.champion_school}</div>
                     <div className="text-sm text-slate-600 mb-1">Coach: {w.coach_name}</div>
                     <div className="text-lg font-bold text-[#B91C1C]">{w.points} pts</div>
                   </div>
@@ -521,7 +532,7 @@ export function NCHSAAYearResultsClient({
 
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-[#03154c] flex items-center gap-2">
+          <CardTitle className="text-[#003366] flex items-center gap-2">
             <Trophy className="w-6 h-6" />
             Results by Classification
           </CardTitle>
@@ -544,7 +555,7 @@ export function NCHSAAYearResultsClient({
               {classifications.map((c) => (
                 <TabsContent key={c} value={c.toLowerCase().replace("/", "")} className="mt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-[#03154c]">{c} State Championship Results</h3>
+                    <h3 className="text-lg font-semibold text-[#003366]">{c} State Championship Results</h3>
                     <Badge className={DIVISION_BADGE_COLORS[c] || "bg-gray-500"}>{c}</Badge>
                   </div>
                   {renderClassificationResults(c, tournamentData[c] || {})}
@@ -556,8 +567,8 @@ export function NCHSAAYearResultsClient({
       </Card>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <Card className="border-2 border-[#012ECD] hover:shadow-lg transition-shadow">
-          <CardHeader className="bg-gradient-to-r from-[#012ECD] to-[#03154c] text-white">
+        <Card className="border-2 border-[#003366] hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-r from-[#003366] to-[#003366] text-white">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5" />
               Historical Results
@@ -566,7 +577,7 @@ export function NCHSAAYearResultsClient({
           <CardContent className="p-4">
             <p className="text-slate-600 text-sm mb-4">Browse complete NCHSAA championship history.</p>
             <Link href="/nchsaa/archive">
-              <Button variant="outline" className="w-full border-[#012ECD] text-[#012ECD] hover:bg-[#012ECD] hover:text-white">
+              <Button variant="outline" className="w-full border-[#003366] text-[#003366] hover:bg-[#003366] hover:text-white">
                 View Archive
               </Button>
             </Link>

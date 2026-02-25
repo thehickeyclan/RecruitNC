@@ -3,17 +3,17 @@ import Image from "next/image"
 
 export function Footer() {
   return (
-    <footer className="border-t bg-nc-blue text-white">
+    <footer className="border-t bg-[#003366] text-white">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
-            <Link href="https://www.ncwrestlingunited.com" className="flex items-center">
+            <Link href="/" className="flex items-center">
               <Image
-                src="/nc-united-main-logo.png"
+                src="/images/nc-united-logo-white.png"
                 alt="NC United Wrestling"
-                width={60}
-                height={60}
-                className="mr-3"
+                width={120}
+                height={44}
+                className="h-10 w-auto mr-3 mix-blend-screen"
                 priority
               />
               <h3 className="text-lg font-semibold">NC United Wrestling</h3>
@@ -107,12 +107,12 @@ export function Footer() {
             <p className="mt-2 text-sm text-gray-300">Have questions or want to report a commitment?</p>
             <a
               href="mailto:info@ncwrestlingunited.com"
-              className="mt-2 inline-block text-sm font-medium text-blue-400 hover:text-blue-300"
+              className="mt-2 inline-block text-sm font-medium text-white/90 hover:text-white"
             >
               info@ncwrestlingunited.com
             </a>
             <span className="mx-2 text-gray-500">·</span>
-            <Link href="/contact" className="text-sm font-medium text-blue-400 hover:text-blue-300">
+            <Link href="/contact" className="text-sm font-medium text-white/90 hover:text-white">
               Contact Us
             </Link>
             <p className="mt-3 text-sm text-gray-300">Follow us</p>
@@ -121,7 +121,7 @@ export function Footer() {
                 href="https://www.instagram.com/ncwrestlingunited/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-blue-400 hover:text-blue-300"
+                className="text-sm font-medium text-white/90 hover:text-white"
               >
                 Instagram
               </a>
@@ -129,7 +129,7 @@ export function Footer() {
                 href="https://www.facebook.com/ncwrestlingunited"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-blue-400 hover:text-blue-300"
+                className="text-sm font-medium text-white/90 hover:text-white"
               >
                 Facebook
               </a>

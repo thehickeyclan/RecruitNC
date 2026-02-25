@@ -121,7 +121,7 @@ export function ImageUploadEditor({
         {!preview && (
           <Button
             size="sm"
-            className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-[#13294B] shadow-lg"
+            className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-[#003366] shadow-lg"
             onClick={() => fileInputRef.current?.click()}
           >
             <Edit className="w-4 h-4 mr-1" />

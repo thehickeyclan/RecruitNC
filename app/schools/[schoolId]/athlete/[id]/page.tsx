@@ -803,7 +803,7 @@ export default function AthleteRecruitingDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <GraduationCap className="h-5 w-5 text-[#002147]" />
+                    <GraduationCap className="h-5 w-5 text-[#003366]" />
                     Academics
                   </CardTitle>
                 </CardHeader>
@@ -837,7 +837,7 @@ export default function AthleteRecruitingDetailPage() {
                         onClick={() => startEditing("academic_gpa", athlete.academic_gpa)}
                       >
                         {athlete.academic_gpa ? (
-                          <p className="text-2xl font-bold text-[#002147]">{athlete.academic_gpa.toFixed(2)}</p>
+                          <p className="text-2xl font-bold text-[#003366]">{athlete.academic_gpa.toFixed(2)}</p>
                         ) : (
                           <p className="text-2xl font-bold text-gray-400">-</p>
                         )}
@@ -928,7 +928,7 @@ export default function AthleteRecruitingDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Phone className="h-5 w-5 text-[#002147]" />
+                    <Phone className="h-5 w-5 text-[#003366]" />
                     Contact Information
                   </CardTitle>
                 </CardHeader>
@@ -1116,7 +1116,7 @@ export default function AthleteRecruitingDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <Trophy className="h-5 w-5 text-[#002147]" />
+                    <Trophy className="h-5 w-5 text-[#003366]" />
                     Wrestling Profile
                   </CardTitle>
                 </CardHeader>
@@ -1157,7 +1157,7 @@ export default function AthleteRecruitingDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="h-5 w-5 text-[#002147]" />
+                    <FileText className="h-5 w-5 text-[#003366]" />
                     Bio
                   </CardTitle>
                 </CardHeader>
@@ -1182,7 +1182,7 @@ export default function AthleteRecruitingDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Trophy className="h-5 w-5 text-[#002147]" />
+                  <Trophy className="h-5 w-5 text-[#003366]" />
                   Additional Performance Data
                 </CardTitle>
               </CardHeader>
@@ -1266,7 +1266,7 @@ export default function AthleteRecruitingDetailPage() {
                         <Button
                           size="sm"
                           onClick={() => handleFieldUpdate("college_opens_experience", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                          className="bg-[#003366] hover:bg-[#004080] min-h-[44px] md:min-h-[36px] touch-manipulation"
                         >
                           Save
                         </Button>
@@ -1321,7 +1321,7 @@ export default function AthleteRecruitingDetailPage() {
                         <Button
                           size="sm"
                           onClick={() => handleFieldUpdate("fargo_experience", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                          className="bg-[#003366] hover:bg-[#004080] min-h-[44px] md:min-h-[36px] touch-manipulation"
                         >
                           Save
                         </Button>
@@ -1376,7 +1376,7 @@ export default function AthleteRecruitingDetailPage() {
                         <Button
                           size="sm"
                           onClick={() => handleFieldUpdate("nationally_ranked_wins", editingValue)}
-                          className="bg-[#002147] hover:bg-[#13294B] min-h-[44px] md:min-h-[36px] touch-manipulation"
+                          className="bg-[#003366] hover:bg-[#004080] min-h-[44px] md:min-h-[36px] touch-manipulation"
                         >
                           Save
                         </Button>
@@ -1418,7 +1418,7 @@ export default function AthleteRecruitingDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-[#002147]" />
+                    <CheckCircle2 className="h-5 w-5 text-[#003366]" />
                     Recruiting Milestones
                   </span>
                   <Button 
@@ -1784,7 +1784,7 @@ export default function AthleteRecruitingDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-[#002147]" />
+                    <FileText className="h-5 w-5 text-[#003366]" />
                     Recruiting Notes
                   </span>
                   <Button 
@@ -1815,14 +1815,14 @@ export default function AthleteRecruitingDetailPage() {
             <Card>
               <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <ActivityIcon className="h-5 w-5 text-[#002147]" />
+                  <ActivityIcon className="h-5 w-5 text-[#003366]" />
                   Activity Log
                 </CardTitle>
                 <Button
                   onClick={() => setShowActivityForm((prev) => !prev)}
                   size="sm"
                   disabled={!canLogActivities}
-                  className="bg-[#002147] hover:bg-[#13294B] disabled:bg-muted disabled:text-muted-foreground"
+                  className="bg-[#003366] hover:bg-[#004080] disabled:bg-muted disabled:text-muted-foreground"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {showActivityForm ? "Cancel" : "Log Activity"}
@@ -1953,7 +1953,7 @@ export default function AthleteRecruitingDetailPage() {
                     <Button
                       onClick={handleLogActivity}
                       disabled={isSavingActivity || !canLogActivities}
-                      className="bg-[#002147] hover:bg-[#13294B] text-white"
+                      className="bg-[#003366] hover:bg-[#004080] text-white"
                     >
                       {isSavingActivity ? (
                         <>

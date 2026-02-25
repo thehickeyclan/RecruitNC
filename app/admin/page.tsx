@@ -76,7 +76,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* NC United Branded Header */}
-      <div className="bg-gradient-to-r from-[#13294B] to-[#1a3a5c] text-white shadow-lg">
+      <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white shadow-lg">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
             <div>
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
               <p className="text-blue-200 text-lg">NC Wrestling United - Portal Management & Analytics</p>
             </div>
             <Link href="/">
-              <Button className="bg-white text-[#13294B] hover:bg-gray-100">
+              <Button className="bg-white text-[#003366] hover:bg-gray-100">
                 View Public Site
               </Button>
             </Link>
@@ -100,18 +100,18 @@ export default function AdminDashboard() {
 
         {/* Key Metrics - Top Priority */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-[#13294B] mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-[#003366] mb-4 flex items-center gap-2">
             <TrendingUp className="h-6 w-6 text-[#C8102E]" />
             Key Platform Metrics
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* Total Platform Users */}
-            <Card className="border-l-4 border-l-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105">
+            <Card className="border-l-4 border-l-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <CardContent className="p-5 bg-gradient-to-br from-white to-blue-50">
                 <div className="text-center">
-                  <Users className="h-8 w-8 text-[#13294B] mx-auto mb-2" />
+                  <Users className="h-8 w-8 text-[#003366] mx-auto mb-2" />
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Platform Users</p>
-                  <p className="text-3xl font-bold text-[#13294B]">{loading ? "..." : stats.totalUsers}</p>
+                  <p className="text-3xl font-bold text-[#003366]">{loading ? "..." : stats.totalUsers}</p>
                 </div>
               </CardContent>
             </Card>
@@ -128,12 +128,12 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Total Athletes */}
-            <Card className="border-l-4 border-l-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105">
+            <Card className="border-l-4 border-l-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <CardContent className="p-5 bg-gradient-to-br from-white to-blue-50">
                 <div className="text-center">
-                  <Users className="h-8 w-8 text-[#13294B] mx-auto mb-2" />
+                  <Users className="h-8 w-8 text-[#003366] mx-auto mb-2" />
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Total Athletes</p>
-                  <p className="text-3xl font-bold text-[#13294B]">{loading ? "..." : stats.totalAthletes}</p>
+                  <p className="text-3xl font-bold text-[#003366]">{loading ? "..." : stats.totalAthletes}</p>
                 </div>
               </CardContent>
             </Card>
@@ -142,20 +142,20 @@ export default function AdminDashboard() {
             <Card className="border-l-4 border-l-[#FFC72C] shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <CardContent className="p-5 bg-gradient-to-br from-white to-yellow-50">
                 <div className="text-center">
-                  <Trophy className="h-8 w-8 text-[#13294B] mx-auto mb-2" />
+                  <Trophy className="h-8 w-8 text-[#003366] mx-auto mb-2" />
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Commits</p>
-                  <p className="text-3xl font-bold text-[#13294B]">{loading ? "..." : stats.totalCommits}</p>
+                  <p className="text-3xl font-bold text-[#003366]">{loading ? "..." : stats.totalCommits}</p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Prospects */}
-            <Card className="border-l-4 border-l-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105">
+            <Card className="border-l-4 border-l-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <CardContent className="p-5 bg-gradient-to-br from-white to-blue-50">
                 <div className="text-center">
-                  <Target className="h-8 w-8 text-[#13294B] mx-auto mb-2" />
+                  <Target className="h-8 w-8 text-[#003366] mx-auto mb-2" />
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Prospects</p>
-                  <p className="text-3xl font-bold text-[#13294B]">{loading ? "..." : stats.totalProspects}</p>
+                  <p className="text-3xl font-bold text-[#003366]">{loading ? "..." : stats.totalProspects}</p>
                 </div>
               </CardContent>
             </Card>
@@ -175,13 +175,13 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-[#13294B] mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-[#003366] mb-4 flex items-center gap-2">
             <Zap className="h-6 w-6 text-[#C8102E]" />
             Quick Actions
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <Link href="/admin/athletes">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <Users className="h-6 w-6" />
                 <span className="text-sm font-semibold">Manage Athletes</span>
               </Button>
@@ -193,43 +193,43 @@ export default function AdminDashboard() {
               </Button>
             </Link>
             <Link href="/admin/new-profile-additions">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <UserPlus className="h-6 w-6" />
                 <span className="text-sm font-semibold">New Additions</span>
               </Button>
             </Link>
             <Link href="/admin/profile-inventory">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <ClipboardList className="h-6 w-6" />
                 <span className="text-sm font-semibold">Profile Inventory</span>
               </Button>
             </Link>
             <Link href="/admin/schools">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <School className="h-6 w-6" />
                 <span className="text-sm font-semibold">Schools</span>
               </Button>
             </Link>
             <Link href="/admin/match-manager">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#FFC72C] to-[#e6b328] hover:from-[#e6b328] hover:to-[#FFC72C] text-[#13294B] shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#FFC72C] to-[#e6b328] hover:from-[#e6b328] hover:to-[#FFC72C] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
                 <Trophy className="h-6 w-6" />
                 <span className="text-sm font-semibold">Match Manager</span>
               </Button>
             </Link>
             <Link href="/admin/nhsca-analytics">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#002147] shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 font-bold">
                 <Trophy className="h-6 w-6" />
                 <span className="text-sm font-semibold">NHSCA Analytics</span>
               </Button>
             </Link>
             <Link href="/admin/national-team-submissions">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#002147] to-[#003366] hover:from-[#003366] hover:to-[#002147] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#003366] hover:from-[#003366] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <Users className="h-6 w-6" />
                 <span className="text-sm font-semibold">National Team Submissions</span>
               </Button>
             </Link>
             <Link href="/admin/blue">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#03154C] to-[#0a2571] hover:from-[#0a2571] hover:to-[#03154C] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#0a2571] hover:from-[#0a2571] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <CreditCard className="h-6 w-6" />
                 <span className="text-sm font-semibold">Blue Program</span>
               </Button>
@@ -247,7 +247,7 @@ export default function AdminDashboard() {
               </Button>
             </Link>
             <Link href="/admin/users-dashboard">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#13294B] to-[#1a3a5c] hover:from-[#1a3a5c] hover:to-[#13294B] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#004080] hover:from-[#004080] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <UserCheck className="h-6 w-6" />
                 <span className="text-sm font-semibold">Users</span>
               </Button>
@@ -263,17 +263,17 @@ export default function AdminDashboard() {
 
         {/* Management Tools - Individual Tiles */}
         <div>
-          <h2 className="text-2xl font-bold text-[#13294B] mb-4 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-[#003366] mb-4 flex items-center gap-2">
             <Settings className="h-6 w-6 text-[#C8102E]" />
             Management Tools
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {/* View All Athletes */}
             <Link href="/admin/athletes">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Users className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">View All Athletes</h3>
+                  <Users className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">View All Athletes</h3>
                   <p className="text-xs text-gray-600">Manage athlete profiles</p>
                 </CardContent>
               </Card>
@@ -281,10 +281,10 @@ export default function AdminDashboard() {
 
             {/* Add New Athlete */}
             <Link href="/admin/athletes/add">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Plus className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Add New Athlete</h3>
+                  <Plus className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Add New Athlete</h3>
                   <p className="text-xs text-gray-600">Create new profile</p>
                 </CardContent>
               </Card>
@@ -292,10 +292,10 @@ export default function AdminDashboard() {
 
             {/* Profile Inventory */}
             <Link href="/admin/profile-inventory">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <ClipboardList className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Profile Inventory</h3>
+                  <ClipboardList className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Profile Inventory</h3>
                   <p className="text-xs text-gray-600">User-created & pending submissions</p>
                 </CardContent>
               </Card>
@@ -305,8 +305,8 @@ export default function AdminDashboard() {
             <Link href="/admin/match-manager">
               <Card className="border-t-4 border-t-[#FFC72C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Trophy className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Match Manager</h3>
+                  <Trophy className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Match Manager</h3>
                   <p className="text-xs text-gray-600">Manage match records</p>
                 </CardContent>
               </Card>
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
               <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <FileText className="h-10 w-10 text-[#C8102E] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Submissions Manager</h3>
+                  <h3 className="font-bold text-[#003366] mb-1">Submissions Manager</h3>
                   <p className="text-xs text-gray-600">Review submissions</p>
                 </CardContent>
               </Card>
@@ -325,10 +325,10 @@ export default function AdminDashboard() {
 
             {/* National Team Submissions */}
             <Link href="/admin/national-team-submissions">
-              <Card className="border-t-4 border-t-[#002147] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Users className="h-10 w-10 text-[#002147] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">National Team Submissions</h3>
+                  <Users className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">National Team Submissions</h3>
                   <p className="text-xs text-gray-600">Interest form responses</p>
                 </CardContent>
               </Card>
@@ -336,10 +336,10 @@ export default function AdminDashboard() {
 
             {/* Blue Program — hub for subscriptions, invites, reports, promo codes, images, interest */}
             <Link href="/admin/blue">
-              <Card className="border-t-4 border-t-[#03154C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <CreditCard className="h-10 w-10 text-[#03154C] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Blue Program</h3>
+                  <CreditCard className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Blue Program</h3>
                   <p className="text-xs text-gray-600">Memberships, invites, reports, images, interest</p>
                 </CardContent>
               </Card>
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <BookOpen className="h-10 w-10 text-[#1a5f4a] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">College Recruiting Guide</h3>
+                  <h3 className="font-bold text-[#003366] mb-1">College Recruiting Guide</h3>
                   <p className="text-xs text-gray-600">Printable guide for coaches (2026–2028)</p>
                 </CardContent>
               </Card>
@@ -361,7 +361,7 @@ export default function AdminDashboard() {
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <RefreshCw className="h-10 w-10 text-[#1a5f4a] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Super32 Tools</h3>
+                  <h3 className="font-bold text-[#003366] mb-1">Super32 Tools</h3>
                   <p className="text-xs text-gray-600">Reconcile DB to verified CSV</p>
                 </CardContent>
               </Card>
@@ -372,7 +372,7 @@ export default function AdminDashboard() {
               <Card className="border-t-4 border-t-[#B91C1C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <Trophy className="h-10 w-10 text-[#B91C1C] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">NCHSAA</h3>
+                  <h3 className="font-bold text-[#003366] mb-1">NCHSAA</h3>
                   <p className="text-xs text-gray-600">Bracket upload, state results</p>
                 </CardContent>
               </Card>
@@ -380,10 +380,10 @@ export default function AdminDashboard() {
 
             {/* Schools & Coaches */}
             <Link href="/admin/schools">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <School className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Schools & Coaches</h3>
+                  <School className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Schools & Coaches</h3>
                   <p className="text-xs text-gray-600">Manage schools</p>
                 </CardContent>
               </Card>
@@ -393,8 +393,8 @@ export default function AdminDashboard() {
             <Link href="/admin/prospects/simple-ranking">
               <Card className="border-t-4 border-t-[#FFC72C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Trophy className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Prospect Rankings</h3>
+                  <Trophy className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Prospect Rankings</h3>
                   <p className="text-xs text-gray-600">Manage rankings</p>
                 </CardContent>
               </Card>
@@ -402,10 +402,10 @@ export default function AdminDashboard() {
 
             {/* Users Dashboard */}
             <Link href="/admin/users-dashboard">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <UserCheck className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Users Dashboard</h3>
+                  <UserCheck className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Users Dashboard</h3>
                   <p className="text-xs text-gray-600">Manage users</p>
                 </CardContent>
               </Card>
@@ -413,10 +413,10 @@ export default function AdminDashboard() {
 
             {/* Enhanced Logo Manager */}
             <Link href="/admin/enhanced-logo-manager">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Pencil className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Enhanced Logo Manager</h3>
+                  <Pencil className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Enhanced Logo Manager</h3>
                   <p className="text-xs text-gray-600">Manage logos</p>
                 </CardContent>
               </Card>
@@ -424,10 +424,10 @@ export default function AdminDashboard() {
 
             {/* Colleges (divisions) — colleges table used by app */}
             <Link href="/admin/colleges">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <School className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Colleges (divisions)</h3>
+                  <School className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Colleges (divisions)</h3>
                   <p className="text-xs text-gray-600">Set division per college</p>
                 </CardContent>
               </Card>
@@ -435,10 +435,10 @@ export default function AdminDashboard() {
 
             {/* College division mappings (legacy) */}
             <Link href="/admin/setup-college-mappings">
-              <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Database className="h-10 w-10 text-[#13294B] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">College division mappings</h3>
+                  <Database className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">College division mappings</h3>
                   <p className="text-xs text-gray-600">Seed division lookup table</p>
                 </CardContent>
               </Card>
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
               <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <BarChart3 className="h-10 w-10 text-[#C8102E] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Commitment Statistics</h3>
+                  <h3 className="font-bold text-[#003366] mb-1">Commitment Statistics</h3>
                   <p className="text-xs text-gray-600">View analytics</p>
                 </CardContent>
               </Card>
@@ -460,7 +460,7 @@ export default function AdminDashboard() {
               <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <Eye className="h-10 w-10 text-[#D3B574] mb-3" />
-                  <h3 className="font-bold text-[#13294B] mb-1">Profile View Analytics</h3>
+                  <h3 className="font-bold text-[#003366] mb-1">Profile View Analytics</h3>
                   <p className="text-xs text-gray-600">Most viewed profiles · everyone vs coaches</p>
                 </CardContent>
               </Card>

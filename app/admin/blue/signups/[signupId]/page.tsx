@@ -129,12 +129,12 @@ export default async function AdminBlueSignupDetailPage({
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[#13294B]">Blue registration</h1>
+            <h1 className="text-2xl font-bold text-[#003366]">Blue registration</h1>
             <p className="text-sm text-gray-600">What they filled out when they signed up on this platform</p>
           </div>
         </div>
 
-        <Card className="border-t-4 border-t-[#03154C] mb-6">
+        <Card className="border-t-4 border-t-[#003366] mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />

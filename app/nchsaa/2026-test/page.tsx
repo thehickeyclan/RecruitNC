@@ -6,7 +6,7 @@
 export default function Nchsaa2026TestPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <p className="text-lg font-medium text-[#03154c]">
+      <p className="text-lg font-medium text-[#003366]">
         [RecruitNC] Test: if you see this, /nchsaa/2026-test loaded. Routing is OK.
       </p>
     </div>

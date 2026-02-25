@@ -22,15 +22,15 @@ export default function NCHSAAArchivePage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-4xl font-bold text-[#03154c]">NCHSAA Digital Archive</h1>
+            <h1 className="text-4xl font-bold text-[#003366]">NCHSAA Digital Archive</h1>
             <p className="text-slate-600">Search and explore historical state championship results</p>
           </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Link href="/nchsaa/2026">
-            <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <CardHeader className="bg-[#002147] text-white p-4">
+            <Card className="border-2 border-[#003366] hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardHeader className="bg-[#003366] text-white p-4">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Calendar className="w-4 h-4" />
                   2026 Results

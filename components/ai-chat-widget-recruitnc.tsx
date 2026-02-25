@@ -356,7 +356,7 @@ export function AIChatWidget() {
             }
           `}</style>
           <Card className="relative max-w-md w-[90vw] bg-white shadow-2xl border-2 border-[#f4c542] animate-[slideUp_0.4s_ease-out]">
-            <CardHeader className="bg-gradient-to-br from-[#001f3f] to-[#001633] text-white p-6 text-center border-b-2 border-[#f4c542]">
+            <CardHeader className="bg-gradient-to-br from-[#003366] to-[#002244] text-white p-6 text-center border-b-2 border-[#f4c542]">
               <div className="flex justify-center mb-4">
                 <div className={cn(
                   "relative h-40 w-40 overflow-hidden shadow-lg",
@@ -405,14 +405,14 @@ export function AIChatWidget() {
                     handleSplashDismiss()
                     setIsOpen(true)
                   }}
-                  className="flex-1 bg-[#001f3f] hover:bg-[#001633] text-white font-semibold"
+                  className="flex-1 bg-[#003366] hover:bg-[#002244] text-white font-semibold"
                 >
                   Ask Data Dawg
                 </Button>
                 <Button
                   onClick={handleSplashDismiss}
                   variant="outline"
-                  className="border-[#001f3f] text-[#001f3f] hover:bg-slate-50"
+                  className="border-[#003366] text-[#003366] hover:bg-slate-50"
                 >
                   Got it
                 </Button>
@@ -457,7 +457,7 @@ export function AIChatWidget() {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="rounded-full bg-white text-[#001f3f] shadow-md px-4 py-2 text-sm font-semibold border border-slate-200 hover:bg-slate-50 transition-colors"
+            className="rounded-full bg-white text-[#003366] shadow-md px-4 py-2 text-sm font-semibold border border-slate-200 hover:bg-slate-50 transition-colors"
           >
             Ask Data Dawg
           </button>
@@ -518,7 +518,7 @@ export function AIChatWidget() {
                 animation: success 0.5s ease-in-out;
               }
             `}</style>
-            <CardHeader className="bg-[#001f3f] text-white p-4 sm:p-4 border-b-2 border-[#f4c542]/60">
+            <CardHeader className="bg-[#003366] text-white p-4 sm:p-4 border-b-2 border-[#f4c542]/60">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className={cn(
@@ -639,7 +639,7 @@ export function AIChatWidget() {
                             className={cn(
                               "max-w-[80%] rounded-2xl px-3 py-2 text-xs",
                               isUser
-                                ? "bg-[#001f3f] text-white"
+                                ? "bg-[#003366] text-white"
                                 : "bg-slate-100 text-slate-900"
                             )}
                           >
@@ -751,7 +751,7 @@ export function AIChatWidget() {
                   <Button
                     onClick={handleSend}
                     disabled={!input.trim() || isLoading || isRecording}
-                    className="bg-[#001f3f] hover:bg-[#001633] text-white px-4 sm:px-3 md:px-4 flex-shrink-0 h-auto py-2 sm:py-2"
+                    className="bg-[#003366] hover:bg-[#002244] text-white px-4 sm:px-3 md:px-4 flex-shrink-0 h-auto py-2 sm:py-2"
                   >
                     {isLoading ? (
                       <Loader2 className="h-4 w-4 sm:h-4 sm:w-4 animate-spin" />

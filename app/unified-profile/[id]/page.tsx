@@ -124,7 +124,7 @@ export default function UnifiedProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="text-[#002147] font-medium">Loading profile…</div>
+        <div className="text-[#003366] font-medium">Loading profile…</div>
       </div>
     )
   }
@@ -143,9 +143,9 @@ export default function UnifiedProfilePage() {
             </div>
           )}
           <div className="flex flex-wrap gap-4">
-            <a href={profileHref} className="text-[#002147] underline">Try again</a>
-            <a href={`${profileHref}?debug=1`} className="text-[#002147] underline">Try again with ?debug=1</a>
-            <a href="/prospects/all" className="text-[#002147] underline">View all prospects</a>
+            <a href={profileHref} className="text-[#003366] underline">Try again</a>
+            <a href={`${profileHref}?debug=1`} className="text-[#003366] underline">Try again with ?debug=1</a>
+            <a href="/prospects/all" className="text-[#003366] underline">View all prospects</a>
           </div>
         </div>
       </div>

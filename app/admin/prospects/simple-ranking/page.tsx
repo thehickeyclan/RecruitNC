@@ -252,7 +252,7 @@ export default function SimpleRankingPage() {
       <AdminHeader />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] text-white rounded-lg p-6 shadow-lg">
+          <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white rounded-lg p-6 shadow-lg">
             <h1 className="text-3xl font-bold mb-2">Prospect Rankings Manager</h1>
             <p className="text-blue-100">Drag the grip icon or use the arrows to move athletes up/down, then save and publish</p>
           </div>
@@ -330,7 +330,7 @@ export default function SimpleRankingPage() {
                 <Button
                   onClick={saveRankings}
                   disabled={saving}
-                  className="bg-[#13294B] hover:bg-[#1e3a5f] text-white"
+                  className="bg-[#003366] hover:bg-[#004080] text-white"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? "Saving..." : "Save Rankings"}
@@ -448,7 +448,7 @@ export default function SimpleRankingPage() {
 
                   {/* Rank */}
                   <TableCell className="font-bold text-center">
-                    <div className="text-lg text-[#13294B]">#{index + 1}</div>
+                    <div className="text-lg text-[#003366]">#{index + 1}</div>
                     {athlete.previous_ranking && athlete.previous_ranking !== index + 1 && (
                       <div className="text-xs mt-0.5">
                         {athlete.previous_ranking > index + 1 ? (
@@ -463,7 +463,7 @@ export default function SimpleRankingPage() {
                   {/* Name */}
                   <TableCell>
                     <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`} className="hover:text-[#CC0000] transition-colors">
-                      <div className="font-semibold text-[#13294B]">{athlete.name}</div>
+                      <div className="font-semibold text-[#003366]">{athlete.name}</div>
                     </Link>
                   </TableCell>
 

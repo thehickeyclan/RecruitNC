@@ -79,7 +79,7 @@ export default function ClassOf2026RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#03154C] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
             <div className="relative z-10 text-center">
               <h1 className="text-3xl sm:text-5xl font-bold text-white mb-2 text-balance">
@@ -163,7 +163,7 @@ export default function ClassOf2026RankingsPage() {
             <Card className="bg-gradient-to-br from-gray-50 to-white">
               <CardContent className="p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#002147]" />
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#003366]" />
                   Statewide Excellence
                 </h2>
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
@@ -183,7 +183,7 @@ export default function ClassOf2026RankingsPage() {
             <Card className="bg-gradient-to-br from-blue-50 to-white">
               <CardContent className="p-6 sm:p-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#002147]" />
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-[#003366]" />
                   The NC United Pipeline
                 </h2>
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
@@ -222,7 +222,7 @@ export default function ClassOf2026RankingsPage() {
           </div>
 
           <Card className="mb-8 sm:mb-12 overflow-hidden">
-            <div className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] p-6 sm:p-12 border-2 sm:border-4 border-[#D3B574]">
+            <div className="bg-gradient-to-br from-[#003366] to-[#1e3a8a] p-6 sm:p-12 border-2 sm:border-4 border-[#D3B574]">
               <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
                 <div className="flex-shrink-0">
                   <div className="w-32 h-32 sm:w-48 sm:h-48 rounded-full overflow-hidden border-2 sm:border-4 border-[#D3B574] shadow-xl">
@@ -298,7 +298,7 @@ export default function ClassOf2026RankingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
-            <Card className="bg-gradient-to-r from-[#03154C] to-[#1e3a8a] text-white">
+            <Card className="bg-gradient-to-r from-[#003366] to-[#1e3a8a] text-white">
               <CardContent className="p-6 sm:p-8 text-center">
                 <Instagram className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-90" />
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Follow Our Journey</h3>
@@ -319,7 +319,7 @@ export default function ClassOf2026RankingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-[#002147] to-[#003366] text-white">
+            <Card className="bg-gradient-to-br from-[#003366] to-[#003366] text-white">
               <CardContent className="p-6 sm:p-8 text-center">
                 <Users className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-90" />
                 <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Join NC United Blue</h3>
@@ -341,7 +341,7 @@ export default function ClassOf2026RankingsPage() {
           {/* Navigation to Other Rankings and Prospects */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <Link href="/public-rankings/2027">
-              <Card className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+              <Card className="bg-gradient-to-br from-[#003366] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
                   <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
                   <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2027 Rankings</h3>

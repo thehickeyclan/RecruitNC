@@ -220,8 +220,8 @@ export default function Class2028RankingsPage() {
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#03154C] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#03154C]/90 via-[#03154C]/65 to-[#1e3a8a]/80"></div>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#003366]/90 via-[#003366]/65 to-[#1e3a8a]/80"></div>
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
             <div className="relative z-10">
               <div className="flex items-center gap-4 mb-8">
@@ -288,7 +288,7 @@ export default function Class2028RankingsPage() {
                                   const parent = target.parentElement
                                   if (parent && !parent.querySelector('.trophy-fallback')) {
                                     const fallback = document.createElement('div')
-                                    fallback.className = 'trophy-fallback w-full h-full bg-gradient-to-br from-[#03154C] to-[#1e3a8a] flex items-center justify-center absolute inset-0'
+                                    fallback.className = 'trophy-fallback w-full h-full bg-gradient-to-br from-[#003366] to-[#1e3a8a] flex items-center justify-center absolute inset-0'
                                     fallback.innerHTML = '<svg class="h-16 w-16 text-[#D3B574]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>'
                                     parent.appendChild(fallback)
                                   }
@@ -296,7 +296,7 @@ export default function Class2028RankingsPage() {
                                 onLoad={() => {}}
                               />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-[#03154C] to-[#1e3a8a] flex items-center justify-center">
+                              <div className="w-full h-full bg-gradient-to-br from-[#003366] to-[#1e3a8a] flex items-center justify-center">
                                 <Trophy className="h-16 w-16 text-[#D3B574]" />
                               </div>
                             )}
@@ -327,7 +327,7 @@ export default function Class2028RankingsPage() {
                           <div className="mt-2">
                             <a
                               href={athlete.id ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : getProfileUrl(athlete.name || "", (athlete.school as string) || "", linkResolution)}
-                              className="text-xs text-[#03154C] hover:text-[#D3B574] hover:underline"
+                              className="text-xs text-[#003366] hover:text-[#D3B574] hover:underline"
                             >
                               View Profile →
                             </a>
@@ -373,7 +373,7 @@ export default function Class2028RankingsPage() {
                     doing it as freshmen and sophomores. Seeing six NHSCA All-Americans in one class tells you these
                     athletes are serious about wrestling at the next level. They're building the foundation now."
                   </blockquote>
-                  <cite className="text-[#03154C] font-semibold">— Mike Macchiavello, Co-Founder NC United</cite>
+                  <cite className="text-[#003366] font-semibold">— Mike Macchiavello, Co-Founder NC United</cite>
                 </div>
               </div>
             </div>
@@ -424,7 +424,7 @@ export default function Class2028RankingsPage() {
                     placeholder="Search by name, school, or weight class..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 text-lg border-2 focus:border-[#03154C] rounded-lg"
+                    className="pl-10 pr-4 py-3 text-lg border-2 focus:border-[#003366] rounded-lg"
                   />
                 </div>
 
@@ -456,7 +456,7 @@ export default function Class2028RankingsPage() {
                 {hasActiveFilters && (
                   <div className="flex flex-wrap gap-2">
                     {searchTerm && (
-                      <Badge variant="secondary" className="bg-[#03154C]/10 text-[#03154C] border-[#031574]/20">
+                      <Badge variant="secondary" className="bg-[#003366]/10 text-[#003366] border-[#003366]/20">
                         Search: "{searchTerm}"
                       </Badge>
                     )}
@@ -528,7 +528,7 @@ export default function Class2028RankingsPage() {
           {/* Navigation to Other Rankings */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <Link href="/public-rankings/2027">
-              <Card className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+              <Card className="bg-gradient-to-br from-[#003366] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
                   <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
                   <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2027 Rankings</h3>
@@ -562,20 +562,20 @@ export default function Class2028RankingsPage() {
             </Link>
           </div>
 
-          <div className="bg-[#03154C] text-white py-16">
+          <div className="bg-[#003366] text-white py-16">
             <div className="container mx-auto px-4 text-center">
               <h2 className="text-3xl font-bold mb-4">Join the Legacy</h2>
               <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
                 The Class of 2028 is building the foundation now. Be part of the next generation of NC United excellence.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-[#D3B574] hover:bg-[#D3B574]/90 text-[#03154C] font-semibold">
+                <Button size="lg" className="bg-[#D3B574] hover:bg-[#D3B574]/90 text-[#003366] font-semibold">
                   Learn About NC United
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-[#03154C] bg-transparent"
+                  className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent"
                 >
                   Contact Our Coaches
                 </Button>

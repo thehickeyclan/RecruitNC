@@ -15,7 +15,7 @@ import { NHSCAChampionsTabs } from "@/components/nhsca-champions-tabs"
 import { supabase } from "@/lib/supabase"
 
 // NC United Brand Colors
-const NC_NAVY = "#002147"
+const NC_NAVY = "#003366"
 const NC_RED = "#B31B1B"
 const NC_GOLD = "#CBAF5D"
 
@@ -244,7 +244,7 @@ export default function NHSCA2025Page() {
     if (placement === 1) return { bg: "bg-yellow-500", text: "1st" }
     if (placement === 2) return { bg: "bg-gray-400", text: "2nd" }
     if (placement === 3) return { bg: "bg-amber-600", text: "3rd" }
-    return { bg: "bg-[#002147]", text: `${placement}th` }
+    return { bg: "bg-[#003366]", text: `${placement}th` }
   }
 
   const getOrdinal = (n: number) => {
@@ -281,7 +281,7 @@ export default function NHSCA2025Page() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002147] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003366] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading 2025 NHSCA Results...</p>
         </div>
       </div>
@@ -291,7 +291,7 @@ export default function NHSCA2025Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-[#002147] text-white">
+      <div className="bg-[#003366] text-white">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
             <Image
@@ -311,35 +311,35 @@ export default function NHSCA2025Page() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Back link */}
-        <Link href="/nhsca" className="inline-flex items-center gap-2 text-[#002147] hover:underline mb-6">
+        <Link href="/nhsca" className="inline-flex items-center gap-2 text-[#003366] hover:underline mb-6">
           <ArrowLeft className="w-4 h-4" />
           Back to NHSCA
         </Link>
 
         {/* Performance Analysis Header */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-[#002147] mb-2">NHSCA Performance Analysis</h2>
+          <h2 className="text-3xl font-bold text-[#003366] mb-2">NHSCA Performance Analysis</h2>
           <p className="text-gray-600">North Carolina&apos;s male All-Americans (Freshman, Sophomore, Junior, Senior divisions) at the 2025 NHSCA Nationals.</p>
         </div>
 
         {/* Key Stats Cards */}
         <Card className="mb-8">
           <CardHeader className="pb-2">
-            <CardTitle className="text-[#002147]">North Carolina NHSCA Performance 2025 (Boys)</CardTitle>
+            <CardTitle className="text-[#003366]">North Carolina NHSCA Performance 2025 (Boys)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-[#002147] text-white rounded-xl p-6 text-center">
+              <div className="bg-[#003366] text-white rounded-xl p-6 text-center">
                 <div className="text-5xl font-bold">{stats.totalAA}</div>
                 <div className="text-white/80 mt-1">Total All-Americans</div>
               </div>
               <div className="bg-gray-100 rounded-xl p-6 text-center">
-                <div className="text-5xl font-bold text-[#002147]">#5</div>
+                <div className="text-5xl font-bold text-[#003366]">#5</div>
                 <div className="text-gray-600 mt-1">National Ranking</div>
                 <div className="text-sm text-gray-500">Out of 46 states</div>
               </div>
               <div className="bg-gray-100 rounded-xl p-6 text-center">
-                <div className="text-5xl font-bold text-[#002147]">60%</div>
+                <div className="text-5xl font-bold text-[#003366]">60%</div>
                 <div className="text-gray-600 mt-1">Growth from 2024</div>
               </div>
             </div>
@@ -348,7 +348,7 @@ export default function NHSCA2025Page() {
 
         {/* National Standing Section */}
         <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-[#002147] text-white">
+          <CardHeader className="bg-[#003366] text-white">
             <CardTitle>North Carolina&apos;s National Standing</CardTitle>
             <p className="text-white/70 text-sm">2025 NHSCA Nationals Team Performance</p>
           </CardHeader>
@@ -376,12 +376,12 @@ export default function NHSCA2025Page() {
         {/* Historic Achievement Banner */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-[#002147]">Historic Achievement</CardTitle>
+            <CardTitle className="text-[#003366]">Historic Achievement</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-gray-100 rounded-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <div className="text-4xl font-bold text-[#002147]">{stats.totalAA} Total All-Americans</div>
+                <div className="text-4xl font-bold text-[#003366]">{stats.totalAA} Total All-Americans</div>
                 <div className="text-gray-600">Highest combined total in state history</div>
                 <div className="text-gray-500 text-sm">60% increase from 2024 performance</div>
               </div>
@@ -416,8 +416,8 @@ export default function NHSCA2025Page() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-[#002147]">National Comparison</CardTitle>
-                <p className="text-[#002147]/70 text-sm mt-1">
+                <CardTitle className="text-[#003366]">National Comparison</CardTitle>
+                <p className="text-[#003366]/70 text-sm mt-1">
                   How North Carolina compares to other states at the 2025 NHSCA Nationals
                 </p>
               </div>
@@ -425,14 +425,14 @@ export default function NHSCA2025Page() {
           </CardHeader>
           <CardContent>
             <Card className="overflow-hidden">
-              <CardHeader className="bg-[#002147] text-white flex flex-row items-center justify-between">
+              <CardHeader className="bg-[#003366] text-white flex flex-row items-center justify-between">
                 <CardTitle className="text-[#CBAF5D]">2025 NHSCA All-Americans by State (All Divisions)</CardTitle>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant={!showAllStates ? "secondary" : "ghost"}
                     onClick={() => setShowAllStates(false)}
-                    className={!showAllStates ? "bg-white text-[#002147]" : "text-white hover:bg-white/20"}
+                    className={!showAllStates ? "bg-white text-[#003366]" : "text-white hover:bg-white/20"}
                   >
                     Top 15 States
                   </Button>
@@ -440,7 +440,7 @@ export default function NHSCA2025Page() {
                     size="sm"
                     variant={showAllStates ? "secondary" : "ghost"}
                     onClick={() => setShowAllStates(true)}
-                    className={showAllStates ? "bg-white text-[#002147]" : "text-white hover:bg-white/20"}
+                    className={showAllStates ? "bg-white text-[#003366]" : "text-white hover:bg-white/20"}
                   >
                     All States
                   </Button>
@@ -451,19 +451,19 @@ export default function NHSCA2025Page() {
                 <div className="flex gap-4 mb-6 border-b">
                   <button
                     onClick={() => setChartViewMode("chart")}
-                    className={`pb-2 px-1 text-sm font-medium ${chartViewMode === "chart" ? "border-b-2 border-[#002147] text-[#002147]" : "text-gray-500"}`}
+                    className={`pb-2 px-1 text-sm font-medium ${chartViewMode === "chart" ? "border-b-2 border-[#003366] text-[#003366]" : "text-gray-500"}`}
                   >
                     Chart View
                   </button>
                   <button
                     onClick={() => setChartViewMode("table")}
-                    className={`pb-2 px-1 text-sm font-medium ${chartViewMode === "table" ? "border-b-2 border-[#002147] text-[#002147]" : "text-gray-500"}`}
+                    className={`pb-2 px-1 text-sm font-medium ${chartViewMode === "table" ? "border-b-2 border-[#003366] text-[#003366]" : "text-gray-500"}`}
                   >
                     Table View
                   </button>
                   <button
                     onClick={() => setChartViewMode("summary")}
-                    className={`pb-2 px-1 text-sm font-medium ${chartViewMode === "summary" ? "border-b-2 border-[#002147] text-[#002147]" : "text-gray-500"}`}
+                    className={`pb-2 px-1 text-sm font-medium ${chartViewMode === "summary" ? "border-b-2 border-[#003366] text-[#003366]" : "text-gray-500"}`}
                   >
                     Summary
                   </button>
@@ -477,7 +477,7 @@ export default function NHSCA2025Page() {
 
                       return (
                         <div key={item.state} className="flex items-center gap-3">
-                          <div className="w-16 text-right text-sm font-medium text-[#002147]">
+                          <div className="w-16 text-right text-sm font-medium text-[#003366]">
                             {item.state}
                             {item.isNC && <span className="ml-1 text-[#CBAF5D]">★</span>}
                           </div>
@@ -488,7 +488,7 @@ export default function NHSCA2025Page() {
                                   className="h-full"
                                   style={{
                                     width: `${(item.Freshman / item.total) * 100}%`,
-                                    backgroundColor: "#002147",
+                                    backgroundColor: "#003366",
                                   }}
                                 />
                               )}
@@ -527,7 +527,7 @@ export default function NHSCA2025Page() {
                     {/* Legend */}
                     <div className="flex justify-center gap-6 mt-6 pt-4 border-t">
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#002147" }} />
+                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#003366" }} />
                         <span className="text-sm text-gray-600">Freshman</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -551,12 +551,12 @@ export default function NHSCA2025Page() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-2 px-3 font-medium text-[#002147]">State</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#002147]">Freshman</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#002147]">Sophomore</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#002147]">Junior</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#002147]">Senior</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#002147]">Total</th>
+                          <th className="text-left py-2 px-3 font-medium text-[#003366]">State</th>
+                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Freshman</th>
+                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Sophomore</th>
+                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Junior</th>
+                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Senior</th>
+                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -565,7 +565,7 @@ export default function NHSCA2025Page() {
                             key={item.state}
                             className={`border-b ${item.isNC ? "bg-[#CBAF5D]/10" : idx % 2 === 0 ? "bg-gray-50" : ""}`}
                           >
-                            <td className="py-2 px-3 font-medium text-[#002147]">
+                            <td className="py-2 px-3 font-medium text-[#003366]">
                               {item.state} {item.isNC && <span className="text-[#CBAF5D]">★</span>}
                             </td>
                             <td className="text-center py-2 px-3">{item.Freshman}</td>
@@ -584,11 +584,11 @@ export default function NHSCA2025Page() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-gray-50 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-[#002147]">PA</div>
+                        <div className="text-3xl font-bold text-[#003366]">PA</div>
                         <div className="text-sm text-gray-600">Leads with 46 All-Americans</div>
                       </div>
                       <div className="bg-[#CBAF5D]/20 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-[#002147]">NC ★</div>
+                        <div className="text-3xl font-bold text-[#003366]">NC ★</div>
                         <div className="text-sm text-gray-600">Ranks #5 with 24 All-Americans</div>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4 text-center">
@@ -605,24 +605,24 @@ export default function NHSCA2025Page() {
 
         {/* 2025 Summary Section */}
         <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-[#002147] text-white border-l-4 border-l-green-500">
+          <CardHeader className="bg-[#003366] text-white border-l-4 border-l-green-500">
             <CardTitle>2025 NHSCA Nationals Summary</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             {/* Top Stats */}
             <div className="grid md:grid-cols-3 gap-4 mb-6">
               <div className="bg-gray-100 rounded-xl p-6 text-center">
-                <div className="text-4xl font-bold text-[#002147]">{stats.totalAA} AA</div>
+                <div className="text-4xl font-bold text-[#003366]">{stats.totalAA} AA</div>
                 <div className="text-gray-600">Total All-Americans</div>
                 <div className="text-sm text-gray-500">60% increase from 2024 performance</div>
               </div>
               <div className="bg-gray-100 rounded-xl p-6 text-center">
-                <div className="text-4xl font-bold text-[#002147]">1</div>
+                <div className="text-4xl font-bold text-[#003366]">1</div>
                 <div className="text-gray-600">National Finalist</div>
                 <div className="text-sm text-gray-500">Lorenzo Alston in Junior Division</div>
               </div>
               <div className="bg-gray-100 rounded-xl p-6 text-center">
-                <div className="text-4xl font-bold text-[#002147]">73%</div>
+                <div className="text-4xl font-bold text-[#003366]">73%</div>
                 <div className="text-gray-600">Bonus Point Wins</div>
                 <div className="text-sm text-gray-500">Pins, tech falls, and major decisions</div>
               </div>
@@ -632,7 +632,7 @@ export default function NHSCA2025Page() {
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-[#002147]">Multi-Time All-Americans</CardTitle>
+                  <CardTitle className="text-lg text-[#003366]">Multi-Time All-Americans</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
@@ -651,7 +651,7 @@ export default function NHSCA2025Page() {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-[#002147]">College Commitments</CardTitle>
+                  <CardTitle className="text-lg text-[#003366]">College Commitments</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {groupedCollegeCommits.length > 0 ? (
@@ -683,7 +683,7 @@ export default function NHSCA2025Page() {
 
             {/* Division Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-[#002147] text-white rounded-xl p-4">
+              <div className="bg-[#003366] text-white rounded-xl p-4">
                 <div className="font-semibold">Freshman</div>
                 <div className="text-4xl font-bold my-2">{stats.byDivision.Freshman}</div>
                 <div className="text-sm opacity-80">All-Americans</div>
@@ -797,7 +797,7 @@ export default function NHSCA2025Page() {
         {/* All-Americans Table Section */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#002147]">
+            <CardTitle className="flex items-center gap-2 text-[#003366]">
               <Trophy className="w-5 h-5" />
               2025 NC All-Americans
             </CardTitle>
@@ -855,32 +855,32 @@ export default function NHSCA2025Page() {
             {/* Results Table */}
             <Tabs value={divisionFilter === "all" ? "all" : divisionFilter} onValueChange={setDivisionFilter}>
               <TabsList className="grid w-full grid-cols-5 mb-4">
-                <TabsTrigger value="all" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">
+                <TabsTrigger value="all" className="data-[state=active]:bg-[#003366] data-[state=active]:text-white">
                   All
                 </TabsTrigger>
                 <TabsTrigger
                   value="Freshman"
-                  className="data-[state=active]:bg-[#002147] data-[state=active]:text-white"
+                  className="data-[state=active]:bg-[#003366] data-[state=active]:text-white"
                 >
                   Freshman
                 </TabsTrigger>
                 <TabsTrigger
                   value="Sophomore"
-                  className="data-[state=active]:bg-[#002147] data-[state=active]:text-white"
+                  className="data-[state=active]:bg-[#003366] data-[state=active]:text-white"
                 >
                   Sophomore
                 </TabsTrigger>
-                <TabsTrigger value="Junior" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">
+                <TabsTrigger value="Junior" className="data-[state=active]:bg-[#003366] data-[state=active]:text-white">
                   Junior
                 </TabsTrigger>
-                <TabsTrigger value="Senior" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">
+                <TabsTrigger value="Senior" className="data-[state=active]:bg-[#003366] data-[state=active]:text-white">
                   Senior
                 </TabsTrigger>
               </TabsList>
 
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full">
-                  <thead className="bg-[#002147] text-white">
+                  <thead className="bg-[#003366] text-white">
                     <tr>
                       <th className="px-4 py-3 text-left">Place</th>
                       <th className="px-4 py-3 text-left">Wrestler</th>
@@ -898,7 +898,7 @@ export default function NHSCA2025Page() {
                           <td className="px-4 py-3">
                             <Badge className={`${badge.bg} text-white`}>{badge.text}</Badge>
                           </td>
-                          <td className="px-4 py-3 font-medium text-[#002147]">{wrestler.athlete_name}</td>
+                          <td className="px-4 py-3 font-medium text-[#003366]">{wrestler.athlete_name}</td>
                           <td className="px-4 py-3 text-gray-600">{wrestler.high_school || "-"}</td>
                           <td className="px-4 py-3 text-gray-600">{wrestler.club || "-"}</td>
                           <td className="px-4 py-3">{wrestler.weight}</td>

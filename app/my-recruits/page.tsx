@@ -44,7 +44,7 @@ export default function MyRecruitsPage() {
     <AuthGuard>
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="max-w-2xl w-full">
-          <CardHeader className="bg-gradient-to-r from-[#002147] to-[#13294B] text-white">
+          <CardHeader className="bg-gradient-to-r from-[#003366] to-[#004080] text-white">
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
               Access Unavailable

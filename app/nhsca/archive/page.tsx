@@ -22,7 +22,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 
-const NC_NAVY = "#002147"
+const NC_NAVY = "#003366"
 const NC_RED = "#B31B1B"
 const NC_GOLD = "#CBAF5D"
 
@@ -264,8 +264,8 @@ export default function NHSCAArchive() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002147] mx-auto mb-4" />
-          <p className="text-[#002147]/70">Loading NHSCA Archive...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003366] mx-auto mb-4" />
+          <p className="text-[#003366]/70">Loading NHSCA Archive...</p>
         </div>
       </div>
     )
@@ -289,14 +289,14 @@ export default function NHSCAArchive() {
             </p>
             <div className="flex gap-4 mt-4">
               <Link href="/nhsca/2025">
-                <Button className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#002147] font-semibold">
+                <Button className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#003366] font-semibold">
                   2025 Results
                 </Button>
               </Link>
               <Link href="/nhsca">
                 <Button
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-[#002147] bg-transparent"
+                  className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent"
                 >
                   Back to NHSCA
                 </Button>
@@ -305,7 +305,7 @@ export default function NHSCAArchive() {
           </div>
         </div>
 
-        <Card className="mb-8 border-2 border-[#002147] bg-[#002147] text-white">
+        <Card className="mb-8 border-2 border-[#003366] bg-[#003366] text-white">
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
@@ -320,8 +320,8 @@ export default function NHSCAArchive() {
                   onClick={() => setTimeRange("last10")}
                   className={
                     timeRange === "last10"
-                      ? "bg-[#CBAF5D] text-[#002147] font-semibold"
-                      : "border-white bg-white text-[#002147] font-semibold hover:bg-[#CBAF5D]"
+                      ? "bg-[#CBAF5D] text-[#003366] font-semibold"
+                      : "border-white bg-white text-[#003366] font-semibold hover:bg-[#CBAF5D]"
                   }
                 >
                   Last 10 Years
@@ -331,8 +331,8 @@ export default function NHSCAArchive() {
                   onClick={() => setTimeRange("all")}
                   className={
                     timeRange === "all"
-                      ? "bg-[#CBAF5D] text-[#002147] font-semibold"
-                      : "border-white bg-white text-[#002147] font-semibold hover:bg-[#CBAF5D]"
+                      ? "bg-[#CBAF5D] text-[#003366] font-semibold"
+                      : "border-white bg-white text-[#003366] font-semibold hover:bg-[#CBAF5D]"
                   }
                 >
                   All Time
@@ -355,19 +355,19 @@ export default function NHSCAArchive() {
           <CardContent>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ActiveTab)} className="mb-6">
               <TabsList className="grid w-full grid-cols-5 bg-slate-100">
-                <TabsTrigger value="Overall" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">
+                <TabsTrigger value="Overall" className="data-[state=active]:bg-[#003366] data-[state=active]:text-white">
                   Overall
                 </TabsTrigger>
-                <TabsTrigger value="Freshman" className="data-[state=active]:bg-[#CBAF5D] data-[state=active]:text-[#002147]">
+                <TabsTrigger value="Freshman" className="data-[state=active]:bg-[#CBAF5D] data-[state=active]:text-[#003366]">
                   Freshman
                 </TabsTrigger>
                 <TabsTrigger value="Sophomore" className="data-[state=active]:bg-[#B31B1B] data-[state=active]:text-white">
                   Sophomore
                 </TabsTrigger>
-                <TabsTrigger value="Junior" className="data-[state=active]:bg-[#002147]/80 data-[state=active]:text-white">
+                <TabsTrigger value="Junior" className="data-[state=active]:bg-[#003366]/80 data-[state=active]:text-white">
                   Junior
                 </TabsTrigger>
-                <TabsTrigger value="Senior" className="data-[state=active]:bg-[#002147] data-[state=active]:text-white">
+                <TabsTrigger value="Senior" className="data-[state=active]:bg-[#003366] data-[state=active]:text-white">
                   Senior
                 </TabsTrigger>
               </TabsList>
@@ -482,13 +482,13 @@ export default function NHSCAArchive() {
                 <table className="w-full border-collapse border border-slate-200">
                   <thead>
                     <tr className="bg-slate-50">
-                      <th className="border border-slate-200 p-3 text-left font-semibold text-[#002147]">Year</th>
-                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#002147]">Total</th>
+                      <th className="border border-slate-200 p-3 text-left font-semibold text-[#003366]">Year</th>
+                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#003366]">Total</th>
                       <th className="border border-slate-200 p-3 text-center font-semibold text-[#CBAF5D]">Freshman</th>
                       <th className="border border-slate-200 p-3 text-center font-semibold text-[#B31B1B]">Sophomore</th>
-                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#002147]/80">Junior</th>
-                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#002147]">Senior</th>
-                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#002147]">Champions</th>
+                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#003366]/80">Junior</th>
+                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#003366]">Senior</th>
+                      <th className="border border-slate-200 p-3 text-center font-semibold text-[#003366]">Champions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -498,13 +498,13 @@ export default function NHSCAArchive() {
                       .map((row) => (
                         <tr key={row.year} className="hover:bg-slate-50">
                           <td className="border border-slate-200 p-3 font-medium">{row.year}</td>
-                          <td className="border border-slate-200 p-3 text-center font-bold text-[#002147]">{row.Total}</td>
+                          <td className="border border-slate-200 p-3 text-center font-bold text-[#003366]">{row.Total}</td>
                           <td className="border border-slate-200 p-3 text-center text-[#CBAF5D]">{row.Freshman}</td>
                           <td className="border border-slate-200 p-3 text-center text-[#B31B1B]">{row.Sophomore}</td>
-                          <td className="border border-slate-200 p-3 text-center text-[#002147]/80">{row.Junior}</td>
-                          <td className="border border-slate-200 p-3 text-center text-[#002147]">{row.Senior}</td>
+                          <td className="border border-slate-200 p-3 text-center text-[#003366]/80">{row.Junior}</td>
+                          <td className="border border-slate-200 p-3 text-center text-[#003366]">{row.Senior}</td>
                           <td className="border border-slate-200 p-3 text-center">
-                            <Badge className="bg-[#CBAF5D] text-[#002147]">
+                            <Badge className="bg-[#CBAF5D] text-[#003366]">
                               {yearStats.find((s) => s.year === row.year)?.champions || 0}
                             </Badge>
                           </td>
@@ -525,27 +525,27 @@ export default function NHSCAArchive() {
                           <CardTitle className="text-sm text-[#CBAF5D]">Peak Performance Year</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <div className="text-2xl font-bold text-[#002147]">
+                          <div className="text-2xl font-bold text-[#003366]">
                             {chartData.reduce((max, d) => (d.Total > max.Total ? d : max), chartData[0])?.year ?? "N/A"}
                           </div>
-                          <div className="text-sm text-[#002147]/70">
+                          <div className="text-sm text-[#003366]/70">
                             {chartData.reduce((max, d) => (d.Total > max.Total ? d : max), chartData[0])?.Total ?? 0}{" "}
                             All-Americans
                           </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="border-2 border-[#002147]">
+                      <Card className="border-2 border-[#003366]">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-sm text-[#002147]">Average Per Year</CardTitle>
+                          <CardTitle className="text-sm text-[#003366]">Average Per Year</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <div className="text-2xl font-bold text-[#002147]">
+                          <div className="text-2xl font-bold text-[#003366]">
                             {chartData.length > 0
                               ? Math.round(chartData.reduce((s, d) => s + d.Total, 0) / chartData.length)
                               : 0}
                           </div>
-                          <div className="text-sm text-[#002147]/70">All-Americans annually</div>
+                          <div className="text-sm text-[#003366]/70">All-Americans annually</div>
                         </CardContent>
                       </Card>
 
@@ -554,7 +554,7 @@ export default function NHSCAArchive() {
                           <CardTitle className="text-sm text-[#B31B1B]">Growth Trend</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <div className="text-2xl font-bold text-[#002147]">
+                          <div className="text-2xl font-bold text-[#003366]">
                             {chartData.length > 1
                               ? `+${
                                   Math.round(
@@ -565,16 +565,16 @@ export default function NHSCAArchive() {
                                 }`
                               : "N/A"}
                           </div>
-                          <div className="text-sm text-[#002147]/70">Per year average</div>
+                          <div className="text-sm text-[#003366]/70">Per year average</div>
                         </CardContent>
                       </Card>
 
-                      <Card className="border-2 border-[#002147]">
+                      <Card className="border-2 border-[#003366]">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-sm text-[#002147]">Strongest Division</CardTitle>
+                          <CardTitle className="text-sm text-[#003366]">Strongest Division</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <div className="text-2xl font-bold text-[#002147]">
+                          <div className="text-2xl font-bold text-[#003366]">
                             {chartData.length > 0
                               ? (["Freshman", "Sophomore", "Junior", "Senior"] as const).reduce(
                                   (max, div) => {
@@ -586,13 +586,13 @@ export default function NHSCAArchive() {
                                 )
                               : "N/A"}
                           </div>
-                          <div className="text-sm text-[#002147]/70">Most All-Americans</div>
+                          <div className="text-sm text-[#003366]/70">Most All-Americans</div>
                         </CardContent>
                       </Card>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-8 text-[#002147]/60">
+                  <div className="text-center py-8 text-[#003366]/60">
                     <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No data available for trend analysis</p>
                   </div>
@@ -604,7 +604,7 @@ export default function NHSCAArchive() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#002147]">
+            <CardTitle className="flex items-center gap-2 text-[#003366]">
               <Filter className="w-5 h-5" />
               Search Archive
             </CardTitle>
@@ -704,7 +704,7 @@ export default function NHSCAArchive() {
           <TabsContent value="results">
             <Card>
               <CardHeader>
-                <CardTitle className="text-[#002147]">Archive Results ({filteredWrestlers.length})</CardTitle>
+                <CardTitle className="text-[#003366]">Archive Results ({filteredWrestlers.length})</CardTitle>
                 <CardDescription>
                   {selectedYear !== "all" && `${selectedYear} • `}
                   {selectedDivision !== "all" && `${selectedDivision} • `}
@@ -731,8 +731,8 @@ export default function NHSCAArchive() {
                             {getOrdinal(w.placement)}
                           </Badge>
                           <div>
-                            <div className="font-semibold text-[#002147]">{w.athlete_name}</div>
-                            <div className="text-sm text-[#002147]/70">
+                            <div className="font-semibold text-[#003366]">{w.athlete_name}</div>
+                            <div className="text-sm text-[#003366]/70">
                               {w.high_school} • {w.club}
                             </div>
                           </div>
@@ -742,12 +742,12 @@ export default function NHSCAArchive() {
                             <div className="font-medium">
                               {w.year} • {w.division}
                             </div>
-                            <div className="text-[#002147]/70">
+                            <div className="text-[#003366]/70">
                               {w.weight} • {w.state}
                             </div>
                           </div>
                           {isMostOutstandingWrestler(w.athlete_name, w.year) && (
-                            <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#002147] text-xs">
+                            <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#003366] text-xs">
                               <Star className="w-3 h-3 mr-1" />
                               MOW
                             </Badge>
@@ -757,7 +757,7 @@ export default function NHSCAArchive() {
                     )
                   })}
                   {filteredWrestlers.length === 0 && (
-                    <div className="text-center py-8 text-[#002147]/60">
+                    <div className="text-center py-8 text-[#003366]/60">
                       <Archive className="w-12 h-12 mx-auto mb-4 opacity-50" />
                       <p>No wrestlers found matching your search criteria</p>
                     </div>
@@ -770,13 +770,13 @@ export default function NHSCAArchive() {
           <TabsContent value="timeline">
             <div className="space-y-4">
               {yearStats.map((ys) => (
-                <Card key={ys.year} className="border-l-4 border-l-[#002147]">
+                <Card key={ys.year} className="border-l-4 border-l-[#003366]">
                   <CardHeader>
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <CardTitle className="text-[#002147]">{ys.year}</CardTitle>
+                      <CardTitle className="text-[#003366]">{ys.year}</CardTitle>
                       <div className="flex gap-2 flex-wrap">
-                        <Badge className="bg-[#CBAF5D] text-[#002147]">{ys.champions} Champions</Badge>
-                        <Badge className="bg-[#002147] text-white">{ys.allAmericans} All-Americans</Badge>
+                        <Badge className="bg-[#CBAF5D] text-[#003366]">{ys.champions} Champions</Badge>
+                        <Badge className="bg-[#003366] text-white">{ys.allAmericans} All-Americans</Badge>
                         <Badge variant="outline">{ys.total ?? ys.allAmericans} Total</Badge>
                       </div>
                     </div>
@@ -800,12 +800,12 @@ export default function NHSCAArchive() {
                                 </Badge>
                                 <div className="text-sm flex-1">
                                   <div className="font-medium">{w.athlete_name}</div>
-                                  <div className="text-[#002147]/70">
+                                  <div className="text-[#003366]/70">
                                     {w.division} • {w.weight}
                                   </div>
                                 </div>
                                 {isMostOutstandingWrestler(w.athlete_name, w.year) && (
-                                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#002147] text-xs">
+                                  <Badge className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#003366] text-xs">
                                     <Star className="w-3 h-3 mr-1" />
                                     MOW
                                   </Badge>
@@ -825,7 +825,7 @@ export default function NHSCAArchive() {
                             e.stopPropagation()
                             toggleYearExpanded(ys.year)
                           }}
-                          className="flex items-center justify-center gap-2 min-h-[44px] w-full rounded-md border border-[#002147]/40 bg-transparent px-4 py-2 text-sm font-medium text-[#002147] hover:bg-[#002147]/10 cursor-pointer transition-colors"
+                          className="flex items-center justify-center gap-2 min-h-[44px] w-full rounded-md border border-[#003366]/40 bg-transparent px-4 py-2 text-sm font-medium text-[#003366] hover:bg-[#003366]/10 cursor-pointer transition-colors"
                         >
                           {expandedYears[ys.year] ? (
                             <>

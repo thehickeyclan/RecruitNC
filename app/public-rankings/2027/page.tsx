@@ -99,7 +99,7 @@ export default function Class2027RankingsPage() {
 
   if (!isLaunched) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#03154C] to-[#1e3a8a] px-4 py-16">
+      <div className="min-h-screen bg-gradient-to-br from-[#003366] to-[#1e3a8a] px-4 py-16">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-white/10 rounded-full mb-6">
@@ -123,7 +123,7 @@ export default function Class2027RankingsPage() {
               <div className="space-y-6 text-white">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-[#D3B574] rounded-full flex items-center justify-center">
-                    <span className="text-[#03154C] font-bold text-xl">1</span>
+                    <span className="text-[#003366] font-bold text-xl">1</span>
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold mb-2">Complete Academic Profiles</h3>
@@ -134,7 +134,7 @@ export default function Class2027RankingsPage() {
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-[#D3B574] rounded-full flex items-center justify-center">
-                    <span className="text-[#03154C] font-bold text-xl">2</span>
+                    <span className="text-[#003366] font-bold text-xl">2</span>
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold mb-2">Direct Contact Access</h3>
@@ -143,7 +143,7 @@ export default function Class2027RankingsPage() {
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-[#D3B574] rounded-full flex items-center justify-center">
-                    <span className="text-[#03154C] font-bold text-xl">3</span>
+                    <span className="text-[#003366] font-bold text-xl">3</span>
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold mb-2">Real-Time Tournament Updates</h3>
@@ -152,7 +152,7 @@ export default function Class2027RankingsPage() {
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-[#D3B574] rounded-full flex items-center justify-center">
-                    <span className="text-[#03154C] font-bold text-xl">4</span>
+                    <span className="text-[#003366] font-bold text-xl">4</span>
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold mb-2">Comprehensive Recruiting Data</h3>
@@ -166,8 +166,8 @@ export default function Class2027RankingsPage() {
           </Card>
 
           <div className="bg-[#D3B574] rounded-lg p-8 mb-12 text-center">
-            <p className="text-2xl md:text-3xl font-bold text-[#03154C] mb-2">30 Ranked Athletes</p>
-            <p className="text-lg text-[#03154C]/80 font-medium">
+            <p className="text-2xl md:text-3xl font-bold text-[#003366] mb-2">30 Ranked Athletes</p>
+            <p className="text-lg text-[#003366]/80 font-medium">
               12 State Champions • 7 NHSCA All-Americans • 40 State Placements • Academic Phenoms
             </p>
           </div>
@@ -177,7 +177,7 @@ export default function Class2027RankingsPage() {
             <Link href="/public-rankings">
               <Button
                 size="lg"
-                className="bg-[#D3B574] hover:bg-[#D3B574]/90 text-[#03154C] font-semibold text-lg px-8 py-6"
+                className="bg-[#D3B574] hover:bg-[#D3B574]/90 text-[#003366] font-semibold text-lg px-8 py-6"
               >
                 <ArrowLeft className="h-5 w-5 mr-2" />
                 Back to Rankings
@@ -192,7 +192,7 @@ export default function Class2027RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#03154C] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#003366] via-[#0a2571] to-[#1e3a8a] p-6 sm:p-12 mb-12 shadow-2xl">
           {heroImage && (
             <div
               className="absolute inset-0"
@@ -205,7 +205,7 @@ export default function Class2027RankingsPage() {
               }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#03154C]/90 via-[#03154C]/65 to-[#1e3a8a]/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#003366]/90 via-[#003366]/65 to-[#1e3a8a]/80"></div>
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-8">
@@ -379,7 +379,7 @@ export default function Class2027RankingsPage() {
                     placeholder="Search by name, school, or weight class..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 text-lg border-2 focus:border-[#03154C] rounded-lg"
+                    className="pl-10 pr-4 py-3 text-lg border-2 focus:border-[#003366] rounded-lg"
                   />
                 </div>
 
@@ -411,7 +411,7 @@ export default function Class2027RankingsPage() {
                 {hasActiveFilters && (
                   <div className="flex flex-wrap gap-2">
                     {searchTerm && (
-                      <Badge variant="secondary" className="bg-[#03154C]/10 text-[#03154C] border-[#031574]/20">
+                      <Badge variant="secondary" className="bg-[#003366]/10 text-[#003366] border-[#003366]/20">
                         Search: "{searchTerm}"
                       </Badge>
                     )}
@@ -483,7 +483,7 @@ export default function Class2027RankingsPage() {
           {/* Navigation to Other Rankings and Prospects */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <Link href="/public-rankings/2026">
-              <Card className="bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
+              <Card className="bg-gradient-to-br from-[#003366] to-[#1e3a8a] text-white hover:shadow-xl transition-shadow cursor-pointer h-full">
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
                   <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
                   <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2026 Rankings</h3>
@@ -534,20 +534,20 @@ export default function Class2027RankingsPage() {
             </Link>
           </div>
 
-          <div className="bg-[#03154C] text-white py-16">
+          <div className="bg-[#003366] text-white py-16">
             <div className="container mx-auto px-4 text-center">
               <h2 className="text-3xl font-bold mb-4">Join the Legacy</h2>
               <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
                 The Class of 2027 has set the standard. Be part of the next generation of NC United excellence.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-[#D3B574] hover:bg-[#D3B574]/90 text-[#03154C] font-semibold">
+                <Button size="lg" className="bg-[#D3B574] hover:bg-[#D3B574]/90 text-[#003366] font-semibold">
                   Learn About NC United
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-[#03154C] bg-transparent"
+                  className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent"
                 >
                   Contact Our Coaches
                 </Button>

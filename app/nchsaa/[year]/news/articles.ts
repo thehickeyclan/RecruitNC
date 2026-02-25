@@ -19,6 +19,8 @@ export interface NCHSAAArticle {
   preview?: string
   /** e.g. "12 min read" */
   readTime?: string
+  /** Optional card image path (e.g. /images/nchsaa-2026-seven-divisions.jpg) */
+  image?: string
 }
 
 export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
@@ -35,6 +37,7 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     readTime: "12 min read",
     date: "2026-02-25",
     published: true,
+    image: "/images/nchsaa-2026-seven-divisions.png",
   },
   {
     slug: "article-2",
