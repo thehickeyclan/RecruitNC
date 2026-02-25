@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
-import { getArticle } from "../../articles"
-import { SevenDivisionsArticleContent } from "../../content/seven-divisions-98-brackets-784-qualifiers"
+import { getArticle } from "../articles"
+import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brackets-784-qualifiers"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
