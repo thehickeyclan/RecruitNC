@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -18,7 +18,19 @@ import {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [statesOpen, setStatesOpen] = useState(false)
+  const statesMenuRef = useRef<HTMLDivElement>(null)
   const { user, signOut, isLoading, profile } = useAuth()
+
+  useEffect(() => {
+    if (!statesOpen) return
+    const onDocClick = (e: MouseEvent) => {
+      if (statesMenuRef.current?.contains(e.target as Node)) return
+      setStatesOpen(false)
+    }
+    document.addEventListener("mousedown", onDocClick)
+    return () => document.removeEventListener("mousedown", onDocClick)
+  }, [statesOpen])
 
   const showMyRecruits =
     profile?.role === "admin" ||
@@ -204,43 +216,46 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+              <div className="relative" ref={statesMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setStatesOpen((o) => !o)}
+                  className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1"
+                >
                   States
                   <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Trophy className="h-4 w-4" />
-                      States
+                </button>
+                {statesOpen && (
+                  <div className="absolute left-0 top-full mt-1 z-50 min-w-[18rem] overflow-hidden rounded-md border bg-white p-1 text-popover-foreground shadow-md">
+                    <div className="px-2 py-1.5">
+                      <div className="flex items-center gap-2 font-semibold">
+                        <Trophy className="h-4 w-4" />
+                        States
+                      </div>
+                      <p className="text-xs text-muted-foreground font-normal mt-1">
+                        NCHSAA State Championships
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">
-                      NCHSAA State Championships
-                    </p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {statesItems.map((sub) => {
-                    const Icon = sub.icon
-                    return (
-                      <DropdownMenuItem
-                        key={sub.href}
-                        onSelect={(e) => {
-                          e.preventDefault()
-                          window.location.href = sub.href
-                        }}
-                        className="cursor-pointer flex items-start gap-3 py-2"
-                      >
-                        <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-medium">{sub.label}</span>
-                          <span className="text-xs text-muted-foreground">{sub.description}</span>
-                        </div>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <div className="my-1 h-px bg-muted" />
+                    {statesItems.map((sub) => {
+                      const Icon = sub.icon
+                      return (
+                        <a
+                          key={sub.href}
+                          href={sub.href}
+                          className="flex cursor-pointer items-start gap-3 rounded-sm px-2 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{sub.label}</span>
+                            <span className="text-xs text-muted-foreground">{sub.description}</span>
+                          </div>
+                        </a>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   Legacy NC
