@@ -581,7 +581,7 @@ export default function NCHSAAOverview() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <form action="/nchsaa/2025" method="get" className="block h-full">
+          <form action="/nchsaa/2025" method="get" target="_blank" rel="noopener noreferrer" className="block h-full">
             <button type="submit" className="w-full h-full text-left cursor-pointer border-0 p-0 bg-transparent">
               <Card className="border-2 border-[#B31B1B] hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <CardHeader className="bg-[#B31B1B] text-white p-4 md:p-6">
@@ -601,7 +601,7 @@ export default function NCHSAAOverview() {
               </Card>
             </button>
           </form>
-          <form action="/nchsaa/2026" method="get" className="block h-full">
+          <form action="/nchsaa/2026" method="get" target="_blank" rel="noopener noreferrer" className="block h-full">
             <button type="submit" className="w-full h-full text-left cursor-pointer border-0 p-0 bg-transparent">
               <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
@@ -621,7 +621,7 @@ export default function NCHSAAOverview() {
               </Card>
             </button>
           </form>
-          <form action="/nchsaa/archive" method="get" className="block h-full">
+          <form action="/nchsaa/archive" method="get" target="_blank" rel="noopener noreferrer" className="block h-full">
             <button type="submit" className="w-full h-full text-left cursor-pointer border-0 p-0 bg-transparent">
               <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
