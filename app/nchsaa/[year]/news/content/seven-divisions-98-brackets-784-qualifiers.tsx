@@ -104,7 +104,7 @@ export function SevenDivisionsArticleContent() {
       <p>Doing big company things at a startup is a sure way to go out of business quickly.</p>
 
       <h2>The Recruiting Reality</h2>
-      <p>The positive news: every college program in North Carolina — and most in Virginia — have attended the state tournament. That is real support.</p>
+      <p>The positive news: every college program in North Carolina — and most in Virginia — attended the state tournament this year. That is real support.</p>
       <p>But we must ask: Are we delivering a product that is clear and usable?</p>
       <p>With eight classifications during the season and seven during the state tournament, college coaches are expected to:</p>
       <ul>

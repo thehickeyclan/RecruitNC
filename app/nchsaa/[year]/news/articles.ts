@@ -26,7 +26,7 @@ export interface NCHSAAArticle {
 export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
   {
     slug: "seven-divisions-98-brackets-784-qualifiers",
-    title: "Seven Divisions, 98 Brackets, 784 Qualifiers: The Question NC Wrestling Needs to Answer",
+    title: "Did We Fix a Problem Wrestling Didn't Have? — Seven Divisions, 98 Brackets, 360 Placers, 784 Qualifiers",
     summary: "When Structure Shapes Value — Part I: Diagnosis",
     subtitle: "When Structure Shapes Value — A Two-Part Conversation About North Carolina's Classification System",
     preview:
