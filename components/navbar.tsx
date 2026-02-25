@@ -101,18 +101,18 @@ export function Navbar() {
     : []
 
   return (
-    <nav className="bg-white shadow-sm border-b touch-scroll sticky top-0 z-50">
+    <nav className="bg-[#003366] shadow-md touch-scroll sticky top-0 z-50" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {/* Logo — white version for dark blue background (Fox News–style) */}
           <div className="flex-shrink-0">
-            <Link href="https://www.ncwrestlingunited.com" className="flex items-center space-x-2 mobile-optimized">
+            <Link href="/" className="flex items-center space-x-2 mobile-optimized">
               <Image
-                src="/images/nc-united-logo.png"
+                src="/images/nc-united-logo-white.png"
                 alt="NC United"
-                width={120}
-                height={48}
-                className="h-12 w-auto"
+                width={140}
+                height={52}
+                className="h-11 w-auto object-contain"
                 priority
               />
             </Link>
@@ -120,15 +120,15 @@ export function Navbar() {
 
           {/* Desktop Navigation — Dropdown items that navigate MUST use <a href>, not Link (Radix blocks navigation otherwise). See .cursorrules. */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+            <div className="ml-10 flex items-baseline space-x-1">
               <Link
                 href="/"
-                className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
               >
                 Home
               </Link>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   Prospects
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -161,19 +161,19 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                  className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
                 >
                   {item.label}
                 </Link>
               ))}
               <a
                 href="/blue"
-                className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
               >
                 Blue Program
               </a>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   Nationals
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -206,12 +206,12 @@ export function Navbar() {
               </DropdownMenu>
               <a
                 href="/nchsaa"
-                className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
               >
                 States
               </a>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   Legacy NC
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -243,7 +243,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
                   National Team
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -287,11 +287,11 @@ export function Navbar() {
           </div>
 
           {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
             {isLoading ? (
               <div className="flex space-x-2">
-                <div className="w-20 h-9 bg-gray-200 animate-pulse rounded-md"></div>
-                <div className="w-20 h-9 bg-gray-200 animate-pulse rounded-md"></div>
+                <div className="w-20 h-9 bg-white/20 animate-pulse rounded-md"></div>
+                <div className="w-20 h-9 bg-white/20 animate-pulse rounded-md"></div>
               </div>
             ) : user ? (
               <DropdownMenu>
@@ -299,7 +299,7 @@ export function Navbar() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center space-x-2 bg-transparent mobile-optimized"
+                    className="flex items-center space-x-2 bg-transparent border-white text-white hover:bg-white hover:text-[#003366] mobile-optimized"
                   >
                     <User className="h-4 w-4" />
                     <span>Account</span>
@@ -333,7 +333,7 @@ export function Navbar() {
                   asChild
                   variant="outline"
                   size="sm"
-                  className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized"
+                  className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized"
                 >
                   <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
                 </Button>
@@ -372,7 +372,7 @@ export function Navbar() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsOpen(true)}
-                  className="mobile-optimized min-h-[44px] min-w-[44px] flex items-center gap-2 px-3 bg-red-600 text-white hover:bg-red-700 hover:text-white"
+                  className="mobile-optimized min-h-[44px] min-w-[44px] flex items-center gap-2 px-3 text-white hover:bg-white/10 border border-white/40"
                 >
                   <Menu className="h-5 w-5" />
                   <span className="text-sm font-semibold">MENU</span>

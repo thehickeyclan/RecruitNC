@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
-import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User, FileText } from "lucide-react"
+import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User, FileText, Clock, ArrowRight } from "lucide-react"
 import { NCHSAA_2026_ARTICLES } from "./news/articles"
 import Link from "next/link"
 import { useEffect, useState } from "react"
@@ -301,75 +301,102 @@ export function NCHSAAYearResultsClient({
         </Link>
       </div>
 
-      <Card className="mb-8 border-2 border-[#B91C1C]">
-        <CardHeader className="bg-gradient-to-r from-[#B91C1C] to-[#7F1D1D] text-white">
-          <CardTitle className="flex items-center gap-2">
-            <Crown className="w-6 h-6" />
-            {displayYear} Tournament Summary
-          </CardTitle>
-          <CardDescription className="text-red-100">
-            State championship results and highlights
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+      <section className="mb-12 rounded-lg overflow-hidden border-2 border-[#dc2626]" aria-labelledby="tournament-summary">
+        <div className="bg-[#dc2626] px-6 py-8 md:py-10">
+          <div className="flex items-center gap-3 mb-2">
+            <Crown className="w-8 h-8 text-white shrink-0" aria-hidden />
+            <h2 id="tournament-summary" className="text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
+          </div>
+          <p className="text-red-100 mb-8">State championship results and highlights</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
             <div className="text-center">
-              <div className="text-3xl font-bold text-[#B91C1C] mb-2">{classifications.length}</div>
-              <div className="text-sm text-slate-600">Classifications</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{classifications.length}</div>
+              <div className="text-sm font-medium text-red-100">Classifications</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-[#D3b574] mb-2">{classifications.length * 14}</div>
-              <div className="text-sm text-slate-600">Weight Classes</div>
+              <div className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2">{classifications.length * 14}</div>
+              <div className="text-sm font-medium text-red-100">Weight Classes</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-[#32cd32] mb-2">{stats.totalMedalists}</div>
-              <div className="text-sm text-slate-600">Medal Winners</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stats.totalMedalists}</div>
+              <div className="text-sm font-medium text-red-100">Medal Winners</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-[#012ECD] mb-2">{stats.ncUnitedMedalists ?? "0"}</div>
-              <div className="text-sm text-slate-600">NC United Medalists</div>
+              <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">{stats.ncUnitedMedalists ?? "0"}</div>
+              <div className="text-sm font-medium text-red-100">NC United Medalists</div>
             </div>
             <div className="text-center col-span-2 md:col-span-1">
-              <div className="text-3xl font-bold text-slate-700 mb-2">{8 * 14 * (classifications.length || 7)}</div>
-              <div className="text-sm text-slate-600">State Qualifiers</div>
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{8 * 14 * (classifications.length || 7)}</div>
+              <div className="text-sm font-medium text-red-100">State Qualifiers</div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {displayYear === 2026 && NCHSAA_2026_ARTICLES.length > 0 && (
-        <Card className="mb-8 border-2 border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-[#03154c] flex items-center gap-2">
-              <FileText className="w-6 h-6" />
-              News & perspective
-            </CardTitle>
-            <CardDescription>Articles on structure, development, and the state of NC wrestling</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {NCHSAA_2026_ARTICLES.map((article) => (
-                <li key={article.slug}>
-                  {article.published ? (
-                    <a
-                      href={`/nchsaa/${displayYear}/news/${article.slug}`}
-                      className="block p-3 rounded-lg border border-slate-200 hover:border-[#B91C1C] hover:bg-red-50/50 transition-colors"
-                    >
-                      <span className="font-medium text-[#03154c]">{article.title}</span>
-                      {article.summary && <span className="block text-sm text-slate-600 mt-0.5">{article.summary}</span>}
-                    </a>
-                  ) : (
-                    <div className="block p-3 rounded-lg border border-slate-100 bg-slate-50 text-slate-500">
-                      <span className="font-medium text-slate-700">{article.title}</span>
-                      {article.summary && <span className="block text-sm text-slate-500 mt-0.5">{article.summary}</span>}
-                      <span className="block text-xs text-slate-400 mt-1">Coming soon</span>
+        <section className="mb-12" aria-labelledby="news-perspective">
+          <div className="bg-[#1a2332] text-white rounded-lg px-6 py-5 mb-8">
+            <h2 id="news-perspective" className="text-xl font-bold tracking-tight mb-1">2026 State Championship Series</h2>
+            <p className="text-red-100 text-sm">Four perspectives on structure, data, and excellence</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {NCHSAA_2026_ARTICLES.map((article, index) => {
+              const isHero = index === 0
+              const isLast = index === NCHSAA_2026_ARTICLES.length - 1
+              const cardContent = (
+                <>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    {article.category && article.categoryBadgeClass && (
+                      <span className={`${article.categoryBadgeClass} text-white text-[11px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider`}>
+                        {article.category}
+                      </span>
+                    )}
+                    {article.part && <span className="text-xs font-semibold text-slate-500 shrink-0">{article.part}</span>}
+                  </div>
+                  <h3 className={`font-bold text-[#1a2332] leading-tight mb-2 ${isHero ? "text-xl md:text-2xl line-clamp-3" : "text-lg line-clamp-3"}`}>{article.title}</h3>
+                  {article.subtitle && <p className="text-sm text-slate-600 mb-3 line-clamp-2">{article.subtitle}</p>}
+                  {article.preview && <p className={`text-slate-500 flex-grow ${isHero ? "text-sm line-clamp-4 mb-4" : "text-sm line-clamp-3 mb-4"}`}>{article.preview}</p>}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-200 mt-auto">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Clock className="w-4 h-4 shrink-0" aria-hidden />
+                      <span className="font-medium">{article.readTime ?? "—"}</span>
+                      {article.date && (
+                        <span className="text-slate-400">
+                          · {new Date(article.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+                    {article.published ? (
+                      <span className="text-sm font-bold text-red-600 group-hover:text-red-700 flex items-center gap-1">
+                        Read More
+                        <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" aria-hidden />
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-slate-400">Coming soon</span>
+                    )}
+                  </div>
+                </>
+              )}
+              const baseClass = "bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full "
+              const heroClass = baseClass + "p-6 md:p-8 border-l-4 border-l-red-600 " + (article.published ? "hover:-translate-y-0.5 cursor-pointer group" : "opacity-90")
+              const cardClass = baseClass + "p-5 " + (article.published ? "hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group" : "opacity-90")
+              const wrapperClass = isHero ? heroClass : cardClass
+              const gridClass = isHero ? "lg:col-span-2" : isLast ? "lg:col-span-2" : ""
+              if (article.published) {
+                return (
+                  <a key={article.slug} href={`/nchsaa/${displayYear}/news/${article.slug}`} className={`${wrapperClass} ${gridClass}`}>
+                    {cardContent}
+                  </a>
+                )
+              }
+              return (
+                <article key={article.slug} className={`${wrapperClass} ${gridClass}`}>
+                  {cardContent}
+                </article>
+              )
+            })}
+          </div>
+        </section>
       )}
 
       <Card className="mb-8">
