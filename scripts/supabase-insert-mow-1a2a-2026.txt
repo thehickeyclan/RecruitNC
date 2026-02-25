@@ -35,11 +35,40 @@ WHERE year = 2026 AND name ILIKE '%Ayden Sumners%';
 -- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/khV3K-NX6Emqlx5FtIyfc-Ayden%20Sumners%202026%20NCHSAA%20MOW.png'
 -- WHERE year = 2026 AND division = '3A';
 
--- Set Miller Menteer 2026 MOW photo (2026 states page). By name:
+-- Set Miller Menteer 2026 MOW photo (2026 states page, updated). By name:
 UPDATE most_outstanding_wrestlers
-SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/46ZmdRaE0VoYIYO1lHQY0-Miller%20Menteer%202026%20NCHSAA%20MOW%20.png'
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/_ftWbJX7Mg6syn-1XXxLx-Miller%20Menteer%202026%20NCHSAA%20MOW%20.png'
 WHERE year = 2026 AND name ILIKE '%Miller Menteer%';
 -- Or by division (uncomment and set division if needed):
 -- UPDATE most_outstanding_wrestlers
--- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/46ZmdRaE0VoYIYO1lHQY0-Miller%20Menteer%202026%20NCHSAA%20MOW%20.png'
+-- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/_ftWbJX7Mg6syn-1XXxLx-Miller%20Menteer%202026%20NCHSAA%20MOW%20.png'
 -- WHERE year = 2026 AND division = '4A';
+
+-- Set Jekai Sedgwick 2026 MOW photo (2026 states page, updated). By name:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/zcnPboSUuP0WlPnDqC2qA-Jekai%20Sedgwick%20NCHSAA%202026%20MOW.png'
+WHERE year = 2026 AND name ILIKE '%Jekai Sedgwick%';
+
+-- Set Adair Panama 2026 MOW photo (1A/2A, 2026 states page). By name or division:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/80Qu4kdpw9KxUM_lQl2dT-Adair%20Panama%202026%20NHSCAA%20MOW.png'
+WHERE year = 2026 AND name ILIKE '%Adair Panama%';
+-- Or by division (1A/2A):
+-- UPDATE most_outstanding_wrestlers
+-- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/80Qu4kdpw9KxUM_lQl2dT-Adair%20Panama%202026%20NHSCAA%20MOW.png'
+-- WHERE year = 2026 AND division = '1A/2A';
+
+-- Set Eli Oakley 2026 MOW photo (2026 states page). By name:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/wdHTD-tY8qJd8-bylT_Is-Eli%20Oakley%20NCHSAA%20MOW%202026.png'
+WHERE year = 2026 AND name ILIKE '%Eli Oakley%';
+
+-- Set Tye Johnson 2026 NCHSAA MOW photo. By name:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/akYDvxYyTMQm8cCHypL8x-Tye%20Johnson%20NCHSAA%202026%20MOW.png'
+WHERE year = 2026 AND name ILIKE '%Tye Johnson%';
+
+-- Set Lorenzo Alston 2026 NCHSAA MOW photo. By name:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/wmtEn6RVi6z2AmxAe_4G4-Lorenzo%20Alston%20NCHSAA%202026%20MOW.png'
+WHERE year = 2026 AND name ILIKE '%Lorenzo Alston%';

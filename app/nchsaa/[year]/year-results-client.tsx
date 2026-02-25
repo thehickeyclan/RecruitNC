@@ -386,21 +386,21 @@ export function NCHSAAYearResultsClient({
       </Card>
 
       {mostOutstandingWrestlers.length > 0 && (
-        <Card className="mb-8 border-2 border-[#D3b574]">
-          <CardHeader className="bg-gradient-to-r from-[#D3b574] to-yellow-600 text-white">
+        <Card className="mb-8 border-2 border-[#03154c] overflow-hidden">
+          <CardHeader className="bg-[#03154c] text-white">
             <CardTitle className="flex items-center gap-2">
               <Crown className="w-6 h-6" />
               Most Outstanding Wrestlers
             </CardTitle>
-            <CardDescription className="text-yellow-100">{displayYear} MOW by division</CardDescription>
+            <CardDescription className="text-slate-300">{displayYear} MOW by division</CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 bg-[#03154c]">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {mostOutstandingWrestlers.map((mow) => (
-                <div key={mow.id} className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200">
+                <div key={mow.id} className="bg-white/5 p-4 rounded-lg border border-white/20">
                   <div className="text-center">
                     {mow.photo_url ? (
-                      <div className="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-2 border-[#D3b574] bg-white">
+                      <div className="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border border-white bg-white">
                         <Image
                           src={mow.photo_url}
                           alt={mow.name}
@@ -411,13 +411,13 @@ export function NCHSAAYearResultsClient({
                         />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 mx-auto mb-3 rounded-full border-2 border-[#D3b574] bg-amber-100 flex items-center justify-center">
-                        <User className="w-12 h-12 text-amber-600" />
+                      <div className="w-24 h-24 mx-auto mb-3 rounded-full border border-white bg-white/10 flex items-center justify-center">
+                        <User className="w-12 h-12 text-amber-400" />
                       </div>
                     )}
                     <div className="text-2xl font-bold text-[#D3b574] mb-2">{mow.division}</div>
-                    <div className="text-lg font-semibold text-[#03154c] mb-1">{mow.name}</div>
-                    <div className="text-sm text-slate-600">{mow.school}</div>
+                    <div className="text-lg font-semibold text-white mb-1">{mow.name}</div>
+                    <div className="text-sm text-slate-300">{mow.school}</div>
                   </div>
                 </div>
               ))}
