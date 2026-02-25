@@ -34,3 +34,12 @@ WHERE year = 2026 AND name ILIKE '%Ayden Sumners%';
 -- UPDATE most_outstanding_wrestlers
 -- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/khV3K-NX6Emqlx5FtIyfc-Ayden%20Sumners%202026%20NCHSAA%20MOW.png'
 -- WHERE year = 2026 AND division = '3A';
+
+-- Set Miller Menteer 2026 MOW photo (2026 states page). By name:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/46ZmdRaE0VoYIYO1lHQY0-Miller%20Menteer%202026%20NCHSAA%20MOW%20.png'
+WHERE year = 2026 AND name ILIKE '%Miller Menteer%';
+-- Or by division (uncomment and set division if needed):
+-- UPDATE most_outstanding_wrestlers
+-- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/46ZmdRaE0VoYIYO1lHQY0-Miller%20Menteer%202026%20NCHSAA%20MOW%20.png'
+-- WHERE year = 2026 AND division = '4A';
