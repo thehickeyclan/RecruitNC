@@ -36,7 +36,7 @@ export function AuthNav() {
             className="flex items-center gap-2 p-4 bg-[#003366] text-white"
             onClick={() => setIsOpen(false)}
           >
-            <img src="/images/nc-united-logo-white.png" alt="NC United" className="h-9 w-auto" />
+            <img src="/images/nc-united-logo-white.png" alt="NC United" className="h-9 w-auto mix-blend-screen" />
             <span className="text-lg font-semibold">NC United Wrestling</span>
           </a>
           <div className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto">
@@ -118,7 +118,7 @@ export function AuthNav() {
     <header className="sticky top-0 z-50 w-full border-b bg-[#003366] shadow-md">
       <div className="container flex h-14 items-center">
         <a href="/" className="flex items-center gap-2 mr-6">
-          <img src="/images/nc-united-logo-white.png" alt="NC United" className="h-9 w-auto" />
+          <img src="/images/nc-united-logo-white.png" alt="NC United" className="h-9 w-auto mix-blend-screen" />
           <span className="hidden sm:inline-block font-bold text-lg text-white">NC United Wrestling</span>
           <span className="sm:hidden font-bold text-lg text-white">NC United</span>
         </a>

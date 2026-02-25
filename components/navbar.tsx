@@ -104,15 +104,15 @@ export function Navbar() {
     <nav className="bg-[#003366] shadow-md touch-scroll sticky top-0 z-50" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo — white version for dark blue background (Fox News–style) */}
-          <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center space-x-2 mobile-optimized">
+          {/* Logo — white on blue; use transparent PNG at this path to avoid blend (no black background) */}
+          <div className="flex-shrink-0 bg-[#003366]">
+            <Link href="/" className="flex items-center space-x-2 mobile-optimized block">
               <Image
                 src="/images/nc-united-logo-white.png"
                 alt="NC United"
                 width={140}
                 height={52}
-                className="h-11 w-auto object-contain"
+                className="h-11 w-auto object-contain mix-blend-screen"
                 priority
               />
             </Link>

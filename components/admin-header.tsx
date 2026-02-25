@@ -72,7 +72,7 @@ export function AdminHeader() {
                 alt="NC United"
                 width={120}
                 height={44}
-                className="h-9 w-auto object-contain"
+                className="h-9 w-auto object-contain mix-blend-screen"
                 priority
               />
               <span className="text-lg font-bold text-white hidden sm:inline">Admin</span>

@@ -301,38 +301,6 @@ export function NCHSAAYearResultsClient({
         </Link>
       </div>
 
-      <section className="mb-12 rounded-lg overflow-hidden border-2 border-[#dc2626]" aria-labelledby="tournament-summary">
-        <div className="bg-[#dc2626] px-6 py-8 md:py-10">
-          <div className="flex items-center gap-3 mb-2">
-            <Crown className="w-8 h-8 text-white shrink-0" aria-hidden />
-            <h2 id="tournament-summary" className="text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
-          </div>
-          <p className="text-red-100 mb-8">State championship results and highlights</p>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{classifications.length}</div>
-              <div className="text-sm font-medium text-red-100">Classifications</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2">{classifications.length * 14}</div>
-              <div className="text-sm font-medium text-red-100">Weight Classes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stats.totalMedalists}</div>
-              <div className="text-sm font-medium text-red-100">Medal Winners</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">{stats.ncUnitedMedalists ?? "0"}</div>
-              <div className="text-sm font-medium text-red-100">NC United Medalists</div>
-            </div>
-            <div className="text-center col-span-2 md:col-span-1">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{8 * 14 * (classifications.length || 7)}</div>
-              <div className="text-sm font-medium text-red-100">State Qualifiers</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {displayYear === 2026 && NCHSAA_2026_ARTICLES.length > 0 && (
         <section className="mb-12" aria-labelledby="news-perspective">
           <div className="bg-[#1a2332] text-white rounded-lg px-6 py-5 mb-8">
@@ -398,6 +366,38 @@ export function NCHSAAYearResultsClient({
           </div>
         </section>
       )}
+
+      <section className="mb-12 rounded-lg overflow-hidden border-2 border-[#dc2626]" aria-labelledby="tournament-summary">
+        <div className="bg-[#dc2626] px-6 py-8 md:py-10">
+          <div className="flex items-center gap-3 mb-2">
+            <Crown className="w-8 h-8 text-white shrink-0" aria-hidden />
+            <h2 id="tournament-summary" className="text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
+          </div>
+          <p className="text-red-100 mb-8">State championship results and highlights</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{classifications.length}</div>
+              <div className="text-sm font-medium text-red-100">Classifications</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2">{classifications.length * 14}</div>
+              <div className="text-sm font-medium text-red-100">Weight Classes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stats.totalMedalists}</div>
+              <div className="text-sm font-medium text-red-100">Medal Winners</div>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl md:text-5xl font-bold text-blue-300 mb-2">{stats.ncUnitedMedalists ?? "0"}</div>
+              <div className="text-sm font-medium text-red-100">NC United Medalists</div>
+            </div>
+            <div className="text-center col-span-2 md:col-span-1">
+              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{8 * 14 * (classifications.length || 7)}</div>
+              <div className="text-sm font-medium text-red-100">State Qualifiers</div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Card className="mb-8">
         <CardHeader>
