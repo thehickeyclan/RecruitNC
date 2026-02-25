@@ -584,7 +584,7 @@ export default function NCHSAAOverview() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <a href="/nchsaa/2025" className="block h-full">
+          <Link href="/nchsaa/2025">
             <Card className="border-2 border-[#B31B1B] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#B31B1B] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -601,8 +601,8 @@ export default function NCHSAAOverview() {
                 </div>
               </CardContent>
             </Card>
-          </a>
-          <a href="/nchsaa/2026" className="block h-full">
+          </Link>
+          <Link href="/nchsaa/2026">
             <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -619,8 +619,8 @@ export default function NCHSAAOverview() {
                 </div>
               </CardContent>
             </Card>
-          </a>
-          <a href="/nchsaa/archive" className="block h-full">
+          </Link>
+          <Link href="/nchsaa/archive">
             <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -637,7 +637,7 @@ export default function NCHSAAOverview() {
                 </div>
               </CardContent>
             </Card>
-          </a>
+          </Link>
         </div>
 
         {/* Tournament Overview */}

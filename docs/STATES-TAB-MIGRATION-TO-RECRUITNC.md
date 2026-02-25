@@ -13,6 +13,8 @@
 
 **Suggested order:** Phase 1 (Overview) → Phase 2 (Year results) → Phase 3 (Archive).
 
+**If STATES menu links (2025/2026) don't work in RecruitNC:** See [RECRUITNC-FIX-STATE-NAV-LINKS.md](./RECRUITNC-FIX-STATE-NAV-LINKS.md) for exact hrefs, markup (Link vs `<a>`), and a pre-deploy checklist.
+
 ---
 
 ## Phase 1: Tournament Overview (`/nchsaa`)

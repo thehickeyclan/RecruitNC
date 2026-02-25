@@ -40,7 +40,7 @@ This doc is the **master checklist** for the full menu. Existing phase docs cove
 | **National Team** | `docs/NATIONAL-TEAM-MOVE-TO-RECRUITNC.md` | NC United / National Team hub, UCD/NHSCA result pages, interest form, APIs. Migration complete in RecruitNC. |
 | **LEGACYNC (phases)** | `docs/LEGACYNC-TAB-MIGRATION-TO-RECRUITNC.md` | Phased LEGACYNC migration; Phase 3 = Schools → points to full Schools doc. |
 | **Schools** | `docs/SCHOOLS-PAGE-MIGRATION-TO-RECRUITNC.md` | Step-by-step Schools migration: files to copy, tables used, implementation steps, RecruitNC fixes. |
-| **STATES (NCHSAA)** | `docs/STATES-PAGE-MIGRATION-TO-RECRUITNC.md` | STATES tab: Phase 1 Overview, Phase 2 year results (/nchsaa/2026, 2025), Phase 3 Digital Archive; files, Supabase (browser only), nav, RLS. |
+| **STATES (NCHSAA)** | `docs/STATES-TAB-MIGRATION-TO-RECRUITNC.md` | STATES tab: Phase 1 Overview, Phase 2 year results (/nchsaa/2026, 2025), Phase 3 Digital Archive; files, Supabase (browser only), nav, RLS. |
 
 ---
 
@@ -94,7 +94,7 @@ Fully specified in **`docs/NATIONALS-PAGES-MOVE-TO-RECRUITNC.md`**. Summary:
 
 ## STATES section (NCHSAA)
 
-**Full migration plan:** **`docs/STATES-PAGE-MIGRATION-TO-RECRUITNC.md`** — Phase 1 Overview, Phase 2 year results, Phase 3 Archive; files, Supabase (browser only), nav.
+**Full migration plan:** **`docs/STATES-TAB-MIGRATION-TO-RECRUITNC.md`** — Phase 1 Overview, Phase 2 year results, Phase 3 Archive; files, Supabase (browser only), nav.
 
 ### Tournament Overview (`/nchsaa`)
 
