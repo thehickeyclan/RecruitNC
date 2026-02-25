@@ -376,7 +376,7 @@ export function NCHSAAYearResultsClient({
                     )}
                   </div>
                 </>
-              )}
+              )
               const baseClass = "bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full "
               const heroClass = baseClass + "p-6 md:p-8 border-l-4 border-l-red-600 " + (article.published ? "hover:-translate-y-0.5 cursor-pointer group" : "opacity-90")
               const cardClass = baseClass + "p-5 " + (article.published ? "hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group" : "opacity-90")
