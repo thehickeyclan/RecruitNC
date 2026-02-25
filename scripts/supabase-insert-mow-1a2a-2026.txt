@@ -49,14 +49,11 @@ UPDATE most_outstanding_wrestlers
 SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/zcnPboSUuP0WlPnDqC2qA-Jekai%20Sedgwick%20NCHSAA%202026%20MOW.png'
 WHERE year = 2026 AND name ILIKE '%Jekai Sedgwick%';
 
--- Set Adair Panama 2026 MOW photo (1A/2A, 2026 states page). By name or division:
+-- Update Adair Panama 2026 MOW photo and school (1A/2A, 2026 states page, updated). By name:
 UPDATE most_outstanding_wrestlers
-SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/80Qu4kdpw9KxUM_lQl2dT-Adair%20Panama%202026%20NHSCAA%20MOW.png'
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Rc9fVmSSGuXdOXr6-ZQJF-Adair%20Panama%202026%20NHSCAA%20MOW.png',
+    school = 'Robbinsville'
 WHERE year = 2026 AND name ILIKE '%Adair Panama%';
--- Or by division (1A/2A):
--- UPDATE most_outstanding_wrestlers
--- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/80Qu4kdpw9KxUM_lQl2dT-Adair%20Panama%202026%20NHSCAA%20MOW.png'
--- WHERE year = 2026 AND division = '1A/2A';
 
 -- Set Eli Oakley 2026 MOW photo (2026 states page). By name:
 UPDATE most_outstanding_wrestlers
