@@ -523,6 +523,7 @@ export function NCHSAAYearResultsClient({
         onClose={closeBracketModal}
         weightClass={bracketModal.weightClass}
         classification={bracketModal.classification}
+        year={displayYear}
       />
     </>
   )

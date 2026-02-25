@@ -51,6 +51,11 @@ const adminNavItems = [
     href: "/admin/blue",
     icon: "💳",
   },
+  {
+    title: "NCHSAA Brackets",
+    href: "/admin/nchsaa-brackets",
+    icon: "📑",
+  },
 ]
 
 export function AdminHeader() {

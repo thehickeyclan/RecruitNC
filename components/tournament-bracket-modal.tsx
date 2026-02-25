@@ -1,4 +1,5 @@
 "use client"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
@@ -9,10 +10,33 @@ interface TournamentBracketModalProps {
   onClose: () => void
   weightClass: string
   classification: string
+  /** When provided, bracket URL is fetched from API (DB + Blob). Omit for 2025 fallback. */
+  year?: number
 }
 
-export function TournamentBracketModal({ isOpen, onClose, weightClass, classification }: TournamentBracketModalProps) {
-  const getBracketImage = () => {
+export function TournamentBracketModal({ isOpen, onClose, weightClass, classification, year }: TournamentBracketModalProps) {
+  const [fetchedUrl, setFetchedUrl] = useState<string | null | "">(null)
+
+  useEffect(() => {
+    if (!isOpen || !year || !classification || !weightClass) {
+      setFetchedUrl(null)
+      return
+    }
+    let cancelled = false
+    const params = new URLSearchParams({ year: String(year), classification, weightClass })
+    fetch(`/api/nchsaa/bracket-image?${params}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.url) setFetchedUrl(data.url)
+        else if (!cancelled) setFetchedUrl("")
+      })
+      .catch(() => {
+        if (!cancelled) setFetchedUrl("")
+      })
+    return () => { cancelled = true }
+  }, [isOpen, year, classification, weightClass])
+
+  const getBracketImage2025 = () => {
     if (classification === "1A") {
       switch (weightClass) {
         case "106":
@@ -149,7 +173,10 @@ export function TournamentBracketModal({ isOpen, onClose, weightClass, classific
     return null
   }
 
-  const bracketImage = getBracketImage()
+  const bracketImage =
+    year != null
+      ? (fetchedUrl && fetchedUrl.length > 0 ? fetchedUrl : year === 2025 ? getBracketImage2025() : undefined)
+      : getBracketImage2025()
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
