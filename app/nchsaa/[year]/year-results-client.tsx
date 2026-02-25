@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye } from "lucide-react"
+import Image from "next/image"
+import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
@@ -31,6 +32,7 @@ interface MostOutstandingWrestler {
   school: string
   division: string
   year: number
+  photo_url?: string | null
 }
 
 interface TeamPointsWinner {
@@ -397,6 +399,22 @@ export function NCHSAAYearResultsClient({
               {mostOutstandingWrestlers.map((mow) => (
                 <div key={mow.id} className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200">
                   <div className="text-center">
+                    {mow.photo_url ? (
+                      <div className="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-2 border-[#D3b574] bg-white">
+                        <Image
+                          src={mow.photo_url}
+                          alt={mow.name}
+                          fill
+                          className="object-cover"
+                          sizes="96px"
+                          unoptimized={!mow.photo_url.startsWith("/")}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 mx-auto mb-3 rounded-full border-2 border-[#D3b574] bg-amber-100 flex items-center justify-center">
+                        <User className="w-12 h-12 text-amber-600" />
+                      </div>
+                    )}
                     <div className="text-2xl font-bold text-[#D3b574] mb-2">{mow.division}</div>
                     <div className="text-lg font-semibold text-[#03154c] mb-1">{mow.name}</div>
                     <div className="text-sm text-slate-600">{mow.school}</div>

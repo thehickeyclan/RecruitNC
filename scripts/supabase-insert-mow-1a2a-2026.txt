@@ -17,3 +17,20 @@ VALUES (
 -- INSERT INTO most_outstanding_wrestlers (name, school, division, year)
 -- VALUES ('Adair Panama', 'Robbinsville', '1A/2A', 2026)
 -- ON CONFLICT (year, division) DO UPDATE SET name = EXCLUDED.name, school = EXCLUDED.school;
+
+-- --------
+-- MOW photo_url: add column if missing, then set Ayden Sumners 2026 photo
+-- (Run "Add column" once; run "Update" to set the image for 2026 states page.)
+-- --------
+-- Add column if your table doesn't have it yet:
+-- ALTER TABLE most_outstanding_wrestlers ADD COLUMN IF NOT EXISTS photo_url TEXT;
+
+-- Set Ayden Sumners 2026 MOW photo (2026 states page). Use EITHER by name OR by division:
+-- By name:
+UPDATE most_outstanding_wrestlers
+SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/khV3K-NX6Emqlx5FtIyfc-Ayden%20Sumners%202026%20NCHSAA%20MOW.png'
+WHERE year = 2026 AND name ILIKE '%Ayden Sumners%';
+-- By division (3A slot):
+-- UPDATE most_outstanding_wrestlers
+-- SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/khV3K-NX6Emqlx5FtIyfc-Ayden%20Sumners%202026%20NCHSAA%20MOW.png'
+-- WHERE year = 2026 AND division = '3A';
