@@ -9,8 +9,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { regionsData } from "@/lib/regional-data"
-import { AuthGuard } from "@/components/auth-guard"
-
 export default function NCHSAAOverview() {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
 
@@ -544,8 +542,7 @@ export default function NCHSAAOverview() {
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         {/* Browse Archive CTA front and center at top */}
         <div className="mb-6 md:mb-8">
@@ -584,7 +581,7 @@ export default function NCHSAAOverview() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <a href="/nchsaa/2025">
+          <a href="/nchsaa/2025" onClick={(e) => { e.preventDefault(); window.location.href = "/nchsaa/2025"; }}>
             <Card className="border-2 border-[#B31B1B] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#B31B1B] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -602,7 +599,7 @@ export default function NCHSAAOverview() {
               </CardContent>
             </Card>
           </a>
-          <a href="/nchsaa/2026">
+          <a href="/nchsaa/2026" onClick={(e) => { e.preventDefault(); window.location.href = "/nchsaa/2026"; }}>
             <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -620,7 +617,7 @@ export default function NCHSAAOverview() {
               </CardContent>
             </Card>
           </a>
-          <a href="/nchsaa/archive">
+          <a href="/nchsaa/archive" onClick={(e) => { e.preventDefault(); window.location.href = "/nchsaa/archive"; }}>
             <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -1116,6 +1113,5 @@ export default function NCHSAAOverview() {
         </Card>
       </div>
     </div>
-    </AuthGuard>
   )
 }
