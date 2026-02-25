@@ -79,8 +79,8 @@ export function Navbar() {
 
   const statesItems = [
     { href: "/nchsaa", label: "Tournament Overview", description: "NCHSAA State Championships & 8-class system", icon: Trophy },
-    { href: "/nchsaa/2026", label: "2026 Results", description: "2026 State Championship results", icon: Medal, openInNewTab: true },
-    { href: "/nchsaa/2025", label: "2025 Results", description: "2025 State Championship results", icon: Medal, openInNewTab: true },
+    { href: "/nchsaa/2026", label: "2026 Results", description: "2026 State Championship results", icon: Medal },
+    { href: "/nchsaa/2025", label: "2025 Results", description: "2025 State Championship results", icon: Medal },
     { href: "/nchsaa/archive", label: "Digital Archive", description: "Search historical state results", icon: Trophy },
   ]
 
@@ -222,14 +222,9 @@ export function Navbar() {
                   <DropdownMenuSeparator />
                   {statesItems.map((sub) => {
                     const Icon = sub.icon
-                    const openInNewTab = "openInNewTab" in sub && (sub as { openInNewTab?: boolean }).openInNewTab
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
-                        <a
-                          href={sub.href}
-                          className="cursor-pointer flex items-start gap-3 py-2"
-                          {...(openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                        >
+                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
@@ -489,20 +484,16 @@ export function Navbar() {
                   <div className="px-3">
                     <div className="text-gray-600 font-medium text-sm mb-2">States</div>
                     <div className="pl-4 space-y-2">
-                      {statesItems.map((sub) => {
-                        const openInNewTab = "openInNewTab" in sub && (sub as { openInNewTab?: boolean }).openInNewTab
-                        return (
-                          <a
-                            key={sub.href}
-                            href={sub.href}
-                            className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
-                            {...(openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                            onClick={() => !openInNewTab && setIsOpen(false)}
-                          >
-                            {sub.label}
-                          </a>
-                        )
-                      })}
+                      {statesItems.map((sub) => (
+                        <a
+                          key={sub.href}
+                          href={sub.href}
+                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {sub.label}
+                        </a>
+                      ))}
                     </div>
                   </div>
                   <div className="px-3">

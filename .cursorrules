@@ -1,9 +1,11 @@
 # Git push
 When the user says "push update" (or similar): stage and commit all relevant changes. The agent cannot run `git push` (no GitHub credentials in this environment). After committing, reply in one line that they should run `git push` locally—do not repeat long explanations.
 
-# Links and navigation (CRITICAL — recurring issue, has caused many hours of rework)
-- **EVERY nav/dropdown link:** Use plain `<a href="...">`, never Next.js `<Link>` and never `onSelect={() => router.push(...)}`. Radix dropdown + Link blocks navigation; this fails every time we add a new menu item if we forget. Pattern: `<DropdownMenuItem asChild><a href={item.href}>...</a></DropdownMenuItem>`.
-- **Before adding or changing any nav/dropdown item:** (1) Use `<a href="...">` for the clickable element. (2) Confirm the route exists (file for that path). (3) Copy the pattern from an existing working dropdown in navbar (e.g. States or Blue).
+# Links and navigation (CRITICAL — has caused 20+ hours of rework across athlete bios, Blue, admin profiles, States, etc.)
+- **Same rule everywhere:** Nav, dropdowns, athlete cards, admin tables, Blue page, NCHSAA/States, view-profile — if it’s an in-app route, follow this.
+- **Inside Radix (dropdown, sheet, dialog):** Use plain `<a href="...">` only. Never `<Link>` and never `router.push()` alone. Radix intercepts and blocks navigation otherwise. Pattern: `<DropdownMenuItem asChild><a href={href}>...</a></DropdownMenuItem>`.
+- **Never `target="_blank"` for same-site routes** (e.g. `/nchsaa/2026`, `/blue`, `/view-profile?id=...`). New-tab opens a blank or stuck page and has caused repeated “page never loads” issues. Use same-tab navigation unless the product explicitly requires “open in new tab” for that one link.
+- **Before adding or changing any link:** (1) Use `<a href="...">` when inside a Radix menu/sheet. (2) Do not add `target="_blank"` for app routes. (3) Confirm the route exists. (4) Copy the pattern from a known working link in this codebase.
 - **New pages:** Create the route first, then add the link using the same pattern as working items.
 
 # Debugging (F12)

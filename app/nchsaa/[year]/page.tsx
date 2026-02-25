@@ -113,30 +113,36 @@ export default function NCHSAAYearResults() {
   }
 
   useEffect(() => {
+    const FETCH_TIMEOUT_MS = 15000
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out. Check your connection and try again.")), FETCH_TIMEOUT_MS)
+    )
+
     const fetchTournamentData = async () => {
       try {
-        const { data: results, error } = await supabase
-          .from("wrestling_nchsaa_results")
-          .select("*")
-          .eq("year", displayYear)
-          .order("classification")
-          .order("weight_class")
-          .order("place")
+        await Promise.race([
+          (async () => {
+            const { data: results, error } = await supabase
+              .from("wrestling_nchsaa_results")
+              .select("*")
+              .eq("year", displayYear)
+              .order("classification")
+              .order("weight_class")
+              .order("place")
 
-        if (error) {
-          console.error("[RecruitNC] NCHSAA fetch error:", error instanceof Error ? error.message : String(error), error)
-          setDebug({
-            yearParam,
-            displayYear,
-            resultsRowCount: 0,
-            mowCount: 0,
-            teamPointsCount: 0,
-            classifications: [],
-            error: error.message ?? String(error),
-          })
-          setLoading(false)
-          return
-        }
+            if (error) {
+              console.error("[RecruitNC] NCHSAA fetch error:", error instanceof Error ? error.message : String(error), error)
+              setDebug({
+                yearParam,
+                displayYear,
+                resultsRowCount: 0,
+                mowCount: 0,
+                teamPointsCount: 0,
+                classifications: [],
+                error: error.message ?? String(error),
+              })
+              return
+            }
 
         const { data: mowResults, error: mowError } = await supabase
           .from("most_outstanding_wrestlers")
@@ -196,14 +202,10 @@ export default function NCHSAAYearResults() {
           classifications: sortedClasses,
           error: null,
         })
-        console.debug("[NCHSAA year page]", {
-          yearParam,
-          displayYear,
-          resultsRowCount: results?.length ?? 0,
-          mowCount,
-          teamPointsCount: teamPointsResults?.length ?? 0,
-          classifications: sortedClasses,
-        })
+        console.debug("[NCHSAA year page]", { yearParam, displayYear, resultsRowCount: results?.length ?? 0, mowCount, teamPointsCount: teamPointsResults?.length ?? 0, classifications: sortedClasses })
+          })(),
+          timeoutPromise,
+        ])
       } catch (e) {
         const errMsg = e instanceof Error ? e.message : String(e)
         console.error("[RecruitNC] NCHSAA page error:", e instanceof Error ? e.message : String(e), e)
