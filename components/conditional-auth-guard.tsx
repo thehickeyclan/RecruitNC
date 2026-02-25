@@ -23,6 +23,7 @@ export function ConditionalAuthGuard({
   const isPublicRankings = pathname?.startsWith("/public-rankings")
   const isNchsaa = pathname === "/nchsaa" || pathname?.startsWith("/nchsaa/")
   const isPublic =
+    !pathname ||
     isHomepage ||
     isAuthRoute ||
     isBluePage ||
