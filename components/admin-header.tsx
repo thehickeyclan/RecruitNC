@@ -52,8 +52,8 @@ const adminNavItems = [
     icon: "💳",
   },
   {
-    title: "NCHSAA Brackets",
-    href: "/admin/nchsaa-brackets",
+    title: "NCHSAA",
+    href: "/admin/nchsaa",
     icon: "📑",
   },
 ]

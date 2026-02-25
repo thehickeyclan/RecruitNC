@@ -367,6 +367,17 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            {/* NCHSAA — brackets, state results utilities */}
+            <Link href="/admin/nchsaa">
+              <Card className="border-t-4 border-t-[#B91C1C] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Trophy className="h-10 w-10 text-[#B91C1C] mb-3" />
+                  <h3 className="font-bold text-[#13294B] mb-1">NCHSAA</h3>
+                  <p className="text-xs text-gray-600">Bracket upload, state results</p>
+                </CardContent>
+              </Card>
+            </Link>
+
             {/* Schools & Coaches */}
             <Link href="/admin/schools">
               <Card className="border-t-4 border-t-[#13294B] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
