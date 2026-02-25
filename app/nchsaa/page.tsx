@@ -581,60 +581,66 @@ export default function NCHSAAOverview() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <a href="/nchsaa/2025" onClick={(e) => { e.preventDefault(); window.location.href = "/nchsaa/2025"; }}>
-            <Card className="border-2 border-[#B31B1B] hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <CardHeader className="bg-[#B31B1B] text-white p-4 md:p-6">
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Calendar className="w-4 h-4 md:w-5 md:h-5" />
-                  2025 NCHSAA Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6">
-                <p className="text-[#002147] text-sm md:text-base">
-                  View 2025 NCHSAA State Championship results across all classifications.
-                </p>
-                <div className="flex items-center text-[#B31B1B] font-semibold mt-3 md:mt-4 text-sm md:text-base">
-                  View Results <ArrowRight className="w-4 h-4 ml-2" />
-                </div>
-              </CardContent>
-            </Card>
-          </a>
-          <a href="/nchsaa/2026" onClick={(e) => { e.preventDefault(); window.location.href = "/nchsaa/2026"; }}>
-            <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Calendar className="w-4 h-4 md:w-5 md:h-5" />
-                  2026 NCHSAA Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6">
-                <p className="text-[#002147] text-sm md:text-base">
-                  View 2026 State Championship results, MOW by division, and the new 7-class format.
-                </p>
-                <div className="flex items-center text-[#002147] font-semibold mt-3 md:mt-4 text-sm md:text-base">
-                  View Results <ArrowRight className="w-4 h-4 ml-2" />
-                </div>
-              </CardContent>
-            </Card>
-          </a>
-          <a href="/nchsaa/archive" onClick={(e) => { e.preventDefault(); window.location.href = "/nchsaa/archive"; }}>
-            <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <Archive className="w-4 h-4 md:w-5 md:h-5" />
-                  Historical Archive
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6">
-                <p className="text-[#002147] text-sm md:text-base">
-                  Search and explore historical NCHSAA State Championship results by year, school, or wrestler.
-                </p>
-                <div className="flex items-center text-[#002147] font-semibold mt-3 md:mt-4 text-sm md:text-base">
-                  Browse Archive <ArrowRight className="w-4 h-4 ml-2" />
-                </div>
-              </CardContent>
-            </Card>
-          </a>
+          <form action="/nchsaa/2025" method="get" className="block h-full">
+            <button type="submit" className="w-full h-full text-left cursor-pointer border-0 p-0 bg-transparent">
+              <Card className="border-2 border-[#B31B1B] hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <CardHeader className="bg-[#B31B1B] text-white p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                    2025 NCHSAA Results
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-[#002147] text-sm md:text-base">
+                    View 2025 NCHSAA State Championship results across all classifications.
+                  </p>
+                  <div className="flex items-center text-[#B31B1B] font-semibold mt-3 md:mt-4 text-sm md:text-base">
+                    View Results <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
+          </form>
+          <form action="/nchsaa/2026" method="get" className="block h-full">
+            <button type="submit" className="w-full h-full text-left cursor-pointer border-0 p-0 bg-transparent">
+              <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                    2026 NCHSAA Results
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-[#002147] text-sm md:text-base">
+                    View 2026 State Championship results, MOW by division, and the new 7-class format.
+                  </p>
+                  <div className="flex items-center text-[#002147] font-semibold mt-3 md:mt-4 text-sm md:text-base">
+                    View Results <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
+          </form>
+          <form action="/nchsaa/archive" method="get" className="block h-full">
+            <button type="submit" className="w-full h-full text-left cursor-pointer border-0 p-0 bg-transparent">
+              <Card className="border-2 border-[#002147] hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <CardHeader className="bg-[#002147] text-white p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <Archive className="w-4 h-4 md:w-5 md:h-5" />
+                    Historical Archive
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-[#002147] text-sm md:text-base">
+                    Search and explore historical NCHSAA State Championship results by year, school, or wrestler.
+                  </p>
+                  <div className="flex items-center text-[#002147] font-semibold mt-3 md:mt-4 text-sm md:text-base">
+                    Browse Archive <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </CardContent>
+              </Card>
+            </button>
+          </form>
         </div>
 
         {/* Tournament Overview */}
