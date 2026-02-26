@@ -18,7 +18,19 @@ import {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
+
+  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href))
+  const isDropdownActive = (items: { href: string }[]) => items.some((item) => isActive(item.href))
+  const navLinkClass = (href: string) =>
+    `text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized ${isActive(href) ? "font-bold" : ""}`
+  const navTriggerClass = (items: { href: string }[]) =>
+    `text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1 ${isDropdownActive(items) ? "font-bold" : ""}`
+  const mobileLinkClass = (href: string) =>
+    `px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center block ${isActive(href) ? "font-bold text-red-600" : "text-gray-600 hover:text-red-600"}`
+  const mobileSubLinkClass = (href: string) =>
+    `py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block pl-4 ${isActive(href) ? "font-bold text-red-600" : "text-gray-600 hover:text-red-600"}`
 
   const showMyRecruits =
     profile?.role === "admin" ||
@@ -123,12 +135,12 @@ export function Navbar() {
             <div className="ml-10 flex items-baseline space-x-1">
               <Link
                 href="/"
-                className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                className={navLinkClass("/")}
               >
                 Home
               </Link>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className={navTriggerClass([...prospectsItems, ...commitmentItems])}>
                   Prospects
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -161,19 +173,19 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                  className={navLinkClass(item.href)}
                 >
                   {item.label}
                 </Link>
               ))}
               <a
                 href="/blue"
-                className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                className={navLinkClass("/blue")}
               >
                 Blue Program
               </a>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className={navTriggerClass(nationalsItems)}>
                   Nationals
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -206,12 +218,12 @@ export function Navbar() {
               </DropdownMenu>
               <a
                 href="/nchsaa"
-                className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized"
+                className={navLinkClass("/nchsaa")}
               >
                 States
               </a>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
                   Legacy NC
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -243,7 +255,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
-                <DropdownMenuTrigger className="text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized flex items-center gap-1">
+                <DropdownMenuTrigger className={navTriggerClass(nationalTeamItems)}>
                   National Team
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
@@ -392,19 +404,19 @@ export function Navbar() {
                 <div className="flex flex-col space-y-4 mt-8 pb-8">
                   <Link
                     href="/"
-                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                    className={mobileLinkClass("/")}
                     onClick={() => setIsOpen(false)}
                   >
                     Home
                   </Link>
                   <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">Prospects</div>
-                    <div className="pl-4 space-y-2">
+                    <div className={`text-sm mb-2 ${isDropdownActive([...prospectsItems, ...commitmentItems]) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Prospects</div>
+                    <div className="space-y-2">
                       {prospectsItems.map((item) => (
                         <a
                           key={item.href}
                           href={item.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          className={mobileSubLinkClass(item.href)}
                           onClick={() => setIsOpen(false)}
                         >
                           {item.label}
@@ -415,7 +427,7 @@ export function Navbar() {
                         <a
                           key={item.href}
                           href={item.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          className={mobileSubLinkClass(item.href)}
                           onClick={() => setIsOpen(false)}
                         >
                           {item.label}
@@ -427,7 +439,7 @@ export function Navbar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                      className={mobileLinkClass(item.href)}
                       onClick={() => setIsOpen(false)}
                     >
                       {item.label}
@@ -435,19 +447,19 @@ export function Navbar() {
                   ))}
                   <a
                     href="/blue"
-                    className="text-gray-600 hover:text-red-600 px-3 py-2 rounded-md text-base font-medium transition-colors mobile-optimized min-h-[44px] flex items-center"
+                    className={mobileLinkClass("/blue")}
                     onClick={() => setIsOpen(false)}
                   >
                     Blue Program
                   </a>
                   <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">Nationals</div>
-                    <div className="pl-4 space-y-2">
+                    <div className={`text-sm mb-2 ${isDropdownActive(nationalsItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Nationals</div>
+                    <div className="space-y-2">
                       {nationalsItems.map((sub) => (
                         <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          className={mobileSubLinkClass(sub.href)}
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
@@ -456,11 +468,11 @@ export function Navbar() {
                     </div>
                   </div>
                   <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">States</div>
-                    <div className="pl-4 space-y-2">
+                    <div className={`text-sm mb-2 ${isActive("/nchsaa") ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>States</div>
+                    <div className="space-y-2">
                       <a
                         href="/nchsaa"
-                        className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                        className={mobileSubLinkClass("/nchsaa")}
                         onClick={() => setIsOpen(false)}
                       >
                         NCHSAA State Championships
@@ -468,13 +480,13 @@ export function Navbar() {
                     </div>
                   </div>
                   <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">Legacy NC</div>
-                    <div className="pl-4 space-y-2">
+                    <div className={`text-sm mb-2 ${isDropdownActive(legacyNcItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Legacy NC</div>
+                    <div className="space-y-2">
                       {legacyNcItems.map((sub) => (
                         <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          className={mobileSubLinkClass(sub.href)}
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
@@ -483,13 +495,13 @@ export function Navbar() {
                     </div>
                   </div>
                   <div className="px-3">
-                    <div className="text-gray-600 font-medium text-sm mb-2">National Team</div>
-                    <div className="pl-4 space-y-2">
+                    <div className={`text-sm mb-2 ${isDropdownActive(nationalTeamItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>National Team</div>
+                    <div className="space-y-2">
                       {nationalTeamItems.map((sub) => (
                         <a
                           key={sub.href}
                           href={sub.href}
-                          className="text-gray-600 hover:text-red-600 py-2 rounded-md text-base transition-colors mobile-optimized min-h-[44px] flex items-center block"
+                          className={mobileSubLinkClass(sub.href)}
                           onClick={() => setIsOpen(false)}
                         >
                           {sub.label}
