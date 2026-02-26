@@ -15,7 +15,6 @@ interface Athlete {
   weightClass?: string
   weight_class?: string
   college_weight_class?: string
-  projected_weight?: string
   hs_weight_class?: string
   highschool?: string
   highSchool?: string
@@ -538,9 +537,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                   )}
                   <p className="text-xs text-gray-600">
                     <span className="font-semibold">Projected Weight:</span>{" "}
-                    {(athlete.college_weight_class != null && String(athlete.college_weight_class).trim() !== "") ||
-                    (athlete.projected_weight != null && String(athlete.projected_weight).trim() !== "")
-                      ? `${String(athlete.college_weight_class ?? athlete.projected_weight)} lbs`
+                    {athlete.college_weight_class != null && String(athlete.college_weight_class).trim() !== ""
+                      ? `${String(athlete.college_weight_class)} lbs`
                       : "TBD"}
                   </p>
                   {athlete.commitmentdate && (

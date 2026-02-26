@@ -25,7 +25,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react"
-import Link from "next/link"
 import Image from "next/image"
 
 // Types
@@ -951,12 +950,12 @@ export default function SubmissionsManagerPage() {
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject
                         </Button>
-                        <Link href={`/view-profile?id=${encodeURIComponent(request.athlete_id)}`} target="_blank">
+                        <a href={`/view-profile?id=${encodeURIComponent(request.athlete_id)}`}>
                           <Button variant="outline">
                             <ExternalLink className="h-4 w-4 mr-2" />
                             View Profile
                           </Button>
-                        </Link>
+                        </a>
                       </div>
                     </CardContent>
                   </Card>
@@ -1522,12 +1521,12 @@ export default function SubmissionsManagerPage() {
                                       )}
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                      <Link href={`/view-profile?id=${encodeURIComponent(request.athlete_id)}`} target="_blank">
+                                      <a href={`/view-profile?id=${encodeURIComponent(request.athlete_id)}`}>
                                         <Button variant="outline" size="sm">
                                           <ExternalLink className="h-3 w-3 mr-1" />
                                           View
                                         </Button>
-                                      </Link>
+                                      </a>
                                     </div>
                                   </div>
                                 </CardContent>
@@ -1669,12 +1668,12 @@ export default function SubmissionsManagerPage() {
                                 )}
                                 Reject & Revert
                               </Button>
-                              <Link href={`/view-profile?id=${encodeURIComponent(edit.athlete_id)}`} target="_blank">
+                              <a href={`/view-profile?id=${encodeURIComponent(edit.athlete_id)}`}>
                                 <Button variant="outline" size="sm">
                                   <ExternalLink className="h-4 w-4 mr-1" />
                                   View Profile
                                 </Button>
-                              </Link>
+                              </a>
                             </div>
                           </div>
                         </CardContent>

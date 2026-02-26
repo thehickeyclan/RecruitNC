@@ -7,6 +7,47 @@
 
 import { NextRequest, NextResponse } from "next/server"
 
+/** Plausible NCHSAA years for a grad year (high school: gradYear-4 through gradYear). */
+const MIN_YEAR = 1990
+const MAX_YEAR = 2035
+
+/**
+ * Strip NCHSAA result lines for years outside the athlete's plausible window (gradYear-4 .. gradYear)
+ * so we don't show another person's results (e.g. two "Jacob Perry" — class of 2028 should not show 2022/2023).
+ * Only runs inside the "NCHSAA State Results" section. Infers grad year from "Class of 20XX" or from latest NCHSAA year + 2.
+ */
+function stripImpossibleNchsaaYears(answer: string): string {
+  const nchsaaBlock = answer.match(/((🏆\s*)?NCHSAA\s+State\s+Results\s*:?\s*\n)([\s\S]*?)(?=\n\s*(🏆|Super32|NHSCA|National Team|Career|High School Career|🇺🇸|\n\n\s*[A-Z])|$)/i)
+  if (!nchsaaBlock) return answer
+
+  const [, header, , sectionContent] = nchsaaBlock
+  const classMatch = answer.match(/\b[Cc]lass\s+of\s+(20\d{2})\b/)
+  let gradYear: number | null = classMatch ? parseInt(classMatch[1], 10) : null
+  if (!gradYear && sectionContent) {
+    const yearMatches = sectionContent.match(/^\s*[-•*]\s*(20\d{2})\s*:/gm)
+    if (yearMatches?.length) {
+      const maxY = Math.max(...yearMatches.map((m) => parseInt(m.replace(/\D/g, "").slice(0, 4), 10)))
+      gradYear = maxY + 2
+    }
+  }
+  if (!gradYear || gradYear < 2000 || gradYear > 2040) return answer
+
+  const minYear = Math.max(MIN_YEAR, gradYear - 4)
+  const maxYear = Math.min(MAX_YEAR, gradYear)
+
+  const filtered = sectionContent
+    .replace(/^(\s*[-•*]\s*)(20\d{2})(\s*:\s*[^\n]*)/gm, (match, _p, yearStr) => {
+      const y = parseInt(yearStr, 10)
+      return y >= minYear && y <= maxYear ? match : ""
+    })
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+
+  const fullBlock = nchsaaBlock[0]
+  const newBlock = header + filtered
+  return answer.replace(fullBlock, newBlock).replace(/\n{3,}/g, "\n\n").trim()
+}
+
 // LegacyNC API URL - set this in RecruitNC's environment variables
 // For local dev: http://localhost:3000
 // For production: https://your-legacy-nc-domain.com
@@ -63,6 +104,8 @@ export async function POST(request: NextRequest) {
     
     // Fix profile links and formatting in the answer
     if (data.answer) {
+      // Remove NCHSAA years that are impossible for the athlete (e.g. class of 2028 should not show 2022/2023 from another person)
+      data.answer = stripImpossibleNchsaaYears(data.answer)
       // Fix double "lbs" from LegacyNC (e.g. "140lbslbs" -> "140 lbs")
       data.answer = data.answer.replace(/lbslbs/gi, "lbs")
       data.answer = data.answer.replace(/(\d+)lbs(?!\s)/gi, "$1 lbs")

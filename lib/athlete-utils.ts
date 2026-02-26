@@ -41,7 +41,7 @@ export async function mapDbToAthlete(data: any): Promise<Athlete> {
     division: (data.colleges?.division ?? data.college_division ?? data.division ?? undefined) as string | undefined,
     weightclass: data.weightclass || "",
     weightClass: data.weightclass || "",
-    college_weight_class: data.college_weight_class ?? data.projected_weight ?? "", // DB may use either column
+    college_weight_class: data.college_weight_class ?? "",
     graduationyear: data.graduationyear || new Date().getFullYear(),
     graduationYear: data.graduationyear || new Date().getFullYear(),
     birthdate: data.birthdate || null,

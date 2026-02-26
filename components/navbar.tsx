@@ -403,13 +403,13 @@ export function Navbar() {
                 }}
               >
                 <div className="flex flex-col space-y-4 mt-8 pb-8">
-                  <Link
+                  <a
                     href="/"
                     className={mobileLinkClass("/")}
                     onClick={() => setIsOpen(false)}
                   >
                     Home
-                  </Link>
+                  </a>
                   <div className="px-3">
                     <div className={`text-sm mb-2 ${isDropdownActive([...prospectsItems, ...commitmentItems]) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Prospects</div>
                     <div className="space-y-2">
@@ -437,14 +437,14 @@ export function Navbar() {
                     </div>
                   </div>
                   {mainNavLinks.slice(1).map((item) => (
-                    <Link
+                    <a
                       key={item.href}
                       href={item.href}
                       className={mobileLinkClass(item.href)}
                       onClick={() => setIsOpen(false)}
                     >
                       {item.label}
-                    </Link>
+                    </a>
                   ))}
                   <a
                     href="/blue"
@@ -511,35 +511,36 @@ export function Navbar() {
                     </div>
                   </div>
                   {highlightNavItems.map((item) => (
-                    <Link
+                    <a
                       key={item.href}
                       href={item.href}
                       className="px-3 py-2 rounded-md text-base font-semibold transition-all mobile-optimized min-h-[44px] flex items-center bg-red-600 text-white hover:bg-red-700"
                       onClick={() => setIsOpen(false)}
                     >
                       {item.label}
-                    </Link>
+                    </a>
                   ))}
                   <div className="border-t pt-4 mt-4">
                     {!user && !isLoading ? (
                       <div className="space-y-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="w-full border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px]"
+                        <a
+                          href="/auth/signin"
+                          target="_top"
+                          rel="noopener"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent px-4 py-2 text-sm font-medium"
                         >
-                          <Link href="/auth/signin" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
-                            Sign In
-                          </Link>
-                        </Button>
-                        <Button
-                          asChild
-                          className="w-full bg-red-600 text-white hover:bg-red-700 mobile-optimized min-h-[44px]"
+                          Sign In
+                        </a>
+                        <a
+                          href="/auth/signup"
+                          target="_top"
+                          rel="noopener"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center justify-center w-full min-h-[44px] rounded-md bg-red-600 text-white hover:bg-red-700 px-4 py-2 text-sm font-medium"
                         >
-                          <Link href="/auth/signup" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
-                            Sign Up
-                          </Link>
-                        </Button>
+                          Sign Up
+                        </a>
                       </div>
                     ) : user ? (
                       <div className="space-y-2">

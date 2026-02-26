@@ -75,7 +75,9 @@ export function WrestlingAchievementsSection({
 
       try {
         console.log("[v0] Fetching achievements for:", athleteName)
-        const response = await fetch(`/api/wrestling-achievements?name=${encodeURIComponent(athleteName)}`)
+        const params = new URLSearchParams({ name: athleteName })
+        if (graduationYear && graduationYear > 0) params.set("graduation_year", String(graduationYear))
+        const response = await fetch(`/api/wrestling-achievements?${params.toString()}`)
         const data = await response.json()
 
         console.log("[v0] Achievements API response:", data)
@@ -97,7 +99,7 @@ export function WrestlingAchievementsSection({
     }
 
     fetchAchievements()
-  }, [athleteName])
+  }, [athleteName, graduationYear])
 
   if (loading) {
     return (

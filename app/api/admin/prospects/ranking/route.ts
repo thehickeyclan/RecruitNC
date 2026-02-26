@@ -50,11 +50,12 @@ export async function GET(request: NextRequest) {
     // Single source of truth: same getNCHSAAResultsForProfile used by unified profile & wrestling-achievements API
     const athletesWithNchsaa = await Promise.all(
       (athletes || []).map(async (athlete) => {
-        const byName = await getNCHSAAResultsForProfile(supabase, athlete.name || "")
+        const gradYear = Number(athlete.graduationyear) || 0
+        const byName = await getNCHSAAResultsForProfile(supabase, athlete.name || "", gradYear || undefined)
         const wrestlingName = (athlete.wrestling_name || "").trim()
         const byWrestling =
           wrestlingName && wrestlingName !== (athlete.name || "").trim()
-            ? await getNCHSAAResultsForProfile(supabase, wrestlingName)
+            ? await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear || undefined)
             : []
         const nchsaa_results = mergeNchsaaResults(byName, byWrestling).map((r) => ({
           year: r.year,

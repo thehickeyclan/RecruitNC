@@ -276,11 +276,12 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsC
                   {athlete.careerRecord && <Badge variant="outline">{athlete.careerRecord}</Badge>}
                 </div>
               </div>
-              <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} target="_blank">
-                <Button variant="outline" size="sm">
-                  Full Profile
-                </Button>
-              </Link>
+              <a
+                href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
+                className="inline-flex items-center justify-center rounded-md border border-input bg-transparent px-4 py-2 text-sm font-medium hover:bg-accent"
+              >
+                Full Profile
+              </a>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>

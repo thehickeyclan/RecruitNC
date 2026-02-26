@@ -41,19 +41,18 @@ export function PortalNavigation() {
                     const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
 
                     return (
-                      <Button
+                      <a
                         key={item.href}
-                        variant={isActive ? "default" : "ghost"}
-                        size="sm"
-                        className={cn("justify-start py-6", isActive ? "bg-[#0a1e50] text-white" : "text-[#0a1e50]")}
-                        asChild
+                        href={item.href}
                         onClick={() => setOpen(false)}
+                        className={cn(
+                          "flex items-center justify-start py-6 px-3 rounded-md text-base w-full cursor-pointer",
+                          isActive ? "bg-[#0a1e50] text-white" : "text-[#0a1e50] hover:bg-[#0a1e50]/10",
+                        )}
                       >
-                        <Link href={item.href}>
-                          <item.icon className="mr-3 h-5 w-5" />
-                          <span className="text-base">{item.label}</span>
-                        </Link>
-                      </Button>
+                        <item.icon className="mr-3 h-5 w-5" />
+                        <span className="text-base">{item.label}</span>
+                      </a>
                     )
                   })}
 
@@ -107,22 +106,18 @@ export function PortalNavigation() {
             <AuthNav />
           </div>
 
-          {/* Admin button on the right */}
+          {/* Admin button on the right — plain <a> so navigation always works */}
           <div>
-            <Button
-              variant={pathname.startsWith("/admin") ? "default" : "outline"}
-              size="sm"
+            <a
+              href="/admin"
               className={cn(
-                "py-2 px-4",
-                pathname.startsWith("/admin") ? "bg-[#0a1e50] text-white" : "text-[#0a1e50] border-[#0a1e50]",
+                "inline-flex items-center justify-center rounded-md py-2 px-4 text-sm font-medium border",
+                pathname.startsWith("/admin") ? "bg-[#0a1e50] text-white border-[#0a1e50]" : "text-[#0a1e50] border-[#0a1e50] hover:bg-[#0a1e50]/10",
               )}
-              asChild
             >
-              <Link href="/admin">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Admin</span>
-              </Link>
-            </Button>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Admin</span>
+            </a>
           </div>
         </div>
       </div>

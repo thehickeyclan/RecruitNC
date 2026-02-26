@@ -50,7 +50,7 @@ export async function loadProfileTournamentData(
   const allTime = options?.allTime === true
 
   const [nchsaa, nhsca, super32] = await Promise.all([
-    getNCHSAAResultsForProfile(supabase, name),
+    getNCHSAAResultsForProfile(supabase, name, gradYear),
     allTime
       ? getNHSCAFromTablesAllTime(supabase, name)
       : getNHSCAFromTables(supabase, name, gradYear),

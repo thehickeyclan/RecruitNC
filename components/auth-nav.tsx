@@ -151,25 +151,25 @@ export function AuthNav() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center gap-2">
+                  <a href="/profile" className="cursor-pointer flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Profile
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
                 {isCoach && (
                   <DropdownMenuItem asChild>
-                    <Link href="/coaches" className="flex items-center gap-2">
+                    <a href="/coaches" className="cursor-pointer flex items-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       Coach&apos;s Portal
-                    </Link>
+                    </a>
                   </DropdownMenuItem>
                 )}
                 {isAdmin && (
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center gap-2">
+                    <a href="/admin" className="cursor-pointer flex items-center gap-2">
                       <Settings className="h-4 w-4" />
                       Admin
-                    </Link>
+                    </a>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={signOut} className="flex items-center gap-2">

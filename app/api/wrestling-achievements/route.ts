@@ -7,6 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const athleteName = (searchParams.get("name") || "").trim()
     const wrestlingName = (searchParams.get("wrestling_name") || "").trim()
+    const graduationYearParam = searchParams.get("graduation_year")
+    const graduationYear = graduationYearParam ? parseInt(graduationYearParam, 10) : undefined
 
     if (!athleteName) {
       return NextResponse.json(
@@ -19,10 +21,10 @@ export async function GET(request: Request) {
       cookies: { get: () => null, set: () => {}, remove: () => {} },
     })
 
-    const byName = await getNCHSAAResultsForProfile(supabase, athleteName)
+    const byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear)
     const byWrestling =
       wrestlingName && wrestlingName !== athleteName
-        ? await getNCHSAAResultsForProfile(supabase, wrestlingName)
+        ? await getNCHSAAResultsForProfile(supabase, wrestlingName, graduationYear)
         : []
     const nchsaaResults = mergeNchsaaResults(byName, byWrestling)
 

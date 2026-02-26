@@ -22,25 +22,65 @@ export function escapeForIlike(s: string): string {
   return (s ?? "").replace(/'/g, "''")
 }
 
-/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) so we match DB spellings either way. */
+/**
+ * Known same-person name spellings (e.g. NCHSAA or source data typo vs athlete profile).
+ * Each group lists all spellings that refer to the same athlete; we query for all so placements pull in.
+ */
+/**
+ * Add spellings here when NCHSAA/source data uses a different name than the athlete profile
+ * (e.g. Quickny vs Quincy, or Furmann vs Furman). Use /api/debug/nchsaa-lookup?name=First+Last&year=2026
+ * to see raw wrestler_name values for a given last name and add any missing spellings.
+ */
+const SAME_PERSON_NAME_ALIASES: string[][] = [
+  ["Holt Quincy", "Holton Quincy", "Holt Quickny", "Holton Quickny"],
+  ["Colt Cambruzzi", "Colt Cambruzi", "Cole Cambruzzi", "Cole Cambruzi"],
+  ["Carter Furman", "Carter Furmann", "Carter Forman"],
+]
+
+function normalizeForAlias(name: string): string {
+  return (name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/,/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(" ")
+}
+
+/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) and known same-person spelling aliases (e.g. Holt Quickny ↔ Holt Quincy) so we match DB spellings either way. */
 export function getNameVariations(name: string): string[] {
   const n = (name ?? "").trim()
   if (!n) return []
-  const variations = [n]
-  const noApostrophe = n.replace(/'/g, "").trim()
-  if (noApostrophe && noApostrophe !== n) variations.push(noApostrophe)
-  if (n.includes(",")) {
-    const [last, first] = n.split(",").map((s) => s.trim())
-    if (first && last) variations.push(`${first} ${last}`)
-  } else {
-    const parts = n.split(/\s+/).filter(Boolean)
-    if (parts.length >= 2) {
-      const first = parts[0]!
-      const last = parts.slice(1).join(" ")
-      variations.push(`${last}, ${first}`)
+  const variations = new Set<string>([n])
+
+  const addVariantsFor = (fullName: string) => {
+    variations.add(fullName)
+    const noApostrophe = fullName.replace(/'/g, "").trim()
+    if (noApostrophe && noApostrophe !== fullName) variations.add(noApostrophe)
+    if (fullName.includes(",")) {
+      const [last, first] = fullName.split(",").map((s) => s.trim())
+      if (first && last) variations.add(`${first} ${last}`)
+    } else {
+      const parts = fullName.split(/\s+/).filter(Boolean)
+      if (parts.length >= 2) {
+        const first = parts[0]!
+        const last = parts.slice(1).join(" ")
+        variations.add(`${last}, ${first}`)
+      }
     }
   }
-  return [...new Set(variations)]
+
+  const key = normalizeForAlias(n)
+  for (const group of SAME_PERSON_NAME_ALIASES) {
+    const inGroup = group.some((s) => normalizeForAlias(s) === key)
+    if (inGroup) {
+      for (const spelling of group) addVariantsFor(spelling.trim())
+      break
+    }
+  }
+
+  addVariantsFor(n)
+  return [...variations]
 }
 
 export type NchsaaRowForProfile = {
@@ -53,15 +93,29 @@ export type NchsaaRowForProfile = {
 }
 
 /**
+ * Plausible NCHSAA tournament years for a graduation year (high school: gradYear-4 through gradYear).
+ * Used to avoid merging a different person with the same name (e.g. two Jacob Perrys).
+ */
+export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: number; max: number } {
+  const y = Number(graduationYear)
+  if (!y || isNaN(y)) return { min: 0, max: 9999 }
+  return { min: Math.max(1990, y - 4), max: y }
+}
+
+/**
  * Fetch NCHSAA results for an athlete using the same logic as /api/wrestling-achievements
  * (name variations, ilike per variation, merge, placer-over-SQ). Use this so Blue list
  * and unified profiles show identical placement.
+ * When graduationYear is provided, results are filtered to plausible high-school years only
+ * (gradYear-4 through gradYear) so we don't merge a different person with the same name.
  */
 export async function getNCHSAAResultsForProfile(
   supabase: SupabaseClient,
-  athleteName: string
+  athleteName: string,
+  graduationYear?: number
 ): Promise<NchsaaRowForProfile[]> {
   if (!(athleteName ?? "").trim()) return []
+  const yearRange = graduationYear ? plausibleNchsaaYearsForGradYear(graduationYear) : null
   const variations = getNameVariations(athleteName)
   const seen = new Set<string>()
   const merged: NchsaaRowForProfile[] = []
@@ -126,10 +180,15 @@ export async function getNCHSAAResultsForProfile(
 
   merged.sort((a, b) => b.year - a.year)
 
+  const byYear =
+    yearRange != null
+      ? merged.filter((r) => r.year >= yearRange.min && r.year <= yearRange.max)
+      : merged
+
   const placerKeys = new Set(
-    merged.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
+    byYear.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`)
   )
-  return merged.filter((r) => {
+  return byYear.filter((r) => {
     if (r.place != null && r.place === 0) {
       if (placerKeys.has(`${r.year}-${r.classification}-${r.weight_class}`)) return false
     }

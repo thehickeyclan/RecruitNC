@@ -583,55 +583,7 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* Latest Commits Section */}
-      <section className="mb-12">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
-            Latest Commits
-          </h2>
-          <Link href="/athletes">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hover:opacity-80 bg-transparent"
-              style={{ borderColor: "#003366", color: "#003366" }}
-            >
-              View All Athletes
-            </Button>
-          </Link>
-        </div>
-
-        {commitsLoading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading latest commits...</p>
-          </div>
-        ) : latestCommits.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {latestCommits.map((athlete) => (
-              <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No recent commits available at this time.</p>
-            {error && (
-              <p className="text-sm mt-2" style={{ color: "#BC0B03" }}>
-                {error}
-              </p>
-            )}
-          </div>
-        )}
-
-        <div className="mt-6 flex justify-center">
-          <Link href="/athletes">
-            <Button className="text-white hover:opacity-90" style={{ backgroundColor: "#003366" }}>
-              View All Commitments
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Commitment Statistics - moved below Latest Commits */}
+      {/* Commitment Statistics */}
       <section className="mb-12">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
@@ -700,6 +652,54 @@ export default function HomePage() {
             </Card>
           </div>
         )}
+      </section>
+
+      {/* Latest Commits Section */}
+      <section className="mb-12">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
+            Latest Commits
+          </h2>
+          <Link href="/athletes">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hover:opacity-80 bg-transparent"
+              style={{ borderColor: "#003366", color: "#003366" }}
+            >
+              View All Athletes
+            </Button>
+          </Link>
+        </div>
+
+        {commitsLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Loading latest commits...</p>
+          </div>
+        ) : latestCommits.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {latestCommits.map((athlete) => (
+              <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No recent commits available at this time.</p>
+            {error && (
+              <p className="text-sm mt-2" style={{ color: "#BC0B03" }}>
+                {error}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-center">
+          <Link href="/athletes">
+            <Button className="text-white hover:opacity-90" style={{ backgroundColor: "#003366" }}>
+              View All Commitments
+            </Button>
+          </Link>
+        </div>
       </section>
 
       {/* Information Banner */}

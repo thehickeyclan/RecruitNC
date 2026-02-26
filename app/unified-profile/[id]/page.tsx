@@ -96,11 +96,11 @@ export default function UnifiedProfilePage() {
     let cancelled = false
     const name = (athlete.name as string).trim()
     const wrestlingName = (athlete.wrestling_name as string)?.trim()
-    const url =
-      wrestlingName && wrestlingName !== name
-        ? `/api/wrestling-achievements?name=${encodeURIComponent(name)}&wrestling_name=${encodeURIComponent(wrestlingName)}`
-        : `/api/wrestling-achievements?name=${encodeURIComponent(name)}`
-    fetch(url)
+    const gradYear = athlete.graduationyear != null ? Number(athlete.graduationyear) : undefined
+    const params = new URLSearchParams({ name })
+    if (wrestlingName && wrestlingName !== name) params.set("wrestling_name", wrestlingName)
+    if (gradYear && !isNaN(gradYear)) params.set("graduation_year", String(gradYear))
+    fetch(`/api/wrestling-achievements?${params.toString()}`)
       .then((res) => res.json())
       .then((data: { success?: boolean; achievements?: { all_results?: { nchsaa?: any[] } } }) => {
         if (cancelled || !data?.success || !data?.achievements?.all_results?.nchsaa?.length) {
@@ -119,7 +119,7 @@ export default function UnifiedProfilePage() {
         if (!cancelled) setNchsaaResults([])
       })
     return () => { cancelled = true }
-  }, [athlete?.name, athlete?.wrestling_name])
+  }, [athlete?.name, athlete?.graduationyear, athlete?.wrestling_name])
 
   if (loading) {
     return (

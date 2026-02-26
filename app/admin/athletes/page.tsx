@@ -377,7 +377,7 @@ export default function AthletesPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-[#002147] hover:underline" target="_blank" rel="noopener noreferrer">
+                        <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-[#002147] hover:underline">
                           {athlete.name || "N/A"}
                         </Link>
                       </TableCell>
@@ -411,7 +411,7 @@ export default function AthletesPage() {
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
-                            <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} target="_blank" rel="noopener noreferrer">View profile</Link>
+                            <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}>View profile</a>
                           </Button>
                           <Button asChild variant="outline" size="sm" className="hover:bg-[#002147] hover:text-white">
                             <Link href={`/admin/athletes/edit?id=${encodeURIComponent(athlete.id)}`}>Edit</Link>

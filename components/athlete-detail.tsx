@@ -587,7 +587,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
       if (!athleteName) return
 
       try {
-        const response = await fetch(`/api/wrestling-achievements?name=${encodeURIComponent(athleteName)}`)
+        const params = new URLSearchParams({ name: athleteName })
+        if (graduationYear && graduationYear > 0) params.set("graduation_year", String(graduationYear))
+        const response = await fetch(`/api/wrestling-achievements?${params.toString()}`)
         const data = await response.json()
 
         if (data.success && data.achievements) {
@@ -608,7 +610,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
     }
 
     fetchNchsaaData()
-  }, [athleteName])
+  }, [athleteName, graduationYear])
 
   useEffect(() => {
     async function fetchUserEmail() {

@@ -254,7 +254,7 @@ export default function EditAthletePage() {
                 <a href={`/admin/athletes/images/${id}`}>Upload Images</a>
               </Button>
               <Button variant="outline" size="sm" asChild className="bg-white text-[#002147] border-white hover:bg-gray-100">
-                <a href={`/view-profile?id=${encodeURIComponent(id)}`} target="_blank" rel="noopener noreferrer">View profile</a>
+                <a href={`/view-profile?id=${encodeURIComponent(id)}`}>View profile</a>
               </Button>
             </div>
           </div>
