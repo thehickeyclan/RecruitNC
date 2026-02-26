@@ -60,9 +60,14 @@ export async function POST(request: NextRequest) {
     
     // Ensure project is set to "recruit-nc" (component should do this, but ensure it)
     // This tells LegacyNC to use the RecruitNC system prompt
+    const project = body.project || "recruit-nc"
     const requestBody = {
       ...body,
-      project: body.project || "recruit-nc" // Default to recruit-nc if not set
+      project,
+      // Canonical 17 four-time NCHSAA state champions. LegacyNC should inject body.recruitNcContext into system prompt so Data Dawg says 17 (not 9).
+      ...(project === "recruit-nc" && {
+        recruitNcContext: getFourTimeStateChampionsContextForAI(),
+      }),
     }
     
     console.log("[RecruitNC Proxy] Forwarding request to LegacyNC:", {
