@@ -254,7 +254,7 @@ export function UnderstandingBracketDepth2026Content() {
         Data compiled from NC United Wrestling&apos;s pre-state <a href={RANKINGS_HREF} className={linkClassMuted}>rankings</a> and 2026 state championship results.
       </p>
       <p className="font-medium text-[#003366] mt-6">
-        <strong>Continue to Part 3:</strong> <a href="/nchsaa/2026/news/article-3" className="underline hover:no-underline text-[#003366]">Celebrating North Carolina&apos;s 2026 State Champions</a>
+        <strong>Continue to Part 3:</strong> <a href="/nchsaa/2026/news/three-join-the-immortals-2026" className="underline hover:no-underline text-[#003366]">Three Join the Immortals: North Carolina&apos;s Historic 2026 Four-Time State Champions</a>
       </p>
     </article>
   )

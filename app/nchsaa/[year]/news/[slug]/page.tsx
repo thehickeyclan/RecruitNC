@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getArticle } from "../articles"
 import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brackets-784-qualifiers"
 import { UnderstandingBracketDepth2026Content } from "../content/understanding-bracket-depth-2026"
+import { ThreeJoinTheImmortals2026Content } from "../content/three-join-the-immortals-2026"
 import { BackToYearLink } from "../back-to-year-link"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
@@ -9,12 +10,14 @@ import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 const ARTICLE_CONTENT: Record<string, () => JSX.Element> = {
   "seven-divisions-98-brackets-784-qualifiers": SevenDivisionsArticleContent,
   "article-2": UnderstandingBracketDepth2026Content,
+  "three-join-the-immortals-2026": ThreeJoinTheImmortals2026Content,
 }
 
 export async function generateStaticParams() {
   return [
     { year: "2026", slug: "seven-divisions-98-brackets-784-qualifiers" },
     { year: "2026", slug: "article-2" },
+    { year: "2026", slug: "three-join-the-immortals-2026" },
   ]
 }
 
