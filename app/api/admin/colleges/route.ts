@@ -3,11 +3,13 @@ import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
-/** List all colleges from the colleges table (for admin division editing). */
+const ENSURED_COLLEGES = [{ name: "Duke", division: "NCAA Division I" }]
+
+/** List all colleges from the colleges table (for admin division editing). Ensures Duke (and any ENSURED_COLLEGES) exist. */
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("colleges")
       .select("id, name, division, slug, logo_url, created_at, updated_at")
       .order("name")
@@ -17,7 +19,23 @@ export async function GET() {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, colleges: data ?? [] })
+    const list = data ?? []
+    for (const ensured of ENSURED_COLLEGES) {
+      if (!list.some((c: { name: string }) => c.name.trim().toLowerCase() === ensured.name.toLowerCase())) {
+        const { error: insertErr } = await supabase
+          .from("colleges")
+          .insert({ name: ensured.name, division: ensured.division, updated_at: new Date().toISOString() })
+        if (!insertErr) {
+          const { data: after } = await supabase
+            .from("colleges")
+            .select("id, name, division, slug, logo_url, created_at, updated_at")
+            .order("name")
+          if (after?.length) return NextResponse.json({ success: true, colleges: after })
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, colleges: list })
   } catch (e) {
     console.error("[admin/colleges] GET error:", e)
     return NextResponse.json(

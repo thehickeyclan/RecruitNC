@@ -129,6 +129,13 @@ export async function updateAthleteAction(id: string, athleteData: any) {
       filteredPayload.bio = updatePayload.bio !== undefined ? String(updatePayload.bio) : ""
       filteredPayload.bio_headline = updatePayload.bio_headline !== undefined ? String(updatePayload.bio_headline) : ""
     }
+    // Always include college_weight_class so it isn't dropped by schema filter (column may be missing from sample)
+    if (updatePayload.college_weight_class !== undefined && updatePayload.college_weight_class !== null) {
+      filteredPayload.college_weight_class =
+        typeof updatePayload.college_weight_class === "string"
+          ? updatePayload.college_weight_class.trim() || null
+          : String(updatePayload.college_weight_class)
+    }
 
     // Use admin client for update to bypass RLS (this is an admin action)
     const { data, error } = await adminSupabase.from("athletes").update(filteredPayload).eq("id", id).select().single()
