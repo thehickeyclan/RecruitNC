@@ -8,6 +8,9 @@ import Link from "next/link"
  */
 const BRACKET_IMAGES: Record<string, string> = {
   "7A-138": "/images/nchsaa-2026-7a-138-podium.png",
+  "7A-150": "/images/nchsaa-2026-7a-150-podium.png",
+  "7A-157": "/images/nchsaa-2026-7a-157-podium.png",
+  "7A-165": "/images/nchsaa-2026-7a-165-podium.png",
 }
 
 function profileUrl(name: string, school: string, year: string) {
