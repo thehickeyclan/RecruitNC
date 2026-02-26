@@ -2,8 +2,7 @@ import { notFound } from "next/navigation"
 import { getArticle } from "../articles"
 import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brackets-784-qualifiers"
 import { UnderstandingBracketDepth2026Content } from "../content/understanding-bracket-depth-2026"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { BackToYearLink } from "../back-to-year-link"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 
@@ -34,13 +33,7 @@ export default async function NCHSAAArticlePage({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="mb-6">
-          <a
-            href={`/nchsaa/${year}`}
-            className="inline-flex items-center gap-2 rounded-md border-2 border-[#C20017] bg-transparent px-4 py-2 text-sm font-medium text-[#C20017] hover:bg-[#C20017] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 shrink-0" />
-            Back to {year} Results
-          </a>
+          <BackToYearLink year={year} />
         </div>
         <header className="mb-6">
           <NchsaaArticleReactions articleSlug={slug} />
@@ -64,9 +57,9 @@ export default async function NCHSAAArticlePage({
         ) : (
           <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-600">
             <p>This article is coming soon.</p>
-            <a href={`/nchsaa/${year}`} className="text-[#B91C1C] hover:underline mt-4 inline-block">
-              Back to {year} NCHSAA Results
-            </a>
+            <div className="mt-4">
+              <BackToYearLink year={year} />
+            </div>
           </div>
         )}
       </div>

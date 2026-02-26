@@ -26,7 +26,7 @@ export interface NCHSAAArticle {
 export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
   {
     slug: "seven-divisions-98-brackets-784-qualifiers",
-    title: "Did North Carolina Wrestling Expand Divisions—And Shrink Our Future?",
+    title: "Did North Carolina Wrestling Expand Divisions—But Shrink Our Future?",
     summary: "When Structure Shapes Value — Part I: Diagnosis",
     subtitle: "When Structure Shapes Value — A Two-Part Conversation About North Carolina's Classification System",
     preview:

@@ -699,7 +699,7 @@ export default function NCHSAAOverview() {
                     <ul className="text-xs md:text-sm space-y-1 text-[#003366]/80">
                       <li>• Multiple Classifications (1A-8A)</li>
                       <li>• 14 Weight Classes per classification</li>
-                      <li>• Top 6 finishers earn medals</li>
+                      <li>• Top 4 finishers earn medals</li>
                       <li>• Double elimination format</li>
                     </ul>
                   </div>
@@ -708,8 +708,6 @@ export default function NCHSAAOverview() {
                     <ul className="text-xs md:text-sm space-y-1 text-[#003366]/80">
                       <li>• Regional tournament qualifiers</li>
                       <li>• Top 4 from each regional</li>
-                      <li>• Automatic bids for returning champions</li>
-                      <li>• Wild card selections</li>
                     </ul>
                   </div>
                 </div>
@@ -729,7 +727,7 @@ export default function NCHSAAOverview() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Classifications</span>
-                    <Badge className="bg-[#003366]">8 (1A-8A)</Badge>
+                    <Badge className="bg-[#003366]">7 (1A/2A combine at states)</Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Weight Classes</span>
@@ -737,7 +735,7 @@ export default function NCHSAAOverview() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Medal Winners</span>
-                    <Badge className="bg-yellow-500 text-white">Top 6 per weight</Badge>
+                    <Badge className="bg-yellow-500 text-white">Top 4 per weight</Badge>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Archive Years</span>

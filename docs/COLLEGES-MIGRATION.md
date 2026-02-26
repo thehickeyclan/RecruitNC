@@ -107,6 +107,21 @@ ALTER TABLE athletes DROP COLUMN IF EXISTS college;
 
 ---
 
+## Add a specific college (e.g. Duke)
+
+To add Duke so it appears in the admin athlete **College** tab dropdown, either:
+
+1. **Admin → Colleges (divisions)** (`/admin/colleges`): use the "Add new college" form, enter **Duke**, set division to **NCAA Division I**, then Add.
+2. **Supabase SQL Editor** (run once):
+
+```sql
+INSERT INTO colleges (name, division, updated_at)
+VALUES ('Duke', 'NCAA Division I', now())
+ON CONFLICT (name) DO NOTHING;
+```
+
+---
+
 ## How new colleges work
 
 - **Colleges table** is the single source of truth. Rows are created by:
