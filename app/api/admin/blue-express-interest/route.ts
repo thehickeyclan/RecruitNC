@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
 
 export const dynamic = "force-dynamic"
+
+function normalizeNameForMatch(first: string, last: string): string {
+  return `${(first ?? "").trim().toLowerCase()} ${(last ?? "").trim().toLowerCase()}`
+}
+
+function formatPlacement2026(place: number | null, classification: string, weightClass: string): string {
+  if (place == null || place === 0) return "SQ"
+  const ord = place === 1 ? "1st" : place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
+  return `${ord} ${classification} ${weightClass}`
+}
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -58,7 +69,7 @@ export async function GET(_request: NextRequest) {
       }
     }
 
-    const list = result.rows as { id: string; status?: string }[]
+    const list = result.rows as { id: string; status?: string; first_name?: string; last_name?: string; graduation_year?: string }[]
     const ids = list.map((r: { id: string }) => r.id)
 
     // If blue_invites has interest_id, attach invite sent / enrolled status per submission
@@ -74,22 +85,83 @@ export async function GET(_request: NextRequest) {
           if (iid) invitesByInterest[iid] = { invite_id: (inv as { id: string }).id, used_at: (inv as { used_at: string | null }).used_at }
         }
       }
-      // If interest_id column doesn't exist, invError is set; submissions still return without link
     }
 
-    const submissions = list.map((row: Record<string, unknown> & { id: string; status?: string | null; regional?: string | null; placement?: string | null }) => {
+    // Who actually signed up: blue_signups (by athlete name + grad year) and blue_memberships + athletes
+    const enrolledKeys = new Set<string>()
+    try {
+      const { data: signups } = await adminClient
+        .from("blue_signups")
+        .select("athlete_first_name, athlete_last_name, athlete_graduation_year")
+        .limit(5000)
+      if (Array.isArray(signups)) {
+        for (const s of signups) {
+          const first = (s as { athlete_first_name?: string }).athlete_first_name ?? ""
+          const last = (s as { athlete_last_name?: string }).athlete_last_name ?? ""
+          const gy = (s as { athlete_graduation_year?: number }).athlete_graduation_year
+          if (first || last) enrolledKeys.add(normalizeNameForMatch(first, last) + "|" + String(gy ?? ""))
+        }
+      }
+      const { data: memberships } = await adminClient
+        .from("blue_memberships")
+        .select("athlete_id")
+        .in("status", ["active", "pending_payment"])
+        .limit(2000)
+      if (Array.isArray(memberships) && memberships.length > 0) {
+        const aids = [...new Set((memberships as { athlete_id: string }[]).map((m) => m.athlete_id))]
+        const { data: athletes } = await adminClient.from("athletes").select("id, name, graduationyear").in("id", aids)
+        if (Array.isArray(athletes)) {
+          for (const a of athletes) {
+            const name = (a as { name?: string }).name ?? ""
+            const gy = (a as { graduationyear?: number }).graduationyear ?? ""
+            if (name) {
+              const parts = (name as string).trim().split(/\s+/)
+              const first = parts[0] ?? ""
+              const last = parts.slice(1).join(" ")
+              enrolledKeys.add(normalizeNameForMatch(first, last) + "|" + String(gy))
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[Admin API] blue-express-interest enrolled lookup:", e)
+    }
+
+    const submissions: Array<Record<string, unknown> & { placement_2026?: string | null }> = []
+    for (const row of list) {
       const link = invitesByInterest[row.id]
       const status = row.status != null && row.status !== "" && STATUS_VALUES.includes(row.status as (typeof STATUS_VALUES)[number]) ? row.status : null
-      return {
+      const first = (row.first_name ?? "").toString().trim()
+      const last = (row.last_name ?? "").toString().trim()
+      const gradYearStr = (row.graduation_year ?? "").toString().trim()
+      const gradYearNum = parseInt(gradYearStr, 10)
+      const enrolledFromInvite = !!link?.used_at
+      const enrolledFromSignup = enrolledKeys.has(normalizeNameForMatch(first, last) + "|" + gradYearStr) || (gradYearNum && enrolledKeys.has(normalizeNameForMatch(first, last) + "|" + String(gradYearNum)))
+      const enrolled = enrolledFromInvite || enrolledFromSignup
+
+      let placement_2026: string | null = null
+      try {
+        const nchsaa = await getNCHSAAResultsForProfile(adminClient, `${first} ${last}`.trim(), gradYearNum || undefined)
+        const for2026 = nchsaa.filter((r) => r.year === 2026)
+        if (for2026.length > 0) {
+          const best = for2026.sort((a, b) => (a.place ?? 99) - (b.place ?? 99))[0]
+          placement_2026 = formatPlacement2026(best.place, best.classification, best.weight_class)
+        }
+      } catch {
+        // ignore per-row NCHSAA errors
+      }
+
+      submissions.push({
         ...row,
         status: status ?? null,
         regional: row.regional ?? null,
         placement: row.placement ?? null,
         invite_id: link?.invite_id ?? null,
         invite_sent: !!link,
-        enrolled: !!link?.used_at,
-      }
-    })
+        enrolled,
+        placement_2026,
+      })
+    }
     if (submissions.length === 0) {
       console.warn("[Admin API] blue_express_interest: 0 rows. If table has data, set SUPABASE_SERVICE_ROLE_KEY to the service role key (not anon) in Vercel for this environment.")
     } else {

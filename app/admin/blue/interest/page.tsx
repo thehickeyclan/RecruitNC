@@ -80,6 +80,7 @@ type Submission = {
   status?: string | null
   regional?: string | null
   placement?: string | null
+  placement_2026?: string | null
   invite_id: string | null
   invite_sent: boolean
   enrolled: boolean
@@ -458,6 +459,9 @@ alter table public.blue_express_interest
                               ))}
                             </SelectContent>
                           </Select>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {row.placement_2026 ?? "—"}
                         </TableCell>
                         <TableCell className="text-center">
                           {row.invite_sent ? (
