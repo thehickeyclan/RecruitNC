@@ -379,7 +379,7 @@ export default function AthletesPage() {
                       <TableCell className="font-medium">
                         <a href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="text-[#002147] hover:underline">
                           {athlete.name || "N/A"}
-                        </Link>
+                        </a>
                       </TableCell>
                       <TableCell>{athlete.highschool || "N/A"}</TableCell>
                       <TableCell>{athlete.state || athlete.state_abbreviation || athlete.hometown_state || "N/A"}</TableCell>

@@ -12,6 +12,7 @@ import "./athletes/flip-card.css"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
+import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
 
 type YearFilter = "All" | "2025" | "2026"
 
@@ -342,6 +343,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* News highlights carousel — main story + others, linked to posts */}
+      <HomeNewsHighlightsCarousel />
 
       {/* Store Product Promotion Banner */}
       <StoreProductPromotion />
