@@ -36,6 +36,7 @@ const SAME_PERSON_NAME_ALIASES: string[][] = [
   ["Colt Cambruzzi", "Colt Cambruzi", "Cole Cambruzzi", "Cole Cambruzi"],
   ["Carter Furman", "Carter Furmann", "Carter Forman"],
   ["Miller Menteer", "Miller Mentzer"],
+  ["Nevaeh Williamson", "Nevaeh Willamson"],
 ]
 
 function normalizeForAlias(name: string): string {
