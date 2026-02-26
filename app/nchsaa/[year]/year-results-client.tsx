@@ -319,7 +319,7 @@ export function NCHSAAYearResultsClient({
                       <img
                         src={article.image}
                         alt=""
-                        className="h-full w-full object-cover"
+                        className={`h-full w-full object-cover ${article.slug === "three-join-the-immortals-2026" ? "object-top" : ""}`}
                       />
                     </div>
                   )}
