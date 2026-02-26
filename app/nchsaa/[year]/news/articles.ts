@@ -52,6 +52,7 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     readTime: "10 min read",
     date: "2026-02-25",
     published: true,
+    image: "/images/nchsaa-2026-7a-138-podium.png",
   },
   {
     slug: "article-3",

@@ -1,11 +1,13 @@
 "use client"
 
+import Link from "next/link"
+
 /**
  * Optional bracket/podium images. Add paths when you have them; layout reserves space.
  * Keys: "7A-138" | "7A-190" | "7A-150" | "7A-157" | "7A-165" | "6A-150"
  */
 const BRACKET_IMAGES: Record<string, string> = {
-  // e.g. "7A-138": "/images/nchsaa-2026-7a-138-podium.jpg",
+  "7A-138": "/images/nchsaa-2026-7a-138-podium.png",
 }
 
 function profileUrl(name: string, school: string, year: string) {
@@ -14,13 +16,16 @@ function profileUrl(name: string, school: string, year: string) {
 
 const RANKINGS_HREF = "/public-rankings"
 
+const linkClass = "text-[#003366] underline hover:no-underline font-medium"
+const linkClassMuted = "text-[#003366] underline hover:no-underline"
+
 export function UnderstandingBracketDepth2026Content() {
   return (
     <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2">
       <p><strong>How bracket strength is measured:</strong></p>
       <p>
         Bracket strength is determined by the number of wrestlers competing who were ranked in NC United&apos;s{" "}
-        <a href={RANKINGS_HREF} className="text-[#003366] underline hover:no-underline font-medium">Pre-State College Prospect Rankings</a>{" "}
+        <Link href={RANKINGS_HREF} className={linkClass}>Pre-State College Prospect Rankings</Link>{" "}
         (Class of 2026 Top 30, Class of 2027 Top 30, Class of 2028 Top 20). 77 of the 80 ranked wrestlers competed at states.
       </p>
       <p><strong>Bracket classifications:</strong></p>
@@ -32,7 +37,7 @@ export function UnderstandingBracketDepth2026Content() {
       </ul>
       <p className="text-sm text-slate-600 italic">
         This data provides context for the broader structural conversation in{" "}
-        <a href="/nchsaa/2026/news/seven-divisions-98-brackets-784-qualifiers" className="text-[#003366] underline hover:no-underline">&quot;Did North Carolina Wrestling Expand Divisions—And Shrink Our Future?&quot;</a>
+        <Link href="/nchsaa/2026/news/seven-divisions-98-brackets-784-qualifiers" className={linkClassMuted}>&quot;Did North Carolina Wrestling Expand Divisions—And Shrink Our Future?&quot;</Link>
       </p>
 
       <hr />
@@ -85,25 +90,25 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="7A-138" title="7A 138 lbs">
         <p><strong>4 Ranked Wrestlers:</strong></p>
         <ol className="list-decimal pl-6 my-3 space-y-1">
-          <li>#3 <a href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Tye Johnson</a> (Cape Fear, 2027) — <strong>1ST</strong></li>
-          <li>#17 <a href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Aidan Szewczyk</a> (Davie, 2027) — 2ND</li>
-          <li>#9 <a href={profileUrl("Aiden White", "Weddington", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Aiden White</a> (Weddington, 2027) — 3RD</li>
-          <li>#8 <a href={profileUrl("Jake Amiott", "Topsail", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Jake Amiott</a> (Topsail, 2028) — 4TH</li>
+          <li>#3 <Link href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Tye Johnson</Link> (Cape Fear, 2027) — <strong>1ST</strong></li>
+          <li>#17 <Link href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Aidan Szewczyk</Link> (Davie, 2027) — 2ND</li>
+          <li>#9 <Link href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</Link> (Weddington, 2027) — 3RD</li>
+          <li>#8 <Link href={profileUrl("Jake Amiott", "Topsail", "2028")} className={linkClass}>Jake Amiott</Link> (Topsail, 2028) — 4TH</li>
         </ol>
-        <p><a href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Johnson</a> defeated <a href={profileUrl("Aiden White", "Weddington", "2027")} className="text-[#003366] underline hover:no-underline font-medium">White</a> and <a href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Szewczyk</a> at states to win the title (he had beaten <a href={profileUrl("Jake Amiott", "Topsail", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Amiott</a> at the 7A East regional finals the week prior). All four ranked wrestlers placed exactly where seeded—a testament to the depth and quality of competition in this bracket.</p>
+        <p><Link href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Johnson</Link> defeated <Link href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>White</Link> and <Link href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Szewczyk</Link> at states to win the title (he had beaten <Link href={profileUrl("Jake Amiott", "Topsail", "2028")} className={linkClass}>Amiott</Link> at the 7A East regional finals the week prior). All four ranked wrestlers placed exactly where seeded—a testament to the depth and quality of competition in this bracket.</p>
         <p><strong>What this bracket required:</strong> Every wrestler faced multiple ranked opponents. To win, Johnson navigated through two ranked opponents at states after having beaten a third at regionals. To place, every wrestler had to defeat or compete closely with other elite talent. This is what deep competitive brackets look like.</p>
       </BracketSection>
 
       <BracketSection imageKey="7A-190" title="7A 190 lbs">
         <p><strong>4 Ranked Wrestlers:</strong></p>
         <ol className="list-decimal pl-6 my-3 space-y-1">
-          <li>#13 <a href={profileUrl("Gavin Yow", "A.L. Brown", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Gavin Yow</a> (A.L. Brown, 2026) — <strong>1ST</strong></li>
-          <li>#14 <a href={profileUrl("Sam Harper", "South Iredell", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Sam Harper</a> (South Iredell, 2026) — 2ND</li>
-          <li>#25 <a href={profileUrl("Brieon Mayfield", "Jack Britt", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Brieon Mayfield</a> (Jack Britt, 2027) — 3RD</li>
-          <li>#20 <a href={profileUrl("Amanuel Kahsai", "New Bern", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Amanuel Kahsai</a> (New Bern, 2028) — DNP</li>
+          <li>#13 <Link href={profileUrl("Gavin Yow", "A.L. Brown", "2026")} className={linkClass}>Gavin Yow</Link> (A.L. Brown, 2026) — <strong>1ST</strong></li>
+          <li>#14 <Link href={profileUrl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Sam Harper</Link> (South Iredell, 2026) — 2ND</li>
+          <li>#25 <Link href={profileUrl("Brieon Mayfield", "Jack Britt", "2027")} className={linkClass}>Brieon Mayfield</Link> (Jack Britt, 2027) — 3RD</li>
+          <li>#20 <Link href={profileUrl("Amanuel Kahsai", "New Bern", "2028")} className={linkClass}>Amanuel Kahsai</Link> (New Bern, 2028) — DNP</li>
         </ol>
-        <p>Also competing: <a href={profileUrl("Deyari El-Amin", "Hillside", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Deyari El-Amin</a> (Hillside, 2026, Honorable Mention) — 4TH</p>
-        <p><a href={profileUrl("Gavin Yow", "A.L. Brown", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Yow</a> defeated <a href={profileUrl("Sam Harper", "South Iredell", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Harper</a> 4-2 in the finals. This bracket featured ranked wrestlers from all three classes, plus an honorable mention wrestler who placed fourth, creating the most diverse competitive field of the tournament.</p>
+        <p>Also competing: <Link href={profileUrl("Deyari El-Amin", "Hillside", "2026")} className={linkClass}>Deyari El-Amin</Link> (Hillside, 2026, Honorable Mention) — 4TH</p>
+        <p><Link href={profileUrl("Gavin Yow", "A.L. Brown", "2026")} className={linkClass}>Yow</Link> defeated <Link href={profileUrl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Harper</Link> 4-2 in the finals. This bracket featured ranked wrestlers from all three classes, plus an honorable mention wrestler who placed fourth, creating the most diverse competitive field of the tournament.</p>
         <p><strong>What this bracket required:</strong> Wrestlers faced opponents across multiple graduating classes. Yow beat a 54-2 opponent in a close finals match. Harper, Mayfield, and Kahsai all competed knowing any match could be against elite-level talent. El-Amin battled through a bracket stacked with ranked opponents to earn fourth place.</p>
       </BracketSection>
 
@@ -114,19 +119,19 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="7A-150" title="7A 150 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#7 <a href={profileUrl("Andrew Davis", "Davie", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Andrew Davis</a> (Davie, 2026) — <strong>1ST</strong></li>
-          <li>#1 <a href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Aaron Ellison</a> (Lumberton, 2028) — 2ND</li>
-          <li>#5 <a href={profileUrl("Jacob Perry", "New Bern", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Jacob Perry</a> (New Bern, 2028) — 4TH</li>
+          <li>#7 <Link href={profileUrl("Andrew Davis", "Davie", "2026")} className={linkClass}>Andrew Davis</Link> (Davie, 2026) — <strong>1ST</strong></li>
+          <li>#1 <Link href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Aaron Ellison</Link> (Lumberton, 2028) — 2ND</li>
+          <li>#5 <Link href={profileUrl("Jacob Perry", "New Bern", "2028")} className={linkClass}>Jacob Perry</Link> (New Bern, 2028) — 4TH</li>
         </ul>
-        <p>Davis navigated two highly-touted 2028 prospects, including beating the #1 ranked 2028 wrestler (<a href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Ellison</a>) in sudden victory 20-17 in the finals. Ellison and Perry both competed knowing they&apos;d face ranked opposition in their path.</p>
+        <p>Davis navigated two highly-touted 2028 prospects, including beating the #1 ranked 2028 wrestler (<Link href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Ellison</Link>) in sudden victory 20-17 in the finals. Ellison and Perry both competed knowing they&apos;d face ranked opposition in their path.</p>
       </BracketSection>
 
       <BracketSection imageKey="7A-157" title="7A 157 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#7 <a href={profileUrl("Aidan Gore", "Garner", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Aidan Gore</a> (Garner, 2027) — <strong>1ST</strong></li>
-          <li>#13 <a href={profileUrl("Jacob McCord", "Grimsley", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Jacob McCord</a> (Grimsley, 2027) — 2ND</li>
-          <li>#29 <a href={profileUrl("Elliott Gould", "Davie", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Elliott Gould</a> (Davie, 2026) — 3RD</li>
+          <li>#7 <Link href={profileUrl("Aidan Gore", "Garner", "2027")} className={linkClass}>Aidan Gore</Link> (Garner, 2027) — <strong>1ST</strong></li>
+          <li>#13 <Link href={profileUrl("Jacob McCord", "Grimsley", "2027")} className={linkClass}>Jacob McCord</Link> (Grimsley, 2027) — 2ND</li>
+          <li>#29 <Link href={profileUrl("Elliott Gould", "Davie", "2026")} className={linkClass}>Elliott Gould</Link> (Davie, 2026) — 3RD</li>
         </ul>
         <p>Gore defeated Gould 7-0 in the semifinals and McCord 1-0 in an extremely close finals match. All three ranked wrestlers placed top-3, with each having to compete through ranked opponents.</p>
       </BracketSection>
@@ -134,9 +139,9 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="7A-165" title="7A 165 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#10 <a href={profileUrl("Carson Worrick", "Davie", "2027")} className="text-[#003366] underline hover:no-underline font-medium">Carson Worrick</a> (Davie, 2027) — <strong>1ST</strong></li>
-          <li>#3 <a href={profileUrl("Ryan Thompson", "Cardinal Gibbons", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Ryan Thompson</a> (Cardinal Gibbons, 2028) — 2ND</li>
-          <li>#29 <a href={profileUrl("John Bane", "New Bern", "2027")} className="text-[#003366] underline hover:no-underline font-medium">John Bane</a> (New Bern, 2027) — 3RD</li>
+          <li>#10 <Link href={profileUrl("Carson Worrick", "Davie", "2027")} className={linkClass}>Carson Worrick</Link> (Davie, 2027) — <strong>1ST</strong></li>
+          <li>#3 <Link href={profileUrl("Ryan Thompson", "Cardinal Gibbons", "2028")} className={linkClass}>Ryan Thompson</Link> (Cardinal Gibbons, 2028) — 2ND</li>
+          <li>#29 <Link href={profileUrl("John Bane", "New Bern", "2027")} className={linkClass}>John Bane</Link> (New Bern, 2027) — 3RD</li>
         </ul>
         <p>Worrick beat higher-ranked Thompson (#3) in a close 7-6 finals match. Thompson, Bane, and Worrick all competed in a bracket where earning a medal meant navigating multiple ranked wrestlers.</p>
       </BracketSection>
@@ -144,9 +149,9 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="6A-150" title="6A 150 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#27 <a href={profileUrl("Elijah Oakley", "Piedmont", "2026")} className="text-[#003366] underline hover:no-underline font-medium">Elijah Oakley</a> (Piedmont, 2026) — <strong>1ST</strong></li>
-          <li>#4 <a href={profileUrl("Hayden Smith", "White Oak", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Hayden Smith</a> (White Oak, 2028) — 2ND</li>
-          <li>#18 <a href={profileUrl("Jacob De La Torre", "Union Pines", "2028")} className="text-[#003366] underline hover:no-underline font-medium">Jacob De La Torre</a> (Union Pines, 2028) — 3RD</li>
+          <li>#27 <Link href={profileUrl("Elijah Oakley", "Piedmont", "2026")} className={linkClass}>Elijah Oakley</Link> (Piedmont, 2026) — <strong>1ST</strong></li>
+          <li>#4 <Link href={profileUrl("Hayden Smith", "White Oak", "2028")} className={linkClass}>Hayden Smith</Link> (White Oak, 2028) — 2ND</li>
+          <li>#18 <Link href={profileUrl("Jacob De La Torre", "Union Pines", "2028")} className={linkClass}>Jacob De La Torre</Link> (Union Pines, 2028) — 3RD</li>
         </ul>
         <p>Oakley (#27) defeated higher-ranked Smith (#4) decisively 9-2 in the finals. All three ranked wrestlers placed top-3, with Smith and De La Torre both navigating a bracket knowing they&apos;d face ranked opponents.</p>
       </BracketSection>
@@ -195,7 +200,7 @@ export function UnderstandingBracketDepth2026Content() {
 
       <h2>What This Reveals</h2>
       <p><strong>Where ranked talent concentrated:</strong></p>
-      <p>While 7A had the most ranked wrestlers of any single division (26 ranked wrestlers), the majority of ranked talent came from 6A and below (68% according to the full <a href={RANKINGS_HREF} className="text-[#003366] underline hover:no-underline font-medium">prospect rankings</a>). This distribution aligns with North Carolina&apos;s developmental landscape where elite talent emerges from programs across all school sizes, not just the largest classifications.</p>
+      <p>While 7A had the most ranked wrestlers of any single division (26 ranked wrestlers), the majority of ranked talent came from 6A and below (68% according to the full <Link href={RANKINGS_HREF} className={linkClass}>prospect rankings</Link>). This distribution aligns with North Carolina&apos;s developmental landscape where elite talent emerges from programs across all school sizes, not just the largest classifications.</p>
       <p><strong>Context for evaluation:</strong></p>
       <p>Understanding bracket composition helps provide context for individual performances and offers insight into where the state&apos;s competitive depth exists. For wrestlers pursuing college opportunities, this data illustrates why performance at national events has become increasingly important for evaluation.</p>
       <p><strong>The structural question:</strong></p>
@@ -213,10 +218,10 @@ export function UnderstandingBracketDepth2026Content() {
       <hr />
 
       <p className="text-sm text-slate-500 italic">
-        Data compiled from NC United Wrestling&apos;s pre-state <a href={RANKINGS_HREF} className="text-[#003366] underline hover:no-underline">rankings</a> and 2026 state championship results.
+        Data compiled from NC United Wrestling&apos;s pre-state <Link href={RANKINGS_HREF} className={linkClassMuted}>rankings</Link> and 2026 state championship results.
       </p>
       <p className="font-medium text-[#003366] mt-6">
-        <strong>Continue to Part 3:</strong> <a href="/nchsaa/2026/news/article-3" className="underline hover:no-underline">Celebrating North Carolina&apos;s 2026 State Champions</a>
+        <strong>Continue to Part 3:</strong> <Link href="/nchsaa/2026/news/article-3" className="underline hover:no-underline text-[#003366]">Celebrating North Carolina&apos;s 2026 State Champions</Link>
       </p>
     </article>
   )
