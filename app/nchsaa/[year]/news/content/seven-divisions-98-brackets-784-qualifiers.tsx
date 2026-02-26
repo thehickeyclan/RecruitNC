@@ -1,184 +1,149 @@
 export function SevenDivisionsArticleContent() {
   return (
-    <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1">
-      <p className="text-slate-600 font-medium">When Structure Shapes Value</p>
-      <p className="text-sm text-slate-500">PART I: Diagnosis</p>
-
-      <h2>Before anything else</h2>
+    <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200">
+      <p className="text-slate-600 font-medium"><strong>Before anything else:</strong></p>
       <p>Our athletes deserve respect. State champions worked for it. Placers earned it. Qualifiers sacrificed for it.</p>
-      <p>This conversation is not about diminishing effort. It is about protecting meaning.</p>
-      <p>Context: North Carolina is a developmental wrestling state — not an established powerhouse like Pennsylvania, New Jersey, or California. The structural decisions we make today will determine whether we accelerate development or stall it.</p>
+      <p><strong>This conversation is about protecting meaning — not diminishing effort.</strong></p>
+
+      <hr />
 
       <h2>The Question That Needs Clarity</h2>
-      <p>North Carolina wrestling operates under an eight-division system during the regular season, which becomes seven divisions at the state tournament when 1A and 2A combine.</p>
-      <p>This creates 98 separate weight class brackets with 784 state qualifiers at the championship.</p>
-      <p>The change happened. But a clear explanation hasn&apos;t reached the wrestling community:</p>
-      <p><strong>Why?</strong></p>
-      <p>What we need to understand:</p>
-      <ul>
-        <li>What problem this solves</li>
-        <li>What long-term goal it aligns to</li>
-        <li>How success will be measured</li>
-        <li>Why the wrestling community should support it</li>
-      </ul>
-      <p>If that explanation exists, it hasn&apos;t been widely communicated.</p>
-      <p>In the absence of clear communication, questions naturally arise.</p>
-      <p>Wrestling teaches accountability and clear communication. We should expect it from leadership structures as well.</p>
+      <p>North Carolina wrestling operates under eight classifications during the regular season, which becomes seven at the state tournament when 1A and 2A combine.</p>
+      <p>That creates:</p>
+      <div className="my-6 grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="rounded-xl bg-[#003366]/8 border-l-4 border-[#003366] p-4 text-center">
+          <div className="text-2xl sm:text-3xl font-bold text-[#003366]">98</div>
+          <div className="text-sm font-medium text-slate-600">weight class brackets</div>
+        </div>
+        <div className="rounded-xl bg-[#003366]/8 border-l-4 border-[#003366] p-4 text-center">
+          <div className="text-2xl sm:text-3xl font-bold text-[#003366]">784</div>
+          <div className="text-sm font-medium text-slate-600">state qualifiers</div>
+        </div>
+        <div className="rounded-xl bg-[#003366]/8 border-l-4 border-[#003366] p-4 text-center">
+          <div className="text-2xl sm:text-3xl font-bold text-[#003366]">360+</div>
+          <div className="text-sm font-medium text-slate-600">placers</div>
+        </div>
+        <div className="rounded-xl bg-[#003366]/8 border-l-4 border-[#003366] p-4 text-center">
+          <div className="text-2xl sm:text-3xl font-bold text-[#003366]">98</div>
+          <div className="text-sm font-medium text-slate-600">state champions</div>
+        </div>
+      </div>
+      <p>The structure changed. But the explanation hasn&apos;t reached the wrestling community in a clear, measurable way.</p>
+      <p><strong>Why seven divisions?</strong> What problem does this solve? What long-term goal does it serve? How will success be measured?</p>
+      <p><strong>In the absence of clarity, questions are inevitable.</strong></p>
 
-      <h2>What Should This Achieve?</h2>
-      <p>If this structure is right for NC wrestling, what are the intended outcomes?</p>
-      <p>Without defined goals, we can&apos;t measure success.</p>
-      <ul>
-        <li>Participation growth? Track athletes wrestling, retention rates, new programs.</li>
-        <li>Competitive development? Track NHSCA All-Americans, national rankings, D1-capable wrestlers.</li>
-        <li>College placement? Track college offers, top-tier recruitment, in-state retention vs. transfer portal.</li>
-        <li>Fairness? Track small school success, competitive parity, regional diversity.</li>
-      </ul>
-      <p>The critical question: What metrics would prove this seven-division model is working?</p>
-      <p>Without published goals and tracked outcomes, we&apos;re making structural decisions in the dark. In a developmental state trying to build national competitiveness, we can&apos;t afford to guess.</p>
+      <hr />
 
-      <h2>When Communication Is Limited, Perception Fills the Gap</h2>
-      <p>Major structural changes without clear explanation of goals and metrics naturally raise questions.</p>
-      <p>When those questions go unanswered, speculation replaces clarity.</p>
-      <p>Whether those speculations are accurate hardly matters if they&apos;re what people believe.</p>
-      <p>In leadership, perception becomes reality.</p>
-      <p>When perception hardens into resentment, alignment fractures. And when alignment fractures, development slows.</p>
+      <h2>Define Success — Or We&apos;re Guessing</h2>
+      <p>Structural decisions should align to outcomes.</p>
+      <p>If the goal is <strong>participation growth</strong> — track retention and new programs.</p>
+      <p>If the goal is <strong>competitive development</strong> — track NHSCA All-Americans and national placements.</p>
+      <p>If the goal is <strong>college placement</strong> — track offers, commitments, and in-state retention.</p>
+      <p>If the goal is <strong>fairness</strong> — track competitive parity across divisions.</p>
+      <p><strong>The essential question: What metrics would prove this model is working?</strong></p>
+      <p>Without defined benchmarks, we are making structural decisions in the dark. Developmental states cannot afford guesswork.</p>
 
-      <h2>Scarcity Creates Value</h2>
-      <p>In economics, when you increase currency supply, each unit&apos;s value changes. That&apos;s not emotion. It&apos;s math.</p>
-      <p>Achievement structures operate similarly.</p>
-      <p>The current reality:</p>
-      <ul>
-        <li>98 weight class brackets across 7 divisions</li>
-        <li>784 state qualifiers</li>
-        <li>360+ placers over two days</li>
-      </ul>
-      <p>If we speak about these achievements as if nothing changed, we create a disconnect between perception and reality.</p>
-      <p>And misalignment has consequences.</p>
+      <hr />
 
-      <h2>Wrestling Is Individual, Not Team-Driven</h2>
-      <p>In North Carolina, wrestling is a developmental sport — not a mainstream, high-participation sport like football or basketball.</p>
-      <p>The critical difference is structure:</p>
-      <p>Football is a team sport where depth matters — 53 players across offense, defense, special teams. Large schools have enrollment to build that depth.</p>
-      <p>Wrestling is fundamentally individual — 14 weight classes, one wrestler per weight. Team scores are just the sum of individual performances.</p>
-      <p>You don&apos;t need roster depth to build an elite wrestling program. You need one great wrestler at each weight.</p>
-      <p>And small schools can develop elite individual athletes just as well as — or better than — large schools.</p>
-      <p>Wrestling&apos;s development structure is also unique:</p>
-      <p>Unlike football and basketball where development happens primarily through school programs, wrestling development happens significantly through club programs. Clubs play more of a role in-season than almost any other sport.</p>
-      <p>This means:</p>
-      <ul>
-        <li>Elite training isn&apos;t limited to schools with large budgets</li>
-        <li>A wrestler from a small school trains at the same elite clubs as wrestlers from large schools</li>
-        <li>Clubs don&apos;t segregate by school size — a 1A wrestler trains alongside 7A wrestlers</li>
-        <li>School enrollment matters less when development happens outside school walls</li>
-      </ul>
-      <p>The reality in North Carolina proves this:</p>
-      <p>Our two biggest counties are absent of middle school wrestling programs.</p>
-      <p>Think about that. The largest population centers — with the most resources and enrollment — don&apos;t even have youth development infrastructure.</p>
-      <p>Meanwhile, smaller counties and rural areas often have established middle school programs, strong wrestling culture, multi-generational coaching lineage, and community support.</p>
-      <p>Large enrollment doesn&apos;t create wrestling excellence. Wrestling culture does.</p>
-      <p>In a developmental state like North Carolina, growth must be aligned with the sport&apos;s actual structure and development stage.</p>
+      <h2>Wrestling Is Not Football</h2>
+      <p>Enrollment-based logic makes sense in football. It does not translate cleanly to wrestling.</p>
+      <p>Wrestling is individual — fourteen weight classes, one athlete per weight.</p>
+      <p>You don&apos;t need 2,000 students to produce an elite 150-pounder. You need culture, coaching, and club development.</p>
+      <p>In North Carolina, development happens largely through clubs — not school enrollment size. Clubs do not segregate by classification. A 1A wrestler trains beside a 7A wrestler.</p>
+      <p><strong>The results reflect that reality:</strong></p>
+      <div className="my-6 rounded-xl bg-amber-50 border-l-4 border-amber-500 p-4 sm:p-5">
+        <p className="text-lg font-bold text-slate-800 mb-1">In the Class of 2026, <span className="text-[#003366]">68% of ranked prospects</span> come from 6A and below.</p>
+        <p className="text-slate-700">Three of the four four-time state champions in 2026 came from smaller schools.</p>
+      </div>
+      <p><strong>Large enrollment does not create wrestling excellence. Wrestling culture does.</strong></p>
 
-      <h2>The &quot;Fairness&quot; Argument</h2>
-      <p>The strongest defense of the current system is fairness.</p>
-      <p>&quot;Small schools don&apos;t have the resources of big schools.&quot; &quot;Larger enrollment creates deeper talent pools.&quot; &quot;It&apos;s not fair to make small schools compete against 4A powerhouses.&quot;</p>
-      <p>This argument makes perfect sense — for football.</p>
-      <p>Football fields 53 players across offense, defense, and special teams. Large schools can fill rosters with depth at every position. Small schools struggle to field competitive teams.</p>
-      <p>But wrestling is different.</p>
-      <p>Wrestling fields 14 wrestlers — one per weight class.</p>
-      <p>Small schools don&apos;t just compete in wrestling — they dominate.</p>
-      <p>Look at the 2026 four-time state champions:</p>
-      <ul>
-        <li>Lorenzo Alston (Uwharrie Charter) — 4A 175 champion</li>
-        <li>Bentley Sly (Stuart Cramer) — 4A 150 champion</li>
-        <li>Cael Dunn (South Davidson) — 1A/2A 215 champion</li>
-      </ul>
-      <p>All three four-time state champions came from smaller schools — and two dominated in 4A, not just small divisions.</p>
-      <p>The data confirms this pattern:</p>
-      <p>In the Class of 2026, 68% of ranked prospects come from 6A and below.</p>
-      <p>Elite wrestling in North Carolina isn&apos;t concentrated in the largest schools (7A/8A). Development happens everywhere.</p>
-      <p>Small-school wrestling programs aren&apos;t handicapped by enrollment. They&apos;re often more focused, better coached, and more committed than larger programs spread across multiple sports.</p>
-      <p>The &quot;fairness&quot; logic from football doesn&apos;t apply to wrestling.</p>
-      <p>When we apply one-size-fits-all thinking based on mainstream sports, we create solutions for problems wrestling doesn&apos;t have — while ignoring the problems it does.</p>
-      <p>Making structural decisions through the lens of mainstream sports is like running a Fortune 500 company with a startup strategy — the mismatch creates instability.</p>
-      <p>Doing big company things at a startup is a sure way to go out of business quickly.</p>
+      <hr />
 
       <h2>The Recruiting Reality</h2>
-      <p>The positive news: every college program in North Carolina — and most in Virginia — attended the state tournament this year. That is real support.</p>
-      <p>But we must ask: Are we delivering a product that is clear and usable?</p>
-      <p>With eight classifications during the season and seven during the state tournament, college coaches are expected to:</p>
-      <ul>
-        <li>Track over 784 state qualifiers</li>
-        <li>Evaluate more than 360 placers</li>
-        <li>Digest it all over a two-day window</li>
+      <p><strong>College coaches showed up. That matters.</strong></p>
+      <p>But clarity matters too.</p>
+      <p>They are asked to evaluate:</p>
+      <ul className="my-4 space-y-2">
+        <li><strong>784 qualifiers</strong></li>
+        <li><strong>360+ placers</strong></li>
+        <li>Across multiple classifications</li>
+        <li>In a two-day window</li>
       </ul>
-      <p>College coaches are in the business of building wrestling programs — not acting as full-time data analysts.</p>
-      <p>When achievement becomes diluted, coaches must look elsewhere for clarity: national events, college opens, out-of-state comparisons.</p>
-      <p>In an era where the transfer portal is already attractive, making high school evaluation more complex does not help our in-state athletes.</p>
-      <p>For athletes with long-term college goals, nationals are no longer optional — they are required.</p>
+      <p>Coaches build programs — they are not full-time data analysts.</p>
+      <p>When achievement density expands, evaluation becomes less efficient. In a transfer portal era, complexity does not help in-state athletes.</p>
+      <p>When clarity decreases, coaches default to national events, college opens, and out-of-state comparisons. That shifts leverage away from the state tournament.</p>
+      <p><strong>Not because our athletes lack talent — but because the structure lacks signal density.</strong></p>
 
-      <h2>The Inconsistency Problem</h2>
-      <p>There are absolutely high-quality brackets in our current state tournament. Some divisions are deep, nationally competitive, and elite.</p>
-      <p>But they are scarce.</p>
-      <p>In other brackets, competitive density is dramatically different. It is possible — and increasingly common — for:</p>
+      <hr />
+
+      <h2>The Competitive Density Problem</h2>
+      <p>Some brackets are nationally competitive. Others are not.</p>
+      <p>It is possible for:</p>
       <ul>
-        <li>A fourth-place finisher in one bracket to be capable of winning six others</li>
+        <li>A fourth-place finisher in one bracket to win several others</li>
         <li>A non-placer in one division to outperform champions elsewhere</li>
       </ul>
-      <p>When that happens, the words &quot;state champion,&quot; &quot;state placer,&quot; and &quot;state qualifier&quot; no longer have common definitions.</p>
-      <p>Language matters. Shared vocabulary matters.</p>
-      <p>When meaning becomes inconsistent, alignment disappears.</p>
-      <p>Overnight, we redefined a common vocabulary we all understood.</p>
+      <p>That does not diminish the athletes. But it does create structural inconsistency.</p>
+      <p><strong>When competitive density varies widely, shared definitions weaken.</strong></p>
 
-      <h2>What Other States Do Differently</h2>
-      <p>Look at states like New Jersey and California. One tournament. One champion per weight.</p>
-      <p>Scarcity creates prestige.</p>
-      <p>Even their qualifying systems carry weight. A New York county finalist, for example, holds tremendous respect because the qualification path is demanding and clear.</p>
-      <p>Prestige is not created by volume. It&apos;s created by structure.</p>
+      <hr />
+
+      <h2>The Vocabulary Problem</h2>
+      <p>State Champion. State Finalist. State Placer. State Qualifier.</p>
+      <p>These terms should immediately communicate level and difficulty.</p>
+      <p>When 360+ athletes place, &quot;state placer&quot; requires context. When 98 champions are crowned, &quot;state champion&quot; requires specification.</p>
+      <p><strong>When achievement language requires explanation, value dilutes.</strong></p>
+      <p>In recruiting, clarity matters. In development, standards matter.</p>
+
+      <hr />
 
       <h2>The Spectator Experience</h2>
-      <p>The state finals should feel like the showcase of our sport. Instead, the experience has become fragmented.</p>
-      <p>Multiple championship matches happening simultaneously — like NFL Sunday with six games on one television.</p>
-      <p>Presentation impacts perception. Perception impacts growth.</p>
-      <p>If we want wrestling to expand, the championship experience must feel elevated, focused, and meaningful — not impossible to follow.</p>
+      <p>Championships shape perception.</p>
+      <p>When multiple finals occur simultaneously across seven divisions, the experience becomes fragmented.</p>
+      <p>Presentation influences prestige. Prestige influences growth.</p>
+      <p><strong>If the state finals are the showcase of our sport, the experience must feel elevated and cohesive.</strong></p>
 
-      <h2>The Risk: Elite Talent Retention</h2>
-      <p>Recent history shows a pattern worth examining.</p>
-      <p>Elite wrestlers have left North Carolina at various points in their development — for different reasons including family circumstances, school choices, and training opportunities.</p>
-      <p>Some are now recognized as among the most elite in the country and internationally.</p>
-      <p>Not all departures are structure-related. Families make decisions based on many factors.</p>
-      <p>But we should ask: Does competitive structure and competitive clarity play a role in retention?</p>
-      <p>When the most competitive brackets are inconsistent, and when the meaning of achievement varies widely, families seeking long-term development may look elsewhere for clearer pathways.</p>
-      <p>If that pattern continues, we risk:</p>
-      <ul>
-        <li>A diluted in-state product</li>
-        <li>Increased reliance on the transfer portal at the college level</li>
-        <li>A state that struggles to grow and compete at the highest levels</li>
+      <hr />
+
+      <h2>A Path Forward</h2>
+      <p>This is about alignment — not criticism.</p>
+      <p>If the objectives include stronger national competitiveness, clear recruiting pathways, elevated championship prestige, and sustainable long-term growth — structure must support those goals.</p>
+      <p><strong>What would help:</strong></p>
+      <ul className="space-y-3 my-4">
+        <li><strong>1. Transparency.</strong> Clear articulation of the problem being solved and the data behind the decision.</li>
+        <li><strong>2. Measurable outcomes.</strong> Publish metrics. Track annually. Report publicly.</li>
+        <li><strong>3. Competitive density as a principle.</strong> Structure divisions around preserving meaningful bracket depth. For context: California and New Jersey have 1 classification, New York has 2. We&apos;d advocate for 3 classifications based on competitive density thresholds.</li>
+        <li><strong>4. Stakeholder alignment.</strong> Engage college programs and club leaders in ongoing dialogue.</li>
       </ul>
-      <p>In a developmental state, retention of developing talent matters for long-term growth.</p>
+      <p>The specific number of divisions matters less than the principles: competitive density, clear communication, measurable accountability, and willingness to evaluate and adjust.</p>
 
-      <h2>The Long-Term Cost of Short-Term Feel Good</h2>
-      <p>Expanding titles and qualifiers feels good in the moment. More banners. More medals. More celebrations.</p>
-      <p>But development requires delayed gratification.</p>
-      <p>If the goal is long-term growth — more college wrestlers, stronger programs, better national performance — then structure matters.</p>
-      <p>When the value of a common achievement becomes unclear, the entire ecosystem feels it.</p>
-      <p>The notion of &quot;state qualifier&quot; becomes like the modern-day penny — it exists, but its value is questioned.</p>
-      <p>Like a sugar high, it makes us feel good in the moment. But we pay the consequences in long-term health and longevity.</p>
+      <hr />
 
-      <h2>This Is Not Just About College Wrestling</h2>
-      <p>Some will say: &quot;Not every kid is trying to wrestle in college.&quot; &quot;Some just want to compete.&quot; &quot;This isn&apos;t only about recruiting.&quot;</p>
-      <p>That&apos;s true. And this conversation isn&apos;t only about recruiting.</p>
-      <p>Structure impacts everyone — not just elite athletes.</p>
-      <p>Even if a wrestler never steps onto a college mat, they deserve:</p>
-      <ul>
-        <li>A clear standard</li>
-        <li>A meaningful championship</li>
-        <li>A well-presented finals experience</li>
-        <li>A system that reflects competitive integrity</li>
-      </ul>
-      <p>Prestige doesn&apos;t only serve the elite. It elevates the entire ecosystem.</p>
-      <p>Wrestling teaches delayed gratification, standards, accountability, and earning your place.</p>
-      <p>Structure should reinforce those values — not blur them.</p>
+      <h2>The End Goal</h2>
+      <p>This is not about reducing opportunity. It is about increasing meaning.</p>
+      <p>When someone wins a state title in North Carolina, the country should understand exactly what that represents.</p>
+      <div className="my-6 rounded-xl bg-[#C20017]/10 border-l-4 border-[#C20017] p-4 sm:p-5">
+        <p className="text-lg font-bold text-slate-800"><strong>Scarcity does not limit achievement. It strengthens it.</strong></p>
+      </div>
+
+      <hr />
+
+      <h2>Moving Forward</h2>
+      <p>North Carolina wrestling has momentum. College coaches are attending, participation is strong, and community energy is high.</p>
+      <p>But momentum must be paired with structural clarity.</p>
+      <p>Strong systems invite evaluation. Strong communities engage in dialogue.</p>
+      <div className="my-6 rounded-xl bg-[#003366]/10 border-l-4 border-[#003366] p-4 sm:p-5">
+        <p className="text-lg font-bold text-slate-800"><strong>North Carolina wrestling deserves both.</strong></p>
+      </div>
+
+      <hr />
+
+      <p className="font-medium text-[#003366] mt-8">
+        <strong>Continue to Part 2:</strong> <a href="/nchsaa/2026/news/article-2" className="underline hover:no-underline">Understanding Bracket Depth in a 7 Division System</a>
+      </p>
+      <p className="text-sm text-slate-500 italic mt-6">
+        This article represents the perspectives of NC United Wrestling on classification structure and long-term development. We welcome dialogue and engagement from the broader wrestling community.
+      </p>
     </article>
   )
 }

@@ -26,7 +26,7 @@ export interface NCHSAAArticle {
 export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
   {
     slug: "seven-divisions-98-brackets-784-qualifiers",
-    title: "Did We Fix a Problem Wrestling Didn't Have? — Seven Divisions, 98 Brackets, 360 Placers, 784 Qualifiers",
+    title: "Did North Carolina Wrestling Expand Divisions—And Shrink Our Future?",
     summary: "When Structure Shapes Value — Part I: Diagnosis",
     subtitle: "When Structure Shapes Value — A Two-Part Conversation About North Carolina's Classification System",
     preview:
@@ -41,17 +41,17 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
   },
   {
     slug: "article-2",
-    title: "Not All Paths to a State Title Are Equal: The Data Behind NC's Bracket Strength Reality",
-    summary: "Understanding Competitive Depth in North Carolina's 2026 State Wrestling Championships",
-    subtitle: "Understanding Competitive Depth in North Carolina's 2026 State Wrestling Championships",
+    title: "Understanding Bracket Depth: The 2026 State Championship Data",
+    summary: "How bracket strength is measured and where ranked talent concentrated",
+    subtitle: "How bracket strength is measured and where ranked talent concentrated",
     preview:
-      'In 2026, North Carolina\'s state wrestling championships featured 98 weight class brackets with 784 state qualifiers. With talent distributed across 98 separate brackets, the competitive reality varies dramatically by weight class.',
+      "Bracket strength is determined by the number of ranked wrestlers competing. 77 of 80 ranked wrestlers competed at states. Two brackets were ELITE (4+ ranked), three were STRONG (3 ranked), and ~83% were LIGHT (0-1 ranked).",
     category: "DATA & RANKINGS",
     categoryBadgeClass: "bg-amber-600",
     part: "Part 2",
     readTime: "10 min read",
     date: "2026-02-25",
-    published: false,
+    published: true,
   },
   {
     slug: "article-3",
