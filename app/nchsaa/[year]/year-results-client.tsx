@@ -470,31 +470,40 @@ export function NCHSAAYearResultsClient({
           </CardHeader>
           <CardContent className="p-6 bg-[#003366]">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {mostOutstandingWrestlers.map((mow) => (
-                <div key={mow.id} className="bg-white/5 p-4 rounded-lg border border-white/20">
-                  <div className="text-center">
-                    {mow.photo_url ? (
-                      <div className="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border border-white bg-white">
-                        <Image
-                          src={mow.photo_url}
-                          alt={mow.name}
-                          fill
-                          className="object-cover"
-                          sizes="96px"
-                          unoptimized={!mow.photo_url.startsWith("/")}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-24 h-24 mx-auto mb-3 rounded-full border border-white bg-white/10 flex items-center justify-center">
-                        <User className="w-12 h-12 text-amber-400" />
-                      </div>
-                    )}
-                    <div className="text-2xl font-bold text-[#D3b574] mb-2">{mow.division}</div>
-                    <div className="text-lg font-semibold text-white mb-1">{mow.name}</div>
-                    <div className="text-sm text-slate-300">{mow.school}</div>
+              {mostOutstandingWrestlers.map((mow) => {
+                // 1A/2A 2026: do not show Adair Panama / Robbinsville — show TBD until correct MOW is set in DB
+                const showTbd =
+                  displayYear === 2026 &&
+                  (mow.division === "1A/2A" || mow.division === "1-4A") &&
+                  (mow.name?.toLowerCase().includes("adair panama") ?? false)
+                const displayName = showTbd ? "TBD" : (mow.name || "TBD")
+                const displaySchool = showTbd ? "TBD" : (mow.school || "—")
+                return (
+                  <div key={mow.id} className="bg-white/5 p-4 rounded-lg border border-white/20">
+                    <div className="text-center">
+                      {!showTbd && mow.photo_url ? (
+                        <div className="relative w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border border-white bg-white">
+                          <Image
+                            src={mow.photo_url}
+                            alt={mow.name}
+                            fill
+                            className="object-cover"
+                            sizes="96px"
+                            unoptimized={!mow.photo_url.startsWith("/")}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-24 h-24 mx-auto mb-3 rounded-full border border-white bg-white/10 flex items-center justify-center">
+                          <User className="w-12 h-12 text-amber-400" />
+                        </div>
+                      )}
+                      <div className="text-2xl font-bold text-[#D3b574] mb-2">{mow.division}</div>
+                      <div className="text-lg font-semibold text-white mb-1">{displayName}</div>
+                      <div className="text-sm text-slate-300">{displaySchool}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </CardContent>
         </Card>

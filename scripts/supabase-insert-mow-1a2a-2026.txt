@@ -1,16 +1,16 @@
--- Insert missing 2026 1A/2A Most Outstanding Wrestler: Adair Panama
--- Run in Supabase SQL Editor (Dashboard → SQL Editor → New query).
-
+-- 2026 1A/2A MOW: Do NOT use Adair Panama / Robbinsville here.
+-- The app shows TBD for 1A/2A when it sees that name; replace with correct MOW when known.
+--
+-- To set 1A/2A 2026 to TBD in the DB (run in Supabase SQL Editor):
+-- UPDATE most_outstanding_wrestlers SET name = 'TBD', school = 'TBD', photo_url = NULL WHERE year = 2026 AND division = '1A/2A';
+--
+-- To remove the 1A/2A 2026 row entirely:
+-- DELETE FROM most_outstanding_wrestlers WHERE year = 2026 AND division = '1A/2A';
+--
 -- Optional: see existing 2026 MOW rows
 -- SELECT * FROM most_outstanding_wrestlers WHERE year = 2026 ORDER BY division;
 
-INSERT INTO most_outstanding_wrestlers (name, school, division, year)
-VALUES (
-  'Adair Panama',
-  'Robbinsville',  -- 120 lbs, 1A/2A 2026
-  '1A/2A',
-  2026
-);
+-- (Adair Panama insert removed — 1A/2A 2026 should show TBD or the correct MOW.)
 
 -- If the table has an id SERIAL, the above is enough.
 -- If you get a duplicate key error (unique on year+division), use upsert instead:
@@ -49,11 +49,7 @@ UPDATE most_outstanding_wrestlers
 SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/zcnPboSUuP0WlPnDqC2qA-Jekai%20Sedgwick%20NCHSAA%202026%20MOW.png'
 WHERE year = 2026 AND name ILIKE '%Jekai Sedgwick%';
 
--- Update Adair Panama 2026 MOW photo and school (1A/2A, 2026 states page, updated). By name:
-UPDATE most_outstanding_wrestlers
-SET photo_url = 'https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/Rc9fVmSSGuXdOXr6-ZQJF-Adair%20Panama%202026%20NHSCAA%20MOW.png',
-    school = 'Robbinsville'
-WHERE year = 2026 AND name ILIKE '%Adair Panama%';
+-- (Adair Panama 1A/2A MOW update removed — 1A/2A 2026 shows TBD in app.)
 
 -- Set Eli Oakley 2026 MOW photo (2026 states page). By name:
 UPDATE most_outstanding_wrestlers
