@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation"
-import Link from "next/link"
 import { getArticle } from "../articles"
 import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brackets-784-qualifiers"
 import { UnderstandingBracketDepth2026Content } from "../content/understanding-bracket-depth-2026"
@@ -35,12 +34,13 @@ export default async function NCHSAAArticlePage({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="mb-6">
-          <Button variant="outline" size="sm" className="border-[#C20017] text-[#C20017] hover:bg-[#C20017] hover:text-white" asChild>
-            <Link href={`/nchsaa/${year}`}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to {year} Results
-            </Link>
-          </Button>
+          <a
+            href={`/nchsaa/${year}`}
+            className="inline-flex items-center gap-2 rounded-md border-2 border-[#C20017] bg-transparent px-4 py-2 text-sm font-medium text-[#C20017] hover:bg-[#C20017] hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 shrink-0" />
+            Back to {year} Results
+          </a>
         </div>
         <header className="mb-6">
           <NchsaaArticleReactions articleSlug={slug} />

@@ -41,11 +41,11 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
   },
   {
     slug: "article-2",
-    title: "Understanding Bracket Depth: The 2026 State Championship Data",
+    title: "Bracket Depth by the Numbers: What 98 Brackets Reveal",
     summary: "How bracket strength is measured and where ranked talent concentrated",
     subtitle: "How bracket strength is measured and where ranked talent concentrated",
     preview:
-      "Bracket strength is determined by the number of ranked wrestlers competing. 77 of 80 ranked wrestlers competed at states. Two brackets were ELITE (4+ ranked), three were STRONG (3 ranked), and ~83% were LIGHT (0-1 ranked).",
+      "Bracket strength is determined by the number of ranked wrestlers competing. 77 of 80 ranked wrestlers competed at states. Two brackets were ELITE (4+ ranked), four were STRONG (3 ranked), and 82% were LIGHT (0-1 ranked).",
     category: "DATA & RANKINGS",
     categoryBadgeClass: "bg-amber-600",
     part: "Part 2",

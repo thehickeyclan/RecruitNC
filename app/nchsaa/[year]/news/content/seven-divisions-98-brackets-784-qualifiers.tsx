@@ -77,7 +77,7 @@ export function SevenDivisionsArticleContent() {
       <hr />
 
       <h2>The Competitive Density Problem</h2>
-      <p>Some brackets are nationally competitive. Others are not.</p>
+      <p>A handful of brackets are highly competitive. However, the large majority are not.</p>
       <p>It is possible for:</p>
       <ul>
         <li>A fourth-place finisher in one bracket to win several others</li>
