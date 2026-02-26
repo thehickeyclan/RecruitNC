@@ -47,13 +47,13 @@ export default async function NCHSAAArticlePage({
         </header>
         {article.published && ContentComponent ? (
           <>
-            <div className="bg-white rounded-lg border border-slate-200 p-6 md:p-8 shadow-sm">
+            <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">
               <ContentComponent />
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <NchsaaArticleReactions articleSlug={slug} />
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-slate-200 p-6 md:p-8 shadow-sm mt-6">
+            <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm mt-6">
               <NchsaaArticleComments articleSlug={slug} />
             </div>
           </>

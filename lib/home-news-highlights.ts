@@ -16,6 +16,7 @@ export interface HomeNewsItem {
 
 const NCHSAA_YEAR = "2026"
 
+/** Only the 3 State Championship Series articles (Part 1, Part 2, Part 3). */
 export const HOME_NEWS_HIGHLIGHTS: HomeNewsItem[] = [
   {
     id: "seven-divisions",
@@ -40,23 +41,14 @@ export const HOME_NEWS_HIGHLIGHTS: HomeNewsItem[] = [
     date: "2026-02-25",
   },
   {
-    id: "article-3",
-    title: "Not All Brackets Were Equal: Celebrating the ELITE Bracket Warriors",
-    summary: "Only 2 brackets qualified as ELITE. Celebrating the wrestlers who chose the hard path.",
-    href: `/nchsaa/${NCHSAA_YEAR}/news/article-3`,
+    id: "three-join-the-immortals",
+    title: "Three Join the Immortals: North Carolina's Historic 2026 Four-Time State Champions",
+    summary: "For the first time in nearly four decades, three four-time state champions were crowned in a single year — Cael Dunn, Lorenzo Alston, and Bentley Sly.",
+    href: `/nchsaa/${NCHSAA_YEAR}/news/three-join-the-immortals-2026`,
+    image: "/images/nchsaa-2026-four-time-champions.png",
     category: "CELEBRATION",
     categoryBadgeClass: "bg-red-600",
-    readTime: "8 min read",
-    date: "2026-02-25",
-  },
-  {
-    id: "article-4",
-    title: "2026 State Championship Highlights",
-    summary: "98 state champions and 392 medalists. Standout performances and storylines from the tournament.",
-    href: `/nchsaa/${NCHSAA_YEAR}/news/article-4`,
-    category: "HIGHLIGHTS",
-    categoryBadgeClass: "bg-green-600",
-    readTime: "6 min read",
-    date: "2026-02-25",
+    readTime: "14 min read",
+    date: "2026-02-26",
   },
 ]

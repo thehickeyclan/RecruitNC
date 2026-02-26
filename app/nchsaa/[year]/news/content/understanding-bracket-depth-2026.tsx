@@ -68,37 +68,39 @@ export function UnderstandingBracketDepth2026Content() {
       <hr />
 
       <h2>The Distribution</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Bracket Strength</th>
-            <th>Count</th>
-            <th>Percentage</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>ELITE (4+ ranked)</td>
-            <td>2</td>
-            <td>2%</td>
-          </tr>
-          <tr>
-            <td>STRONG (3 ranked)</td>
-            <td>4</td>
-            <td>4%</td>
-          </tr>
-          <tr>
-            <td>MEDIUM (2 ranked)</td>
-            <td>~12</td>
-            <td>~12%</td>
-          </tr>
-          <tr>
-            <td>LIGHT (0-1 ranked)</td>
-            <td>~80</td>
-            <td>~82%</td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="overflow-x-auto -mx-2 sm:mx-0 my-4" role="region" aria-label="Bracket distribution table">
+        <table className="min-w-[280px]">
+          <thead>
+            <tr>
+              <th>Bracket Strength</th>
+              <th>Count</th>
+              <th>Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ELITE (4+ ranked)</td>
+              <td>2</td>
+              <td>2%</td>
+            </tr>
+            <tr>
+              <td>STRONG (3 ranked)</td>
+              <td>4</td>
+              <td>4%</td>
+            </tr>
+            <tr>
+              <td>MEDIUM (2 ranked)</td>
+              <td>~12</td>
+              <td>~12%</td>
+            </tr>
+            <tr>
+              <td>LIGHT (0-1 ranked)</td>
+              <td>~80</td>
+              <td>~82%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p><strong>What the data shows:</strong></p>
       <p>Across 98 weight class brackets, competitive depth varied significantly. Two brackets featured 4+ ranked wrestlers. Four had exactly 3 ranked wrestlers. Most brackets (82%) had 0-1 ranked wrestlers.</p>
 

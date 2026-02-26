@@ -3,6 +3,7 @@ import Image from "next/image"
 const FOUR_TIME_IMAGE = "/images/nchsaa-2026-four-time-champions.png"
 const CAEL_IMAGE = "/images/nchsaa-2026-cael-dunn.png"
 const LORENZO_IMAGE = "/images/nchsaa-2026-lorenzo-alston.png"
+const BENTLEY_IMAGE = "/images/nchsaa-2026-bentley-sly.png"
 const linkClass = "text-[#003366] underline hover:no-underline font-medium"
 
 export function ThreeJoinTheImmortals2026Content() {
@@ -18,6 +19,10 @@ export function ThreeJoinTheImmortals2026Content() {
       <p><strong>Never — in nearly four decades — had three done it in the same year.</strong></p>
       <p><strong>Until February 22, 2026.</strong></p>
       <p>On that day, three wrestlers — Cael Dunn, Lorenzo Alston, and Bentley Sly — stepped onto the mat carrying the weight of history.</p>
+      <div className="my-6">
+        <Image src={FOUR_TIME_IMAGE} alt="Cael Dunn, Lorenzo Alston, and Bentley Sly — North Carolina's 2026 four-time state champions" width={800} height={450} className="rounded-lg w-full h-auto object-cover" />
+        <p className="text-sm text-slate-500 mt-2 text-center italic">Cael Dunn, Lorenzo Alston, and Bentley Sly — February 22, 2026</p>
+      </div>
       <p>Four years. Four state titles. Fourteen names on a list that spans from 1987 to 2024.</p>
       <p>By the end of the night, that list had grown to seventeen.</p>
       <p><strong>For the first time in North Carolina wrestling history, three four-time state champions were crowned in a single year.</strong></p>
@@ -172,7 +177,7 @@ export function ThreeJoinTheImmortals2026Content() {
 
       <h2>Bentley Sly: The National Contender</h2>
       <div className="my-4">
-        <Image src={FOUR_TIME_IMAGE} alt="Bentley Sly - Four-Time State Champion" width={800} height={450} className="rounded-lg w-full h-auto object-cover" />
+        <Image src={BENTLEY_IMAGE} alt="Bentley Sly - Four-Time State Champion" width={800} height={450} className="rounded-lg w-full h-auto object-cover" />
       </div>
       <p><strong>School:</strong> Stuart Cramer</p>
       <p><strong>College:</strong> Appalachian State University</p>

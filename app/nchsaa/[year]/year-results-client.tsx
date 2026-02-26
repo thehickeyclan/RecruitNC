@@ -249,25 +249,25 @@ export function NCHSAAYearResultsClient({
     }
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {weightClasses.map((weightClass) => (
-          <div key={weightClass} className="bg-white p-4 rounded-lg border border-gray-200">
-            <h4 className="text-lg font-semibold text-[#003366] mb-3">{weightClass} lbs</h4>
+          <div key={weightClass} className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200">
+            <h4 className="text-base sm:text-lg font-semibold text-[#003366] mb-2 sm:mb-3">{weightClass} lbs</h4>
             <div className="space-y-2">
               {data[weightClass]
                 .filter((r) => r.place != null && r.place >= 1 && r.place <= maxPlacerPlace)
                 .map((result, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center gap-3">
-                      <Badge className={getPlaceBadgeColor(result.place)}>
+                  <div key={index} className="flex items-center justify-between gap-2 p-2 sm:p-2.5 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <Badge className={`${getPlaceBadgeColor(result.place)} shrink-0`}>
                         {result.place === 1 ? "1st" : result.place === 2 ? "2nd" : result.place === 3 ? "3rd" : result.place ? `${result.place}th` : "-"}
                       </Badge>
-                      <div>
-                        <div className="font-medium text-[#003366]">{result.wrestler_name}</div>
-                        <div className="text-sm text-slate-600">{result.school}</div>
+                      <div className="min-w-0">
+                        <div className="font-medium text-[#003366] truncate">{result.wrestler_name}</div>
+                        <div className="text-xs sm:text-sm text-slate-600 truncate">{result.school}</div>
                       </div>
                     </div>
-                    {result.result && <div className="text-sm text-slate-500">{result.result}</div>}
+                    {result.result && <div className="text-xs sm:text-sm text-slate-500 shrink-0 hidden sm:block">{result.result}</div>}
                   </div>
                 ))}
             </div>
@@ -302,12 +302,12 @@ export function NCHSAAYearResultsClient({
       </div>
 
       {displayYear === 2026 && NCHSAA_2026_ARTICLES.length > 0 && (
-        <section className="mb-12" aria-labelledby="news-perspective">
-          <div className="bg-[#1a2332] text-white rounded-lg px-6 py-5 mb-8">
-            <h2 id="news-perspective" className="text-xl font-bold tracking-tight mb-1">2026 State Championship Series</h2>
-            <p className="text-red-100 text-sm">Four perspectives on structure, data, and excellence</p>
+        <section className="mb-10 sm:mb-12" aria-labelledby="news-perspective">
+          <div className="bg-[#1a2332] text-white rounded-lg px-4 sm:px-6 py-4 sm:py-5 mb-6 sm:mb-8">
+            <h2 id="news-perspective" className="text-lg sm:text-xl font-bold tracking-tight mb-1">2026 State Championship Series</h2>
+            <p className="text-red-100 text-xs sm:text-sm">Four perspectives on structure, data, and excellence</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {NCHSAA_2026_ARTICLES.map((article, index) => {
               const isHero = index === 0
               const isLast = index === NCHSAA_2026_ARTICLES.length - 1
@@ -378,29 +378,29 @@ export function NCHSAAYearResultsClient({
         </section>
       )}
 
-      <section className="mb-12 rounded-lg overflow-hidden border-2 border-[#C20017]" aria-labelledby="tournament-summary">
-        <div className="bg-[#C20017] px-6 py-8 md:py-10">
-          <div className="flex items-center gap-3 mb-2">
-            <Crown className="w-8 h-8 text-white shrink-0" aria-hidden />
-            <h2 id="tournament-summary" className="text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
+      <section className="mb-8 sm:mb-12 rounded-lg overflow-hidden border-2 border-[#C20017]" aria-labelledby="tournament-summary">
+        <div className="bg-[#C20017] px-4 sm:px-6 py-6 sm:py-8 md:py-10">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-white shrink-0" aria-hidden />
+            <h2 id="tournament-summary" className="text-xl sm:text-2xl font-bold text-white">{displayYear} Tournament Summary</h2>
           </div>
-          <p className="text-white/90 mb-8">State championship results and highlights</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <p className="text-white/90 text-sm mb-6 sm:mb-8">State championship results and highlights</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{classifications.length}</div>
-              <div className="text-sm font-medium text-white/90">Classifications</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{classifications.length}</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Classifications</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-yellow-300 mb-2">{classifications.length * 14}</div>
-              <div className="text-sm font-medium text-white/90">Weight Classes</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300 mb-1 sm:mb-2">{classifications.length * 14}</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Weight Classes</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stats.totalMedalists}</div>
-              <div className="text-sm font-medium text-white/90">Medal Winners</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{stats.totalMedalists}</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Medal Winners</div>
             </div>
             <div className="text-center col-span-2 md:col-span-1">
-              <div className="text-4xl md:text-5xl font-bold text-white mb-2">{8 * 14 * (classifications.length || 7)}</div>
-              <div className="text-sm font-medium text-white/90">State Qualifiers</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{8 * 14 * (classifications.length || 7)}</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">State Qualifiers</div>
             </div>
           </div>
         </div>
@@ -415,7 +415,7 @@ export function NCHSAAYearResultsClient({
           <CardDescription>Select a division and weight class to view the bracket</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-[#003366]">Division</label>
               <Select value={selectedDivision} onValueChange={setSelectedDivision}>
@@ -468,8 +468,8 @@ export function NCHSAAYearResultsClient({
             </CardTitle>
             <CardDescription className="text-slate-300">{displayYear} MOW by division</CardDescription>
           </CardHeader>
-          <CardContent className="p-6 bg-[#003366]">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <CardContent className="p-4 sm:p-6 bg-[#003366]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {mostOutstandingWrestlers.map((mow) => (
                 <div key={mow.id} className="bg-white/5 p-4 rounded-lg border border-white/20">
                   <div className="text-center">
@@ -509,8 +509,8 @@ export function NCHSAAYearResultsClient({
             </CardTitle>
             <CardDescription className="text-red-100">{displayYear} team points by division</CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {teamPointsWinners.map((w) => (
                 <div key={w.id} className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
                   <div className="text-center">
@@ -541,9 +541,9 @@ export function NCHSAAYearResultsClient({
             </div>
           ) : (
             <Tabs defaultValue={classifications[0]?.toLowerCase().replace("/", "") ?? "4a"} className="w-full">
-              <TabsList className="flex flex-wrap gap-1 w-full">
+              <TabsList className="flex flex-wrap gap-1.5 w-full h-auto p-1.5 sm:p-1 bg-slate-100">
                 {classifications.map((c) => (
-                  <TabsTrigger key={c} value={c.toLowerCase().replace("/", "")}>
+                  <TabsTrigger key={c} value={c.toLowerCase().replace("/", "")} className="text-xs sm:text-sm px-2.5 py-2 sm:px-3 sm:py-1.5 data-[state=active]:bg-white">
                     {c}
                   </TabsTrigger>
                 ))}

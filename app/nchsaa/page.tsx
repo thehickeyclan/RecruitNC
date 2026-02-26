@@ -555,8 +555,8 @@ export default function NCHSAAOverview() {
           >
             ← Back to Overview
           </button>
-          <h1 className="text-4xl font-bold text-[#003366]">{selectedYear} NCHSAA Results</h1>
-          <p className="text-slate-600 mb-6">North Carolina State Wrestling Championships</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#003366]">{selectedYear} NCHSAA Results</h1>
+          <p className="text-slate-600 text-sm sm:text-base mb-6">North Carolina State Wrestling Championships</p>
           <NCHSAAYearResultsClient displayYear={selectedYear} yearParam={String(selectedYear)} />
         </div>
       </div>

@@ -69,20 +69,9 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     published: true,
     image: "/images/nchsaa-2026-four-time-champions.png",
   },
-  {
-    slug: "article-4",
-    title: "2026 State Championship Highlights",
-    subtitle: "Celebrating North Carolina's Wrestling Champions",
-    preview:
-      "The 2026 NCHSAA State Wrestling Championships brought together 784 state qualifiers across seven divisions, crowning 98 state champions and 392 medalists. Here are the standout performances and storylines from the tournament.",
-    category: "HIGHLIGHTS",
-    categoryBadgeClass: "bg-green-600",
-    part: "Part 4",
-    readTime: "6 min read",
-    date: "2026-02-25",
-    published: false,
-  },
 ]
+
+/** Only the 3 State Championship Series articles (Part 1, 2, 3) are shown on /nchsaa/2026 and home. */
 
 export function getArticle(slug: string): NCHSAAArticle | undefined {
   return NCHSAA_2026_ARTICLES.find((a) => a.slug === slug)

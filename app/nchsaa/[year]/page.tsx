@@ -22,7 +22,7 @@ export default async function NCHSAAYearPage({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-[#003366]">{displayYear} NCHSAA Results</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#003366]">{displayYear} NCHSAA Results</h1>
         <p className="text-slate-600 mb-6">North Carolina State Wrestling Championships</p>
         <NCHSAAYearResultsClient displayYear={displayYear} yearParam={yearParam} />
       </div>
