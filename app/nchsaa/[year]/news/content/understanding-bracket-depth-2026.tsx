@@ -1,5 +1,3 @@
-"use client"
-
 /**
  * Optional bracket/podium images. Add paths when you have them; layout reserves space.
  * Keys: "7A-138" | "7A-190" | "7A-150" | "7A-157" | "7A-165" | "6A-150"
@@ -11,8 +9,8 @@ const BRACKET_IMAGES: Record<string, string> = {
   "7A-165": "/images/nchsaa-2026-7a-165-podium.png",
 }
 
-function profileUrl(name: string, school: string, year: string) {
-  return `/unified-profile/by-name?${new URLSearchParams({ name, school, year }).toString()}`
+function key(name: string, school: string, year: string) {
+  return `${name}|${school}|${year}`
 }
 
 const RANKINGS_HREF = "/public-rankings"
@@ -25,30 +23,21 @@ function ProfileLink({
   className,
   children,
 }: {
-  href: string
+  href: string | null
   className: string
   children: React.ReactNode
 }) {
-  return <a href={href} className={className}>{children}</a>
+  if (href) return <a href={href} className={className}>{children}</a>
+  return <span className={className}>{children}</span>
 }
 
-/** Force full page navigation for all in-app links so nothing (e.g. router/Radix) can intercept. */
-function handleArticleLinkClick(e: React.MouseEvent<HTMLElement>) {
-  const target = e.target as HTMLElement
-  const anchor = target.closest("a")
-  if (!anchor || !e.currentTarget.contains(anchor)) return
-  const href = anchor.getAttribute("href")
-  if (!href || href.startsWith("#") || href.startsWith("//") || !href.startsWith("/")) return
-  e.preventDefault()
-  window.location.href = href
-}
-
-export function UnderstandingBracketDepth2026Content() {
+export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profileIdMap: Record<string, string> }) {
+  const pl = (name: string, school: string, year: string) =>
+    profileIdMap[key(name, school, year)]
+      ? `/view-profile?id=${encodeURIComponent(profileIdMap[key(name, school, year)]!)}`
+      : null
   return (
-    <article
-      className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2"
-      onClick={handleArticleLinkClick}
-    >
+    <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2">
       <p><strong>How bracket strength is measured:</strong></p>
       <p>
         Bracket strength is determined by the number of wrestlers competing who were ranked in NC United&apos;s{" "}
@@ -119,25 +108,25 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="7A-138" title="7A 138 lbs">
         <p><strong>4 Ranked Wrestlers:</strong></p>
         <ol className="list-decimal pl-6 my-3 space-y-1">
-          <li>#3 <ProfileLink href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Tye Johnson</ProfileLink> (Cape Fear, 2027) — <strong>1ST</strong></li>
-          <li>#17 <ProfileLink href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Aidan Szewczyk</ProfileLink> (Davie, 2027) — 2ND</li>
-          <li>#9 <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</ProfileLink> (Weddington, 2027) — 3RD</li>
-          <li>#8 <ProfileLink href={profileUrl("Jake Amiott", "Topsail", "2028")} className={linkClass}>Jake Amiott</ProfileLink> (Topsail, 2028) — 4TH</li>
+          <li>#3 <ProfileLink href={pl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Tye Johnson</ProfileLink> (Cape Fear, 2027) — <strong>1ST</strong></li>
+          <li>#17 <ProfileLink href={pl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Aidan Szewczyk</ProfileLink> (Davie, 2027) — 2ND</li>
+          <li>#9 <ProfileLink href={pl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</ProfileLink> (Weddington, 2027) — 3RD</li>
+          <li>#8 <ProfileLink href={pl("Jake Amiott", "Topsail", "2028")} className={linkClass}>Jake Amiott</ProfileLink> (Topsail, 2028) — 4TH</li>
         </ol>
-        <p><ProfileLink href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Johnson</ProfileLink> defeated <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>White</ProfileLink> and <ProfileLink href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Szewczyk</ProfileLink> at states to win the title. All four ranked wrestlers placed exactly where seeded—a testament to the depth and quality of competition in this bracket.</p>
+        <p><ProfileLink href={pl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Johnson</ProfileLink> defeated <ProfileLink href={pl("Aiden White", "Weddington", "2027")} className={linkClass}>White</ProfileLink> and <ProfileLink href={pl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Szewczyk</ProfileLink> at states to win the title. All four ranked wrestlers placed exactly where seeded—a testament to the depth and quality of competition in this bracket.</p>
         <p><strong>What this bracket required:</strong> Every wrestler faced multiple ranked opponents. To win, Johnson navigated through two ranked opponents at states. To place, every wrestler had to defeat or compete closely with other elite talent. This is what deep competitive brackets look like.</p>
       </BracketSection>
 
       <BracketSection imageKey="7A-190" title="7A 190 lbs">
         <p><strong>4 Ranked Wrestlers:</strong></p>
         <ol className="list-decimal pl-6 my-3 space-y-1">
-          <li>#13 <ProfileLink href={profileUrl("Gavin Yow", "A.L. Brown", "2026")} className={linkClass}>Gavin Yow</ProfileLink> (A.L. Brown, 2026) — <strong>1ST</strong></li>
-          <li>#14 <ProfileLink href={profileUrl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Sam Harper</ProfileLink> (South Iredell, 2026) — 2ND</li>
-          <li>#25 <ProfileLink href={profileUrl("Brieon Mayfield", "Jack Britt", "2027")} className={linkClass}>Brieon Mayfield</ProfileLink> (Jack Britt, 2027) — 3RD</li>
-          <li>#20 <ProfileLink href={profileUrl("Amanuel Kahsai", "New Bern", "2028")} className={linkClass}>Amanuel Kahsai</ProfileLink> (New Bern, 2028) — DNP</li>
+          <li>#13 <ProfileLink href={pl("Gavin Yow", "A.L. Brown", "2026")} className={linkClass}>Gavin Yow</ProfileLink> (A.L. Brown, 2026) — <strong>1ST</strong></li>
+          <li>#14 <ProfileLink href={pl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Sam Harper</ProfileLink> (South Iredell, 2026) — 2ND</li>
+          <li>#25 <ProfileLink href={pl("Brieon Mayfield", "Jack Britt", "2027")} className={linkClass}>Brieon Mayfield</ProfileLink> (Jack Britt, 2027) — 3RD</li>
+          <li>#20 <ProfileLink href={pl("Amanuel Kahsai", "New Bern", "2028")} className={linkClass}>Amanuel Kahsai</ProfileLink> (New Bern, 2028) — DNP</li>
         </ol>
-        <p>Also competing: <ProfileLink href={profileUrl("Deyari El-Amin", "Hillside", "2026")} className={linkClass}>Deyari El-Amin</ProfileLink> (Hillside, 2026, Honorable Mention) — 4TH</p>
-        <p><ProfileLink href={profileUrl("Gavin Yow", "A.L. Brown", "2026")} className={linkClass}>Yow</ProfileLink> defeated <ProfileLink href={profileUrl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Harper</ProfileLink> 4-2 in the finals. This bracket featured ranked wrestlers from all three classes, plus an honorable mention wrestler who placed fourth, creating the most diverse competitive field of the tournament.</p>
+        <p>Also competing: <ProfileLink href={pl("Deyari El-Amin", "Hillside", "2026")} className={linkClass}>Deyari El-Amin</ProfileLink> (Hillside, 2026, Honorable Mention) — 4TH</p>
+        <p><ProfileLink href={pl("Gavin Yow", "A.L. Brown", "2026")} className={linkClass}>Yow</ProfileLink> defeated <ProfileLink href={pl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Harper</ProfileLink> 4-2 in the finals. This bracket featured ranked wrestlers from all three classes, plus an honorable mention wrestler who placed fourth, creating the most diverse competitive field of the tournament.</p>
         <p><strong>What this bracket required:</strong> Wrestlers faced opponents across multiple graduating classes. Yow beat a 54-2 opponent in a close finals match. Harper, Mayfield, and Kahsai all competed knowing any match could be against elite-level talent. El-Amin battled through a bracket stacked with ranked opponents to earn fourth place.</p>
       </BracketSection>
 
@@ -148,19 +137,19 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="7A-150" title="7A 150 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#7 <ProfileLink href={profileUrl("Andrew Davis", "Davie", "2026")} className={linkClass}>Andrew Davis</ProfileLink> (Davie, 2026) — <strong>1ST</strong></li>
-          <li>#1 <ProfileLink href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Aaron Ellison</ProfileLink> (Lumberton, 2028) — 2ND</li>
-          <li>#5 <ProfileLink href={profileUrl("Jacob Perry", "New Bern", "2028")} className={linkClass}>Jacob Perry</ProfileLink> (New Bern, 2028) — 4TH</li>
+          <li>#7 <ProfileLink href={pl("Andrew Davis", "Davie", "2026")} className={linkClass}>Andrew Davis</ProfileLink> (Davie, 2026) — <strong>1ST</strong></li>
+          <li>#1 <ProfileLink href={pl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Aaron Ellison</ProfileLink> (Lumberton, 2028) — 2ND</li>
+          <li>#5 <ProfileLink href={pl("Jacob Perry", "New Bern", "2028")} className={linkClass}>Jacob Perry</ProfileLink> (New Bern, 2028) — 4TH</li>
         </ul>
-        <p>Davis navigated two highly-touted 2028 prospects, including beating the #1 ranked 2028 wrestler (<ProfileLink href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Ellison</ProfileLink>) in sudden victory 20-17 in the finals. Ellison and Perry both competed knowing they&apos;d face ranked opposition in their path.</p>
+        <p>Davis navigated two highly-touted 2028 prospects, including beating the #1 ranked 2028 wrestler (<ProfileLink href={pl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Ellison</ProfileLink>) in sudden victory 20-17 in the finals. Ellison and Perry both competed knowing they&apos;d face ranked opposition in their path.</p>
       </BracketSection>
 
       <BracketSection imageKey="7A-157" title="7A 157 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#7 <ProfileLink href={profileUrl("Aidan Gore", "Garner", "2027")} className={linkClass}>Aidan Gore</ProfileLink> (Garner, 2027) — <strong>1ST</strong></li>
-          <li>#13 <ProfileLink href={profileUrl("Jacob McCord", "Grimsley", "2027")} className={linkClass}>Jacob McCord</ProfileLink> (Grimsley, 2027) — 2ND</li>
-          <li>#29 <ProfileLink href={profileUrl("Elliott Gould", "Davie", "2026")} className={linkClass}>Elliott Gould</ProfileLink> (Davie, 2026) — 3RD</li>
+          <li>#7 <ProfileLink href={pl("Aidan Gore", "Garner", "2027")} className={linkClass}>Aidan Gore</ProfileLink> (Garner, 2027) — <strong>1ST</strong></li>
+          <li>#13 <ProfileLink href={pl("Jacob McCord", "Grimsley", "2027")} className={linkClass}>Jacob McCord</ProfileLink> (Grimsley, 2027) — 2ND</li>
+          <li>#29 <ProfileLink href={pl("Elliott Gould", "Davie", "2026")} className={linkClass}>Elliott Gould</ProfileLink> (Davie, 2026) — 3RD</li>
         </ul>
         <p>Gore defeated Gould 7-0 in the semifinals and McCord 1-0 in an extremely close finals match. All three ranked wrestlers placed top-3, with each having to compete through ranked opponents.</p>
       </BracketSection>
@@ -168,9 +157,9 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="7A-165" title="7A 165 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#10 <ProfileLink href={profileUrl("Carson Worrick", "Davie", "2027")} className={linkClass}>Carson Worrick</ProfileLink> (Davie, 2027) — <strong>1ST</strong></li>
-          <li>#3 <ProfileLink href={profileUrl("Ryan Thompson", "Cardinal Gibbons", "2028")} className={linkClass}>Ryan Thompson</ProfileLink> (Cardinal Gibbons, 2028) — 2ND</li>
-          <li>#29 <ProfileLink href={profileUrl("John Bane", "New Bern", "2027")} className={linkClass}>John Bane</ProfileLink> (New Bern, 2027) — 3RD</li>
+          <li>#10 <ProfileLink href={pl("Carson Worrick", "Davie", "2027")} className={linkClass}>Carson Worrick</ProfileLink> (Davie, 2027) — <strong>1ST</strong></li>
+          <li>#3 <ProfileLink href={pl("Ryan Thompson", "Cardinal Gibbons", "2028")} className={linkClass}>Ryan Thompson</ProfileLink> (Cardinal Gibbons, 2028) — 2ND</li>
+          <li>#29 <ProfileLink href={pl("John Bane", "New Bern", "2027")} className={linkClass}>John Bane</ProfileLink> (New Bern, 2027) — 3RD</li>
         </ul>
         <p>Worrick beat higher-ranked Thompson (#3) in a close 7-6 finals match. Thompson, Bane, and Worrick all competed in a bracket where earning a medal meant navigating multiple ranked wrestlers.</p>
       </BracketSection>
@@ -178,9 +167,9 @@ export function UnderstandingBracketDepth2026Content() {
       <BracketSection imageKey="6A-150" title="6A 150 lbs">
         <p><strong>3 Ranked Wrestlers:</strong></p>
         <ul className="list-disc pl-6 my-3 space-y-1">
-          <li>#27 <ProfileLink href={profileUrl("Elijah Oakley", "Piedmont", "2026")} className={linkClass}>Elijah Oakley</ProfileLink> (Piedmont, 2026) — <strong>1ST</strong></li>
-          <li>#4 <ProfileLink href={profileUrl("Hayden Smith", "White Oak", "2028")} className={linkClass}>Hayden Smith</ProfileLink> (White Oak, 2028) — 2ND</li>
-          <li>#18 <ProfileLink href={profileUrl("Jacob De La Torre", "Union Pines", "2028")} className={linkClass}>Jacob De La Torre</ProfileLink> (Union Pines, 2028) — 3RD</li>
+          <li>#27 <ProfileLink href={pl("Elijah Oakley", "Piedmont", "2026")} className={linkClass}>Elijah Oakley</ProfileLink> (Piedmont, 2026) — <strong>1ST</strong></li>
+          <li>#4 <ProfileLink href={pl("Hayden Smith", "White Oak", "2028")} className={linkClass}>Hayden Smith</ProfileLink> (White Oak, 2028) — 2ND</li>
+          <li>#18 <ProfileLink href={pl("Jacob De La Torre", "Union Pines", "2028")} className={linkClass}>Jacob De La Torre</ProfileLink> (Union Pines, 2028) — 3RD</li>
         </ul>
         <p>Oakley (#27) defeated higher-ranked Smith (#4) decisively 9-2 in the finals. All three ranked wrestlers placed top-3, with Smith and De La Torre both navigating a bracket knowing they&apos;d face ranked opponents.</p>
       </BracketSection>
@@ -242,73 +231,73 @@ export function UnderstandingBracketDepth2026Content() {
       <h3>1. Tye Johnson (Cape Fear, 7A 138) — Class of 2027</h3>
       <p><strong>Ranked opponents faced at states: 2</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #9 <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</ProfileLink> (Dec 4-1) in semifinals</li>
-        <li>Beat #17 <ProfileLink href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Aidan Szewczyk</ProfileLink> (MD 18-5) in finals</li>
+        <li>Beat #9 <ProfileLink href={pl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</ProfileLink> (Dec 4-1) in semifinals</li>
+        <li>Beat #17 <ProfileLink href={pl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Aidan Szewczyk</ProfileLink> (MD 18-5) in finals</li>
       </ul>
-      <p><strong>The only champion to face 2 ranked opponents at the state tournament.</strong> All four ranked wrestlers in the ELITE bracket placed 1-2-3-4. <ProfileLink href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Tye</ProfileLink> defeated two of them to claim his title and moved from #3 to #1 in Class of 2027 rankings.</p>
+      <p><strong>The only champion to face 2 ranked opponents at the state tournament.</strong> All four ranked wrestlers in the ELITE bracket placed 1-2-3-4. <ProfileLink href={pl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Tye</ProfileLink> defeated two of them to claim his title and moved from #3 to #1 in Class of 2027 rankings.</p>
 
       <h3>2. Aidan Gore (Garner, 7A 157) — Class of 2027</h3>
       <p><strong>Ranked opponents faced: 2</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #29 <ProfileLink href={profileUrl("Elliott Gould", "Davie", "2026")} className={linkClass}>Elliott Gould</ProfileLink> (Dec 7-0) in semifinals</li>
-        <li>Beat #13 <ProfileLink href={profileUrl("Jacob McCord", "Grimsley", "2027")} className={linkClass}>Jacob McCord</ProfileLink> (Dec 1-0) in finals</li>
+        <li>Beat #29 <ProfileLink href={pl("Elliott Gould", "Davie", "2026")} className={linkClass}>Elliott Gould</ProfileLink> (Dec 7-0) in semifinals</li>
+        <li>Beat #13 <ProfileLink href={pl("Jacob McCord", "Grimsley", "2027")} className={linkClass}>Jacob McCord</ProfileLink> (Dec 1-0) in finals</li>
       </ul>
       <p>Finals decided by a single point. Both ranked opponents defeated on the path to gold.</p>
 
       <h3>3. Carson Worrick (Davie, 7A 165) — Class of 2027</h3>
       <p><strong>Ranked opponents faced: 2</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #29 <ProfileLink href={profileUrl("John Bane", "New Bern", "2027")} className={linkClass}>John Bane</ProfileLink> in semifinals</li>
-        <li>Beat #3 <ProfileLink href={profileUrl("Ryan Thompson", "Cardinal Gibbons", "2028")} className={linkClass}>Ryan Thompson</ProfileLink> (Dec 7-6) in finals</li>
+        <li>Beat #29 <ProfileLink href={pl("John Bane", "New Bern", "2027")} className={linkClass}>John Bane</ProfileLink> in semifinals</li>
+        <li>Beat #3 <ProfileLink href={pl("Ryan Thompson", "Cardinal Gibbons", "2028")} className={linkClass}>Ryan Thompson</ProfileLink> (Dec 7-6) in finals</li>
       </ul>
       <p><strong>Beat a higher-ranked opponent (#3) in a close finals match.</strong> Thompson was ranked #3 in Class of 2028 and a 2025 NHSCA All-American.</p>
 
       <h3>4. Andrew Davis (Davie, 7A 150) — Class of 2026</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #1 <ProfileLink href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Aaron Ellison</ProfileLink> (SV-1 20-17) in finals</li>
+        <li>Beat #1 <ProfileLink href={pl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Aaron Ellison</ProfileLink> (SV-1 20-17) in finals</li>
       </ul>
       <p><strong>Defeated the #1 ranked wrestler in Class of 2028 in sudden victory.</strong> Ellison was a 2025 NHSCA All-American who entered states 51-1. This was the most impressive single victory of the tournament.</p>
 
       <h3>5. Gavin Yow (A.L. Brown, 7A 190) — Class of 2026</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #14 <ProfileLink href={profileUrl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Sam Harper</ProfileLink> (Dec 4-2) in finals</li>
+        <li>Beat #14 <ProfileLink href={pl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Sam Harper</ProfileLink> (Dec 4-2) in finals</li>
       </ul>
       <p>Harper entered the match 54-2. The finals was decided by two points after an extremely competitive match. ELITE bracket with 4 ranked wrestlers.</p>
 
       <h3>6. Elijah Oakley (Piedmont, 6A 150) — Class of 2026</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #4 <ProfileLink href={profileUrl("Hayden Smith", "White Oak", "2028")} className={linkClass}>Hayden Smith</ProfileLink> (Dec 9-2) in finals</li>
+        <li>Beat #4 <ProfileLink href={pl("Hayden Smith", "White Oak", "2028")} className={linkClass}>Hayden Smith</ProfileLink> (Dec 9-2) in finals</li>
       </ul>
       <p><strong>Ranked #27, defeated the #4 ranked wrestler in Class of 2028.</strong> Overcame a 23-rank gap to win decisively.</p>
 
       <h3>7. Jose Trejo (Surry Central, 3A 120) — Class of 2026</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #13 <ProfileLink href={profileUrl("Stephen Cross", "Surry Central", "2028")} className={linkClass}>Stephen Cross</ProfileLink> (TB-1 13-12) in finals</li>
+        <li>Beat #13 <ProfileLink href={pl("Stephen Cross", "Surry Central", "2028")} className={linkClass}>Stephen Cross</ProfileLink> (TB-1 13-12) in finals</li>
       </ul>
       <p><strong>Won in a tiebreaker.</strong> Went 45-0 on the season, defeating a ranked 2028 prospect in the closest possible match.</p>
 
       <h3>8. Lorenzo Alston (Uwharrie Charter, 4A 175) — Class of 2026</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #25 <ProfileLink href={profileUrl("Jacob Reigel", "Uwharrie Charter", "2026")} className={linkClass}>Jacob Reigel</ProfileLink> (Dec 8-1) in finals</li>
+        <li>Beat #25 <ProfileLink href={pl("Jacob Reigel", "Uwharrie Charter", "2026")} className={linkClass}>Jacob Reigel</ProfileLink> (Dec 8-1) in finals</li>
       </ul>
       <p>Controlled match against a Lynchburg commit who entered 49-1. Went 48-0 on the season after the 7-division system moved Uwharrie Charter from 1A to 4A.</p>
 
       <h3>9. Cameron Gue (Mount Pleasant, 4A 132) — Class of 2026</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #16 <ProfileLink href={profileUrl("Christian Riddick", "Mount Pleasant", "2028")} className={linkClass}>Christian Riddick</ProfileLink> (Fall 3:29) in finals</li>
+        <li>Beat #16 <ProfileLink href={pl("Christian Riddick", "Mount Pleasant", "2028")} className={linkClass}>Christian Riddick</ProfileLink> (Fall 3:29) in finals</li>
       </ul>
       <p>Went 60-1 on the season. Dominated a ranked 2028 prospect en route to his second state title.</p>
 
       <h3>10. Jekai Sedgwick (Hoke, 8A 120) — Class of 2027</h3>
       <p><strong>Ranked opponents faced: 1</strong></p>
       <ul className="list-disc pl-6 my-2 space-y-1">
-        <li>Beat #17 <ProfileLink href={profileUrl("Adrian Feliciano", "Hoke", "2028")} className={linkClass}>Adrian Feliciano</ProfileLink> (Fall 1:54) in finals</li>
+        <li>Beat #17 <ProfileLink href={pl("Adrian Feliciano", "Hoke", "2028")} className={linkClass}>Adrian Feliciano</ProfileLink> (Fall 1:54) in finals</li>
       </ul>
       <p>Went 38-0 on the season. Pinned a ranked 2028 opponent in under two minutes to claim his first state title.</p>
 

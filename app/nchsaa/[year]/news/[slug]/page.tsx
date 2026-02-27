@@ -2,16 +2,11 @@ import { notFound } from "next/navigation"
 import { getArticle } from "../articles"
 import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brackets-784-qualifiers"
 import { UnderstandingBracketDepth2026Content } from "../content/understanding-bracket-depth-2026"
+import { getArticle2ProfileIdMap } from "../content/article-2-profile-ids"
 import { ThreeJoinTheImmortals2026Content } from "../content/three-join-the-immortals-2026"
 import { BackToYearLink } from "../back-to-year-link"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
-
-const ARTICLE_CONTENT: Record<string, () => JSX.Element> = {
-  "seven-divisions-98-brackets-784-qualifiers": SevenDivisionsArticleContent,
-  "article-2": UnderstandingBracketDepth2026Content,
-  "three-join-the-immortals-2026": ThreeJoinTheImmortals2026Content,
-}
 
 export async function generateStaticParams() {
   return [
@@ -30,7 +25,12 @@ export default async function NCHSAAArticlePage({
   const article = getArticle(slug)
   if (!article) notFound()
 
-  const ContentComponent = ARTICLE_CONTENT[slug]
+  const profileIdMap = slug === "article-2" ? await getArticle2ProfileIdMap() : {}
+
+  let content: JSX.Element | null = null
+  if (slug === "seven-divisions-98-brackets-784-qualifiers") content = <SevenDivisionsArticleContent />
+  else if (slug === "article-2") content = <UnderstandingBracketDepth2026Content profileIdMap={profileIdMap} />
+  else if (slug === "three-join-the-immortals-2026") content = <ThreeJoinTheImmortals2026Content />
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -45,10 +45,10 @@ export default async function NCHSAAArticlePage({
             <p className="text-slate-500 text-sm mt-2">{new Date(article.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
           )}
         </header>
-        {article.published && ContentComponent ? (
+        {article.published && content ? (
           <>
             <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">
-              <ContentComponent />
+              {content}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <NchsaaArticleReactions articleSlug={slug} />
               </div>
