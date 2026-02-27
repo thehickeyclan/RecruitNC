@@ -442,19 +442,19 @@ export function NCHSAAYearResultsClient({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             <div className="text-center">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{classifications.length}</div>
-              <div className="text-xs sm:text-sm font-medium text-white/90">Classifications</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Divisions</div>
             </div>
             <div className="text-center">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300 mb-1 sm:mb-2">{classifications.length * 14}</div>
-              <div className="text-xs sm:text-sm font-medium text-white/90">Weight Classes</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Brackets</div>
             </div>
             <div className="text-center">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{stats.totalMedalists}</div>
-              <div className="text-xs sm:text-sm font-medium text-white/90">Medal Winners</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Placers</div>
             </div>
             <div className="text-center col-span-2 md:col-span-1">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{8 * 14 * (classifications.length || 7)}</div>
-              <div className="text-xs sm:text-sm font-medium text-white/90">State Qualifiers</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{classifications.length * 14 * 8}</div>
+              <div className="text-xs sm:text-sm font-medium text-white/90">Qualifiers</div>
             </div>
           </div>
         </div>

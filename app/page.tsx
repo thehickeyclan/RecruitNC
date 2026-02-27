@@ -278,13 +278,7 @@ export default function HomePage() {
           <div className="flex-1 flex flex-col justify-center p-8 md:p-12 lg:p-16">
             <div className="max-w-2xl">
               <h1 className="mb-6 text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-                Recruit
-                <span className="block md:inline">
-                  <span className="underline decoration-4 underline-offset-4" style={{ color: "#D3B574" }}>
-                    NC
-                  </span>{" "}
-                  Portal
-                </span>
+                Recruit<span className="underline decoration-4 underline-offset-4" style={{ color: "#D3B574" }}>NC</span> Portal
               </h1>
               <p className="mb-8 text-lg md:text-xl text-white/95 leading-relaxed max-w-xl">
                 Tracking North Carolina's top wrestling prospects and their college commitments. Stay updated with the
