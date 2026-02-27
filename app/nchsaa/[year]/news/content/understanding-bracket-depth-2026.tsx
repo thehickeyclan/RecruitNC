@@ -1,9 +1,12 @@
+"use client"
+
 /**
  * Optional bracket/podium images. Add paths when you have them; layout reserves space.
  * Keys: "7A-138" | "7A-190" | "7A-150" | "7A-157" | "7A-165" | "6A-150"
  */
 const BRACKET_IMAGES: Record<string, string> = {
   "7A-138": "/images/nchsaa-2026-7a-138-podium.png",
+  "7A-190": "/images/nchsaa-2026-7a-190-podium.png",
   "7A-150": "/images/nchsaa-2026-7a-150-podium.png",
   "7A-157": "/images/nchsaa-2026-7a-157-podium.png",
   "7A-165": "/images/nchsaa-2026-7a-165-podium.png",
@@ -27,8 +30,33 @@ function ProfileLink({
   className: string
   children: React.ReactNode
 }) {
-  if (href) return <a href={href} className={className}>{children}</a>
-  return <span className={className}>{children}</span>
+  if (href) {
+    return (
+      <a
+        href={href}
+        className={`${className} cursor-pointer`}
+        onClick={(e) => {
+          e.preventDefault()
+          window.location.href = href
+        }}
+      >
+        {children}
+      </a>
+    )
+  }
+  return <span className={`${className} cursor-default`}>{children}</span>
+}
+
+/** Force full-page navigation so router/overlays don't block. */
+function useArticleLinkClick() {
+  return (e: React.MouseEvent<HTMLDivElement>) => {
+    const a = (e.target as HTMLElement).closest("a[href^='/']")
+    if (!a || !(e.currentTarget.contains(a))) return
+    const href = a.getAttribute("href")
+    if (!href || href.startsWith("#")) return
+    e.preventDefault()
+    window.location.href = href
+  }
 }
 
 export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profileIdMap: Record<string, string> }) {
@@ -36,8 +64,12 @@ export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profile
     profileIdMap[key(name, school, year)]
       ? `/view-profile?id=${encodeURIComponent(profileIdMap[key(name, school, year)]!)}`
       : null
+  const onArticleClick = useArticleLinkClick()
   return (
-    <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2">
+    <article
+      className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2"
+      onClick={onArticleClick}
+    >
       <p><strong>How bracket strength is measured:</strong></p>
       <p>
         Bracket strength is determined by the number of wrestlers competing who were ranked in NC United&apos;s{" "}
