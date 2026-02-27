@@ -21,6 +21,10 @@ const RANKINGS_HREF = "/public-rankings"
 const linkClass = "text-[#003366] underline hover:no-underline font-medium"
 const linkClassMuted = "text-[#003366] underline hover:no-underline"
 
+/**
+ * BULLETPROOF: Use <button> not <a> for profile links. <a> tags get intercepted by Next/router/overlays
+ * and break (many deploys to fix). See docs/NCHSAA-ARTICLE-LINKS-MUST-USE-BUTTON.md
+ */
 function ProfileLink({
   href,
   className,
@@ -32,31 +36,28 @@ function ProfileLink({
 }) {
   if (href) {
     return (
-      <a
-        href={href}
-        className={`${className} cursor-pointer`}
-        onClick={(e) => {
-          e.preventDefault()
+      <button
+        type="button"
+        className={`${className} cursor-pointer bg-transparent border-0 p-0 font-inherit inline text-left`}
+        onClick={() => {
           window.location.href = href
         }}
       >
         {children}
-      </a>
+      </button>
     )
   }
   return <span className={`${className} cursor-default`}>{children}</span>
 }
 
-/** Force full-page navigation so router/overlays don't block. */
-function useArticleLinkClick() {
-  return (e: React.MouseEvent<HTMLDivElement>) => {
-    const a = (e.target as HTMLElement).closest("a[href^='/']")
-    if (!a || !(e.currentTarget.contains(a))) return
-    const href = a.getAttribute("href")
-    if (!href || href.startsWith("#")) return
-    e.preventDefault()
-    window.location.href = href
-  }
+/** Same-window nav for any <a> in article (rankings, other articles). */
+function onArticleLinkClick(e: React.MouseEvent<HTMLDivElement>) {
+  const a = (e.target as HTMLElement).closest("a[href^='/']")
+  if (!a || !(e.currentTarget.contains(a))) return
+  const href = a.getAttribute("href")
+  if (!href || href.startsWith("#")) return
+  e.preventDefault()
+  window.location.href = href
 }
 
 export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profileIdMap: Record<string, string> }) {
@@ -64,11 +65,10 @@ export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profile
     profileIdMap[key(name, school, year)]
       ? `/view-profile?id=${encodeURIComponent(profileIdMap[key(name, school, year)]!)}`
       : null
-  const onArticleClick = useArticleLinkClick()
   return (
     <article
       className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2"
-      onClick={onArticleClick}
+      onClick={onArticleLinkClick}
     >
       <p><strong>How bracket strength is measured:</strong></p>
       <p>
