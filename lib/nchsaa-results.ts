@@ -199,6 +199,72 @@ export async function getNCHSAAResultsForProfile(
   })
 }
 
+/**
+ * Fetch all 2026 NCHSAA results in one query. Use with getPlacement2026FromRows to avoid N+1 queries.
+ */
+export async function getAll2026Results(supabase: SupabaseClient): Promise<NchsaaRowForProfile[]> {
+  const { data, error } = await supabase
+    .from("wrestling_nchsaa_results")
+    .select("year, classification, weight_class, place, school, wrestler_name")
+    .eq("year", 2026)
+    .order("classification")
+    .order("weight_class")
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    year: Number(row.year),
+    classification: (row.classification ?? "").toString(),
+    weight_class: (row.weight_class ?? "").toString(),
+    place: row.place != null ? Number(row.place) : null,
+    school: (row.school ?? "").toString(),
+    wrestler_name: (row.wrestler_name ?? "").toString(),
+  }))
+}
+
+/** Format a single 2026 placement for display (e.g. "1st 2A 132", "SQ"). */
+export function formatPlacement2026(
+  place: number | null,
+  classification: string,
+  weightClass: string
+): string {
+  if (place == null || place === 0) return "SQ"
+  const ord = place === 1 ? "1st" : place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
+  return `${ord} ${classification} ${weightClass}`
+}
+
+/**
+ * Compute 2026 placement string for one athlete from preloaded 2026 rows (no DB calls).
+ * Uses same name-matching and placer-over-SQ logic as getNCHSAAResultsForProfile.
+ */
+export function getPlacement2026FromRows(
+  rows2026: NchsaaRowForProfile[],
+  athleteName: string,
+  graduationYear?: number
+): string | null {
+  const name = (athleteName ?? "").trim()
+  if (!name) return null
+  const yearRange = graduationYear ? plausibleNchsaaYearsForGradYear(graduationYear) : null
+  if (yearRange && (2026 < yearRange.min || 2026 > yearRange.max)) return null
+  const variations = getNameVariations(name)
+  const rowLower = (s: string) => (s ?? "").toLowerCase()
+  const matched = rows2026.filter((row) => {
+    const wn = rowLower(row.wrestler_name)
+    return variations.some((v) => wn.includes(rowLower(v)) || rowLower(v).includes(wn))
+  })
+  if (matched.length === 0) return null
+  const placerKeys = new Set(
+    matched.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.classification}-${r.weight_class}`)
+  )
+  const filtered = matched.filter((r) => {
+    if (r.place != null && r.place === 0) {
+      if (placerKeys.has(`${r.classification}-${r.weight_class}`)) return false
+    }
+    return true
+  })
+  const best = filtered.sort((a, b) => (a.place ?? 99) - (b.place ?? 99))[0]
+  if (!best) return null
+  return formatPlacement2026(best.place, best.classification, best.weight_class)
+}
+
 /** Merge two NCHSAA result lists (e.g. from name + wrestling_name), dedupe by year/classification/weight. */
 export function mergeNchsaaResults(
   a: NchsaaRowForProfile[],

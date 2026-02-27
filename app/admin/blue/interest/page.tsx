@@ -376,7 +376,7 @@ alter table public.blue_express_interest
                 {zeroRowsHint && (
                   <div className="max-w-xl mx-auto rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                     <p className="font-medium">Seeing zero rows but you have data in Supabase?</p>
-                    <p className="mt-2">In <strong>Vercel → Project → Settings → Environment Variables</strong>, set <code className="bg-amber-100 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> to the <strong>service role</strong> key (Supabase Dashboard → Settings → API → <code className="bg-amber-100 px-1 rounded">service_role</code> secret), not the anon key. Use the same Supabase project as your data. Then redeploy and refresh.</p>
+                    <p className="mt-2">In <strong>Vercel → Project → Settings → Environment Variables</strong>, set <code className="bg-amber-100 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code> or <code className="bg-amber-100 px-1 rounded">SUPABASE_SERVICE_ROLE_KEY_OVERRIDE</code> to the <strong>service role</strong> key (Supabase Dashboard → Settings → API → <code className="bg-amber-100 px-1 rounded">service_role</code> secret), not the anon key. Use the same Supabase project as your data. Then redeploy and refresh.</p>
                   </div>
                 )}
               </div>

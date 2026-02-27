@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
+import { getAll2026Results, getPlacement2026FromRows } from "@/lib/nchsaa-results"
 
 export const dynamic = "force-dynamic"
 
@@ -9,19 +9,17 @@ function normalizeNameForMatch(first: string, last: string): string {
   return `${(first ?? "").trim().toLowerCase()} ${(last ?? "").trim().toLowerCase()}`
 }
 
-function formatPlacement2026(place: number | null, classification: string, weightClass: string): string {
-  if (place == null || place === 0) return "SQ"
-  const ord = place === 1 ? "1st" : place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-  return `${ord} ${classification} ${weightClass}`
-}
-
-async function requireAdmin() {
+async function requireAdmin(retry = false): Promise<{ ok: true } | { ok: false; status: 401 | 403; error: string }> {
   const supabase = await createClient()
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser()
   if (authError || !user) {
+    if (!retry) {
+      await new Promise((r) => setTimeout(r, 400))
+      return requireAdmin(true)
+    }
     return { ok: false as const, status: 401 as const, error: "Unauthorized" }
   }
   const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
@@ -38,7 +36,21 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
     }
 
-    const adminClient = createAdminClient()
+    let adminClient
+    try {
+      adminClient = createAdminClient()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : ""
+      console.error("[Admin API] blue-express-interest createAdminClient failed:", msg)
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Supabase service role is not configured. In Vercel → Project → Settings → Environment Variables, set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE to the service_role key (Supabase Dashboard → Settings → API), not the anon key. Then redeploy.",
+        },
+        { status: 503 }
+      )
+    }
 
     async function fetchRows(): Promise<{ rows: unknown[]; error: { message: string; code?: string } | null }> {
       const { data, error } = await adminClient
@@ -85,6 +97,14 @@ export async function GET(_request: NextRequest) {
           if (iid) invitesByInterest[iid] = { invite_id: (inv as { id: string }).id, used_at: (inv as { used_at: string | null }).used_at }
         }
       }
+    }
+
+    // Single query for 2026 placements (avoids N+1 and timeouts)
+    let rows2026: Awaited<ReturnType<typeof getAll2026Results>> = []
+    try {
+      rows2026 = await getAll2026Results(adminClient)
+    } catch (e) {
+      console.warn("[Admin API] blue-express-interest getAll2026Results:", e)
     }
 
     // Who actually signed up: blue_signups (by athlete name + grad year) and blue_memberships + athletes
@@ -139,17 +159,11 @@ export async function GET(_request: NextRequest) {
       const enrolledFromSignup = enrolledKeys.has(normalizeNameForMatch(first, last) + "|" + gradYearStr) || (gradYearNum && enrolledKeys.has(normalizeNameForMatch(first, last) + "|" + String(gradYearNum)))
       const enrolled = enrolledFromInvite || enrolledFromSignup
 
-      let placement_2026: string | null = null
-      try {
-        const nchsaa = await getNCHSAAResultsForProfile(adminClient, `${first} ${last}`.trim(), gradYearNum || undefined)
-        const for2026 = nchsaa.filter((r) => r.year === 2026)
-        if (for2026.length > 0) {
-          const best = for2026.sort((a, b) => (a.place ?? 99) - (b.place ?? 99))[0]
-          placement_2026 = formatPlacement2026(best.place, best.classification, best.weight_class)
-        }
-      } catch {
-        // ignore per-row NCHSAA errors
-      }
+      const placement_2026 = getPlacement2026FromRows(
+        rows2026,
+        `${first} ${last}`.trim(),
+        gradYearNum || undefined
+      )
 
       submissions.push({
         ...row,
@@ -163,7 +177,7 @@ export async function GET(_request: NextRequest) {
       })
     }
     if (submissions.length === 0) {
-      console.warn("[Admin API] blue_express_interest: 0 rows. If table has data, set SUPABASE_SERVICE_ROLE_KEY to the service role key (not anon) in Vercel for this environment.")
+      console.warn("[Admin API] blue_express_interest: 0 rows. If table has data, set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE to the service role key (not anon) in Vercel for this environment.")
     } else {
       console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
     }
