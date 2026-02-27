@@ -37,6 +37,7 @@ const SAME_PERSON_NAME_ALIASES: string[][] = [
   ["Carter Furman", "Carter Furmann", "Carter Forman"],
   ["Miller Menteer", "Miller Mentzer"],
   ["Nevaeh Williamson", "Nevaeh Willamson"],
+  ["Cam Stinson", "Cameron Stinson"],
 ]
 
 function normalizeForAlias(name: string): string {
@@ -229,11 +230,18 @@ export async function getNCHSAAResults(
   const currentYear = new Date().getFullYear()
   const yearsRemaining = graduationYear - currentYear
 
+  // Use athlete's full high-school window (gradYear-4 .. gradYear) for seniors/graduated so we show all 4 years (e.g. Charlie Sly).
+  // Underclassmen: only search years that could already have results (no future years).
   let yearsToSearch: number[]
   if (yearsRemaining >= 3) yearsToSearch = [currentYear]
   else if (yearsRemaining === 2) yearsToSearch = [currentYear, currentYear - 1]
   else if (yearsRemaining === 1) yearsToSearch = [currentYear, currentYear - 1, currentYear - 2]
-  else yearsToSearch = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3]
+  else {
+    const minY = Math.max(1990, graduationYear - 4)
+    const maxY = Math.min(graduationYear, currentYear)
+    yearsToSearch = []
+    for (let y = minY; y <= maxY; y++) yearsToSearch.push(y)
+  }
 
   const { data: results, error } = await supabase
     .from("wrestling_nchsaa_results")

@@ -12,19 +12,20 @@ async function getNCHSAAResults(supabase: any, athleteName: string, graduationYe
   const currentYear = new Date().getFullYear()
   const yearsRemaining = graduationYear - currentYear
 
-  // Determine how many years back to search based on class
+  // Use athlete's full high-school window (gradYear-4 .. gradYear) for seniors/graduated so we show all 4 years.
+  // Underclassmen: only search years that could already have results (no future years).
   let yearsToSearch: number[]
   if (yearsRemaining >= 3) {
-    // Class of 2028+ (freshmen/younger) - search 1 year back
     yearsToSearch = [currentYear]
   } else if (yearsRemaining === 2) {
-    // Class of 2027 (sophomores) - search 2 years back
     yearsToSearch = [currentYear, currentYear - 1]
   } else if (yearsRemaining === 1) {
     yearsToSearch = [currentYear, currentYear - 1, currentYear - 2]
   } else {
-    // Class of 2025 (seniors) or graduated - search 4 years back
-    yearsToSearch = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3]
+    const minY = Math.max(1990, graduationYear - 4)
+    const maxY = Math.min(graduationYear, currentYear)
+    yearsToSearch = []
+    for (let y = minY; y <= maxY; y++) yearsToSearch.push(y)
   }
 
   const { data: results, error } = await supabase

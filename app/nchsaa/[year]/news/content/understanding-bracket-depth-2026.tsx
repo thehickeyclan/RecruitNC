@@ -20,7 +20,6 @@ const RANKINGS_HREF = "/public-rankings"
 const linkClass = "text-[#003366] underline hover:no-underline font-medium"
 const linkClassMuted = "text-[#003366] underline hover:no-underline"
 
-/** Force full-page navigation so the by-name lookup completes (avoids client-side fetch being canceled). */
 function ProfileLink({
   href,
   className,
@@ -30,23 +29,26 @@ function ProfileLink({
   className: string
   children: React.ReactNode
 }) {
-  return (
-    <a
-      href={href}
-      className={className}
-      onClick={(e) => {
-        e.preventDefault()
-        window.location.href = href
-      }}
-    >
-      {children}
-    </a>
-  )
+  return <a href={href} className={className}>{children}</a>
+}
+
+/** Force full page navigation for all in-app links so nothing (e.g. router/Radix) can intercept. */
+function handleArticleLinkClick(e: React.MouseEvent<HTMLElement>) {
+  const target = e.target as HTMLElement
+  const anchor = target.closest("a")
+  if (!anchor || !e.currentTarget.contains(anchor)) return
+  const href = anchor.getAttribute("href")
+  if (!href || href.startsWith("#") || href.startsWith("//") || !href.startsWith("/")) return
+  e.preventDefault()
+  window.location.href = href
 }
 
 export function UnderstandingBracketDepth2026Content() {
   return (
-    <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2">
+    <article
+      className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2"
+      onClick={handleArticleLinkClick}
+    >
       <p><strong>How bracket strength is measured:</strong></p>
       <p>
         Bracket strength is determined by the number of wrestlers competing who were ranked in NC United&apos;s{" "}
@@ -62,7 +64,7 @@ export function UnderstandingBracketDepth2026Content() {
       </ul>
       <p className="text-sm text-slate-600 italic">
         This data provides context for the broader structural conversation in{" "}
-        <a href="/nchsaa/2026/news/seven-divisions-98-brackets-784-qualifiers" className={linkClassMuted}>&quot;Did North Carolina Wrestling Expand Divisions—But Shrink Our Future?&quot;</a>
+        <a href="/nchsaa/2026/news/seven-divisions-98-brackets-784-qualifiers" className={linkClassMuted}>&quot;Did North Carolina Wrestling Expand Divisions—And Shrink Our Future?&quot;</a>
       </p>
 
       <hr />
@@ -122,8 +124,8 @@ export function UnderstandingBracketDepth2026Content() {
           <li>#9 <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</ProfileLink> (Weddington, 2027) — 3RD</li>
           <li>#8 <ProfileLink href={profileUrl("Jake Amiott", "Topsail", "2028")} className={linkClass}>Jake Amiott</ProfileLink> (Topsail, 2028) — 4TH</li>
         </ol>
-        <p><ProfileLink href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Johnson</ProfileLink> defeated <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>White</ProfileLink> and <ProfileLink href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Szewczyk</ProfileLink> at states to win the title (he had beaten <ProfileLink href={profileUrl("Jake Amiott", "Topsail", "2028")} className={linkClass}>Amiott</ProfileLink> at the 7A East regional finals the week prior). All four ranked wrestlers placed exactly where seeded—a testament to the depth and quality of competition in this bracket.</p>
-        <p><strong>What this bracket required:</strong> Every wrestler faced multiple ranked opponents. To win, Johnson navigated through two ranked opponents at states after having beaten a third at regionals. To place, every wrestler had to defeat or compete closely with other elite talent. This is what deep competitive brackets look like.</p>
+        <p><ProfileLink href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Johnson</ProfileLink> defeated <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>White</ProfileLink> and <ProfileLink href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Szewczyk</ProfileLink> at states to win the title. All four ranked wrestlers placed exactly where seeded—a testament to the depth and quality of competition in this bracket.</p>
+        <p><strong>What this bracket required:</strong> Every wrestler faced multiple ranked opponents. To win, Johnson navigated through two ranked opponents at states. To place, every wrestler had to defeat or compete closely with other elite talent. This is what deep competitive brackets look like.</p>
       </BracketSection>
 
       <BracketSection imageKey="7A-190" title="7A 190 lbs">
@@ -207,10 +209,8 @@ export function UnderstandingBracketDepth2026Content() {
         <li>The wrestler who knew moving weight classes would give them a better shot at gold—and stayed anyway.</li>
       </ul>
       <p>That&apos;s the difference between circumstance and choice.</p>
-      <div className="my-6 rounded-xl bg-amber-50 border-l-4 border-amber-500 p-4 sm:p-5">
-        <p className="text-lg font-bold text-slate-800">Most wrestlers in light brackets didn&apos;t choose easy paths. The 7-division system created 80+ light brackets—most athletes are just wrestling where they naturally belong.</p>
-        <p className="text-slate-700 mt-2"><strong>But iron men chose resistance when ease was available.</strong></p>
-      </div>
+      <p>Most wrestlers in light brackets didn&apos;t choose easy paths. The 7-division system created 80+ light brackets—most athletes are just wrestling where they naturally belong.</p>
+      <p><strong>But iron men chose resistance when ease was available.</strong></p>
       <p>They chose growth over guaranteed outcomes. They chose to test themselves when they could have taken the safer route.</p>
       <p>Wrestling teaches that growth comes from difficulty. You don&apos;t get stronger lifting light weights. You don&apos;t get better wrestling easy opponents.</p>
       <p><strong>Iron men understand this—and make choices accordingly.</strong></p>
@@ -230,6 +230,96 @@ export function UnderstandingBracketDepth2026Content() {
       <p>For college programs building rosters, iron men who seek competitive resistance are easier to project. They&apos;ve already proven they belong in deep fields.</p>
       <p>This is why performance at national events has become increasingly important for North Carolina wrestlers. College coaches need to see how athletes perform when the bracket is stacked.</p>
       <p>The iron men in ELITE and STRONG brackets already provided that proof at states.</p>
+      <p>But who faced the absolute toughest path to gold? Let&apos;s look at the data.</p>
+
+      <hr />
+
+      <h2>The Toughest Roads to Gold</h2>
+      <p>Not all state championships are created equal.</p>
+      <p>Some champions faced zero ranked opponents. Others had to defeat multiple elite wrestlers just to reach the finals.</p>
+      <p><strong>Here are the 10 toughest paths to a 2026 state title:</strong></p>
+
+      <h3>1. Tye Johnson (Cape Fear, 7A 138) — Class of 2027</h3>
+      <p><strong>Ranked opponents faced at states: 2</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #9 <ProfileLink href={profileUrl("Aiden White", "Weddington", "2027")} className={linkClass}>Aiden White</ProfileLink> (Dec 4-1) in semifinals</li>
+        <li>Beat #17 <ProfileLink href={profileUrl("Aidan Szewczyk", "Davie", "2027")} className={linkClass}>Aidan Szewczyk</ProfileLink> (MD 18-5) in finals</li>
+      </ul>
+      <p><strong>The only champion to face 2 ranked opponents at the state tournament.</strong> All four ranked wrestlers in the ELITE bracket placed 1-2-3-4. <ProfileLink href={profileUrl("Tye Johnson", "Cape Fear", "2027")} className={linkClass}>Tye</ProfileLink> defeated two of them to claim his title and moved from #3 to #1 in Class of 2027 rankings.</p>
+
+      <h3>2. Aidan Gore (Garner, 7A 157) — Class of 2027</h3>
+      <p><strong>Ranked opponents faced: 2</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #29 <ProfileLink href={profileUrl("Elliott Gould", "Davie", "2026")} className={linkClass}>Elliott Gould</ProfileLink> (Dec 7-0) in semifinals</li>
+        <li>Beat #13 <ProfileLink href={profileUrl("Jacob McCord", "Grimsley", "2027")} className={linkClass}>Jacob McCord</ProfileLink> (Dec 1-0) in finals</li>
+      </ul>
+      <p>Finals decided by a single point. Both ranked opponents defeated on the path to gold.</p>
+
+      <h3>3. Carson Worrick (Davie, 7A 165) — Class of 2027</h3>
+      <p><strong>Ranked opponents faced: 2</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #29 <ProfileLink href={profileUrl("John Bane", "New Bern", "2027")} className={linkClass}>John Bane</ProfileLink> in semifinals</li>
+        <li>Beat #3 <ProfileLink href={profileUrl("Ryan Thompson", "Cardinal Gibbons", "2028")} className={linkClass}>Ryan Thompson</ProfileLink> (Dec 7-6) in finals</li>
+      </ul>
+      <p><strong>Beat a higher-ranked opponent (#3) in a close finals match.</strong> Thompson was ranked #3 in Class of 2028 and a 2025 NHSCA All-American.</p>
+
+      <h3>4. Andrew Davis (Davie, 7A 150) — Class of 2026</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #1 <ProfileLink href={profileUrl("Aaron Ellison", "Lumberton", "2028")} className={linkClass}>Aaron Ellison</ProfileLink> (SV-1 20-17) in finals</li>
+      </ul>
+      <p><strong>Defeated the #1 ranked wrestler in Class of 2028 in sudden victory.</strong> Ellison was a 2025 NHSCA All-American who entered states 51-1. This was the most impressive single victory of the tournament.</p>
+
+      <h3>5. Gavin Yow (A.L. Brown, 7A 190) — Class of 2026</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #14 <ProfileLink href={profileUrl("Sam Harper", "South Iredell", "2026")} className={linkClass}>Sam Harper</ProfileLink> (Dec 4-2) in finals</li>
+      </ul>
+      <p>Harper entered the match 54-2. The finals was decided by two points after an extremely competitive match. ELITE bracket with 4 ranked wrestlers.</p>
+
+      <h3>6. Elijah Oakley (Piedmont, 6A 150) — Class of 2026</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #4 <ProfileLink href={profileUrl("Hayden Smith", "White Oak", "2028")} className={linkClass}>Hayden Smith</ProfileLink> (Dec 9-2) in finals</li>
+      </ul>
+      <p><strong>Ranked #27, defeated the #4 ranked wrestler in Class of 2028.</strong> Overcame a 23-rank gap to win decisively.</p>
+
+      <h3>7. Jose Trejo (Surry Central, 3A 120) — Class of 2026</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #13 <ProfileLink href={profileUrl("Stephen Cross", "Surry Central", "2028")} className={linkClass}>Stephen Cross</ProfileLink> (TB-1 13-12) in finals</li>
+      </ul>
+      <p><strong>Won in a tiebreaker.</strong> Went 45-0 on the season, defeating a ranked 2028 prospect in the closest possible match.</p>
+
+      <h3>8. Lorenzo Alston (Uwharrie Charter, 4A 175) — Class of 2026</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #25 <ProfileLink href={profileUrl("Jacob Reigel", "Uwharrie Charter", "2026")} className={linkClass}>Jacob Reigel</ProfileLink> (Dec 8-1) in finals</li>
+      </ul>
+      <p>Controlled match against a Lynchburg commit who entered 49-1. Went 48-0 on the season after the 7-division system moved Uwharrie Charter from 1A to 4A.</p>
+
+      <h3>9. Cameron Gue (Mount Pleasant, 4A 132) — Class of 2026</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #16 <ProfileLink href={profileUrl("Christian Riddick", "Mount Pleasant", "2028")} className={linkClass}>Christian Riddick</ProfileLink> (Fall 3:29) in finals</li>
+      </ul>
+      <p>Went 60-1 on the season. Dominated a ranked 2028 prospect en route to his second state title.</p>
+
+      <h3>10. Jekai Sedgwick (Hoke, 8A 120) — Class of 2027</h3>
+      <p><strong>Ranked opponents faced: 1</strong></p>
+      <ul className="list-disc pl-6 my-2 space-y-1">
+        <li>Beat #17 <ProfileLink href={profileUrl("Adrian Feliciano", "Hoke", "2028")} className={linkClass}>Adrian Feliciano</ProfileLink> (Fall 1:54) in finals</li>
+      </ul>
+      <p>Went 38-0 on the season. Pinned a ranked 2028 opponent in under two minutes to claim his first state title.</p>
+
+      <hr />
+
+      <p><strong>The Pattern:</strong></p>
+      <p>Only three champions faced 2 ranked opponents at states: <strong>Tye Johnson, Aidan Gore, and Carson Worrick</strong>.</p>
+      <p><strong>Most state champions (88 of 98) faced zero or one ranked opponent.</strong></p>
+      <p>When competitive depth varies this dramatically, the meaning of &quot;state champion&quot; varies with it.</p>
+      <p>These ten wrestlers chose to compete at their natural weight, knowing ranked opponents stood in their path. They didn&apos;t avoid competition. They embraced it.</p>
+      <p><strong>That&apos;s what separates iron men from the field.</strong></p>
 
       <hr />
 
