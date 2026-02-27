@@ -66,7 +66,7 @@ export default function AdminBlueMembers2026Page() {
         }
       })
       .catch(() => {
-        setError("Failed to load")
+        setError("Failed to load (timeout or network). Try again.")
         setRows2026([])
         setRowsAllYears([])
         setStatsAllTime(defaultStats)
@@ -241,12 +241,17 @@ export default function AdminBlueMembers2026Page() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
+                <p className="text-sm text-gray-500">Loading tournament data for all Blue members… can take 30–60s.</p>
               </div>
             ) : error ? (
               <div className="py-6 px-4 rounded-lg bg-red-50 border border-red-200">
                 <p className="font-medium text-red-800">{error}</p>
+                <p className="mt-2 text-sm text-red-700">This page loads tournament data for every Blue member; with many members it can take 30–60 seconds.</p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => fetchData()}>
+                  Retry
+                </Button>
               </div>
             ) : rows.length === 0 ? (
               <p className="py-8 text-center text-gray-500">No Blue members found, or no 2026 NCHSAA data.</p>

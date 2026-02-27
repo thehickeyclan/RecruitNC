@@ -20,7 +20,7 @@ export function SevenDivisionsArticleContent() {
           <div className="text-sm font-medium text-slate-600">state qualifiers</div>
         </div>
         <div className="rounded-xl bg-[#003366]/8 border-l-4 border-[#003366] p-4 text-center">
-          <div className="text-2xl sm:text-3xl font-bold text-[#003366]">360+</div>
+          <div className="text-2xl sm:text-3xl font-bold text-[#003366]">392</div>
           <div className="text-sm font-medium text-slate-600">placers</div>
         </div>
         <div className="rounded-xl bg-[#003366]/8 border-l-4 border-[#003366] p-4 text-center">
@@ -65,7 +65,7 @@ export function SevenDivisionsArticleContent() {
       <p>They are asked to evaluate:</p>
       <ul className="my-4 space-y-2">
         <li><strong>784 qualifiers</strong></li>
-        <li><strong>360+ placers</strong></li>
+        <li><strong>392 placers</strong></li>
         <li>Across multiple classifications</li>
         <li>In a two-day window</li>
       </ul>
@@ -91,7 +91,7 @@ export function SevenDivisionsArticleContent() {
       <h2>The Vocabulary Problem</h2>
       <p>State Champion. State Finalist. State Placer. State Qualifier.</p>
       <p>These terms should immediately communicate level and difficulty.</p>
-      <p>When 360+ athletes place, &quot;state placer&quot; requires context. When 98 champions are crowned, &quot;state champion&quot; requires specification.</p>
+      <p>When 392 athletes place, &quot;state placer&quot; requires context. When 98 champions are crowned, &quot;state champion&quot; requires specification.</p>
       <p><strong>When achievement language requires explanation, value dilutes.</strong></p>
       <p>In recruiting, clarity matters. In development, standards matter.</p>
 

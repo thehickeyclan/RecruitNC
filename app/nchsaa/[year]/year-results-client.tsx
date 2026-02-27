@@ -441,19 +441,19 @@ export function NCHSAAYearResultsClient({
           <p className="text-white/90 text-sm mb-6 sm:mb-8">State championship results and highlights</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{classifications.length}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{displayYear === 2026 ? 7 : classifications.length}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Divisions</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-yellow-300 mb-1 sm:mb-2">{classifications.length * 14}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#D3B574] mb-1 sm:mb-2">{displayYear === 2026 ? 98 : classifications.length * 14}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Brackets</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{stats.totalMedalists}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{displayYear === 2026 ? 392 : stats.totalMedalists}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Placers</div>
             </div>
             <div className="text-center col-span-2 md:col-span-1">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{classifications.length * 14 * 8}</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{displayYear === 2026 ? 784 : classifications.length * 14 * 8}</div>
               <div className="text-xs sm:text-sm font-medium text-white/90">Qualifiers</div>
             </div>
           </div>

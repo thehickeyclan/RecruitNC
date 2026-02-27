@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { loadProfileTournamentData } from "@/lib/profile-tournament-data"
 
 export const dynamic = "force-dynamic"
+/** Allow up to 60s so N×loadProfileTournamentData for all Blue members can finish (chunked to avoid burst). */
+export const maxDuration = 60
 
 export type BlueMember2026Row = {
   athlete_id: string
@@ -113,18 +115,25 @@ export async function GET(request: Request) {
   const rows: BlueMember2026Row[] = []
   const champYearsByMember = new Map<string, Set<number>>()
   // NCHSAA from getNCHSAAResultsForProfile has no year filter → all years; 2×/3×/4× = all-time career state titles
-
-  const results = await Promise.all(
-    athletes.map(async (a) => {
-      let data: Awaited<ReturnType<typeof loadProfileTournamentData>> = { nchsaa: [], nhsca: [], super32: [] }
-      try {
-        data = await loadProfileTournamentData(admin, a, { allTime: true })
-      } catch {
-        // table missing or query error
-      }
-      return { a, name: (a.name ?? "").toString().trim(), ...data }
-    })
-  )
+  // Process in chunks to avoid timeout and DB connection burst (many Blue members = many parallel loadProfileTournamentData calls).
+  const CHUNK_SIZE = 12
+  type ResultRow = { a: (typeof athletes)[number]; name: string } & Awaited<ReturnType<typeof loadProfileTournamentData>>
+  const results: ResultRow[] = []
+  for (let i = 0; i < athletes.length; i += CHUNK_SIZE) {
+    const chunk = athletes.slice(i, i + CHUNK_SIZE)
+    const chunkResults = await Promise.all(
+      chunk.map(async (a) => {
+        let data: Awaited<ReturnType<typeof loadProfileTournamentData>> = { nchsaa: [], nhsca: [], super32: [] }
+        try {
+          data = await loadProfileTournamentData(admin, a, { allTime: true })
+        } catch {
+          // table missing or query error
+        }
+        return { a, name: (a.name ?? "").toString().trim(), ...data }
+      })
+    )
+    results.push(...chunkResults)
+  }
 
   const rows2026Only: BlueMember2026Row[] = []
   const rowsAllYears: BlueMember2026Row[] = []
