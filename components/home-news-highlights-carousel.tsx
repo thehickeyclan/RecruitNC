@@ -57,7 +57,7 @@ export function HomeNewsHighlightsCarousel() {
                     src={mainStory.image}
                     alt=""
                     fill
-                    className="object-cover transition-transform group-hover:scale-[1.02]"
+                    className={`object-cover transition-transform group-hover:scale-[1.02] ${mainStory.imagePosition === "top" ? "object-top" : ""}`}
                     sizes="(max-width: 768px) 100vw, 40vw"
                   />
                 ) : (
@@ -79,8 +79,7 @@ export function HomeNewsHighlightsCarousel() {
                 </h3>
                 <p className="mb-3 line-clamp-2 text-sm text-slate-600">{mainStory.summary}</p>
                 <span className="inline-flex items-center text-sm font-medium text-[#003366]">
-                  Read article
-                  <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  Read article →
                 </span>
               </div>
             </div>

@@ -8,6 +8,8 @@ export interface HomeNewsItem {
   summary: string
   href: string
   image?: string
+  /** Use "top" so people/faces stay visible when image is cropped (object-position: top) */
+  imagePosition?: "top" | "center"
   category?: string
   categoryBadgeClass?: string
   readTime?: string
@@ -35,8 +37,9 @@ export const HOME_NEWS_HIGHLIGHTS: HomeNewsItem[] = [
     summary: "How bracket strength is measured and where ranked talent concentrated.",
     href: `/nchsaa/${NCHSAA_YEAR}/news/article-2`,
     image: "/images/nchsaa-2026-7a-138-podium.png",
+    imagePosition: "top",
     category: "DATA & RANKINGS",
-    categoryBadgeClass: "bg-amber-600",
+    categoryBadgeClass: "bg-[#1a2332]",
     readTime: "10 min read",
     date: "2026-02-25",
   },
@@ -46,8 +49,9 @@ export const HOME_NEWS_HIGHLIGHTS: HomeNewsItem[] = [
     summary: "For the first time in nearly four decades, three four-time state champions were crowned in a single year — Cael Dunn, Lorenzo Alston, and Bentley Sly.",
     href: `/nchsaa/${NCHSAA_YEAR}/news/three-join-the-immortals-2026`,
     image: "/images/nchsaa-2026-four-time-champions.png",
+    imagePosition: "top",
     category: "CELEBRATION",
-    categoryBadgeClass: "bg-red-600",
+    categoryBadgeClass: "bg-[#1a2332]",
     readTime: "14 min read",
     date: "2026-02-26",
   },

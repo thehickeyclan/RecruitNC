@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
-import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User, FileText, Clock, ArrowRight } from "lucide-react"
-import { NCHSAA_2026_ARTICLES } from "./news/articles"
+import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User, FileText, Clock, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { NCHSAA_2026_ARTICLES, type NCHSAAArticle } from "./news/articles"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
@@ -73,6 +73,133 @@ function sortClassifications(classes: string[]): string[] {
     return a.localeCompare(b)
   })
   return sorted
+}
+
+/** Carousel: 1 hero + 2 smaller cards; prev/next flips which story is featured. Matches home News layout. */
+function NCHSAA2026ArticleCarousel({ articles, displayYear }: { articles: NCHSAAArticle[]; displayYear: number }) {
+  const [heroIndex, setHeroIndex] = useState(0)
+  const hero = articles[heroIndex]
+  const sideIndices = [(heroIndex + 1) % articles.length, (heroIndex + 2) % articles.length]
+  const sideArticles = sideIndices.map((i) => articles[i])
+
+  const go = (delta: number) => {
+    setHeroIndex((prev) => (prev + delta + articles.length) % articles.length)
+  }
+
+  if (articles.length === 0) return null
+
+  return (
+    <section className="mb-10 sm:mb-12" aria-labelledby="news-perspective">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div className="bg-[#1a2332] text-white rounded-lg px-4 sm:px-6 py-4 sm:py-5 flex-1 sm:flex-initial">
+          <h2 id="news-perspective" className="text-lg sm:text-xl font-bold tracking-tight mb-1">2026 State Championship Series</h2>
+          <p className="text-red-100 text-xs sm:text-sm">Three perspectives on structure, data, and excellence</p>
+        </div>
+        {articles.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              className="rounded-full p-2 border border-slate-300 bg-white shadow-sm hover:bg-slate-50 text-[#003366] transition-colors"
+              aria-label="Previous story"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="text-sm font-medium text-slate-600">
+              {heroIndex + 1} / {articles.length}
+            </span>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              className="rounded-full p-2 border border-slate-300 bg-white shadow-sm hover:bg-slate-50 text-[#003366] transition-colors"
+              aria-label="Next story"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        {/* Hero — same layout as home: image left, content right on md+ */}
+        {hero && hero.published && (
+          <Link
+            href={`/nchsaa/${displayYear}/news/${hero.slug}`}
+            className="group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+          >
+            <div className="grid min-h-[200px] grid-cols-1 md:grid-cols-5">
+              <div className="relative h-48 md:h-auto md:min-h-[220px] md:col-span-2">
+                {hero.image ? (
+                  <Image
+                    src={hero.image}
+                    alt=""
+                    fill
+                    className={`object-cover transition-transform group-hover:scale-[1.02] ${hero.imagePosition === "top" ? "object-top" : ""}`}
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-slate-100" aria-hidden>
+                    <FileText className="h-12 w-12 text-slate-300" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col justify-center p-6 md:col-span-3">
+                {hero.category && (
+                  <span className={`mb-2 inline-block self-start rounded px-2 py-0.5 text-xs font-medium text-white ${hero.categoryBadgeClass ?? "bg-[#1a2332]"}`}>
+                    {hero.category}
+                  </span>
+                )}
+                <h3 className="mb-2 text-xl font-bold text-[#003366] group-hover:underline md:text-2xl">{hero.title}</h3>
+                {hero.subtitle && <p className="mb-3 line-clamp-2 text-sm text-slate-600">{hero.subtitle}</p>}
+                {hero.preview && <p className="mb-3 line-clamp-2 text-sm text-slate-500">{hero.preview}</p>}
+                <span className="inline-flex items-center text-sm font-medium text-[#003366]">Read article →</span>
+              </div>
+            </div>
+          </Link>
+        )}
+
+        {/* Two smaller cards — side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          {sideArticles.filter((a) => a.published).map((article) => (
+            <Link
+              key={article.slug}
+              href={`/nchsaa/${displayYear}/news/${article.slug}`}
+              className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="relative h-36 w-full shrink-0">
+                {article.image ? (
+                  <Image
+                    src={article.image}
+                    alt=""
+                    fill
+                    className={`object-cover transition-transform group-hover:scale-[1.02] ${article.imagePosition === "top" ? "object-top" : ""}`}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-slate-100" aria-hidden>
+                    <FileText className="h-10 w-10 text-slate-300" />
+                  </div>
+                )}
+                {article.category && (
+                  <span className={`absolute left-2 top-2 rounded px-2 py-0.5 text-xs font-medium text-white ${article.categoryBadgeClass ?? "bg-[#1a2332]"}`}>
+                    {article.category}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-1 flex-col p-4">
+                <h4 className="mb-1 line-clamp-2 font-semibold text-[#003366] group-hover:underline">{article.title}</h4>
+                {article.subtitle && <p className="line-clamp-2 text-xs text-slate-600 mb-2">{article.subtitle}</p>}
+                <div className="mt-auto flex items-center justify-between pt-2 border-t border-slate-100">
+                  {article.readTime && <span className="text-xs text-slate-500">{article.readTime}</span>}
+                  <span className="text-sm font-medium text-[#003366]">Read article →</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export function NCHSAAYearResultsClient({
@@ -302,80 +429,7 @@ export function NCHSAAYearResultsClient({
       </div>
 
       {displayYear === 2026 && NCHSAA_2026_ARTICLES.length > 0 && (
-        <section className="mb-10 sm:mb-12" aria-labelledby="news-perspective">
-          <div className="bg-[#1a2332] text-white rounded-lg px-4 sm:px-6 py-4 sm:py-5 mb-6 sm:mb-8">
-            <h2 id="news-perspective" className="text-lg sm:text-xl font-bold tracking-tight mb-1">2026 State Championship Series</h2>
-            <p className="text-red-100 text-xs sm:text-sm">Four perspectives on structure, data, and excellence</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {NCHSAA_2026_ARTICLES.map((article, index) => {
-              const isHero = index === 0
-              const isLast = index === NCHSAA_2026_ARTICLES.length - 1
-              const cardContent = (
-                <>
-                  {article.image && (
-                    <div className={`relative w-full overflow-hidden rounded-t-lg bg-slate-100 ${isHero ? "h-40 md:h-48 -mx-6 -mt-6 md:-mx-8 md:-mt-8" : "h-32 -mx-5 -mt-5"} shrink-0`}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={article.image}
-                        alt=""
-                        className={`h-full w-full object-cover ${article.slug === "three-join-the-immortals-2026" ? "object-top" : ""}`}
-                      />
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    {article.category && article.categoryBadgeClass && (
-                      <span className={`${article.categoryBadgeClass} text-white text-[11px] font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider`}>
-                        {article.category}
-                      </span>
-                    )}
-                    {article.part && <span className="text-xs font-semibold text-slate-500 shrink-0">{article.part}</span>}
-                  </div>
-                  <h3 className={`font-bold text-[#1a2332] leading-tight mb-2 ${isHero ? "text-xl md:text-2xl line-clamp-3" : "text-lg line-clamp-3"}`}>{article.title}</h3>
-                  {article.subtitle && <p className="text-sm text-slate-600 mb-3 line-clamp-2">{article.subtitle}</p>}
-                  {article.preview && <p className={`text-slate-500 flex-grow ${isHero ? "text-sm line-clamp-4 mb-4" : "text-sm line-clamp-3 mb-4"}`}>{article.preview}</p>}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-200 mt-auto">
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
-                      <Clock className="w-4 h-4 shrink-0" aria-hidden />
-                      <span className="font-medium">{article.readTime ?? "—"}</span>
-                      {article.date && (
-                        <span className="text-slate-400">
-                          · {new Date(article.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </span>
-                      )}
-                    </div>
-                    {article.published ? (
-                      <span className="text-sm font-bold text-red-600 group-hover:text-red-700 flex items-center gap-1">
-                        Read More
-                        <ArrowRight className="w-4 h-4 shrink-0 group-hover:translate-x-1 transition-transform" aria-hidden />
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-slate-400">Coming soon</span>
-                    )}
-                  </div>
-                </>
-              )
-              const baseClass = "bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full "
-              const heroClass = baseClass + "p-6 md:p-8 border-l-4 border-l-red-600 " + (article.published ? "hover:-translate-y-0.5 cursor-pointer group" : "opacity-90")
-              const cardClass = baseClass + "p-5 " + (article.published ? "hover:-translate-y-0.5 hover:shadow-lg cursor-pointer group" : "opacity-90")
-              const wrapperClass = isHero ? heroClass : cardClass
-              const gridClass = isHero ? "lg:col-span-2" : isLast ? "lg:col-span-2" : ""
-              if (article.published) {
-                const articleHref = `/nchsaa/${displayYear}/news/${article.slug}`
-                return (
-                  <Link key={article.slug} href={articleHref} className={`${wrapperClass} ${gridClass}`}>
-                    {cardContent}
-                  </Link>
-                )
-              }
-              return (
-                <article key={article.slug} className={`${wrapperClass} ${gridClass}`}>
-                  {cardContent}
-                </article>
-              )
-            })}
-          </div>
-        </section>
+        <NCHSAA2026ArticleCarousel articles={NCHSAA_2026_ARTICLES} displayYear={displayYear} />
       )}
 
       <section className="mb-8 sm:mb-12 rounded-lg overflow-hidden border-2 border-[#C20017]" aria-labelledby="tournament-summary">

@@ -21,6 +21,8 @@ export interface NCHSAAArticle {
   readTime?: string
   /** Optional card image path (e.g. /images/nchsaa-2026-seven-divisions.jpg) */
   image?: string
+  /** Use "top" so people/faces stay visible when image is cropped */
+  imagePosition?: "top" | "center"
 }
 
 export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
@@ -62,7 +64,8 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     preview:
       "Only 14 wrestlers in North Carolina history had achieved it. Never — in nearly four decades — had three done it in the same year. Until February 22, 2026.",
     category: "CELEBRATION",
-    categoryBadgeClass: "bg-red-600",
+    categoryBadgeClass: "bg-[#1a2332]",
+    imagePosition: "top",
     part: "Part 3",
     readTime: "14 min read",
     date: "2026-02-26",
