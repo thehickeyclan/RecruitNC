@@ -127,8 +127,8 @@ function NCHSAA2026ArticleCarousel({ articles, displayYear }: { articles: NCHSAA
             href={`/nchsaa/${displayYear}/news/${hero.slug}`}
             className="group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
-            <div className="grid min-h-[200px] grid-cols-1 md:grid-cols-5">
-              <div className="relative h-48 md:h-auto md:min-h-[220px] md:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-5 md:min-h-[260px]">
+              <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[260px] md:col-span-2">
                 {hero.image ? (
                   <Image
                     src={hero.image}
@@ -164,9 +164,9 @@ function NCHSAA2026ArticleCarousel({ articles, displayYear }: { articles: NCHSAA
             <Link
               key={article.slug}
               href={`/nchsaa/${displayYear}/news/${article.slug}`}
-              className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+              className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md min-h-0"
             >
-              <div className="relative h-36 w-full shrink-0">
+              <div className="relative aspect-[16/10] w-full shrink-0">
                 {article.image ? (
                   <Image
                     src={article.image}
@@ -186,10 +186,10 @@ function NCHSAA2026ArticleCarousel({ articles, displayYear }: { articles: NCHSAA
                   </span>
                 )}
               </div>
-              <div className="flex flex-1 flex-col p-4">
+              <div className="flex flex-1 flex-col min-h-[100px] p-4">
                 <h4 className="mb-1 line-clamp-2 font-semibold text-[#003366] group-hover:underline">{article.title}</h4>
-                {article.subtitle && <p className="line-clamp-2 text-xs text-slate-600 mb-2">{article.subtitle}</p>}
-                <div className="mt-auto flex items-center justify-between pt-2 border-t border-slate-100">
+                {article.subtitle && <p className="line-clamp-2 text-xs text-slate-600 mb-2 flex-1">{article.subtitle}</p>}
+                <div className="mt-auto flex items-center justify-between pt-3 border-t border-slate-100">
                   {article.readTime && <span className="text-xs text-slate-500">{article.readTime}</span>}
                   <span className="text-sm font-medium text-[#003366]">Read article →</span>
                 </div>

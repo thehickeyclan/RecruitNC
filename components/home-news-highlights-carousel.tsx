@@ -132,13 +132,13 @@ function StoryCard({ item }: { item: HomeNewsItem }) {
       className="group flex min-w-[280px] max-w-[320px] flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="flex flex-col">
-        <div className="relative h-36 w-full">
+        <div className="relative aspect-[16/10] w-full shrink-0">
           {item.image ? (
             <Image
               src={item.image}
               alt=""
               fill
-              className="object-cover transition-transform group-hover:scale-[1.02]"
+              className={`object-cover transition-transform group-hover:scale-[1.02] ${item.imagePosition === "top" ? "object-top" : ""}`}
               sizes="320px"
             />
           ) : (
