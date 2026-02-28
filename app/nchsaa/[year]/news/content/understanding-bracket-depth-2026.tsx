@@ -28,24 +28,21 @@ function ProfileLink({
   className,
   children,
 }: {
-  href: string | null
+  href: string
   className: string
   children: React.ReactNode
 }) {
-  if (href) {
-    return (
-      <button
-        type="button"
-        className={`${className} cursor-pointer bg-transparent border-0 p-0 font-inherit inline text-left`}
-        onClick={() => {
-          window.location.href = href
-        }}
-      >
-        {children}
-      </button>
-    )
-  }
-  return <span className={`${className} cursor-default`}>{children}</span>
+  return (
+    <button
+      type="button"
+      className={`${className} cursor-pointer bg-transparent border-0 p-0 font-inherit inline text-left`}
+      onClick={() => {
+        window.location.href = href
+      }}
+    >
+      {children}
+    </button>
+  )
 }
 
 /** Same-window nav for any <a> in article (rankings, other articles). */
@@ -59,10 +56,12 @@ function onArticleLinkClick(e: React.MouseEvent<HTMLDivElement>) {
 }
 
 export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profileIdMap: Record<string, string> }) {
-  const pl = (name: string, school: string, year: string) =>
-    profileIdMap[key(name, school, year)]
-      ? `/view-profile?id=${encodeURIComponent(profileIdMap[key(name, school, year)]!)}`
-      : null
+  const pl = (name: string, school: string, year: string): string => {
+    const id = profileIdMap[key(name, school, year)]
+    if (id) return `/view-profile?id=${encodeURIComponent(id)}`
+    const params = new URLSearchParams({ name: name.trim(), school: school.trim(), year: year.trim() })
+    return `/unified-profile/by-name?${params.toString()}`
+  }
   return (
     <article
       className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-300 [&_th]:bg-slate-100 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-300 [&_td]:px-3 [&_td]:py-2"

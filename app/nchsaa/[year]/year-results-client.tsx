@@ -218,16 +218,6 @@ export function NCHSAAYearResultsClient({
   const [bracketModal, setBracketModal] = useState({ isOpen: false, weightClass: "", classification: "" })
   const [selectedDivision, setSelectedDivision] = useState("")
   const [selectedWeight, setSelectedWeight] = useState("")
-  const [debug, setDebug] = useState<{
-    yearParam: string
-    displayYear: number
-    resultsRowCount: number
-    mowCount: number
-    teamPointsCount: number
-    classifications: string[]
-    error: string | null
-  } | null>(null)
-
   const openBracketModal = (classification: string, weightClass: string) => {
     setBracketModal({ isOpen: true, weightClass, classification })
   }
@@ -255,15 +245,6 @@ export function NCHSAAYearResultsClient({
 
             if (error) {
               console.error("[RecruitNC] NCHSAA fetch error:", error instanceof Error ? error.message : String(error), error)
-              setDebug({
-                yearParam,
-                displayYear,
-                resultsRowCount: 0,
-                mowCount: 0,
-                teamPointsCount: 0,
-                classifications: [],
-                error: error.message ?? String(error),
-              })
               return
             }
 
@@ -314,30 +295,12 @@ export function NCHSAAYearResultsClient({
             const sortedClasses = sortClassifications(Object.keys(groupedData))
             setClassifications(sortedClasses)
             setStats({ totalMedalists, ncUnitedMedalists: ncUnitedCount })
-            setDebug({
-              yearParam,
-              displayYear,
-              resultsRowCount: results?.length ?? 0,
-              mowCount,
-              teamPointsCount: teamPointsResults?.length ?? 0,
-              classifications: sortedClasses,
-              error: null,
-            })
           })(),
           timeoutPromise,
         ])
       } catch (e) {
         const errMsg = e instanceof Error ? e.message : String(e)
         console.error("[RecruitNC] NCHSAA page error:", errMsg, e)
-        setDebug({
-          yearParam,
-          displayYear,
-          resultsRowCount: 0,
-          mowCount: 0,
-          teamPointsCount: 0,
-          classifications: [],
-          error: errMsg,
-        })
       } finally {
         setLoading(false)
       }
@@ -634,17 +597,6 @@ export function NCHSAAYearResultsClient({
           </CardContent>
         </Card>
       </div>
-
-      {debug != null && (
-        <details className="mt-6 border border-amber-200 bg-amber-50 rounded-md overflow-hidden">
-          <summary className="px-4 py-2 cursor-pointer font-medium text-amber-900 bg-amber-100">
-            Debug: NCHSAA {displayYear}
-          </summary>
-          <pre className="p-4 text-xs text-left overflow-auto max-h-60 bg-white border-t border-amber-200">
-            {JSON.stringify(debug, null, 2)}
-          </pre>
-        </details>
-      )}
 
       <TournamentBracketModal
         isOpen={bracketModal.isOpen}

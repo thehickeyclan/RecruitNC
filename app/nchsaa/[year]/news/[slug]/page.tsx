@@ -39,8 +39,7 @@ export default async function NCHSAAArticlePage({
           <BackToYearLink year={year} />
         </div>
         <header className="mb-6">
-          <NchsaaArticleReactions articleSlug={slug} />
-          <h1 className="text-2xl md:text-3xl font-bold text-[#003366] mt-4">{article.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#003366]">{article.title}</h1>
           {article.date && (
             <p className="text-slate-500 text-sm mt-2">{new Date(article.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
           )}
