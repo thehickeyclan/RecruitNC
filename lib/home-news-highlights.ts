@@ -1,6 +1,9 @@
 /**
  * News highlights for the home page carousel.
  * First item = main/featured story; rest = secondary. Links go to actual article pages.
+ *
+ * Part 1 (seven-divisions) uses the bulletproof route so the article always loads:
+ * /article/seven-divisions-98-brackets-784-qualifiers (plain HTML, no React; see docs/ARTICLE-BULLETPROOF-ROUTE.md).
  */
 export interface HomeNewsItem {
   id: string
@@ -24,7 +27,7 @@ export const HOME_NEWS_HIGHLIGHTS: HomeNewsItem[] = [
     id: "seven-divisions",
     title: "Did North Carolina Wrestling Expand Divisions—But Shrink Our Future?",
     summary: "When Structure Shapes Value — Part I: Diagnosis. A two-part conversation about North Carolina's classification system.",
-    href: `/nchsaa/${NCHSAA_YEAR}/news/seven-divisions-98-brackets-784-qualifiers`,
+    href: `/article/seven-divisions-98-brackets-784-qualifiers`,
     image: "/images/nchsaa-2026-seven-divisions.png",
     category: "ANALYSIS",
     categoryBadgeClass: "bg-[#1a2332]",
