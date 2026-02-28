@@ -216,7 +216,9 @@ export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profile
         <span className="text-xs text-slate-400 mt-1 block">Aidan Szewczyk — 138 lbs 7A Finalist</span>
       </figcaption>
       </figure>
-      <p>In a 7-division system where <strong>82% of brackets are LIGHT</strong> (0-1 ranked wrestlers), most athletes compete at their natural weight in their assigned classification. They don&apos;t choose the competitive depth of their bracket. That&apos;s determined by the structure.</p>
+      <p>In a 7-division system where 82% of brackets are LIGHT (0-1 ranked wrestlers), bracket depth isn&apos;t something most wrestlers choose. It&apos;s determined by the structure.</p>
+      <p>The 7-division system created 98 separate weight classes. Ranked talent distributed unevenly across them. Some brackets got depth. Most didn&apos;t.</p>
+      <p>That&apos;s a structural outcome, not an athlete decision.</p>
       <p>If you&apos;re a 150-pounder in 5A and there are no ranked wrestlers at your weight, you didn&apos;t avoid competition. You&apos;re simply wrestling where you belong. You&apos;re a consequence of structural decisions made by leadership.</p>
       <p><strong>But some wrestlers had a choice.</strong></p>
       <p>They could have bumped up a weight class—or dropped down—and faced an easier bracket. Fewer ranked opponents. A clearer path to a state title.</p>
