@@ -42,12 +42,11 @@ function normSchool(s: string) {
   return t.replace(/\./g, "").replace(/\s+/g, " ").trim()
 }
 
+/** Athletes table has name and wrestling_name; firstname/lastname do not exist. */
 function getFullName(row: Record<string, unknown>): string {
   const name = (row.name as string)?.trim()
   if (name) return name
-  const first = (row.firstname ?? row.firstName ?? row.first_name) as string | undefined
-  const last = (row.lastname ?? row.lastName ?? row.last_name) as string | undefined
-  return [first, last].filter(Boolean).join(" ").trim() || ""
+  return (row.wrestling_name as string)?.trim() || ""
 }
 
 function key(name: string, school: string, year: string) {
@@ -61,12 +60,12 @@ export async function getArticle2ProfileIdMap(): Promise<Record<string, string>>
   // Try camelCase first (graduationyear); if empty, try snake_case (graduation_year) for DB compatibility
   let { data: athletes, error } = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+    .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
     .in("graduationyear", years)
   if ((error || !athletes?.length) && supabase) {
     const fallback = await supabase
       .from("athletes")
-      .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+      .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
       .in("graduation_year", years)
     if (fallback.data?.length) {
       athletes = fallback.data
@@ -108,14 +107,14 @@ export async function getArticle2ProfileIdMapDebug(): Promise<{
   const years = [2026, 2027, 2028]
   const res1 = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+    .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
     .in("graduationyear", years)
   const firstQueryCount = res1.data?.length ?? 0
   const firstQueryError = res1.error?.message ?? null
 
   const res2 = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+    .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
     .in("graduation_year", years)
   const fallbackCount = res2.data?.length ?? 0
   const fallbackError = res2.error?.message ?? null

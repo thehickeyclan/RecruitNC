@@ -14,12 +14,11 @@ function normSchool(s: string) {
   return t.replace(/\./g, "").replace(/\s+/g, " ").trim()
 }
 
+/** Athletes table has name and wrestling_name; firstname/lastname do not exist. */
 function getFullName(row: Record<string, unknown>): string {
   const name = (row.name as string)?.trim()
   if (name) return name
-  const first = (row.firstname ?? row.firstName ?? row.first_name) as string | undefined
-  const last = (row.lastname ?? row.lastName ?? row.last_name) as string | undefined
-  return [first, last].filter(Boolean).join(" ").trim() || ""
+  return (row.wrestling_name as string)?.trim() || ""
 }
 
 export default async function UnifiedProfileByNamePage({
@@ -48,12 +47,12 @@ export default async function UnifiedProfileByNamePage({
 
   let { data: athletes, error } = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school")
+    .select("id, name, wrestling_name, highschool, high_school")
     .in("graduationyear", [yearNum, year])
   if ((error || !athletes?.length) && supabase) {
     const fallback = await supabase
       .from("athletes")
-      .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school")
+      .select("id, name, wrestling_name, highschool, high_school")
       .in("graduation_year", [yearNum, year])
     if (fallback.data?.length) {
       athletes = fallback.data
