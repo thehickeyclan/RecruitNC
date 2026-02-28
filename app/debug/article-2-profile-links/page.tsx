@@ -16,6 +16,7 @@ function key(name: string, school: string, year: string) {
 export default async function Article2ProfileLinksDebugPage() {
   const profileIdMap = await getArticle2ProfileIdMap()
   const keys = ARTICLE_2_PROFILE_KEYS
+  const resolvedCount = Object.keys(profileIdMap).length
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -24,6 +25,11 @@ export default async function Article2ProfileLinksDebugPage() {
         <p className="text-gray-600 mb-4">
           Names from the Bracket Depth article. Use &quot;By-name&quot; to test the fallback when ID is missing (e.g. Gavin Yow).
         </p>
+        {resolvedCount === 0 && (
+          <p className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900">
+            No names resolved to IDs yet (map empty). Matching uses name + school + graduation year; &quot;By-name&quot; links still work in the article and here.
+          </p>
+        )}
         <div className="mb-6 flex flex-wrap gap-3">
           <Link
             href="/nchsaa/2026/news/article-2"

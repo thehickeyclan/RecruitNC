@@ -33,6 +33,15 @@ function norm(s: string) {
   return (s || "").trim().replace(/\s+/g, " ").toLowerCase()
 }
 
+/** Normalize school for matching: strip punctuation, "high school", "hs", etc. so "A.L. Brown" matches "AL Brown" or "A. L. Brown HS". */
+function normSchool(s: string) {
+  let t = norm(s)
+  for (const suffix of [" high school", " hs", " high"]) {
+    if (t.endsWith(suffix)) t = t.slice(0, -suffix.length).trim()
+  }
+  return t.replace(/\./g, "").replace(/\s+/g, " ").trim()
+}
+
 function getFullName(row: Record<string, unknown>): string {
   const name = (row.name as string)?.trim()
   if (name) return name
@@ -50,7 +59,7 @@ export async function getArticle2ProfileIdMap(): Promise<Record<string, string>>
   const supabase = createAdminClient()
   const { data: athletes, error } = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, graduationyear")
+    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
     .in("graduationyear", [2026, 2027, 2028])
 
   const map: Record<string, string> = {}
@@ -58,16 +67,16 @@ export async function getArticle2ProfileIdMap(): Promise<Record<string, string>>
 
   for (const [name, school, year] of ARTICLE_2_PROFILE_KEYS) {
     const wantName = norm(name)
-    const wantSchool = norm(school)
+    const wantSchoolNorm = normSchool(school)
     const match = athletes.find((a) => {
       const row = a as Record<string, unknown>
       const full = getFullName(row)
-      const gy = String((row.graduationyear as number) ?? "")
+      const gy = String((row.graduationyear as number) ?? (row.graduation_year as string) ?? "")
       if (gy !== year) return false
       if (norm(full) !== wantName) return false
-      if (!wantSchool) return true
-      const hs = norm((row.highschool as string) || "")
-      return hs === wantSchool || hs.includes(wantSchool) || wantSchool.includes(hs)
+      if (!wantSchoolNorm) return true
+      const hs = normSchool((row.highschool as string) || (row.high_school as string) || "")
+      return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
     })
     if (match) map[key(name, school, year)] = (match as Record<string, unknown>).id as string
   }
