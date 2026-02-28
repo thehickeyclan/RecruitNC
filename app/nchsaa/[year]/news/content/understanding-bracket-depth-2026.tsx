@@ -16,8 +16,6 @@ function key(name: string, school: string, year: string) {
   return `${name}|${school}|${year}`
 }
 
-const RANKINGS_HREF = "/public-rankings"
-
 const linkClass = "text-[#003366] underline hover:no-underline font-medium"
 const linkClassMuted = "text-[#003366] underline hover:no-underline"
 
@@ -73,7 +71,7 @@ export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profile
       <p><strong>How bracket strength is measured:</strong></p>
       <p>
         Bracket strength is determined by the number of wrestlers competing who were ranked in NC United&apos;s{" "}
-        <a href={RANKINGS_HREF} className={linkClass}>Pre-State College Prospect Rankings</a>{" "}
+        <strong>Pre-State College Prospect Rankings</strong>{" "}
         (Class of 2026 Top 30, Class of 2027 Top 30, Class of 2028 Top 20). 77 of the 80 ranked wrestlers competed at states.
       </p>
       <p><strong>Bracket classifications:</strong></p>
@@ -346,7 +344,7 @@ export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profile
 
       <h2>What This Reveals</h2>
       <p><strong>Where ranked talent concentrated:</strong></p>
-      <p>While 7A had the most ranked wrestlers of any single division (26 ranked wrestlers), the majority of ranked talent came from 6A and below (68% according to the full <a href={RANKINGS_HREF} className={linkClass}>prospect rankings</a>). This distribution aligns with North Carolina&apos;s developmental landscape where elite talent emerges from programs across all school sizes, not just the largest classifications.</p>
+      <p>While 7A had the most ranked wrestlers of any single division (26 ranked wrestlers), the majority of ranked talent came from 6A and below (68% according to the full prospect rankings). This distribution aligns with North Carolina&apos;s developmental landscape where elite talent emerges from programs across all school sizes, not just the largest classifications.</p>
       <p><strong>Context for evaluation:</strong></p>
       <p>Understanding bracket composition helps provide context for individual performances and offers insight into where the state&apos;s competitive depth exists. For wrestlers pursuing college opportunities, this data illustrates why performance at national events has become increasingly important for evaluation.</p>
       <p><strong>The structural question:</strong></p>
@@ -364,7 +362,7 @@ export function UnderstandingBracketDepth2026Content({ profileIdMap }: { profile
       <hr />
 
       <p className="text-sm text-slate-500 italic">
-        Data compiled from NC United Wrestling&apos;s pre-state <a href={RANKINGS_HREF} className={linkClassMuted}>rankings</a> and 2026 state championship results.
+        Data compiled from NC United Wrestling&apos;s pre-state rankings and 2026 state championship results.
       </p>
       <p className="font-medium text-[#003366] mt-6">
         <strong>Continue to Part 3:</strong> <a href="/nchsaa/2026/news/three-join-the-immortals-2026" className="underline hover:no-underline text-[#003366]">Three Join the Immortals: North Carolina&apos;s Historic 2026 Four-Time State Champions</a>
