@@ -45,14 +45,15 @@ export default async function UnifiedProfileByNamePage({
 
   const supabase = createAdminClient()
 
+  // Select only columns that exist (no high_school)
   let { data: athletes, error } = await supabase
     .from("athletes")
-    .select("id, name, wrestling_name, highschool, high_school")
+    .select("id, name, wrestling_name, highschool")
     .in("graduationyear", [yearNum, year])
   if ((error || !athletes?.length) && supabase) {
     const fallback = await supabase
       .from("athletes")
-      .select("id, name, wrestling_name, highschool, high_school")
+      .select("id, name, wrestling_name, highschool")
       .in("graduation_year", [yearNum, year])
     if (fallback.data?.length) {
       athletes = fallback.data
@@ -82,7 +83,7 @@ export default async function UnifiedProfileByNamePage({
     const full = getFullName(row)
     if (norm(full) !== wantName) return false
     if (!wantSchoolNorm) return true
-    const hs = normSchool((row.highschool as string) || (row.high_school as string) || "")
+    const hs = normSchool((row.highschool as string) || "")
     return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
   })
 

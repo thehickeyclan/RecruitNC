@@ -58,14 +58,15 @@ export async function getArticle2ProfileIdMap(): Promise<Record<string, string>>
   const supabase = createAdminClient()
   const years = [2026, 2027, 2028]
   // Try camelCase first (graduationyear); if empty, try snake_case (graduation_year) for DB compatibility
+  // Select only columns that exist: highschool, graduationyear (no high_school / graduation_year)
   let { data: athletes, error } = await supabase
     .from("athletes")
-    .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
+    .select("id, name, wrestling_name, highschool, graduationyear")
     .in("graduationyear", years)
   if ((error || !athletes?.length) && supabase) {
     const fallback = await supabase
       .from("athletes")
-      .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
+      .select("id, name, wrestling_name, highschool, graduationyear")
       .in("graduation_year", years)
     if (fallback.data?.length) {
       athletes = fallback.data
@@ -82,11 +83,11 @@ export async function getArticle2ProfileIdMap(): Promise<Record<string, string>>
     const match = athletes.find((a) => {
       const row = a as Record<string, unknown>
       const full = getFullName(row)
-      const gy = String((row.graduationyear as number) ?? (row.graduation_year as string) ?? "")
+      const gy = String((row.graduationyear as number) ?? "")
       if (gy !== year) return false
       if (norm(full) !== wantName) return false
       if (!wantSchoolNorm) return true
-      const hs = normSchool((row.highschool as string) || (row.high_school as string) || "")
+      const hs = normSchool((row.highschool as string) || "")
       return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
     })
     if (match) map[key(name, school, year)] = (match as Record<string, unknown>).id as string
@@ -107,14 +108,14 @@ export async function getArticle2ProfileIdMapDebug(): Promise<{
   const years = [2026, 2027, 2028]
   const res1 = await supabase
     .from("athletes")
-    .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
+    .select("id, name, wrestling_name, highschool, graduationyear")
     .in("graduationyear", years)
   const firstQueryCount = res1.data?.length ?? 0
   const firstQueryError = res1.error?.message ?? null
 
   const res2 = await supabase
     .from("athletes")
-    .select("id, name, wrestling_name, highschool, high_school, graduationyear, graduation_year")
+    .select("id, name, wrestling_name, highschool, graduationyear")
     .in("graduation_year", years)
   const fallbackCount = res2.data?.length ?? 0
   const fallbackError = res2.error?.message ?? null
@@ -128,11 +129,11 @@ export async function getArticle2ProfileIdMapDebug(): Promise<{
       const match = athletes.find((a) => {
         const row = a as Record<string, unknown>
         const full = getFullName(row)
-        const gy = String((row.graduationyear as number) ?? (row.graduation_year as string) ?? "")
+        const gy = String((row.graduationyear as number) ?? "")
         if (gy !== year) return false
         if (norm(full) !== wantName) return false
         if (!wantSchoolNorm) return true
-        const hs = normSchool((row.highschool as string) || (row.high_school as string) || "")
+        const hs = normSchool((row.highschool as string) || "")
         return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
       })
       if (match) map[key(name, school, year)] = (match as Record<string, unknown>).id as string
