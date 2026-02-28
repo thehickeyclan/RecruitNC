@@ -6,6 +6,14 @@ function norm(s: string) {
   return (s || "").trim().replace(/\s+/g, " ").toLowerCase()
 }
 
+function normSchool(s: string) {
+  let t = norm(s)
+  for (const suffix of [" high school", " hs", " high"]) {
+    if (t.endsWith(suffix)) t = t.slice(0, -suffix.length).trim()
+  }
+  return t.replace(/\./g, "").replace(/\s+/g, " ").trim()
+}
+
 function getFullName(row: Record<string, unknown>): string {
   const name = (row.name as string)?.trim()
   if (name) return name
@@ -38,10 +46,20 @@ export default async function UnifiedProfileByNamePage({
 
   const supabase = createAdminClient()
 
-  const { data: athletes, error } = await supabase
+  let { data: athletes, error } = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool")
+    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school")
     .in("graduationyear", [yearNum, year])
+  if ((error || !athletes?.length) && supabase) {
+    const fallback = await supabase
+      .from("athletes")
+      .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school")
+      .in("graduation_year", [yearNum, year])
+    if (fallback.data?.length) {
+      athletes = fallback.data
+      error = fallback.error
+    }
+  }
 
   if (error || !athletes?.length) {
     return (
@@ -59,14 +77,14 @@ export default async function UnifiedProfileByNamePage({
   }
 
   const wantName = norm(name)
-  const wantSchool = norm(school)
+  const wantSchoolNorm = normSchool(school)
   const match = athletes.find((a) => {
     const row = a as Record<string, unknown>
     const full = getFullName(row)
     if (norm(full) !== wantName) return false
-    if (!wantSchool) return true
-    const hs = norm((row.highschool as string) || "")
-    return hs === wantSchool || hs.includes(wantSchool) || wantSchool.includes(hs)
+    if (!wantSchoolNorm) return true
+    const hs = normSchool((row.highschool as string) || (row.high_school as string) || "")
+    return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
   })
 
   const id = match ? (match as Record<string, unknown>).id as string : null

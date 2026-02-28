@@ -57,10 +57,22 @@ function key(name: string, school: string, year: string) {
 /** Resolve article (name, school, year) to athlete IDs. One Supabase query; returns map for direct /view-profile?id= links. */
 export async function getArticle2ProfileIdMap(): Promise<Record<string, string>> {
   const supabase = createAdminClient()
-  const { data: athletes, error } = await supabase
+  const years = [2026, 2027, 2028]
+  // Try camelCase first (graduationyear); if empty, try snake_case (graduation_year) for DB compatibility
+  let { data: athletes, error } = await supabase
     .from("athletes")
     .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
-    .in("graduationyear", [2026, 2027, 2028])
+    .in("graduationyear", years)
+  if ((error || !athletes?.length) && supabase) {
+    const fallback = await supabase
+      .from("athletes")
+      .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+      .in("graduation_year", years)
+    if (fallback.data?.length) {
+      athletes = fallback.data
+      error = fallback.error
+    }
+  }
 
   const map: Record<string, string> = {}
   if (error || !athletes?.length) return map
