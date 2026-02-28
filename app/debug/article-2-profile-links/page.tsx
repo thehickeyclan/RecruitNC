@@ -1,6 +1,6 @@
 import Link from "next/link"
 import {
-  getArticle2ProfileIdMap,
+  getArticle2ProfileIdMapDebug,
   ARTICLE_2_PROFILE_KEYS,
 } from "@/app/nchsaa/[year]/news/content/article-2-profile-ids"
 
@@ -14,7 +14,8 @@ function key(name: string, school: string, year: string) {
  * See docs/NCHSAA-ARTICLE-LINKS-MUST-USE-BUTTON.md and docs/ARTICLE-BULLETPROOF-ROUTE.md.
  */
 export default async function Article2ProfileLinksDebugPage() {
-  const profileIdMap = await getArticle2ProfileIdMap()
+  const { map: profileIdMap, firstQueryCount, firstQueryError, fallbackCount, fallbackError, sampleKeys } =
+    await getArticle2ProfileIdMapDebug()
   const keys = ARTICLE_2_PROFILE_KEYS
   const resolvedCount = Object.keys(profileIdMap).length
 
@@ -26,9 +27,17 @@ export default async function Article2ProfileLinksDebugPage() {
           Names from the Bracket Depth article. Use &quot;By-name&quot; to test the fallback when ID is missing (e.g. Gavin Yow).
         </p>
         {resolvedCount === 0 && (
-          <p className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900">
-            No names resolved to IDs yet (map empty). Matching uses name + school + graduation year; &quot;By-name&quot; links still work in the article and here.
-          </p>
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900 space-y-2">
+            <p>No names resolved to IDs yet (map empty). Matching uses name + school + graduation year; &quot;By-name&quot; links still work in the article and here.</p>
+            <p className="font-medium mt-2">Diagnostic:</p>
+            <ul className="list-disc list-inside text-xs">
+              <li>Query <code className="bg-amber-100 px-1">graduationyear</code> in (2026,2027,2028): <strong>{firstQueryCount}</strong> rows{firstQueryError != null && ` — error: ${firstQueryError}`}</li>
+              <li>Query <code className="bg-amber-100 px-1">graduation_year</code> in (2026,2027,2028): <strong>{fallbackCount}</strong> rows{fallbackError != null && ` — error: ${fallbackError}`}</li>
+              {sampleKeys != null && sampleKeys.length > 0 && (
+                <li>Sample DB columns: {sampleKeys.join(", ")}</li>
+              )}
+            </ul>
+          </div>
         )}
         <div className="mb-6 flex flex-wrap gap-3">
           <Link

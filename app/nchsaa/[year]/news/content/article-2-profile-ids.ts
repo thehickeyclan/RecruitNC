@@ -94,3 +94,62 @@ export async function getArticle2ProfileIdMap(): Promise<Record<string, string>>
   }
   return map
 }
+
+/** For /debug/article-2-profile-links: run both queries and return counts + sample so we can see why map is empty. */
+export async function getArticle2ProfileIdMapDebug(): Promise<{
+  map: Record<string, string>
+  firstQueryCount: number
+  firstQueryError: string | null
+  fallbackCount: number
+  fallbackError: string | null
+  sampleKeys: string[] | null
+}> {
+  const supabase = createAdminClient()
+  const years = [2026, 2027, 2028]
+  const res1 = await supabase
+    .from("athletes")
+    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+    .in("graduationyear", years)
+  const firstQueryCount = res1.data?.length ?? 0
+  const firstQueryError = res1.error?.message ?? null
+
+  const res2 = await supabase
+    .from("athletes")
+    .select("id, name, firstname, lastname, firstName, lastName, highschool, high_school, graduationyear, graduation_year")
+    .in("graduation_year", years)
+  const fallbackCount = res2.data?.length ?? 0
+  const fallbackError = res2.error?.message ?? null
+
+  const athletes = res1.data?.length ? res1.data : res2.data ?? []
+  const map: Record<string, string> = {}
+  if (athletes.length) {
+    for (const [name, school, year] of ARTICLE_2_PROFILE_KEYS) {
+      const wantName = norm(name)
+      const wantSchoolNorm = normSchool(school)
+      const match = athletes.find((a) => {
+        const row = a as Record<string, unknown>
+        const full = getFullName(row)
+        const gy = String((row.graduationyear as number) ?? (row.graduation_year as string) ?? "")
+        if (gy !== year) return false
+        if (norm(full) !== wantName) return false
+        if (!wantSchoolNorm) return true
+        const hs = normSchool((row.highschool as string) || (row.high_school as string) || "")
+        return hs === wantSchoolNorm || hs.includes(wantSchoolNorm) || wantSchoolNorm.includes(hs)
+      })
+      if (match) map[key(name, school, year)] = (match as Record<string, unknown>).id as string
+    }
+  }
+
+  const sampleKeys = athletes.length && typeof athletes[0] === "object"
+    ? Object.keys(athletes[0] as Record<string, unknown>)
+    : null
+
+  return {
+    map,
+    firstQueryCount,
+    firstQueryError,
+    fallbackCount,
+    fallbackError,
+    sampleKeys,
+  }
+}
