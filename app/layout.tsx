@@ -15,6 +15,8 @@ import { StorageAccessPrompt } from "@/components/storage-access-prompt"
 import { IframeSignInBanner } from "@/components/iframe-signin-banner"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 import { RecoveryRedirect } from "@/components/recovery-redirect"
+import { Analytics } from "@vercel/analytics/next"
+
 export const metadata = {
   title: "NC Wrestling Commits | Prospect Rankings",
   description: "North Carolina wrestling prospect rankings and college commitments",
@@ -85,6 +87,7 @@ export default function RootLayout({
             </div>
             <Toaster />
             <AIChatWidget />
+            <Analytics />
           </AuthProvider>
         </ThemeProvider>
         <Script
