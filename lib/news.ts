@@ -19,6 +19,8 @@ export interface NewsItem {
   readTime?: string
   image?: string
   imagePosition?: "top" | "center"
+  /** Use "contain" to show full image (e.g. product shots); default "cover" fills the card. */
+  imageFit?: "cover" | "contain"
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
   isAnnouncement?: boolean
 }
@@ -37,6 +39,7 @@ const ALL_NEWS: NewsItem[] = [
     readTime: "5 min read",
     image: "/images/first-flight-2026-nc-united-shoe.png",
     imagePosition: "center",
+    imageFit: "contain",
     isAnnouncement: true,
   },
   {
