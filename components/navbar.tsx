@@ -61,14 +61,16 @@ export function Navbar() {
     }
   }
 
-  // Top-level nav: Home, Prospects (dropdown), Rankings, Blue (plain <a>), National Team (dropdown).
-  const mainNavLinks = [
-    { href: "/", label: "Home" },
-    { href: "/public-rankings", label: "Rankings" },
-  ]
+  // Primary nav order: Home, Athletes, Prospects, Rankings, Events, Calendar, States, Nationals, Programs, News, Store, LegacyNC (last).
   const prospectsItems = [
     { href: "/prospects/all", label: "Athlete Profiles" },
   ]
+  const programsItems = [
+    { href: "/blue", label: "Blue Program", description: "NC United Blue membership", icon: Users },
+    { href: "/national-team", label: "National Team", description: "NC United National Team Portal", icon: Trophy },
+  ]
+  const storeUrl = "https://store.ncwrestlingunited.com/"
+  const calendarUrl = "https://calendar.ncwrestlingunited.com"
   const commitmentItems = [
     { href: "/athletes", label: "All Commitments" },
     { href: "/high-schools", label: "By High School" },
@@ -134,57 +136,68 @@ export function Navbar() {
           {/* Desktop Navigation — Dropdown items that navigate MUST use <a href>, not Link (Radix blocks navigation otherwise). See .cursorrules. */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-1">
-              <Link
-                href="/"
-                className={navLinkClass("/")}
-              >
-                Home
-              </Link>
+              <Link href="/" className={navLinkClass("/")}>Home</Link>
               <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass([...prospectsItems, ...commitmentItems])}>
-                  Prospects
+                <DropdownMenuTrigger className={navTriggerClass(commitmentItems)}>
+                  Athletes
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel className="font-normal text-muted-foreground">
-                    Profiles &amp; commitments
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {prospectsItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <a href={item.href} className="cursor-pointer">
-                        {item.label}
-                      </a>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="font-normal text-muted-foreground">
-                    Commitments
-                  </DropdownMenuLabel>
                   {commitmentItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
-                      <a href={item.href} className="cursor-pointer">
-                        {item.label}
-                      </a>
+                      <a href={item.href} className="cursor-pointer">{item.label}</a>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              {mainNavLinks.slice(1).map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={navLinkClass(item.href)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <a
-                href="/blue"
-                className={navLinkClass("/blue")}
-              >
-                Blue Program
-              </a>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={navTriggerClass(prospectsItems)}>
+                  Prospects
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {prospectsItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <a href={item.href} className="cursor-pointer">{item.label}</a>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Link href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings</Link>
+              <a href="/nhsca" className={navLinkClass("/nhsca")}>Events</a>
+              <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Calendar</a>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={navTriggerClass(statesItems)}>
+                  States
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-72">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex items-center gap-2 font-semibold">
+                      <Trophy className="h-4 w-4" />
+                      States
+                    </div>
+                    <p className="text-xs text-muted-foreground font-normal mt-1">
+                      NCHSAA State Championships
+                    </p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {statesItems.map((sub) => {
+                    const Icon = sub.icon
+                    return (
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium">{sub.label}</span>
+                            <span className="text-xs text-muted-foreground">{sub.description}</span>
+                          </div>
+                        </a>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(nationalsItems)}>
                   Nationals
@@ -217,29 +230,22 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a
-                href="/nchsaa"
-                className={navLinkClass("/nchsaa")}
-              >
-                States
-              </a>
               <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
-                  Legacy NC
+                <DropdownMenuTrigger className={navTriggerClass([...programsItems, ...nationalTeamItems])}>
+                  Programs
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-72">
                   <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Users className="h-4 w-4" />
-                      Legacy NC
-                    </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">
-                      Athletes, schools &amp; awards
-                    </p>
+                    <div className="flex items-center gap-2 font-semibold">Programs</div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {legacyNcItems.map((sub) => {
+                  <DropdownMenuItem asChild>
+                    <a href="/blue" className="cursor-pointer">Blue Program</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="font-normal text-muted-foreground text-xs">National Team</DropdownMenuLabel>
+                  {nationalTeamItems.map((sub) => {
                     const Icon = sub.icon
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
@@ -255,23 +261,25 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Link href="/news" className={navLinkClass("/news")}>News</Link>
+              <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Store</a>
               <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass(nationalTeamItems)}>
-                  National Team
+                <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
+                  LegacyNC
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-72">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex items-center gap-2 font-semibold">
                       <Users className="h-4 w-4" />
-                      National Team
+                      LegacyNC
                     </div>
                     <p className="text-xs text-muted-foreground font-normal mt-1">
-                      NC United National Team Portal
+                      Athletes, schools &amp; awards
                     </p>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {nationalTeamItems.map((sub) => {
+                  {legacyNcItems.map((sub) => {
                     const Icon = sub.icon
                     return (
                       <DropdownMenuItem key={sub.href} asChild>
@@ -403,110 +411,58 @@ export function Navbar() {
                 }}
               >
                 <div className="flex flex-col space-y-4 mt-8 pb-8">
-                  <a
-                    href="/"
-                    className={mobileLinkClass("/")}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Home
-                  </a>
+                  <a href="/" className={mobileLinkClass("/")} onClick={() => setIsOpen(false)}>Home</a>
                   <div className="px-3">
-                    <div className={`text-sm mb-2 ${isDropdownActive([...prospectsItems, ...commitmentItems]) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Prospects</div>
+                    <div className={`text-sm mb-2 ${isDropdownActive(commitmentItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Athletes</div>
                     <div className="space-y-2">
-                      {prospectsItems.map((item) => (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          className={mobileSubLinkClass(item.href)}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {item.label}
-                        </a>
-                      ))}
-                      <div className="text-gray-500 text-xs font-medium mt-3 mb-1">Commitments</div>
                       {commitmentItems.map((item) => (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          className={mobileSubLinkClass(item.href)}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {item.label}
-                        </a>
+                        <a key={item.href} href={item.href} className={mobileSubLinkClass(item.href)} onClick={() => setIsOpen(false)}>{item.label}</a>
                       ))}
                     </div>
                   </div>
-                  {mainNavLinks.slice(1).map((item) => (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      className={mobileLinkClass(item.href)}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                  <a
-                    href="/blue"
-                    className={mobileLinkClass("/blue")}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Blue Program
-                  </a>
+                  <div className="px-3">
+                    <div className={`text-sm mb-2 ${isDropdownActive(prospectsItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Prospects</div>
+                    <div className="space-y-2">
+                      {prospectsItems.map((item) => (
+                        <a key={item.href} href={item.href} className={mobileSubLinkClass(item.href)} onClick={() => setIsOpen(false)}>{item.label}</a>
+                      ))}
+                    </div>
+                  </div>
+                  <a href="/public-rankings" className={mobileLinkClass("/public-rankings")} onClick={() => setIsOpen(false)}>Rankings</a>
+                  <a href="/nhsca" className={mobileLinkClass("/nhsca")} onClick={() => setIsOpen(false)}>Events</a>
+                  <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Calendar</a>
+                  <div className="px-3">
+                    <div className={`text-sm mb-2 ${isDropdownActive(statesItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>States</div>
+                    <div className="space-y-2">
+                      {statesItems.map((sub) => (
+                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
+                      ))}
+                    </div>
+                  </div>
                   <div className="px-3">
                     <div className={`text-sm mb-2 ${isDropdownActive(nationalsItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Nationals</div>
                     <div className="space-y-2">
                       {nationalsItems.map((sub) => (
-                        <a
-                          key={sub.href}
-                          href={sub.href}
-                          className={mobileSubLinkClass(sub.href)}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {sub.label}
-                        </a>
+                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
                       ))}
                     </div>
                   </div>
                   <div className="px-3">
-                    <div className={`text-sm mb-2 ${isActive("/nchsaa") ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>States</div>
+                    <div className={`text-sm mb-2 ${isDropdownActive([...programsItems, ...nationalTeamItems]) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Programs</div>
                     <div className="space-y-2">
-                      <a
-                        href="/nchsaa"
-                        className={mobileSubLinkClass("/nchsaa")}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        NCHSAA State Championships
-                      </a>
+                      <a href="/blue" className={mobileSubLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue Program</a>
+                      {nationalTeamItems.map((sub) => (
+                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
+                      ))}
                     </div>
                   </div>
+                  <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
+                  <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Store</a>
                   <div className="px-3">
-                    <div className={`text-sm mb-2 ${isDropdownActive(legacyNcItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>Legacy NC</div>
+                    <div className={`text-sm mb-2 ${isDropdownActive(legacyNcItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>LegacyNC</div>
                     <div className="space-y-2">
                       {legacyNcItems.map((sub) => (
-                        <a
-                          key={sub.href}
-                          href={sub.href}
-                          className={mobileSubLinkClass(sub.href)}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {sub.label}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="px-3">
-                    <div className={`text-sm mb-2 ${isDropdownActive(nationalTeamItems) ? "font-bold text-red-600" : "text-gray-600 font-medium"}`}>National Team</div>
-                    <div className="space-y-2">
-                      {nationalTeamItems.map((sub) => (
-                        <a
-                          key={sub.href}
-                          href={sub.href}
-                          className={mobileSubLinkClass(sub.href)}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {sub.label}
-                        </a>
+                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
                       ))}
                     </div>
                   </div>

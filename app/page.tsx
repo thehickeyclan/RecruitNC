@@ -16,6 +16,9 @@ import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-ca
 
 type YearFilter = "All" | "2025" | "2026"
 
+// Homepage hero background. To fall back to the previous banner, use: "/hero-banner-nc-wrestling-arena.png"
+const HERO_BACKGROUND_IMAGE = "/hero-banner-nchsaa-2026-arena.png"
+
 interface Athlete {
   id: string
   name: string
@@ -260,8 +263,8 @@ export default function HomePage() {
         {/* Background Image Layer */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/hero-banner-nc-wrestling-arena.png"
-            alt="NC Wrestling Arena with State Flag"
+            src={HERO_BACKGROUND_IMAGE}
+            alt="NCHSAA Wrestling Championship arena"
             fill
             className="object-cover object-center"
             priority
