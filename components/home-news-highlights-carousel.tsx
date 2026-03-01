@@ -2,16 +2,18 @@
 
 import { useRef, useState, useEffect, useCallback } from "react"
 import Image from "next/image"
-import { ChevronLeft, ChevronRight, ArrowRight, FileText } from "lucide-react"
-import { HOME_NEWS_HIGHLIGHTS, type HomeNewsItem } from "@/lib/home-news-highlights"
+import Link from "next/link"
+import { ChevronLeft, ChevronRight, FileText } from "lucide-react"
+import { getFeaturedForHome, type NewsItem } from "@/lib/news"
 
 export function HomeNewsHighlightsCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
-  const mainStory = HOME_NEWS_HIGHLIGHTS[0]
-  const others = HOME_NEWS_HIGHLIGHTS.slice(1)
+  const featured = getFeaturedForHome(4)
+  const mainStory = featured[0]
+  const others = featured.slice(1)
 
   const checkScroll = useCallback(() => {
     if (scrollRef.current) {
@@ -35,13 +37,21 @@ export function HomeNewsHighlightsCarousel() {
     }
   }
 
-  if (HOME_NEWS_HIGHLIGHTS.length === 0) return null
+  if (featured.length === 0) return null
 
   return (
     <section className="mb-12" aria-label="News highlights">
-      <h2 className="mb-4 text-2xl font-bold" style={{ color: "#003366" }}>
-        News &amp; Highlights
-      </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-2xl font-bold" style={{ color: "#003366" }}>
+          News &amp; Highlights
+        </h2>
+        <Link
+          href="/news"
+          className="text-sm font-medium text-[#003366] hover:underline"
+        >
+          All news →
+        </Link>
+      </div>
 
       <div className="space-y-6">
         {/* Main story — large card, links to post */}
@@ -125,7 +135,7 @@ export function HomeNewsHighlightsCarousel() {
   )
 }
 
-function StoryCard({ item }: { item: HomeNewsItem }) {
+function StoryCard({ item }: { item: NewsItem }) {
   return (
     <a
       href={item.href}
