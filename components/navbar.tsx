@@ -64,7 +64,7 @@ export function Navbar() {
     }
   }
 
-  // Primary nav: Home, Athletes (Commitments + Profiles + Rankings), Events (States + Nationals + Calendar), Programs, News, Store, LegacyNC.
+  // Primary nav: Home, Athletes, Events (States + Nationals), Calendar, Programs, News, Store, LegacyNC.
   const commitmentItems = [
     { href: "/athletes", label: "All Commitments" },
     { href: "/high-schools", label: "By High School" },
@@ -210,12 +210,9 @@ export function Navbar() {
                       </DropdownMenuItem>
                     )
                   })}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer">Calendar</a>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Calendar</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass([...programsItems, ...nationalTeamItems])}>
                   Programs
@@ -417,9 +414,9 @@ export function Navbar() {
                       {nationalsItems.map((sub) => (
                         <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
                       ))}
-                      <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className="py-2 rounded-md text-base font-normal text-gray-600 hover:text-red-600 min-h-[44px] flex items-center block pl-4" onClick={() => setIsOpen(false)}>Calendar</a>
                     </div>
                   </div>
+                  <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Calendar</a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive([...programsItems, ...nationalTeamItems]))}>Programs</div>
                     <div className="space-y-2">

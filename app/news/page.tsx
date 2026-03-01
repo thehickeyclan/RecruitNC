@@ -41,7 +41,7 @@ export default function NewsPage() {
                         src={item.image}
                         alt=""
                         fill
-                        className={`object-cover ${item.imagePosition === "top" ? "object-top" : "object-center"}`}
+                        className={`${item.imageFit === "contain" ? "object-contain" : "object-cover"} ${item.imagePosition === "top" ? "object-top" : "object-center"}`}
                         sizes="128px"
                       />
                     </div>
