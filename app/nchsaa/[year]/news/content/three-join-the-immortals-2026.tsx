@@ -109,7 +109,7 @@ export function ThreeJoinTheImmortals2026Content() {
       </div>
       <p><strong>School:</strong> Uwharrie Charter</p>
       <p><strong>College:</strong> NC State University (committed and signed)</p>
-      <p><strong>Career Record:</strong> 198-2</p>
+      <p><strong>Career Record:</strong> 202-2</p>
       <p><strong>National Rankings:</strong> Frequently ranked top 10 on FloWrestling and MatScout</p>
       <p><strong>State Titles:</strong> 2023 (1A 144), 2024 (1A 145), 2025 (1A 157), 2026 (4A 175)</p>
 
@@ -129,7 +129,7 @@ export function ThreeJoinTheImmortals2026Content() {
       <p>He was also named <strong>2026 4A Most Outstanding Wrestler</strong>.</p>
 
       <h3>The Consistency</h3>
-      <p>Lorenzo&apos;s career record tells the story of sustained excellence: <strong>198-2</strong>.</p>
+      <p>Lorenzo&apos;s career record tells the story of sustained excellence: <strong>202-2</strong>.</p>
       <p>But the details reveal something even more remarkable:</p>
       <p><strong>Last three seasons:</strong></p>
       <ul>
@@ -169,7 +169,7 @@ export function ThreeJoinTheImmortals2026Content() {
       <p>Lorenzo competed against — and defeated — nationally-ranked wrestlers year after year.</p>
 
       <h3>The Legacy</h3>
-      <p>A 198-2 career. Three consecutive undefeated seasons. Four state titles across two classifications. Two NHSCA runner-up finishes. NHSCA Dual Team Champion with Uwharrie Charter. Nationally ranked top 10 on FloWrestling and MatScout for over a year. NC State University signee.</p>
+      <p>A 202-2 career. Three consecutive undefeated seasons. Four state titles across two classifications. Two NHSCA runner-up finishes. NHSCA Dual Team Champion with Uwharrie Charter. Nationally ranked top 10 on FloWrestling and MatScout for over a year. NC State University signee.</p>
       <p>Lorenzo Alston proved that greatness isn&apos;t about school size or enrollment. It&apos;s about work ethic, coaching, and competitive fire.</p>
       <p><strong>Uwharrie Charter is a small school. But Lorenzo&apos;s legacy is enormous.</strong></p>
 
@@ -268,11 +268,11 @@ export function ThreeJoinTheImmortals2026Content() {
 
       <h3>2026 — Three Join the Immortals</h3>
       <ol className="list-decimal pl-6 space-y-1" start={15}>
-        <li><strong>Cael Dunn</strong> (Avery/South Davidson, 2022-2026) — 170-170-190-215 (1A/2A - smallest division) — <strong>217-1 career</strong></li>
-        <li><strong>Lorenzo Alston</strong> (Uwharrie Charter, 2022-2026) — 144-145-157-175 (1A → 4A after 7-division system) — <strong>198-2 career</strong></li>
         <li><strong>Bentley Sly</strong> (Stuart Cramer, 2022-2026) — 120-132-144-150 (3A → 4A senior year) — <strong>207-6 career</strong></li>
+        <li><strong>Lorenzo Alston</strong> (Uwharrie Charter, 2022-2026) — 144-145-157-175 (1A → 4A after 7-division system) — <strong>202-2 career</strong></li>
+        <li><strong>Cael Dunn</strong> (Avery/South Davidson, 2022-2026) — 170-170-190-215 (1A/2A - smallest division) — <strong>217-1 career</strong></li>
       </ol>
-      <p><strong>Combined 2026 four-time champion career record: 622-9</strong></p>
+      <p><strong>Combined 2026 four-time champion career record: 626-9</strong></p>
 
       <hr />
 
@@ -291,8 +291,8 @@ export function ThreeJoinTheImmortals2026Content() {
       <h2>The Future</h2>
       <p>Cael is headed to Campbell University. Lorenzo is committed and signed to NC State University. Bentley is headed to Appalachian State University.</p>
       <p>But their high school careers are complete.</p>
-      <p><strong>217-1. 198-2. 207-6.</strong></p>
-      <p><strong>622 wins. 9 losses. 12 state titles.</strong></p>
+      <p><strong>217-1. 202-2. 207-6.</strong></p>
+      <p><strong>626 wins. 9 losses. 12 state titles.</strong></p>
       <p>They entered the 2026 state tournament as three of the most dominant wrestlers in North Carolina history.</p>
       <p>They left as immortals.</p>
 
