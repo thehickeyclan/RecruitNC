@@ -108,7 +108,7 @@ export function ThreeJoinTheImmortals2026Content() {
         <Image src={LORENZO_IMAGE} alt="Lorenzo Alston - Four-Time State Champion" width={800} height={450} className="rounded-lg w-full h-auto object-cover" />
       </div>
       <p><strong>School:</strong> Uwharrie Charter</p>
-      <p><strong>College:</strong> Uncommitted</p>
+      <p><strong>College:</strong> NC State University (committed and signed)</p>
       <p><strong>Career Record:</strong> 198-2</p>
       <p><strong>National Rankings:</strong> Frequently ranked top 10 on FloWrestling and MatScout</p>
       <p><strong>State Titles:</strong> 2023 (1A 144), 2024 (1A 145), 2025 (1A 157), 2026 (4A 175)</p>
@@ -169,7 +169,7 @@ export function ThreeJoinTheImmortals2026Content() {
       <p>Lorenzo competed against — and defeated — nationally-ranked wrestlers year after year.</p>
 
       <h3>The Legacy</h3>
-      <p>A 198-2 career. Three consecutive undefeated seasons. Four state titles across two classifications. Two NHSCA runner-up finishes. NHSCA Dual Team Champion with Uwharrie Charter. Nationally ranked top 10 on FloWrestling and MatScout for over a year.</p>
+      <p>A 198-2 career. Three consecutive undefeated seasons. Four state titles across two classifications. Two NHSCA runner-up finishes. NHSCA Dual Team Champion with Uwharrie Charter. Nationally ranked top 10 on FloWrestling and MatScout for over a year. NC State University signee.</p>
       <p>Lorenzo Alston proved that greatness isn&apos;t about school size or enrollment. It&apos;s about work ethic, coaching, and competitive fire.</p>
       <p><strong>Uwharrie Charter is a small school. But Lorenzo&apos;s legacy is enormous.</strong></p>
 
@@ -289,7 +289,7 @@ export function ThreeJoinTheImmortals2026Content() {
       <hr />
 
       <h2>The Future</h2>
-      <p>Cael is headed to Campbell University. Lorenzo is evaluating his options. Bentley is headed to Appalachian State University.</p>
+      <p>Cael is headed to Campbell University. Lorenzo is committed and signed to NC State University. Bentley is headed to Appalachian State University.</p>
       <p>But their high school careers are complete.</p>
       <p><strong>217-1. 198-2. 207-6.</strong></p>
       <p><strong>622 wins. 9 losses. 12 state titles.</strong></p>

@@ -18,7 +18,7 @@ const ARTICLE_HTML: Record<string, string> = {
     a:hover{text-decoration:none}
     h1{font-size:1.75rem;color:#003366;margin:1rem 0 0.5rem}
     .date{font-size:0.875rem;color:#64748b;margin-bottom:1.5rem}
-    .back{display:inline-block;margin-bottom:1.5rem;padding:0.5rem 1rem;border:2px solid #C20017;color:#C20017;text-decoration:none;border-radius:0.375rem;font-size:0.875rem;font-weight:500}
+    .back{display:inline-block;margin-bottom:1.5rem;padding:0.5rem 1rem;border:2px solid #C20017;color:#C20017;text-decoration:none;border-radius:0.375rem;font-size:0.875rem;font-weight:500;background:transparent;cursor:pointer;font-family:inherit}
     .back:hover{background:#C20017;color:#fff}
     .card{background:#fff;border-radius:0.5rem;border:1px solid #e2e8f0;padding:1.5rem 2rem;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
     article p{margin:0.75rem 0}
@@ -35,7 +35,7 @@ const ARTICLE_HTML: Record<string, string> = {
 </head>
 <body>
   <div class="c">
-    <a href="/nchsaa/2026" class="back">← Back to 2026 Results</a>
+    <button type="button" class="back" onclick="window.location.href='/nchsaa/2026'">← Back to 2026 Results</button>
     <h1>Did North Carolina Wrestling Expand Divisions—But Shrink Our Future?</h1>
     <p class="date">February 25, 2026</p>
     <div class="card">
