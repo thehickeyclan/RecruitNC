@@ -36,7 +36,7 @@ export default function NewsPage() {
               >
                 <div className="flex gap-4">
                   {item.image ? (
-                    <div className="relative h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                    <div className={`relative h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg ${item.imageFit === "contain" ? "bg-white" : "bg-slate-100"}`}>
                       <Image
                         src={item.image}
                         alt=""

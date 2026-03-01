@@ -258,7 +258,7 @@ export function Navbar() {
                       LegacyNC
                     </div>
                     <p className="text-xs text-muted-foreground font-normal mt-1">
-                      Athletes, schools &amp; awards
+                      Comprehensive history of NC Wrestling
                     </p>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
