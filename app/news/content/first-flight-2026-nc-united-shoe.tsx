@@ -36,7 +36,7 @@ export function FirstFlight2026Content() {
       <p>North Carolina is known as the birthplace of aviation. The Wright brothers launched the first powered flight from our coast — proving that bold ideas, when backed by courage and community, can change everything.</p>
       <p>The First Flight shoe represents:</p>
       <ul>
-        <li>The launch of a new era for NC United</li>
+        <li>The launch of a new era for NC Wrestling</li>
         <li>The first officially community-selected shoe</li>
         <li>The beginning of a long-term partnership</li>
         <li>Elevating wrestling culture in North Carolina</li>
@@ -70,9 +70,9 @@ export function FirstFlight2026Content() {
       <hr />
 
       <h2>Availability &amp; Pricing</h2>
-      <p>The First Flight shoe will retail for <strong>$300 per pair</strong>. This includes:</p>
+      <p>The First Flight shoe will retail for <strong>$299 per pair</strong>. This includes:</p>
       <ul>
-        <li>Nike base wrestling shoe</li>
+        <li>Nike Inflict 4 wrestling shoe</li>
         <li>Custom design execution</li>
         <li>Individual finishing</li>
         <li>Limited-edition numbering</li>
@@ -91,7 +91,6 @@ export function FirstFlight2026Content() {
         <li>Expansion of the NC United wrestling ecosystem</li>
       </ul>
       <p>This release is not just about sneakers. It is about reinvesting back into the athletes and families who make North Carolina wrestling strong.</p>
-      <p className="text-sm text-slate-600 italic">(For clarity: the purchase of a sneaker is not considered a charitable donation. However, revenue generated from this release directly supports NC United&apos;s nonprofit mission.)</p>
 
       <hr />
 
