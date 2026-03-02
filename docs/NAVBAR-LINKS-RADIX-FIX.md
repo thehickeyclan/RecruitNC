@@ -22,3 +22,11 @@
 4. Add the same href in both desktop and mobile if the item appears in both.
 
 **Authority:** `.cursorrules` in the repo root has the same rule and must be followed. This doc exists so the *reason* (Radix intercepts) and the *fix* (<a href>) are written down in one place.
+
+---
+
+## Store/cart document request (canceled)
+
+**Symptom:** In the network tab, `store` (document) shows as **(canceled)** with initiator `layout-....js` — the layout script is starting the request and something in the layout tree is canceling it.
+
+**Fix:** Do not mount layout components that run effects (redirects, resize, etc.) on `/store`, `/cart`, or `/checkout`. Those effects can abort in-flight document requests. In `app/layout.tsx`, `RecoveryRedirect`, `IframeResizer`, `StorageAccessPrompt`, `IframeSignInBanner`, and `CoachApprovalNotification` are now rendered via `LayoutOptionalClients`, which returns `null` when `pathname` is store/cart/checkout so those components never run on those routes and cannot cancel the request.

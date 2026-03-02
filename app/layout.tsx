@@ -9,12 +9,8 @@ import { Toaster } from "@/components/ui/toaster"
 import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ConditionalAuthGuard } from "@/components/conditional-auth-guard"
-import { CoachApprovalNotification } from "@/components/coach-approval-notification"
-import { IframeResizer } from "@/components/iframe-resizer"
-import { StorageAccessPrompt } from "@/components/storage-access-prompt"
-import { IframeSignInBanner } from "@/components/iframe-signin-banner"
+import { LayoutOptionalClients } from "@/components/layout-optional-clients"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
-import { RecoveryRedirect } from "@/components/recovery-redirect"
 import { Analytics } from "@vercel/analytics/next"
 
 export const metadata = {
@@ -73,11 +69,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
-            <RecoveryRedirect />
-            <IframeResizer />
-            <StorageAccessPrompt />
-            <IframeSignInBanner />
-            <CoachApprovalNotification />
+            <LayoutOptionalClients />
             <div id="app-content" className="relative flex flex-col min-h-screen">
               <Navbar />
               <main className="flex-1">
