@@ -66,13 +66,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="/store"
-                  className="text-sm text-gray-300 hover:text-white"
-                  onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}
-                >
+                <Link href="/store" className="text-sm text-gray-300 hover:text-white">
                   Store
-                </a>
+                </Link>
               </li>
               <li>
                 <a

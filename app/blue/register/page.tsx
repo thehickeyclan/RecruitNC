@@ -15,6 +15,8 @@ import { Loader2 } from "lucide-react"
 
 const NAVY = "#03154C"
 const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"] as const
+const PARENT_RELATIONSHIPS = ["Father", "Mother", "Guardian", "Other"] as const
+const HIGHEST_ACHIEVEMENTS = ["All American", "State Champion", "State Placer", "State Qualifier", "None"] as const
 /** Fallback if API fails — matches Blue page default. */
 const BLUE_SHIRT_FALLBACK = "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/eNZzhlbUPjwSpRAahxEPt-Blue%20Team%20Photo.png"
 
@@ -62,8 +64,20 @@ export default function BlueRegisterPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const [parent, setParent] = useState({ email: "", firstName: "", lastName: "", phone: "" })
-  const [athlete, setAthlete] = useState({ firstName: "", lastName: "", graduationYear: "", highSchool: "", wrestlingClub: "", weightClass: "" })
+  const [parent, setParent] = useState({ email: "", firstName: "", lastName: "", phone: "", relationship: "" })
+  const [athlete, setAthlete] = useState({
+    firstName: "",
+    lastName: "",
+    graduationYear: "",
+    highSchool: "",
+    wrestlingClub: "",
+    weightClass: "",
+    cellPhone: "",
+    email: "",
+    gpa: "",
+    interestWrestlingCollege: false,
+    highestAchievement: "",
+  })
   const [promoCode, setPromoCode] = useState("")
   const [waiverAccepted, setWaiverAccepted] = useState(false)
   const [tshirtSize, setTshirtSize] = useState<string>("")
@@ -115,6 +129,34 @@ export default function BlueRegisterPage() {
       setError("Please select a t-shirt size.")
       return
     }
+    if (!parent.relationship) {
+      setError("Please select your relationship to the athlete.")
+      return
+    }
+    if (!parent.phone.trim()) {
+      setError("Parent cell phone is required.")
+      return
+    }
+    if (!athlete.wrestlingClub.trim()) {
+      setError("Athlete club is required.")
+      return
+    }
+    if (!athlete.cellPhone.trim()) {
+      setError("Athlete cell phone is required.")
+      return
+    }
+    if (!athlete.email.trim()) {
+      setError("Athlete email is required.")
+      return
+    }
+    if (!athlete.gpa.trim()) {
+      setError("Athlete GPA is required.")
+      return
+    }
+    if (!athlete.highestAchievement) {
+      setError("Please select highest level achievement.")
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch("/api/blue/signup", {
@@ -130,6 +172,7 @@ export default function BlueRegisterPage() {
             firstName: parent.firstName,
             lastName: parent.lastName,
             phone: parent.phone ? normalizePhoneForStorage(parent.phone) : undefined,
+            relationship: parent.relationship || undefined,
           },
           athlete: {
             firstName: athlete.firstName,
@@ -138,6 +181,11 @@ export default function BlueRegisterPage() {
             highSchool: athlete.highSchool,
             wrestlingClub: athlete.wrestlingClub || undefined,
             weightClass: athlete.weightClass || undefined,
+            cellPhone: athlete.cellPhone ? normalizePhoneForStorage(athlete.cellPhone) : undefined,
+            email: athlete.email || undefined,
+            gpa: athlete.gpa || undefined,
+            interestWrestlingCollege: athlete.interestWrestlingCollege,
+            highestAchievement: athlete.highestAchievement || undefined,
           },
         }),
       })
@@ -291,15 +339,33 @@ export default function BlueRegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="parentPhone">Phone (optional)</Label>
+                <Label htmlFor="parentPhone">Cell phone</Label>
                 <Input
                   id="parentPhone"
                   type="tel"
                   value={parent.phone}
                   onChange={(e) => setParent((p) => ({ ...p, phone: formatPhoneInput(e.target.value) }))}
                   placeholder="(555) 123-4567"
+                  required
                   disabled={loading}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="parentRelationship">Relationship to athlete</Label>
+                <Select
+                  value={parent.relationship}
+                  onValueChange={(v) => setParent((p) => ({ ...p, relationship: v }))}
+                  disabled={loading}
+                >
+                  <SelectTrigger id="parentRelationship" className="w-full">
+                    <SelectValue placeholder="Select relationship" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PARENT_RELATIONSHIPS.map((r) => (
+                      <SelectItem key={r} value={r}>{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="border-t pt-6">
@@ -365,14 +431,80 @@ export default function BlueRegisterPage() {
                   />
                 </div>
                 <div className="space-y-2 mt-4">
-                  <Label htmlFor="wrestlingClub">Wrestling club (optional)</Label>
+                  <Label htmlFor="wrestlingClub">Club</Label>
                   <Input
                     id="wrestlingClub"
                     value={athlete.wrestlingClub}
                     onChange={(e) => setAthlete((a) => ({ ...a, wrestlingClub: e.target.value }))}
+                    required
                     disabled={loading}
                     placeholder="Club name"
                   />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="athleteCellPhone">Athlete cell phone</Label>
+                    <Input
+                      id="athleteCellPhone"
+                      type="tel"
+                      value={athlete.cellPhone}
+                      onChange={(e) => setAthlete((a) => ({ ...a, cellPhone: formatPhoneInput(e.target.value) }))}
+                      placeholder="(555) 123-4567"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="athleteEmail">Athlete email</Label>
+                    <Input
+                      id="athleteEmail"
+                      type="email"
+                      value={athlete.email}
+                      onChange={(e) => setAthlete((a) => ({ ...a, email: e.target.value }))}
+                      required
+                      disabled={loading}
+                      placeholder="athlete@example.com"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="athleteGpa">GPA</Label>
+                  <Input
+                    id="athleteGpa"
+                    value={athlete.gpa}
+                    onChange={(e) => setAthlete((a) => ({ ...a, gpa: e.target.value }))}
+                    required
+                    disabled={loading}
+                    placeholder="e.g. 3.5"
+                  />
+                </div>
+                <div className="space-y-2 mt-4">
+                  <Label>Highest level achievement</Label>
+                  <Select
+                    value={athlete.highestAchievement}
+                    onValueChange={(v) => setAthlete((a) => ({ ...a, highestAchievement: v }))}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select highest achievement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {HIGHEST_ACHIEVEMENTS.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-start gap-3 mt-4">
+                  <Checkbox
+                    id="interestCollege"
+                    checked={athlete.interestWrestlingCollege}
+                    onCheckedChange={(c) => setAthlete((a) => ({ ...a, interestWrestlingCollege: c === true }))}
+                    disabled={loading}
+                  />
+                  <Label htmlFor="interestCollege" className="text-sm leading-tight cursor-pointer">
+                    Interested in wrestling in college?
+                  </Label>
                 </div>
                 <div className="space-y-2 mt-4">
                   <Label>T-shirt size (required)</Label>

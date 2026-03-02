@@ -23,8 +23,30 @@ export async function POST(request: NextRequest) {
     if (!parent?.email?.trim() || !parent?.firstName?.trim() || !parent?.lastName?.trim()) {
       return NextResponse.json({ error: "Missing parent email, first name, or last name." }, { status: 400 })
     }
+    if (!parent?.phone?.trim()) {
+      return NextResponse.json({ error: "Parent cell phone is required." }, { status: 400 })
+    }
+    if (!parent?.relationship?.trim()) {
+      return NextResponse.json({ error: "Please select your relationship to the athlete." }, { status: 400 })
+    }
     if (!athlete?.firstName?.trim() || !athlete?.lastName?.trim() || athlete?.graduationYear == null || !athlete?.highSchool?.trim()) {
       return NextResponse.json({ error: "Missing athlete first name, last name, graduation year, or high school." }, { status: 400 })
+    }
+    if (!athlete?.wrestlingClub?.trim()) {
+      return NextResponse.json({ error: "Athlete club is required." }, { status: 400 })
+    }
+    if (!athlete?.cellPhone?.trim()) {
+      return NextResponse.json({ error: "Athlete cell phone is required." }, { status: 400 })
+    }
+    if (!athlete?.email?.trim()) {
+      return NextResponse.json({ error: "Athlete email is required." }, { status: 400 })
+    }
+    if (!athlete?.gpa?.trim()) {
+      return NextResponse.json({ error: "Athlete GPA is required." }, { status: 400 })
+    }
+    const validAchievements = ["All American", "State Champion", "State Placer", "State Qualifier", "None"]
+    if (!athlete?.highestAchievement?.trim() || !validAchievements.includes(athlete.highestAchievement.trim())) {
+      return NextResponse.json({ error: "Please select highest level achievement." }, { status: 400 })
     }
     const wrestlingClub = athlete?.wrestlingClub?.trim() || null
     const tshirtSize = tshirtSizeRaw && TSHIRT_SIZES.includes(tshirtSizeRaw as (typeof TSHIRT_SIZES)[number])
@@ -63,12 +85,18 @@ export async function POST(request: NextRequest) {
         parent_first_name: parent.firstName.trim(),
         parent_last_name: parent.lastName.trim(),
         parent_phone: parent.phone ? normalizePhoneForStorage(parent.phone) : null,
+        parent_relationship: parent.relationship?.trim() || null,
         athlete_first_name: athlete.firstName.trim(),
         athlete_last_name: athlete.lastName.trim(),
         athlete_graduation_year: gradYear,
         athlete_high_school: athlete.highSchool.trim(),
         athlete_wrestling_club: wrestlingClub,
         athlete_weight_class: athlete.weightClass?.trim() || null,
+        athlete_cell_phone: athlete.cellPhone ? normalizePhoneForStorage(athlete.cellPhone) : null,
+        athlete_email: athlete.email?.trim().toLowerCase() || null,
+        athlete_gpa: athlete.gpa?.trim() || null,
+        interest_wrestling_college: athlete.interestWrestlingCollege === true,
+        highest_achievement: athlete.highestAchievement?.trim() || null,
         tshirt_size: tshirtSize,
         waiver_signed_at: new Date().toISOString(),
         promo_code_used: promoCodeRaw?.trim() || null,

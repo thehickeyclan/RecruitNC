@@ -30,12 +30,18 @@ CREATE TABLE IF NOT EXISTS public.blue_signups (
   parent_first_name text NOT NULL,
   parent_last_name text NOT NULL,
   parent_phone text,
+  parent_relationship text,
   athlete_first_name text NOT NULL,
   athlete_last_name text NOT NULL,
   athlete_graduation_year int NOT NULL,
   athlete_high_school text NOT NULL,
   athlete_wrestling_club text,
   athlete_weight_class text,
+  athlete_cell_phone text,
+  athlete_email text,
+  athlete_gpa text,
+  interest_wrestling_college boolean DEFAULT false,
+  highest_achievement text,
   tshirt_size text NOT NULL,
   waiver_signed_at timestamptz NOT NULL,
   promo_code_used text,
@@ -53,3 +59,16 @@ CREATE POLICY "Service role full access blue_signups" ON public.blue_signups FOR
 ```
 
 Safe to run more than once. Flow: form → POST creates row + Stripe checkout → webhook sets status=paid.
+
+## Migration: add required parent/athlete fields (run if table already exists)
+
+Run in Supabase SQL Editor to add columns for parent relationship, athlete cell/email/GPA, college interest, and highest achievement:
+
+```sql
+ALTER TABLE public.blue_signups ADD COLUMN IF NOT EXISTS parent_relationship text;
+ALTER TABLE public.blue_signups ADD COLUMN IF NOT EXISTS athlete_cell_phone text;
+ALTER TABLE public.blue_signups ADD COLUMN IF NOT EXISTS athlete_email text;
+ALTER TABLE public.blue_signups ADD COLUMN IF NOT EXISTS athlete_gpa text;
+ALTER TABLE public.blue_signups ADD COLUMN IF NOT EXISTS interest_wrestling_college boolean DEFAULT false;
+ALTER TABLE public.blue_signups ADD COLUMN IF NOT EXISTS highest_achievement text;
+```
