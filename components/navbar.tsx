@@ -83,7 +83,6 @@ export function Navbar() {
     { href: "/blue", label: "Blue Program", description: "NC United Blue membership", icon: Users },
     { href: "/national-team", label: "National Team", description: "NC United National Team Portal", icon: Trophy },
   ]
-  const storeUrl = "/store"
   const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
   const nationalTeamItems = [
@@ -243,8 +242,8 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/news" className={navLinkClass("/news")}>News</Link>
-              <a href={storeUrl} className={navLinkClass("/store")}>Store</a>
-              <a href="/cart" className={navLinkClass("/cart")}>
+              <a href="/store" className={navLinkClass("/store")} onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
+              <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => { e.preventDefault(); window.location.href = "/cart"; }}>
                 Cart
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
@@ -317,16 +316,16 @@ export function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <a href="/profile" className="cursor-pointer">Profile</a>
+                    <Link href="/profile">Profile</Link>
                   </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <a href={getRecruitingPortalUrl()} className="cursor-pointer flex items-center">
+                        <Link href={getRecruitingPortalUrl()} className="flex items-center">
                           <Star className="h-4 w-4 mr-2" />
                           My Recruits
-                        </a>
+                        </Link>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -436,8 +435,8 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href={storeUrl} className={mobileLinkClass("/store")} onClick={() => setIsOpen(false)}>Store</a>
-                  <a href="/cart" className={mobileLinkClass("/cart")} onClick={() => setIsOpen(false)}>
+                  <a href="/store" className={mobileLinkClass("/store")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/store"; }}>Store</a>
+                  <a href="/cart" className={mobileLinkClass("/cart")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/cart"; }}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>
                   <div className="px-3">
@@ -482,23 +481,27 @@ export function Navbar() {
                       </div>
                     ) : user ? (
                       <div className="space-y-2">
-                        <a
-                          href="/profile"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-gray-300 hover:bg-gray-100 px-4 py-2 text-sm font-medium mobile-optimized"
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
                         >
-                          <User className="h-4 w-4 mr-2" />
-                          Profile
-                        </a>
+                          <Link href="/profile" onClick={() => setIsOpen(false)}>
+                            <User className="h-4 w-4 mr-2" />
+                            Profile
+                          </Link>
+                        </Button>
                         {showMyRecruits && (
-                          <a
-                            href={getRecruitingPortalUrl()}
-                            onClick={() => setIsOpen(false)}
-                            className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-gray-300 hover:bg-gray-100 px-4 py-2 text-sm font-medium mobile-optimized"
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="w-full bg-transparent mobile-optimized min-h-[44px]"
                           >
-                            <Star className="h-4 w-4 mr-2" />
-                            My Recruits
-                          </a>
+                            <Link href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
+                              <Star className="h-4 w-4 mr-2" />
+                              My Recruits
+                            </Link>
+                          </Button>
                         )}
                         <Button
                           onClick={() => {
