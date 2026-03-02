@@ -96,7 +96,7 @@ export default function CartPage() {
             <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
             <p className="text-muted-foreground mb-6">Add some items to get started!</p>
             <Button asChild className="bg-[#003366] hover:bg-[#003366]/90 text-white">
-              <Link href="/store">Browse Products</Link>
+              <a href="/store" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Browse Products</a>
             </Button>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function CartPage() {
           <nav className="text-sm text-muted-foreground">
             <Link href="/" className="hover:text-foreground">Home</Link>
             <span className="mx-2">&gt;</span>
-            <Link href="/store" className="hover:text-foreground">Store</Link>
+            <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
             <span className="mx-2">&gt;</span>
             <span className="text-foreground font-medium">Cart</span>
           </nav>
@@ -155,10 +155,10 @@ export default function CartPage() {
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Shopping Cart</h1>
-          <Link href="/store" className="text-sm text-[#003366] hover:underline flex items-center gap-1">
+          <a href="/store" className="text-sm text-[#003366] hover:underline flex items-center gap-1" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
             <ArrowLeft className="w-4 h-4" />
             Continue Shopping
-          </Link>
+          </a>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_400px] gap-8">

@@ -37,13 +37,14 @@ export function ProductHeader({ productName, category }: ProductHeaderProps) {
     <header className="border-b bg-background sticky top-0 z-40 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <Link
+          <a
             href="/store"
             className="hover:text-foreground flex items-center gap-1"
+            onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Back to Store</span>
-          </Link>
+          </a>
         </div>
 
         <nav className="text-sm text-muted-foreground">
@@ -51,9 +52,9 @@ export function ProductHeader({ productName, category }: ProductHeaderProps) {
             Home
           </Link>
           <span className="mx-2">&gt;</span>
-          <Link href="/store" className="hover:text-foreground">
+          <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
             Store
-          </Link>
+          </a>
           <span className="mx-2">&gt;</span>
           <span className="hover:text-foreground">{categoryDisplayName}</span>
           <span className="mx-2">&gt;</span>

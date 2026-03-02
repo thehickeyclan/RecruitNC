@@ -68,9 +68,8 @@ export function Footer() {
               <li>
                 <a
                   href="/store"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="text-sm text-gray-300 hover:text-white"
+                  onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}
                 >
                   Store
                 </a>

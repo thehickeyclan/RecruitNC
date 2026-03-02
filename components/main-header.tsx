@@ -22,9 +22,9 @@ export function MainHeader({
               RecruitNC
             </Link>
           )}
-          <Link href="/store" className="text-sm text-muted-foreground hover:text-foreground">
+          <a href="/store" className="text-sm text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
             Store
-          </Link>
+          </a>
         </div>
         {showCart && (
           <Link

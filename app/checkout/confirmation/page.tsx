@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { CheckCircle2, Printer, Package, Truck, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -413,7 +412,7 @@ export default function ConfirmationPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild className="bg-[#003366] hover:bg-[#003366]/90 text-white">
-              <Link href="/store">Continue Shopping</Link>
+              <a href="/store" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Continue Shopping</a>
             </Button>
           </div>
         </div>

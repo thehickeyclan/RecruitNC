@@ -21,9 +21,9 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
           <Link href="/" className="font-semibold text-[#003366] hover:underline">
             RecruitNC
           </Link>
-          <Link href="/store" className="text-sm text-muted-foreground hover:text-foreground">
+          <a href="/store" className="text-sm text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
             Store
-          </Link>
+          </a>
         </div>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

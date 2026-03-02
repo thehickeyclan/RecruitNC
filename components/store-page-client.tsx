@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { StoreHeader } from "@/components/store-header"
 import { StoreBanner } from "@/components/store-banner"
 import { ShoeRaffleHero } from "@/components/shoe-raffle-hero"
@@ -28,7 +28,6 @@ const categories = [
 ]
 
 export function StorePageClient({ initialProducts }: StorePageClientProps) {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const { applyPromoCode, promoCode } = useCartStore()
   const { toast } = useToast()
@@ -60,12 +59,12 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
           const newParams = new URLSearchParams(searchParams?.toString())
           newParams.delete("promo")
           newParams.delete("promoCode")
-          const newUrl = newParams.toString() ? `?${newParams.toString()}` : "/store"
-          router.replace(newUrl, { scroll: false })
+          const newUrl = newParams.toString() ? `/store?${newParams.toString()}` : "/store"
+          window.history.replaceState(null, "", newUrl)
         }
       })
     }
-  }, [searchParams, promoCode, applyPromoCode, toast, router])
+  }, [searchParams, promoCode, applyPromoCode, toast])
 
   const filteredProducts = useMemo(() => {
     let filtered = [...initialProducts]
@@ -148,7 +147,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
       <StoreBanner
         onShopAll={() => {
           setSelectedCategories([])
-          router.replace("/store", { scroll: false })
+          window.history.replaceState(null, "", "/store")
           setTimeout(
             () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
             100,
@@ -156,7 +155,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
         }}
         onShopCategory={(categoryId) => {
           setSelectedCategories([categoryId])
-          router.replace(`/store?category=${encodeURIComponent(categoryId)}`, { scroll: false })
+          window.history.replaceState(null, "", `/store?category=${encodeURIComponent(categoryId)}`)
           setTimeout(
             () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
             100,

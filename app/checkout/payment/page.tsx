@@ -245,7 +245,7 @@ export default function PaymentPage() {
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
           <span className="mx-2">&gt;</span>
-          <Link href="/store" className="hover:text-foreground">Store</Link>
+          <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
           <span className="mx-2">&gt;</span>
           <span className="text-foreground font-medium">Checkout</span>
         </nav>
