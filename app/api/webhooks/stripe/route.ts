@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
       const nameFromAddr = [addr.firstName, addr.lastName].filter(Boolean).join(" ") || ""
       payload = {
         customerEmail,
-        customerName: meta.customer_name ?? nameFromAddr || "Customer",
+        customerName: meta.customer_name ?? (nameFromAddr || "Customer"),
         shippingAddress,
         shippingMethod,
         items,
