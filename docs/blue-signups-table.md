@@ -62,7 +62,7 @@ Safe to run more than once. Flow: form â†’ POST creates row + Stripe checkout â†
 
 ## Production checklist (before/right after deploying the new Blue form)
 
-1. **Run the migration below** in Supabase SQL Editor so `blue_signups` has the new columns. If you skip this, parents will get a 503 and "Database is missing new registration columns."
+1. **Run the migration below** in Supabase SQL Editor so `blue_signups` has the new columns. If you skip this, parents will get a 503 ("Database is missing new registration columns") or a 500 ("Failed to save registration") until the migration is run.
 2. Confirm Stripe env: `STRIPE_SECRET_KEY`, `STRIPE_BLUE_PRICE_ID`, and (optional) `NEXT_PUBLIC_APP_URL` for success/cancel URLs.
 3. After deploy, submit a test registration (or use a test invite) and confirm you reach Stripe Checkout and the row appears in `blue_signups` with the new fields populated.
 

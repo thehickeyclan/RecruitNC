@@ -107,19 +107,22 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (signupErr || !signup) {
-      if (signupErr?.code === "42P01") {
+      const errCode = signupErr?.code !== undefined ? String(signupErr.code) : ""
+      const errMsg = (signupErr?.message ?? "") as string
+      console.error("[blue/signup] insert failed:", { code: errCode, message: errMsg, full: signupErr })
+      const isUndefinedColumn = errCode === "42703" || errMsg.includes("42703") || (errMsg.includes("column") && errMsg.includes("does not exist"))
+      if (isUndefinedColumn) {
+        return NextResponse.json(
+          { error: "Database is missing new registration columns. Run the migration in docs/blue-signups-table.md (section: Migration: add required parent/athlete fields) in Supabase SQL Editor, then try again. Contact info@ncwrestlingunited.com if this persists." },
+          { status: 503 }
+        )
+      }
+      if (signupErr?.code === "42P01" || (errMsg.includes("relation") && errMsg.includes("does not exist"))) {
         return NextResponse.json(
           { error: "Blue signups are not set up yet. Please run the SQL in docs/blue-signups-table.md in Supabase." },
           { status: 503 }
         )
       }
-      if (signupErr?.code === "42703") {
-        return NextResponse.json(
-          { error: "Database is missing new registration columns. Run the migration in docs/blue-signups-table.md (Migration: add required parent/athlete fields) in Supabase, then try again. If this persists, contact info@ncwrestlingunited.com." },
-          { status: 503 }
-        )
-      }
-      console.error("[blue/signup] insert:", signupErr)
       return NextResponse.json({ error: "Failed to save registration. Please try again or contact info@ncwrestlingunited.com." }, { status: 500 })
     }
 
