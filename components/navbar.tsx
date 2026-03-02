@@ -16,6 +16,9 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
 
 export function Navbar() {
@@ -221,30 +224,22 @@ export function Navbar() {
                   Programs
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">Programs</div>
-                  </DropdownMenuLabel>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel className="font-normal font-semibold">Programs</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <a href="/blue" className="cursor-pointer">Blue Program</a>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="font-normal text-muted-foreground text-xs">National Team</DropdownMenuLabel>
-                  {nationalTeamItems.map((sub) => {
-                    const Icon = sub.icon
-                    return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
-                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{sub.label}</span>
-                            <span className="text-xs text-muted-foreground">{sub.description}</span>
-                          </div>
-                        </a>
-                      </DropdownMenuItem>
-                    )
-                  })}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="cursor-pointer">National Team</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-56">
+                      {nationalTeamItems.map((sub) => (
+                        <DropdownMenuItem key={sub.href} asChild>
+                          <a href={sub.href} className="cursor-pointer">{sub.label}</a>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/news" className={navLinkClass("/news")}>News</Link>
@@ -322,16 +317,16 @@ export function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Profile</Link>
+                    <a href="/profile" className="cursor-pointer">Profile</a>
                   </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href={getRecruitingPortalUrl()} className="flex items-center">
+                        <a href={getRecruitingPortalUrl()} className="cursor-pointer flex items-center">
                           <Star className="h-4 w-4 mr-2" />
                           My Recruits
-                        </Link>
+                        </a>
                       </DropdownMenuItem>
                     </>
                   )}
@@ -432,9 +427,12 @@ export function Navbar() {
                     <div className={mobileMenuParentClass(isDropdownActive([...programsItems, ...nationalTeamItems]))}>Programs</div>
                     <div className="space-y-2">
                       <a href="/blue" className={mobileSubLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue Program</a>
-                      {nationalTeamItems.map((sub) => (
-                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                      ))}
+                      <div className="pl-4 border-l-2 border-white/20 mt-2 space-y-1">
+                        <p className="text-xs font-bold text-white/90 mb-1">National Team</p>
+                        {nationalTeamItems.map((sub) => (
+                          <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
@@ -484,27 +482,23 @@ export function Navbar() {
                       </div>
                     ) : user ? (
                       <div className="space-y-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                        <a
+                          href="/profile"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-gray-300 hover:bg-gray-100 px-4 py-2 text-sm font-medium mobile-optimized"
                         >
-                          <Link href="/profile" onClick={() => setIsOpen(false)}>
-                            <User className="h-4 w-4 mr-2" />
-                            Profile
-                          </Link>
-                        </Button>
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </a>
                         {showMyRecruits && (
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                          <a
+                            href={getRecruitingPortalUrl()}
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-gray-300 hover:bg-gray-100 px-4 py-2 text-sm font-medium mobile-optimized"
                           >
-                            <Link href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
-                              <Star className="h-4 w-4 mr-2" />
-                              My Recruits
-                            </Link>
-                          </Button>
+                            <Star className="h-4 w-4 mr-2" />
+                            My Recruits
+                          </a>
                         )}
                         <Button
                           onClick={() => {
