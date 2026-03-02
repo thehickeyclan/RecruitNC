@@ -248,15 +248,15 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/news" className={navLinkClass("/news")}>News</Link>
-              <Link href={storeUrl} className={navLinkClass("/store")}>Store</Link>
-              <Link href="/cart" className={navLinkClass("/cart")}>
+              <a href={storeUrl} className={navLinkClass("/store")}>Store</a>
+              <a href="/cart" className={navLinkClass("/cart")}>
                 Cart
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
                     {cartCount}
                   </span>
                 )}
-              </Link>
+              </a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
                   LegacyNC
@@ -438,10 +438,10 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <Link href={storeUrl} className={mobileLinkClass("/store")} onClick={() => setIsOpen(false)}>Store</Link>
-                  <Link href="/cart" className={mobileLinkClass("/cart")} onClick={() => setIsOpen(false)}>
+                  <a href={storeUrl} className={mobileLinkClass("/store")} onClick={() => setIsOpen(false)}>Store</a>
+                  <a href="/cart" className={mobileLinkClass("/cart")} onClick={() => setIsOpen(false)}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
-                  </Link>
+                  </a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
                     <div className="space-y-2">
