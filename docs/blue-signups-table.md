@@ -60,6 +60,12 @@ CREATE POLICY "Service role full access blue_signups" ON public.blue_signups FOR
 
 Safe to run more than once. Flow: form → POST creates row + Stripe checkout → webhook sets status=paid.
 
+## Production checklist (before/right after deploying the new Blue form)
+
+1. **Run the migration below** in Supabase SQL Editor so `blue_signups` has the new columns. If you skip this, parents will get a 503 and "Database is missing new registration columns."
+2. Confirm Stripe env: `STRIPE_SECRET_KEY`, `STRIPE_BLUE_PRICE_ID`, and (optional) `NEXT_PUBLIC_APP_URL` for success/cancel URLs.
+3. After deploy, submit a test registration (or use a test invite) and confirm you reach Stripe Checkout and the row appears in `blue_signups` with the new fields populated.
+
 ## Migration: add required parent/athlete fields (run if table already exists)
 
 Run in Supabase SQL Editor to add columns for parent relationship, athlete cell/email/GPA, college interest, and highest achievement:

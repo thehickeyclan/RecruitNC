@@ -113,12 +113,14 @@ export async function POST(request: NextRequest) {
           { status: 503 }
         )
       }
+      if (signupErr?.code === "42703") {
+        return NextResponse.json(
+          { error: "Database is missing new registration columns. Run the migration in docs/blue-signups-table.md (Migration: add required parent/athlete fields) in Supabase, then try again. If this persists, contact info@ncwrestlingunited.com." },
+          { status: 503 }
+        )
+      }
       console.error("[blue/signup] insert:", signupErr)
-      return NextResponse.json({ error: "Failed to save registration." }, { status: 500 })
-    }
-
-    if (inviteId) {
-      await admin.from("blue_invites").update({ used_at: new Date().toISOString() }).eq("id", inviteId)
+      return NextResponse.json({ error: "Failed to save registration. Please try again or contact info@ncwrestlingunited.com." }, { status: 500 })
     }
 
     if (!stripeSecret || !bluePriceId) {
@@ -167,12 +169,16 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams)
-    if (!session.url) return NextResponse.json({ error: "Could not create checkout session." }, { status: 500 })
+    if (!session.url) return NextResponse.json({ error: "Could not create checkout session. Please try again or contact info@ncwrestlingunited.com." }, { status: 500 })
 
     if (promoIdToIncrement) {
       const { data: row } = await admin.from("blue_promo_codes").select("redemptions_count").eq("id", promoIdToIncrement).single()
       const next = (row?.redemptions_count ?? 0) + 1
       await admin.from("blue_promo_codes").update({ redemptions_count: next }).eq("id", promoIdToIncrement)
+    }
+
+    if (inviteId) {
+      await admin.from("blue_invites").update({ used_at: new Date().toISOString() }).eq("id", inviteId)
     }
     return NextResponse.json({ success: true, checkoutUrl: session.url })
   } catch (e) {
