@@ -20,6 +20,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import { StoreNavLink } from "@/components/store-nav-link"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -253,7 +254,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")} onClick={(e) => handleNav(e, "/news")}>News</a>
-              <a href="/store" className={navLinkClass("/store")} onClick={(e) => handleNav(e, "/store")}>Store</a>
+              <StoreNavLink className={`${navLinkClass("/store")} cursor-pointer`}>Store</StoreNavLink>
               <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => handleNav(e, "/cart")}>
                 Cart
                 {cartCount > 0 && (
@@ -447,7 +448,7 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href="/store" className={mobileLinkClass("/store")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/store"; }}>Store</a>
+                  <StoreNavLink className={`${mobileLinkClass("/store")} cursor-pointer`} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
                   <a href="/cart" className={mobileLinkClass("/cart")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/cart"; }}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>
