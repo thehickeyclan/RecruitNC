@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, ExternalLink } from "lucide-react"
+import { ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -90,9 +90,7 @@ export function StoreProductPromotion() {
             </div>
             
             <Link 
-              href="https://store.ncwrestlingunited.com"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/store"
               className="mt-4"
             >
               <Button 
@@ -101,7 +99,6 @@ export function StoreProductPromotion() {
               >
                 <ShoppingBag className="w-5 h-5 mr-2" />
                 Shop Now
-                <ExternalLink className="w-5 h-5 ml-2" />
               </Button>
             </Link>
           </div>

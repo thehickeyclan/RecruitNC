@@ -67,7 +67,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://store.ncwrestlingunited.com/"
+                  href="/store"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-gray-300 hover:text-white"

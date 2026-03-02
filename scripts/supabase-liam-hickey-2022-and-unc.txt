@@ -1,0 +1,24 @@
+-- Liam Hickey: add missing 2022 NCHSAA 3rd place + ensure UNC commitment is set
+-- Run in Supabase SQL Editor (Dashboard → SQL Editor → New query).
+-- Data Dawg / LegacyNC read from the same DB; after this, "Liam Hickey" should show 2022 3rd and UNC.
+
+-- 1) Insert missing 2022 NCHSAA state result (3rd place, 4A, 120 lbs, Cardinal Gibbons)
+--    If Liam's 2022 weight was different, change '120' below (e.g. '113').
+INSERT INTO wrestling_nchsaa_results (year, classification, weight_class, place, wrestler_name, school)
+SELECT 2022, '4A', '120', 3, 'Liam Hickey', 'Cardinal Gibbons'
+WHERE NOT EXISTS (
+  SELECT 1 FROM wrestling_nchsaa_results
+  WHERE year = 2022 AND wrestler_name ILIKE '%Liam%Hickey%' AND place = 3
+);
+
+-- 2) Set Liam Hickey's UNC Chapel Hill commitment (so Data Dawg shows it)
+UPDATE athletes
+SET
+  college = 'UNC Chapel Hill',
+  commitmentdate = COALESCE(commitmentdate, '2025-05-01')
+WHERE name ILIKE '%Liam Hickey%'
+  AND (college IS NULL OR college = '' OR college NOT ILIKE '%unc%');
+
+-- Verify (optional):
+-- SELECT * FROM wrestling_nchsaa_results WHERE wrestler_name ILIKE '%Hickey%' ORDER BY year;
+-- SELECT id, name, college, commitmentdate FROM athletes WHERE name ILIKE '%Liam Hickey%';

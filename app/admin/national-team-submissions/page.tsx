@@ -40,6 +40,9 @@ const TOURNAMENTS = {
   "deep-south": "Deep South Duals (Date TBA)",
 }
 
+const NHSCA_TEAM_1_LABEL = "Team 1"
+const NHSCA_TEAM_2_LABEL = "Team 2"
+
 type InterestFormSubmission = {
   id: string
   first_name: string
@@ -62,6 +65,8 @@ type InterestFormSubmission = {
   reviewed_at: string | null
   created_at: string
   updated_at: string
+  nhsca_duals_team?: string | null
+  nhsca_duals_starter?: boolean
 }
 
 export default function NationalTeamSubmissionsPage() {
@@ -76,6 +81,9 @@ export default function NationalTeamSubmissionsPage() {
   const [selectedWeight, setSelectedWeight] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"rank" | "name" | "weight" | "created">("rank")
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [nhscaTeam, setNhscaTeam] = useState<string>("")
+  const [nhscaStarter, setNhscaStarter] = useState(false)
+  const [updatingNhscaId, setUpdatingNhscaId] = useState<string | null>(null)
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true)
@@ -123,9 +131,73 @@ export default function NationalTeamSubmissionsPage() {
         setAdminNotes("")
         setNewStatus("")
         setRankScore("")
+        setNhscaTeam("")
+        setNhscaStarter(false)
       } catch (err: any) {
         console.error("Error updating submission:", err)
         alert(`Failed to update submission: ${err?.message || "Unknown error"}`)
+      }
+    },
+    [loadSubmissions]
+  )
+
+  const assignNhscaDualsStarter = useCallback(
+    async (sub: InterestFormSubmission, team: "team_1" | "team_2") => {
+      setUpdatingNhscaId(sub.id)
+      try {
+        const othersSameTeamAndWeight = submissions.filter(
+          (s) =>
+            s.id !== sub.id &&
+            s.primary_weight === sub.primary_weight &&
+            (s as InterestFormSubmission).nhsca_duals_team === team &&
+            (s as InterestFormSubmission).nhsca_duals_starter
+        )
+        for (const other of othersSameTeamAndWeight) {
+          await fetch("/api/admin/national-team-submissions", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: other.id, nhsca_duals_starter: false }),
+          })
+        }
+        await fetch("/api/admin/national-team-submissions", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sub.id,
+            nhsca_duals_team: team,
+            nhsca_duals_starter: true,
+          }),
+        })
+        await loadSubmissions()
+      } catch (err: any) {
+        console.error("Error assigning NHSCA starter:", err)
+        alert(`Failed to assign: ${err?.message || "Unknown error"}`)
+      } finally {
+        setUpdatingNhscaId(null)
+      }
+    },
+    [submissions, loadSubmissions]
+  )
+
+  const clearNhscaDualsAssignment = useCallback(
+    async (sub: InterestFormSubmission) => {
+      setUpdatingNhscaId(sub.id)
+      try {
+        await fetch("/api/admin/national-team-submissions", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sub.id,
+            nhsca_duals_team: null,
+            nhsca_duals_starter: false,
+          }),
+        })
+        await loadSubmissions()
+      } catch (err: any) {
+        console.error("Error clearing NHSCA assignment:", err)
+        alert(`Failed to clear: ${err?.message || "Unknown error"}`)
+      } finally {
+        setUpdatingNhscaId(null)
       }
     },
     [loadSubmissions]
@@ -158,6 +230,16 @@ export default function NationalTeamSubmissionsPage() {
   useEffect(() => {
     loadSubmissions()
   }, [loadSubmissions])
+
+  useEffect(() => {
+    if (selectedSubmission) {
+      setNhscaTeam(selectedSubmission.nhsca_duals_team ?? "")
+      setNhscaStarter(selectedSubmission.nhsca_duals_starter ?? false)
+    } else {
+      setNhscaTeam("")
+      setNhscaStarter(false)
+    }
+  }, [selectedSubmission])
 
   const filteredSubmissions = submissions
     .filter((sub) => {
@@ -489,6 +571,57 @@ export default function NationalTeamSubmissionsPage() {
                       </CardContent>
                     </Card>
 
+                    {tournamentId === "nhsca" && (() => {
+                      const team1Starters = submissions.filter(
+                        (s) => (s as InterestFormSubmission).nhsca_duals_team === "team_1" && (s as InterestFormSubmission).nhsca_duals_starter
+                      )
+                      const team2Starters = submissions.filter(
+                        (s) => (s as InterestFormSubmission).nhsca_duals_team === "team_2" && (s as InterestFormSubmission).nhsca_duals_starter
+                      )
+                      return (
+                        <Card className="border-2 border-[#002147]/20">
+                          <CardHeader>
+                            <CardTitle>NHSCA Duals – Starters for 2 Teams</CardTitle>
+                            <CardDescription>
+                              One starter per weight per team. Assign from the table below or in the submission detail.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid md:grid-cols-2 gap-6">
+                              <div>
+                                <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_1_LABEL}</h4>
+                                <ul className="space-y-1 text-sm">
+                                  {WEIGHT_CLASSES.map((w) => {
+                                    const sub = team1Starters.find((s) => s.primary_weight === w)
+                                    return (
+                                      <li key={w} className="flex justify-between gap-2">
+                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
+                                      </li>
+                                    )
+                                  })}
+                                </ul>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_2_LABEL}</h4>
+                                <ul className="space-y-1 text-sm">
+                                  {WEIGHT_CLASSES.map((w) => {
+                                    const sub = team2Starters.find((s) => s.primary_weight === w)
+                                    return (
+                                      <li key={w} className="flex justify-between gap-2">
+                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
+                                      </li>
+                                    )
+                                  })}
+                                </ul>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })()}
+
                     <div className="space-y-4">
                       {WEIGHT_CLASSES.map((weight) => {
                         const weightSubs = tournamentSubs
@@ -527,40 +660,96 @@ export default function NationalTeamSubmissionsPage() {
                                     <TableHead>School</TableHead>
                                     <TableHead>Grad Year</TableHead>
                                     <TableHead>Status</TableHead>
+                                    {tournamentId === "nhsca" && (
+                                      <TableHead>NHSCA Duals (2 teams)</TableHead>
+                                    )}
                                     <TableHead>Actions</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {weightSubs.map((sub) => (
-                                    <TableRow key={sub.id}>
-                                      <TableCell>
-                                        {sub.rank_score !== null ? (
-                                          <Badge variant="outline" className="font-mono">
-                                            #{sub.rank_score}
-                                          </Badge>
-                                        ) : (
-                                          <span className="text-gray-400">—</span>
+                                  {weightSubs.map((sub) => {
+                                    const isUpdating = updatingNhscaId === sub.id
+                                    const team = (sub as InterestFormSubmission).nhsca_duals_team
+                                    const starter = (sub as InterestFormSubmission).nhsca_duals_starter
+                                    return (
+                                      <TableRow key={sub.id}>
+                                        <TableCell>
+                                          {sub.rank_score !== null ? (
+                                            <Badge variant="outline" className="font-mono">
+                                              #{sub.rank_score}
+                                            </Badge>
+                                          ) : (
+                                            <span className="text-gray-400">—</span>
+                                          )}
+                                        </TableCell>
+                                        <TableCell className="font-medium">
+                                          {sub.last_name}, {sub.first_name}
+                                        </TableCell>
+                                        <TableCell>{sub.high_school}</TableCell>
+                                        <TableCell>{sub.graduation_year}</TableCell>
+                                        <TableCell>
+                                          <Badge className={getStatusColor(sub.status)}>{sub.status}</Badge>
+                                        </TableCell>
+                                        {tournamentId === "nhsca" && (
+                                          <TableCell>
+                                            <div className="flex flex-wrap items-center gap-1">
+                                              {team && starter && (
+                                                <Badge variant="secondary" className="text-xs">
+                                                  {team === "team_1" ? NHSCA_TEAM_1_LABEL : NHSCA_TEAM_2_LABEL} starter
+                                                </Badge>
+                                              )}
+                                              {team && !starter && (
+                                                <Badge variant="outline" className="text-xs">
+                                                  {team === "team_1" ? NHSCA_TEAM_1_LABEL : NHSCA_TEAM_2_LABEL}
+                                                </Badge>
+                                              )}
+                                              {isUpdating ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                              ) : (
+                                                <>
+                                                  <Button
+                                                    size="sm"
+                                                    variant={team === "team_1" && starter ? "default" : "outline"}
+                                                    className="text-xs h-7"
+                                                    onClick={() => assignNhscaDualsStarter(sub as InterestFormSubmission, "team_1")}
+                                                  >
+                                                    {NHSCA_TEAM_1_LABEL} starter
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant={team === "team_2" && starter ? "default" : "outline"}
+                                                    className="text-xs h-7"
+                                                    onClick={() => assignNhscaDualsStarter(sub as InterestFormSubmission, "team_2")}
+                                                  >
+                                                    {NHSCA_TEAM_2_LABEL} starter
+                                                  </Button>
+                                                  {(team || starter) && (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="ghost"
+                                                      className="text-xs h-7 text-muted-foreground"
+                                                      onClick={() => clearNhscaDualsAssignment(sub as InterestFormSubmission)}
+                                                    >
+                                                      Clear
+                                                    </Button>
+                                                  )}
+                                                </>
+                                              )}
+                                            </div>
+                                          </TableCell>
                                         )}
-                                      </TableCell>
-                                      <TableCell className="font-medium">
-                                        {sub.last_name}, {sub.first_name}
-                                      </TableCell>
-                                      <TableCell>{sub.high_school}</TableCell>
-                                      <TableCell>{sub.graduation_year}</TableCell>
-                                      <TableCell>
-                                        <Badge className={getStatusColor(sub.status)}>{sub.status}</Badge>
-                                      </TableCell>
-                                      <TableCell>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => setSelectedSubmission(sub)}
-                                        >
-                                          View
-                                        </Button>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
+                                        <TableCell>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setSelectedSubmission(sub)}
+                                          >
+                                            View
+                                          </Button>
+                                        </TableCell>
+                                      </TableRow>
+                                    )
+                                  })}
                                 </TableBody>
                               </Table>
                             </CardContent>
@@ -727,6 +916,43 @@ export default function NationalTeamSubmissionsPage() {
                       className="mt-1 min-h-[100px]"
                     />
                   </div>
+
+                  {selectedSubmission.tournament_interest.includes("nhsca") && (
+                    <div className="border-t pt-4 space-y-3">
+                      <Label className="text-sm font-semibold text-gray-700">NHSCA Duals (2 teams)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Assign to Team 1 or Team 2 and mark as starter. Only one starter per weight per team.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div>
+                          <Label htmlFor="nhscaTeam" className="text-xs text-muted-foreground">Team</Label>
+                          <Select
+                            value={nhscaTeam || "none"}
+                            onValueChange={(v) => setNhscaTeam(v === "none" ? "" : v)}
+                          >
+                            <SelectTrigger id="nhscaTeam" className="w-[140px] mt-1">
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="team_1">{NHSCA_TEAM_1_LABEL}</SelectItem>
+                              <SelectItem value="team_2">{NHSCA_TEAM_2_LABEL}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center gap-2 pt-6">
+                          <input
+                            type="checkbox"
+                            id="nhscaStarter"
+                            checked={nhscaStarter}
+                            onChange={(e) => setNhscaStarter(e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <Label htmlFor="nhscaStarter" className="text-sm">Starter for this team</Label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -758,6 +984,8 @@ export default function NationalTeamSubmissionsPage() {
                         status: newStatus || selectedSubmission.status,
                         admin_notes: adminNotes || selectedSubmission.admin_notes || null,
                         rank_score: rankScore ? parseInt(rankScore) : selectedSubmission.rank_score,
+                        nhsca_duals_team: nhscaTeam && nhscaTeam !== "none" ? nhscaTeam : null,
+                        nhsca_duals_starter: !!nhscaTeam && nhscaTeam !== "none" && nhscaStarter,
                       })
                     }
                   }}

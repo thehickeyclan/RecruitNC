@@ -1,0 +1,27 @@
+-- Cam Stinson: add missing 2021 (and 2020 if needed) NCHSAA state titles so all 4 years show
+-- He is a 4x state champion: 106-113-120-126 (2021–2024 or 2020–2023). Data Dawg currently shows only 2022–2024.
+-- Run in Supabase SQL Editor (Dashboard → SQL Editor → New query).
+
+-- 1) Insert 2021 state champion (4A, 106 lbs) — the missing year so he has 4 titles
+INSERT INTO wrestling_nchsaa_results (year, classification, weight_class, place, wrestler_name, school)
+SELECT 2021, '4A', '106', 1, 'Cam Stinson', 'Mallard Creek'
+WHERE NOT EXISTS (
+  SELECT 1 FROM wrestling_nchsaa_results
+  WHERE year = 2021
+    AND (wrestler_name ILIKE '%Cam%Stinson%' OR wrestler_name ILIKE '%Cameron%Stinson%')
+    AND place = 1
+);
+
+-- 2) If your source has 2020 as his first title (106), uncomment and run:
+-- INSERT INTO wrestling_nchsaa_results (year, classification, weight_class, place, wrestler_name, school)
+-- SELECT 2020, '4A', '106', 1, 'Cam Stinson', 'Mallard Creek'
+-- WHERE NOT EXISTS (
+--   SELECT 1 FROM wrestling_nchsaa_results
+--   WHERE year = 2020 AND (wrestler_name ILIKE '%Cam%Stinson%' OR wrestler_name ILIKE '%Cameron%Stinson%') AND place = 1
+-- );
+
+-- Verify (optional): should show 4 rows for Cam/Cameron Stinson, place=1
+-- SELECT year, classification, weight_class, place, wrestler_name, school
+-- FROM wrestling_nchsaa_results
+-- WHERE wrestler_name ILIKE '%Stinson%' AND place = 1
+-- ORDER BY year;

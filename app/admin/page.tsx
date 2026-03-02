@@ -8,7 +8,8 @@ import { AdminHeader } from "@/components/admin-header"
 import { 
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
-  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard
+  TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
+  ShoppingBag
 } from "lucide-react"
 
 interface AdminStats {
@@ -234,6 +235,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Blue Program</span>
               </Button>
             </Link>
+            <Link href="/admin/orders">
+              <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+                <ShoppingBag className="h-6 w-6" />
+                <span className="text-sm font-semibold">Store & Orders</span>
+              </Button>
+            </Link>
             <Link href="/admin/college-recruiting-guide">
               <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <BookOpen className="h-6 w-6" />
@@ -341,6 +348,17 @@ export default function AdminDashboard() {
                   <CreditCard className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Blue Program</h3>
                   <p className="text-xs text-gray-600">Memberships, invites, reports, images, interest</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Store & Orders — order history, products, customers, inventory */}
+            <Link href="/admin/orders">
+              <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <ShoppingBag className="h-10 w-10 text-[#1a5f4a] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Store & Orders</h3>
+                  <p className="text-xs text-gray-600">Order history, products, customers, inventory</p>
                 </CardContent>
               </Card>
             </Link>

@@ -80,7 +80,8 @@
     "tw-animate-css": "latest",
     "typescript": "^5",
     "vaul": "latest",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "zustand": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

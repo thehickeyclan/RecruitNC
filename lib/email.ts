@@ -165,3 +165,88 @@ export async function sendEditRequestNotification({
   }
 }
 
+/** Order confirmation email for store purchases (Resend). */
+export interface SendOrderConfirmationParams {
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  items: Array<{ name: string; variant: string; quantity: number; price: number }>
+  subtotal: number
+  shipping: number
+  tax: number
+  discount: number
+  total: number
+  shippingAddress: Record<string, unknown>
+}
+
+export async function sendOrderConfirmationEmail(
+  params: SendOrderConfirmationParams
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not configured, skipping order confirmation email")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const { orderNumber, customerName, customerEmail, items, subtotal, shipping, tax, discount, total, shippingAddress } = params
+
+    const itemsRows = items
+      .map(
+        (i) =>
+          `<tr><td>${i.name} (${i.variant})</td><td>${i.quantity}</td><td>$${Number(i.price).toFixed(2)}</td></tr>`
+      )
+      .join("")
+    const addr = shippingAddress as Record<string, string>
+    const addressBlock = [addr.address1 || addr.address, addr.address2, addr.city, addr.state, addr.zipCode || addr.zip]
+      .filter(Boolean)
+      .join(", ")
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">NC United Store</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Hi ${customerName},</p>
+    <p>Thanks for your order. Order number: <strong>${orderNumber}</strong>.</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+      <thead><tr style="border-bottom: 1px solid #e5e7eb;"><th style="text-align: left;">Item</th><th>Qty</th><th style="text-align: right;">Price</th></tr></thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    <p style="margin: 8px 0;">Subtotal: $${Number(subtotal).toFixed(2)}</p>
+    ${shipping > 0 ? `<p style="margin: 8px 0;">Shipping: $${Number(shipping).toFixed(2)}</p>` : ""}
+    ${tax > 0 ? `<p style="margin: 8px 0;">Tax: $${Number(tax).toFixed(2)}</p>` : ""}
+    ${discount > 0 ? `<p style="margin: 8px 0;">Discount: -$${Number(discount).toFixed(2)}</p>` : ""}
+    <p style="margin: 16px 0; font-weight: bold;">Total: $${Number(total).toFixed(2)}</p>
+    <p style="margin: 16px 0;">Shipping to: ${addressBlock}</p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+    <p style="color: #6b7280; font-size: 14px;">Questions? Contact <a href="mailto:info@ncwrestlingunited.com" style="color: #003366;">info@ncwrestlingunited.com</a></p>
+  </div>
+</body>
+</html>
+    `
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [customerEmail.trim()],
+      subject: `Order ${orderNumber} confirmed – NC United Store`,
+      html,
+    })
+
+    if (result.error) {
+      console.error("Resend order confirmation error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendOrderConfirmationEmail:", err)
+    return { success: false, error: message }
+  }
+}
+

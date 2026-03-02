@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
 import {
   DropdownMenu,
@@ -21,6 +22,8 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
+  const cartItems = useCartStore((s) => s.items)
+  const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
 
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href))
   const isDropdownActive = (items: { href: string }[]) => items.some((item) => isActive(item.href))
@@ -77,7 +80,7 @@ export function Navbar() {
     { href: "/blue", label: "Blue Program", description: "NC United Blue membership", icon: Users },
     { href: "/national-team", label: "National Team", description: "NC United National Team Portal", icon: Trophy },
   ]
-  const storeUrl = "https://store.ncwrestlingunited.com/"
+  const storeUrl = "/store"
   const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
   const nationalTeamItems = [
@@ -245,7 +248,15 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <Link href="/news" className={navLinkClass("/news")}>News</Link>
-              <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Store</a>
+              <Link href={storeUrl} className={navLinkClass("/store")}>Store</Link>
+              <Link href="/cart" className={navLinkClass("/cart")}>
+                Cart
+                {cartCount > 0 && (
+                  <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
                   LegacyNC
@@ -427,7 +438,10 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Store</a>
+                  <Link href={storeUrl} className={mobileLinkClass("/store")} onClick={() => setIsOpen(false)}>Store</Link>
+                  <Link href="/cart" className={mobileLinkClass("/cart")} onClick={() => setIsOpen(false)}>
+                    Cart{cartCount > 0 ? ` (${cartCount})` : ""}
+                  </Link>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
                     <div className="space-y-2">
