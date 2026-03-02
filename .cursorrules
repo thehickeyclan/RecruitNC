@@ -9,5 +9,13 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Before adding or changing any link:** (1) Use `<a href="...">` when inside a Radix menu/sheet. (2) Do not add `target="_blank"` for app routes. (3) Confirm the route exists. (4) Copy the pattern from a known working link in this codebase.
 - **New pages:** Create the route first, then add the link using the same pattern as working items.
 
+# Adding a new page (REQUIRED — nav links have failed 7+ times; follow exactly)
+- **Step 1:** Create the route: `app/[your-path]/page.tsx` (e.g. `app/store/page.tsx` → `/store`).
+- **Step 2:** In `components/navbar.tsx`, add the link using the **same pattern as Store/Cart**: force full-page navigation so nothing can intercept.
+  - **Desktop (top-level):** `<a href="/your-path" className={navLinkClass("/your-path")} onClick={(e) => { e.preventDefault(); window.location.href = "/your-path"; }}>Label</a>`
+  - **Desktop (dropdown):** `<DropdownMenuItem asChild><a href="/your-path" className="cursor-pointer" onClick={(e) => { e.preventDefault(); window.location.href = "/your-path"; }}>Label</a></DropdownMenuItem>`
+  - **Mobile:** `<a href="/your-path" className={...} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/your-path"; }}>Label</a>`
+- **Do not** use `<Link>` or `router.push()` for navbar/dropdown/sheet links. Do not rely on default `<a>` click — use `e.preventDefault()` and `window.location.href` so the link always works.
+
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.

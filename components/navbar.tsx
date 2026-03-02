@@ -70,6 +70,17 @@ export function Navbar() {
     }
   }
 
+  // Force full-page nav so nothing (Radix, router) can intercept. Use for every internal nav link.
+  const handleNav = (e: React.MouseEvent, url: string) => {
+    e.preventDefault()
+    window.location.href = url
+  }
+  const handleNavMobile = (e: React.MouseEvent, url: string) => {
+    e.preventDefault()
+    setIsOpen(false)
+    window.location.href = url
+  }
+
   // Primary nav: Home, Athletes, Events (States + Nationals), Calendar, Programs, News, Store, LegacyNC.
   const commitmentItems = [
     { href: "/athletes", label: "All Commitments" },
@@ -144,7 +155,7 @@ export function Navbar() {
           {/* Desktop Navigation — Dropdown items that navigate MUST use <a href>, not Link (Radix blocks navigation otherwise). See .cursorrules. */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-1">
-              <Link href="/" className={navLinkClass("/")}>Home</Link>
+              <a href="/" className={navLinkClass("/")} onClick={(e) => handleNav(e, "/")}>Home</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(athletesItems)}>
                   Athletes
@@ -153,17 +164,17 @@ export function Navbar() {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel className="font-normal text-muted-foreground">Commitments</DropdownMenuLabel>
                   {commitmentItems.map((item) => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <a href={item.href} className="cursor-pointer">{item.label}</a>
-                    </DropdownMenuItem>
+                    <div key={item.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                      <a href={item.href} className="block w-full" onClick={(e) => handleNav(e, item.href)}>{item.label}</a>
+                    </div>
                   ))}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href={profilesItem.href} className="cursor-pointer">{profilesItem.label}</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href={rankingsItem.href} className="cursor-pointer">{rankingsItem.label}</a>
-                  </DropdownMenuItem>
+                  <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                    <a href={profilesItem.href} className="block w-full" onClick={(e) => handleNav(e, profilesItem.href)}>{profilesItem.label}</a>
+                  </div>
+                  <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                    <a href={rankingsItem.href} className="block w-full" onClick={(e) => handleNav(e, rankingsItem.href)}>{rankingsItem.label}</a>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -182,15 +193,15 @@ export function Navbar() {
                   {statesItems.map((sub) => {
                     const Icon = sub.icon
                     return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                      <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                        <a href={sub.href} className="flex flex-1 items-start gap-3 py-2" onClick={(e) => handleNav(e, sub.href)}>
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
                         </a>
-                      </DropdownMenuItem>
+                      </div>
                     )
                   })}
                   <DropdownMenuSeparator />
@@ -204,15 +215,15 @@ export function Navbar() {
                   {nationalsItems.map((sub) => {
                     const Icon = sub.icon
                     return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                      <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                        <a href={sub.href} className="flex flex-1 items-start gap-3 py-2" onClick={(e) => handleNav(e, sub.href)}>
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
                         </a>
-                      </DropdownMenuItem>
+                      </div>
                     )
                   })}
                 </DropdownMenuContent>
@@ -226,24 +237,24 @@ export function Navbar() {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel className="font-normal font-semibold">Programs</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="/blue" className="cursor-pointer">Blue Program</a>
-                  </DropdownMenuItem>
+                  <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                    <a href="/blue" className="block w-full" onClick={(e) => handleNav(e, "/blue")}>Blue Program</a>
+                  </div>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="cursor-pointer">National Team</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-56">
                       {nationalTeamItems.map((sub) => (
-                        <DropdownMenuItem key={sub.href} asChild>
-                          <a href={sub.href} className="cursor-pointer">{sub.label}</a>
-                        </DropdownMenuItem>
+                        <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                          <a href={sub.href} className="block w-full" onClick={(e) => handleNav(e, sub.href)}>{sub.label}</a>
+                        </div>
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Link href="/news" className={navLinkClass("/news")}>News</Link>
-              <a href="/store" className={navLinkClass("/store")} onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
-              <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => { e.preventDefault(); window.location.href = "/cart"; }}>
+              <a href="/news" className={navLinkClass("/news")} onClick={(e) => handleNav(e, "/news")}>News</a>
+              <a href="/store" className={navLinkClass("/store")} onClick={(e) => handleNav(e, "/store")}>Store</a>
+              <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => handleNav(e, "/cart")}>
                 Cart
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
@@ -270,27 +281,28 @@ export function Navbar() {
                   {legacyNcItems.map((sub) => {
                     const Icon = sub.icon
                     return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="cursor-pointer flex items-start gap-3 py-2">
+                      <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
+                        <a href={sub.href} className="flex flex-1 items-start gap-3 py-2" onClick={(e) => handleNav(e, sub.href)}>
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
                         </a>
-                      </DropdownMenuItem>
+                      </div>
                     )
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
               {highlightNavItems.map((item) => (
-                <Link
+                <a
                   key={item.href}
                   href={item.href}
                   className="px-3 py-2 rounded-md text-sm font-semibold transition-all mobile-optimized bg-red-600 text-white hover:bg-red-700"
+                  onClick={(e) => handleNav(e, item.href)}
                 >
                   {item.label}
-                </Link>
+                </a>
               ))}
             </div>
           </div>
