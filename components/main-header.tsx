@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { StoreNavLink } from "@/components/store-nav-link"
+import { StoreButton } from "@/components/store-button"
 import { useCartStore } from "@/lib/store/cart-store"
 
 export function MainHeader({
@@ -23,7 +23,7 @@ export function MainHeader({
               RecruitNC
             </Link>
           )}
-          <StoreNavLink className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">Store</StoreNavLink>
+          <StoreButton className="text-sm text-muted-foreground hover:text-foreground cursor-pointer border-0 bg-transparent font-inherit p-0">Store</StoreButton>
         </div>
         {showCart && (
           <Link

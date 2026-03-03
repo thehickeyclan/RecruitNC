@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ShoppingBag } from "lucide-react"
 import Image from "next/image"
-import { StoreNavLink } from "@/components/store-nav-link"
+import { StoreButton } from "@/components/store-button"
 
 interface Product {
   id: number // BIGINT from database
@@ -89,7 +89,7 @@ export function StoreProductPromotion() {
               </h3>
             </div>
             
-            <StoreNavLink className="mt-4 block cursor-pointer">
+            <StoreButton className="mt-4 block cursor-pointer border-0 bg-transparent font-inherit p-0 text-left w-full">
               <Button 
                 className="w-full bg-[#B31B1B] hover:bg-[#8B1515] text-white font-semibold"
                 size="lg"
@@ -97,7 +97,7 @@ export function StoreProductPromotion() {
                 <ShoppingBag className="w-5 h-5 mr-2" />
                 Shop Now
               </Button>
-            </StoreNavLink>
+            </StoreButton>
           </div>
         </div>
 

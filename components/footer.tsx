@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { StoreNavLink } from "@/components/store-nav-link"
+import { StoreButton } from "@/components/store-button"
 
 export function Footer() {
   return (
@@ -67,9 +67,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <StoreNavLink className="text-sm text-gray-300 hover:text-white cursor-pointer">
-                  Store
-                </StoreNavLink>
+                <StoreButton className="text-sm text-gray-300 hover:text-white cursor-pointer border-0 bg-transparent font-inherit p-0">Store</StoreButton>
               </li>
               <li>
                 <a
