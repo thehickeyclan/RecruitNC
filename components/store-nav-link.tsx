@@ -15,6 +15,8 @@ export function StoreNavLink({
   return (
     <a
       href="/store-app"
+      target="_blank"
+      rel="noopener noreferrer"
       className={className}
       onClick={() => onNavigate?.()}
     >

@@ -70,18 +70,9 @@ export function Navbar() {
     }
   }
 
-  // Force full-page nav so nothing (Radix, router) can intercept. Use for every internal nav link.
-  const handleNav = (e: React.MouseEvent, url: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-    window.location.href = url
-  }
-
-  const handleNavMobile = (e: React.MouseEvent, url: string) => {
-    e.preventDefault()
-    setIsOpen(false)
-    window.location.href = url
-  }
+  // Let links work: do not prevent default. Dropdowns keep onClick for compatibility but link navigates.
+  const handleNav = (_e: React.MouseEvent, _url: string) => {}
+  const handleNavMobile = () => setIsOpen(false)
 
   // Primary nav: Home, Athletes, Events (States + Nationals), Calendar, Programs, News, Store, LegacyNC.
   const commitmentItems = [
@@ -157,7 +148,7 @@ export function Navbar() {
           {/* Desktop Navigation — Dropdown items that navigate MUST use <a href>, not Link (Radix blocks navigation otherwise). See .cursorrules. */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-1">
-              <a href="/" className={navLinkClass("/")} onClick={(e) => handleNav(e, "/")}>Home</a>
+              <a href="/" className={navLinkClass("/")}>Home</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(athletesItems)}>
                   Athletes
@@ -254,9 +245,9 @@ export function Navbar() {
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/news" className={navLinkClass("/news")} onClick={(e) => handleNav(e, "/news")}>News</a>
-              <a href="/store-app" className={navLinkClass("/store-app")} onClick={(e) => handleNav(e, "/store-app")}>Store</a>
-              <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => handleNav(e, "/cart")}>
+              <a href="/news" className={navLinkClass("/news")}>News</a>
+              <a href="/store-app" target="_blank" rel="noopener noreferrer" className={navLinkClass("/store-app")}>Store</a>
+              <a href="/cart" className={navLinkClass("/cart")}>
                 Cart
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
@@ -449,8 +440,8 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href="/store-app" className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onClick={(e) => handleNavMobile(e, "/store-app")}>Store</a>
-                  <a href="/cart" className={mobileLinkClass("/cart")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/cart"; }}>
+                  <a href="/store-app" target="_blank" rel="noopener noreferrer" className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onClick={handleNavMobile}>Store</a>
+                  <a href="/cart" className={mobileLinkClass("/cart")} onClick={handleNavMobile}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>
                   <div className="px-3">
