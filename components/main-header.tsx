@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore } from "@/lib/store/cart-store"
 
 export function MainHeader({
@@ -22,9 +23,7 @@ export function MainHeader({
               RecruitNC
             </Link>
           )}
-          <a href="/store" className="text-sm text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
-            Store
-          </a>
+          <StoreNavLink className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">Store</StoreNavLink>
         </div>
         {showCart && (
           <Link

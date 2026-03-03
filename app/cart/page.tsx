@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -96,7 +97,7 @@ export default function CartPage() {
             <h2 className="text-2xl font-bold mb-2">Your cart is empty</h2>
             <p className="text-muted-foreground mb-6">Add some items to get started!</p>
             <Button asChild className="bg-[#003366] hover:bg-[#003366]/90 text-white">
-              <a href="/store" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Browse Products</a>
+              <StoreNavLink className="cursor-pointer">Browse Products</StoreNavLink>
             </Button>
           </div>
         </div>
@@ -117,7 +118,7 @@ export default function CartPage() {
           <nav className="text-sm text-muted-foreground">
             <Link href="/" className="hover:text-foreground">Home</Link>
             <span className="mx-2">&gt;</span>
-            <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
+            <StoreNavLink className="hover:text-foreground cursor-pointer">Store</StoreNavLink>
             <span className="mx-2">&gt;</span>
             <span className="text-foreground font-medium">Cart</span>
           </nav>
@@ -155,10 +156,10 @@ export default function CartPage() {
 
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Shopping Cart</h1>
-          <a href="/store" className="text-sm text-[#003366] hover:underline flex items-center gap-1" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
+          <StoreNavLink className="text-sm text-[#003366] hover:underline flex items-center gap-1 cursor-pointer">
             <ArrowLeft className="w-4 h-4" />
             Continue Shopping
-          </a>
+          </StoreNavLink>
         </div>
 
         <div className="grid lg:grid-cols-[1fr_400px] gap-8">

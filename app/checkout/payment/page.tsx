@@ -6,6 +6,7 @@ import Link from "next/link"
 import { ArrowLeft, Lock, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore } from "@/lib/store/cart-store"
 import { CheckoutProgress } from "@/components/checkout-progress"
 import { OrderSummary } from "@/components/order-summary"
@@ -245,7 +246,7 @@ export default function PaymentPage() {
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
           <span className="mx-2">&gt;</span>
-          <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
+          <StoreNavLink className="hover:text-foreground cursor-pointer">Store</StoreNavLink>
           <span className="mx-2">&gt;</span>
           <span className="text-foreground font-medium">Checkout</span>
         </nav>

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useCartStore } from "@/lib/store/cart-store"
@@ -21,9 +22,7 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
           <Link href="/" className="font-semibold text-[#003366] hover:underline">
             RecruitNC
           </Link>
-          <a href="/store" className="text-sm text-muted-foreground hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
-            Store
-          </a>
+          <StoreNavLink className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">Store</StoreNavLink>
         </div>
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />

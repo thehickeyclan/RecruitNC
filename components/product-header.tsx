@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { ChevronLeft } from "lucide-react"
 
 interface ProductHeaderProps {
@@ -37,14 +38,10 @@ export function ProductHeader({ productName, category }: ProductHeaderProps) {
     <header className="border-b bg-background sticky top-0 z-40 shadow-sm">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <a
-            href="/store"
-            className="hover:text-foreground flex items-center gap-1"
-            onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}
-          >
+          <StoreNavLink className="hover:text-foreground flex items-center gap-1 cursor-pointer">
             <ChevronLeft className="w-4 h-4" />
             <span>Back to Store</span>
-          </a>
+          </StoreNavLink>
         </div>
 
         <nav className="text-sm text-muted-foreground">
@@ -52,9 +49,7 @@ export function ProductHeader({ productName, category }: ProductHeaderProps) {
             Home
           </Link>
           <span className="mx-2">&gt;</span>
-          <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
-            Store
-          </a>
+          <StoreNavLink className="hover:text-foreground cursor-pointer">Store</StoreNavLink>
           <span className="mx-2">&gt;</span>
           <span className="hover:text-foreground">{categoryDisplayName}</span>
           <span className="mx-2">&gt;</span>

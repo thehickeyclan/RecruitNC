@@ -46,7 +46,7 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
     }
   }, [searchParams])
 
-  // Auto-apply promo code from URL parameter
+  // Auto-apply promo code from URL parameter (no replaceState to avoid Next router refetch / store canceled)
   useEffect(() => {
     const promoParam = searchParams?.get("promo") || searchParams?.get("promoCode")
     if (promoParam && promoParam !== promoCode) {
@@ -56,11 +56,6 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
             title: "Promo code applied!",
             description: `Promo code "${promoParam}" has been applied to your cart.`,
           })
-          const newParams = new URLSearchParams(searchParams?.toString())
-          newParams.delete("promo")
-          newParams.delete("promoCode")
-          const newUrl = newParams.toString() ? `/store?${newParams.toString()}` : "/store"
-          window.history.replaceState(null, "", newUrl)
         }
       })
     }
@@ -147,7 +142,6 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
       <StoreBanner
         onShopAll={() => {
           setSelectedCategories([])
-          window.history.replaceState(null, "", "/store")
           setTimeout(
             () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
             100,
@@ -155,7 +149,6 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
         }}
         onShopCategory={(categoryId) => {
           setSelectedCategories([categoryId])
-          window.history.replaceState(null, "", `/store?category=${encodeURIComponent(categoryId)}`)
           setTimeout(
             () => document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" }),
             100,

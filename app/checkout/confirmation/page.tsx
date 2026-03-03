@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { CheckCircle2, Printer, Package, Truck, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore } from "@/lib/store/cart-store"
 import { createOrderFromPaymentIntent, createOrderFromSession, getOrder } from "@/app/actions/stripe"
 import { trackPurchase } from "@/lib/meta-pixel"
@@ -412,7 +413,7 @@ export default function ConfirmationPage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild className="bg-[#003366] hover:bg-[#003366]/90 text-white">
-              <a href="/store" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Continue Shopping</a>
+              <StoreNavLink className="cursor-pointer">Continue Shopping</StoreNavLink>
             </Button>
           </div>
         </div>

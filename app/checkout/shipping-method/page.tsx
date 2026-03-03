@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore, type ShippingMethod } from "@/lib/store/cart-store"
 import { CheckoutProgress } from "@/components/checkout-progress"
 import { OrderSummary } from "@/components/order-summary"
@@ -67,7 +68,7 @@ export default function ShippingMethodPage() {
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
           <span className="mx-2">&gt;</span>
-          <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
+          <StoreNavLink className="hover:text-foreground cursor-pointer">Store</StoreNavLink>
           <span className="mx-2">&gt;</span>
           <span className="text-foreground font-medium">Checkout</span>
         </nav>

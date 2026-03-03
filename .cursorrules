@@ -10,12 +10,10 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **New pages:** Create the route first, then add the link using the same pattern as working items.
 
 # Adding a new page (REQUIRED — nav links have failed 7+ times; follow exactly)
+- **Why:** New pages and new links often don’t work with client-side navigation — existing client bundles can have a stale route manifest, so RSC fetches get canceled. Full page load hits the server and works.
 - **Step 1:** Create the route: `app/[your-path]/page.tsx` (e.g. `app/store/page.tsx` → `/store`).
-- **Step 2:** In `components/navbar.tsx`, add the link using the **same pattern as Store/Cart**: force full-page navigation so nothing can intercept.
-  - **Desktop (top-level):** `<a href="/your-path" className={navLinkClass("/your-path")} onClick={(e) => { e.preventDefault(); window.location.href = "/your-path"; }}>Label</a>`
-  - **Desktop (dropdown):** `<DropdownMenuItem asChild><a href="/your-path" className="cursor-pointer" onClick={(e) => { e.preventDefault(); window.location.href = "/your-path"; }}>Label</a></DropdownMenuItem>`
-  - **Mobile:** `<a href="/your-path" className={...} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/your-path"; }}>Label</a>`
-- **Do not** use `<Link>` or `router.push()` for navbar/dropdown/sheet links. Do not rely on default `<a>` click — use `e.preventDefault()` and `window.location.href` so the link always works.
+- **Step 2:** For **any new internal link** (nav, footer, in-page): use **HardLink** (or StoreNavLink for `/store`) so navigation is a full page load. Import from `@/components/hard-link` or `@/components/store-nav-link`. Example: `<HardLink href="/your-path" className={...}>Label</HardLink>`. For navbar mobile with sheet: `<HardLink href="/your-path" className={...} onNavigate={() => setIsOpen(false)}>Label</HardLink>`.
+- **Navbar:** Add the link using HardLink (or the existing `<a href="..." onClick={e => { e.preventDefault(); window.location.href = "..." }}>` pattern). Do **not** use `<Link>` or `router.push()` for new (or critical) internal links — they can fail for new routes.
 
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.

@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { StoreNavLink } from "@/components/store-nav-link"
 import { useCartStore, type ShippingAddress } from "@/lib/store/cart-store"
 import { CheckoutProgress } from "@/components/checkout-progress"
 import { OrderSummary } from "@/components/order-summary"
@@ -120,7 +121,7 @@ export default function ShippingPage() {
         <nav className="text-sm text-muted-foreground">
           <Link href="/" className="hover:text-foreground">Home</Link>
           <span className="mx-2">&gt;</span>
-          <a href="/store" className="hover:text-foreground" onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>Store</a>
+          <StoreNavLink className="hover:text-foreground cursor-pointer">Store</StoreNavLink>
           <span className="mx-2">&gt;</span>
           <span className="text-foreground font-medium">Checkout</span>
         </nav>
