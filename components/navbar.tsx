@@ -246,7 +246,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
-              <a href="/store-app" target="_blank" rel="noopener noreferrer" className={navLinkClass("/store-app")}>Store</a>
+              <a href="/store-app" target="_top" rel="noopener" className={navLinkClass("/store-app")}>Store</a>
               <a href="/cart" className={navLinkClass("/cart")}>
                 Cart
                 {cartCount > 0 && (
@@ -440,7 +440,7 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href="/store-app" target="_blank" rel="noopener noreferrer" className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onClick={handleNavMobile}>Store</a>
+                  <a href="/store-app" target="_top" rel="noopener" className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onClick={handleNavMobile}>Store</a>
                   <a href="/cart" className={mobileLinkClass("/cart")} onClick={handleNavMobile}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>

@@ -46,7 +46,7 @@ export async function GET(_request: NextRequest) {
         {
           ok: false,
           error:
-            "Supabase service role is not configured. In Vercel → Project → Settings → Environment Variables, set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE to the service_role key (Supabase Dashboard → Settings → API), not the anon key. Then redeploy.",
+            "Supabase service role is not configured. In Vercel → Settings → Environment Variables set SUPABASE_SERVICE_ROLE_KEY to the service_role key (Supabase Dashboard → Settings → API), not the anon key. Then redeploy.",
         },
         { status: 503 }
       )
@@ -177,7 +177,7 @@ export async function GET(_request: NextRequest) {
       })
     }
     if (submissions.length === 0) {
-      console.warn("[Admin API] blue_express_interest: 0 rows. If table has data, set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE to the service role key (not anon) in Vercel for this environment.")
+      console.warn("[Admin API] blue_express_interest: 0 rows. If table has data, set SUPABASE_SERVICE_ROLE_KEY (service role, not anon) in Vercel for this environment.")
     } else {
       console.log("[Admin API] blue_express_interest fetched:", submissions.length, "rows")
     }

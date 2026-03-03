@@ -400,6 +400,30 @@ export default function NationalTeamSubmissionsPage() {
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>
             )}
 
+            <Card className="mb-4 border border-amber-200 bg-amber-50/80">
+              <CardContent className="p-3">
+                <p className="text-amber-900 text-sm font-medium mb-1">Team 1 / Team 2 / Starter not saving?</p>
+                <p className="text-amber-800 text-xs mb-2">Run this once in Supabase → SQL Editor, then refresh.</p>
+                <pre className="p-2 bg-white border rounded text-xs overflow-x-auto whitespace-pre-wrap font-mono mb-2">ALTER TABLE public.national_team_interest_forms
+  ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;</pre>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    const sql = `ALTER TABLE public.national_team_interest_forms
+  ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;`
+                    navigator.clipboard.writeText(sql)
+                    alert("Copied. Paste in Supabase SQL Editor and run.")
+                  }}
+                >
+                  Copy SQL
+                </Button>
+              </CardContent>
+            </Card>
+
             {migrationSql && (
               <Card className="mb-4 border-2 border-amber-300 bg-amber-50">
                 <CardHeader className="pb-2">

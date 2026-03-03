@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 
-/** Store link: normal anchor to /store-app. */
+/** Store link: target="_top" so it works when app is embedded in iframe. Same pattern as Sign In. */
 export function StoreNavLink({
   className,
   children,
@@ -15,8 +15,8 @@ export function StoreNavLink({
   return (
     <a
       href="/store-app"
-      target="_blank"
-      rel="noopener noreferrer"
+      target="_top"
+      rel="noopener"
       className={className}
       onClick={() => onNavigate?.()}
     >

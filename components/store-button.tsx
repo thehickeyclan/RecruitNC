@@ -1,9 +1,9 @@
 "use client"
 
-/** Store link: normal anchor to /store-app so it always works. */
+/** Store link: target="_top" so it works when app is embedded in iframe (ncwrestlingunited.com). Same as Sign In. */
 export function StoreButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <a href="/store-app" target="_blank" rel="noopener noreferrer" className={className}>
+    <a href="/store-app" target="_top" rel="noopener" className={className}>
       {children ?? "Store"}
     </a>
   )

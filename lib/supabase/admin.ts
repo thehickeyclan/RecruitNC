@@ -31,12 +31,11 @@ export function createAdminClient(): SupabaseClient {
   if (adminClient) return adminClient
 
   const url = getSupabaseUrl()
-  // Prefer OVERRIDE (used in Vercel Production/Preview/Development when the integration key had issues).
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY_OVERRIDE || process.env.SUPABASE_SERVICE_ROLE_KEY
+  // Prefer SUPABASE_SERVICE_ROLE_KEY. Fall back to OVERRIDE so existing Vercel envs that only have OVERRIDE keep working.
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY_OVERRIDE
   if (!key) {
     throw new Error(
-      "Supabase service role key is not configured. Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY_OVERRIDE."
+      "Supabase service role key is not configured. Set SUPABASE_SERVICE_ROLE_KEY in Vercel (Supabase Dashboard → Settings → API → service_role key, not anon). Then redeploy."
     )
   }
 
