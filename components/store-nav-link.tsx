@@ -15,10 +15,8 @@ export function StoreNavLink({
   onNavigate?: () => void
 }) {
   return (
-    <form action="/store" method="get" className="inline" style={{ margin: 0 }} onClick={() => onNavigate?.()}>
-      <button type="submit" className={className ?? ""} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-        {children}
-      </button>
-    </form>
+    <a href="/store" className={className} onClick={(e) => { e.preventDefault(); onNavigate?.(); window.location.href = "/store"; }}>
+      {children}
+    </a>
   )
 }

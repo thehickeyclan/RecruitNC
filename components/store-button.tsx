@@ -6,10 +6,8 @@
  */
 export function StoreButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <form action="/store" method="get" className="inline" style={{ margin: 0 }}>
-      <button type="submit" className={className ?? ""} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
-        {children ?? "Store"}
-      </button>
-    </form>
+    <a href="/store" className={className} onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
+      {children ?? "Store"}
+    </a>
   )
 }
