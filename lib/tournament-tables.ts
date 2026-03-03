@@ -24,6 +24,11 @@ const SAME_PERSON_ALIASES: [string, string][] = [
   ["Jackson D'Ettore", "Jackson Dettore"],
 ]
 
+/** Normalize for alias match: treat backtick as apostrophe so "Jackson D`Ettore" matches alias "Jackson D'Ettore". */
+function normalizeForAlias(s: string): string {
+  return (s ?? "").trim().toLowerCase().replace(/`/g, "'")
+}
+
 /** Return alternate spellings to try (e.g. Zach/Zack, D'Ettore/Dettore). Ensures we find tournament data even when DB spellings differ. Exported for use by wrestling-achievements API. */
 export function getNameVariants(name: string): string[] {
   const t = (name ?? "").trim()
@@ -32,7 +37,9 @@ export function getNameVariants(name: string): string[] {
   const add = (s: string) => {
     if ((s ?? "").trim()) set.add(s.trim())
   }
-  const noApostrophe = t.replace(/'/g, "").trim()
+  const withApostrophe = t.replace(/`/g, "'")
+  if (withApostrophe !== t) add(withApostrophe)
+  const noApostrophe = t.replace(/'/g, "").replace(/`/g, "").trim()
   if (noApostrophe && noApostrophe !== t) add(noApostrophe)
   if (t.includes(",")) {
     const [last, first] = t.split(",").map((s) => s.trim())
@@ -47,7 +54,8 @@ export function getNameVariants(name: string): string[] {
   if (lower.includes("ammon ") && !lower.includes("amon ")) add(t.replace(/\bAmmon\b/gi, "Amon"))
   if (lower.includes("amon ") && !lower.includes("ammon ")) add(t.replace(/\bAmon\b/gi, "Ammon"))
   for (const [a, b] of SAME_PERSON_ALIASES) {
-    if (t.toLowerCase() === a.toLowerCase() || t.toLowerCase() === b.toLowerCase()) {
+    const tNorm = normalizeForAlias(t)
+    if (tNorm === a.toLowerCase() || tNorm === b.toLowerCase()) {
       add(a)
       add(b)
       const aNoApo = a.replace(/'/g, "").trim()

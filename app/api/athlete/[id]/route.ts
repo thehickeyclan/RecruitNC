@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNHSCAFromTables, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
+import { getNameVariants, getNHSCAFromTables, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 /**
@@ -41,14 +41,7 @@ export async function GET(
     const highSchool = (athlete.highschool ?? athlete.highSchool ?? "").toString().trim()
     const name = (athlete.name ?? "").toString().trim()
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
-    const namesToTry = [name]
-    if (wrestlingName && wrestlingName !== name) namesToTry.push(wrestlingName)
-    const noApo = name.replace(/'/g, "").trim()
-    if (noApo && noApo !== name && !namesToTry.includes(noApo)) namesToTry.push(noApo)
-    if (wrestlingName) {
-      const wnNoApo = wrestlingName.replace(/'/g, "").trim()
-      if (wnNoApo && wnNoApo !== wrestlingName && !namesToTry.includes(wnNoApo)) namesToTry.push(wnNoApo)
-    }
+    const namesToTry = [...new Set([...getNameVariants(name), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
     const [nhscaFromTables, super32FromTable, nationalTeamFromTables] = await Promise.all([
       (async () => {
         const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []

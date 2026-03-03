@@ -45,21 +45,24 @@ function normalizeForAlias(name: string): string {
   return (name ?? "")
     .trim()
     .toLowerCase()
+    .replace(/`/g, "'")
     .replace(/,/g, " ")
     .split(/\s+/)
     .filter(Boolean)
     .join(" ")
 }
 
-/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) and known same-person spelling aliases (e.g. Holt Quickny ↔ Holt Quincy) so we match DB spellings either way. */
+/** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) and known same-person spelling aliases (e.g. Holt Quickny ↔ Holt Quincy) so we match DB spellings either way. Treats backtick as apostrophe so "Jackson D`Ettore" matches. */
 export function getNameVariations(name: string): string[] {
   const n = (name ?? "").trim()
   if (!n) return []
   const variations = new Set<string>([n])
+  const withApostrophe = n.replace(/`/g, "'")
+  if (withApostrophe !== n) variations.add(withApostrophe)
 
   const addVariantsFor = (fullName: string) => {
     variations.add(fullName)
-    const noApostrophe = fullName.replace(/'/g, "").trim()
+    const noApostrophe = fullName.replace(/'/g, "").replace(/`/g, "").trim()
     if (noApostrophe && noApostrophe !== fullName) variations.add(noApostrophe)
     if (fullName.includes(",")) {
       const [last, first] = fullName.split(",").map((s) => s.trim())
