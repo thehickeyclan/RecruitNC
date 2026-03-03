@@ -84,6 +84,7 @@ export default function NationalTeamSubmissionsPage() {
   const [nhscaTeam, setNhscaTeam] = useState<string>("")
   const [nhscaStarter, setNhscaStarter] = useState(false)
   const [updatingNhscaId, setUpdatingNhscaId] = useState<string | null>(null)
+  const [migrationSql, setMigrationSql] = useState<string | null>(null)
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true)
@@ -167,7 +168,14 @@ export default function NationalTeamSubmissionsPage() {
           credentials: "include",
         })
         const result = await res.json()
-        if (!result.ok) throw new Error(result.error || "Failed to set starter")
+        if (!result.ok) {
+          if (result.fixMigrationSql) {
+            setMigrationSql(result.fixMigrationSql)
+            return
+          }
+          throw new Error(result.error || "Failed to set starter")
+        }
+        setMigrationSql(null)
         await loadSubmissions()
       } catch (err: any) {
         console.error("Error assigning NHSCA starter:", err)
@@ -194,7 +202,14 @@ export default function NationalTeamSubmissionsPage() {
           credentials: "include",
         })
         const result = await res.json()
-        if (!result.ok) throw new Error(result.error || "Failed to clear assignment")
+        if (!result.ok) {
+          if (result.fixMigrationSql) {
+            setMigrationSql(result.fixMigrationSql)
+            return
+          }
+          throw new Error(result.error || "Failed to clear assignment")
+        }
+        setMigrationSql(null)
         await loadSubmissions()
       } catch (err: any) {
         console.error("Error clearing NHSCA assignment:", err)
@@ -383,6 +398,34 @@ export default function NationalTeamSubmissionsPage() {
 
             {error && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">{error}</div>
+            )}
+
+            {migrationSql && (
+              <Card className="mb-4 border-2 border-amber-300 bg-amber-50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-amber-900 text-base">Missing database columns</CardTitle>
+                  <CardDescription className="text-amber-800">
+                    Run this in Supabase → SQL Editor, then refresh and try again.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <pre className="p-3 bg-white border rounded text-sm overflow-x-auto whitespace-pre-wrap font-mono">{migrationSql}</pre>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        navigator.clipboard.writeText(migrationSql)
+                        alert("Copied to clipboard")
+                      }}
+                    >
+                      Copy SQL
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setMigrationSql(null)}>
+                      Dismiss
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {!loading && !error && submissions.length === 0 && (

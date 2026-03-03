@@ -34,6 +34,18 @@ For the Legacy NC side (what to copy, redirects, nav cleanup), see **Legacy NC**
 | Nav + optional admin | Nav done; optional admin after pages |
 | Admin: national-team-submissions API + page | ✅ In RecruitNC; dashboard link added |
 
+## Add NHSCA Duals columns (if "Team 1 starter" / "Team 2 starter" fails)
+
+If you see **"Could not find the nhsca_duals_starter column"** when clicking starter buttons, run this in **Supabase → SQL Editor**:
+
+```sql
+ALTER TABLE public.national_team_interest_forms
+  ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;
+```
+
+Then refresh the National Team Submissions page. The app also shows this SQL in a banner when the error occurs.
+
 ## Migrate admin interest form submissions to RecruitNC
 
 **No data migration** — `national_team_interest_forms` lives in the shared DB; submissions are already available to RecruitNC.

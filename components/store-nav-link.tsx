@@ -2,9 +2,7 @@
 
 import type { ReactNode } from "react"
 
-/**
- * Store: plain form GET to /store. No link, no JS — nothing can intercept.
- */
+/** Store link: normal anchor to /store-app. */
 export function StoreNavLink({
   className,
   children,
@@ -14,15 +12,13 @@ export function StoreNavLink({
   children: ReactNode
   onNavigate?: () => void
 }) {
-  const goStore = () => {
-    if (typeof window !== "undefined" && (window as any).__storeNavigating) return
-    if (typeof window !== "undefined") (window as any).__storeNavigating = true
-    onNavigate?.()
-    window.location.href = "/store-app"
-  }
   return (
-    <button type="button" className={className} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }} onClick={goStore}>
+    <a
+      href="/store-app"
+      className={className}
+      onClick={() => onNavigate?.()}
+    >
       {children}
-    </button>
+    </a>
   )
 }

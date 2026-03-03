@@ -11,6 +11,15 @@ function isMissingTableError(e: { message?: string; code?: string }): boolean {
   )
 }
 
+const NHSCA_DUALS_MIGRATION_SQL = `ALTER TABLE public.national_team_interest_forms
+  ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;`
+
+function isMissingColumnError(e: { message?: string }): boolean {
+  const msg = (e?.message || "").toLowerCase()
+  return msg.includes("could not find") && (msg.includes("column") || msg.includes("schema cache"))
+}
+
 async function requireAdmin() {
   const supabase = await createClient()
   const {
@@ -152,6 +161,16 @@ export async function PATCH(request: NextRequest) {
             ok: false,
             error:
               "The submissions table does not exist. Run the migration: scripts/206-create-national-team-interest-form-table.sql",
+          },
+          { status: 503 }
+        )
+      }
+      if (isMissingColumnError(error)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Missing database columns for NHSCA Duals (team/starter). Run the SQL below in Supabase SQL Editor.",
+            fixMigrationSql: NHSCA_DUALS_MIGRATION_SQL,
           },
           { status: 503 }
         )
