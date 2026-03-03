@@ -95,10 +95,13 @@ export default function AdminBlueReportsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-gray-600 mb-1">
                 <Users className="h-4 w-4" />
-                <span className="text-sm">Total signups</span>
+                <span className="text-sm">Paid signups</span>
               </div>
-              <p className="text-2xl font-bold text-[#13294B]">{data.signupTotal}</p>
-              <p className="text-xs text-gray-500">{data.signupPaid} paid · {data.signupPending} pending</p>
+              <p className="text-2xl font-bold text-[#13294B]">{data.signupPaid}</p>
+              <p className="text-xs text-gray-500">Completed payment</p>
+              {data.signupPending > 0 && (
+                <p className="text-xs text-amber-600 mt-0.5">{data.signupPending} pending (form only, no payment yet)</p>
+              )}
             </CardContent>
           </Card>
           <Card>
