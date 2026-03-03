@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
+import { StoreLink } from "@/components/store-link"
 import Image from "next/image"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -77,7 +78,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-lg max-w-sm mx-auto w-full">
-      <Link
+      <StoreLink
         href={productUrl}
         className="relative block aspect-square overflow-hidden bg-secondary cursor-pointer p-4 md:p-6"
       >
@@ -127,7 +128,7 @@ export function ProductCard({ product }: ProductCardProps) {
             Low Stock
           </Badge>
         )}
-      </Link>
+      </StoreLink>
 
       <CardContent className="p-4">
         {product.category && (
@@ -136,12 +137,12 @@ export function ProductCard({ product }: ProductCardProps) {
           </Badge>
         )}
 
-        <Link
+        <StoreLink
           href={productUrl}
           className="font-semibold text-lg mb-2 line-clamp-2 text-balance hover:text-[#003366] transition-colors block"
         >
           {product.name}
-        </Link>
+        </StoreLink>
 
         <div className="flex items-center gap-1 mb-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -208,7 +209,7 @@ export function ProductCard({ product }: ProductCardProps) {
           asChild
           className="w-full bg-[#003366] hover:bg-[#003366]/90 text-white"
         >
-          <Link href={productUrl}>View Product</Link>
+          <StoreLink href={productUrl}>View Product</StoreLink>
         </Button>
       </CardFooter>
     </Card>

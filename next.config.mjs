@@ -1,5 +1,11 @@
 const WP_ORIGIN = "https://ncwrestlingunited.com";
 
+/**
+ * Store prefetch: Next.js has no global prefetch disable. We avoid "store (canceled)"
+ * requests by using StoreNavLink (no <a href="/store">) and StoreLink (prefetch={false})
+ * for all /store and /store/* links. See components/store-nav-link.tsx and store-link.tsx.
+ */
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {

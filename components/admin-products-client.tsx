@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { StoreLink } from "@/components/store-link"
 import Image from "next/image"
 import {
   Table,
@@ -126,9 +127,9 @@ export function AdminProductsClient({ products }: AdminProductsClientProps) {
                       <Link href={`/admin/products/${product.id}`}>Edit</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/store/product/${product.id}`} target="_blank" rel="noopener noreferrer">
+                      <StoreLink href={`/store/product/${product.id}`} target="_blank" rel="noopener noreferrer">
                         View
-                      </Link>
+                      </StoreLink>
                     </Button>
                   </TableCell>
                 </TableRow>
