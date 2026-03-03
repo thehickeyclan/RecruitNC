@@ -22,13 +22,13 @@ function escapeForIlike(s: string): string {
 /** Curly apostrophe (Unicode) — source data sometimes uses this. */
 const CURLY_APO = "\u2019"
 
-/** Return ILIKE patterns for a name so we match DB whether it has straight or curly apostrophe (e.g. Jackson D'Ettore). */
+/** Return ILIKE patterns for a name so we match DB: straight/curly apostrophe and backtick (Data Dawg uses these). */
 function getIlikePatternsForVariation(v: string): string[] {
   const straight = `%${escapeForIlike(v)}%`
   const patterns = [straight]
   if (v.includes("'")) {
-    const withCurly = `%${v.replace(/'/g, CURLY_APO)}%`
-    patterns.push(withCurly)
+    patterns.push(`%${v.replace(/'/g, CURLY_APO)}%`)
+    patterns.push(`%${v.replace(/'/g, "`")}%`)
   }
   return patterns
 }
@@ -111,6 +111,7 @@ function formatPlacement(p: number | string | null | undefined): string {
 
 /**
  * Fetch NHSCA from nhsca_placements (primary) or wrestling_nhsca_results (fallback).
+ * Tries exact match first so "Jackson D'Ettore" in DB matches without ILIKE/pattern issues.
  */
 export async function getNHSCAFromTables(
   supabase: SupabaseClient,
@@ -119,11 +120,66 @@ export async function getNHSCAFromTables(
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim() || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
-  const namesToTry = getNameVariants(athleteName)
+  const exactName = normalizeApostrophes(athleteName.trim())
 
+  const mapPlacement = (p: any) => ({
+    year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
+    placement: formatPlacement(p.placement),
+    record: (p.record ?? "").toString().trim(),
+    weight: (p.weight_class ?? p.weight ?? "").toString().trim(),
+    division: (p.division ?? "").toString().trim(),
+  })
+  const mapResult = (r: any) => ({
+    year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
+    placement: formatPlacement(r.placement ?? r.place),
+    record: (r.record ?? r.record_text ?? "").toString().trim(),
+    weight: (r.weight ?? "").toString().trim(),
+    division: (r.division ?? "").toString().trim(),
+  })
+
+  // 1. Exact match first: "First Last" then "Last, First" (DB often has NCHSAA as "D'Ettore, Jackson")
+  const { data: exactPlacements } = await supabase
+    .from("nhsca_placements")
+    .select("*")
+    .eq("athlete_name", exactName)
+    .gte("year", startYear)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (exactPlacements?.length) return exactPlacements.map(mapPlacement)
+
+  const { data: exactNhsca } = await supabase
+    .from("wrestling_nhsca_results")
+    .select("*")
+    .eq("athlete_name", exactName)
+    .gte("year", startYear)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (exactNhsca?.length) return exactNhsca.map(mapResult)
+
+  const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfPlacements } = await supabase
+      .from("nhsca_placements")
+      .select("*")
+      .eq("athlete_name", lastFirst)
+      .gte("year", startYear)
+      .lte("year", graduationYear)
+      .order("year", { ascending: false })
+    if (lfPlacements?.length) return lfPlacements.map(mapPlacement)
+    const { data: lfNhsca } = await supabase
+      .from("wrestling_nhsca_results")
+      .select("*")
+      .eq("athlete_name", lastFirst)
+      .gte("year", startYear)
+      .lte("year", graduationYear)
+      .order("year", { ascending: false })
+    if (lfNhsca?.length) return lfNhsca.map(mapResult)
+  }
+
+  // 2. Name variants + ILIKE patterns (incl. backtick so "D`Ettore, Jackson" in DB matches)
+  const namesToTry = getNameVariants(athleteName)
   for (const searchName of namesToTry) {
     for (const pattern of getIlikePatternsForVariation(searchName)) {
-      // 1. Try nhsca_placements (has record data per user)
       const { data: placements } = await supabase
         .from("nhsca_placements")
         .select("*")
@@ -131,18 +187,8 @@ export async function getNHSCAFromTables(
         .gte("year", startYear)
         .lte("year", graduationYear)
         .order("year", { ascending: false })
+      if (placements?.length) return placements.map(mapPlacement)
 
-      if (placements?.length) {
-        return placements.map((p: any) => ({
-          year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
-          placement: formatPlacement(p.placement),
-          record: (p.record ?? "").toString().trim(),
-          weight: (p.weight_class ?? p.weight ?? "").toString().trim(),
-          division: (p.division ?? "").toString().trim(),
-        }))
-      }
-
-      // 2. Fallback: wrestling_nhsca_results
       const { data: results } = await supabase
         .from("wrestling_nhsca_results")
         .select("*")
@@ -150,16 +196,7 @@ export async function getNHSCAFromTables(
         .gte("year", startYear)
         .lte("year", graduationYear)
         .order("year", { ascending: false })
-
-      if (results?.length) {
-        return results.map((r: any) => ({
-          year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || new Date().getFullYear(),
-          placement: formatPlacement(r.placement ?? r.place),
-          record: (r.record ?? r.record_text ?? "").toString().trim(),
-          weight: (r.weight ?? "").toString().trim(),
-          division: (r.division ?? "").toString().trim(),
-        }))
-      }
+      if (results?.length) return results.map(mapResult)
     }
   }
 
@@ -224,7 +261,7 @@ export async function getNHSCAFromTablesAllTime(
 
 /**
  * Fetch Super32 from super32_results table.
- * Table has: uuid, wins, losses, record, high_school (and athlete_name, year if present).
+ * Tries exact match first so DB "Jackson D'Ettore" matches without ILIKE issues.
  */
 export async function getSuper32FromTable(
   supabase: SupabaseClient,
@@ -234,6 +271,38 @@ export async function getSuper32FromTable(
 ): Promise<TournamentResultRow[]> {
   if ((!athleteName?.trim() && !options?.highSchool?.trim()) || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
+  const exactName = normalizeApostrophes(athleteName.trim())
+
+  const filterBySchool = (rows: any[]) => {
+    if (!options?.highSchool?.trim() || rows.length === 0) return rows
+    const school = options.highSchool.trim().toLowerCase()
+    const filtered = rows.filter((r: any) => {
+      const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
+      return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
+    })
+    return filtered.length > 0 ? filtered : rows
+  }
+
+  const { data: exactRows } = await supabase
+    .from("super32_results")
+    .select("*")
+    .eq("athlete_name", exactName)
+    .gte("year", startYear)
+    .lte("year", graduationYear)
+    .order("year", { ascending: false })
+  if (exactRows?.length) return dedupeSuper32ByYear(mapSuper32Rows(filterBySchool(exactRows)))
+
+  const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfRows } = await supabase
+      .from("super32_results")
+      .select("*")
+      .eq("athlete_name", lastFirst)
+      .gte("year", startYear)
+      .lte("year", graduationYear)
+      .order("year", { ascending: false })
+    if (lfRows?.length) return dedupeSuper32ByYear(mapSuper32Rows(filterBySchool(lfRows)))
+  }
 
   for (const searchName of getNameVariants(athleteName)) {
     for (const namePattern of getIlikePatternsForVariation(searchName)) {
@@ -245,16 +314,7 @@ export async function getSuper32FromTable(
         .lte("year", graduationYear)
         .order("year", { ascending: false })
 
-      let rows = byName ?? []
-      if (options?.highSchool?.trim() && rows.length > 0) {
-        const school = options.highSchool.trim().toLowerCase()
-        const filtered = rows.filter((r: any) => {
-          const rowSchool = (r.high_school ?? r.school ?? "").toString().toLowerCase()
-          // Allow rows with null/empty school (e.g. not resolved during import)
-          return !rowSchool || rowSchool.includes(school) || school.includes(rowSchool)
-        })
-        rows = filtered.length > 0 ? filtered : rows
-      }
+      const rows = filterBySchool(byName ?? [])
       if (rows.length) return dedupeSuper32ByYear(mapSuper32Rows(rows))
     }
   }

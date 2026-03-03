@@ -25,13 +25,13 @@ export function escapeForIlike(s: string): string {
 /** Curly apostrophe (Unicode) — NCHSAA/source data sometimes stores names with this. */
 const CURLY_APOSTROPHE = "\u2019"
 
-/** Return ilike patterns for a name variation so we match DB whether it has straight or curly apostrophe. */
+/** Return ilike patterns for a name so we match DB: straight/curly apostrophe and backtick (same as Data Dawg). */
 function getIlikePatternsForVariation(v: string): string[] {
   const escaped = "%" + escapeForIlike(v) + "%"
   const patterns = [escaped]
   if (v.includes("'")) {
-    const withCurly = "%" + v.replace(/'/g, CURLY_APOSTROPHE) + "%"
-    patterns.push(withCurly)
+    patterns.push("%" + v.replace(/'/g, CURLY_APOSTROPHE) + "%")
+    patterns.push("%" + v.replace(/'/g, "`") + "%")
   }
   return patterns
 }
@@ -146,9 +146,44 @@ export async function getNCHSAAResultsForProfile(
 ): Promise<NchsaaRowForProfile[]> {
   if (!(athleteName ?? "").trim()) return []
   const yearRange = graduationYear ? plausibleNchsaaYearsForGradYear(graduationYear) : null
-  const variations = getNameVariations(athleteName)
+  const exactName = normalizeApostrophes(athleteName).trim()
   const seen = new Set<string>()
   const merged: NchsaaRowForProfile[] = []
+
+  const pushRows = (data: any[]) => {
+    for (const row of data ?? []) {
+      const key = `${row.year}-${row.classification}-${row.weight_class}-${(row.wrestler_name ?? "").toString()}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      merged.push({
+        year: Number(row.year),
+        classification: (row.classification ?? "").toString(),
+        weight_class: (row.weight_class ?? "").toString(),
+        place: row.place != null ? Number(row.place) : null,
+        school: (row.school ?? "").toString(),
+        wrestler_name: (row.wrestler_name ?? "").toString(),
+      })
+    }
+  }
+
+  // Exact match first: "First Last" then "Last, First" (DB often has "D'Ettore, Jackson")
+  const { data: exactData, error: exactErr } = await supabase
+    .from("wrestling_nchsaa_results")
+    .select("year, classification, weight_class, place, school, wrestler_name")
+    .eq("wrestler_name", exactName)
+    .order("year", { ascending: false })
+  if (!exactErr && exactData?.length) pushRows(exactData)
+
+  const variations = getNameVariations(athleteName)
+  const lastFirst = variations.find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfData, error: lfErr } = await supabase
+      .from("wrestling_nchsaa_results")
+      .select("year, classification, weight_class, place, school, wrestler_name")
+      .eq("wrestler_name", lastFirst)
+      .order("year", { ascending: false })
+    if (!lfErr && lfData?.length) pushRows(lfData)
+  }
 
   for (const v of variations) {
     const patterns = getIlikePatternsForVariation(v)
@@ -159,20 +194,7 @@ export async function getNCHSAAResultsForProfile(
         .ilike("wrestler_name", pattern)
         .order("year", { ascending: false })
       if (error) throw error
-      if (!data?.length) continue
-      for (const row of data) {
-        const key = `${row.year}-${row.classification}-${row.weight_class}-${(row.wrestler_name ?? "").toString()}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        merged.push({
-          year: Number(row.year),
-          classification: (row.classification ?? "").toString(),
-          weight_class: (row.weight_class ?? "").toString(),
-          place: row.place != null ? Number(row.place) : null,
-          school: (row.school ?? "").toString(),
-          wrestler_name: (row.wrestler_name ?? "").toString(),
-        })
-      }
+      if (data?.length) pushRows(data)
     }
   }
 
