@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 
-/** Store: form GET so navigation cannot be canceled. Full document load. */
+/** Store: plain anchor so the browser does one document load. onNavigate runs before nav (e.g. close mobile sheet). */
 export function StoreNavLink({
   className,
   children,
@@ -13,14 +13,12 @@ export function StoreNavLink({
   onNavigate?: () => void
 }) {
   return (
-    <form method="get" action="/store-app" target="_top" className={className} onSubmit={() => onNavigate?.()}>
-      <button
-        type="submit"
-        className="w-full text-left"
-        style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}
-      >
-        {children}
-      </button>
-    </form>
+    <a
+      href="/store-app"
+      className={className}
+      onClick={() => onNavigate?.()}
+    >
+      {children}
+    </a>
   )
 }
