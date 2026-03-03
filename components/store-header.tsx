@@ -34,9 +34,9 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
             className="pl-9 h-9 w-full"
           />
         </div>
-        <button
-          type="button"
-          onClick={() => { window.location.href = "/cart" }}
+        <a
+          href="/cart"
+          target="_top"
           className="relative flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground shrink-0 bg-transparent border-0 cursor-pointer p-0"
         >
           Cart
@@ -45,7 +45,7 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
               {count}
             </span>
           )}
-        </button>
+        </a>
       </div>
     </header>
   )

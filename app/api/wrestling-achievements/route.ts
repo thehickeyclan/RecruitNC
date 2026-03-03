@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
 import { escapeForIlike, getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { getSuper32FromTable } from "@/lib/tournament-tables"
+import { getNameVariants, getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
   try {

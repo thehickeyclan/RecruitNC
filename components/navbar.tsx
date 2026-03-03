@@ -20,6 +20,8 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
+import { StoreButton } from "@/components/store-button"
+import { StoreNavLink } from "@/components/store-nav-link"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -246,15 +248,15 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
-              <button type="button" onClick={() => { window.location.href = "/store-app" }} className={navLinkClass("/store-app") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0"}>Store</button>
-              <button type="button" onClick={() => { window.location.href = "/cart" }} className={navLinkClass("/cart") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0 flex items-center"}>
+              <StoreButton className={navLinkClass("/store-app") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0"}>Store</StoreButton>
+              <a href="/cart" target="_top" className={navLinkClass("/cart") + " flex items-center"}>
                 Cart
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
                     {cartCount}
                   </span>
                 )}
-              </button>
+              </a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
                   LegacyNC
@@ -440,10 +442,10 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <button type="button" className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left cursor-pointer bg-transparent border-0 font-inherit"} onClick={() => { setIsOpen(false); window.location.href = "/store-app" }}>Store</button>
-                  <button type="button" className={mobileLinkClass("/cart") + " block min-h-[44px] w-full text-left cursor-pointer bg-transparent border-0 font-inherit"} onClick={() => { setIsOpen(false); window.location.href = "/cart" }}>
+                  <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
+                  <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " block min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
-                  </button>
+                  </a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
                     <div className="space-y-2">

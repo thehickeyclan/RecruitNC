@@ -9,6 +9,11 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Before adding or changing any link:** (1) Use `<a href="...">` when inside a Radix menu/sheet. (2) Do not add `target="_blank"` for app routes. (3) Confirm the route exists. (4) Copy the pattern from a known working link in this codebase.
 - **New pages:** Create the route first, then add the link using the same pattern as working items.
 
+# New page returns 404 / links do nothing
+- **Critical:** Critical links (Store, admin, new pages) must be plain `<a href="...">` (HardLink or StoreNavLink use real anchors) so navigation works with zero JavaScript.
+- **404 in new tab but other pages (e.g. /blue) work:** Only some routes 404 = either (1) the deployment marked "Production" is not the latest (so new routes exist only on a newer deployment). **Fix:** Vercel → Deployments → find the deployment from the latest commit → ⋮ → "Promote to Production". (2) Or those routes throw at build time and get dropped — check Build logs for errors mentioning admin/orders or store. (3) Or they throw at runtime — check Function/Runtime logs when requesting that URL.
+- **Redeploy with cache cleared:** Deployments → Redeploy → enable "Clear build cache" if the build might be stale.
+
 # Adding a new page (REQUIRED — nav links have failed 7+ times; follow exactly)
 - **Why:** New pages and new links often don’t work with client-side navigation — existing client bundles can have a stale route manifest, so RSC fetches get canceled. Full page load hits the server and works.
 - **Step 1:** Create the route: `app/[your-path]/page.tsx` (e.g. `app/store/page.tsx` → `/store`).

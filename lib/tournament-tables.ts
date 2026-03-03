@@ -19,26 +19,56 @@ function escapeForIlike(s: string): string {
   return (s ?? "").replace(/'/g, "''")
 }
 
-/** Return alternate spellings to try (e.g. Zach/Zack, D'Ettore/Dettore). Ensures we find tournament data even when DB spellings differ. */
-function getNameVariants(name: string): string[] {
+/** Known same-person name spellings (apostrophe vs no apostrophe, etc.) so tournament tables match. */
+const SAME_PERSON_ALIASES: [string, string][] = [
+  ["Jackson D'Ettore", "Jackson Dettore"],
+]
+
+/** Return alternate spellings to try (e.g. Zach/Zack, D'Ettore/Dettore). Ensures we find tournament data even when DB spellings differ. Exported for use by wrestling-achievements API. */
+export function getNameVariants(name: string): string[] {
   const t = (name ?? "").trim()
   if (!t) return []
-  const variants: string[] = [t]
+  const set = new Set<string>([t])
+  const add = (s: string) => {
+    if ((s ?? "").trim()) set.add(s.trim())
+  }
   const noApostrophe = t.replace(/'/g, "").trim()
-  if (noApostrophe && noApostrophe !== t) variants.push(noApostrophe)
+  if (noApostrophe && noApostrophe !== t) add(noApostrophe)
   if (t.includes(",")) {
     const [last, first] = t.split(",").map((s) => s.trim())
-    if (first && last) variants.push(`${first} ${last}`)
+    if (first && last) add(`${first} ${last}`)
   } else {
     const parts = t.split(/\s+/).filter(Boolean)
-    if (parts.length >= 2) variants.push(`${parts.slice(1).join(" ")}, ${parts[0]}`)
+    if (parts.length >= 2) add(`${parts.slice(1).join(" ")}, ${parts[0]}`)
   }
   const lower = t.toLowerCase()
-  if (lower.includes("zach ") && !lower.includes("zack ")) variants.push(t.replace(/\bZach\b/gi, "Zack"))
-  if (lower.includes("zack ") && !lower.includes("zach ")) variants.push(t.replace(/\bZack\b/gi, "Zach"))
-  if (lower.includes("ammon ") && !lower.includes("amon ")) variants.push(t.replace(/\bAmmon\b/gi, "Amon"))
-  if (lower.includes("amon ") && !lower.includes("ammon ")) variants.push(t.replace(/\bAmon\b/gi, "Ammon"))
-  return [...new Set(variants)]
+  if (lower.includes("zach ") && !lower.includes("zack ")) add(t.replace(/\bZach\b/gi, "Zack"))
+  if (lower.includes("zack ") && !lower.includes("zach ")) add(t.replace(/\bZack\b/gi, "Zach"))
+  if (lower.includes("ammon ") && !lower.includes("amon ")) add(t.replace(/\bAmmon\b/gi, "Amon"))
+  if (lower.includes("amon ") && !lower.includes("ammon ")) add(t.replace(/\bAmon\b/gi, "Ammon"))
+  for (const [a, b] of SAME_PERSON_ALIASES) {
+    if (t.toLowerCase() === a.toLowerCase() || t.toLowerCase() === b.toLowerCase()) {
+      add(a)
+      add(b)
+      const aNoApo = a.replace(/'/g, "").trim()
+      const bNoApo = b.replace(/'/g, "").trim()
+      if (aNoApo) add(aNoApo)
+      if (bNoApo) add(bNoApo)
+      const partsA = a.split(/\s+/).filter(Boolean)
+      const partsB = b.split(/\s+/).filter(Boolean)
+      if (partsA.length >= 2) add(`${partsA.slice(1).join(" ")}, ${partsA[0]}`)
+      if (partsB.length >= 2) add(`${partsB.slice(1).join(" ")}, ${partsB[0]}`)
+      break
+    }
+  }
+  const variants = [...set]
+  const expanded = new Set<string>(variants)
+  for (const v of variants) {
+    if (v.includes(",")) continue
+    const parts = v.split(/\s+/).filter(Boolean)
+    if (parts.length >= 2) expanded.add(`${parts.slice(1).join(" ")}, ${parts[0]}`)
+  }
+  return [...expanded]
 }
 
 function formatPlacement(p: number | string | null | undefined): string {
