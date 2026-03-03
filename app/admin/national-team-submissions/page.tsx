@@ -85,6 +85,8 @@ export default function NationalTeamSubmissionsPage() {
   const [nhscaStarter, setNhscaStarter] = useState(false)
   const [updatingNhscaId, setUpdatingNhscaId] = useState<string | null>(null)
   const [migrationSql, setMigrationSql] = useState<string | null>(null)
+  const [editPrimaryWeight, setEditPrimaryWeight] = useState<string>("")
+  const [editSecondaryWeight, setEditSecondaryWeight] = useState<string>("")
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true)
@@ -254,9 +256,13 @@ export default function NationalTeamSubmissionsPage() {
     if (selectedSubmission) {
       setNhscaTeam(selectedSubmission.nhsca_duals_team ?? "")
       setNhscaStarter(selectedSubmission.nhsca_duals_starter ?? false)
+      setEditPrimaryWeight(selectedSubmission.primary_weight ?? "")
+      setEditSecondaryWeight(selectedSubmission.secondary_weight ?? "")
     } else {
       setNhscaTeam("")
       setNhscaStarter(false)
+      setEditPrimaryWeight("")
+      setEditSecondaryWeight("")
     }
   }, [selectedSubmission])
 
@@ -892,17 +898,36 @@ export default function NationalTeamSubmissionsPage() {
                       {selectedSubmission.graduation_year}
                     </div>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <Label className="text-sm font-semibold text-gray-700">Weight Classes</Label>
-                    <div className="mt-1">
-                      <Badge variant="outline" className="mr-2">
-                        Primary: {selectedSubmission.primary_weight} lbs
-                      </Badge>
-                      {selectedSubmission.secondary_weight && (
-                        <Badge variant="outline">
-                          Secondary: {selectedSubmission.secondary_weight} lbs
-                        </Badge>
-                      )}
+                    <div className="mt-2 flex flex-wrap items-center gap-4">
+                      <div>
+                        <Label htmlFor="editPrimaryWeight" className="text-xs text-muted-foreground block mb-1">Primary (lbs)</Label>
+                        <Select value={editPrimaryWeight} onValueChange={setEditPrimaryWeight}>
+                          <SelectTrigger id="editPrimaryWeight" className="w-[100px]">
+                            <SelectValue placeholder="Weight" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {WEIGHT_CLASSES.map((w) => (
+                              <SelectItem key={w} value={w}>{w}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="editSecondaryWeight" className="text-xs text-muted-foreground block mb-1">Secondary (lbs, optional)</Label>
+                        <Select value={editSecondaryWeight || "none"} onValueChange={(v) => setEditSecondaryWeight(v === "none" ? "" : v)}>
+                          <SelectTrigger id="editSecondaryWeight" className="w-[100px]">
+                            <SelectValue placeholder="None" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {WEIGHT_CLASSES.map((w) => (
+                              <SelectItem key={w} value={w}>{w}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1060,6 +1085,8 @@ export default function NationalTeamSubmissionsPage() {
                         rank_score: rankScore ? parseInt(rankScore) : selectedSubmission.rank_score,
                         nhsca_duals_team: nhscaTeam && nhscaTeam !== "none" ? nhscaTeam : null,
                         nhsca_duals_starter: !!nhscaTeam && nhscaTeam !== "none" && nhscaStarter,
+                        primary_weight: editPrimaryWeight || selectedSubmission.primary_weight,
+                        secondary_weight: editSecondaryWeight || null,
                       })
                     }
                   }}
