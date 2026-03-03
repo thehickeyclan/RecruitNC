@@ -30,6 +30,9 @@ export function BulletproofInternalLinks() {
       }
 
       // Internal same-origin link: force full page load so navigation always works
+      if (typeof window !== "undefined" && window.location.search.includes("bulletproof_debug=1")) {
+        console.log("[BulletproofInternalLinks] intercepting internal link →", anchor.href)
+      }
       e.preventDefault()
       e.stopPropagation()
       window.location.href = anchor.href
