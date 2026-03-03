@@ -43,6 +43,12 @@ export async function GET(
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
     const namesToTry = [name]
     if (wrestlingName && wrestlingName !== name) namesToTry.push(wrestlingName)
+    const noApo = name.replace(/'/g, "").trim()
+    if (noApo && noApo !== name && !namesToTry.includes(noApo)) namesToTry.push(noApo)
+    if (wrestlingName) {
+      const wnNoApo = wrestlingName.replace(/'/g, "").trim()
+      if (wnNoApo && wnNoApo !== wrestlingName && !namesToTry.includes(wnNoApo)) namesToTry.push(wnNoApo)
+    }
     const [nhscaFromTables, super32FromTable, nationalTeamFromTables] = await Promise.all([
       (async () => {
         const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []

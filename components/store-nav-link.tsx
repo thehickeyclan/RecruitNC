@@ -13,15 +13,13 @@ export function StoreNavLink({
   onNavigate?: () => void
 }) {
   return (
-    <form method="get" action="/cart" target="_top" className="inline">
-      <button
-        type="submit"
-        className={className}
-        style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}
-        onClick={() => onNavigate?.()}
-      >
-        {children}
-      </button>
-    </form>
+    <button
+      type="button"
+      className={className}
+      style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}
+      onClick={() => { onNavigate?.(); window.location.href = "/store-app" }}
+    >
+      {children}
+    </button>
   )
 }

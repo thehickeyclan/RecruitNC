@@ -189,9 +189,13 @@ export default function AdminBlueSubscriptionsPage() {
                           </TableCell>
                           <TableCell className="text-sm text-gray-600">{new Date(s.created_at).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
-                            <Link href={`/admin/blue/signups/${s.id}`} className="text-sm text-[#003366] hover:underline font-medium">
+                            <button
+                              type="button"
+                              onClick={() => { window.location.href = `/admin/blue/signups/${s.id}` }}
+                              className="text-sm text-[#003366] hover:underline font-medium bg-transparent border-0 cursor-pointer p-0"
+                            >
                               View all inputs
-                            </Link>
+                            </button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -283,12 +287,13 @@ export default function AdminBlueSubscriptionsPage() {
                       <TableRow key={sub.id}>
                         <TableCell className="font-medium">
                           {sub.athlete_id ? (
-                            <Link
-                              href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`}
-                              className="text-[#003366] hover:underline cursor-pointer font-medium"
+                            <button
+                              type="button"
+                              onClick={() => { window.location.href = `/admin/blue/members/${encodeURIComponent(sub.athlete_id)}` }}
+                              className="text-[#003366] hover:underline cursor-pointer font-medium bg-transparent border-0 p-0 text-left"
                             >
                               {sub.athlete_name}
-                            </Link>
+                            </button>
                           ) : (
                             <span>{sub.athlete_name}</span>
                           )}

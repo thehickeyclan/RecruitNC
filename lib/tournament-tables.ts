@@ -26,6 +26,13 @@ function getNameVariants(name: string): string[] {
   const variants: string[] = [t]
   const noApostrophe = t.replace(/'/g, "").trim()
   if (noApostrophe && noApostrophe !== t) variants.push(noApostrophe)
+  if (t.includes(",")) {
+    const [last, first] = t.split(",").map((s) => s.trim())
+    if (first && last) variants.push(`${first} ${last}`)
+  } else {
+    const parts = t.split(/\s+/).filter(Boolean)
+    if (parts.length >= 2) variants.push(`${parts.slice(1).join(" ")}, ${parts[0]}`)
+  }
   const lower = t.toLowerCase()
   if (lower.includes("zach ") && !lower.includes("zack ")) variants.push(t.replace(/\bZach\b/gi, "Zack"))
   if (lower.includes("zack ") && !lower.includes("zach ")) variants.push(t.replace(/\bZack\b/gi, "Zach"))

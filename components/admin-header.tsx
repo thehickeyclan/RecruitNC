@@ -80,12 +80,12 @@ export function AdminHeader() {
 
             <nav className="hidden md:flex space-x-1">
               {adminNavItems.map((item) => (
-                <Link
+                <button
                   key={item.href}
-                  href={item.href}
-                  prefetch={false}
+                  type="button"
+                  onClick={() => { window.location.href = item.href }}
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-transparent border-0 cursor-pointer",
                     pathname === item.href
                       ? "bg-white/20 text-white"
                       : "text-white hover:bg-white/10",
@@ -93,7 +93,7 @@ export function AdminHeader() {
                 >
                   <span>{item.icon}</span>
                   <span>{item.title}</span>
-                </Link>
+                </button>
               ))}
             </nav>
           </div>

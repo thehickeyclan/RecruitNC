@@ -26,9 +26,10 @@ export function MainHeader({
           <StoreButton className="text-sm text-muted-foreground hover:text-foreground cursor-pointer border-0 bg-transparent font-inherit p-0">Store</StoreButton>
         </div>
         {showCart && (
-          <Link
-            href="/store-app"
-            className="relative flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+          <button
+            type="button"
+            onClick={() => { window.location.href = "/cart" }}
+            className="relative flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground bg-transparent border-0 cursor-pointer p-0"
           >
             Cart
             {count > 0 && (
@@ -36,7 +37,7 @@ export function MainHeader({
                 {count}
               </span>
             )}
-          </Link>
+          </button>
         )}
       </div>
     </header>
