@@ -15,8 +15,8 @@ export function StoreNavLink({
   onNavigate?: () => void
 }) {
   return (
-    <a href="/store" className={className} onClick={(e) => { e.preventDefault(); onNavigate?.(); window.location.href = "/store"; }}>
+    <button type="button" className={className} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }} onClick={() => { onNavigate?.(); window.location.href = "/store"; }}>
       {children}
-    </a>
+    </button>
   )
 }

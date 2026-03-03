@@ -253,7 +253,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")} onClick={(e) => handleNav(e, "/news")}>News</a>
-              <a href="/store" className={`${navLinkClass("/store")} cursor-pointer`} onClick={(e) => handleNav(e, "/store")}>Store</a>
+              <button type="button" className={`${navLinkClass("/store")} cursor-pointer bg-transparent border-0 font-inherit text-inherit`} onClick={() => { window.location.href = "/store"; }}>Store</button>
               <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => handleNav(e, "/cart")}>
                 Cart
                 {cartCount > 0 && (
@@ -447,7 +447,7 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href="/store" className={`${mobileLinkClass("/store")} block min-h-[44px] flex items-center`} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/store"; }}>Store</a>
+                  <button type="button" className={`${mobileLinkClass("/store")} block min-h-[44px] w-full text-left bg-transparent border-0 font-inherit`} onClick={() => { setIsOpen(false); window.location.href = "/store"; }}>Store</button>
                   <a href="/cart" className={mobileLinkClass("/cart")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/cart"; }}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>

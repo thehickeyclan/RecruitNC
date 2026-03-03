@@ -6,8 +6,8 @@
  */
 export function StoreButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <a href="/store" className={className} onClick={(e) => { e.preventDefault(); window.location.href = "/store"; }}>
+    <button type="button" className={className} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }} onClick={() => { window.location.href = "/store"; }}>
       {children ?? "Store"}
-    </a>
+    </button>
   )
 }
