@@ -87,7 +87,8 @@ export default function SignInPage() {
           body: JSON.stringify({ email, password }),
         })
         if (res.ok) {
-          setTimeout(() => { window.location.href = "/auth/callback-admin" }, 600)
+          const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
+          setTimeout(() => { window.location.href = next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin" }, 1200)
           return
         }
         const err = await res.json().catch(() => ({}))
@@ -100,7 +101,10 @@ export default function SignInPage() {
         // Fallback to regular sign-in
         const result = await signIn(email, password)
         if (result.error) setError(result.error.message || "Login failed")
-        else setTimeout(() => { window.location.href = "/auth/callback-admin" }, 2500)
+        else {
+          const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
+          setTimeout(() => { window.location.href = next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin" }, 2500)
+        }
         setLoading(false)
         return
       }

@@ -90,7 +90,7 @@ export default function NationalTeamSubmissionsPage() {
     setError(null)
 
     try {
-      const response = await fetch("/api/admin/national-team-submissions")
+      const response = await fetch("/api/admin/national-team-submissions", { credentials: "include" })
       const result = await response.json()
 
       if (!result.ok) {
@@ -111,13 +111,9 @@ export default function NationalTeamSubmissionsPage() {
       try {
         const response = await fetch("/api/admin/national-team-submissions", {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: submissionId,
-            ...updates,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: submissionId, ...updates }),
+          credentials: "include",
         })
 
         const result = await response.json()
@@ -157,9 +153,10 @@ export default function NationalTeamSubmissionsPage() {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: other.id, nhsca_duals_starter: false }),
+            credentials: "include",
           })
         }
-        await fetch("/api/admin/national-team-submissions", {
+        const res = await fetch("/api/admin/national-team-submissions", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -167,7 +164,10 @@ export default function NationalTeamSubmissionsPage() {
             nhsca_duals_team: team,
             nhsca_duals_starter: true,
           }),
+          credentials: "include",
         })
+        const result = await res.json()
+        if (!result.ok) throw new Error(result.error || "Failed to set starter")
         await loadSubmissions()
       } catch (err: any) {
         console.error("Error assigning NHSCA starter:", err)
@@ -183,7 +183,7 @@ export default function NationalTeamSubmissionsPage() {
     async (sub: InterestFormSubmission) => {
       setUpdatingNhscaId(sub.id)
       try {
-        await fetch("/api/admin/national-team-submissions", {
+        const res = await fetch("/api/admin/national-team-submissions", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -191,7 +191,10 @@ export default function NationalTeamSubmissionsPage() {
             nhsca_duals_team: null,
             nhsca_duals_starter: false,
           }),
+          credentials: "include",
         })
+        const result = await res.json()
+        if (!result.ok) throw new Error(result.error || "Failed to clear assignment")
         await loadSubmissions()
       } catch (err: any) {
         console.error("Error clearing NHSCA assignment:", err)
@@ -212,6 +215,7 @@ export default function NationalTeamSubmissionsPage() {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: submissionId }),
+          credentials: "include",
         })
         const result = await response.json()
         if (!result.ok) throw new Error(result.error || "Failed to delete submission")
@@ -397,6 +401,9 @@ export default function NationalTeamSubmissionsPage() {
                     <code className="bg-amber-100 px-1 rounded text-xs">
                       scripts/206-create-national-team-interest-form-table.sql
                     </code>
+                    . If &quot;Set as starter&quot; does nothing, add columns:{" "}
+                    <code className="bg-amber-100 px-1 rounded text-xs">nhsca_duals_team text, nhsca_duals_starter boolean</code>{" "}
+                    to <code className="bg-amber-100 px-1 rounded text-xs">national_team_interest_forms</code> (see scripts/207-add-nhsca-duals-columns.sql).
                   </p>
                 </CardContent>
               </Card>

@@ -39,10 +39,43 @@ export async function GET(
 
     const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
     const highSchool = (athlete.highschool ?? athlete.highSchool ?? "").toString().trim()
+    const name = (athlete.name ?? "").toString().trim()
+    const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
+    const namesToTry = [name]
+    if (wrestlingName && wrestlingName !== name) namesToTry.push(wrestlingName)
     const [nhscaFromTables, super32FromTable, nationalTeamFromTables] = await Promise.all([
-      getNHSCAFromTables(supabase, athlete.name ?? "", gradYear),
-      getSuper32FromTable(supabase, athlete.name ?? "", gradYear, { highSchool: highSchool || undefined }),
-      getUltimateClubDualsFromTables(supabase, athlete.name ?? "", highSchool || undefined),
+      (async () => {
+        const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
+        const seen = new Set<string>()
+        for (const n of namesToTry) {
+          if (!n) continue
+          const rows = await getNHSCAFromTables(supabase, n, gradYear)
+          for (const r of rows) {
+            const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
+            if (!seen.has(key)) {
+              seen.add(key)
+              merged.push(r)
+            }
+          }
+        }
+        return merged.sort((a, b) => (b.year as number) - (a.year as number))
+      })(),
+      (async () => {
+        for (const n of namesToTry) {
+          if (!n) continue
+          const rows = await getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
+          if (rows.length) return rows
+        }
+        return []
+      })(),
+      (async () => {
+        for (const n of namesToTry) {
+          if (!n) continue
+          const rows = await getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)
+          if (rows.length) return rows
+        }
+        return []
+      })(),
     ])
     const nationalTeamFromRow = getNationalTeamResults(athlete)
     const national_team_results = mergeNationalTeamResults(nationalTeamFromTables, nationalTeamFromRow)

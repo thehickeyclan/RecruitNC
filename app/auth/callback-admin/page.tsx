@@ -1,21 +1,40 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { createClient } from "@/lib/supabase/client"
 
 export default function AdminCallbackPage() {
+  const searchParams = useSearchParams()
+  const next = searchParams.get("next")
   const { session, isLoading } = useAuth()
+  const [retried, setRetried] = useState(false)
 
   useEffect(() => {
     if (!isLoading) {
       if (session) {
-        // Full page load so admin receives cookies; client nav can drop them
-        setTimeout(() => { window.location.href = "/admin" }, 300)
-      } else {
-        window.location.href = "/auth/signin"
+        const target = next && next !== "/auth/signin" && next.startsWith("/") ? decodeURIComponent(next) : "/admin"
+        setTimeout(() => { window.location.href = target }, 800)
+        return
+      }
+      if (!retried) {
+        setRetried(true)
+        const t = setTimeout(async () => {
+          const supabase = createClient()
+          const { data: { session: s } } = await supabase.auth.getSession()
+          if (s) {
+            const target = next && next !== "/auth/signin" && next.startsWith("/") ? decodeURIComponent(next) : "/admin"
+            window.location.href = target
+          } else {
+            const returnTo = next ? `?returnTo=${next}` : ""
+            window.location.href = `/auth/signin${returnTo}`
+          }
+        }, 1200)
+        return () => clearTimeout(t)
       }
     }
-  }, [session, isLoading])
+  }, [session, isLoading, next, retried])
 
   return (
     <div className="flex min-h-screen items-center justify-center">

@@ -106,6 +106,13 @@ export default function AdminBlueSubscriptionsPage() {
               <div className="py-6 px-4 rounded-lg bg-red-50 border border-red-200">
                 <p className="font-medium text-red-800">Could not load</p>
                 <p className="mt-2 text-sm text-red-700">{loadError}</p>
+                {(loadError === "Not signed in." || loadError?.includes("401")) && (
+                  <p className="mt-3">
+                    <Link href="/auth/signin?returnTo=/admin/blue/subscriptions" className="text-[#003366] font-medium underline">
+                      Sign in again
+                    </Link>
+                  </p>
+                )}
               </div>
             ) : signupsError ? (
               <div className="py-6 px-4 rounded-lg bg-amber-50 border border-amber-200">

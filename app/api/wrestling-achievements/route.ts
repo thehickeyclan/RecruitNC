@@ -30,8 +30,13 @@ export async function GET(request: Request) {
     const nchsaaResults = mergeNchsaaResults(byName, byWrestling)
 
     const nameVariations = [athleteName]
+    if (wrestlingName && wrestlingName !== athleteName) nameVariations.push(wrestlingName)
     const noApostrophe = athleteName.replace(/'/g, "").trim()
     if (noApostrophe && noApostrophe !== athleteName) nameVariations.push(noApostrophe)
+    if (wrestlingName) {
+      const wnNoApo = wrestlingName.replace(/'/g, "").trim()
+      if (wnNoApo && wnNoApo !== wrestlingName && !nameVariations.includes(wnNoApo)) nameVariations.push(wnNoApo)
+    }
     if (athleteName.includes(",")) {
       const [last, first] = athleteName.split(",").map((s) => s.trim())
       if (first && last) nameVariations.push(`${first} ${last}`)
