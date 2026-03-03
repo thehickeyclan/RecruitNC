@@ -127,7 +127,7 @@ export default function CoachSignupPage() {
           <CardDescription>Create your coach account and request verification</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form method="post" onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />

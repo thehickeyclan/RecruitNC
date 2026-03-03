@@ -175,7 +175,7 @@ export default function SignUpPage() {
         <CardContent className="relative z-10">
           {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <form method="post" onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>

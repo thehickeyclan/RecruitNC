@@ -77,7 +77,7 @@ export default function RootLayout({
   function onSubmit(e) {
     var form = e.target;
     if (!form || form.tagName !== 'FORM') return;
-    var method = ((form.getAttribute('method') || 'get').toLowerCase());
+    var method = ((form.getAttribute('method') || '').toLowerCase());
     if (method !== 'get') return;
     var action = (form.getAttribute('action') || '').trim() || (window.location && window.location.pathname) || '/';
     if (!sameOrigin(action)) return;

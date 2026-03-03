@@ -244,7 +244,7 @@ export default function SignInPage() {
               <CardDescription className="text-sm sm:text-base">Enter your credentials to access your account</CardDescription>
             </CardHeader>
             <CardContent className="relative z-10">
-              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+              <form method="post" onSubmit={handleSubmit} className="space-y-4" noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                   <Input

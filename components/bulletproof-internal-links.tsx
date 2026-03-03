@@ -43,7 +43,7 @@ export function BulletproofInternalLinks() {
       if (typeof window === "undefined") return
       const form = e.target as HTMLFormElement
       if (!form || form.tagName !== "FORM") return
-      const method = (form.getAttribute("method") ?? "get").toLowerCase()
+      const method = (form.getAttribute("method") ?? "").toLowerCase()
       if (method !== "get") return
       const action = (form.getAttribute("action") ?? "").trim() || window.location.pathname
       try {
