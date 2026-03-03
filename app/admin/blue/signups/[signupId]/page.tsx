@@ -120,6 +120,7 @@ export default async function AdminBlueSignupDetailPage({
   const parentLastName = (data.parent_last_name ?? "").toString().trim() || "—"
   const parentEmail = (data.parent_email ?? "").toString().trim() || "—"
   const parentPhone = (data.parent_phone ?? "").toString().trim() || "—"
+  const parentRelationship = (data.parent_relationship ?? "").toString().trim() || "—"
   const athleteFirst = (data.athlete_first_name ?? "").toString().trim() || "—"
   const athleteLast = (data.athlete_last_name ?? "").toString().trim() || "—"
   const highSchool = (data.athlete_high_school ?? "").toString().trim() || "—"
@@ -128,7 +129,15 @@ export default async function AdminBlueSignupDetailPage({
   const tshirt = (data.tshirt_size ?? "").toString().trim() || "—"
   const status = (data.status ?? "").toString()
   const createdAt = (data.created_at ?? "").toString()
+  const updatedAt = (data.updated_at ?? "").toString()
   const gradYear = data.athlete_graduation_year ?? "—"
+  const athleteCell = (data.athlete_cell_phone ?? "").toString().trim() || "—"
+  const athleteEmail = (data.athlete_email ?? "").toString().trim() || "—"
+  const athleteGpa = (data.athlete_gpa ?? "").toString().trim() || "—"
+  const interestCollege = data.interest_wrestling_college === true ? "Yes" : data.interest_wrestling_college === false ? "No" : "—"
+  const highestAchievement = (data.highest_achievement ?? "").toString().trim() || "—"
+  const promoCode = (data.promo_code_used ?? "").toString().trim() || "—"
+  const waiverSignedAt = (data.waiver_signed_at ?? "").toString() || "—"
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
