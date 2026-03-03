@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +17,6 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasSession, setHasSession] = useState<boolean | null>(null)
   const [recovering, setRecovering] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     const supabase = createClient()
@@ -117,7 +115,7 @@ export default function ResetPasswordPage() {
         setSuccess(true)
         // Redirect to sign in after 3 seconds
         setTimeout(() => {
-          router.push("/auth/signin")
+          window.location.href = "/auth/signin"
         }, 3000)
       }
     } catch (err) {

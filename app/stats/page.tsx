@@ -16,7 +16,7 @@ export default function StatsComingSoonPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/auth/signin?redirect=/stats")
+      window.location.href = "/auth/signin?redirect=/stats"
     }
   }, [user, loading, router])
 

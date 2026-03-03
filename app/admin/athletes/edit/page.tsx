@@ -240,7 +240,7 @@ export default function EditAthletePage() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={() => router.push("/admin/athletes")} className="border-white text-white hover:bg-white/10">
+              <Button variant="outline" size="sm" onClick={() => window.location.href = "/admin/athletes"} className="border-white text-white hover:bg-white/10">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Athletes
               </Button>

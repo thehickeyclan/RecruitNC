@@ -64,11 +64,11 @@ export default function PaymentPage() {
     if (!isHydrated) return
 
     if (items.length === 0) {
-      router.push("/cart")
+      window.location.href = "/cart"
       return
     }
     if (!shippingAddress) {
-      router.push("/checkout/shipping")
+      window.location.href = "/checkout/shipping"
       return
     }
     if (!shippingAddress.address1?.trim()) {
@@ -77,11 +77,11 @@ export default function PaymentPage() {
         description: "Shipping address is missing. Please complete your shipping information.",
         variant: "destructive",
       })
-      router.push("/checkout/shipping")
+      window.location.href = "/checkout/shipping"
       return
     }
     if (!shippingMethod) {
-      router.push("/checkout/shipping-method")
+      window.location.href = "/checkout/shipping-method"
       return
     }
 
@@ -116,7 +116,7 @@ export default function PaymentPage() {
           variant: "destructive",
         })
         setIsLoading(false)
-        router.push("/cart")
+        window.location.href = "/cart"
         return
       }
 
@@ -126,7 +126,7 @@ export default function PaymentPage() {
           description: `Your discount of $${totalState.discount.toFixed(2)} requires a promo code. Please return to cart and re-apply it.`,
           variant: "destructive",
         })
-        router.push("/cart")
+        window.location.href = "/cart"
         return
       }
 
@@ -135,7 +135,7 @@ export default function PaymentPage() {
         if (success) totalState = getTotal()
         else {
           toast({ title: "Promo Code Error", description: "Failed to apply promo code. Please try again.", variant: "destructive" })
-          router.push("/cart")
+          window.location.href = "/cart"
           return
         }
       }
@@ -156,7 +156,7 @@ export default function PaymentPage() {
           variant: "destructive",
         })
         setIsLoading(false)
-        router.push("/cart")
+        window.location.href = "/cart"
         return
       }
       if (promoDiscount > 0 && !finalPromoCode) {
@@ -166,7 +166,7 @@ export default function PaymentPage() {
           variant: "destructive",
         })
         setIsLoading(false)
-        router.push("/cart")
+        window.location.href = "/cart"
         return
       }
       if ((totalState.discount > 0 || promoDiscount > 0) && !finalPromoCode) {
@@ -176,7 +176,7 @@ export default function PaymentPage() {
           variant: "destructive",
         })
         setIsLoading(false)
-        router.push("/cart")
+        window.location.href = "/cart"
         return
       }
 
@@ -219,7 +219,7 @@ export default function PaymentPage() {
       })
 
       if (result.success && "isFree" in result && result.isFree && result.orderId) {
-        router.push(`/checkout/confirmation?order_id=${result.orderId}`)
+        window.location.href = `/checkout/confirmation?order_id=${result.orderId}`
         return
       }
 
@@ -300,7 +300,7 @@ export default function PaymentPage() {
             </Card>
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => router.push("/checkout/shipping-method")}>
+              <Button variant="outline" onClick={() => window.location.href = "/checkout/shipping-method"}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Shipping Method
               </Button>

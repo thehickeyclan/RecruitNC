@@ -30,7 +30,7 @@ export default function SignInForm() {
         setError(error.message)
       } else {
         const returnTo = searchParams.get('returnTo') || '/athletes'
-        router.push(returnTo)
+        window.location.href = returnTo
       }
     } catch (err) {
       setError('An unexpected error occurred')

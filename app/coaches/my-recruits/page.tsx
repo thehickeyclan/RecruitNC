@@ -16,13 +16,13 @@ export default function MyRecruitsRedirectPage() {
     if (!isLoading && profile) {
       // Redirect admins to schools management
       if (profile.is_admin) {
-        router.push("/admin/schools")
+        window.location.href = "/admin/schools"
         return
       }
 
       // Redirect coaches with school_id to their branded portal
       if (profile.school_id) {
-        router.push(`/schools/${profile.school_id}/portal`)
+        window.location.href = `/schools/${profile.school_id}/portal`
         return
       }
 
@@ -64,7 +64,7 @@ export default function MyRecruitsRedirectPage() {
             </a>
           </p>
           <div className="pt-4">
-            <Button onClick={() => router.push("/contact")} className="bg-[#BC0B03] hover:bg-[#9a0902]">
+            <Button onClick={() => window.location.href = "/contact"} className="bg-[#BC0B03] hover:bg-[#9a0902]">
               Contact Us
             </Button>
           </div>

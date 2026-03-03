@@ -31,7 +31,7 @@ export default function AddAthletePage() {
         description: "Athlete added successfully",
       })
 
-      router.push("/admin/athletes")
+      window.location.href = "/admin/athletes"
     } catch (error) {
       console.error("[v0] Server action error:", error)
 

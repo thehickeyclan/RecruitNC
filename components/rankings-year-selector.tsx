@@ -34,7 +34,7 @@ export function RankingsYearSelector({
     const search = current.toString()
     const query = search ? `?${search}` : ""
 
-    router.push(`${pathname}${query}`)
+    window.location.href = `${pathname}${query}`
   }, [selectedYear, router, pathname, searchParams, defaultYear])
 
   return (

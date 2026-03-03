@@ -322,7 +322,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/admin/orders/${order.id}`)}>
+                          <DropdownMenuItem onClick={() => { window.location.href = `/admin/orders/${order.id}` }}>
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
@@ -365,7 +365,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
               <p className="mb-4">Loading full order details...</p>
               <Button
                 onClick={() => {
-                  router.push(`/admin/orders/${selectedOrder.id}`)
+                  window.location.href = `/admin/orders/${selectedOrder.id}`
                   setSelectedOrder(null)
                 }}
               >

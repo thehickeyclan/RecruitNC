@@ -549,7 +549,7 @@ export function AIChatWidget() {
                     onClick={(e) => {
                       e.stopPropagation()
                       setIsOpen(false)
-                      router.push("/")
+                      window.location.href = "/"
                     }}
                     aria-label="Go to home page"
                   >

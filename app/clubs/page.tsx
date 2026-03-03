@@ -16,7 +16,7 @@ export default function ClubsComingSoonPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/auth/signin?redirect=/clubs")
+      window.location.href = "/auth/signin?redirect=/clubs"
     }
   }, [user, loading, router])
 

@@ -52,9 +52,16 @@ function normalizeForAlias(name: string): string {
     .join(" ")
 }
 
+/** Normalize Unicode/smart apostrophes to straight quote so matching works (e.g. "D'Ettore" from forms). */
+function normalizeApostrophes(s: string): string {
+  return (s ?? "")
+    .replace(/\u2019/g, "'") // RIGHT SINGLE QUOTATION MARK
+    .replace(/\u2018/g, "'") // LEFT SINGLE QUOTATION MARK
+}
+
 /** Same name variations as /api/wrestling-achievements (unified profile NCHSAA). Includes apostrophe-free variant (e.g. D'Ettore → Dettore) and known same-person spelling aliases (e.g. Holt Quickny ↔ Holt Quincy) so we match DB spellings either way. Treats backtick as apostrophe so "Jackson D`Ettore" matches. */
 export function getNameVariations(name: string): string[] {
-  const n = (name ?? "").trim()
+  const n = normalizeApostrophes((name ?? "").trim())
   if (!n) return []
   const variations = new Set<string>([n])
   const withApostrophe = n.replace(/`/g, "'")
@@ -106,7 +113,9 @@ export type NchsaaRowForProfile = {
 export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: number; max: number } {
   const y = Number(graduationYear)
   if (!y || isNaN(y)) return { min: 0, max: 9999 }
-  return { min: Math.max(1990, y - 4), max: y }
+  // Include gradYear+1 so we don't drop current-year state (e.g. 2026) when grad year is off by one
+  const maxYear = Math.min(2030, y + 1)
+  return { min: Math.max(1990, y - 4), max: maxYear }
 }
 
 /**

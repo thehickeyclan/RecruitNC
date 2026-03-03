@@ -22,7 +22,7 @@ export default function AdminTestPage() {
   }
 
   const handleGoToAdmin = () => {
-    router.push("/admin")
+    window.location.href = "/admin"
   }
 
   return (

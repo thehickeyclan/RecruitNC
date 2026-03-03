@@ -1,24 +1,22 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function ProfileClient() {
-  const router = useRouter()
   const { user, session, signOut, loading: isLoading } = useAuth()
 
   useEffect(() => {
     if (!isLoading && !session) {
-      router.push("/auth/signin")
+      window.location.href = "/auth/signin"
     }
-  }, [isLoading, session, router])
+  }, [isLoading, session])
 
   const handleSignOut = async () => {
     await signOut()
-    router.push("/")
+    window.location.href = "/"
   }
 
   if (isLoading) {
@@ -58,7 +56,7 @@ export default function ProfileClient() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push("/")}>
+          <Button variant="outline" onClick={() => window.location.href = "/"}>
             Back to Home
           </Button>
           <Button variant="destructive" onClick={handleSignOut}>

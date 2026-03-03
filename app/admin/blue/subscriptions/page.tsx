@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -77,7 +76,7 @@ export default function AdminBlueSubscriptionsPage() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/blue" prefetch={false}><ArrowLeft className="h-4 w-4" /></Link>
+            <a href="/admin/blue"><ArrowLeft className="h-4 w-4" /></a>
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#003366]">Blue member cockpit</h1>
@@ -108,9 +107,9 @@ export default function AdminBlueSubscriptionsPage() {
                 <p className="mt-2 text-sm text-red-700">{loadError}</p>
                 {(loadError === "Not signed in." || loadError?.includes("401")) && (
                   <p className="mt-3">
-                    <Link href="/auth/signin?returnTo=/admin/blue/subscriptions" className="text-[#003366] font-medium underline">
+                    <a href="/auth/signin?returnTo=/admin/blue/subscriptions" className="text-[#003366] font-medium underline">
                       Sign in again
-                    </Link>
+                    </a>
                   </p>
                 )}
               </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useRouter } from 'next/navigation'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -98,7 +97,6 @@ export function RecruitsPipelineView({
   normalizePhoneForTel,
   isCommittedElsewhere,
 }: RecruitsPipelineViewProps) {
-  const router = useRouter()
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
@@ -269,7 +267,7 @@ export function RecruitsPipelineView({
                             key={prospect.id}
                             onClick={() => {
                               const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                              router.push(url)
+                              window.location.href = url
                             }}
                             className={`border hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer transition-all rounded-lg touch-manipulation ${
                               committedElsewhere
@@ -485,7 +483,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         <div className="flex items-center gap-3">
@@ -539,7 +537,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {prospect.graduationyear}
@@ -548,7 +546,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {prospect.weightclass}lbs
@@ -557,7 +555,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {prospect.location || "NC"}
@@ -602,7 +600,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {prospect.star_rating ? `${prospect.star_rating} ⭐` : "-"}
@@ -611,7 +609,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {prospect.academic_gpa || "-"}
@@ -620,7 +618,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {prospect.prospect_ranking ? `#${prospect.prospect_ranking}` : "-"}
@@ -629,7 +627,7 @@ export function RecruitsPipelineView({
                         className="p-4 align-middle text-muted-foreground cursor-pointer"
                         onClick={() => {
                           const url = `/schools/${params.schoolId}/athlete/${prospect.id}${viewAsCoachId ? `?viewAsCoachId=${viewAsCoachId}` : ""}`
-                          router.push(url)
+                          window.location.href = url
                         }}
                       >
                         {lastActivity ? new Date(lastActivity.action_date).toLocaleDateString() : "-"}

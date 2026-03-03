@@ -46,9 +46,9 @@ export default function ShippingMethodPage() {
 
   useEffect(() => {
     if (items.length === 0) {
-      router.push("/cart")
+      window.location.href = "/cart"
     } else if (!shippingAddress) {
-      router.push("/checkout/shipping")
+      window.location.href = "/checkout/shipping"
     }
   }, [items, shippingAddress, router])
 
@@ -58,7 +58,7 @@ export default function ShippingMethodPage() {
     const method = SHIPPING_OPTIONS.find((m) => m.id === selectedMethod)
     if (method) {
       setShippingMethod(method)
-      router.push("/checkout/payment")
+      window.location.href = "/checkout/payment"
     }
   }
 
@@ -148,7 +148,7 @@ export default function ShippingMethodPage() {
             </Card>
 
             <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={() => router.push("/checkout/shipping")}>
+              <Button variant="outline" onClick={() => window.location.href = "/checkout/shipping"}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Shipping
               </Button>

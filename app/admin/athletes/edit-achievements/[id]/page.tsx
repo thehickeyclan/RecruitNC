@@ -83,7 +83,7 @@ export default function EditAchievementsPage({ params }: { params: { id: string 
         description: "Achievements updated successfully",
       })
 
-      router.push("/admin/athletes")
+      window.location.href = "/admin/athletes"
     } catch (error) {
       console.error("Error updating achievements:", error)
       toast({

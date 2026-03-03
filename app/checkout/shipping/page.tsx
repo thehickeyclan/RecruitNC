@@ -107,11 +107,11 @@ export default function ShippingPage() {
       return
     }
     setShippingAddress(formData)
-    router.push("/checkout/shipping-method")
+    window.location.href = "/checkout/shipping-method"
   }
 
   if (items.length === 0) {
-    router.push("/cart")
+    window.location.href = "/cart"
     return null
   }
 
@@ -224,7 +224,7 @@ export default function ShippingPage() {
               </Card>
 
               <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={() => router.push("/cart")}>
+                <Button type="button" variant="outline" onClick={() => window.location.href = "/cart"}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Cart
                 </Button>

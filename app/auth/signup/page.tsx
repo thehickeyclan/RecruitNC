@@ -105,7 +105,7 @@ export default function SignUpPage() {
               <p className="text-sm text-muted-foreground">
                 Check your inbox (and spam folder) for an email from RecruitNC. The link expires in 24 hours.
               </p>
-              <Button className="w-full bg-transparent" variant="outline" onClick={() => router.push("/")}>
+              <Button className="w-full bg-transparent" variant="outline" onClick={() => window.location.href = "/"}>
                 Return to Home
               </Button>
             </div>

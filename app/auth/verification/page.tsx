@@ -27,7 +27,7 @@ export default function VerificationPage() {
       setMessage("Your email has been verified! You can now sign in.")
       // Redirect to sign in after 3 seconds
       setTimeout(() => {
-        router.push("/auth/signin")
+        window.location.href = "/auth/signin"
       }, 3000)
     }
   }, [searchParams, router])

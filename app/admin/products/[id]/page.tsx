@@ -77,7 +77,7 @@ export default function EditProductPage() {
         }
       } else {
         toast.error("Failed to load product")
-        router.push("/admin/products")
+        window.location.href = "/admin/products"
       }
       setLoading(false)
     }
@@ -134,7 +134,7 @@ export default function EditProductPage() {
       })
       if (result.success) {
         toast.success(publishNow ? "Product published successfully!" : "Product updated successfully")
-        router.push("/admin/products")
+        window.location.href = "/admin/products"
       } else {
         toast.error(result.error ?? "Failed to update product")
       }

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Minus, Plus, Trash2, ShoppingBag, Lock, Shield, Truck, RotateCcw, ArrowLeft, Check, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,7 +22,6 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export default function CartPage() {
-  const router = useRouter()
   const { toast } = useToast()
   const {
     items,
@@ -333,7 +331,7 @@ export default function CartPage() {
                     const checkoutUrl = promoCode
                       ? `/checkout/shipping?promoCode=${encodeURIComponent(promoCode)}`
                       : "/checkout/shipping"
-                    router.push(checkoutUrl)
+                    window.location.href = checkoutUrl
                   }}
                 >
                   <Lock className="w-4 h-4 mr-2" />

@@ -51,12 +51,12 @@ export function CheckoutForm({ clientSecret, total }: CheckoutFormProps) {
         try {
           const orderResult = await createOrderFromPaymentIntent(paymentIntent.id)
           if (orderResult.success && orderResult.orderId) {
-            router.push(`/checkout/confirmation?order_id=${orderResult.orderId}`)
+            window.location.href = `/checkout/confirmation?order_id=${orderResult.orderId}`
           } else {
-            router.push(`/checkout/confirmation?payment_intent=${paymentIntent.id}`)
+            window.location.href = `/checkout/confirmation?payment_intent=${paymentIntent.id}`
           }
         } catch {
-          router.push(`/checkout/confirmation?payment_intent=${paymentIntent.id}`)
+          window.location.href = `/checkout/confirmation?payment_intent=${paymentIntent.id}`
         }
       } else if (paymentIntent?.status === "requires_action") {
         // 3DS or other action – Stripe may redirect; keep processing state until redirect

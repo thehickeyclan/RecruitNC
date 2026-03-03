@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,7 +36,6 @@ interface Athlete {
 }
 
 export default function AthleteEditPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
   const { toast } = useToast()
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -62,7 +60,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     if (!user) {
-      router.push("/login")
+      window.location.href = "/auth/signin"
       return
     }
 
@@ -196,7 +194,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
       <div className="mb-6">
         <Button
           variant="ghost"
-          onClick={() => router.back()}
+          onClick={() => window.history.back()}
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -378,7 +376,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.back()}
+            onClick={() => window.history.back()}
           >
             Cancel
           </Button>

@@ -2,7 +2,6 @@
 
 import { useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, ArrowLeft } from "lucide-react"
@@ -15,15 +14,14 @@ import { AuthGuard } from "@/components/auth-guard"
  */
 export default function CoachPortalPage() {
   const { profile } = useAuth()
-  const router = useRouter()
 
   // Redirect coaches with a school_id to their custom branded portal
   useEffect(() => {
     if (profile?.school_id) {
       console.log("[Coach Portal] Redirecting to branded portal for school:", profile.school_id)
-      router.push(`/schools/${profile.school_id}/portal`)
+      window.location.href = `/schools/${profile.school_id}/portal`
     }
-  }, [profile, router])
+  }, [profile])
 
   // Show loading while redirecting
   if (profile?.school_id) {

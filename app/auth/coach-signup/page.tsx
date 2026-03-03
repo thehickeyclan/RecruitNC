@@ -83,7 +83,7 @@ export default function CoachSignupPage() {
 
       // Redirect to success page after a delay
       setTimeout(() => {
-        router.push("/auth/coach-verification-pending")
+        window.location.href = "/auth/coach-verification-pending"
       }, 2000)
     } catch (error: any) {
       console.error("Coach signup error:", error)
@@ -110,7 +110,7 @@ export default function CoachSignupPage() {
                 the platform. Admin approval for athlete contact information will be processed in the background.
               </AlertDescription>
             </Alert>
-            <Button className="w-full" onClick={() => router.push("/auth/signin")}>
+            <Button className="w-full" onClick={() => window.location.href = "/auth/signin"}>
               Go to Sign In
             </Button>
           </CardContent>

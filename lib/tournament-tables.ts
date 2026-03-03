@@ -29,9 +29,16 @@ function normalizeForAlias(s: string): string {
   return (s ?? "").trim().toLowerCase().replace(/`/g, "'")
 }
 
+/** Normalize Unicode/smart apostrophes to straight quote so matching works (e.g. "D'Ettore" from forms). */
+function normalizeApostrophes(s: string): string {
+  return (s ?? "")
+    .replace(/\u2019/g, "'") // RIGHT SINGLE QUOTATION MARK
+    .replace(/\u2018/g, "'") // LEFT SINGLE QUOTATION MARK
+}
+
 /** Return alternate spellings to try (e.g. Zach/Zack, D'Ettore/Dettore). Ensures we find tournament data even when DB spellings differ. Exported for use by wrestling-achievements API. */
 export function getNameVariants(name: string): string[] {
-  const t = (name ?? "").trim()
+  const t = normalizeApostrophes((name ?? "").trim())
   if (!t) return []
   const set = new Set<string>([t])
   const add = (s: string) => {

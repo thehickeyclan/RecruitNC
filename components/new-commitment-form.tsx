@@ -49,7 +49,7 @@ export function NewCommitmentForm() {
           <CardDescription>Please sign in to submit a new commitment.</CardDescription>
         </CardHeader>
         <CardFooter>
-          <Button onClick={() => router.push("/auth/signin")} className="bg-[#c8102e] hover:bg-[#a50d25] text-white">
+          <Button onClick={() => window.location.href = "/auth/signin"} className="bg-[#c8102e] hover:bg-[#a50d25] text-white">
             Sign In to Continue
           </Button>
         </CardFooter>
@@ -477,7 +477,7 @@ export function NewCommitmentForm() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={() => router.push("/")}>
+          <Button type="button" variant="outline" onClick={() => window.location.href = "/"}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting} className="bg-[#c8102e] hover:bg-[#a50d25] text-white">

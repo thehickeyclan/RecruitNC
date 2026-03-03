@@ -1,7 +1,6 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth-context"
-import { useRouter } from "next/navigation"
 import { useEffect, type ReactNode } from "react"
 
 interface RoleGuardProps {
@@ -24,7 +23,6 @@ export function RoleGuard({
   unauthorizedComponent,
 }: RoleGuardProps) {
   const { user, profile, isLoading, isAdmin, isVerifiedCoach } = useAuth()
-  const router = useRouter()
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -32,10 +30,10 @@ export function RoleGuard({
       if (typeof window !== "undefined" && window.self !== window.top) {
         window.top!.location.href = url
       } else {
-        router.push(url)
+        window.location.href = url
       }
     }
-  }, [user, isLoading, router, fallbackPath])
+  }, [user, isLoading, fallbackPath])
 
   // Show loading state
   if (isLoading) {

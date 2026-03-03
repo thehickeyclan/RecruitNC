@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useAuth } from "@/contexts/auth-context"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,6 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const { user, isLoading, isAdmin, profile } = useAuth()
-  const router = useRouter()
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
@@ -106,14 +105,14 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
           if (typeof window !== "undefined" && window.self !== window.top) {
             window.top!.location.href = window.location.origin + signinPath
           } else {
-            router.push(signinPath)
+            window.location.href = signinPath
           }
         }
       }
       const redirectTimer = setTimeout(doFinalRedirect, 800)
       return () => clearTimeout(redirectTimer)
     }
-  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, router, redirecting, profile])
+  }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, redirecting, profile])
 
   if (!mounted || isLoading || !sessionCheckComplete) {
     return (
@@ -172,7 +171,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
               If you should have admin access, please check your user profile in the database (user_profiles.is_admin
               should be true)
             </p>
-            <Button onClick={() => router.push("/")} variant="outline" className="w-full">
+            <Button onClick={() => { window.location.href = "/" }} variant="outline" className="w-full">
               Return to Home
             </Button>
           </CardContent>

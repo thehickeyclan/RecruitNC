@@ -70,7 +70,7 @@ export function AthleteFormWithDropdown({ initialData = {} }) {
 
       // Redirect after successful submission
       setTimeout(() => {
-        router.push("/admin/athletes")
+        window.location.href = "/admin/athletes"
       }, 2000)
     } catch (err) {
       console.error("Error submitting athlete:", err)

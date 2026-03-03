@@ -97,7 +97,7 @@ export default function NewProductPage() {
 
       if (result.success) {
         toast.success(publishNow ? "Product published successfully!" : "Product saved as draft")
-        router.push("/admin/products")
+        window.location.href = "/admin/products"
       } else {
         toast.error(result.error || "Failed to save product")
       }

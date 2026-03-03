@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,7 +16,6 @@ export default function EditProfilePage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [canEdit, setCanEdit] = useState(false)
-  const router = useRouter()
   const { toast } = useToast()
 
   useEffect(() => {
@@ -33,7 +31,7 @@ export default function EditProfilePage({ params }: { params: { id: string } }) 
             description: "You don't have permission to edit this profile",
             variant: "destructive",
           })
-          router.push(`/view-profile?id=${encodeURIComponent(params.id)}`)
+          window.location.href = `/view-profile?id=${encodeURIComponent(params.id)}`
           return
         }
 
@@ -72,7 +70,7 @@ export default function EditProfilePage({ params }: { params: { id: string } }) 
     }
 
     loadProfile()
-  }, [params.id, router, toast])
+  }, [params.id, toast])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -101,7 +99,7 @@ export default function EditProfilePage({ params }: { params: { id: string } }) 
           title: "Success",
           description: "Profile updated successfully",
         })
-        router.push(`/view-profile?id=${encodeURIComponent(params.id)}`)
+        window.location.href = `/view-profile?id=${encodeURIComponent(params.id)}`
       } else {
         throw new Error(data.error || "Failed to update profile")
       }
@@ -132,7 +130,7 @@ export default function EditProfilePage({ params }: { params: { id: string } }) 
   return (
     <div className="container mx-auto py-10 max-w-2xl">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="sm" onClick={() => router.push(`/view-profile?id=${encodeURIComponent(params.id)}`)}>
+        <Button variant="outline" size="sm" onClick={() => window.location.href = `/view-profile?id=${encodeURIComponent(params.id)}`}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Profile
         </Button>
@@ -199,7 +197,7 @@ export default function EditProfilePage({ params }: { params: { id: string } }) 
             </div>
 
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => router.push(`/view-profile?id=${encodeURIComponent(params.id)}`)}>
+              <Button type="button" variant="outline" onClick={() => window.location.href = `/view-profile?id=${encodeURIComponent(params.id)}`}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>

@@ -17,9 +17,9 @@ export default function CoachPendingPage() {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        router.push("/auth/signin")
+        window.location.href = "/auth/signin"
       } else if (profile?.verified_coach) {
-        router.push("/coach-portal")
+        window.location.href = "/coach-portal"
       } else {
         setChecking(false)
       }

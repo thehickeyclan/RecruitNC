@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Mail, Phone } from "lucide-react"
 import { PhoneSignIn } from "@/components/phone-sign-in"
 import { SocialLoginButtons } from "@/components/social-login-buttons"
@@ -17,7 +16,6 @@ type AuthMethod = "email" | "phone"
 
 export function UnifiedSignUpForm() {
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email")
-  const router = useRouter()
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -71,7 +69,6 @@ export function UnifiedSignUpForm() {
 }
 
 function EmailSignUpSection() {
-  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
@@ -131,7 +128,7 @@ function EmailSignUpSection() {
           <p className="text-xs text-muted-foreground text-center">
             Check your inbox and spam folder. The link expires in 24 hours.
           </p>
-          <Button className="w-full bg-transparent" variant="outline" onClick={() => router.push("/")}>
+          <Button className="w-full bg-transparent" variant="outline" onClick={() => window.location.href = "/"}>
             Return to Home
           </Button>
         </div>

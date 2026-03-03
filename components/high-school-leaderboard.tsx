@@ -222,7 +222,7 @@ export function HighSchoolLeaderboard({
   }
 
   const navigateToAthlete = (athleteId: string) => {
-    router.push(`/athletes/${athleteId}`)
+    window.location.href = `/athletes/${athleteId}`
   }
 
   const filteredSchools = schools.filter((school) => {

@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -60,7 +59,6 @@ export default function EditRequestForm({ athlete }: EditRequestFormProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [achievements, setAchievements] = useState<AchievementInput[]>([])
-  const router = useRouter()
   const { toast } = useToast()
   const [showSuccess, setShowSuccess] = useState(false)
 
@@ -268,7 +266,7 @@ export default function EditRequestForm({ athlete }: EditRequestFormProps) {
     <div className="max-w-2xl mx-auto">
       <Button
         variant="ghost"
-        onClick={() => router.push(`/athletes/${athlete.id}`)}
+        onClick={() => window.location.href = `/athletes/${athlete.id}`}
         className="mb-6 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -627,7 +625,7 @@ export default function EditRequestForm({ athlete }: EditRequestFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/athletes/${athlete.id}`)}
+                onClick={() => window.location.href = `/athletes/${athlete.id}`}
                 disabled={isSubmitting}
                 className="flex-1"
               >
@@ -652,7 +650,7 @@ export default function EditRequestForm({ athlete }: EditRequestFormProps) {
               Close
             </Button>
             <Button
-              onClick={() => router.push(`/athletes/${athlete.id}`)}
+              onClick={() => window.location.href = `/athletes/${athlete.id}`}
               className="bg-[#B31B1B] hover:bg-[#a50d25] text-white"
             >
               Return to Profile

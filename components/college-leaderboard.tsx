@@ -307,7 +307,7 @@ export function CollegeLeaderboard({
   }
 
   const navigateToAthlete = (athleteId: string) => {
-    router.push(`/athletes/${athleteId}`)
+    window.location.href = `/athletes/${athleteId}`
   }
 
   const filteredColleges = colleges.filter((college) => {

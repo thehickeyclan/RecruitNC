@@ -83,7 +83,7 @@ export default function DemoRankingsClient() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" onClick={() => router.push("/auth/signin?redirect=/auth/demo-rankings")}>
+            <Button className="w-full" onClick={() => window.location.href = "/auth/signin?redirect=/auth/demo-rankings"}>
               Sign In to View Full Rankings
             </Button>
           </CardFooter>

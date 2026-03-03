@@ -44,9 +44,9 @@ export default function SubmissionsPage() {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push(`/auth/signin?redirectTo=${encodeURIComponent("/admin/submissions")}`)
+        window.location.href = `/auth/signin?redirectTo=${encodeURIComponent("/admin/submissions")}`
       } else if (!isAdmin) {
-        router.push("/")
+        window.location.href = "/"
       }
     }
   }, [user, isAdmin, loading, router])

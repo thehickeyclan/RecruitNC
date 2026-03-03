@@ -112,7 +112,7 @@ export default function AthleteForm() {
           title: "Success",
           description: "Athlete added successfully!",
         })
-        router.push("/admin/athletes")
+        window.location.href = "/admin/athletes"
         router.refresh()
       } else {
         throw new Error("Failed to create athlete")

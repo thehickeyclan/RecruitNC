@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -91,9 +90,9 @@ export default async function AdminBlueSignupDetailPage({
         <div className="max-w-2xl mx-auto">
           <div className="mb-6 flex items-center gap-4">
             <Button variant="outline" size="icon" asChild>
-              <Link href="/admin/blue/subscriptions">
+              <a href="/admin/blue/subscriptions">
                 <ArrowLeft className="h-4 w-4" />
-              </Link>
+              </a>
             </Button>
           </div>
           <Card className="border-amber-500 border-2">
@@ -136,9 +135,9 @@ export default async function AdminBlueSignupDetailPage({
       <div className="max-w-2xl mx-auto">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/blue/subscriptions">
+            <a href="/admin/blue/subscriptions">
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </a>
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#003366]">Blue registration</h1>
@@ -273,7 +272,7 @@ export default async function AdminBlueSignupDetailPage({
         </Card>
 
         <Button variant="outline" asChild>
-          <Link href="/admin/blue/subscriptions">Back to cockpit</Link>
+          <a href="/admin/blue/subscriptions">Back to cockpit</a>
         </Button>
       </div>
     </div>

@@ -43,7 +43,7 @@ export default function ConfirmProfileButton({
       if (res.status === 401) {
         // Not signed in — redirect to sign-in and return back to this profile
         const returnTo = encodeURIComponent(pathname || `/athletes/${athleteId}`)
-        router.push(`/auth/signin?returnTo=${returnTo}`)
+        window.location.href = `/auth/signin?returnTo=${encodeURIComponent(returnTo)}`
         return
       }
 

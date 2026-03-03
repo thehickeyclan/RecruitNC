@@ -614,7 +614,7 @@ export default function AthleteRecruitingDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/schools/${schoolId}/portal`)}
+            onClick={() => window.location.href = `/schools/${schoolId}/portal`}
             className="mb-3"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />

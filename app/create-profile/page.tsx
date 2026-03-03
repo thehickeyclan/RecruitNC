@@ -152,7 +152,7 @@ export default function CreateProfilePage() {
       }
       if (response.ok && data.athleteId) {
         setForceCreate(false)
-        router.push(`/view-profile?id=${encodeURIComponent(data.athleteId)}`)
+        window.location.href = `/view-profile?id=${encodeURIComponent(data.athleteId)}`
         return
       }
       if (response.ok) {
@@ -181,7 +181,7 @@ export default function CreateProfilePage() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Failed to link profile")
       setExistingCandidate(null)
-      router.push(`/view-profile?id=${encodeURIComponent(data.athleteId)}`)
+      window.location.href = `/view-profile?id=${encodeURIComponent(data.athleteId)}`
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not link profile")
     } finally {
@@ -210,7 +210,7 @@ export default function CreateProfilePage() {
       const data = await response.json()
       if (response.ok && data.athleteId) {
         setForceCreate(false)
-        router.push(`/view-profile?id=${encodeURIComponent(data.athleteId)}`)
+        window.location.href = `/view-profile?id=${encodeURIComponent(data.athleteId)}`
         return
       }
       setError(data.details || data.error || "Failed to create profile")
@@ -265,10 +265,10 @@ export default function CreateProfilePage() {
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <div className="flex gap-4 justify-center">
-              <Button onClick={() => router.push("/profile")} variant="outline">
+              <Button onClick={() => window.location.href = "/profile"} variant="outline">
                 View My Account
               </Button>
-              <Button onClick={() => router.push("/prospects/all")}>Browse All Profiles</Button>
+              <Button onClick={() => window.location.href = "/prospects/all"}>Browse All Profiles</Button>
             </div>
           </CardContent>
         </Card>

@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
-import { escapeForIlike, getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { getNameVariants, getSuper32FromTable } from "@/lib/tournament-tables"
+import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import { getNameVariants, getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
   try {
@@ -29,48 +29,28 @@ export async function GET(request: Request) {
         : []
     const nchsaaResults = mergeNchsaaResults(byName, byWrestling)
 
-    const nameVariations = [athleteName]
-    if (wrestlingName && wrestlingName !== athleteName) nameVariations.push(wrestlingName)
-    const noApostrophe = athleteName.replace(/'/g, "").trim()
-    if (noApostrophe && noApostrophe !== athleteName) nameVariations.push(noApostrophe)
-    if (wrestlingName) {
-      const wnNoApo = wrestlingName.replace(/'/g, "").trim()
-      if (wnNoApo && wnNoApo !== wrestlingName && !nameVariations.includes(wnNoApo)) nameVariations.push(wnNoApo)
-    }
-    if (athleteName.includes(",")) {
-      const [last, first] = athleteName.split(",").map((s) => s.trim())
-      if (first && last) nameVariations.push(`${first} ${last}`)
-    } else {
-      const parts = athleteName.trim().split(/\s+/)
-      if (parts.length >= 2) nameVariations.push(`${parts.slice(1).join(" ")}, ${parts[0]}`)
-    }
+    const namesToTry = [...new Set([...getNameVariants(athleteName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
 
-    let nhscaResults: any[] = []
-    let nhscaError = null
-    for (const nameVariation of nameVariations) {
-      const pattern = `%${escapeForIlike(nameVariation)}%`
-      const { data, error } = await supabase
-        .from("wrestling_nhsca_results")
-        .select("*")
-        .ilike("athlete_name", pattern)
-        .order("year", { ascending: false })
-
-      if (error) {
-        nhscaError = error
-        break
-      }
-
-      if (data && data.length > 0) {
-        nhscaResults = data
-        console.log("[v0] Found NHSCA results with name variation:", nameVariation)
-        break
-      }
-    }
-
+    let nhscaResults: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
     const gradYearNum = graduationYear && !isNaN(graduationYear) ? graduationYear : new Date().getFullYear()
+    const seenNhsca = new Set<string>()
+    for (const searchName of namesToTry) {
+      if (!searchName) continue
+      const rows = await getNHSCAFromTables(supabase, searchName, gradYearNum)
+      for (const r of rows) {
+        const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
+        if (!seenNhsca.has(key)) {
+          seenNhsca.add(key)
+          nhscaResults.push(r)
+        }
+      }
+    }
+    nhscaResults.sort((a, b) => (b.year as number) - (a.year as number))
+
     const super32ByYear = new Map<number, { year: number; placement: string; record: string; weight?: string; division?: string }>()
-    for (const nameVariation of nameVariations) {
-      const rows = await getSuper32FromTable(supabase, nameVariation, gradYearNum, {})
+    for (const searchName of namesToTry) {
+      if (!searchName) continue
+      const rows = await getSuper32FromTable(supabase, searchName, gradYearNum, {})
       for (const r of rows) {
         const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
         if (!super32ByYear.has(y)) super32ByYear.set(y, { year: r.year, placement: r.placement, record: r.record, weight: r.weight, division: r.division })
@@ -78,16 +58,11 @@ export async function GET(request: Request) {
     }
     const super32Results = Array.from(super32ByYear.values()).sort((a, b) => b.year - a.year)
 
-    if (nhscaError) {
-      console.error("[v0] NHSCA query error:", nhscaError)
-      throw nhscaError
-    }
-
     // Process and format achievements
     const achievements = {
       state_championships: nchsaaResults?.filter((r) => r.place === 1) || [],
       state_placers: nchsaaResults?.filter((r) => r.place && r.place <= 8) || [],
-      national_placers: nhscaResults?.filter((r) => r.placement && r.placement <= 8) || [],
+      national_placers: nhscaResults?.filter((r) => r.placement) || [],
       all_results: {
         nchsaa: nchsaaResults || [],
         nhsca: nhscaResults || [],
