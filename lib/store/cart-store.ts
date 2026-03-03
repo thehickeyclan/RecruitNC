@@ -324,7 +324,7 @@ export const useCartStore = create<CartStore>()(
             return false
           }
 
-          const response = await fetch("/api/promo-codes/validate", {
+          const response = await fetch("/api/promo/validate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code: normalizedCode, subtotal }),
