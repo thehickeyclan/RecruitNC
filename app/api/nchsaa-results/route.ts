@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { escapeForIlike } from "@/lib/nchsaa-results"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const athleteName = searchParams.get("athleteName")
+    const athleteName = (searchParams.get("athleteName") ?? "").trim()
     const graduationYear = searchParams.get("graduationYear")
 
     if (!athleteName || !graduationYear) {
@@ -18,10 +19,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid graduation year" }, { status: 400 })
     }
 
+    const pattern = `%${escapeForIlike(athleteName)}%`
     const { data: results, error } = await supabase
       .from("wrestling_nchsaa_results")
       .select("*")
-      .ilike("wrestler_name", `%${athleteName}%`)
+      .ilike("wrestler_name", pattern)
       .gte("year", gradYear - 4)
       .lte("year", gradYear)
       .order("year", { ascending: false })

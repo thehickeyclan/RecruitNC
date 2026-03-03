@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 
 /**
- * Store link via /go/store (302 redirect). Avoids canceled RSC/document request; browser does full GET /store after redirect.
+ * Store: plain form GET to /store. No link, no JS — nothing can intercept.
  */
 export function StoreNavLink({
   className,
@@ -15,16 +15,10 @@ export function StoreNavLink({
   onNavigate?: () => void
 }) {
   return (
-    <a
-      href="/go/store"
-      className={className}
-      onClick={(e) => {
-        e.preventDefault()
-        onNavigate?.()
-        window.location.href = "/go/store"
-      }}
-    >
-      {children}
-    </a>
+    <form action="/store" method="get" className="inline" style={{ margin: 0 }} onClick={() => onNavigate?.()}>
+      <button type="submit" className={className ?? ""} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
+        {children}
+      </button>
+    </form>
   )
 }

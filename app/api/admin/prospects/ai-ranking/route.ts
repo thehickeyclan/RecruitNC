@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getNCHSAAResultsForProfile } from "@/lib/nchsaa-results"
+import { getNHSCAFromTables } from "@/lib/tournament-tables"
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,19 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    // Fetch NCHSAA tournament results
-    const { data: nchsaaResults } = await supabase
-      .from("wrestling_nchsaa_results")
-      .select("year, place, classification, weight")
-      .ilike("wrestler_name", `%${athlete.name}%`)
-      .order("year", { ascending: false })
-
-    // Fetch NHSCA tournament results
-    const { data: nhscaResults } = await supabase
-      .from("wrestling_nhsca_results")
-      .select("year, placement, division, weight")
-      .ilike("athlete_name", `%${athlete.name}%`)
-      .order("year", { ascending: false })
+    const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+    const [nchsaaRows, nhscaRows] = await Promise.all([
+      getNCHSAAResultsForProfile(supabase, (athlete.name ?? "").trim(), gradYear),
+      getNHSCAFromTables(supabase, (athlete.name ?? "").trim(), gradYear),
+    ])
+    const nchsaaResults = nchsaaRows
+    const nhscaResults = nhscaRows.map((r) => ({ year: r.year, placement: r.placement, division: r.division, weight: r.weight }))
 
     // Generate AI ranking analysis
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -78,7 +74,7 @@ High School: ${athlete.highschool} (${athlete.division || "Unknown Division"})
 GPA: ${athlete.academic_gpa || "Not provided"}
 
 STATE TOURNAMENT RESULTS (NCHSAA):
-${nchsaaResults?.map((r) => `${r.year}: ${r.place}${r.place === 1 ? "st" : r.place === 2 ? "nd" : r.place === 3 ? "rd" : "th"} place in ${r.classification} at ${r.weight} lbs`).join("\n") || "No state results found"}
+${nchsaaResults?.map((r) => `${r.year}: ${r.place}${r.place === 1 ? "st" : r.place === 2 ? "nd" : r.place === 3 ? "rd" : "th"} place in ${r.classification} at ${r.weight_class ?? ""} lbs`).join("\n") || "No state results found"}
 
 NATIONAL TOURNAMENT RESULTS (NHSCA):
 ${nhscaResults?.map((r) => `${r.year}: ${r.placement} in ${r.division} at ${r.weight} lbs`).join("\n") || "No NHSCA results found"}

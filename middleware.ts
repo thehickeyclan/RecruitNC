@@ -117,11 +117,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for static assets (don't run middleware on these):
-     * - _next/static, _next/image
-     * - favicon.ico, manifest.json, icons
-     * - common image/static file extensions
+     * Match all request paths except: static assets, and /store (store runs with zero middleware).
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-|store(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|ico)$).*)",
   ],
 }

@@ -5,6 +5,10 @@
 
 import { SupabaseClient } from "@supabase/supabase-js"
 
+function escapeForIlike(s: string): string {
+  return (s ?? "").replace(/'/g, "''")
+}
+
 export interface NHSCAPlacement {
   year: number
   placement: number | string
@@ -33,19 +37,34 @@ export async function getNHSCAPlacements(
   const endYear = graduationYear || currentYear
 
   try {
-    // Query nhsca_placements table
-    // Match by name (case-insensitive, partial match)
-    const { data: placements, error } = await supabase
-      .from("nhsca_placements")
-      .select("*")
-      .ilike("athlete_name", `%${athleteName.trim()}%`)
-      .gte("year", startYear)
-      .lte("year", endYear)
-      .order("year", { ascending: false })
-      .order("placement", { ascending: true })
+    const namesToTry = [athleteName.trim()]
+    const noApostrophe = athleteName.trim().replace(/'/g, "").trim()
+    if (noApostrophe && noApostrophe !== namesToTry[0]) namesToTry.push(noApostrophe)
 
-    if (error) {
-      console.error("Error fetching NHSCA placements:", error)
+    let placements: any[] | null = null
+    let lastError: Error | null = null
+    for (const name of namesToTry) {
+      const pattern = `%${escapeForIlike(name)}%`
+      const { data, error } = await supabase
+        .from("nhsca_placements")
+        .select("*")
+        .ilike("athlete_name", pattern)
+        .gte("year", startYear)
+        .lte("year", endYear)
+        .order("year", { ascending: false })
+        .order("placement", { ascending: true })
+      if (error) {
+        lastError = error
+        continue
+      }
+      if (data?.length) {
+        placements = data
+        break
+      }
+    }
+
+    if (lastError) {
+      console.error("Error fetching NHSCA placements:", lastError)
       return []
     }
 

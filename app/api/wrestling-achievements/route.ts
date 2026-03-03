@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
-import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import { escapeForIlike, getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import { getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
   try {
@@ -29,6 +30,8 @@ export async function GET(request: Request) {
     const nchsaaResults = mergeNchsaaResults(byName, byWrestling)
 
     const nameVariations = [athleteName]
+    const noApostrophe = athleteName.replace(/'/g, "").trim()
+    if (noApostrophe && noApostrophe !== athleteName) nameVariations.push(noApostrophe)
     if (athleteName.includes(",")) {
       const [last, first] = athleteName.split(",").map((s) => s.trim())
       if (first && last) nameVariations.push(`${first} ${last}`)
@@ -40,10 +43,11 @@ export async function GET(request: Request) {
     let nhscaResults: any[] = []
     let nhscaError = null
     for (const nameVariation of nameVariations) {
+      const pattern = `%${escapeForIlike(nameVariation)}%`
       const { data, error } = await supabase
         .from("wrestling_nhsca_results")
         .select("*")
-        .ilike("athlete_name", `%${nameVariation}%`)
+        .ilike("athlete_name", pattern)
         .order("year", { ascending: false })
 
       if (error) {
@@ -58,11 +62,15 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log("[v0] NHSCA query result:", {
-      resultsCount: nhscaResults?.length || 0,
-      error: nhscaError,
-      sampleResult: nhscaResults?.[0] || null,
-    })
+    const gradYearNum = graduationYear && !isNaN(graduationYear) ? graduationYear : new Date().getFullYear()
+    const super32Rows = await getSuper32FromTable(supabase, athleteName, gradYearNum, {})
+    const super32Results = super32Rows.map((r) => ({
+      year: r.year,
+      placement: r.placement,
+      record: r.record,
+      weight: r.weight,
+      division: r.division,
+    }))
 
     if (nhscaError) {
       console.error("[v0] NHSCA query error:", nhscaError)
@@ -77,7 +85,7 @@ export async function GET(request: Request) {
       all_results: {
         nchsaa: nchsaaResults || [],
         nhsca: nhscaResults || [],
-        super32: [], // TODO: Add super32 table and query when available
+        super32: super32Results || [],
       },
     }
 
@@ -87,13 +95,14 @@ export async function GET(request: Request) {
       national_placers: achievements.national_placers.length,
       total_nchsaa: achievements.all_results.nchsaa.length,
       total_nhsca: achievements.all_results.nhsca.length,
+      total_super32: achievements.all_results.super32.length,
     })
 
     return NextResponse.json({
       success: true,
       athlete_name: athleteName,
       achievements,
-      total_records: (nchsaaResults?.length || 0) + (nhscaResults?.length || 0),
+      total_records: (nchsaaResults?.length || 0) + (nhscaResults?.length || 0) + super32Results.length,
     })
   } catch (error) {
     console.error("[v0] Wrestling achievements API error:", error)

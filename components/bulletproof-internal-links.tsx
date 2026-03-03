@@ -25,6 +25,8 @@ export function BulletproofInternalLinks() {
       try {
         const url = new URL(anchor.href)
         if (url.origin !== window.location.origin) return
+        // Don't intercept /store — let browser do native nav so request isn't canceled by layout
+        if (url.pathname === "/store" || url.pathname.startsWith("/store/")) return
       } catch {
         return
       }

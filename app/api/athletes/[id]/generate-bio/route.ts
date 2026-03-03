@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { loadProfileTournamentData } from "@/lib/profile-tournament-data"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -31,20 +32,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    const searchName = athlete.name.trim()
-    console.log("[v0] Bio generation: Searching tournament results for name:", searchName)
-
-    const { data: nchsaaResults } = await supabase
-      .from("wrestling_nchsaa_results")
-      .select("*")
-      .ilike("wrestler_name", `%${searchName}%`)
-      .order("year", { ascending: false })
-
-    const { data: nhscaResults } = await supabase
-      .from("wrestling_nhsca_results")
-      .select("*")
-      .ilike("athlete_name", `%${searchName}%`)
-      .order("year", { ascending: false })
+    const gradYear = Number(athlete.graduation_year) || new Date().getFullYear()
+    const tournamentData = await loadProfileTournamentData(supabase, {
+      id: athlete.id,
+      name: athlete.name,
+      highschool: athlete.highschool,
+      graduationyear: gradYear,
+    })
+    const nchsaaResults = tournamentData.nchsaa
+    const nhscaResults = tournamentData.nhsca
 
     console.log("[v0] Bio generation: NCHSAA results count:", nchsaaResults?.length || 0)
     console.log("[v0] Bio generation: NHSCA results count:", nhscaResults?.length || 0)
@@ -52,18 +48,18 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const formatNchsaaResults = (results: any[]) => {
       if (!results || results.length === 0) return "No NCHSAA state tournament results"
       return results
-        .map((r) => `${r.year} NCHSAA State ${r.classification}: ${r.place} place at ${r.weight_class}lbs`)
+        .map((r) => `${r.year} NCHSAA State ${r.classification}: ${r.place} place at ${r.weight_class ?? r.weight ?? ""}lbs`)
         .join(", ")
     }
 
     const formatNhscaResults = (results: any[]) => {
       if (!results || results.length === 0) return "No NHSCA national tournament results"
-      return results.map((r) => `${r.year} NHSCA Nationals: ${r.placement} place at ${r.weight}lbs`).join(", ")
+      return results.map((r) => `${r.year} NHSCA Nationals: ${r.placement} place at ${(r as any).weight ?? ""}lbs`).join(", ")
     }
 
     // Prepare athlete data for AI analysis
     const formattedNchsaa = formatNchsaaResults(nchsaaResults || [])
-    const formattedNhsca = formatNhscaResults(nhscaResults || [])
+    const formattedNhsca = formatNhscaResults(nhscaResults)
 
     const athleteData = {
       name: athlete.name,
