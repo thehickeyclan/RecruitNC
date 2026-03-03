@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 
-/** Store link: target="_top" so it works when app is embedded in iframe. Same pattern as Sign In. */
+/** Store: form GET so navigation cannot be canceled. Full document load. */
 export function StoreNavLink({
   className,
   children,
@@ -13,14 +13,15 @@ export function StoreNavLink({
   onNavigate?: () => void
 }) {
   return (
-    <a
-      href="/store-app"
-      target="_top"
-      rel="noopener"
-      className={className}
-      onClick={() => onNavigate?.()}
-    >
-      {children}
-    </a>
+    <form method="get" action="/cart" target="_top" className="inline">
+      <button
+        type="submit"
+        className={className}
+        style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}
+        onClick={() => onNavigate?.()}
+      >
+        {children}
+      </button>
+    </form>
   )
 }

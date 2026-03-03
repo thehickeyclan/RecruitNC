@@ -18,6 +18,10 @@
 3. Optionally remove SUPABASE_SERVICE_ROLE_KEY_OVERRIDE once SUPABASE_SERVICE_ROLE_KEY is set (cleaner; OVERRIDE is still a fallback if you need it).
 4. **Redeploy** (Production and any Preview you use).
 
+## Canceled requests ("---" in Network tab)
+
+If document or API requests show as canceled (no status, 0 B transferred), Next.js was likely **prefetching** admin routes. When you navigate or when prefetches complete, the browser aborts some requests. Admin nav uses **`prefetch={false}`** on `Link` components (AdminHeader, Blue hub, Blue sub-pages) so each click is one navigation instead of many prefetches that get aborted. Do not remove `prefetch={false}` from admin/Blue links.
+
 ## If Blue admin still doesn’t load
 
 - **401 Unauthorized:** Session not sent or expired. Sign in again; use “Sign in again” on the Blue subscriptions page if shown.

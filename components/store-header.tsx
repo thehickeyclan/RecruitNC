@@ -35,7 +35,7 @@ export function StoreHeader({ searchQuery, onSearchChange }: StoreHeaderProps) {
           />
         </div>
         <Link
-          href="/cart"
+          href="/store-app"
           className="relative flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground shrink-0"
         >
           Cart

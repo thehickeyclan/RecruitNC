@@ -246,8 +246,10 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
-              <a href="/store-app" target="_top" rel="noopener" className={navLinkClass("/store-app")}>Store</a>
-              <a href="/cart" className={navLinkClass("/cart")}>
+              <form method="get" action="/cart" target="_top" className="inline">
+                <button type="submit" className={navLinkClass("/cart") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0"}>Store</button>
+              </form>
+              <a href="/store-app" target="_top" rel="noopener" className={navLinkClass("/store-app")}>
                 Cart
                 {cartCount > 0 && (
                   <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
@@ -440,8 +442,10 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <a href="/store-app" target="_top" rel="noopener" className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onClick={handleNavMobile}>Store</a>
-                  <a href="/cart" className={mobileLinkClass("/cart")} onClick={handleNavMobile}>
+                  <form method="get" action="/cart" target="_top" className="block w-full">
+                  <button type="submit" className={mobileLinkClass("/cart") + " block min-h-[44px] w-full text-left cursor-pointer bg-transparent border-0 font-inherit"} onClick={handleNavMobile}>Store</button>
+                </form>
+                  <a href="/store-app" target="_top" rel="noopener" className={mobileLinkClass("/store-app")} onClick={handleNavMobile}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>
                   <div className="px-3">

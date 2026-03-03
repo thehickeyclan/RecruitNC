@@ -90,7 +90,7 @@ export default function AdminBlueMembers2026Page() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/blue">
+            <Link href="/admin/blue" prefetch={false}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>

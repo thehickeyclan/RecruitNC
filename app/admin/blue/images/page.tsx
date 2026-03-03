@@ -112,7 +112,7 @@ export default function AdminBlueImagesPage() {
     <div className="container mx-auto max-w-2xl space-y-6 p-6">
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
-          <Link href="/admin/blue"><ArrowLeft className="h-4 w-4" /></Link>
+          <Link href="/admin/blue" prefetch={false}><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
         <h1 className="text-2xl font-bold text-[#03154C]">Blue Page Images</h1>
       </div>

@@ -90,7 +90,10 @@ export default function ViewProfilePage() {
       return
     }
     let cancelled = false
-    const params = new URLSearchParams({ name: athlete.name as string })
+    const name = (athlete.name as string).trim()
+    const wrestlingName = (athlete.wrestling_name as string)?.trim()
+    const params = new URLSearchParams({ name })
+    if (wrestlingName && wrestlingName !== name) params.set("wrestling_name", wrestlingName)
     const gradYear = athlete.graduationyear != null ? Number(athlete.graduationyear) : undefined
     if (gradYear && !isNaN(gradYear)) params.set("graduation_year", String(gradYear))
     fetch(`/api/wrestling-achievements?${params.toString()}`)
@@ -112,7 +115,7 @@ export default function ViewProfilePage() {
         if (!cancelled) setNchsaaResults([])
       })
     return () => { cancelled = true }
-  }, [athlete?.name, athlete?.graduationyear])
+  }, [athlete?.name, athlete?.graduationyear, athlete?.wrestling_name])
 
   if (loading) {
     return (

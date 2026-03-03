@@ -271,7 +271,7 @@ export default function AdminBlueInterestPage() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" asChild>
-              <Link href="/admin/blue">
+              <Link href="/admin/blue" prefetch={false}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>

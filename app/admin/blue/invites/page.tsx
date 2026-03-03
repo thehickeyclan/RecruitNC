@@ -187,7 +187,7 @@ ${registerUrl}
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/blue"><ArrowLeft className="h-4 w-4" /></Link>
+            <Link href="/admin/blue" prefetch={false}><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">Blue program invites</h1>

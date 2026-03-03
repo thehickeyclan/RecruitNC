@@ -68,14 +68,15 @@ export async function GET(request: Request) {
     }
 
     const gradYearNum = graduationYear && !isNaN(graduationYear) ? graduationYear : new Date().getFullYear()
-    const super32Rows = await getSuper32FromTable(supabase, athleteName, gradYearNum, {})
-    const super32Results = super32Rows.map((r) => ({
-      year: r.year,
-      placement: r.placement,
-      record: r.record,
-      weight: r.weight,
-      division: r.division,
-    }))
+    const super32ByYear = new Map<number, { year: number; placement: string; record: string; weight?: string; division?: string }>()
+    for (const nameVariation of nameVariations) {
+      const rows = await getSuper32FromTable(supabase, nameVariation, gradYearNum, {})
+      for (const r of rows) {
+        const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
+        if (!super32ByYear.has(y)) super32ByYear.set(y, { year: r.year, placement: r.placement, record: r.record, weight: r.weight, division: r.division })
+      }
+    }
+    const super32Results = Array.from(super32ByYear.values()).sort((a, b) => b.year - a.year)
 
     if (nhscaError) {
       console.error("[v0] NHSCA query error:", nhscaError)

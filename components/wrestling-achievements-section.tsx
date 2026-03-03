@@ -23,6 +23,7 @@ interface WrestlingAchievementsSectionProps {
     college_opens_experience?: string
     recruiting_status?: string
     name?: string
+    wrestling_name?: string
   }
   nchsaaResults?: Array<{
     year: number
@@ -76,6 +77,8 @@ export function WrestlingAchievementsSection({
       try {
         console.log("[v0] Fetching achievements for:", athleteName)
         const params = new URLSearchParams({ name: athleteName })
+        const wrestlingName = athlete?.wrestling_name?.trim()
+        if (wrestlingName && wrestlingName !== athleteName) params.set("wrestling_name", wrestlingName)
         if (graduationYear && graduationYear > 0) params.set("graduation_year", String(graduationYear))
         const response = await fetch(`/api/wrestling-achievements?${params.toString()}`)
         const data = await response.json()

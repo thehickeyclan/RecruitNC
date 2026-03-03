@@ -58,7 +58,7 @@ export default function AdminBlueReportsPage() {
       <div className="min-h-screen bg-gray-50 p-8">
         <p className="text-gray-600">Failed to load reports.</p>
         <Button variant="outline" asChild className="mt-4">
-          <Link href="/admin/blue">Back to Blue</Link>
+          <Link href="/admin/blue" prefetch={false}>Back to Blue</Link>
         </Button>
       </div>
     )
@@ -81,7 +81,7 @@ export default function AdminBlueReportsPage() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/blue"><ArrowLeft className="h-4 w-4" /></Link>
+            <Link href="/admin/blue" prefetch={false}><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">Blue reports</h1>

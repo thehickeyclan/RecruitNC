@@ -7,15 +7,13 @@
 - **Same-tab link to /store-app from inside the iframe:** The iframe would navigate to the store, but the parent page stays the same. Users often don’t see it or it’s canceled by layout/React.
 - **target="_blank" (what we tried):** From inside an iframe, the browser opens a new tab but for security/sandbox reasons the new tab can end up as **about:blank** (green screen). So Store “opened a new tab” but the tab was empty.
 - **Fix:** Use **target="_top"** for the Store link (navbar, StoreButton, StoreNavLink). That loads the store in the **top-level browsing context** (the full window), breaking out of the iframe. When not embedded, `_top` is just the same tab. Same pattern as Sign In.
+- **Canceled requests:** Even with `target="_top"`, the GET /store-app document request was sometimes **blocked/canceled** (0 B transferred). To avoid client-side code (Next.js, layout, scripts) aborting the navigation, **Store entry points use a form GET** (`<form method="get" action="/store-app" target="_top">` with a submit button). A form submit triggers a full document load that is not treated as a client-side navigation.
 
 ## What is implemented
 
 1. **GET /store** → 302 to /store-app (route only; no React at /store).
 2. **Store UI** at /store-app (page + product/[id]).
-3. **All Store entry points** use `<a href="/store-app" target="_top" rel="noopener">`:
-   - Navbar (desktop and mobile)
-   - StoreButton
-   - StoreNavLink
+3. **All Store entry points** use a **form GET** to /store-app with **target="_top"** (navbar desktop + mobile, StoreButton, StoreNavLink). This avoids the document request being canceled.
 4. **Do not use target="_blank"** for Store when the app can be embedded. It causes about:blank in the new tab.
 
 ## Prevention

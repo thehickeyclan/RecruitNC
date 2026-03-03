@@ -63,7 +63,7 @@ export default function AdminBlueHubPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {sections.map(({ href, title, description, icon: Icon }) => (
-            <Link key={href} href={href}>
+            <Link key={href} href={href} prefetch={false}>
               <Card className="border-t-4 border-t-[#03154C] shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer h-full">
                 <CardHeader className="flex flex-row items-center gap-4">
                   <div className="rounded-lg bg-[#03154C]/10 p-3">

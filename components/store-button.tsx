@@ -1,10 +1,12 @@
 "use client"
 
-/** Store link: target="_top" so it works when app is embedded in iframe (ncwrestlingunited.com). Same as Sign In. */
+/** Store: form GET so navigation cannot be canceled by the app. Full document load. */
 export function StoreButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <a href="/store-app" target="_top" rel="noopener" className={className}>
-      {children ?? "Store"}
-    </a>
+    <form method="get" action="/cart" target="_top" className="inline">
+      <button type="submit" className={className ?? ""} style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer" }}>
+        {children ?? "Store"}
+      </button>
+    </form>
   )
 }
