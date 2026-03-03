@@ -55,29 +55,6 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#003366" />
         <meta name="msapplication-tap-highlight" content="no" />
-        {/* Run before React and other scripts so internal link clicks always do a full page load */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-(function() {
-  function handle(e) {
-    var target = e.target;
-    var anchor = target && target.closest ? target.closest('a') : null;
-    if (!anchor || !anchor.href) return;
-    if (anchor.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    try {
-      var url = new URL(anchor.href);
-      if (url.origin !== window.location.origin) return;
-    } catch (err) { return; }
-    e.preventDefault();
-    e.stopPropagation();
-    window.location.href = anchor.href;
-  }
-  document.addEventListener('click', handle, true);
-})();
-            `.trim(),
-          }}
-        />
       </head>
       <body
         className="min-h-screen bg-background font-sans antialiased"
@@ -107,10 +84,8 @@ export default function RootLayout({
             <Analytics />
           </AuthProvider>
         </ThemeProvider>
-        <Script
-          src="https://ncwrestlingunited.com/wp-content/plugins/advanced-iframe/js/ai_external.js"
-          strategy="afterInteractive"
-        />
+        {/* Disabled: was likely canceling nav to /store. Re-enable if app is embedded in iframe and needs it. */}
+        {/* <Script src="https://ncwrestlingunited.com/wp-content/plugins/advanced-iframe/js/ai_external.js" strategy="afterInteractive" /> */}
       </body>
     </html>
   )

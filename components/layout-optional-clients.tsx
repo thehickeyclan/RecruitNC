@@ -7,12 +7,12 @@ import { StorageAccessPrompt } from "@/components/storage-access-prompt"
 import { IframeSignInBanner } from "@/components/iframe-signin-banner"
 import { CoachApprovalNotification } from "@/components/coach-approval-notification"
 
-/**
- * These components run effects (redirects, resize, etc.) that can cancel in-flight
- * document requests when navigating to /store, /cart, /checkout. Don't mount them
- * on those routes so the store/cart/checkout document load is never aborted.
- */
+/** Mounting these was canceling nav to /store. Disabled until we mount them without aborting. */
+const MOUNT_OPTIONAL_CLIENTS = false
+
 export function LayoutOptionalClients() {
+  if (!MOUNT_OPTIONAL_CLIENTS) return null
+
   const pathname = usePathname() ?? ""
   const isStoreCartCheckout =
     pathname === "/store" ||
@@ -20,9 +20,7 @@ export function LayoutOptionalClients() {
     pathname === "/cart" ||
     pathname.startsWith("/checkout/")
 
-  if (isStoreCartCheckout) {
-    return null
-  }
+  if (isStoreCartCheckout) return null
 
   return (
     <>
