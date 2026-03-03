@@ -263,6 +263,11 @@ export default function PaymentPage() {
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003366]" />
                   </div>
+                ) : !process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ? (
+                  <div className="text-center py-12 space-y-2">
+                    <p className="font-medium text-destructive">Payment form not available</p>
+                    <p className="text-sm text-muted-foreground">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is missing. Add it in Vercel → Settings → Environment Variables, then redeploy.</p>
+                  </div>
                 ) : clientSecret ? (
                   <Elements
                     stripe={stripePromise}
