@@ -1,16 +1,15 @@
 "use client"
 
 /**
- * Store nav as a button so nothing can intercept (no <a>). Use in footer and anywhere else.
+ * Store nav via form GET so the browser does a full document request — nothing to cancel.
+ * (window.location / <a> were getting "store (canceled)" from layout/RSC.)
  */
 export function StoreButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      className={className}
-      onClick={() => { window.location.href = "/store"; }}
-    >
-      {children ?? "Store"}
-    </button>
+    <form action="/store" method="get" className="inline" onSubmit={(e) => e.stopPropagation()}>
+      <button type="submit" className={className}>
+        {children ?? "Store"}
+      </button>
+    </form>
   )
 }

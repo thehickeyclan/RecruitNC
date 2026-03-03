@@ -253,7 +253,9 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")} onClick={(e) => handleNav(e, "/news")}>News</a>
-              <button type="button" className={`${navLinkClass("/store")} cursor-pointer border-0 bg-transparent font-inherit text-inherit`} onClick={() => { window.location.href = "/store"; }}>Store</button>
+              <form action="/store" method="get" className="inline" onSubmit={(e) => e.stopPropagation()}>
+                <button type="submit" className={`${navLinkClass("/store")} cursor-pointer border-0 bg-transparent font-inherit text-inherit`}>Store</button>
+              </form>
               <a href="/cart" className={navLinkClass("/cart")} onClick={(e) => handleNav(e, "/cart")}>
                 Cart
                 {cartCount > 0 && (
@@ -447,7 +449,9 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
-                  <button type="button" className={`${mobileLinkClass("/store")} cursor-pointer w-full text-left border-0 bg-transparent font-inherit min-h-[44px] flex items-center`} onClick={() => { setIsOpen(false); window.location.href = "/store"; }}>Store</button>
+                  <form action="/store" method="get" className="block w-full" onSubmit={() => setIsOpen(false)}>
+                    <button type="submit" className={`${mobileLinkClass("/store")} cursor-pointer w-full text-left border-0 bg-transparent font-inherit min-h-[44px] flex items-center`}>Store</button>
+                  </form>
                   <a href="/cart" className={mobileLinkClass("/cart")} onClick={(e) => { e.preventDefault(); setIsOpen(false); window.location.href = "/cart"; }}>
                     Cart{cartCount > 0 ? ` (${cartCount})` : ""}
                   </a>
