@@ -8,19 +8,31 @@ import { ArrowLeft, User, AlertCircle } from "lucide-react"
 
 type SignupRow = {
   id: string
+  invite_id: string | null
+  parent_email: string | null
   parent_first_name: string | null
   parent_last_name: string | null
-  parent_email: string | null
   parent_phone: string | null
+  parent_relationship: string | null
   athlete_first_name: string | null
   athlete_last_name: string | null
   athlete_graduation_year: number | null
   athlete_high_school: string | null
   athlete_wrestling_club: string | null
   athlete_weight_class: string | null
+  athlete_cell_phone: string | null
+  athlete_email: string | null
+  athlete_gpa: string | null
+  interest_wrestling_college: boolean | null
+  highest_achievement: string | null
   tshirt_size: string | null
+  waiver_signed_at: string | null
+  promo_code_used: string | null
   status: string | null
+  stripe_session_id: string | null
+  stripe_customer_id: string | null
   created_at: string | null
+  updated_at: string | null
 }
 
 async function getSignup(signupId: string): Promise<
@@ -50,7 +62,7 @@ async function getSignup(signupId: string): Promise<
   const admin = createAdminClient()
   const { data: row, error } = await admin
     .from("blue_signups")
-    .select("id, parent_first_name, parent_last_name, parent_email, parent_phone, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, tshirt_size, status, created_at")
+    .select("id, invite_id, parent_email, parent_first_name, parent_last_name, parent_phone, parent_relationship, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, interest_wrestling_college, highest_achievement, tshirt_size, waiver_signed_at, promo_code_used, status, stripe_session_id, stripe_customer_id, created_at, updated_at")
     .eq("id", signupId)
     .single()
 
@@ -160,6 +172,10 @@ export default async function AdminBlueSignupDetailPage({
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone (cell)</p>
               <p className="font-medium">{parentPhone}</p>
             </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Relationship to athlete</p>
+              <p className="font-medium">{parentRelationship}</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -198,17 +214,61 @@ export default async function AdminBlueSignupDetailPage({
               </div>
             </div>
             <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Athlete cell phone</p>
+              <p className="font-medium">{athleteCell}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Athlete email</p>
+              <p className="font-medium">{athleteEmail}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Athlete GPA</p>
+              <p className="font-medium">{athleteGpa}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Interest in wrestling in college</p>
+              <p className="font-medium">{interestCollege}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Highest achievement</p>
+              <p className="font-medium">{highestAchievement}</p>
+            </div>
+            <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">T-shirt size</p>
               <p className="font-medium">{tshirt}</p>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Signed up</p>
-              <p className="font-medium">{createdAt ? new Date(createdAt).toLocaleString() : "—"}</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Promo code used</p>
+              <p className="font-medium">{promoCode}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Waiver signed at</p>
+              <p className="font-medium">{waiverSignedAt}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</p>
               <p className="font-medium">{status === "paid" ? "Paid" : status}</p>
             </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Created</p>
+              <p className="font-medium">{createdAt}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Updated</p>
+              <p className="font-medium">{updatedAt}</p>
+            </div>
+            {data.stripe_session_id && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Stripe session ID</p>
+                <p className="font-medium font-mono text-xs break-all">{data.stripe_session_id}</p>
+              </div>
+            )}
+            {data.stripe_customer_id && (
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Stripe customer ID</p>
+                <p className="font-medium font-mono text-xs break-all">{data.stripe_customer_id}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

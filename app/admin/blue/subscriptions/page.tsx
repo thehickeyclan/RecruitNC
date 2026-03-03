@@ -160,6 +160,7 @@ export default function AdminBlueSubscriptionsPage() {
                         <TableHead>Parent phone</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Signed up</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -180,6 +181,11 @@ export default function AdminBlueSubscriptionsPage() {
                             <span className={s.status === "paid" ? "text-green-600" : "text-amber-600"}>{s.status === "paid" ? "Paid" : "Pending"}</span>
                           </TableCell>
                           <TableCell className="text-sm text-gray-600">{new Date(s.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right">
+                            <Link href={`/admin/blue/signups/${s.id}`} className="text-sm text-[#003366] hover:underline font-medium">
+                              View all inputs
+                            </Link>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

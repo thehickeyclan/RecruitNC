@@ -55,6 +55,29 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#003366" />
         <meta name="msapplication-tap-highlight" content="no" />
+        {/* Run before React and other scripts so internal link clicks always do a full page load */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  function handle(e) {
+    var target = e.target;
+    var anchor = target && target.closest ? target.closest('a') : null;
+    if (!anchor || !anchor.href) return;
+    if (anchor.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    try {
+      var url = new URL(anchor.href);
+      if (url.origin !== window.location.origin) return;
+    } catch (err) { return; }
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = anchor.href;
+  }
+  document.addEventListener('click', handle, true);
+})();
+            `.trim(),
+          }}
+        />
       </head>
       <body
         className="min-h-screen bg-background font-sans antialiased"
