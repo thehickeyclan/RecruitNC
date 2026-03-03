@@ -3,16 +3,15 @@ import { notFound, redirect } from "next/navigation"
 import { resolveSchoolFromSlug } from "@/lib/resolve-school-from-slug"
 
 interface CollegePageProps {
-  params: {
-    college: string
-  }
+  params: Promise<{ slug: string }>
 }
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export default async function CollegeMyRecruitsRedirect({ params }: CollegePageProps) {
-  await redirectToMyRecruits(params.college)
+  const { slug } = await params
+  await redirectToMyRecruits(slug)
 }
 
 async function redirectToMyRecruits(collegeParam: string) {

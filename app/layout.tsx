@@ -55,6 +55,46 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#003366" />
         <meta name="msapplication-tap-highlight" content="no" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  var origin = typeof window !== 'undefined' && window.location && window.location.origin;
+  if (!origin) return;
+  function sameOrigin(url) {
+    try { return new URL(url, origin).origin === origin; } catch (e) { return false; }
+  }
+  function onClick(e) {
+    var el = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
+    var a = el && el.closest && el.closest('a');
+    if (!a || !a.href) return;
+    if (a.target === '_blank' || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (!sameOrigin(a.href)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = a.href;
+  }
+  function onSubmit(e) {
+    var form = e.target;
+    if (!form || form.tagName !== 'FORM') return;
+    var action = (form.getAttribute('action') || '').trim() || (window.location && window.location.pathname) || '/';
+    if (!sameOrigin(action)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var method = ((form.getAttribute('method') || 'get').toLowerCase());
+    var url = new URL(form.action || action, origin);
+    if (method === 'get') {
+      var fd = new FormData(form);
+      fd.forEach(function(v, k) { url.searchParams.set(k, String(v)); });
+    }
+    window.location.href = url.toString();
+  }
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('submit', onSubmit, true);
+})();
+`,
+          }}
+        />
       </head>
       <body
         className="min-h-screen bg-background font-sans antialiased"
