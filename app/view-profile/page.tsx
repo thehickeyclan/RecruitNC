@@ -85,14 +85,15 @@ export default function ViewProfilePage() {
   }, [id])
 
   useEffect(() => {
-    if (!athlete?.name || typeof athlete.name !== "string") {
+    if (!athlete?.id) {
       setNchsaaResults([])
       return
     }
     let cancelled = false
-    const name = (athlete.name as string).trim()
+    const params = new URLSearchParams({ athlete_id: String(athlete.id) })
+    const name = (athlete.name as string)?.trim()
     const wrestlingName = (athlete.wrestling_name as string)?.trim()
-    const params = new URLSearchParams({ name })
+    if (name) params.set("name", name)
     if (wrestlingName && wrestlingName !== name) params.set("wrestling_name", wrestlingName)
     const gradYear = athlete.graduationyear != null ? Number(athlete.graduationyear) : undefined
     if (gradYear && !isNaN(gradYear)) params.set("graduation_year", String(gradYear))

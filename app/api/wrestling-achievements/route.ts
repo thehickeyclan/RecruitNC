@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
 import { getNameVariants, getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
@@ -6,21 +6,30 @@ import { getNameVariants, getNHSCAFromTables, getSuper32FromTable } from "@/lib/
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const athleteName = (searchParams.get("name") || "").trim()
-    const wrestlingName = (searchParams.get("wrestling_name") || "").trim()
-    const graduationYearParam = searchParams.get("graduation_year")
+    let athleteName = (searchParams.get("name") || "").trim()
+    let wrestlingName = (searchParams.get("wrestling_name") || "").trim()
+    let graduationYearParam = searchParams.get("graduation_year")
+    const athleteId = searchParams.get("athlete_id")?.trim()
+
+    const supabase = createAdminClient()
+
+    if (athleteId) {
+      const { data: athlete } = await supabase.from("athletes").select("name, wrestling_name, graduationyear").eq("id", athleteId).single()
+      if (athlete) {
+        athleteName = (athlete.name ?? "").toString().trim() || athleteName
+        wrestlingName = (athlete.wrestling_name ?? "").toString().trim() || wrestlingName
+        if (athlete.graduationyear != null) graduationYearParam = String(athlete.graduationyear)
+      }
+    }
+
     const graduationYear = graduationYearParam ? parseInt(graduationYearParam, 10) : undefined
 
     if (!athleteName) {
       return NextResponse.json(
-        { success: false, error: "Athlete name is required" },
+        { success: false, error: "Athlete name or athlete_id required" },
         { status: 400 },
       )
     }
-
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      cookies: { get: () => null, set: () => {}, remove: () => {} },
-    })
 
     const byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear)
     const byWrestling =
