@@ -127,7 +127,7 @@ export function AdminProductsClient({ products }: AdminProductsClientProps) {
                       <Link href={`/admin/products/${product.id}`}>Edit</Link>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
-                      <StoreLink href={`/store/product/${product.id}`} target="_blank" rel="noopener noreferrer">
+                      <StoreLink href={`/store-app/product/${product.id}`} target="_blank" rel="noopener noreferrer">
                         View
                       </StoreLink>
                     </Button>

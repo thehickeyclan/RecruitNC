@@ -17,6 +17,8 @@ export function LayoutOptionalClients() {
   const isStoreCartCheckout =
     pathname === "/store" ||
     pathname.startsWith("/store/") ||
+    pathname === "/store-app" ||
+    pathname.startsWith("/store-app/") ||
     pathname === "/cart" ||
     pathname.startsWith("/checkout/")
 

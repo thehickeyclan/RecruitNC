@@ -34,7 +34,7 @@ export async function createReview(formData: {
       return { success: false, error: error.message }
     }
 
-    revalidatePath(`/store/product/${formData.productId}`)
+    revalidatePath(`/store-app/product/${formData.productId}`)
     return { success: true }
   } catch (err) {
     console.error("[reviews] Error creating review:", err)

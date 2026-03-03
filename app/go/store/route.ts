@@ -6,6 +6,6 @@ import { NextRequest, NextResponse } from "next/server"
  * the browser then does a fresh GET to /store, avoiding canceled RSC/document requests.
  */
 export function GET(request: NextRequest) {
-  const url = new URL("/store", request.url)
+  const url = new URL("/store-app", request.url)
   return NextResponse.redirect(url, 302)
 }

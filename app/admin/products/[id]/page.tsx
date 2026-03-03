@@ -146,7 +146,7 @@ export default function EditProductPage() {
   }
 
   const handlePreview = () => {
-    window.open(`/store/product/${productId}`, "_blank")
+    window.open(`/store-app/product/${productId}`, "_blank")
   }
 
   const availableColors = Array.from(new Set(variantData.map((v) => v.color).filter(Boolean)))

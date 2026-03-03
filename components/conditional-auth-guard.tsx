@@ -21,7 +21,7 @@ export function ConditionalAuthGuard({
   const isProspects = pathname === "/prospects" || pathname?.startsWith("/prospects/")
   const isAthletes = pathname === "/athletes" || pathname?.startsWith("/athletes/")
   const isPublicRankings = pathname?.startsWith("/public-rankings")
-  const isStore = pathname === "/store" || pathname?.startsWith("/store/")
+  const isStore = pathname === "/store" || pathname?.startsWith("/store/") || pathname === "/store-app" || pathname?.startsWith("/store-app/")
   const isCart = pathname === "/cart"
   const isCheckout = pathname?.startsWith("/checkout/")
   const isNchsaaArticle = /^\/nchsaa\/[^/]+\/news\/[^/]+$/.test(pathname ?? "")

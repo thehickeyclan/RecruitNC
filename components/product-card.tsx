@@ -71,7 +71,7 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   const productId = String(product.id)
-  const productUrl = `/store/product/${productId}`
+  const productUrl = `/store-app/product/${productId}`
   const currentImage = getCurrentImage()
   const stockQty = product.stock_quantity ?? 0
   const rating = product.rating ?? 0

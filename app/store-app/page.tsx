@@ -4,7 +4,7 @@ import { Suspense } from "react"
 
 export const dynamic = "force-dynamic"
 
-export default async function StorePage() {
+export default async function StoreAppPage() {
   const supabase = await createClient()
 
   const { data: productsData, error } = await supabase
@@ -22,12 +22,10 @@ export default async function StorePage() {
     console.error("[v0] Error fetching products:", error)
   }
 
-  // Fetch all reviews to calculate ratings
   const { data: allReviews } = await supabase
     .from("product_reviews")
     .select("product_id, rating")
 
-  // Calculate average rating per product
   const ratingsMap: Record<string, { sum: number; count: number }> = {}
   allReviews?.forEach((review: { product_id: string; rating: number }) => {
     const productId = review.product_id
@@ -62,12 +60,6 @@ export default async function StorePage() {
       image_url: product.image_url,
     }
   })
-
-  console.log("[v0] Products fetched:", products.length)
-  console.log(
-    "[v0] Product categories:",
-    products.map((p: Record<string, unknown>) => ({ name: p.name, category: p.category })),
-  )
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-background" />}>

@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     '/blue',
     '/go',
     '/store',
+    '/store-app',
     '/cart',
     '/nchsaa',
     '/auth/signin',
@@ -119,6 +120,6 @@ export const config = {
     /*
      * Match all request paths except: static assets, and /store (store runs with zero middleware).
      */
-    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-|store(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|manifest\\.json|icon-|store(?:/|$)|store-app(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|ico)$).*)",
   ],
 }
