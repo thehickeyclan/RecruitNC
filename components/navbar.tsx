@@ -159,17 +159,17 @@ export function Navbar() {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel className="font-normal text-muted-foreground">Commitments</DropdownMenuLabel>
                   {commitmentItems.map((item) => (
-                    <div key={item.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                      <a href={item.href} className="block w-full" onClick={(e) => handleNav(e, item.href)}>{item.label}</a>
-                    </div>
+                    <DropdownMenuItem key={item.href} asChild>
+                      <a href={item.href} className="block w-full cursor-pointer">{item.label}</a>
+                    </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />
-                  <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                    <a href={profilesItem.href} className="block w-full" onClick={(e) => handleNav(e, profilesItem.href)}>{profilesItem.label}</a>
-                  </div>
-                  <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                    <a href={rankingsItem.href} className="block w-full" onClick={(e) => handleNav(e, rankingsItem.href)}>{rankingsItem.label}</a>
-                  </div>
+                  <DropdownMenuItem asChild>
+                    <a href={profilesItem.href} className="block w-full cursor-pointer">{profilesItem.label}</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href={rankingsItem.href} className="block w-full cursor-pointer">{rankingsItem.label}</a>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -188,15 +188,15 @@ export function Navbar() {
                   {statesItems.map((sub) => {
                     const Icon = sub.icon
                     return (
-                      <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                        <a href={sub.href} className="flex flex-1 items-start gap-3 py-2" onClick={(e) => handleNav(e, sub.href)}>
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
                         </a>
-                      </div>
+                      </DropdownMenuItem>
                     )
                   })}
                   <DropdownMenuSeparator />
@@ -210,15 +210,15 @@ export function Navbar() {
                   {nationalsItems.map((sub) => {
                     const Icon = sub.icon
                     return (
-                      <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                        <a href={sub.href} className="flex flex-1 items-start gap-3 py-2" onClick={(e) => handleNav(e, sub.href)}>
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
                         </a>
-                      </div>
+                      </DropdownMenuItem>
                     )
                   })}
                 </DropdownMenuContent>
@@ -232,16 +232,16 @@ export function Navbar() {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel className="font-normal font-semibold">Programs</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                    <a href="/blue" className="block w-full" onClick={(e) => handleNav(e, "/blue")}>Blue Program</a>
-                  </div>
+                  <DropdownMenuItem asChild>
+                    <a href="/blue" className="block w-full cursor-pointer">Blue Program</a>
+                  </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="cursor-pointer">National Team</DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-56">
                       {nationalTeamItems.map((sub) => (
-                        <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                          <a href={sub.href} className="block w-full" onClick={(e) => handleNav(e, sub.href)}>{sub.label}</a>
-                        </div>
+                        <DropdownMenuItem key={sub.href} asChild>
+                          <a href={sub.href} className="block w-full cursor-pointer">{sub.label}</a>
+                        </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
@@ -276,15 +276,15 @@ export function Navbar() {
                   {legacyNcItems.map((sub) => {
                     const Icon = sub.icon
                     return (
-                      <div key={sub.href} className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent">
-                        <a href={sub.href} className="flex flex-1 items-start gap-3 py-2" onClick={(e) => handleNav(e, sub.href)}>
+                      <DropdownMenuItem key={sub.href} asChild>
+                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
                           <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium">{sub.label}</span>
                             <span className="text-xs text-muted-foreground">{sub.description}</span>
                           </div>
                         </a>
-                      </div>
+                      </DropdownMenuItem>
                     )
                   })}
                 </DropdownMenuContent>
@@ -323,16 +323,16 @@ export function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Profile</Link>
+                    <a href="/profile">Profile</a>
                   </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
-                        <Link href={getRecruitingPortalUrl()} className="flex items-center">
+                        <a href={getRecruitingPortalUrl()} className="flex items-center">
                           <Star className="h-4 w-4 mr-2" />
                           My Recruits
-                        </Link>
+                        </a>
                       </DropdownMenuItem>
                     </>
                   )}

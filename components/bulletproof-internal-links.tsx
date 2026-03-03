@@ -15,7 +15,9 @@ export function BulletproofInternalLinks() {
     const handleClick = (e: MouseEvent) => {
       if (typeof window === "undefined") return
       const target = e.target as Node
-      const anchor = target && "closest" in target ? (target as Element).closest("a") : null
+      // Find <a> even when click is on a child (e.g. text node or span inside Radix item)
+      let el: Element | null = target?.nodeType === 1 ? (target as Element) : (target?.parentElement ?? null)
+      const anchor = el?.closest?.("a") ?? null
       if (!anchor || !anchor.href) return
 
       // Leave external links and new-tab behavior alone
@@ -25,8 +27,8 @@ export function BulletproofInternalLinks() {
       try {
         const url = new URL(anchor.href)
         if (url.origin !== window.location.origin) return
-        // Don't intercept /store — let browser do native nav so request isn't canceled by layout
-        if (url.pathname === "/store" || url.pathname.startsWith("/store/")) return
+        // Don't intercept store — let browser do native nav so request isn't canceled by layout
+        if (url.pathname === "/store" || url.pathname.startsWith("/store/") || url.pathname === "/store-app" || url.pathname.startsWith("/store-app/")) return
       } catch {
         return
       }

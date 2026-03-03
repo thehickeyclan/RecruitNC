@@ -10,6 +10,7 @@ import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context"
 import { ConditionalAuthGuard } from "@/components/conditional-auth-guard"
 import { LayoutOptionalClients } from "@/components/layout-optional-clients"
+import { BulletproofInternalLinks } from "@/components/bulletproof-internal-links"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 import { Analytics } from "@vercel/analytics/next"
 
@@ -69,6 +70,7 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
+            <BulletproofInternalLinks />
             <LayoutOptionalClients />
             <div id="app-content" className="relative flex flex-col min-h-screen">
               <Navbar />

@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -66,7 +65,7 @@ export function AdminHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-3">
           <div className="flex items-center space-x-8">
-            <Link href="/" className="flex items-center space-x-3">
+            <a href="/" className="flex items-center space-x-3">
               <Image
                 src="/images/nc-united-logo-white.png"
                 alt="NC United"
@@ -76,7 +75,7 @@ export function AdminHeader() {
                 priority
               />
               <span className="text-lg font-bold text-white hidden sm:inline">Admin</span>
-            </Link>
+            </a>
 
             <nav className="hidden md:flex space-x-1">
               {adminNavItems.map((item) => (
@@ -99,9 +98,9 @@ export function AdminHeader() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Link href="/" className="text-sm text-white hover:bg-white/10 px-3 py-2 rounded-md transition-colors">
+            <a href="/" className="text-sm text-white hover:bg-white/10 px-3 py-2 rounded-md transition-colors">
               View Site
-            </Link>
+            </a>
           </div>
         </div>
       </div>

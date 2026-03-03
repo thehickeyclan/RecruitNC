@@ -1,4 +1,3 @@
-import Link from "next/link"
 import Image from "next/image"
 import { StoreButton } from "@/components/store-button"
 
@@ -8,7 +7,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div>
-            <Link href="/" className="flex items-center">
+            <a href="/" className="flex items-center">
               <Image
                 src="/images/nc-united-logo-white.png"
                 alt="NC United Wrestling"
@@ -18,7 +17,7 @@ export function Footer() {
                 priority
               />
               <h3 className="text-lg font-semibold">NC United Wrestling</h3>
-            </Link>
+            </a>
             <p className="mt-2 text-sm text-gray-300">
               Tracking North Carolina's wrestling talent and college commitments.
             </p>
@@ -27,44 +26,44 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="mt-2 space-y-2">
               <li>
-                <Link href="/prospects/all" className="text-sm text-gray-300 hover:text-white">
+                <a href="/prospects/all" className="text-sm text-gray-300 hover:text-white">
                   Athlete Profiles
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/public-rankings" className="text-sm text-gray-300 hover:text-white">
+                <a href="/public-rankings" className="text-sm text-gray-300 hover:text-white">
                   Rankings
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/blue" className="text-sm text-gray-300 hover:text-white">
+                <a href="/blue" className="text-sm text-gray-300 hover:text-white">
                   Blue Program
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/national-team" className="text-sm text-gray-300 hover:text-white">
+                <a href="/national-team" className="text-sm text-gray-300 hover:text-white">
                   National Team
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/athletes" className="text-sm text-gray-300 hover:text-white">
+                <a href="/athletes" className="text-sm text-gray-300 hover:text-white">
                   Commitments
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/high-schools" className="text-sm text-gray-300 hover:text-white">
+                <a href="/high-schools" className="text-sm text-gray-300 hover:text-white">
                   By High School
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/colleges" className="text-sm text-gray-300 hover:text-white">
+                <a href="/colleges" className="text-sm text-gray-300 hover:text-white">
                   By College
-                </Link>
+                </a>
               </li>
               <li>
-                <Link href="/stats" className="text-sm text-gray-300 hover:text-white">
+                <a href="/stats" className="text-sm text-gray-300 hover:text-white">
                   Statistics
-                </Link>
+                </a>
               </li>
               <li>
                 <StoreButton className="text-sm text-gray-300 hover:text-white cursor-pointer border-0 bg-transparent font-inherit p-0">Store</StoreButton>
@@ -90,9 +89,9 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-gray-300 hover:text-white">
+                <a href="/contact" className="text-sm text-gray-300 hover:text-white">
                   Contact
-                </Link>
+                </a>
               </li>
             </ul>
           </div>
@@ -106,9 +105,9 @@ export function Footer() {
               info@ncwrestlingunited.com
             </a>
             <span className="mx-2 text-gray-500">·</span>
-            <Link href="/contact" className="text-sm font-medium text-white/90 hover:text-white">
+            <a href="/contact" className="text-sm font-medium text-white/90 hover:text-white">
               Contact Us
-            </Link>
+            </a>
             <p className="mt-3 text-sm text-gray-300">Follow us</p>
             <div className="mt-1 flex gap-3">
               <a
