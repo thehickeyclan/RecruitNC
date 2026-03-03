@@ -3,9 +3,8 @@
 import type { ReactNode } from "react"
 
 /**
- * Navigate to /store without using <a href="/store"> so Next.js layout
- * never sees an internal link to prefetch or intercept (avoids "store (canceled)"
- * document requests from layout-*.js).
+ * Real <a href="/store">. No JavaScript required — browser does a full page load.
+ * Use so Store link works even when the app or deploy is broken.
  */
 export function StoreNavLink({
   className,
@@ -16,24 +15,17 @@ export function StoreNavLink({
   children: ReactNode
   onNavigate?: () => void
 }) {
-  const go = () => {
-    onNavigate?.()
-    window.location.href = "/store"
-  }
   return (
-    <span
-      role="link"
-      tabIndex={0}
+    <a
+      href="/store"
       className={className}
-      onClick={go}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          go()
-        }
+      onClick={(e) => {
+        e.preventDefault()
+        onNavigate?.()
+        window.location.href = "/store"
       }}
     >
       {children}
-    </span>
+    </a>
   )
 }

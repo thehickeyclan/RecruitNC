@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AdminHeader } from "@/components/admin-header"
@@ -235,12 +236,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Blue Program</span>
               </Button>
             </Link>
-            <Link href="/admin/orders">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+            <HardLink href="/admin/orders" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex">
                 <ShoppingBag className="h-6 w-6" />
                 <span className="text-sm font-semibold">Store & Orders</span>
-              </Button>
-            </Link>
+              </span>
+            </HardLink>
             <Link href="/admin/college-recruiting-guide">
               <Button className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <BookOpen className="h-6 w-6" />
@@ -352,8 +353,8 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* Store & Orders — order history, products, customers, inventory */}
-            <Link href="/admin/orders">
+            {/* Store & Orders — order history, products, customers, inventory. HardLink + Card (no button) so click navigates. */}
+            <HardLink href="/admin/orders" className="block h-full">
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <ShoppingBag className="h-10 w-10 text-[#1a5f4a] mb-3" />
@@ -361,7 +362,7 @@ export default function AdminDashboard() {
                   <p className="text-xs text-gray-600">Order history, products, customers, inventory</p>
                 </CardContent>
               </Card>
-            </Link>
+            </HardLink>
 
             {/* College Recruiting Guide */}
             <Link href="/admin/college-recruiting-guide">

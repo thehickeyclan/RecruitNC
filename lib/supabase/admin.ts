@@ -31,7 +31,7 @@ export function createAdminClient(): SupabaseClient {
   if (adminClient) return adminClient
 
   const url = getSupabaseUrl()
-  // Use override if set (so you can add an editable env var in Vercel when the integration key is locked)
+  // Prefer OVERRIDE (used in Vercel Production/Preview/Development when the integration key had issues).
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY_OVERRIDE || process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!key) {

@@ -3,10 +3,9 @@
 import type { ReactNode } from "react"
 
 /**
- * Internal link that forces a full page load (window.location.href).
- * Use for any NEW page or NEW link: existing client bundles may have a stale
- * route manifest, so client-side navigation can cancel or fail for new routes.
- * Full page load hits the server and works.
+ * Internal link as a real <a href>. No JavaScript required — browser does a full
+ * page load. Use for any critical or new link so navigation works even when
+ * the app or deploy is broken.
  */
 export function HardLink({
   href,
@@ -19,24 +18,17 @@ export function HardLink({
   children: ReactNode
   onNavigate?: () => void
 }) {
-  const go = () => {
-    onNavigate?.()
-    window.location.href = href
-  }
   return (
-    <span
-      role="link"
-      tabIndex={0}
+    <a
+      href={href}
       className={className}
-      onClick={go}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          go()
-        }
+      onClick={(e) => {
+        e.preventDefault()
+        onNavigate?.()
+        window.location.href = href
       }}
     >
       {children}
-    </span>
+    </a>
   )
 }
