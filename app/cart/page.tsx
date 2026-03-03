@@ -145,7 +145,7 @@ export default function CartPage() {
                 <h3 className="font-semibold text-blue-900 mb-1">Shipping Options</h3>
                 <ul className="text-sm text-blue-800 space-y-0.5 list-none">
                   <li><strong>Ship anywhere:</strong> $5.00 flat rate</li>
-                  <li><strong>Free pickup at States</strong> (Suite 109, Greensboro Coliseum)</li>
+                  <li><strong>Free pickup</strong> at NC United Blue practices every Sunday at UNC</li>
                 </ul>
               </div>
             </div>

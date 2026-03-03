@@ -50,6 +50,13 @@ export async function createPaymentIntent(
   | { success: false; error: string }
 > {
   try {
+    if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+      return {
+        success: false,
+        error: "Stripe is not configured. Add STRIPE_SECRET_KEY (and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) in Vercel → Settings → Environment Variables, then redeploy.",
+      }
+    }
+
     const supabase = createAdminClient()
 
     if (params.total <= 0) {

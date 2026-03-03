@@ -25,17 +25,10 @@ const SHIPPING_OPTIONS: ShippingMethod[] = [
   },
   {
     id: "pickup",
-    name: "Pickup at blue practice",
+    name: "Free pickup at NC United Blue practices",
     price: 0,
-    days: "Next practice",
-    description: "Pick up your order at the next team practice — $0",
-  },
-  {
-    id: "pickup-states",
-    name: "Pickup at States (Suite 109)",
-    price: 0,
-    days: "During States",
-    description: "Pick up at Suite 109, Greensboro Coliseum during NCHSAA State tournament — $0",
+    days: "Sundays at UNC",
+    description: "Pick up your order at NC United Blue practices every Sunday at UNC — FREE",
   },
 ]
 
@@ -89,14 +82,8 @@ export default function ShippingMethodPage() {
               <CardContent>
                 <RadioGroup value={selectedMethod} onValueChange={setSelectedMethod} className="space-y-4">
                   {SHIPPING_OPTIONS.map((option) => {
-                    const isPickupAtPractice = option.id === "pickup"
-                    const isPickupAtStates = option.id === "pickup-states"
-                    const isAnyPickup = isPickupAtPractice || isPickupAtStates
-                    const borderClass = isPickupAtPractice
-                      ? "border-green-500 bg-green-50/50"
-                      : isPickupAtStates
-                        ? "border-blue-500 bg-blue-50/50"
-                        : ""
+                    const isPickup = option.id === "pickup"
+                    const borderClass = isPickup ? "border-green-500 bg-green-50/50" : ""
 
                     return (
                       <div
@@ -107,20 +94,14 @@ export default function ShippingMethodPage() {
                         <Label htmlFor={option.id} className="flex-1 cursor-pointer">
                           <div className="flex justify-between items-start mb-1">
                             <div className="flex items-center gap-2">
-                              {isAnyPickup && (
-                                <MapPin className={`w-4 h-4 ${isPickupAtStates ? "text-blue-600" : "text-green-600"}`} />
-                              )}
+                              {isPickup && <MapPin className="w-4 h-4 text-green-600" />}
                               <div>
                                 <p className="font-semibold">{option.name}</p>
                                 <p className="text-sm text-muted-foreground">{option.days}</p>
                               </div>
                             </div>
                             <p className="font-semibold">
-                              {isAnyPickup ? (
-                                <span className={isPickupAtStates ? "text-blue-600" : "text-green-600"}>FREE</span>
-                              ) : (
-                                `$${option.price.toFixed(2)}`
-                              )}
+                              {isPickup ? <span className="text-green-600">FREE</span> : `$${option.price.toFixed(2)}`}
                             </p>
                           </div>
                           <p className="text-sm text-muted-foreground">{option.description}</p>
@@ -131,16 +112,9 @@ export default function ShippingMethodPage() {
                 </RadioGroup>
 
                 {selectedMethod === "pickup" && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-sm text-blue-700 font-medium">
-                      Your order will be ready for pickup at the next team practice. You&apos;ll receive a confirmation email with details.
-                    </p>
-                  </div>
-                )}
-                {selectedMethod === "pickup-states" && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-sm text-blue-700 font-medium">
-                      Your order will be ready for pickup at Suite 109, Greensboro Coliseum during the NCHSAA State tournament. You&apos;ll receive a confirmation email with details.
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-700 font-medium">
+                      Your order will be ready for pickup at NC United Blue practices every Sunday at UNC. You&apos;ll receive a confirmation email with details.
                     </p>
                   </div>
                 )}

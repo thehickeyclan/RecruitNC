@@ -33,9 +33,10 @@ function getIlikePatternsForVariation(v: string): string[] {
   return patterns
 }
 
-/** Known same-person name spellings (apostrophe vs no apostrophe, etc.) so tournament tables match. */
+/** Known same-person name spellings so tournament tables (incl. national team) match. */
 const SAME_PERSON_ALIASES: string[][] = [
   ["Jackson D'Ettore", "Jackson Dettore", "Jackson D\u2019Ettore"],
+  ["Samuel Gantt", "Sammy Gantt"],
 ]
 
 /** Normalize for alias match: treat backtick as apostrophe, curly as straight, so all Jackson spellings match. */
