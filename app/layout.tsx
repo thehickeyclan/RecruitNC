@@ -77,16 +77,15 @@ export default function RootLayout({
   function onSubmit(e) {
     var form = e.target;
     if (!form || form.tagName !== 'FORM') return;
+    var method = ((form.getAttribute('method') || 'get').toLowerCase());
+    if (method !== 'get') return;
     var action = (form.getAttribute('action') || '').trim() || (window.location && window.location.pathname) || '/';
     if (!sameOrigin(action)) return;
     e.preventDefault();
     e.stopPropagation();
-    var method = ((form.getAttribute('method') || 'get').toLowerCase());
     var url = new URL(form.action || action, origin);
-    if (method === 'get') {
-      var fd = new FormData(form);
-      fd.forEach(function(v, k) { url.searchParams.set(k, String(v)); });
-    }
+    var fd = new FormData(form);
+    fd.forEach(function(v, k) { url.searchParams.set(k, String(v)); });
     window.location.href = url.toString();
   }
   document.addEventListener('click', onClick, true);

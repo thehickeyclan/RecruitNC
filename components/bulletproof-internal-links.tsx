@@ -43,6 +43,8 @@ export function BulletproofInternalLinks() {
       if (typeof window === "undefined") return
       const form = e.target as HTMLFormElement
       if (!form || form.tagName !== "FORM") return
+      const method = (form.getAttribute("method") ?? "get").toLowerCase()
+      if (method !== "get") return
       const action = (form.getAttribute("action") ?? "").trim() || window.location.pathname
       try {
         const url = new URL(action, window.location.origin)
@@ -52,14 +54,11 @@ export function BulletproofInternalLinks() {
       }
       e.preventDefault()
       e.stopPropagation()
-      const method = (form.getAttribute("method") ?? "get").toLowerCase()
       const finalUrl = new URL(form.action, window.location.origin)
-      if (method === "get") {
-        const formData = new FormData(form)
-        formData.forEach((value, key) => {
-          finalUrl.searchParams.set(key, String(value))
-        })
-      }
+      const formData = new FormData(form)
+      formData.forEach((value, key) => {
+        finalUrl.searchParams.set(key, String(value))
+      })
       if (window.location.search.includes("bulletproof_debug=1")) {
         console.log("[RecruitNC] BulletproofInternalLinks: form →", finalUrl.toString())
       }
