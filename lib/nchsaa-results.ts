@@ -22,6 +22,20 @@ export function escapeForIlike(s: string): string {
   return (s ?? "").replace(/'/g, "''")
 }
 
+/** Curly apostrophe (Unicode) — NCHSAA/source data sometimes stores names with this. */
+const CURLY_APOSTROPHE = "\u2019"
+
+/** Return ilike patterns for a name variation so we match DB whether it has straight or curly apostrophe. */
+function getIlikePatternsForVariation(v: string): string[] {
+  const escaped = "%" + escapeForIlike(v) + "%"
+  const patterns = [escaped]
+  if (v.includes("'")) {
+    const withCurly = "%" + v.replace(/'/g, CURLY_APOSTROPHE) + "%"
+    patterns.push(withCurly)
+  }
+  return patterns
+}
+
 /**
  * Known same-person name spellings (e.g. NCHSAA or source data typo vs athlete profile).
  * Each group lists all spellings that refer to the same athlete; we query for all so placements pull in.
@@ -38,15 +52,15 @@ const SAME_PERSON_NAME_ALIASES: string[][] = [
   ["Miller Menteer", "Miller Mentzer"],
   ["Nevaeh Williamson", "Nevaeh Willamson"],
   ["Cam Stinson", "Cameron Stinson"],
-  ["Jackson D'Ettore", "Jackson Dettore"],
+  ["Jackson D'Ettore", "Jackson Dettore", "Jackson D\u2019Ettore"],
 ]
 
 function normalizeForAlias(name: string): string {
-  return (name ?? "")
+  return normalizeApostrophes((name ?? "")
     .trim()
     .toLowerCase()
     .replace(/`/g, "'")
-    .replace(/,/g, " ")
+    .replace(/,/g, " "))
     .split(/\s+/)
     .filter(Boolean)
     .join(" ")
@@ -137,58 +151,63 @@ export async function getNCHSAAResultsForProfile(
   const merged: NchsaaRowForProfile[] = []
 
   for (const v of variations) {
-    const pattern = "%" + escapeForIlike(v) + "%"
-    const { data, error } = await supabase
-      .from("wrestling_nchsaa_results")
-      .select("year, classification, weight_class, place, school, wrestler_name")
-      .ilike("wrestler_name", pattern)
-      .order("year", { ascending: false })
-    if (error) throw error
-    if (!data?.length) continue
-    for (const row of data) {
-      const key = `${row.year}-${row.classification}-${row.weight_class}-${(row.wrestler_name ?? "").toString()}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      merged.push({
-        year: Number(row.year),
-        classification: (row.classification ?? "").toString(),
-        weight_class: (row.weight_class ?? "").toString(),
-        place: row.place != null ? Number(row.place) : null,
-        school: (row.school ?? "").toString(),
-        wrestler_name: (row.wrestler_name ?? "").toString(),
-      })
+    const patterns = getIlikePatternsForVariation(v)
+    for (const pattern of patterns) {
+      const { data, error } = await supabase
+        .from("wrestling_nchsaa_results")
+        .select("year, classification, weight_class, place, school, wrestler_name")
+        .ilike("wrestler_name", pattern)
+        .order("year", { ascending: false })
+      if (error) throw error
+      if (!data?.length) continue
+      for (const row of data) {
+        const key = `${row.year}-${row.classification}-${row.weight_class}-${(row.wrestler_name ?? "").toString()}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        merged.push({
+          year: Number(row.year),
+          classification: (row.classification ?? "").toString(),
+          weight_class: (row.weight_class ?? "").toString(),
+          place: row.place != null ? Number(row.place) : null,
+          school: (row.school ?? "").toString(),
+          wrestler_name: (row.wrestler_name ?? "").toString(),
+        })
+      }
     }
   }
 
   // Fallback: if nothing matched (e.g. "Max Davis" vs "Maxwell Davis" in DB), try last name + first-name substring
   if (merged.length === 0) {
-    const parts = athleteName.trim().split(/\s+/).filter(Boolean)
+    const parts = normalizeApostrophes(athleteName).trim().split(/\s+/).filter(Boolean)
     const firstName = parts[0] ?? ""
     const lastName = parts.slice(1).join(" ")
     if (firstName && lastName) {
-      const lastPattern = `%${escapeForIlike(lastName)}%`
-      const { data: byLast, error: errLast } = await supabase
-        .from("wrestling_nchsaa_results")
-        .select("year, classification, weight_class, place, school, wrestler_name")
-        .ilike("wrestler_name", lastPattern)
-        .order("year", { ascending: false })
-        .limit(100)
-      if (!errLast && byLast?.length) {
-        const firstLower = firstName.toLowerCase()
-        for (const row of byLast) {
-          const rn = (row.wrestler_name ?? "").toString().toLowerCase()
-          if (!rn.includes(firstLower)) continue
-          const key = `${row.year}-${row.classification}-${row.weight_class}-${rn}`
-          if (seen.has(key)) continue
-          seen.add(key)
-          merged.push({
-            year: Number(row.year),
-            classification: (row.classification ?? "").toString(),
-            weight_class: (row.weight_class ?? "").toString(),
-            place: row.place != null ? Number(row.place) : null,
-            school: (row.school ?? "").toString(),
-            wrestler_name: (row.wrestler_name ?? "").toString(),
-          })
+      const lastPatterns = getIlikePatternsForVariation(lastName)
+      for (const lastPattern of lastPatterns) {
+        const { data: byLast, error: errLast } = await supabase
+          .from("wrestling_nchsaa_results")
+          .select("year, classification, weight_class, place, school, wrestler_name")
+          .ilike("wrestler_name", lastPattern)
+          .order("year", { ascending: false })
+          .limit(100)
+        if (!errLast && byLast?.length) {
+          const firstLower = firstName.toLowerCase()
+          for (const row of byLast) {
+            const rn = (row.wrestler_name ?? "").toString().toLowerCase()
+            if (!rn.includes(firstLower)) continue
+            const key = `${row.year}-${row.classification}-${row.weight_class}-${rn}`
+            if (seen.has(key)) continue
+            seen.add(key)
+            merged.push({
+              year: Number(row.year),
+              classification: (row.classification ?? "").toString(),
+              weight_class: (row.weight_class ?? "").toString(),
+              place: row.place != null ? Number(row.place) : null,
+              school: (row.school ?? "").toString(),
+              wrestler_name: (row.wrestler_name ?? "").toString(),
+            })
+          }
+          break
         }
       }
     }

@@ -157,6 +157,38 @@ export default function BlueRegisterPage() {
       setError("Please select highest level achievement.")
       return
     }
+    if (!athlete.weightClass.trim()) {
+      setError("Weight class is required.")
+      return
+    }
+    if (!parent.firstName.trim()) {
+      setError("Parent first name is required.")
+      return
+    }
+    if (!parent.lastName.trim()) {
+      setError("Parent last name is required.")
+      return
+    }
+    if (!parent.email.trim()) {
+      setError("Parent email is required.")
+      return
+    }
+    if (!athlete.firstName.trim()) {
+      setError("Athlete first name is required.")
+      return
+    }
+    if (!athlete.lastName.trim()) {
+      setError("Athlete last name is required.")
+      return
+    }
+    if (!athlete.highSchool.trim()) {
+      setError("High school is required.")
+      return
+    }
+    if (!waiverAccepted) {
+      setError("You must accept the Waiver and Release of Liability to continue.")
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch("/api/blue/signup", {
@@ -306,8 +338,8 @@ export default function BlueRegisterPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="parentFirstName">First name</Label>
+              <div className="space-y-2">
+                <Label htmlFor="parentFirstName">First name <span className="text-red-500">*</span></Label>
                   <Input
                     id="parentFirstName"
                     value={parent.firstName}
@@ -317,7 +349,7 @@ export default function BlueRegisterPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="parentLastName">Last name</Label>
+                  <Label htmlFor="parentLastName">Last name <span className="text-red-500">*</span></Label>
                   <Input
                     id="parentLastName"
                     value={parent.lastName}
@@ -328,7 +360,7 @@ export default function BlueRegisterPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="parentEmail">Email</Label>
+                <Label htmlFor="parentEmail">Email <span className="text-red-500">*</span></Label>
                 <Input
                   id="parentEmail"
                   type="email"
@@ -339,7 +371,7 @@ export default function BlueRegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="parentPhone">Cell phone</Label>
+                <Label htmlFor="parentPhone">Cell phone <span className="text-red-500">*</span></Label>
                 <Input
                   id="parentPhone"
                   type="tel"
@@ -351,7 +383,7 @@ export default function BlueRegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="parentRelationship">Relationship to athlete</Label>
+                <Label htmlFor="parentRelationship">Relationship to athlete <span className="text-red-500">*</span></Label>
                 <Select
                   value={parent.relationship}
                   onValueChange={(v) => setParent((p) => ({ ...p, relationship: v }))}
@@ -373,7 +405,7 @@ export default function BlueRegisterPage() {
                 <CardDescription className="mb-4">Wrestler info and t-shirt size.</CardDescription>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="athleteFirstName">First name</Label>
+                    <Label htmlFor="athleteFirstName">First name <span className="text-red-500">*</span></Label>
                     <Input
                       id="athleteFirstName"
                       value={athlete.firstName}
@@ -383,7 +415,7 @@ export default function BlueRegisterPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="athleteLastName">Last name</Label>
+                    <Label htmlFor="athleteLastName">Last name <span className="text-red-500">*</span></Label>
                     <Input
                       id="athleteLastName"
                       value={athlete.lastName}
@@ -395,7 +427,7 @@ export default function BlueRegisterPage() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="graduationYear">Graduation year</Label>
+                    <Label htmlFor="graduationYear">Graduation year <span className="text-red-500">*</span></Label>
                     <Input
                       id="graduationYear"
                       type="number"
@@ -409,18 +441,19 @@ export default function BlueRegisterPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="weightClass">Weight class (optional)</Label>
+                    <Label htmlFor="weightClass">Weight class <span className="text-red-500">*</span></Label>
                     <Input
                       id="weightClass"
                       value={athlete.weightClass}
                       onChange={(e) => setAthlete((a) => ({ ...a, weightClass: e.target.value }))}
+                      required
                       disabled={loading}
                       placeholder="e.g. 132"
                     />
                   </div>
                 </div>
                 <div className="space-y-2 mt-4">
-                  <Label htmlFor="highSchool">High school</Label>
+                  <Label htmlFor="highSchool">High school <span className="text-red-500">*</span></Label>
                   <Input
                     id="highSchool"
                     value={athlete.highSchool}
@@ -431,7 +464,7 @@ export default function BlueRegisterPage() {
                   />
                 </div>
                 <div className="space-y-2 mt-4">
-                  <Label htmlFor="wrestlingClub">Club</Label>
+                  <Label htmlFor="wrestlingClub">Club <span className="text-red-500">*</span></Label>
                   <Input
                     id="wrestlingClub"
                     value={athlete.wrestlingClub}
@@ -443,7 +476,7 @@ export default function BlueRegisterPage() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="athleteCellPhone">Athlete cell phone</Label>
+                    <Label htmlFor="athleteCellPhone">Athlete cell phone <span className="text-red-500">*</span></Label>
                     <Input
                       id="athleteCellPhone"
                       type="tel"
@@ -455,7 +488,7 @@ export default function BlueRegisterPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="athleteEmail">Athlete email</Label>
+                    <Label htmlFor="athleteEmail">Athlete email <span className="text-red-500">*</span></Label>
                     <Input
                       id="athleteEmail"
                       type="email"
@@ -468,7 +501,7 @@ export default function BlueRegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2 mt-4">
-                  <Label htmlFor="athleteGpa">GPA</Label>
+                  <Label htmlFor="athleteGpa">GPA <span className="text-red-500">*</span></Label>
                   <Input
                     id="athleteGpa"
                     value={athlete.gpa}
@@ -479,7 +512,7 @@ export default function BlueRegisterPage() {
                   />
                 </div>
                 <div className="space-y-2 mt-4">
-                  <Label>Highest level achievement</Label>
+                  <Label>Highest level achievement <span className="text-red-500">*</span></Label>
                   <Select
                     value={athlete.highestAchievement}
                     onValueChange={(v) => setAthlete((a) => ({ ...a, highestAchievement: v }))}
@@ -507,7 +540,7 @@ export default function BlueRegisterPage() {
                   </Label>
                 </div>
                 <div className="space-y-2 mt-4">
-                  <Label>T-shirt size (required)</Label>
+                  <Label>T-shirt size <span className="text-red-500">*</span></Label>
                   <Select value={tshirtSize} onValueChange={setTshirtSize} disabled={loading}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select size" />
@@ -544,7 +577,7 @@ export default function BlueRegisterPage() {
                     disabled={loading}
                   />
                   <Label htmlFor="waiver" className="text-sm leading-tight cursor-pointer">
-                    I have read and understand this Waiver and Release of Liability and sign it voluntarily on behalf of myself and the minor participant.
+                    I have read and understand this Waiver and Release of Liability and sign it voluntarily on behalf of myself and the minor participant. <span className="text-red-500">*</span>
                   </Label>
                 </div>
               </div>

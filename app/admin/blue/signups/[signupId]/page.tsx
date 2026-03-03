@@ -134,7 +134,7 @@ export default async function AdminBlueSignupDetailPage({
   const athleteCell = (data.athlete_cell_phone ?? "").toString().trim() || "—"
   const athleteEmail = (data.athlete_email ?? "").toString().trim() || "—"
   const athleteGpa = (data.athlete_gpa ?? "").toString().trim() || "—"
-  const interestCollege = data.interest_wrestling_college === true ? "Yes" : data.interest_wrestling_college === false ? "No" : "—"
+  const interestCollege = data.interest_wrestling_college === true ? "Yes" : "No"
   const highestAchievement = (data.highest_achievement ?? "").toString().trim() || "—"
   const promoCode = (data.promo_code_used ?? "").toString().trim() || "—"
   const waiverSignedAt = (data.waiver_signed_at ?? "").toString() || "—"

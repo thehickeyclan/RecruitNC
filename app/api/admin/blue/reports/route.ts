@@ -31,6 +31,10 @@ export type BlueReportsData = {
   estimatedMRR: number
   byClass: { graduationYear: number; count: number; isAnticipatedChurn: boolean }[]
   anticipatedChurnCount: number
+  /** Total rows in blue_signups (everyone who submitted the registration form). */
+  signupTotal: number
+  signupPaid: number
+  signupPending: number
 }
 
 /** GET: Blue reports for charts — trends, class distribution, MRR */
@@ -48,6 +52,17 @@ export async function GET() {
   if (error) {
     if (error.code === "42P01") return NextResponse.json({ error: "Table blue_memberships does not exist." }, { status: 503 })
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Signups (blue_signups): everyone who submitted the registration form
+  let signupTotal = 0
+  let signupPaid = 0
+  let signupPending = 0
+  const { data: signupRows } = await admin.from("blue_signups").select("id, status")
+  if (signupRows && Array.isArray(signupRows)) {
+    signupTotal = signupRows.length
+    signupPaid = signupRows.filter((r) => (r as { status?: string }).status === "paid").length
+    signupPending = signupTotal - signupPaid
   }
 
   const now = new Date()
@@ -132,6 +147,9 @@ export async function GET() {
     estimatedMRR,
     byClass,
     anticipatedChurnCount,
+    signupTotal,
+    signupPaid,
+    signupPending,
   }
 
   return NextResponse.json(data)
