@@ -6,7 +6,7 @@
  */
 export function StoreButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   return (
-    <a href="/store" className={className}>
+    <a href="/go/store" className={className} onClick={(e) => { e.preventDefault(); window.location.href = "/go/store"; }}>
       {children ?? "Store"}
     </a>
   )

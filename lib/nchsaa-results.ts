@@ -309,10 +309,11 @@ export async function getNCHSAAResults(
     for (let y = minY; y <= maxY; y++) yearsToSearch.push(y)
   }
 
+  const namePattern = `%${escapeForIlike(athleteName)}%`
   const { data: results, error } = await supabase
     .from("wrestling_nchsaa_results")
     .select("year, place, classification")
-    .ilike("wrestler_name", `%${athleteName}%`)
+    .ilike("wrestler_name", namePattern)
     .in("year", yearsToSearch)
     .order("year", { ascending: false })
 

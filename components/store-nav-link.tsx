@@ -3,8 +3,7 @@
 import type { ReactNode } from "react"
 
 /**
- * Real <a href="/store">. No JavaScript required — browser does a full page load.
- * Use so Store link works even when the app or deploy is broken.
+ * Store link via /go/store (302 redirect). Avoids canceled RSC/document request; browser does full GET /store after redirect.
  */
 export function StoreNavLink({
   className,
@@ -17,12 +16,12 @@ export function StoreNavLink({
 }) {
   return (
     <a
-      href="/store"
+      href="/go/store"
       className={className}
       onClick={(e) => {
         e.preventDefault()
         onNavigate?.()
-        window.location.href = "/store"
+        window.location.href = "/go/store"
       }}
     >
       {children}

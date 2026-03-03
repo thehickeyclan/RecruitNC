@@ -14,11 +14,18 @@ export interface TournamentResultRow {
   division?: string
 }
 
-/** Return alternate spellings to try (e.g. Zach/Zack, Ammon/Amon). Ensures we find tournament data even when DB spellings differ. */
+/** Escape single quote for ILIKE (e.g. D'Ettore => D''Ettore) so the query doesn't break. */
+function escapeForIlike(s: string): string {
+  return (s ?? "").replace(/'/g, "''")
+}
+
+/** Return alternate spellings to try (e.g. Zach/Zack, D'Ettore/Dettore). Ensures we find tournament data even when DB spellings differ. */
 function getNameVariants(name: string): string[] {
   const t = (name ?? "").trim()
   if (!t) return []
   const variants: string[] = [t]
+  const noApostrophe = t.replace(/'/g, "").trim()
+  if (noApostrophe && noApostrophe !== t) variants.push(noApostrophe)
   const lower = t.toLowerCase()
   if (lower.includes("zach ") && !lower.includes("zack ")) variants.push(t.replace(/\bZach\b/gi, "Zack"))
   if (lower.includes("zack ") && !lower.includes("zach ")) variants.push(t.replace(/\bZack\b/gi, "Zach"))
@@ -51,11 +58,12 @@ export async function getNHSCAFromTables(
   const namesToTry = getNameVariants(athleteName)
 
   for (const searchName of namesToTry) {
+    const pattern = `%${escapeForIlike(searchName)}%`
     // 1. Try nhsca_placements (has record data per user)
     const { data: placements } = await supabase
       .from("nhsca_placements")
       .select("*")
-      .ilike("athlete_name", `%${searchName}%`)
+      .ilike("athlete_name", pattern)
       .gte("year", startYear)
       .lte("year", graduationYear)
       .order("year", { ascending: false })
@@ -74,7 +82,7 @@ export async function getNHSCAFromTables(
     const { data: results } = await supabase
       .from("wrestling_nhsca_results")
       .select("*")
-      .ilike("athlete_name", `%${searchName}%`)
+      .ilike("athlete_name", pattern)
       .gte("year", startYear)
       .lte("year", graduationYear)
       .order("year", { ascending: false })
@@ -107,10 +115,11 @@ export async function getNHSCAFromTablesAllTime(
   const namesToTry = getNameVariants(athleteName)
 
   for (const searchName of namesToTry) {
+    const pattern = `%${escapeForIlike(searchName)}%`
     const { data: placements } = await supabase
       .from("nhsca_placements")
       .select("*")
-      .ilike("athlete_name", `%${searchName}%`)
+      .ilike("athlete_name", pattern)
       .gte("year", ALL_TIME_YEAR_MIN)
       .lte("year", ALL_TIME_YEAR_MAX)
       .order("year", { ascending: false })
@@ -128,7 +137,7 @@ export async function getNHSCAFromTablesAllTime(
     const { data: results } = await supabase
       .from("wrestling_nhsca_results")
       .select("*")
-      .ilike("athlete_name", `%${searchName}%`)
+      .ilike("athlete_name", pattern)
       .gte("year", ALL_TIME_YEAR_MIN)
       .lte("year", ALL_TIME_YEAR_MAX)
       .order("year", { ascending: false })
@@ -161,7 +170,7 @@ export async function getSuper32FromTable(
   const startYear = graduationYear - 4
 
   for (const searchName of getNameVariants(athleteName)) {
-    const namePattern = `%${searchName}%`
+    const namePattern = `%${escapeForIlike(searchName)}%`
     const { data: byName } = await supabase
       .from("super32_results")
       .select("*")
@@ -197,7 +206,7 @@ export async function getSuper32FromTableAllTime(
   if (!athleteName?.trim() && !options?.highSchool?.trim()) return []
 
   for (const searchName of getNameVariants(athleteName)) {
-    const namePattern = `%${searchName}%`
+    const namePattern = `%${escapeForIlike(searchName)}%`
     const { data: byName } = await supabase
       .from("super32_results")
       .select("*")

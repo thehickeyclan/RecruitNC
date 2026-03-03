@@ -29,6 +29,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     '/view-profile',
     '/blue',
+    '/go',
     '/store',
     '/cart',
     '/nchsaa',
