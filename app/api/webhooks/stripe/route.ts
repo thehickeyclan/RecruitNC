@@ -3,6 +3,8 @@ import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendOrderConfirmationEmail } from "@/lib/email"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
+import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
+import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 
 export const dynamic = "force-dynamic"
 
@@ -46,6 +48,33 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient()
+
+  // Real-time churn and billing sync: Stripe subscription lifecycle → blue_memberships
+  if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription
+    const subId = subscription.id
+    const status = subscription.status
+    const periodEnd = subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null
+    const isDeleted = event.type === "customer.subscription.deleted"
+    const isCanceled = isDeleted || status === "canceled" || status === "unpaid" || status === "incomplete_expired"
+    const dbStatus = isCanceled ? "cancelled" : status === "past_due" ? "active" : status === "active" || status === "trialing" ? "active" : "cancelled"
+    const updatePayload: Record<string, unknown> = {
+      status: dbStatus,
+      updated_at: new Date().toISOString(),
+      ...(periodEnd && !isCanceled && { next_billing_at: periodEnd }),
+      ...(isCanceled && { ended_at: new Date().toISOString() }),
+    }
+    const { error } = await admin
+      .from("blue_memberships")
+      .update(updatePayload)
+      .eq("stripe_subscription_id", subId)
+    if (error) {
+      console.error("[webhooks/stripe] subscription sync blue_memberships:", error.message)
+    }
+    return NextResponse.json({ received: true })
+  }
 
   if (event.type === "charge.updated") {
     const charge = event.data.object as Stripe.Charge
@@ -243,7 +272,7 @@ export async function POST(request: NextRequest) {
 
     const signupId = session.metadata?.signup_id
     if (signupId) {
-      const { error } = await admin
+      const { error: signupUpdateErr } = await admin
         .from("blue_signups")
         .update({
           status: "paid",
@@ -252,15 +281,146 @@ export async function POST(request: NextRequest) {
           updated_at: new Date().toISOString(),
         })
         .eq("id", signupId)
-      if (error) {
-        console.error("[webhooks/stripe] Failed to update blue_signups:", error.message)
+      if (signupUpdateErr) {
+        console.error("[webhooks/stripe] Failed to update blue_signups:", signupUpdateErr.message)
         return NextResponse.json({ error: "Update failed" }, { status: 500 })
+      }
+      // Ensure blue_memberships row exists so reports (MRR, active count) stay correct
+      if (subscriptionId) {
+        const { data: existingMembership } = await admin
+          .from("blue_memberships")
+          .select("id")
+          .eq("stripe_subscription_id", subscriptionId)
+          .maybeSingle()
+        if (!existingMembership) {
+          const { data: signupRow } = await admin
+            .from("blue_signups")
+            .select("parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, tshirt_size")
+            .eq("id", signupId)
+            .single()
+          if (signupRow) {
+            const parentEmail = (signupRow.parent_email as string)?.trim()?.toLowerCase() || ""
+            const gradYear = Number(signupRow.athlete_graduation_year)
+            const athleteName = [
+              (signupRow.athlete_first_name as string)?.trim(),
+              (signupRow.athlete_last_name as string)?.trim(),
+            ].filter(Boolean).join(" ").trim()
+            const highSchool = (signupRow.athlete_high_school as string)?.trim() || ""
+            let payerUserId: string | null = null
+            const { data: profileRow } = await admin
+              .from("user_profiles")
+              .select("user_id")
+              .ilike("email", parentEmail)
+              .limit(1)
+              .maybeSingle()
+            if (profileRow?.user_id) {
+              payerUserId = profileRow.user_id as string
+            } else if (parentEmail) {
+              const randomPassword = "blue-" + crypto.randomUUID() + "-" + Math.random().toString(36).slice(2, 14)
+              const { data: newUser, error: createUserErr } = await admin.auth.admin.createUser({
+                email: parentEmail,
+                password: randomPassword,
+                email_confirm: true,
+                user_metadata: {
+                  full_name: [(signupRow.parent_first_name as string), (signupRow.parent_last_name as string)].filter(Boolean).join(" ").trim(),
+                  first_name: (signupRow.parent_first_name as string)?.trim(),
+                  last_name: (signupRow.parent_last_name as string)?.trim(),
+                  profile_type: "parent",
+                },
+              })
+              if (!createUserErr && newUser?.user?.id) {
+                payerUserId = newUser.user.id
+                await admin.from("user_profiles").insert({
+                  user_id: newUser.user.id,
+                  email: newUser.user.email,
+                  full_name: newUser.user.user_metadata?.full_name ?? parentEmail,
+                  first_name: newUser.user.user_metadata?.first_name ?? null,
+                  last_name: newUser.user.user_metadata?.last_name ?? null,
+                  profile_type: "parent",
+                  role: "user",
+                  is_admin: false,
+                })
+              }
+            }
+            if (payerUserId && athleteName && Number.isFinite(gradYear) && gradYear >= 2020 && gradYear <= 2040) {
+              const existingAthlete = await findExistingAthlete(admin, {
+                name: athleteName,
+                graduationYear: gradYear,
+                school: highSchool,
+              })
+              let athleteId: string | undefined = existingAthlete?.id
+              if (!athleteId) {
+                const columns = await getAthletesColumnNames(admin)
+                const athletePayload = filterPayloadToSchema({
+                  name: athleteName,
+                  firstName: (signupRow.athlete_first_name as string)?.trim(),
+                  lastName: (signupRow.athlete_last_name as string)?.trim(),
+                  graduationyear: gradYear,
+                  highschool: highSchool,
+                  weightclass: (signupRow.athlete_weight_class as string)?.trim() || null,
+                  ncUnitedTeam: "blue",
+                  recruiting_status: "Uncommitted",
+                  is_prospect: true,
+                  profile_verified: false,
+                  updated_at: new Date().toISOString(),
+                }, columns)
+                const { data: newAthlete, error: athleteErr } = await admin
+                  .from("athletes")
+                  .insert(athletePayload)
+                  .select("id")
+                  .single()
+                if (athleteErr || !newAthlete?.id) {
+                  console.error("[webhooks/stripe] blue_signups→membership: create athlete failed", athleteErr?.message)
+                } else {
+                  athleteId = newAthlete.id
+                }
+              }
+              if (athleteId) {
+                const startedAt = new Date().toISOString()
+                let nextBillingAt: string | null = null
+                if (subscriptionId) {
+                  try {
+                    const sub = await getStripe().subscriptions.retrieve(subscriptionId)
+                    if (sub.current_period_end) {
+                      nextBillingAt = new Date(sub.current_period_end * 1000).toISOString()
+                    }
+                  } catch (_) {}
+                }
+                const { error: membershipErr } = await admin.from("blue_memberships").insert({
+                  athlete_id: athleteId,
+                  payer_user_id: payerUserId,
+                  status: "active",
+                  started_at: startedAt,
+                  stripe_customer_id: customerId,
+                  stripe_subscription_id: subscriptionId,
+                  source: "invite",
+                  created_at: startedAt,
+                  updated_at: startedAt,
+                  ...(nextBillingAt && { next_billing_at: nextBillingAt }),
+                  ...((signupRow as { tshirt_size?: string }).tshirt_size && { tshirt_size: (signupRow as { tshirt_size?: string }).tshirt_size }),
+                })
+                if (membershipErr) {
+                  console.error("[webhooks/stripe] blue_signups→membership: insert failed", membershipErr.message)
+                }
+              }
+            }
+          }
+        }
       }
       return NextResponse.json({ received: true })
     }
 
     const membershipId = session.metadata?.membership_id
     if (membershipId) {
+      let nextBillingAt: string | null = null
+      if (subscriptionId) {
+        try {
+          const sub = await getStripe().subscriptions.retrieve(subscriptionId)
+          if (sub.current_period_end) {
+            nextBillingAt = new Date(sub.current_period_end * 1000).toISOString()
+          }
+        } catch (_) {}
+      }
       const { error } = await admin
         .from("blue_memberships")
         .update({
@@ -268,6 +428,7 @@ export async function POST(request: NextRequest) {
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           updated_at: new Date().toISOString(),
+          ...(nextBillingAt && { next_billing_at: nextBillingAt }),
         })
         .eq("id", membershipId)
       if (error) {

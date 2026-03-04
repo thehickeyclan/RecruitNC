@@ -29,8 +29,16 @@ const GOLD = "#D3B574"
 export default function AdminBlueReportsPage() {
   const [data, setData] = useState<BlueReportsData | null>(null)
   const [loading, setLoading] = useState(true)
-
+  const [backfilling, setBackfilling] = useState(false)
   const [authError, setAuthError] = useState(false)
+
+  const loadReports = () => {
+    setLoading(true)
+    fetch("/api/admin/blue/reports", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && !d.error && setData(d))
+      .finally(() => setLoading(false))
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -57,6 +65,28 @@ export default function AdminBlueReportsPage() {
       })
     return () => { cancelled = true }
   }, [])
+
+  const paidSignups = data?.signupPaid ?? 0
+  const activePlusPaused = (data?.currentActive ?? 0) + (data?.currentPaused ?? 0)
+  const needsBackfill = paidSignups > 0 && paidSignups > activePlusPaused
+
+  const runBackfill = async () => {
+    setBackfilling(true)
+    try {
+      const r = await fetch("/api/admin/blue/backfill-memberships-from-signups", {
+        method: "POST",
+        credentials: "include",
+      })
+      const j = await r.json().catch(() => ({}))
+      if (r.ok) {
+        loadReports()
+      } else {
+        console.error("[RecruitNC] Backfill failed:", j.error || r.statusText)
+      }
+    } finally {
+      setBackfilling(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -119,6 +149,20 @@ export default function AdminBlueReportsPage() {
           <Card className="mb-6 border-amber-200 bg-amber-50/50">
             <CardContent className="pt-6">
               <p className="text-sm text-amber-800">Signup funnel data: {data.signupsError}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {needsBackfill && (
+          <Card className="mb-6 border-[#003366]/30 bg-[#003366]/5">
+            <CardContent className="pt-6">
+              <p className="text-sm text-[#13294B] mb-2">
+                Paid signups ({paidSignups}) is higher than active members ({activePlusPaused}). People who paid via the Blue signup form may not have a membership row yet, so MRR and active count are understated.
+              </p>
+              <Button onClick={runBackfill} disabled={backfilling} className="bg-[#003366] hover:bg-[#003366]/90">
+                {backfilling ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                <span className="ml-2">{backfilling ? "Syncing…" : "Sync paid signups to memberships"}</span>
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -274,6 +318,90 @@ export default function AdminBlueReportsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Expected billing by month (next 12 months) */}
+        {(data.billingByMonth?.length ?? 0) > 0 ? (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Expected billing by month</CardTitle>
+              <CardDescription>How much will be billed each month (next 12 months) based on each member’s next billing date. Synced from Stripe.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.billingByMonth ?? []} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+                    <Tooltip
+                      formatter={(value: number, name: string, props: { payload?: { count: number } }) => [
+                        `$${Number(value).toLocaleString()} (${props.payload?.count ?? 0} members)`,
+                        "Amount",
+                      ]}
+                    />
+                    <Bar dataKey="amount" name="Amount" fill={GOLD} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (data.currentActive ?? 0) + (data.currentPaused ?? 0) > 0 ? (
+          <Card className="mb-8 border-dashed">
+            <CardContent className="pt-6">
+              <p className="text-sm text-gray-600">
+                To see <strong>expected billing by month</strong> and <strong>upcoming billing dates</strong>, run the migration in <code className="bg-gray-100 px-1 rounded">docs/blue-membership-tables.md</code> (section &quot;Next billing date&quot;) and ensure Stripe webhooks for <code className="bg-gray-100 px-1 rounded">customer.subscription.updated</code> and <code className="bg-gray-100 px-1 rounded">customer.subscription.deleted</code> are enabled.
+              </p>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {/* Upcoming billing: table of next billing dates */}
+        {((data.upcomingBillingRows?.length ?? 0) > 0 || (data.upcomingBilling?.length ?? 0) > 0) && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Upcoming billing</CardTitle>
+              <CardDescription>Next billing dates (next 90 days). Churn and new signups sync from Stripe in real time.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {(data.upcomingBillingRows?.length ?? 0) > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-gray-600">
+                        <th className="pb-2 pr-4">Athlete</th>
+                        <th className="pb-2 pr-4">Next billing date</th>
+                        <th className="pb-2">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(data.upcomingBillingRows ?? []).slice(0, 30).map((row) => (
+                        <tr key={row.membershipId} className="border-b border-gray-100">
+                          <td className="py-2 pr-4 font-medium">{row.athleteName}</td>
+                          <td className="py-2 pr-4 text-gray-600">
+                            {new Date(row.nextBillingAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </td>
+                          <td className="py-2">${(row.amountCents / 100).toFixed(0)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {(data.upcomingBillingRows?.length ?? 0) > 30 && (
+                    <p className="text-xs text-gray-500 mt-2">Showing first 30 of {(data.upcomingBillingRows ?? []).length}.</p>
+                  )}
+                </div>
+              )}
+              {(data.upcomingBilling?.length ?? 0) > 0 && (data.upcomingBillingRows?.length ?? 0) === 0 && (
+                <p className="text-sm text-gray-600">
+                  {(data.upcomingBilling ?? []).reduce((s, d) => s + d.count, 0)} billing events in the next 90 days.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Class distribution (graduation year) */}
         <Card>

@@ -20,6 +20,21 @@ import { getEventSlugForApi, getEventName, getKnownEventUrlSlugs } from "@/lib/n
 const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
 const GRAD_YEARS = ["2026", "2027", "2028", "2029", "2030"]
 
+const NHSCA_2026_EVENT_DETAILS = {
+  title: "27th Annual National Duals",
+  when: "Memorial Day Weekend · May 23–25, 2026",
+  venue: "Virginia Beach Sports Center",
+  tagline: "The Largest and Most Competitive Duals Event in the Country",
+  weightNote: "3 lb. allowance – 106, 113, 120, 126, 132, 138, 145, 152, 160, 170, 182, 195, 220, 285",
+  gradeNote: "Grade levels based on 2025–26 School Year.",
+}
+
+const NHSCA_2026_COST = {
+  amount: 250,
+  label: "Registration + team apparel bundle",
+  note: "One-time payment at checkout.",
+}
+
 export default function NationalTeamRegisterEventPage() {
   const params = useParams()
   const urlSlug = typeof params.eventSlug === "string" ? params.eventSlug : ""
@@ -137,6 +152,8 @@ export default function NationalTeamRegisterEventPage() {
     )
   }
 
+  const isNhsca2026 = urlSlug === "nhsca-2026" || urlSlug === "nhsca-duals-2026"
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-xl mx-auto">
@@ -147,6 +164,34 @@ export default function NationalTeamRegisterEventPage() {
             ← Back to National Team
           </Link>
         </div>
+
+        {isNhsca2026 && (
+          <>
+            <Card className="mb-6 border-[#003366]/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-[#003366]">{NHSCA_2026_EVENT_DETAILS.title}</CardTitle>
+                <CardDescription className="text-base font-medium text-gray-700 mt-1">
+                  {NHSCA_2026_EVENT_DETAILS.when}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-gray-700">
+                <p className="font-medium">{NHSCA_2026_EVENT_DETAILS.venue}</p>
+                <p className="italic text-gray-600">{NHSCA_2026_EVENT_DETAILS.tagline}</p>
+                <p><strong>Weight classes:</strong> {NHSCA_2026_EVENT_DETAILS.weightNote}</p>
+                <p>{NHSCA_2026_EVENT_DETAILS.gradeNote}</p>
+              </CardContent>
+            </Card>
+            <Card className="mb-6 border-[#D3B574]/50 bg-[#003366]/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Cost and what’s included</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                <p className="font-semibold text-[#003366]">${NHSCA_2026_COST.amount} — {NHSCA_2026_COST.label}</p>
+                <p className="text-gray-600">Event registration plus team apparel. {NHSCA_2026_COST.note}</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         {cancelled && (
           <Card className="mb-6 border-amber-200 bg-amber-50">

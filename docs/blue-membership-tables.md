@@ -191,9 +191,18 @@ alter table public.blue_memberships add column if not exists stripe_subscription
 alter table public.blue_memberships alter column status set default 'pending_payment';
 ```
 
+## Next billing date (for reports and calendar)
+
+Stripe webhooks sync `current_period_end` so reports can show upcoming billing and expected revenue by month:
+
+```sql
+alter table public.blue_memberships add column if not exists next_billing_at timestamptz;
+create index if not exists idx_blue_memberships_next_billing on public.blue_memberships(next_billing_at) where next_billing_at is not null;
+```
+
 ## T-shirt size (Blue signup)
 
-For Blue registration we collect the athlete’s t-shirt size and store it on the membership:
+For Blue registration we collect the athlete's t-shirt size and store it on the membership:
 
 ```sql
 alter table public.blue_memberships add column if not exists tshirt_size text;

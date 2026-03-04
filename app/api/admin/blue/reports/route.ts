@@ -43,6 +43,12 @@ export type BlueReportsData = {
   newSubsThisMonth: number
   /** Signups table error if any (e.g. table missing). */
   signupsError?: string
+  /** Upcoming billing: date string (YYYY-MM-DD) → { date, amountCents, count }. Next 90 days. */
+  upcomingBilling: { date: string; amountCents: number; count: number }[]
+  /** Expected billing by month (next 12 months): month key → total $ from members whose next_billing_at falls in that month. */
+  billingByMonth: { month: string; amount: number; count: number }[]
+  /** Per-membership next billing (for table): { membershipId, athleteName, nextBillingAt, amountCents }[]. */
+  upcomingBillingRows?: { membershipId: string; athleteName: string; nextBillingAt: string; amountCents: number }[]
 }
 
 /** GET: Blue reports for charts — trends, class distribution, MRR */
@@ -52,14 +58,26 @@ export async function GET() {
 
   const admin = createAdminClient()
 
-  const { data: rows, error } = await admin
+  let rows: Array<{ id: string; athlete_id: string; status: string; started_at: string; ended_at: string | null; created_at: string; next_billing_at?: string }> | null = null
+  const { data: rowsWithBilling, error: err1 } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, status, started_at, ended_at, created_at")
+    .select("id, athlete_id, status, started_at, ended_at, created_at, next_billing_at")
     .order("created_at", { ascending: true })
-
-  if (error) {
-    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_memberships does not exist." }, { status: 503 })
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (err1) {
+    if (err1.code === "42P01") return NextResponse.json({ error: "Table blue_memberships does not exist." }, { status: 503 })
+    if (err1.code === "42703") {
+      billingColumnExists = false
+      const { data: rowsBasic, error: err2 } = await admin
+        .from("blue_memberships")
+        .select("id, athlete_id, status, started_at, ended_at, created_at")
+        .order("created_at", { ascending: true })
+      if (err2) return NextResponse.json({ error: err2.message }, { status: 500 })
+      rows = rowsBasic as typeof rows
+    } else {
+      return NextResponse.json({ error: err1.message }, { status: 500 })
+    }
+  } else {
+    rows = rowsWithBilling as typeof rows
   }
 
   // Signups (blue_signups): everyone who submitted the registration form
@@ -160,6 +178,65 @@ export async function GET() {
   const newSubsThisMonth = currentMonthTrend?.newCount ?? 0
   const newMRRThisMonth = newSubsThisMonth * BLUE_PRICE
 
+  // Upcoming billing (next 90 days) and billing by month (next 12 months) from next_billing_at
+  const billingRows = (rows ?? []).filter(
+    (r) => (r.status === "active" || r.status === "paused") && (r as { next_billing_at?: string }).next_billing_at
+  ) as Array<{ id: string; athlete_id: string; next_billing_at: string }>
+  const dayBuckets: Record<string, number> = {}
+  const monthBuckets: Record<string, number> = {}
+  const ninetyDaysOut = new Date(now)
+  ninetyDaysOut.setDate(ninetyDaysOut.getDate() + 90)
+  for (const r of billingRows) {
+    const d = new Date(r.next_billing_at)
+    if (d < now) continue
+    const dateKey = r.next_billing_at.slice(0, 10)
+    if (d <= ninetyDaysOut) {
+      dayBuckets[dateKey] = (dayBuckets[dateKey] ?? 0) + 1
+    }
+    const monthKeyB = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    monthBuckets[monthKeyB] = (monthBuckets[monthKeyB] ?? 0) + 1
+  }
+  const upcomingBilling = Object.entries(dayBuckets)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, amountCents: count * BLUE_PRICE * 100, count }))
+  const next12Months: { year: number; month: number; key: string }[] = []
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
+    next12Months.push({ year: d.getFullYear(), month: d.getMonth(), key: monthKey(d) })
+  }
+  const billingByMonth = next12Months.map(({ key }) => ({
+    month: key,
+    amount: ((monthBuckets[key] ?? 0) * BLUE_PRICE),
+    count: monthBuckets[key] ?? 0,
+  }))
+
+  let upcomingBillingRows: { membershipId: string; athleteName: string; nextBillingAt: string; amountCents: number }[] = []
+  if (billingRows.length > 0) {
+    const bAthleteIds = [...new Set(billingRows.map((r) => r.athlete_id))]
+    const { data: bAthletes } = await admin.from("athletes").select("id, name, firstname, lastname, firstName, lastName").in("id", bAthleteIds)
+    const nameMap = (bAthletes ?? []).reduce(
+      (acc, a) => {
+        const row = a as Record<string, unknown>
+        const id = String(row.id)
+        const name = String(row.name ?? "").trim()
+          || [row.firstname ?? row.firstName, row.lastname ?? row.lastName].filter(Boolean).join(" ").trim()
+        acc[id] = name || "—"
+        return acc
+      },
+      {} as Record<string, string>
+    )
+    upcomingBillingRows = billingRows
+      .filter((r) => new Date(r.next_billing_at) >= now)
+      .sort((a, b) => a.next_billing_at.localeCompare(b.next_billing_at))
+      .slice(0, 60)
+      .map((r) => ({
+        membershipId: r.id,
+        athleteName: nameMap[r.athlete_id] ?? "—",
+        nextBillingAt: r.next_billing_at,
+        amountCents: BLUE_PRICE * 100,
+      }))
+  }
+
   const data: BlueReportsData = {
     membershipTrend: trend,
     currentActive,
@@ -174,6 +251,9 @@ export async function GET() {
     churnLast12Months,
     newMRRThisMonth,
     newSubsThisMonth,
+    upcomingBilling,
+    billingByMonth,
+    ...(upcomingBillingRows.length > 0 && { upcomingBillingRows }),
     ...(signupsError && { signupsError }),
   }
 
