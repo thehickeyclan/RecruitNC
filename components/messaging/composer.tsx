@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Send, Loader2, SmilePlus, AtSign, ImagePlus, X } from "lucide-react"
+import { Send, Loader2, SmilePlus, AtSign, ImagePlus, X, ImageIcon } from "lucide-react"
 import { EmojiStrip, type CustomEmojiItem } from "./emoji-strip"
 
 const MAX_LENGTH = 2000
@@ -32,7 +32,10 @@ export function Composer({
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
   const [uploading, setUploading] = useState(false)
   const [customEmoji, setCustomEmoji] = useState<CustomEmojiItem[]>([])
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerOpenToLogos, setPickerOpenToLogos] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const hasLogos = customEmoji.length > 0
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lastAtRef = useRef<number>(-1)
 
@@ -266,20 +269,42 @@ export function Composer({
         </div>
       )}
       <div className="flex gap-2 items-end">
-        <Popover>
+        <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
           <PopoverTrigger asChild>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className="shrink-0 h-11 w-11 text-gray-500 hover:text-[#003366]"
-              aria-label="Insert emoji"
-            >
-              <SmilePlus className="h-5 w-5" />
-            </Button>
+            <span className="inline-flex shrink-0 gap-0">
+              {hasLogos && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-11 w-11 text-gray-500 hover:text-[#003366]"
+                  aria-label="Insert logo"
+                  onClick={() => setPickerOpenToLogos(true)}
+                >
+                  <ImageIcon className="h-5 w-5" />
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-11 w-11 text-gray-500 hover:text-[#003366]"
+                aria-label={hasLogos ? "Insert emoji" : "Insert emoji or logo"}
+                onClick={() => setPickerOpenToLogos(false)}
+              >
+                <SmilePlus className="h-5 w-5" />
+              </Button>
+            </span>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto p-0">
-            <EmojiStrip onPick={(emoji) => insertAtCursor(emoji)} customEmoji={customEmoji} />
+            <EmojiStrip
+              onPick={(emoji) => {
+                insertAtCursor(emoji)
+                setPickerOpen(false)
+              }}
+              customEmoji={customEmoji}
+              defaultTab={pickerOpenToLogos ? "logos" : "standard"}
+            />
           </PopoverContent>
         </Popover>
         <Button
@@ -320,7 +345,9 @@ export function Composer({
         {body.length > MAX_LENGTH * 0.9 && (
           <p className="text-xs text-gray-500">{body.length} / {MAX_LENGTH}</p>
         )}
-        <p className="text-xs text-gray-400">@ mention · Emoji · Add photo or paste image · Links open in new tab</p>
+        <p className="text-xs text-gray-400">
+          @ mention · {hasLogos ? "Logos · " : ""}Emoji · Add photo or paste image · Links open in new tab
+        </p>
       </div>
     </div>
   )

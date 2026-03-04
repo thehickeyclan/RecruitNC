@@ -18,22 +18,13 @@ const CUSTOM_CATEGORY_LABELS: Record<string, string> = {
 export function EmojiStrip({
   onPick,
   customEmoji = [],
+  defaultTab,
 }: {
   onPick: (emoji: string) => void
   customEmoji?: CustomEmojiItem[]
+  /** Open directly to this tab: "standard" or first logos tab when "logos" */
+  defaultTab?: "standard" | "logos"
 }) {
-  const [mainTab, setMainTab] = useState<"standard" | string>("standard")
-  const [standardSubTab, setStandardSubTab] = useState(EMOJI_CATEGORIES[0]?.id ?? "smileys")
-  const [search, setSearch] = useState("")
-
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const emoji = (e.currentTarget as HTMLButtonElement).dataset.emoji
-      if (emoji) onPick(emoji)
-    },
-    [onPick]
-  )
-
   const customByCategory = useMemo(
     () =>
       customEmoji.reduce(
@@ -47,9 +38,32 @@ export function EmojiStrip({
       ),
     [customEmoji]
   )
-  const customCategoriesWithItems = CUSTOM_CATEGORY_ORDER.filter(
-    (c) => (customByCategory[c]?.length ?? 0) > 0
+  const customCategoriesWithItems = useMemo(
+    () => CUSTOM_CATEGORY_ORDER.filter((c) => (customByCategory[c]?.length ?? 0) > 0),
+    [customByCategory]
   )
+  const firstLogoCategory = customCategoriesWithItems[0]
+  const initialTab =
+    defaultTab === "logos" && firstLogoCategory ? firstLogoCategory : "standard"
+
+  const [mainTab, setMainTab] = useState<"standard" | string>(initialTab)
+  const [standardSubTab, setStandardSubTab] = useState(EMOJI_CATEGORIES[0]?.id ?? "smileys")
+  const [search, setSearch] = useState("")
+
+  // When popover opens to "logos", show logo grid
+  useEffect(() => {
+    if (defaultTab === "logos" && firstLogoCategory && mainTab === "standard") setMainTab(firstLogoCategory)
+  }, [defaultTab, firstLogoCategory, mainTab])
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const emoji = (e.currentTarget as HTMLButtonElement).dataset.emoji
+      if (emoji) onPick(emoji)
+    },
+    [onPick]
+  )
+
+  // customByCategory and customCategoriesWithItems defined above
 
   const searchTrimmed = search.trim().toLowerCase()
   const searchResults = useMemo(() => {

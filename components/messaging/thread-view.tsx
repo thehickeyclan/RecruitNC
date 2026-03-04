@@ -93,6 +93,20 @@ export function ThreadView({
   }, [threadId])
 
   useEffect(() => {
+    fetch("/api/messaging/custom-emoji", { credentials: "include" })
+      .then((r) => r.json())
+      .then((res) => {
+        const list = res?.emoji ?? []
+        const map: Record<string, string> = {}
+        for (const e of list) {
+          if (e?.slug && e?.image_url) map[e.slug] = e.image_url
+        }
+        setCustomEmojiMap(map)
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     if (!scrollRef.current || messages.length === 0) return
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight
   }, [messages.length])

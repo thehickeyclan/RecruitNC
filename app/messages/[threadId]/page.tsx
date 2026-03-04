@@ -6,7 +6,7 @@ import { ThreadView } from "@/components/messaging/thread-view"
 import { ThreadMembersPane } from "@/components/messaging/thread-members-pane"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { ArrowLeft, Archive, Loader2, Users } from "lucide-react"
+import { ArrowLeft, Archive, Link2, Loader2, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function ThreadPage() {
@@ -18,7 +18,17 @@ export default function ThreadPage() {
   const [forbidden, setForbidden] = useState(false)
   const [membersOpen, setMembersOpen] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const isAdmin = profile?.is_admin === true
+
+  function copyThreadLink() {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/messages/${threadId}` : ""
+    if (!url) return
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2000)
+    })
+  }
 
   useEffect(() => {
     if (!threadId || !user) return
@@ -109,6 +119,16 @@ export default function ThreadPage() {
             </a>
           </Button>
           <h1 className="text-lg font-semibold truncate flex-1">{threadName || "…"}</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={copyThreadLink}
+            aria-label="Copy workspace link"
+          >
+            <Link2 className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">{linkCopied ? "Copied!" : "Copy link"}</span>
+          </Button>
           {/* Mobile: Members button opens sheet */}
           <Sheet open={membersOpen} onOpenChange={setMembersOpen}>
             <SheetTrigger asChild>

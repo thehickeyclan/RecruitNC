@@ -28,7 +28,7 @@ export type MessageRow = {
 // Match http/https URLs, @mentions (e.g. @John Smith), and custom emoji :slug:
 const URL_REGEX = /(https?:\/\/[^\s]+)/gi
 const MENTION_REGEX = /(@[\w]+(?:\s+[\w]+)*)/g
-const CUSTOM_EMOJI_REGEX = /(:[a-z0-9-]+:)/g
+const CUSTOM_EMOJI_REGEX = /(:[a-z0-9_-]+:)/g
 
 function linkifyAndMentions(
   text: string,
@@ -65,7 +65,7 @@ function linkifyAndMentions(
           </span>
         )
       } else {
-        const byCustom = customEmojiMap ? bit.split(/(:[a-z0-9-]+:)/g) : [bit]
+        const byCustom = customEmojiMap ? bit.split(/(:[a-z0-9_-]+:)/g) : [bit]
         byCustom.forEach((seg, k) => {
           if (seg.startsWith(":") && seg.endsWith(":") && customEmojiMap) {
             const slug = seg.slice(1, -1)
@@ -217,35 +217,48 @@ export function MessageBubble(
           </>
         )}
       </div>
-      <div className="flex items-center gap-1.5 px-1">
+      <div className="flex items-center gap-1.5 px-1 flex-wrap">
         <span className="text-xs text-gray-400">{time}</span>
         {message.edited_at && (
           <span className="text-xs text-gray-400">· Edited</span>
         )}
         {showEdit && !editing && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="p-0.5 rounded text-gray-400 hover:text-gray-600"
-                aria-label="Edit message"
-              >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isOwn ? "end" : "start"}>
-              <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault()
-                  setEditBody(message.body)
-                  setEditing(true)
-                }}
-              >
-                <Pencil className="h-3.5 w-3.5 mr-2" />
-                Edit
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setEditBody(message.body)
+                setEditing(true)
+              }}
+              className="text-xs text-gray-500 hover:text-[#003366] hover:underline"
+              aria-label="Edit message"
+            >
+              Edit
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="p-0.5 rounded text-gray-400 hover:text-gray-600"
+                  aria-label="More options"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={isOwn ? "end" : "start"}>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault()
+                    setEditBody(message.body)
+                    setEditing(true)
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         )}
       </div>
     </div>
