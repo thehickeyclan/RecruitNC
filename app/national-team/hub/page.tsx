@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, Calendar, Shirt, MessageCircle, Loader2, Lock } from "lucide-react"
+import { MessageCircle, Loader2, Lock } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
 
@@ -75,19 +75,39 @@ export default function NationalTeamHubPage() {
           </Button>
         </div>
 
-        {/* Payment due — one line for all events */}
-        <Card className="border-amber-200 bg-amber-50/50">
-          <CardContent className="py-3">
-            <p className="text-sm text-amber-800 font-medium">
-              Payment due: {PAYMENT_DUE}
-            </p>
-          </CardContent>
-        </Card>
+        {events.length > 0 && (
+          <Card className="border-amber-200 bg-amber-50/50">
+            <CardContent className="py-3">
+              <p className="text-sm text-amber-800 font-medium">
+                Payment due: {PAYMENT_DUE}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {events.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-gray-500">
-              No events yet. After you register and pay, your event roster and details will appear here.
+          <Card className="border-[#003366]/20">
+            <CardHeader>
+              <CardTitle className="text-[#003366]">Your team hub</CardTitle>
+              <CardDescription>
+                Once you register and pay for an event, this page will show your event roster, your registration details, and the team group chat — all in one place.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600">
+                If you have an invite to <strong>NHSCA Duals 2026</strong>, use your registration link to sign up. After payment, come back here to see the roster and team messaging.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild className="bg-[#003366] hover:bg-[#003366]/90">
+                  <a href="/national-team/nhsca-2026">NHSCA 2026 event page</a>
+                </Button>
+                <Button asChild variant="outline">
+                  <a href="/national-team">National Team overview</a>
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Already registered? Sign in with the parent email from your registration so your events appear here.
+              </p>
             </CardContent>
           </Card>
         ) : (
@@ -96,43 +116,12 @@ export default function NationalTeamHubPage() {
           ))
         )}
 
-        {/* Placeholder sections (same for all; can be made event-specific later) */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shirt className="h-5 w-5" />
-              Apparel
-            </CardTitle>
-            <CardDescription>Photos and sizing for team gear</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">Coming soon. The organizer will add apparel photos and details here.</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Schedule & agenda
-            </CardTitle>
-            <CardDescription>Time agenda by day</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">Coming soon. Event schedule and daily agenda will appear here.</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Coaches
-            </CardTitle>
-            <CardDescription>Coaches and bios</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">Coming soon. Coach bios and contact info will be added here.</p>
+        {/* Single “what’s coming” note instead of three placeholder cards */}
+        <Card className="bg-gray-50 border-gray-200">
+          <CardContent className="py-4">
+            <p className="text-sm text-gray-600">
+              <strong className="text-gray-700">Apparel, schedule, and coaches:</strong> The organizer will add photos, sizing, daily agenda, and coach bios here before the event.
+            </p>
           </CardContent>
         </Card>
 

@@ -462,13 +462,27 @@ export function Navbar() {
                   </div>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive([...statesItems, ...nationalsItems]))}>Events</div>
-                    <div className="space-y-2">
-                      {statesItems.map((sub) => (
-                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                      ))}
-                      {nationalsItems.map((sub) => (
-                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                      ))}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">States</p>
+                        <div className="space-y-1">
+                          <a href="/nchsaa" className={mobileSubLinkClass("/nchsaa")} onClick={() => setIsOpen(false)}>Overview</a>
+                          <a href="/nchsaa/2026" className={mobileSubLinkClass("/nchsaa/2026")} onClick={() => setIsOpen(false)}>2026 Results</a>
+                          <a href="/nchsaa/2025" className={mobileSubLinkClass("/nchsaa/2025")} onClick={() => setIsOpen(false)}>2025 Results</a>
+                          <a href="/nchsaa/archive" className={mobileSubLinkClass("/nchsaa/archive")} onClick={() => setIsOpen(false)}>Archive</a>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">HS Nationals</p>
+                        <div className="space-y-1">
+                          <a href="/nhsca" className={mobileSubLinkClass("/nhsca")} onClick={() => setIsOpen(false)}>Overview</a>
+                          <a href="/nhsca/2025" className={mobileSubLinkClass("/nhsca/2025")} onClick={() => setIsOpen(false)}>2025 Results</a>
+                          <a href="/nhsca/archive" className={mobileSubLinkClass("/nhsca/archive")} onClick={() => setIsOpen(false)}>Archive</a>
+                        </div>
+                      </div>
+                      <div>
+                        <a href="/super32" className={mobileSubLinkClass("/super32")} onClick={() => setIsOpen(false)}>Super32 Champions</a>
+                      </div>
                     </div>
                   </div>
                   <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Calendar</a>

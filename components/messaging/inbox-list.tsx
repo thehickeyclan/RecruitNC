@@ -15,7 +15,17 @@ export type InboxThread = {
   unread_count: number
 }
 
-export function InboxList({ threads, loading }: { threads: InboxThread[]; loading: boolean }) {
+export function InboxList({
+  threads,
+  loading,
+  emptyFiltered,
+  emptySearch,
+}: {
+  threads: InboxThread[]
+  loading: boolean
+  emptyFiltered?: boolean
+  emptySearch?: boolean
+}) {
   const router = useRouter()
 
   if (loading) {
@@ -30,8 +40,22 @@ export function InboxList({ threads, loading }: { threads: InboxThread[]; loadin
     return (
       <div className="text-center py-12 px-4">
         <MessageCircle className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-        <p className="text-gray-600 font-medium">No messages yet</p>
-        <p className="text-sm text-gray-500 mt-1">When you're added to a team or event group, it will show up here.</p>
+        {emptySearch ? (
+          <>
+            <p className="text-gray-600 font-medium">No chats match your search</p>
+            <p className="text-sm text-gray-500 mt-1">Try a different search or clear the search box.</p>
+          </>
+        ) : emptyFiltered ? (
+          <>
+            <p className="text-gray-600 font-medium">No unread messages</p>
+            <p className="text-sm text-gray-500 mt-1">You're all caught up.</p>
+          </>
+        ) : (
+          <>
+            <p className="text-gray-600 font-medium">No messages yet</p>
+            <p className="text-sm text-gray-500 mt-1">When you're added to a team or event group, it will show up here.</p>
+          </>
+        )}
       </div>
     )
   }

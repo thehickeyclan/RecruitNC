@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
-  ShoppingBag
+  ShoppingBag, Smile
 } from "lucide-react"
 
 interface AdminStats {
@@ -429,6 +429,17 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </Link>
+
+            {/* Custom emoji — HS, College, Club, NCU logos for messaging */}
+            <HardLink href="/admin/custom-emoji" className="block h-full">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Smile className="h-10 w-10 text-[#D3B574] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">Custom emoji</h3>
+                  <p className="text-xs text-gray-600">HS, College, Club, NCU logos for messages</p>
+                </CardContent>
+              </Card>
+            </HardLink>
 
             {/* Enhanced Logo Manager */}
             <Link href="/admin/enhanced-logo-manager">

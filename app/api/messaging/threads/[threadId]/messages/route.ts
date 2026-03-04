@@ -47,7 +47,7 @@ export async function GET(
 
   let query = supabase
     .from("messaging_messages")
-    .select("id, thread_id, sender_id, type, body, created_at")
+    .select("id, thread_id, sender_id, type, body, created_at, edited_at")
     .eq("thread_id", threadId)
 
   if (beforeId) {
@@ -67,10 +67,57 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const messages = (rows ?? []).slice(0, limit)
+  const rawMessages = (rows ?? []).slice(0, limit).reverse() as Array<{
+    id: string
+    thread_id: string
+    sender_id: string
+    type: string
+    body: string
+    created_at: string
+    edited_at?: string | null
+  }>
   const hasMore = (rows ?? []).length > limit
+
+  // Attach sender display names (GroupMe-style: show who wrote each message)
+  const senderIds = [...new Set(rawMessages.map((m) => m.sender_id))]
+  const nameBySenderId = new Map<string, string>()
+  if (senderIds.length > 0) {
+    const admin = createAdminClient()
+    const { data: profiles } = await admin
+      .from("user_profiles")
+      .select("user_id, full_name, first_name, last_name")
+      .in("user_id", senderIds)
+    for (const p of profiles ?? []) {
+      const r = p as { user_id: string; full_name?: string | null; first_name?: string | null; last_name?: string | null }
+      const name = r.full_name?.trim() || [r.first_name, r.last_name].filter(Boolean).join(" ").trim() || "Member"
+      nameBySenderId.set(r.user_id, name)
+    }
+  }
+
+  // Attachments for these messages (RLS: user is thread member so can select)
+  const messageIds = rawMessages.map((m) => m.id)
+  const attachmentsByMessageId = new Map<string, { id: string; file_url: string; content_type?: string | null; filename?: string | null }[]>()
+  if (messageIds.length > 0) {
+    const { data: attachmentRows } = await supabase
+      .from("messaging_attachments")
+      .select("id, message_id, file_url, content_type, filename")
+      .in("message_id", messageIds)
+    for (const a of attachmentRows ?? []) {
+      const row = a as { id: string; message_id: string; file_url: string; content_type?: string | null; filename?: string | null }
+      const list = attachmentsByMessageId.get(row.message_id) ?? []
+      list.push({ id: row.id, file_url: row.file_url, content_type: row.content_type, filename: row.filename })
+      attachmentsByMessageId.set(row.message_id, list)
+    }
+  }
+
+  const messages = rawMessages.map((m) => ({
+    ...m,
+    sender_name: nameBySenderId.get(m.sender_id) ?? null,
+    attachments: attachmentsByMessageId.get(m.id) ?? [],
+  }))
+
   return NextResponse.json({
-    messages: messages.reverse(),
+    messages,
     hasMore,
   })
 }
@@ -89,7 +136,7 @@ export async function POST(
   const { threadId } = await params
   if (!threadId) return NextResponse.json({ error: "Missing threadId" }, { status: 400 })
 
-  let body: { body?: string; type?: string }
+  let body: { body?: string; type?: string; attachment_urls?: { url: string; content_type?: string; filename?: string }[] }
   try {
     body = await request.json()
   } catch {
@@ -97,8 +144,13 @@ export async function POST(
   }
 
   const text = typeof body.body === "string" ? body.body.trim() : ""
-  if (text.length === 0 || text.length > MAX_BODY_LENGTH) {
-    return NextResponse.json({ error: "Body must be 1–2000 characters" }, { status: 400 })
+  const attachmentUrls = Array.isArray(body.attachment_urls)
+    ? body.attachment_urls.filter((a) => a && typeof a.url === "string" && a.url.trim().length > 0)
+    : []
+  const hasContent = text.length > 0 || attachmentUrls.length > 0
+  if (!hasContent) return NextResponse.json({ error: "Message must have text or at least one attachment" }, { status: 400 })
+  if (text.length > MAX_BODY_LENGTH) {
+    return NextResponse.json({ error: "Body must be at most 2000 characters" }, { status: 400 })
   }
 
   const type = body.type === "announcement" ? "announcement" : "message"
@@ -115,15 +167,27 @@ export async function POST(
     return NextResponse.json({ error: "Only admins can send announcements" }, { status: 403 })
   }
 
+  const bodyText = text.length > 0 ? text : " "
   const { data: message, error: insertError } = await supabase
     .from("messaging_messages")
-    .insert({ thread_id: threadId, sender_id: user.id, type, body: text })
-    .select("id, thread_id, sender_id, type, body, created_at")
+    .insert({ thread_id: threadId, sender_id: user.id, type, body: bodyText })
+    .select("id, thread_id, sender_id, type, body, created_at, edited_at")
     .single()
 
   if (insertError) {
     console.error("[messaging/messages POST]", insertError)
     return NextResponse.json({ error: insertError.message }, { status: 500 })
+  }
+
+  if (attachmentUrls.length > 0 && message) {
+    const attachmentRows = attachmentUrls.map((a) => ({
+      message_id: message.id,
+      file_url: a.url.trim(),
+      content_type: typeof a.content_type === "string" ? a.content_type : null,
+      filename: typeof a.filename === "string" ? a.filename : null,
+    }))
+    const { error: attachError } = await supabase.from("messaging_attachments").insert(attachmentRows)
+    if (attachError) console.error("[messaging/messages POST] attachments insert:", attachError)
   }
 
   await supabase

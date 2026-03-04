@@ -3,8 +3,39 @@
 import { useEffect, useRef, useState } from "react"
 import { MessageBubble, type MessageRow } from "./message-bubble"
 import { Composer } from "./composer"
-import { Loader2, ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
+
+function formatDateLabel(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const diffDays = Math.floor((today.getTime() - msgDay.getTime()) / (24 * 60 * 60 * 1000))
+  if (diffDays === 0) return "Today"
+  if (diffDays === 1) return "Yesterday"
+  if (diffDays < 7) return d.toLocaleDateString(undefined, { weekday: "long" })
+  return d.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })
+}
+
+function messageGroupsWithDates(messages: MessageRow[]): { dateLabel: string; items: MessageRow[] }[] {
+  const groups: { dateLabel: string; items: MessageRow[] }[] = []
+  let currentLabel = ""
+  let currentItems: MessageRow[] = []
+  for (const m of messages) {
+    const label = formatDateLabel(m.created_at)
+    if (label !== currentLabel) {
+      if (currentItems.length > 0) groups.push({ dateLabel: currentLabel, items: currentItems })
+      currentLabel = label
+      currentItems = [m]
+    } else {
+      currentItems.push(m)
+    }
+  }
+  if (currentItems.length > 0) groups.push({ dateLabel: currentLabel, items: currentItems })
+  return groups
+}
+
+export type ThreadViewMember = { user_id: string; display_name: string }
 
 export function ThreadView({
   threadId,
@@ -16,6 +47,8 @@ export function ThreadView({
   currentUserId: string
 }) {
   const [messages, setMessages] = useState<MessageRow[]>([])
+  const [members, setMembers] = useState<ThreadViewMember[]>([])
+  const [customEmojiMap, setCustomEmojiMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -47,10 +80,13 @@ export function ThreadView({
     Promise.all([
       loadMessages(),
       fetch(`/api/messaging/threads/${threadId}/read`, { method: "PATCH", credentials: "include" }),
+      fetch(`/api/messaging/threads/${threadId}/members`, { credentials: "include" }).then((r) => r.json()),
     ])
-      .then(([data]) => {
+      .then(([data, , membersData]) => {
         setMessages(data.messages ?? [])
         setHasMore(!!data.hasMore)
+        const list = (membersData?.members ?? []).map((m: { user_id: string; display_name: string }) => ({ user_id: m.user_id, display_name: m.display_name }))
+        setMembers(list)
       })
       .catch(() => setMessages([]))
       .finally(() => setLoading(false))
@@ -95,13 +131,26 @@ export function ThreadView({
         )}
         <div ref={topSentinelRef} aria-hidden />
         <div className="space-y-4">
-          {messages.map((m) => (
-            <MessageBubble
-              key={m.id}
-              message={m}
-              isOwn={m.sender_id === currentUserId}
-              currentUserId={currentUserId}
-            />
+          {messageGroupsWithDates(messages).map(({ dateLabel, items }) => (
+            <div key={dateLabel} className="space-y-4">
+              <div className="flex justify-center">
+                <span className="text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+                  {dateLabel}
+                </span>
+              </div>
+              {items.map((m) => (
+                <MessageBubble
+                  key={m.id}
+                  message={m}
+                  isOwn={m.sender_id === currentUserId}
+                  currentUserId={currentUserId}
+                  customEmojiMap={customEmojiMap}
+                  onEdited={(updated) =>
+                    setMessages((prev) => prev.map((msg) => (msg.id === updated.id ? updated : msg)))
+                  }
+                />
+              ))}
+            </div>
           ))}
         </div>
         {messages.length === 0 && (
@@ -111,7 +160,7 @@ export function ThreadView({
           </div>
         )}
       </div>
-      <Composer threadId={threadId} onSent={onSent} />
+      <Composer threadId={threadId} onSent={onSent} members={members} />
     </div>
   )
 }

@@ -56,12 +56,45 @@ CREATE TABLE IF NOT EXISTS messaging_messages (
   sender_id uuid NOT NULL,
   type text NOT NULL DEFAULT 'message' CHECK (type IN ('message', 'announcement')),
   body text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
+  created_at timestamptz NOT NULL DEFAULT now(),
+  edited_at timestamptz
 );
 
 CREATE INDEX IF NOT EXISTS idx_messaging_messages_thread_created ON messaging_messages (thread_id, created_at DESC);
 
-COMMENT ON TABLE messaging_messages IS 'Body max 2000 chars enforced in API. No edit/delete in V1.';
+COMMENT ON TABLE messaging_messages IS 'Body max 2000 chars enforced in API. edited_at set when user edits body.';
+
+-- Attachments: one row per file attached to a message (e.g. images).
+CREATE TABLE IF NOT EXISTS messaging_attachments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id uuid NOT NULL REFERENCES messaging_messages(id) ON DELETE CASCADE,
+  file_url text NOT NULL,
+  content_type text,
+  filename text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_messaging_attachments_message ON messaging_attachments (message_id);
+COMMENT ON TABLE messaging_attachments IS 'Image/file attachments for messages. file_url is the blob URL.';
+
+-- Custom emoji: admin-uploaded logos (HS, College, Club, NCU, etc.) used as :slug: in messages.
+CREATE TABLE IF NOT EXISTS custom_emoji (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug text NOT NULL UNIQUE,
+  image_url text NOT NULL,
+  category text NOT NULL CHECK (category IN ('hs', 'college', 'club', 'ncu', 'other')),
+  display_name text,
+  sort_order int NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_custom_emoji_category ON custom_emoji (category, sort_order);
+COMMENT ON TABLE custom_emoji IS 'Admin-managed custom emoji for messaging; inserted as :slug: in message body and rendered as small image.';
+
+ALTER TABLE custom_emoji ENABLE ROW LEVEL SECURITY;
+CREATE POLICY custom_emoji_select ON custom_emoji FOR SELECT USING (true);
+-- INSERT/UPDATE/DELETE only via service role (admin API).
+
+-- Migrations (run after initial schema if tables already exist):
+-- ALTER TABLE messaging_messages ADD COLUMN IF NOT EXISTS edited_at timestamptz;
 
 -- RLS: enable and define policies so users only see their threads/messages.
 ALTER TABLE messaging_threads ENABLE ROW LEVEL SECURITY;
@@ -90,6 +123,22 @@ CREATE POLICY messaging_messages_insert ON messaging_messages
     sender_id = auth.uid() AND
     EXISTS (SELECT 1 FROM messaging_thread_members m WHERE m.thread_id = messaging_messages.thread_id AND m.user_id = auth.uid())
   );
+CREATE POLICY messaging_messages_update_sender ON messaging_messages
+  FOR UPDATE USING (sender_id = auth.uid());
+
+ALTER TABLE messaging_attachments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY messaging_attachments_select ON messaging_attachments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM messaging_messages mm
+      JOIN messaging_thread_members m ON m.thread_id = mm.thread_id AND m.user_id = auth.uid()
+      WHERE mm.id = messaging_attachments.message_id
+    )
+  );
+CREATE POLICY messaging_attachments_insert ON messaging_attachments
+  FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM messaging_messages mm WHERE mm.id = messaging_attachments.message_id AND mm.sender_id = auth.uid())
+  );
 
 -- Realtime: allow authenticated users to listen to messages in threads they belong to.
 -- (Supabase Realtime uses RLS; ensure service role or anon can't bypass; clients use auth.uid().)
@@ -97,19 +146,32 @@ CREATE POLICY messaging_messages_insert ON messaging_messages
 
 **Optional:** If you use service-role for server-side inbox (e.g. admin or server-computed membership), you may need a separate policy or bypass for admin. For Phase 1, client + RLS is enough.
 
+**Invite link (share group by link):** Run this to enable "Copy invite link" and join-by-link:
+
+```sql
+ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS invite_token text UNIQUE;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_messaging_threads_invite_token ON messaging_threads (invite_token) WHERE invite_token IS NOT NULL;
+```
+
 ---
 
 ## 2. API routes (Next.js App Router)
 
-BBase path: `/api/messaging/`. All routes require auth (session); return 401 if unauthenticated.
+Base path: `/api/messaging/`. All routes require auth (session); return 401 if unauthenticated.
 
 | Method | Route | Purpose |
 |--------|------|--------|
 | GET | `/api/messaging/inbox` | List threads for current user with last message + unread count. |
 | GET | `/api/messaging/threads/[threadId]` | Thread meta + membership check. |
-| GET | `/api/messaging/threads/[threadId]/messages` | Paginated messages (cursor-based). |
-| POST | `/api/messaging/threads/[threadId]/messages` | Send message (or announcement if role allows). |
+| GET | `/api/messaging/threads/[threadId]/messages` | Paginated messages (cursor-based; includes `edited_at`, `attachments`). |
+| POST | `/api/messaging/threads/[threadId]/messages` | Send message (body and/or `attachment_urls`; announcement if role allows). |
+| PATCH | `/api/messaging/threads/[threadId]/messages/[messageId]` | Edit own message (body only; sets `edited_at`). |
+| POST | `/api/messaging/upload` | Upload image(s) for messaging (FormData: file(s), optional threadId). Returns `{ uploads: [{ url, content_type, filename }] }`. |
+| GET | `/api/messaging/custom-emoji` | List custom emoji (slug, image_url, category) for composer picker and message rendering. |
 | PATCH | `/api/messaging/threads/[threadId]/read` | Set last_read_at = now for current user. |
+| GET | `/api/admin/custom-emoji` | (Admin) List all custom emoji. |
+| POST | `/api/admin/custom-emoji` | (Admin) Upload logo → resize to 64×64, store in Blob, insert row. FormData: file, slug, category (hs\|college\|club\|ncu\|other), display_name. |
+| PATCH/DELETE | `/api/admin/custom-emoji/[id]` | (Admin) Update or delete custom emoji. |
 | PATCH | `/api/messaging/threads/[threadId]/notifications` | Set notification_level (all \| mentions \| muted). |
 
 **Inbox response shape (GET /api/messaging/inbox):**
@@ -128,9 +190,9 @@ BBase path: `/api/messaging/`. All routes require auth (session); return 401 if 
 
 **Send message (POST):**
 
-- Body: `{ "body": "…", "type": "message" }` or `"type": "announcement"` (if sender is admin/coach).
-- Validate: body length 1–2000 chars; user is member; for announcement, check role.
-- Insert into `messaging_messages`; then update `messaging_threads.last_message_at = now()`.
+- Body: `{ "body": "…", "type": "message", "attachment_urls": [{ "url", "content_type?", "filename?" }] }` or `"type": "announcement"` (if sender is admin/coach). At least one of body (non-empty) or attachment_urls required.
+- Validate: body length ≤2000 chars; user is member; for announcement, check role.
+- Insert into `messaging_messages`; insert rows into `messaging_attachments` for each attachment_url; then update `messaging_threads.last_message_at = now()`.
 - Return created message (id, thread_id, sender_id, type, body, created_at).
 
 **Rate limiting (recommended):**
@@ -208,7 +270,11 @@ Phase 1 groups are **created and populated from existing data**, not by end user
 - **NHSCA Duals 2026:** One thread with `context_type = 'event'`, `context_id = 'nhsca-duals-2026'`. Members = users whose email matches `national_team_event_registrations.parent_email` (or `parent_user_id`) for that event and status = paid. Create thread once; sync members via a script or admin job (e.g. “Sync NHSCA Duals 2026 members”).
 - **Blue 2026:** Same idea with `context_type = 'program'`, `context_id = 'blue-2026'`; members from Blue membership table (active for 2026).
 
-No “create group” in the UI for Phase 1. Admin or a one-off script creates the thread and inserts `messaging_thread_members` from the source tables. Document the mapping in a small runbook or `scripts/` so Cursor can implement the sync.
+No “create group” in the UI for Phase 1. Admin or a one-off script creates the thread and inserts `messaging_thread_members` from the source tables. **In-app create group (admin only):** Admins see a "New group" button on the Messages page; the dialog POSTs to `/api/admin/messaging/threads` (name required; optional `context_type`/`context_id`). The creator is added as thread admin.
+
+**Add members & invite link:** Thread **admins** see **Add** and **Link** in the members pane. **Add** opens a search dialog (by name or email); selecting a user adds them to the group and sends them an email ("You've been added to [group]" with link to the thread). **Link** copies a shareable invite URL (`/messages/join?token=...`). Anyone with the link can open it; if signed in they are added to the group and redirected to the thread; if not, they sign in first then are added. APIs: `GET/POST .../members`, `GET .../members/search?q=`, `GET .../invite-link`, `POST /api/messaging/join` (body `{ token }`). Requires `messaging_threads.invite_token` column (see migration above).
+
+**Composer (modern UX):** **Emoji** — emoji button opens a picker strip (common emojis); insert at cursor. **@mentions** — typing `@` shows a dropdown of thread members; select by click or Enter/Tab. Inserted as `@Display Name` in the message. In the message bubble, `@Name` is rendered with highlight (brand color). Links in messages remain clickable (new tab).
 
 ---
 
@@ -239,10 +305,10 @@ Use these as sequential prompts so the implementation stays consistent.
 
 - DMs (Phase 2).
 - Read receipts (“Seen by 8”) — Phase 2 if needed.
-- Attachments, polls, reactions.
+- Polls, reactions (image attachments and message edit are in scope).
 - Minors-specific restrictions (not in scope per product decision).
 - Public/semi-public channels (Phase 4).
-- Message edit/delete (optional “delete for me” can be added later with a soft-delete column).
+- Message delete (optional “delete for me” can be added later with a soft-delete column).
 
 ---
 
