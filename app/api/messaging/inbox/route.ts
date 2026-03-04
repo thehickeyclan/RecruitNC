@@ -72,7 +72,7 @@ export async function GET() {
       context_id: t.context_id ?? null,
       last_message_at: t.last_message_at,
       last_message_preview: preview,
-      unread_count: unreadByThread.get(t.id) ?? 0,,
+      unread_count: unreadByThread.get(t.id) ?? 0,
     }
   })
 
