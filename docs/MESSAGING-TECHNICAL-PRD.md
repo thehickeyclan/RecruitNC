@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS messaging_threads (
   context_id text,
   created_at timestamptz NOT NULL DEFAULT now(),
   last_message_at timestamptz NOT NULL DEFAULT now(),
-  created_by_user_id uuid
+  created_by_user_id uuid,
+  archived_at timestamptz
 );
 
 CREATE INDEX IF NOT EXISTS idx_messaging_threads_last_message_at ON messaging_threads (last_message_at DESC);
@@ -166,6 +167,12 @@ CREATE POLICY messaging_attachments_insert ON messaging_attachments
 -- (Supabase Realtime uses RLS; ensure service role or anon can't bypass; clients use auth.uid().)
 ```
 
+**If you see "column messaging_messages.edited_at does not exist":** run in SQL Editor:
+
+```sql
+ALTER TABLE messaging_messages ADD COLUMN IF NOT EXISTS edited_at timestamptz;
+```
+
 **If you already ran the schema and see "infinite recursion detected in policy for relation messaging_thread_members":** run the fix below in SQL Editor (creates a helper function and replaces the recursive policy).
 
 ```sql
@@ -186,6 +193,26 @@ CREATE POLICY messaging_thread_members_select ON messaging_thread_members
 ```
 
 **Optional:** If you use service-role for server-side inbox (e.g. admin or server-computed membership), you may need a separate policy or bypass for admin. For Phase 1, client + RLS is enough.
+
+**One-off: delete a duplicate thread by name** (e.g. two "NHSCA Duals 2026" groups — deletes the older one):
+
+```sql
+WITH to_delete AS (
+  SELECT id FROM messaging_threads
+  WHERE name = 'NHSCA Duals 2026'
+  ORDER BY created_at ASC
+  LIMIT 1
+)
+DELETE FROM messaging_threads WHERE id IN (SELECT id FROM to_delete);
+```
+
+**Archive groups (admin):** Add column so admins can archive a group (hides from inbox). Run in SQL Editor:
+
+```sql
+ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+```
+
+Then use the in-app "Archive" button in the thread header (admin only), or PATCH `/api/admin/messaging/threads/[threadId]` with `{ "archive": true }`.
 
 **Invite link (share group by link):** Run this to enable "Copy invite link" and join-by-link:
 

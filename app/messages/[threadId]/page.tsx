@@ -6,17 +6,19 @@ import { ThreadView } from "@/components/messaging/thread-view"
 import { ThreadMembersPane } from "@/components/messaging/thread-members-pane"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { ArrowLeft, Loader2, Users } from "lucide-react"
+import { ArrowLeft, Archive, Loader2, Users } from "lucide-react"
 import { useEffect, useState } from "react"
 
 export default function ThreadPage() {
   const params = useParams()
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, profile } = useAuth()
   const threadId = typeof params?.threadId === "string" ? params.threadId : ""
   const [threadName, setThreadName] = useState<string>("")
   const [isEventThread, setIsEventThread] = useState(false)
   const [forbidden, setForbidden] = useState(false)
   const [membersOpen, setMembersOpen] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+  const isAdmin = profile?.is_admin === true
 
   useEffect(() => {
     if (!threadId || !user) return
@@ -50,6 +52,23 @@ export default function ThreadPage() {
     checkAccess()
     return () => { cancelled = true }
   }, [threadId, user])
+
+  async function handleArchive() {
+    if (!threadId || !isAdmin || archiving) return
+    setArchiving(true)
+    try {
+      const res = await fetch(`/api/admin/messaging/threads/${threadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ archive: true }),
+      })
+      if (!res.ok) throw new Error("Failed to archive")
+      window.location.href = "/messages"
+    } catch {
+      setArchiving(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -108,6 +127,19 @@ export default function ThreadPage() {
             >
               Team hub
             </a>
+          )}
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={handleArchive}
+              disabled={archiving}
+              aria-label="Archive group"
+            >
+              {archiving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+              <span className="hidden sm:inline ml-1">Archive</span>
+            </Button>
           )}
         </div>
         <div className="flex-1 min-h-0 flex flex-col">

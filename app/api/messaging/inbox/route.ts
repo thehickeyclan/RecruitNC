@@ -27,6 +27,7 @@ export async function GET() {
     .from("messaging_threads")
     .select("id, name, type, context_type, context_id, last_message_at")
     .in("id", threadIds)
+    .is("archived_at", null)
     .order("last_message_at", { ascending: false })
 
   if (threadsError) {
