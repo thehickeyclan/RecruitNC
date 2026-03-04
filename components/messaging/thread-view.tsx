@@ -99,7 +99,12 @@ export function ThreadView({
         const list = res?.emoji ?? []
         const map: Record<string, string> = {}
         for (const e of list) {
-          if (e?.slug && e?.image_url) map[e.slug] = e.image_url
+          const slug = e?.slug?.trim()
+          const url = e?.image_url ?? e?.imageUrl
+          if (slug && url && typeof url === "string") {
+            map[slug.toLowerCase()] = url
+            map[slug] = url
+          }
         }
         setCustomEmojiMap(map)
       })

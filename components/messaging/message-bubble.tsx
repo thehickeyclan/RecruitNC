@@ -28,7 +28,7 @@ export type MessageRow = {
 // Match http/https URLs, @mentions (e.g. @John Smith), and custom emoji :slug:
 const URL_REGEX = /(https?:\/\/[^\s]+)/gi
 const MENTION_REGEX = /(@[\w]+(?:\s+[\w]+)*)/g
-const CUSTOM_EMOJI_REGEX = /(:[a-z0-9_-]+:)/g
+const CUSTOM_EMOJI_REGEX = /(:[a-zA-Z0-9_-]+:)/g
 
 function linkifyAndMentions(
   text: string,
@@ -65,11 +65,11 @@ function linkifyAndMentions(
           </span>
         )
       } else {
-        const byCustom = customEmojiMap ? bit.split(/(:[a-z0-9_-]+:)/g) : [bit]
+        const byCustom = customEmojiMap ? bit.split(/(:[a-zA-Z0-9_-]+:)/g) : [bit]
         byCustom.forEach((seg, k) => {
           if (seg.startsWith(":") && seg.endsWith(":") && customEmojiMap) {
-            const slug = seg.slice(1, -1)
-            const url = customEmojiMap[slug]
+            const slug = seg.slice(1, -1).trim()
+            const url = customEmojiMap[slug] ?? customEmojiMap[slug.toLowerCase()]
             if (url) {
               result.push(
                 <img
