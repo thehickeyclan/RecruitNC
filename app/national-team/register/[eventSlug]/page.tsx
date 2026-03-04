@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Loader2, Lock, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { getEventSlugForApi, getEventName, getKnownEventUrlSlugs } from "@/lib/national-team-events"
 
 const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
@@ -33,6 +34,7 @@ const NHSCA_2026_COST = {
   amount: 250,
   label: "Registration + team apparel bundle",
   note: "One-time payment at checkout.",
+  dueDate: "Sunday, March 14, 2026",
 }
 
 export default function NationalTeamRegisterEventPage() {
@@ -158,6 +160,18 @@ export default function NationalTeamRegisterEventPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-xl mx-auto">
         <div className="mb-6 text-center">
+          {isNhsca2026 && (
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/images/nhsca-logo.png"
+                alt="NHSCA"
+                width={160}
+                height={56}
+                className="object-contain"
+                priority
+              />
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-[#003366]">{eventName} – Registration</h1>
           <p className="text-gray-600 mt-1">Invite-only. Enter your code to continue.</p>
           <Link href="/national-team" className="text-sm text-[#003366] hover:underline mt-2 inline-block">
@@ -188,6 +202,7 @@ export default function NationalTeamRegisterEventPage() {
               <CardContent className="space-y-1 text-sm">
                 <p className="font-semibold text-[#003366]">${NHSCA_2026_COST.amount} — {NHSCA_2026_COST.label}</p>
                 <p className="text-gray-600">Event registration plus team apparel. {NHSCA_2026_COST.note}</p>
+                <p className="text-amber-800 font-medium mt-2">Payment due: {NHSCA_2026_COST.dueDate}</p>
               </CardContent>
             </Card>
           </>

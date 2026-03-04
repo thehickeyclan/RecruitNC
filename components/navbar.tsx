@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, ShoppingCart } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, ShoppingCart, MessageCircle } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -248,6 +248,12 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
+              {user && (
+                <a href="/messages" className={navLinkClass("/messages") + " flex items-center gap-1"}>
+                  <MessageCircle className="h-5 w-5" />
+                  Messages
+                </a>
+              )}
               <StoreButton className={navLinkClass("/store-app") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0"}>Store</StoreButton>
               <a href="/cart" target="_top" className={navLinkClass("/cart") + " flex items-center gap-1"} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
                 <ShoppingCart className="h-5 w-5" />
@@ -324,6 +330,9 @@ export function Navbar() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
                     <a href="/profile">Profile</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/messages">Messages</a>
                   </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
@@ -442,6 +451,9 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
+                  {user && (
+                    <a href="/messages" className={mobileLinkClass("/messages")} onClick={() => setIsOpen(false)}>Messages</a>
+                  )}
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
                   <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
                     <ShoppingCart className="h-5 w-5 shrink-0" />

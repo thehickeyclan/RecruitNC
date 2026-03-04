@@ -25,6 +25,8 @@ export interface NationalTeamResult {
   event: string
   year: number
   record: string
+  /** When true, athlete is on roster but results not in yet (e.g. 2026 NHSCA Duals Member, 0-0 until after event). */
+  isPlaceholder?: boolean
 }
 
 interface TournamentResultsDisplayProps {
@@ -154,9 +156,16 @@ export function TournamentResultsDisplay({
                 <TableBody>
                   {nationalTeamResults.length > 0 ? nationalTeamResults.map((result, index) => (
                     <TableRow key={index} className="hover:bg-gray-50 transition-colors">
-                      <TableCell className="font-medium text-[#03154C]">{result.event}</TableCell>
+                      <TableCell className="font-medium text-[#03154C]">
+                        {result.event}
+                        {result.isPlaceholder && (
+                          <span className="ml-2 text-xs font-normal text-gray-500">(Member)</span>
+                        )}
+                      </TableCell>
                       <TableCell className="font-semibold">{result.year}</TableCell>
-                      <TableCell className="font-mono">{result.record}</TableCell>
+                      <TableCell className={result.isPlaceholder ? "font-mono text-gray-400" : "font-mono"}>
+                        {result.record}
+                      </TableCell>
                     </TableRow>
                   )) : (
                     <TableRow>

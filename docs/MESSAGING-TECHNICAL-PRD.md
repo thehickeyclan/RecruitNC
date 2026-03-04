@@ -1,0 +1,247 @@
+# RecruitNC Messaging — Technical Architecture PRD
+
+**Purpose:** Implementation-ready spec for Cursor/developers. Use with the product PRD and `MESSAGING-PLATFORM-VISION.md`.
+
+**Scope:** Phase 1 (private groups, single inbox, thread view, send message). No DMs, no minors-specific logic, no read receipts in V1.
+
+---
+
+## 1. Supabase schema (production-ready)
+
+Run in **Supabase → SQL Editor**. Create in this order.
+
+```sql
+-- =============================================================================
+-- RecruitNC Messaging — Phase 1
+-- =============================================================================
+
+-- Threads: one row per conversation (group or, later, DM).
+CREATE TABLE IF NOT EXISTS messaging_threads (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  type text NOT NULL DEFAULT 'group' CHECK (type IN ('group', 'dm')),
+  name text NOT NULL,
+  context_type text,
+  context_id text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  last_message_at timestamptz NOT NULL DEFAULT now(),
+  created_by_user_id uuid
+);
+
+CREATE INDEX IF NOT EXISTS idx_messaging_threads_last_message_at ON messaging_threads (last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messaging_threads_context ON messaging_threads (context_type, context_id) WHERE context_type IS NOT NULL;
+
+COMMENT ON TABLE messaging_threads IS 'One row per conversation. context_type/context_id e.g. event/nhsca-duals-2026 or program/blue-2026.';
+
+-- Thread membership: who is in which thread.
+CREATE TABLE IF NOT EXISTS messaging_thread_members (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  thread_id uuid NOT NULL REFERENCES messaging_threads(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  role text NOT NULL DEFAULT 'member' CHECK (role IN ('member', 'admin')),
+  notification_level text NOT NULL DEFAULT 'mentions' CHECK (notification_level IN ('all', 'mentions', 'muted')),
+  last_read_at timestamptz,
+  joined_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(thread_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_messaging_thread_members_user ON messaging_thread_members (user_id);
+CREATE INDEX IF NOT EXISTS idx_messaging_thread_members_thread ON messaging_thread_members (thread_id);
+
+COMMENT ON TABLE messaging_thread_members IS 'Membership and per-thread read position. last_read_at drives unread count.';
+
+-- Messages: one row per message.
+CREATE TABLE IF NOT EXISTS messaging_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  thread_id uuid NOT NULL REFERENCES messaging_threads(id) ON DELETE CASCADE,
+  sender_id uuid NOT NULL,
+  type text NOT NULL DEFAULT 'message' CHECK (type IN ('message', 'announcement')),
+  body text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messaging_messages_thread_created ON messaging_messages (thread_id, created_at DESC);
+
+COMMENT ON TABLE messaging_messages IS 'Body max 2000 chars enforced in API. No edit/delete in V1.';
+
+-- RLS: enable and define policies so users only see their threads/messages.
+ALTER TABLE messaging_threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messaging_thread_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messaging_messages ENABLE ROW LEVEL SECURITY;
+
+-- Threads: visible only to members.
+CREATE POLICY messaging_threads_select_member ON messaging_threads
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM messaging_thread_members m WHERE m.thread_id = messaging_threads.id AND m.user_id = auth.uid())
+  );
+
+-- Thread members: users see only rows for threads they're in (and their own row for last_read_at updates).
+CREATE POLICY messaging_thread_members_select ON messaging_thread_members
+  FOR SELECT USING (user_id = auth.uid() OR thread_id IN (SELECT thread_id FROM messaging_thread_members WHERE user_id = auth.uid()));
+CREATE POLICY messaging_thread_members_update_own ON messaging_thread_members
+  FOR UPDATE USING (user_id = auth.uid());
+
+-- Messages: visible only if user is a thread member.
+CREATE POLICY messaging_messages_select ON messaging_messages
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM messaging_thread_members m WHERE m.thread_id = messaging_messages.thread_id AND m.user_id = auth.uid())
+  );
+CREATE POLICY messaging_messages_insert ON messaging_messages
+  FOR INSERT WITH CHECK (
+    sender_id = auth.uid() AND
+    EXISTS (SELECT 1 FROM messaging_thread_members m WHERE m.thread_id = messaging_messages.thread_id AND m.user_id = auth.uid())
+  );
+
+-- Realtime: allow authenticated users to listen to messages in threads they belong to.
+-- (Supabase Realtime uses RLS; ensure service role or anon can't bypass; clients use auth.uid().)
+```
+
+**Optional:** If you use service-role for server-side inbox (e.g. admin or server-computed membership), you may need a separate policy or bypass for admin. For Phase 1, client + RLS is enough.
+
+---
+
+## 2. API routes (Next.js App Router)
+
+BBase path: `/api/messaging/`. All routes require auth (session); return 401 if unauthenticated.
+
+| Method | Route | Purpose |
+|--------|------|--------|
+| GET | `/api/messaging/inbox` | List threads for current user with last message + unread count. |
+| GET | `/api/messaging/threads/[threadId]` | Thread meta + membership check. |
+| GET | `/api/messaging/threads/[threadId]/messages` | Paginated messages (cursor-based). |
+| POST | `/api/messaging/threads/[threadId]/messages` | Send message (or announcement if role allows). |
+| PATCH | `/api/messaging/threads/[threadId]/read` | Set last_read_at = now for current user. |
+| PATCH | `/api/messaging/threads/[threadId]/notifications` | Set notification_level (all \| mentions \| muted). |
+
+**Inbox response shape (GET /api/messaging/inbox):**
+
+- Return threads where the user is in `messaging_thread_members`, joined with:
+  - Last message: `SELECT * FROM messaging_messages WHERE thread_id = ? ORDER BY created_at DESC LIMIT 1`.
+  - Unread count: see §6 (unread algorithm).
+- Sort by `threads.last_message_at DESC`.
+- Fields per thread: `id`, `name`, `type`, `context_type`, `context_id`, `last_message_at`, `last_message_preview` (e.g. first 80 chars of last message), `unread_count`.
+
+**Messages pagination (GET /api/messaging/threads/[threadId]/messages):**
+
+- Query params: `before=<message_id>` (cursor) and `limit=50` (default 50, max 100).
+- Query: `WHERE thread_id = ? AND (created_at, id) < (cursor_at, cursor_id) ORDER BY created_at DESC LIMIT ?`. Return in **chronological order** (oldest first) so the UI can append above the view; or return newest-first and reverse on client.
+- Recommend: store `created_at` + `id` of the oldest message in the current page as `before` cursor; next page = messages older than that.
+
+**Send message (POST):**
+
+- Body: `{ "body": "…", "type": "message" }` or `"type": "announcement"` (if sender is admin/coach).
+- Validate: body length 1–2000 chars; user is member; for announcement, check role.
+- Insert into `messaging_messages`; then update `messaging_threads.last_message_at = now()`.
+- Return created message (id, thread_id, sender_id, type, body, created_at).
+
+**Rate limiting (recommended):**
+
+- Apply in middleware or inside POST handler: e.g. max 30 messages per user per minute (sliding or fixed window). Return 429 if exceeded.
+
+---
+
+## 3. Realtime subscriptions
+
+**Channel:** Subscribe to new messages in threads the user is in.
+
+- Use Supabase Realtime **postgres_changes** on `messaging_messages` with filter `thread_id=in.(thread_id_1, thread_id_2, …)`.
+- Or subscribe per thread when the thread view is open: filter `thread_id=eq.<threadId>`.
+- Payload: new row (id, thread_id, sender_id, type, body, created_at). Use it to append to the thread view and/or refresh inbox last message + unread.
+
+**Unread counts:**
+
+- Option A: On `message_created`, invalidate inbox or refetch unread for that thread (see §6).
+- Option B: Subscribe to `messaging_threads` changes for `last_message_at` and refresh inbox list when it changes (simpler but coarser).
+
+Recommendation: subscribe to `messaging_messages` INSERT for the user’s thread list; on event, update local state (append message if that thread is open, else increment unread for that thread and update last message preview).
+
+---
+
+## 4. Next.js component structure
+
+```
+app/
+  messages/
+    page.tsx              → Inbox (list of threads)
+    [threadId]/
+      page.tsx            → Thread view (messages + input)
+components/
+  messaging/
+    inbox-list.tsx        → List of thread rows (avatar, name, preview, time, unread)
+    thread-view.tsx       → Scrollable messages + composer
+    message-bubble.tsx    → Single message (sender, body, time; announcement style if type=announcement)
+    composer.tsx         → Textarea + Send; Enter to send; max 2000 chars
+```
+
+- **Inbox:** Client component; fetch `GET /api/messaging/inbox` on mount; optional Realtime subscription to update last message / unread without full refetch.
+- **Thread view:** Client component; fetch `GET /api/messaging/threads/[threadId]/messages` with cursor for pagination (load more on scroll up); on mount call `PATCH .../read` to mark read. Subscribe to Realtime for this thread_id to append new messages. Composer posts to `POST .../messages`.
+- **Nav:** Add “Messages” (or “Chat”) linking to `/messages`; show total unread count in nav if desired (from inbox response or a small `GET /api/messaging/unread-total`).
+
+---
+
+## 5. Message pagination strategy
+
+- **Cursor-based:** Use `(created_at, id)` as cursor. Request: `?before=<id>` or `?before_ts=<iso>&before_id=<id>`. Server: `WHERE thread_id = $1 AND (created_at, id) < ($2, $3) ORDER BY created_at DESC LIMIT 50`. Return messages **newest-first**; client reverses to show oldest at top, newest at bottom. “Load more” sends the oldest (created_at, id) of the current page as `before`.
+- **Initial load:** No `before`; return latest 50. Client reverses; “Load more” above uses oldest of those 50 as cursor.
+- Store `hasMore` (e.g. returned 50 → hasMore true) so the UI can show “Load more” or infinite scroll.
+
+---
+
+## 6. Unread counter algorithm
+
+**Definition:** For a user and a thread, unread = number of messages in that thread where `created_at > member.last_read_at` (and optionally `sender_id != current user` so your own messages don’t count).
+
+**Implementation:**
+
+- **Per-thread unread (inbox row):**  
+  `SELECT COUNT(*) FROM messaging_messages m WHERE m.thread_id = $1 AND m.created_at > COALESCE((SELECT last_read_at FROM messaging_thread_members WHERE thread_id = $1 AND user_id = $2), '1970-01-01') AND m.sender_id != $2`
+- **When user opens thread:** Call `PATCH /api/messaging/threads/[threadId]/read` to set `last_read_at = now()` for that user and thread.
+- **Total unread (nav badge):** Sum the above over all threads for the user (or maintain a materialized view / cached count; for V1, summing in GET inbox is acceptable if thread count is small).
+
+**Realtime:** When a new message is received for a thread, if the thread is not the open one, increment that thread’s unread in local state (or refetch inbox for that thread’s row).
+
+---
+
+## 7. Seeding groups from existing data
+
+Phase 1 groups are **created and populated from existing data**, not by end users.
+
+- **NHSCA Duals 2026:** One thread with `context_type = 'event'`, `context_id = 'nhsca-duals-2026'`. Members = users whose email matches `national_team_event_registrations.parent_email` (or `parent_user_id`) for that event and status = paid. Create thread once; sync members via a script or admin job (e.g. “Sync NHSCA Duals 2026 members”).
+- **Blue 2026:** Same idea with `context_type = 'program'`, `context_id = 'blue-2026'`; members from Blue membership table (active for 2026).
+
+No “create group” in the UI for Phase 1. Admin or a one-off script creates the thread and inserts `messaging_thread_members` from the source tables. Document the mapping in a small runbook or `scripts/` so Cursor can implement the sync.
+
+---
+
+## 8. Cursor build prompts (implementation order)
+
+Use these as sequential prompts so the implementation stays consistent.
+
+1. **“Create the RecruitNC messaging Supabase schema from docs/MESSAGING-TECHNICAL-PRD.md §1. Add a single SQL file under scripts/ that can be run in Supabase SQL Editor, and paste the full script in chat.”**
+2. **“Implement GET /api/messaging/inbox and GET /api/messaging/threads/[threadId]/messages with cursor pagination as in docs/MESSAGING-TECHNICAL-PRD.md §2 and §5. Use createClient() for auth and RLS.”**
+3. **“Implement POST /api/messaging/threads/[threadId]/messages and PATCH .../read and PATCH .../notifications per the Technical PRD. Add body length 1–2000 and rate limit 30 msg/min per user.”**
+4. **“Add app/messages/page.tsx (inbox) and app/messages/[threadId]/page.tsx (thread view) using the component structure in the Technical PRD §4. Use the existing UI components (Card, Button, Input, etc.) and keep the layout minimal and mobile-first.”**
+5. **“Add Supabase Realtime subscription for messaging_messages in the thread view and inbox so new messages appear without refresh. Update unread count when a new message arrives for a thread that isn’t the open one.”**
+6. **“Implement the unread counter in the inbox API and in the nav (optional badge). Mark thread read when the user opens the thread (PATCH read).”**
+7. **“Add a script or admin flow to create the NHSCA Duals 2026 thread and sync members from national_team_event_registrations (paid, parent_email/parent_user_id). Document in scripts/ and show the runnable script in chat.”**
+
+---
+
+## 9. Performance checklist
+
+- Inbox: one query for threads + last message + unread (or 1 query threads, 1 query last messages, 1 query unread counts; avoid N+1).
+- Thread messages: index on (thread_id, created_at DESC); cursor pagination only.
+- Send message: single insert + single update (threads.last_message_at). No full thread refetch.
+- Realtime: subscribe only to the open thread when thread view is mounted; optionally one channel for inbox (new message in any of my threads) with minimal payload.
+
+---
+
+## 10. What’s out of scope for Phase 1
+
+- DMs (Phase 2).
+- Read receipts (“Seen by 8”) — Phase 2 if needed.
+- Attachments, polls, reactions.
+- Minors-specific restrictions (not in scope per product decision).
+- Public/semi-public channels (Phase 4).
+- Message edit/delete (optional “delete for me” can be added later with a soft-delete column).
+
+Use this doc as the single technical source of truth when implementing RecruitNC Messaging Phase 1.

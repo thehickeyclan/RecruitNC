@@ -209,6 +209,9 @@ export function getNationalTeamResults(athlete: any): NationalTeamResultRow[] {
   if (nd2024) rows.push({ event: "NHSCA National Duals", year: 2024, record: nd2024 })
   const nd2023 = (athlete?.nhsca_national_duals_2023_record ?? athlete?.nhsca_duals_2023_record ?? "").toString().trim()
   if (nd2023) rows.push({ event: "NHSCA National Duals", year: 2023, record: nd2023 })
+  // 2026 NHSCA Duals: same event naming as roster placeholder ("NHSCA Duals"); when populated after event, shows real record
+  const nd2026 = (athlete?.nhsca_national_duals_2026_record ?? athlete?.nhsca_duals_2026_record ?? "").toString().trim()
+  if (nd2026) rows.push({ event: "NHSCA Duals", year: 2026, record: nd2026 })
   return rows
 }
 

@@ -43,11 +43,20 @@ CREATE TABLE IF NOT EXISTS national_team_event_registrations (
   stripe_session_id text,
   order_id uuid,
   status text NOT NULL DEFAULT 'pending',
+  record text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_national_team_reg_event ON national_team_event_registrations (event_slug);
 CREATE INDEX IF NOT EXISTS idx_national_team_reg_status ON national_team_event_registrations (event_slug, status);
+
+-- Optional: link registration to athlete profile so unified profile can show "2026 NHSCA Duals – Member" (and later real record).
+-- Run when you want to link registrations to athletes (e.g. when bringing duals roster into unified profiles).
+-- ALTER TABLE national_team_event_registrations ADD COLUMN IF NOT EXISTS athlete_id uuid REFERENCES athletes(id) ON DELETE SET NULL;
+-- CREATE INDEX IF NOT EXISTS idx_national_team_reg_athlete ON national_team_event_registrations (athlete_id);
+
+-- Event record (e.g. "5-2" for NHSCA Duals 2026). Set in Admin → Blue → National team – NHSCA 2026 payments; shows on athlete profile. Run if table already existed without this column:
+-- ALTER TABLE national_team_event_registrations ADD COLUMN IF NOT EXISTS record text;
 
 -- Flag products that should not appear in the public apparel store (e.g. national team bundle, internal items).
 ALTER TABLE products ADD COLUMN IF NOT EXISTS show_in_public_store boolean DEFAULT true;

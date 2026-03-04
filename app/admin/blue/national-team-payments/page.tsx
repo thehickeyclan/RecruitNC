@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { ArrowLeft, Loader2, ExternalLink, DollarSign } from "lucide-react"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
@@ -23,6 +24,7 @@ type Registration = {
   status: string
   order_id: string | null
   order_number?: string
+  record?: string | null
   created_at: string
 }
 
@@ -33,6 +35,8 @@ export default function AdminBlueNationalTeamPaymentsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "paid" | "pending">("all")
   const [error, setError] = useState<string | null>(null)
+  const [recordEdits, setRecordEdits] = useState<Record<string, string>>({})
+  const [savingId, setSavingId] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -76,6 +80,33 @@ export default function AdminBlueNationalTeamPaymentsPage() {
   const totalPaid = registrations
     .filter((r) => r.status === "paid" || r.order_id)
     .reduce((sum, r) => sum + (r.reg_fee_cents || 0) + (r.apparel_fee_cents || 0), 0)
+
+  async function saveRecord(regId: string, value: string) {
+    setSavingId(regId)
+    try {
+      const res = await fetch(`/api/admin/blue/national-team-registrations/${regId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ record: value.trim() || null }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Failed to save")
+      setRegistrations((prev) =>
+        prev.map((r) => (r.id === regId ? { ...r, record: value.trim() || null } : r))
+      )
+      setRecordEdits((e) => {
+        const next = { ...e }
+        delete next[regId]
+        return next
+      })
+    } catch (err) {
+      console.error(err)
+      setError(err instanceof Error ? err.message : "Could not save record")
+    } finally {
+      setSavingId(null)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -162,6 +193,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                           <TableHead>Reg</TableHead>
                           <TableHead>Apparel</TableHead>
                           <TableHead>Status</TableHead>
+                          <TableHead className="whitespace-nowrap">Record</TableHead>
                           <TableHead>Order</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -182,6 +214,26 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                               ) : (
                                 <Badge variant="secondary">Pending</Badge>
                               )}
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                className="h-8 w-20 font-mono text-sm"
+                                placeholder="0-0"
+                                value={recordEdits[r.id] ?? r.record ?? ""}
+                                onChange={(e) => setRecordEdits((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                                onBlur={(e) => {
+                                  if (savingId === r.id) return
+                                  const trimmed = (e.target.value ?? "").trim()
+                                  const current = (r.record ?? "").trim()
+                                  if (trimmed !== current) saveRecord(r.id, trimmed)
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    (e.target as HTMLInputElement).blur()
+                                  }
+                                }}
+                                disabled={savingId === r.id}
+                              />
                             </TableCell>
                             <TableCell>
                               {r.order_id ? (

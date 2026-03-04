@@ -22,3 +22,6 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.
+
+# Scripts that need to be run
+- When adding or referencing any script that the user must run (e.g. SQL in Supabase SQL Editor, migrations, one-off commands), **always show the full runnable script in the chat** in addition to (or instead of) only putting it in a file. That way the user can copy and run it immediately without opening the file.
