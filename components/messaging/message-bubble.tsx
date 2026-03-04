@@ -11,7 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Pencil, Loader2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Loader2, SmilePlus } from "lucide-react"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+
+export type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
 
 export type MessageRow = {
   id: string
@@ -23,6 +30,7 @@ export type MessageRow = {
   edited_at?: string | null
   sender_name?: string | null
   attachments?: { id: string; file_url: string; content_type?: string | null; filename?: string | null }[]
+  reactions?: ReactionAgg[]
 }
 
 // Match http/https URLs, @mentions (e.g. @John Smith), and custom emoji :slug:
@@ -92,17 +100,45 @@ function linkifyAndMentions(
 
 const MAX_BODY_LENGTH = 2000
 
+const QUICK_EMOJI = ["👍", "👏", "❤️", "😂", "🔥"]
+
 export function MessageBubble(
   props: {
     message: MessageRow
     isOwn: boolean
     currentUserId: string
     onEdited?: (updated: MessageRow) => void
+    onReactionChange?: () => void
     customEmojiMap?: Record<string, string>
   }
 ) {
-  const { message, isOwn, onEdited, customEmojiMap } = props
+  const { message, isOwn, onEdited, onReactionChange, customEmojiMap } = props
+  const reactions = message.reactions ?? []
   const [editing, setEditing] = useState(false)
+  const [reacting, setReacting] = useState(false)
+
+  async function toggleReaction(emoji: string) {
+    if (!onReactionChange) return
+    const haveReacted = reactions.some((r) => r.emoji === emoji && r.user_ids.includes(props.currentUserId))
+    setReacting(true)
+    try {
+      const url = `/api/messaging/threads/${message.thread_id}/messages/${message.id}/reactions`
+      if (haveReacted) {
+        await fetch(url, { method: "DELETE", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ emoji }) })
+      } else {
+        await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ emoji }) })
+      }
+      onReactionChange()
+    } finally {
+      setReacting(false)
+    }
+  }
+
+  function renderReactionEmoji(emoji: string) {
+    const url = customEmojiMap?.[emoji] ?? customEmojiMap?.[emoji.toLowerCase()]
+    if (url) return <img src={url} alt={emoji} className="w-4 h-4 object-contain inline-block" />
+    return <span>{emoji}</span>
+  }
   const [editBody, setEditBody] = useState(message.body)
   const [saving, setSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
@@ -261,6 +297,78 @@ export function MessageBubble(
           </>
         )}
       </div>
+      {(reactions.length > 0 || onReactionChange) && (
+        <div className="flex items-center gap-1 flex-wrap mt-0.5">
+          {reactions.map((r) => {
+            const haveReacted = r.user_ids.includes(props.currentUserId)
+            return (
+              <button
+                key={r.emoji}
+                type="button"
+                onClick={() => onReactionChange && toggleReaction(r.emoji)}
+                disabled={reacting}
+                className={cn(
+                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors",
+                  haveReacted ? "bg-[#003366]/20 border-[#003366]/40 text-[#003366]" : "bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200"
+                )}
+              >
+                {renderReactionEmoji(r.emoji)}
+                {r.count > 1 && <span>{r.count}</span>}
+              </button>
+            )
+          })}
+          {onReactionChange && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  aria-label="Add reaction"
+                  disabled={reacting}
+                >
+                  <SmilePlus className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align={isOwn ? "end" : "start"} className="w-auto p-2">
+                <div className="flex flex-wrap gap-1">
+                  {QUICK_EMOJI.map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      className="p-1.5 rounded hover:bg-gray-100 text-lg"
+                      onClick={() => toggleReaction(e)}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                  {customEmojiMap &&
+                    (() => {
+                      const seen = new Set<string>()
+                      return Object.keys(customEmojiMap)
+                        .filter((k) => {
+                          const low = k.toLowerCase()
+                          if (seen.has(low)) return false
+                          seen.add(low)
+                          return true
+                        })
+                        .slice(0, 6)
+                        .map((slug) => (
+                          <button
+                            key={slug}
+                            type="button"
+                            className="p-1 rounded hover:bg-gray-100"
+                            onClick={() => toggleReaction(slug)}
+                          >
+                            <img src={customEmojiMap[slug]} alt={slug} className="w-5 h-5 object-contain" />
+                          </button>
+                        ))
+                    })()}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+      )}
     </div>
   )
 }

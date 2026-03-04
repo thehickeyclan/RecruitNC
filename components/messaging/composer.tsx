@@ -8,6 +8,37 @@ import { Send, Loader2, SmilePlus, AtSign, ImagePlus, X, ImageIcon } from "lucid
 import { EmojiStrip, type CustomEmojiItem } from "./emoji-strip"
 
 const MAX_LENGTH = 2000
+const SLUG_REGEX = /(:[a-zA-Z0-9_-]+:)/g
+
+/** Renders message body with :slug: replaced by logo images for preview */
+function ComposerPreview({ body, customEmoji }: { body: string; customEmoji: CustomEmojiItem[] }) {
+  const map = useMemo(() => {
+    const m: Record<string, string> = {}
+    for (const e of customEmoji) {
+      if (e?.slug && e?.image_url) {
+        m[e.slug.toLowerCase()] = e.image_url
+        m[e.slug] = e.image_url
+      }
+    }
+    return m
+  }, [customEmoji])
+  if (!body.trim() || Object.keys(map).length === 0) return null
+  const parts = body.split(SLUG_REGEX)
+  const hasSlug = parts.some((p) => p.startsWith(":") && p.endsWith(":"))
+  if (!hasSlug) return null
+  return (
+    <div className="flex flex-wrap items-center gap-0.5 text-sm text-gray-600 mt-1 min-h-[24px]">
+      {parts.map((seg, i) => {
+        if (seg.startsWith(":") && seg.endsWith(":")) {
+          const slug = seg.slice(1, -1).trim()
+          const url = map[slug] ?? map[slug.toLowerCase()]
+          if (url) return <img key={i} src={url} alt={slug} className="inline-block w-5 h-5 align-middle object-contain" />
+        }
+        return <span key={i}>{seg}</span>
+      })}
+    </div>
+  )
+}
 
 export type PendingAttachment = { url: string; content_type: string; filename: string }
 
@@ -342,6 +373,7 @@ export function Composer({
         </Button>
       </div>
       <div className="flex flex-wrap items-center gap-x-3 mt-1.5">
+        <ComposerPreview body={body} customEmoji={customEmoji} />
         {body.length > MAX_LENGTH * 0.9 && (
           <p className="text-xs text-gray-500">{body.length} / {MAX_LENGTH}</p>
         )}

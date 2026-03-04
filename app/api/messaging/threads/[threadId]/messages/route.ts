@@ -110,10 +110,37 @@ export async function GET(
     }
   }
 
+  // Reactions (if table exists): group by message_id -> { emoji, count, user_ids }[]
+  type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
+  const reactionsByMessageId = new Map<string, ReactionAgg[]>()
+  if (messageIds.length > 0) {
+    try {
+      const { data: reactionRows } = await supabase
+        .from("messaging_reactions")
+        .select("message_id, user_id, emoji")
+        .in("message_id", messageIds)
+      for (const r of reactionRows ?? []) {
+        const row = r as { message_id: string; user_id: string; emoji: string }
+        let list = reactionsByMessageId.get(row.message_id) ?? []
+        const existing = list.find((x) => x.emoji === row.emoji)
+        if (existing) {
+          existing.count += 1
+          if (!existing.user_ids.includes(row.user_id)) existing.user_ids.push(row.user_id)
+        } else {
+          list = [...list, { emoji: row.emoji, count: 1, user_ids: [row.user_id] }]
+        }
+        reactionsByMessageId.set(row.message_id, list)
+      }
+    } catch {
+      // Table may not exist yet
+    }
+  }
+
   const messages = rawMessages.map((m) => ({
     ...m,
     sender_name: nameBySenderId.get(m.sender_id) ?? null,
     attachments: attachmentsByMessageId.get(m.id) ?? [],
+    reactions: reactionsByMessageId.get(m.id) ?? [],
   }))
 
   return NextResponse.json({

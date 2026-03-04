@@ -77,6 +77,24 @@ CREATE TABLE IF NOT EXISTS messaging_attachments (
 CREATE INDEX IF NOT EXISTS idx_messaging_attachments_message ON messaging_attachments (message_id);
 COMMENT ON TABLE messaging_attachments IS 'Image/file attachments for messages. file_url is the blob URL.';
 
+-- Reactions: emoji/logo on a message (support a comment). emoji = unicode (e.g. 👍) or custom slug (e.g. north-carolina-tar-heels-logo-svg).
+CREATE TABLE IF NOT EXISTS messaging_reactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id uuid NOT NULL REFERENCES messaging_messages(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  emoji text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(message_id, user_id, emoji)
+);
+CREATE INDEX IF NOT EXISTS idx_messaging_reactions_message ON messaging_reactions (message_id);
+ALTER TABLE messaging_reactions ENABLE ROW LEVEL SECURITY;
+-- Allow thread members to see reactions; allow own insert/delete.
+CREATE POLICY messaging_reactions_select ON messaging_reactions FOR SELECT USING (
+  EXISTS (SELECT 1 FROM messaging_messages m JOIN messaging_thread_members t ON t.thread_id = m.thread_id AND t.user_id = auth.uid() WHERE m.id = messaging_reactions.message_id)
+);
+CREATE POLICY messaging_reactions_insert ON messaging_reactions FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY messaging_reactions_delete ON messaging_reactions FOR DELETE USING (user_id = auth.uid());
+
 -- Custom emoji: admin-uploaded logos (HS, College, Club, NCU, etc.) used as :slug: in messages.
 CREATE TABLE IF NOT EXISTS custom_emoji (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -242,6 +260,26 @@ ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS archived_at timestamptz;
 ```
 
 Then use the in-app "Archive" button in the thread header (admin only), or PATCH `/api/admin/messaging/threads/[threadId]` with `{ "archive": true }`.
+
+**Message reactions** (support a comment with 👍 or a custom logo). Run in SQL Editor:
+
+```sql
+CREATE TABLE IF NOT EXISTS messaging_reactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  message_id uuid NOT NULL REFERENCES messaging_messages(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL,
+  emoji text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(message_id, user_id, emoji)
+);
+CREATE INDEX IF NOT EXISTS idx_messaging_reactions_message ON messaging_reactions (message_id);
+ALTER TABLE messaging_reactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY messaging_reactions_select ON messaging_reactions FOR SELECT USING (
+  EXISTS (SELECT 1 FROM messaging_messages m JOIN messaging_thread_members t ON t.thread_id = m.thread_id AND t.user_id = auth.uid() WHERE m.id = messaging_reactions.message_id)
+);
+CREATE POLICY messaging_reactions_insert ON messaging_reactions FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY messaging_reactions_delete ON messaging_reactions FOR DELETE USING (user_id = auth.uid());
+```
 
 **Invite link (share group by link):** Run this to enable "Copy invite link" and join-by-link:
 

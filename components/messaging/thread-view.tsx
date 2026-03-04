@@ -167,6 +167,7 @@ export function ThreadView({
                   onEdited={(updated) =>
                     setMessages((prev) => prev.map((msg) => (msg.id === updated.id ? updated : msg)))
                   }
+                  onReactionChange={() => loadMessages().then((data) => setMessages(data.messages ?? []))}
                 />
               ))}
             </div>
