@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Search } from "lucide-react"
 import { EMOJI_CATEGORIES, EMOJI_SEARCH_LIST } from "./emoji-data"
 
