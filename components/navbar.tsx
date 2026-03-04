@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -31,12 +31,8 @@ export function Navbar() {
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
 
-  // Fetch total unread message count when user is logged in
-  useEffect(() => {
-    if (!user) {
-      setUnreadMessages(0)
-      return
-    }
+  const fetchUnreadMessages = useCallback(() => {
+    if (!user) return
     fetch("/api/messaging/inbox", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
@@ -45,7 +41,30 @@ export function Navbar() {
         setUnreadMessages(total)
       })
       .catch(() => setUnreadMessages(0))
-  }, [user, pathname])
+  }, [user])
+
+  // Fetch unread count when user or pathname changes
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessages(0)
+      return
+    }
+    fetchUnreadMessages()
+  }, [user, pathname, fetchUnreadMessages])
+
+  // Poll for new messages every 30s and refetch when tab gains focus (so badge updates without refresh)
+  useEffect(() => {
+    if (!user) return
+    const interval = setInterval(fetchUnreadMessages, 30_000)
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchUnreadMessages()
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+    }
+  }, [user, fetchUnreadMessages])
 
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href))
   const isDropdownActive = (items: { href: string }[]) => items.some((item) => isActive(item.href))

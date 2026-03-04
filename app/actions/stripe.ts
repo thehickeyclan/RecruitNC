@@ -70,9 +70,15 @@ export async function createPaymentIntent(
       return { success: false, error: "Minimum charge is $0.50." }
     }
 
+    const customerEmail = (params.customerEmail || "").trim()
+    const customerName = (params.customerName || "").trim() || "Customer"
+    if (!customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      return { success: false, error: "A valid email address is required for checkout." }
+    }
+
     const metadata: Record<string, string> = {
-      customer_email: params.customerEmail,
-      customer_name: params.customerName,
+      customer_email: customerEmail,
+      customer_name: customerName,
       shipping_address: JSON.stringify(params.shippingAddress),
       shipping_method: JSON.stringify(params.shippingMethod),
       items: JSON.stringify(
@@ -98,7 +104,7 @@ export async function createPaymentIntent(
       currency: "usd",
       automatic_payment_methods: { enabled: true },
       metadata,
-      receipt_email: params.customerEmail,
+      receipt_email: customerEmail,
     })
 
     if (!pi.client_secret) {
@@ -234,6 +240,34 @@ async function createOrderFromPaymentIntentMetadata(
   })
 
   if (orderError) {
+    const code = (orderError as { code?: string }).code
+    if (code === "23505") {
+      const { data: existingOrder } = await supabase
+        .from("orders")
+        .select("id, order_number, subtotal, shipping_cost, tax, discount, total, shipping_address, shipping_method")
+        .eq("stripe_payment_intent_id", paymentIntentId)
+        .single()
+      if (existingOrder) {
+        const { data: existingItems } = await supabase
+          .from("order_items")
+          .select("product_name, variant, quantity, price")
+          .eq("order_id", existingOrder.id)
+        const items = (existingItems ?? []).map((r: { product_name: string; variant: unknown; quantity: number; price: number }) => ({
+          name: r.product_name,
+          variant: r.variant,
+          quantity: r.quantity,
+          price: Number(r.price),
+        }))
+        return {
+          orderId: existingOrder.id,
+          orderNumber: existingOrder.order_number,
+          totals: orderRowToTotals(existingOrder),
+          items,
+          shippingAddress: existingOrder.shipping_address ?? {},
+          shippingMethod: existingOrder.shipping_method ?? {},
+        }
+      }
+    }
     console.error("[store] createOrderFromPaymentIntentMetadata insert order:", orderError)
     return null
   }

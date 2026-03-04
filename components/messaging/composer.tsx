@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -44,16 +45,23 @@ export type PendingAttachment = { url: string; content_type: string; filename: s
 
 export type ComposerMember = { user_id: string; display_name: string }
 
+const TYPING_DEBOUNCE_MS = 300
+const TYPING_STOP_MS = 2000
+
 export function Composer({
   threadId,
   onSent,
   disabled,
   members = [],
+  currentUserId,
+  currentUserDisplayName,
 }: {
   threadId: string
   onSent?: () => void
   disabled?: boolean
   members?: ComposerMember[]
+  currentUserId?: string
+  currentUserDisplayName?: string
 }) {
   const [body, setBody] = useState("")
   const [sending, setSending] = useState(false)
@@ -69,6 +77,10 @@ export function Composer({
   const hasLogos = customEmoji.length > 0
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lastAtRef = useRef<number>(-1)
+  const typingChannelRef = useRef<ReturnType<ReturnType<typeof createClient>["channel"]> | null>(null)
+  const typingSentRef = useRef(false)
+  const typingStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const typingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     fetch("/api/messaging/custom-emoji", { credentials: "include" })
@@ -76,6 +88,49 @@ export function Composer({
       .then((data) => setCustomEmoji(data.emoji ?? []))
       .catch(() => setCustomEmoji([]))
   }, [])
+
+  // Typing indicator: join broadcast channel and send typing/stopped
+  useEffect(() => {
+    if (!threadId || !currentUserId || !currentUserDisplayName) return
+    const supabase = createClient()
+    const ch = supabase.channel(`thread-typing-${threadId}`).subscribe()
+    typingChannelRef.current = ch
+    return () => {
+      if (typingStopTimerRef.current) clearTimeout(typingStopTimerRef.current)
+      if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current)
+      if (typingSentRef.current) {
+        ch.send({ type: "broadcast", event: "stopped", payload: { user_id: currentUserId } })
+      }
+      supabase.removeChannel(ch)
+      typingChannelRef.current = null
+    }
+  }, [threadId, currentUserId, currentUserDisplayName])
+
+  const broadcastTyping = useCallback(() => {
+    const ch = typingChannelRef.current
+    if (!ch || !currentUserId || !currentUserDisplayName) return
+    if (typingStopTimerRef.current) {
+      clearTimeout(typingStopTimerRef.current)
+      typingStopTimerRef.current = null
+    }
+    ch.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { user_id: currentUserId, display_name: currentUserDisplayName },
+    })
+    typingSentRef.current = true
+    typingStopTimerRef.current = setTimeout(() => {
+      ch.send({ type: "broadcast", event: "stopped", payload: { user_id: currentUserId } })
+      typingSentRef.current = false
+      typingStopTimerRef.current = null
+    }, TYPING_STOP_MS)
+  }, [currentUserId, currentUserDisplayName])
+
+  const scheduleTypingBroadcast = useCallback(() => {
+    if (!typingChannelRef.current || !currentUserId) return
+    if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current)
+    typingDebounceRef.current = setTimeout(broadcastTyping, TYPING_DEBOUNCE_MS)
+  }, [broadcastTyping, currentUserId])
 
   useEffect(() => {
     if (!sending && textareaRef.current) textareaRef.current.focus()
@@ -109,6 +164,7 @@ export function Composer({
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const v = e.target.value
     setBody(v)
+    if (v.trim()) scheduleTypingBroadcast()
     const cursor = e.target.selectionStart ?? 0
     const beforeCursor = v.slice(0, cursor)
     const atMatch = beforeCursor.match(/@(\w*)$/)
@@ -223,6 +279,14 @@ export function Composer({
       setBody("")
       setMentionQuery(null)
       setPendingAttachments([])
+      if (typingStopTimerRef.current) {
+        clearTimeout(typingStopTimerRef.current)
+        typingStopTimerRef.current = null
+      }
+      if (typingSentRef.current && typingChannelRef.current && currentUserId) {
+        typingChannelRef.current.send({ type: "broadcast", event: "stopped", payload: { user_id: currentUserId } })
+        typingSentRef.current = false
+      }
       onSent?.()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to send")

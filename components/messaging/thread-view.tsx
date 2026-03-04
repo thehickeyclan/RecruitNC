@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { MessageBubble, type MessageRow } from "./message-bubble"
 import { Composer } from "./composer"
 import { Loader2 } from "lucide-react"
@@ -52,8 +53,10 @@ export function ThreadView({
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [typingUsers, setTypingUsers] = useState<{ user_id: string; display_name: string }[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
+  const typingTimeoutRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   function loadMessages(beforeId?: string) {
     const url = beforeId
@@ -91,6 +94,72 @@ export function ThreadView({
       .catch(() => setMessages([]))
       .finally(() => setLoading(false))
   }, [threadId])
+
+  // Real-time: new messages (Supabase Realtime). Requires messaging_messages in replication (Supabase Dashboard → Database → Replication).
+  useEffect(() => {
+    if (!threadId || loading) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`thread-messages-${threadId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messaging_messages",
+          filter: `thread_id=eq.${threadId}`,
+        },
+        () => {
+          loadMessages().then((data) => setMessages(data.messages ?? []))
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          try {
+            console.log("[RecruitNC] Messaging realtime subscribed for thread", threadId)
+          } catch (_) {}
+        }
+      })
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [threadId, loading])
+
+  // Typing indicators: listen for broadcast on thread channel (exclude current user)
+  useEffect(() => {
+    if (!threadId) return
+    const supabase = createClient()
+    const channel = supabase.channel(`thread-typing-${threadId}`)
+    const handleTyping = (payload: { payload?: { user_id?: string; display_name?: string } }) => {
+      const uid = payload.payload?.user_id
+      const name = payload.payload?.display_name ?? "Someone"
+      if (!uid || uid === currentUserId) return
+      setTypingUsers((prev) => {
+        const next = prev.filter((u) => u.user_id !== uid)
+        next.push({ user_id: uid, display_name: name })
+        return next
+      })
+      if (typingTimeoutRef.current[uid]) clearTimeout(typingTimeoutRef.current[uid])
+      const t = setTimeout(() => {
+        setTypingUsers((prev) => prev.filter((u) => u.user_id !== uid))
+        delete typingTimeoutRef.current[uid]
+      }, 4000)
+      typingTimeoutRef.current[uid] = t
+    }
+    const handleStopped = (payload: { payload?: { user_id?: string } }) => {
+      const uid = payload.payload?.user_id
+      if (!uid) return
+      if (typingTimeoutRef.current[uid]) {
+        clearTimeout(typingTimeoutRef.current[uid])
+        delete typingTimeoutRef.current[uid]
+      }
+      setTypingUsers((prev) => prev.filter((u) => u.user_id !== uid))
+    }
+    channel.on("broadcast", { event: "typing" }, handleTyping).on("broadcast", { event: "stopped" }, handleStopped).subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [threadId, currentUserId])
 
   useEffect(() => {
     fetch("/api/messaging/custom-emoji", { credentials: "include" })
@@ -168,6 +237,7 @@ export function ThreadView({
                     setMessages((prev) => prev.map((msg) => (msg.id === updated.id ? updated : msg)))
                   }
                   onReactionChange={() => loadMessages().then((data) => setMessages(data.messages ?? []))}
+                  onDeleted={(id) => setMessages((prev) => prev.filter((msg) => msg.id !== id))}
                 />
               ))}
             </div>
@@ -179,8 +249,24 @@ export function ThreadView({
             <p className="text-sm mt-1">Say something to get the conversation started.</p>
           </div>
         )}
+        {typingUsers.length > 0 && (
+          <div className="flex items-center gap-2 py-2 text-sm text-gray-500">
+            <span className="inline-flex gap-1">
+              <span className="animate-pulse">●</span>
+              <span className="animate-pulse">●</span>
+              <span className="animate-pulse">●</span>
+            </span>
+            {typingUsers.map((u) => u.display_name).join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing…
+          </div>
+        )}
       </div>
-      <Composer threadId={threadId} onSent={onSent} members={members} />
+      <Composer
+        threadId={threadId}
+        onSent={onSent}
+        members={members}
+        currentUserId={currentUserId}
+        currentUserDisplayName={members.find((m) => m.user_id === currentUserId)?.display_name ?? "You"}
+      />
     </div>
   )
 }

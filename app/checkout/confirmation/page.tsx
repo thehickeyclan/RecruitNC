@@ -28,6 +28,7 @@ export default function ConfirmationPage() {
   const [isProcessing, setIsProcessing] = useState(true)
   const [orderLoadError, setOrderLoadError] = useState<string | null>(null)
   const purchaseFiredForOrder = useRef<string | null>(null)
+  const processOrderStarted = useRef(false)
 
   useEffect(() => {
     if (!orderData?.orderNumber || !orderData?.totals) return
@@ -49,6 +50,9 @@ export default function ConfirmationPage() {
 
   useEffect(() => {
     const processOrder = async () => {
+      if (processOrderStarted.current) return
+      processOrderStarted.current = true
+
       if (orderId) {
         try {
           const result = await getOrder(orderId)

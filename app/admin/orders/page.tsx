@@ -4,25 +4,40 @@ import type { Order } from "@/lib/admin-data"
 
 export const dynamic = "force-dynamic"
 
+/** Supabase returns max 1000 rows per request; fetch in chunks so we get all orders. */
+const CHUNK_SIZE = 1000
+const MAX_ORDERS = 15_000
+
 export default async function OrdersPage() {
   try {
     const supabase = createAdminClient()
+    const allOrders: any[] = []
+    let offset = 0
+    let hasMore = true
 
-    const { data: orders, error: ordersError } = await supabase
-      .from("orders")
-      .select(
+    while (hasMore && allOrders.length < MAX_ORDERS) {
+      const { data: chunk, error: ordersError } = await supabase
+        .from("orders")
+        .select(
+          `
+          *,
+          order_items (id, product_name)
         `
-        *,
-        order_items (id, product_name)
-      `
-      )
-      .order("created_at", { ascending: false })
+        )
+        .order("created_at", { ascending: false })
+        .range(offset, offset + CHUNK_SIZE - 1)
 
-    if (ordersError) {
-      console.error("[admin/orders] Error fetching orders:", ordersError)
+      if (ordersError) {
+        console.error("[admin/orders] Error fetching orders:", ordersError)
+        break
+      }
+      const rows = chunk ?? []
+      allOrders.push(...rows)
+      hasMore = rows.length === CHUNK_SIZE
+      offset += CHUNK_SIZE
     }
 
-    const formattedOrders: Order[] = (orders || []).map((order: any) => {
+    const formattedOrders: Order[] = allOrders.map((order: any) => {
       const addr = order.shipping_address || {}
       const firstName = (addr.firstName ?? addr.first_name ?? "").trim()
       const lastName = (addr.lastName ?? addr.last_name ?? "").trim()

@@ -52,6 +52,15 @@ Webhook must create orders row and order_items from Stripe metadata (or session)
 
 Metadata shape: ensure store sends order_id or equivalent and line items so webhook can write to orders and order_items without duplication.
 
+**Duplicate orders (e.g. same $5 charge repeated):** Caused by webhook retries + client/confirmation both creating orders with no DB uniqueness. Fix: run the SQL in "Prevent duplicate orders" below; code now treats unique violation (23505) as idempotent success and confirmation page only runs the order-success path once per load.
+
+**Prevent duplicate orders (run in Supabase SQL Editor):**
+```sql
+CREATE UNIQUE INDEX IF NOT EXISTS orders_stripe_payment_intent_id_key
+  ON orders (stripe_payment_intent_id)
+  WHERE stripe_payment_intent_id IS NOT NULL;
+```
+
 ---
 
 ## 5. Admin (store)

@@ -10,8 +10,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Pencil, Loader2, SmilePlus } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { MoreHorizontal, Pencil, Loader2, SmilePlus, Trash2 } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -108,14 +119,34 @@ export function MessageBubble(
     isOwn: boolean
     currentUserId: string
     onEdited?: (updated: MessageRow) => void
+    onDeleted?: (messageId: string) => void
     onReactionChange?: () => void
     customEmojiMap?: Record<string, string>
   }
 ) {
-  const { message, isOwn, onEdited, onReactionChange, customEmojiMap } = props
+  const { message, isOwn, onEdited, onDeleted, onReactionChange, customEmojiMap } = props
   const reactions = message.reactions ?? []
   const [editing, setEditing] = useState(false)
   const [reacting, setReacting] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function confirmDelete() {
+    if (!onDeleted) return
+    setDeleting(true)
+    try {
+      const res = await fetch(
+        `/api/messaging/threads/${message.thread_id}/messages/${message.id}`,
+        { method: "DELETE", credentials: "include" }
+      )
+      if (res.ok) {
+        setDeleteOpen(false)
+        onDeleted(message.id)
+      }
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   async function toggleReaction(emoji: string) {
     if (!onReactionChange) return
@@ -292,8 +323,46 @@ export function MessageBubble(
                   <Pencil className="h-3.5 w-3.5 mr-2" />
                   Edit
                 </DropdownMenuItem>
+                {onDeleted && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        setDeleteOpen(true)
+                      }}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
+            {onDeleted && (
+              <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <AlertDialogContent>
+                  <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This cannot be undone. The message will be removed for everyone in the thread.
+                  </AlertDialogDescription>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(e) => {
+                        e.preventDefault()
+                        confirmDelete()
+                      }}
+                      disabled={deleting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </>
         )}
       </div>

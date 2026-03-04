@@ -56,6 +56,10 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     .eq("status", "paid")
 
   if (regError) {
+    if (isAdmin) {
+      console.warn("[national-team/hub] Admin access: registrations query failed", regError)
+      return NextResponse.json({ allowed: true, events: [] })
+    }
     if ((regError as { code?: string })?.code === "42P01") {
       return NextResponse.json(
         { allowed: false, reason: "no_access" },

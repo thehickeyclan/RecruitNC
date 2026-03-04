@@ -112,17 +112,25 @@ export async function POST(request: NextRequest) {
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
     const meta = (paymentIntent.metadata || {}) as Record<string, string>
-    let customerEmail = meta.customer_email
-    if (!customerEmail && paymentIntent.receipt_email) customerEmail = paymentIntent.receipt_email
-    if (!customerEmail && paymentIntent.latest_charge) {
+    let chargeBilling: { email?: string; name?: string } = {}
+    if (paymentIntent.latest_charge) {
       try {
         const stripe = getStripe()
         const charge = await stripe.charges.retrieve(paymentIntent.latest_charge as string)
-        customerEmail = charge.billing_details?.email || charge.receipt_email || ""
+        chargeBilling = {
+          email: charge.billing_details?.email || charge.receipt_email || "",
+          name: (charge.billing_details?.name || "").trim() || undefined,
+        }
       } catch (_) {}
     }
-    if (!customerEmail) customerEmail = `payment-${paymentIntent.id}@placeholder.com`
-    if (!meta.customer_email && !meta.items) {
+    let customerEmail =
+      (meta.customer_email && meta.customer_email !== "unknown@example.com" ? meta.customer_email : null) ||
+      (paymentIntent.receipt_email && paymentIntent.receipt_email !== "unknown@example.com" ? paymentIntent.receipt_email : null) ||
+      (chargeBilling.email && !chargeBilling.email.includes("placeholder") ? chargeBilling.email : null) ||
+      chargeBilling.email ||
+      ""
+    if (!customerEmail || customerEmail.includes("placeholder")) customerEmail = chargeBilling.email || paymentIntent.receipt_email || `payment-${paymentIntent.id}@placeholder.com`
+    if (!meta.customer_email && !meta.items && !chargeBilling.email) {
       return NextResponse.json({ received: true })
     }
     const { data: existing } = await admin
@@ -157,6 +165,28 @@ export async function POST(request: NextRequest) {
       } catch {
         shippingAddress = {}
       }
+      if (
+        (!shippingAddress || Object.keys(shippingAddress).length === 0 || !(shippingAddress as Record<string, string>).address1) &&
+        (paymentIntent as { shipping?: { name?: string; address?: { line1?: string; line2?: string; city?: string; state?: string; postal_code?: string; country?: string }; phone?: string } }).shipping?.address
+      ) {
+        const ship = (paymentIntent as { shipping?: { name?: string; address?: { line1?: string; line2?: string; city?: string; state?: string; postal_code?: string; country?: string }; phone?: string } }).shipping!
+        const addr = ship.address!
+        const nameParts = (ship.name || chargeBilling.name || "").trim().split(/\s+/)
+        const firstName = nameParts[0] || ""
+        const lastName = nameParts.slice(1).join(" ") || ""
+        shippingAddress = {
+          firstName,
+          lastName,
+          address1: addr.line1 ?? "",
+          address2: addr.line2 ?? "",
+          city: addr.city ?? "",
+          state: addr.state ?? "",
+          zipCode: addr.postal_code ?? "",
+          country: addr.country ?? "US",
+          phone: ship.phone ?? "",
+          email: customerEmail.includes("placeholder") ? "" : customerEmail,
+        }
+      }
       let shippingMethod: { name: string; price: number } = { name: "Standard Shipping", price: 0 }
       try {
         const parsed = JSON.parse(meta.shipping_method || "{}") as Record<string, unknown>
@@ -185,9 +215,14 @@ export async function POST(request: NextRequest) {
       }
       const addr = shippingAddress as Record<string, string>
       const nameFromAddr = [addr.firstName, addr.lastName].filter(Boolean).join(" ") || ""
+      const customerName =
+        (meta.customer_name && meta.customer_name !== "Unknown" ? meta.customer_name.trim() : null) ||
+        nameFromAddr ||
+        chargeBilling.name ||
+        "Customer"
       payload = {
-        customerEmail,
-        customerName: meta.customer_name ?? (nameFromAddr || "Customer"),
+        customerEmail: customerEmail.includes("placeholder") && chargeBilling.email ? chargeBilling.email : customerEmail,
+        customerName,
         shippingAddress,
         shippingMethod,
         items,
@@ -235,6 +270,10 @@ export async function POST(request: NextRequest) {
       promo_code: payload.promoCode ?? null,
     })
     if (orderError) {
+      const code = (orderError as { code?: string }).code
+      if (code === "23505") {
+        return NextResponse.json({ received: true })
+      }
       console.error("[webhooks/stripe] store order insert:", orderError)
       return NextResponse.json({ error: "Order insert failed" }, { status: 500 })
     }
@@ -476,6 +515,9 @@ export async function POST(request: NextRequest) {
           stripe_payment_intent_id: paymentIntentId,
           promo_code: null,
         })
+        if ((orderErr as { code?: string })?.code === "23505") {
+          return NextResponse.json({ received: true })
+        }
         if (!orderErr && totalCents > 0) {
           await admin.from("order_items").insert({
             order_id: orderId,
@@ -510,10 +552,23 @@ export async function POST(request: NextRequest) {
     if (paymentIntentId && isLikelyDropIn) {
       const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()
       if (!existingOrder) {
-        const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? `checkout-${session.id}@placeholder.com`
-        const name = (session.customer_details as { name?: string })?.name ?? ""
-        const customerName = name.trim() || "Customer"
-        const addr = (session.customer_details as { address?: { line1?: string; line2?: string; city?: string; state?: string; postal_code?: string } })?.address
+        let customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? ""
+        let customerName = ((session.customer_details as { name?: string })?.name ?? "").trim()
+        let addr = (session.customer_details as { address?: { line1?: string; line2?: string; city?: string; state?: string; postal_code?: string } })?.address
+        if (!customerEmail || customerEmail.includes("placeholder") || !customerName || customerName === "Customer") {
+          try {
+            const pi = await getStripe().paymentIntents.retrieve(paymentIntentId)
+            const chargeId = pi.latest_charge
+            if (chargeId && typeof chargeId === "string") {
+              const charge = await getStripe().charges.retrieve(chargeId)
+              if (charge.billing_details?.email && !customerEmail) customerEmail = charge.billing_details.email
+              else if (charge.billing_details?.email && customerEmail.includes("placeholder")) customerEmail = charge.billing_details.email
+              if (charge.billing_details?.name && (!customerName || customerName === "Customer")) customerName = charge.billing_details.name.trim()
+            }
+          } catch (_) {}
+        }
+        if (!customerEmail) customerEmail = `checkout-${session.id}@placeholder.com`
+        if (!customerName) customerName = "Customer"
         const shippingAddress = addr
           ? { address1: addr.line1 ?? "", address2: addr.line2 ?? "", city: addr.city ?? "", state: addr.state ?? "", zipCode: addr.postal_code ?? "" }
           : {}
@@ -536,17 +591,22 @@ export async function POST(request: NextRequest) {
           stripe_payment_intent_id: paymentIntentId,
           promo_code: null,
         })
-        if (!orderErr) {
-          await admin.from("order_items").insert({
-            order_id: orderId,
-            product_id: null,
-            product_name: dropInName,
-            variant: { color: "N/A", size: "N/A" },
-            quantity: 1,
-            price: amountTotal,
-            image_url: null,
-          })
+        if ((orderErr as { code?: string })?.code === "23505") {
+          return NextResponse.json({ received: true })
         }
+        if (orderErr) {
+          console.error("[webhooks/stripe] drop-in order insert:", orderErr)
+          return NextResponse.json({ error: "Order insert failed" }, { status: 500 })
+        }
+        await admin.from("order_items").insert({
+          order_id: orderId,
+          product_id: null,
+          product_name: dropInName,
+          variant: { color: "N/A", size: "N/A" },
+          quantity: 1,
+          price: amountTotal,
+          image_url: null,
+        })
       }
     }
   }

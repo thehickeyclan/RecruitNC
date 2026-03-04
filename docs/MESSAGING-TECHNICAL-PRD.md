@@ -166,6 +166,8 @@ CREATE POLICY messaging_messages_insert ON messaging_messages
   );
 CREATE POLICY messaging_messages_update_sender ON messaging_messages
   FOR UPDATE USING (sender_id = auth.uid());
+CREATE POLICY messaging_messages_delete_sender ON messaging_messages
+  FOR DELETE USING (sender_id = auth.uid());
 
 ALTER TABLE messaging_attachments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY messaging_attachments_select ON messaging_attachments
@@ -261,6 +263,13 @@ ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS archived_at timestamptz;
 
 Then use the in-app "Archive" button in the thread header (admin only), or PATCH `/api/admin/messaging/threads/[threadId]` with `{ "archive": true }`.
 
+**Delete own messages:** So senders can delete their own messages (including logo/emoji-only). Run in SQL Editor:
+
+```sql
+CREATE POLICY messaging_messages_delete_sender ON messaging_messages
+  FOR DELETE USING (sender_id = auth.uid());
+```
+
 **Message reactions** (support a comment with 👍 or a custom logo). Run in SQL Editor:
 
 ```sql
@@ -338,9 +347,11 @@ Base path: `/api/messaging/`. All routes require auth (session); return 401 if u
 
 ## 3. Realtime subscriptions
 
+**Enable Realtime for the table (required for live messages):** In **Supabase Dashboard → Database → Replication**, ensure the `messaging_messages` table is enabled for replication. Without this, postgres_changes will not fire and users must refresh to see new messages.
+
 **Channel:** Subscribe to new messages in threads the user is in.
 
-- Use Supabase Realtime **postgres_changes** on `messaging_messages` with filter `thread_id=in.(thread_id_1, thread_id_2, …)`.
+- Use Supabase Realtime **postgres_changes** on `messaging_messages` with filter `thread_id=eq.<threadId>` when the thread view is open (implemented in `thread-view.tsx`).
 - Or subscribe per thread when the thread view is open: filter `thread_id=eq.<threadId>`.
 - Payload: new row (id, thread_id, sender_id, type, body, created_at). Use it to append to the thread view and/or refresh inbox last message + unread.
 
