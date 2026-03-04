@@ -23,16 +23,33 @@ export async function GET() {
   const threadIds = [...new Set((myMembers ?? []).map((m) => m.thread_id))]
   if (threadIds.length === 0) return NextResponse.json({ threads: [] })
 
-  const { data: threads, error: threadsError } = await supabase
-    .from("messaging_threads")
-    .select("id, name, type, context_type, context_id, last_message_at")
-    .in("id", threadIds)
-    .is("archived_at", null)
-    .order("last_message_at", { ascending: false })
+  let threads: { id: string; name: string; type: string; context_type: string | null; context_id: string | null; last_message_at: string }[] | null = null
+  let threadsError: { message?: string; code?: string } | null = null
+
+  const baseThreadsQuery = () =>
+    supabase
+      .from("messaging_threads")
+      .select("id, name, type, context_type, context_id, last_message_at")
+      .in("id", threadIds)
+      .order("last_message_at", { ascending: false })
+
+  const { data: threadsWithArchived, error: errWith } = await baseThreadsQuery().is("archived_at", null)
+  if (!errWith) {
+    threads = threadsWithArchived
+  } else {
+    const isMissingColumn = errWith.code === "42703" || (errWith.message ?? "").includes("archived_at")
+    if (isMissingColumn) {
+      const { data: threadsNoArchived, error: errNo } = await baseThreadsQuery()
+      threads = threadsNoArchived
+      threadsError = errNo
+    } else {
+      threadsError = errWith
+    }
+  }
 
   if (threadsError) {
     console.error("[messaging/inbox] threads", threadsError)
-    return NextResponse.json({ error: threadsError.message }, { status: 500 })
+    return NextResponse.json({ error: threadsError.message ?? "Failed to load threads" }, { status: 500 })
   }
   if (!threads?.length) return NextResponse.json({ threads: [] })
 

@@ -167,6 +167,35 @@ CREATE POLICY messaging_attachments_insert ON messaging_attachments
 -- (Supabase Realtime uses RLS; ensure service role or anon can't bypass; clients use auth.uid().)
 ```
 
+**One script to fix common issues** (inbox 500, "Create group" fails, edited_at missing). Run in Supabase SQL Editor:
+
+```sql
+-- 1. Missing columns
+ALTER TABLE messaging_messages ADD COLUMN IF NOT EXISTS edited_at timestamptz;
+ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+
+-- 2. Infinite recursion fix (messaging_thread_members SELECT)
+CREATE OR REPLACE FUNCTION public.get_my_messaging_thread_ids()
+RETURNS SETOF uuid LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public
+AS $$ SELECT thread_id FROM messaging_thread_members WHERE user_id = auth.uid(); $$;
+
+DROP POLICY IF EXISTS messaging_thread_members_select ON messaging_thread_members;
+CREATE POLICY messaging_thread_members_select ON messaging_thread_members
+  FOR SELECT USING (user_id = auth.uid() OR thread_id IN (SELECT get_my_messaging_thread_ids()));
+
+-- 3. "New group" / Create group: creator can see thread and add self as member
+DROP POLICY IF EXISTS messaging_threads_select_creator ON messaging_threads;
+CREATE POLICY messaging_threads_select_creator ON messaging_threads
+  FOR SELECT USING (created_by_user_id = auth.uid());
+
+DROP POLICY IF EXISTS messaging_thread_members_insert_self_creator ON messaging_thread_members;
+CREATE POLICY messaging_thread_members_insert_self_creator ON messaging_thread_members
+  FOR INSERT WITH CHECK (
+    user_id = auth.uid() AND
+    EXISTS (SELECT 1 FROM messaging_threads t WHERE t.id = messaging_thread_members.thread_id AND t.created_by_user_id = auth.uid())
+  );
+```
+
 **If you see "column messaging_messages.edited_at does not exist":** run in SQL Editor:
 
 ```sql
