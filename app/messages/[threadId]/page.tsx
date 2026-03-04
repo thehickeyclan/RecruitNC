@@ -20,16 +20,35 @@ export default function ThreadPage() {
 
   useEffect(() => {
     if (!threadId || !user) return
-    fetch(`/api/messaging/threads/${threadId}`, { credentials: "include" })
-      .then((r) => {
-        if (r.status === 403) setForbidden(true)
-        return r.json()
-      })
-      .then((data) => {
-        setThreadName(data?.thread?.name ?? "")
-        setIsEventThread(data?.thread?.context_type === "event")
-      })
-      .catch(() => setForbidden(true))
+    let cancelled = false
+    function checkAccess(retry = false) {
+      fetch(`/api/messaging/threads/${threadId}`, { credentials: "include" })
+        .then((r) => {
+          if (cancelled) return
+          if (r.status === 403) {
+            if (retry) {
+              setForbidden(true)
+              return r.json()
+            }
+            // Retry once after a short delay (e.g. after creating a new group, membership can take a moment)
+            setTimeout(() => checkAccess(true), 500)
+            return r.json()
+          }
+          return r.json()
+        })
+        .then((data) => {
+          if (cancelled) return
+          if (data?.thread) {
+            setThreadName(data.thread.name ?? "")
+            setIsEventThread(data.thread.context_type === "event")
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setForbidden(true)
+        })
+    }
+    checkAccess()
+    return () => { cancelled = true }
   }, [threadId, user])
 
   if (isLoading) {

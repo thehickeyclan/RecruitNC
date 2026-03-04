@@ -69,5 +69,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to add you to the group" }, { status: 500 })
   }
 
+  // Ensure the creator can see the thread with their session (RLS) before returning
+  const userClient = await createClient()
+  for (let i = 0; i < 3; i++) {
+    const { data: memberRow } = await userClient
+      .from("messaging_thread_members")
+      .select("thread_id")
+      .eq("thread_id", thread.id)
+      .eq("user_id", auth.user.id)
+      .single()
+    if (memberRow) return NextResponse.json({ threadId: thread.id, name: thread.name })
+    await new Promise((r) => setTimeout(r, 100 * (i + 1)))
+  }
+
   return NextResponse.json({ threadId: thread.id, name: thread.name })
 }
