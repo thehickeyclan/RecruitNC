@@ -239,6 +239,7 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient()
     const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null
     const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null
+    const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id
 
     const signupId = session.metadata?.signup_id
     if (signupId) {
@@ -276,7 +277,68 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id
+    // National team event registration: create store order (for revenue by product) and mark registration paid
+    const registrationId = session.metadata?.registration_id
+    const isNationalTeam = session.metadata?.source === "national_team" && registrationId
+    if (isNationalTeam && paymentIntentId) {
+      const { data: reg } = await admin
+        .from("national_team_event_registrations")
+        .select("*")
+        .eq("id", registrationId)
+        .single()
+      if (reg && reg.status !== "paid") {
+        const { data: products } = await admin
+          .from("products")
+          .select("id, name, slug")
+          .eq("category", "national_team")
+        const bundleProduct = products?.find((p) => (p as { slug?: string }).slug === "nhsca-2026-bundle") ?? products?.[0]
+        const orderNumber = generateOrderNumber()
+        const orderId = crypto.randomUUID()
+        const regCents = Number(reg.reg_fee_cents) || 0
+        const apparelCents = Number(reg.apparel_fee_cents) || 0
+        const totalCents = regCents + apparelCents
+        const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? reg.parent_email ?? ""
+        const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
+        const { error: orderErr } = await admin.from("orders").insert({
+          id: orderId,
+          order_number: orderNumber,
+          customer_email: customerEmail,
+          customer_name: customerName,
+          shipping_address: {},
+          shipping_method: { name: "National team event", price: 0 },
+          subtotal: totalCents / 100,
+          shipping_cost: 0,
+          tax: 0,
+          discount: 0,
+          total: totalCents / 100,
+          status: "paid",
+          stripe_payment_intent_id: paymentIntentId,
+          promo_code: null,
+        })
+        if (!orderErr && totalCents > 0) {
+          await admin.from("order_items").insert({
+            order_id: orderId,
+            product_id: bundleProduct?.id ?? null,
+            product_name: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
+            variant: { color: "N/A", size: "N/A" },
+            quantity: 1,
+            price: totalCents / 100,
+            image_url: null,
+          })
+          await admin
+            .from("national_team_event_registrations")
+            .update({
+              status: "paid",
+              order_id: orderId,
+              stripe_session_id: session.id,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", registrationId)
+        }
+      }
+      return NextResponse.json({ received: true })
+    }
+
     const amountTotal = ((session as { amount_total?: number }).amount_total ?? 0) / 100
     const hasStoreMetadata = !!(session.metadata?.items && session.metadata?.customer_email)
     const shippingLower = (session.metadata?.shipping_method as string)?.toLowerCase() ?? ""

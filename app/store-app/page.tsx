@@ -15,6 +15,7 @@ export default async function StoreAppPage() {
       product_images (url, display_order)
     `)
     .eq("in_stock", true)
+    .eq("show_in_public_store", true)
     .order("display_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
 

@@ -31,6 +31,7 @@ export default function NewProductPage() {
   const [trackInventory, setTrackInventory] = useState(true)
   const [status, setStatus] = useState<"draft" | "active" | "archived">("draft")
   const [featured, setFeatured] = useState(false)
+  const [showInPublicStore, setShowInPublicStore] = useState(true)
   const [images, setImages] = useState<string[]>([])
 
   const [variantData, setVariantData] = useState<Variant[]>([])
@@ -93,6 +94,7 @@ export default function NewProductPage() {
               : undefined,
         trackInventory,
         requiresShipping: true,
+        showInPublicStore,
       })
 
       if (result.success) {
@@ -183,6 +185,7 @@ export default function NewProductPage() {
                     <SelectItem value="headwear">Headwear</SelectItem>
                     <SelectItem value="accessories">Accessories</SelectItem>
                     <SelectItem value="practice-fee">Practice Fee</SelectItem>
+                    <SelectItem value="national_team">National team (invite-only)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -365,6 +368,13 @@ export default function NewProductPage() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="featured">Featured product</Label>
                 <Switch id="featured" checked={featured} onCheckedChange={setFeatured} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show-in-store">Show in public store</Label>
+                  <p className="text-sm text-muted-foreground">Uncheck for invite-only or internal products</p>
+                </div>
+                <Switch id="show-in-store" checked={showInPublicStore} onCheckedChange={setShowInPublicStore} />
               </div>
             </CardContent>
           </Card>

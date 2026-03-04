@@ -25,6 +25,7 @@ export async function createProduct(payload: {
   }>
   trackInventory: boolean
   requiresShipping: boolean
+  showInPublicStore?: boolean
 }): Promise<
   | { success: true; data: { id: string } }
   | { success: false; error: string }
@@ -32,6 +33,7 @@ export async function createProduct(payload: {
   try {
     const supabase = createAdminClient()
     const inStock = payload.status === "active"
+    const showInPublicStore = payload.showInPublicStore !== false
     const imageList = Array.isArray(payload.images) ? payload.images : []
     const firstUrl = imageList[0]
     const firstImageUrl =
@@ -47,6 +49,7 @@ export async function createProduct(payload: {
         in_stock: inStock,
         featured: payload.featured,
         image_url: firstImageUrl,
+        show_in_public_store: showInPublicStore,
       })
       .select("id")
       .single()
@@ -168,9 +171,10 @@ export async function updateProduct(
       stock: number
       active: boolean
     }>
-    trackInventory: boolean
+trackInventory: boolean
     requiresShipping: boolean
     urlHandle?: string
+    showInPublicStore?: boolean
   }
 ): Promise<{ success: true } | { success: false; error: string }> {
   try {
@@ -178,6 +182,7 @@ export async function updateProduct(
 
     const inStock = payload.status === "active"
     const firstImage = payload.images?.[0]?.url ?? null
+    const showInPublicStore = payload.showInPublicStore !== false
 
     const { error: updateError } = await supabase
       .from("products")
@@ -189,6 +194,7 @@ export async function updateProduct(
         in_stock: inStock,
         featured: payload.featured,
         image_url: firstImage,
+        show_in_public_store: showInPublicStore,
       })
       .eq("id", productId)
 

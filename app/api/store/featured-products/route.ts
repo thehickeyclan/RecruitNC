@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         )
       `)
       .eq("in_stock", true)
+      .eq("show_in_public_store", true)
       .limit(50) // Get more products so we can randomize
     
     if (error) {

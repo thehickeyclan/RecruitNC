@@ -23,6 +23,7 @@ export async function GET(
     `
     )
     .eq("id", id)
+    .eq("show_in_public_store", true)
     .single()
 
   if (error) {

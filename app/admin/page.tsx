@@ -236,10 +236,10 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Blue Program</span>
               </Button>
             </Link>
-            <HardLink href="/admin/orders" className="block">
+            <HardLink href="/admin/store" className="block">
               <span className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex">
                 <ShoppingBag className="h-6 w-6" />
-                <span className="text-sm font-semibold">Store & Orders</span>
+                <span className="text-sm font-semibold">Store</span>
               </span>
             </HardLink>
             <Link href="/admin/college-recruiting-guide">
@@ -353,13 +353,13 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* Store & Orders — order history, products, customers, inventory. HardLink + Card (no button) so click navigates. */}
-            <HardLink href="/admin/orders" className="block h-full">
+            {/* Store — orders, products, promo codes. HardLink so click navigates. */}
+            <HardLink href="/admin/store" className="block h-full">
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <ShoppingBag className="h-10 w-10 text-[#1a5f4a] mb-3" />
-                  <h3 className="font-bold text-[#003366] mb-1">Store & Orders</h3>
-                  <p className="text-xs text-gray-600">Order history, products, customers, inventory</p>
+                  <h3 className="font-bold text-[#003366] mb-1">Store</h3>
+                  <p className="text-xs text-gray-600">Orders, products, promo codes</p>
                 </CardContent>
               </Card>
             </HardLink>

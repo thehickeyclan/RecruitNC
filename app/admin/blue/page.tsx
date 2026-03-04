@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CreditCard, Link2, BarChart3, Ticket, Image, FileText, ArrowRight, Trophy } from "lucide-react"
+import { CreditCard, Link2, BarChart3, Ticket, Image, FileText, ArrowRight, Trophy, DollarSign } from "lucide-react"
 
 const NAVY = "#03154C"
 const GOLD = "#D3B574"
@@ -49,6 +49,12 @@ const sections = [
     title: "Blue members – 2026 NCHSAA",
     description: "List of Blue members (active or athlete flag) and their 2026 state placement.",
     icon: Trophy,
+  },
+  {
+    href: "/admin/blue/national-team-payments",
+    title: "National team – NHSCA 2026 payments",
+    description: "Who has paid and who has not. Registrations and store orders for revenue by product.",
+    icon: DollarSign,
   },
 ]
 

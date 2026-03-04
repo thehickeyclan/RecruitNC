@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       product_images (*)
     `
     )
-    .eq("active", true)
+    .eq("show_in_public_store", true)
 
   if (category) {
     query = query.eq("category", category)

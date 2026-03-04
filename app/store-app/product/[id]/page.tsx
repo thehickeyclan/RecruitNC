@@ -27,6 +27,7 @@ export default async function ProductDetailPage({
     )
     .eq("id", id)
     .eq("in_stock", true)
+    .eq("show_in_public_store", true)
     .single()
 
   if (error || !product) {
@@ -44,6 +45,7 @@ export default async function ProductDetailPage({
     )
     .eq("category", product.category)
     .eq("in_stock", true)
+    .eq("show_in_public_store", true)
     .neq("id", id)
     .limit(4)
 
