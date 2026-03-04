@@ -35,6 +35,14 @@ export type BlueReportsData = {
   signupTotal: number
   signupPaid: number
   signupPending: number
+  /** Churn: ended (cancelled) in period. */
+  churnThisMonth: number
+  churnLast12Months: number
+  /** New MRR from new subscriptions in period (newCount × BLUE_PRICE). */
+  newMRRThisMonth: number
+  newSubsThisMonth: number
+  /** Signups table error if any (e.g. table missing). */
+  signupsError?: string
 }
 
 /** GET: Blue reports for charts — trends, class distribution, MRR */
@@ -58,8 +66,12 @@ export async function GET() {
   let signupTotal = 0
   let signupPaid = 0
   let signupPending = 0
-  const { data: signupRows } = await admin.from("blue_signups").select("id, status")
-  if (signupRows && Array.isArray(signupRows)) {
+  let signupsError: string | undefined
+  const { data: signupRows, error: signupErr } = await admin.from("blue_signups").select("id, status")
+  if (signupErr) {
+    if (signupErr.code === "42P01") signupsError = "Table blue_signups does not exist."
+    else signupsError = signupErr.message
+  } else if (signupRows && Array.isArray(signupRows)) {
     signupTotal = signupRows.length
     signupPaid = signupRows.filter((r) => (r as { status?: string }).status === "paid").length
     signupPending = signupTotal - signupPaid
@@ -140,6 +152,14 @@ export async function GET() {
 
   const anticipatedChurnCount = byClass.find((c) => c.graduationYear === currentYear)?.count ?? 0
 
+  // Current month = last bucket in trend (we built months from oldest to newest)
+  const currentMonthTrend = trend[trend.length - 1]
+  const last12Trends = trend.slice(-12)
+  const churnThisMonth = currentMonthTrend?.endedCount ?? 0
+  const churnLast12Months = last12Trends.reduce((s, t) => s + t.endedCount, 0)
+  const newSubsThisMonth = currentMonthTrend?.newCount ?? 0
+  const newMRRThisMonth = newSubsThisMonth * BLUE_PRICE
+
   const data: BlueReportsData = {
     membershipTrend: trend,
     currentActive,
@@ -150,6 +170,11 @@ export async function GET() {
     signupTotal,
     signupPaid,
     signupPending,
+    churnThisMonth,
+    churnLast12Months,
+    newMRRThisMonth,
+    newSubsThisMonth,
+    ...(signupsError && { signupsError }),
   }
 
   return NextResponse.json(data)

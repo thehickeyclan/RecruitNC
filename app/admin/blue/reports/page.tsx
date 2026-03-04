@@ -77,7 +77,7 @@ export default function AdminBlueReportsPage() {
     )
   }
 
-  if (!data || !data.membershipTrend) {
+  if (!data) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <p className="text-gray-600">Failed to load reports.</p>
@@ -88,7 +88,9 @@ export default function AdminBlueReportsPage() {
     )
   }
 
-  const trendChartData = data.membershipTrend.map((t) => ({
+  const hasTrend = data.membershipTrend && data.membershipTrend.length > 0
+
+  const trendChartData = (data.membershipTrend ?? []).map((t) => ({
     ...t,
     monthLabel: t.month.slice(0, 7).replace("-", " "),
   }))
@@ -113,19 +115,52 @@ export default function AdminBlueReportsPage() {
           </div>
         </div>
 
-        {/* Summary cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        {data.signupsError && (
+          <Card className="mb-6 border-amber-200 bg-amber-50/50">
+            <CardContent className="pt-6">
+              <p className="text-sm text-amber-800">Signup funnel data: {data.signupsError}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Summary cards: MRR, churn, new customers, active base */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <Users className="h-4 w-4" />
-                <span className="text-sm">Paid signups</span>
+                <DollarSign className="h-4 w-4" />
+                <span className="text-sm">MRR</span>
               </div>
-              <p className="text-2xl font-bold text-[#13294B]">{data.signupPaid}</p>
-              <p className="text-xs text-gray-500">Completed payment</p>
-              {data.signupPending > 0 && (
-                <p className="text-xs text-amber-600 mt-0.5">{data.signupPending} pending (form only, no payment yet)</p>
-              )}
+              <p className="text-2xl font-bold text-[#13294B]">${(data.estimatedMRR ?? 0).toLocaleString()}</p>
+              <p className="text-xs text-gray-500">Active + paused × $55/mo</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-gray-600 mb-1">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-sm">New MRR (this month)</span>
+              </div>
+              <p className="text-2xl font-bold text-[#13294B]">${(data.newMRRThisMonth ?? 0).toLocaleString()}</p>
+              <p className="text-xs text-gray-500">{(data.newSubsThisMonth ?? 0)} new × $55</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-gray-600 mb-1">
+                <span className="text-sm font-medium text-red-700">Churn (this month)</span>
+              </div>
+              <p className="text-2xl font-bold text-[#13294B]">{data.churnThisMonth ?? 0}</p>
+              <p className="text-xs text-gray-500">Ended subscriptions</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-gray-600 mb-1">
+                <span className="text-sm text-gray-600">Churn (last 12 mo)</span>
+              </div>
+              <p className="text-2xl font-bold text-[#13294B]">{data.churnLast12Months ?? 0}</p>
+              <p className="text-xs text-gray-500">Total ended</p>
             </CardContent>
           </Card>
           <Card>
@@ -134,19 +169,9 @@ export default function AdminBlueReportsPage() {
                 <Users className="h-4 w-4" />
                 <span className="text-sm">Active members</span>
               </div>
-              <p className="text-2xl font-bold text-[#13294B]">{data.currentActive}</p>
-              {data.currentPaused > 0 && <p className="text-xs text-gray-500">+ {data.currentPaused} paused</p>}
+              <p className="text-2xl font-bold text-[#13294B]">{data.currentActive ?? 0}</p>
+              {(data.currentPaused ?? 0) > 0 && <p className="text-xs text-gray-500">+ {data.currentPaused} paused</p>}
               <p className="text-xs text-gray-500">Paid subscriptions</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <DollarSign className="h-4 w-4" />
-                <span className="text-sm">Est. MRR</span>
-              </div>
-              <p className="text-2xl font-bold text-[#13294B]">${data.estimatedMRR.toLocaleString()}</p>
-              <p className="text-xs text-gray-500">Active + paused × $55</p>
             </CardContent>
           </Card>
           <Card>
@@ -155,20 +180,41 @@ export default function AdminBlueReportsPage() {
                 <GraduationCap className="h-4 w-4" />
                 <span className="text-sm">Anticipated churn</span>
               </div>
-              <p className="text-2xl font-bold text-[#13294B]">{data.anticipatedChurnCount}</p>
+              <p className="text-2xl font-bold text-[#13294B]">{data.anticipatedChurnCount ?? 0}</p>
               <p className="text-xs text-gray-500">Class of {new Date().getFullYear()} (graduating)</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Signup funnel (form submissions vs paid) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-gray-600 mb-1">
+                <Users className="h-4 w-4" />
+                <span className="text-sm">Paid signups</span>
+              </div>
+              <p className="text-2xl font-bold text-[#13294B]">{data.signupPaid ?? 0}</p>
+              <p className="text-xs text-gray-500">Form + payment completed</p>
+              {(data.signupPending ?? 0) > 0 && (
+                <p className="text-xs text-amber-600 mt-0.5">{data.signupPending} pending (no payment yet)</p>
+              )}
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-gray-600 mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-sm">Last 24 months</span>
-              </div>
+              <div className="text-sm text-gray-600 mb-1">Total signups (form)</div>
+              <p className="text-2xl font-bold text-[#13294B]">{data.signupTotal ?? 0}</p>
+              <p className="text-xs text-gray-500">All blue_signups rows</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-sm text-gray-600 mb-1">New subs (24 mo)</div>
               <p className="text-2xl font-bold text-[#13294B]">
-                {data.membershipTrend.reduce((s, t) => s + t.newCount, 0)}
+                {hasTrend ? (data.membershipTrend ?? []).reduce((s, t) => s + t.newCount, 0) : "—"}
               </p>
-              <p className="text-xs text-gray-500">New subscriptions</p>
+              <p className="text-xs text-gray-500">From memberships table</p>
             </CardContent>
           </Card>
         </div>
@@ -180,44 +226,52 @@ export default function AdminBlueReportsPage() {
             <CardDescription>New vs ended per month and active count at end of month (last 24 months).</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={trendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="monthLabel" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
-                  <Tooltip
-                    formatter={(value: number) => [value, ""]}
-                    labelFormatter={(_, payload) => payload?.[0]?.payload?.month ?? ""}
-                  />
-                  <Legend />
-                  <Area yAxisId="left" type="monotone" dataKey="activeAtEnd" name="Active at end of month" stroke={NAVY} fill={NAVY} fillOpacity={0.3} />
-                  <Bar yAxisId="left" dataKey="newCount" name="New" fill={GOLD} radius={[4, 4, 0, 0]} />
-                  <Bar yAxisId="left" dataKey="endedCount" name="Ended" fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
+            {!hasTrend ? (
+              <p className="py-8 text-center text-gray-500">No trend data. Ensure blue_memberships exists and has rows.</p>
+            ) : (
+              <div className="h-[320px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={trendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="monthLabel" tick={{ fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
+                    <Tooltip
+                      formatter={(value: number) => [value, ""]}
+                      labelFormatter={(_, payload) => payload?.[0]?.payload?.month ?? ""}
+                    />
+                    <Legend />
+                    <Area yAxisId="left" type="monotone" dataKey="activeAtEnd" name="Active at end of month" stroke={NAVY} fill={NAVY} fillOpacity={0.3} />
+                    <Bar yAxisId="left" dataKey="newCount" name="New" fill={GOLD} radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="left" dataKey="endedCount" name="Churn (ended)" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         {/* Estimated MRR over time */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Estimated MRR over time</CardTitle>
-            <CardDescription>Active + paused × $55 per month (last 24 months).</CardDescription>
+            <CardTitle>MRR over time</CardTitle>
+            <CardDescription>Estimated MRR at end of each month (active + paused × $55). Actual amounts may vary with promos.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[260px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="monthLabel" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
-                  <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, "Est. MRR"]} />
-                  <Line type="monotone" dataKey="estimatedMRR" name="Est. MRR" stroke={NAVY} strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            {!hasTrend ? (
+              <p className="py-8 text-center text-gray-500">No trend data.</p>
+            ) : (
+              <div className="h-[260px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trendChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="monthLabel" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+                    <Tooltip formatter={(value: number) => [`$${Number(value).toLocaleString()}`, "MRR"]} />
+                    <Line type="monotone" dataKey="estimatedMRR" name="MRR" stroke={NAVY} strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
