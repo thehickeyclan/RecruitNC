@@ -44,16 +44,19 @@ export function InboxList({ threads, loading }: { threads: InboxThread[]; loadin
             type="button"
             onClick={() => router.push(`/messages/${t.id}`)}
             className={cn(
-              "w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-gray-50 transition-colors min-h-[72px]",
-              t.unread_count > 0 && "bg-blue-50/50"
+              "w-full flex items-center gap-3 px-4 py-4 text-left hover:bg-gray-50 transition-colors min-h-[72px] border-l-4 border-transparent",
+              t.unread_count > 0 && "bg-blue-50/80 border-l-[#003366]"
             )}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#003366]/10 text-[#003366]">
+            <div className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#003366]",
+              t.unread_count > 0 ? "bg-[#003366]/20" : "bg-[#003366]/10"
+            )}>
               <MessageCircle className="h-6 w-6" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-gray-900 truncate">{t.name}</span>
+                <span className={cn("truncate", t.unread_count > 0 ? "font-bold text-[#003366]" : "font-semibold text-gray-900")}>{t.name}</span>
                 <span className="text-xs text-gray-500 shrink-0">{formatTime(t.last_message_at)}</span>
               </div>
               <p className="text-sm text-gray-500 truncate mt-0.5">

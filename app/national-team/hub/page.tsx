@@ -1,14 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Users, Calendar, Shirt, MessageCircle, Loader2, Lock } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
+import { ThreadView } from "@/components/messaging/thread-view"
 
 const PAYMENT_DUE = "Sunday, March 14, 2026"
 
 export default function NationalTeamHubPage() {
+  const { user } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -89,7 +92,7 @@ export default function NationalTeamHubPage() {
           </Card>
         ) : (
           events.map((event) => (
-            <EventHubSection key={event.eventSlug} event={event} />
+            <EventHubSection key={event.eventSlug} event={event} currentUserId={user?.id ?? ""} />
           ))
         )}
 
@@ -133,31 +136,39 @@ export default function NationalTeamHubPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
-              Team messaging
-            </CardTitle>
-            <CardDescription>Group chat and announcements</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">Coming soon. A link to the team chat (e.g. GroupMe) or RecruitNC messaging will appear here.</p>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
 }
 
-function EventHubSection({ event }: { event: HubEvent }) {
+function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
+  const myRegs = event.myRegistrations ?? []
+  const hasThread = !!event.threadId && !!currentUserId
   return (
     <Card>
       <CardHeader>
         <CardTitle>{event.eventName}</CardTitle>
-        <CardDescription>Roster and event details</CardDescription>
+        <CardDescription>Roster, your registration, and group chat</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {myRegs.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Your registration</h3>
+            <div className="rounded-md border bg-gray-50/50 p-4 space-y-3">
+              {myRegs.map((r) => (
+                <div key={r.id} className="text-sm">
+                  <p className="font-medium text-[#003366]">
+                    {r.athlete_first_name} {r.athlete_last_name}
+                  </p>
+                  <p className="text-gray-600 mt-0.5">
+                    Weight: {r.primary_weight} · School: {r.high_school || "—"} · Grad: {r.graduation_year}
+                  </p>
+                  <p className="text-gray-500 mt-0.5">Status: {r.status}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Roster ({event.roster.length})</h3>
           <div className="border rounded-md overflow-hidden">
@@ -185,6 +196,24 @@ function EventHubSection({ event }: { event: HubEvent }) {
             </table>
           </div>
         </div>
+        {hasThread && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+              <MessageCircle className="h-4 w-4" />
+              Group chat
+            </h3>
+            <div className="border rounded-lg overflow-hidden bg-white" style={{ minHeight: 280, maxHeight: 400 }}>
+              <ThreadView
+                threadId={event.threadId!}
+                threadName={`${event.eventName} chat`}
+                currentUserId={currentUserId}
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              <a href="/messages" className="text-[#003366] hover:underline">Open in Messages</a> for full view
+            </p>
+          </div>
+        )}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Payment status</h3>
           <p className="text-sm text-gray-600">All listed athletes are paid. Equipment due date and any balance will be shared by the organizer.</p>

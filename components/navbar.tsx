@@ -297,6 +297,7 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
+              <StoreNavLink className={navLinkClass("/store-app")}>Store</StoreNavLink>
               {highlightNavItems.map((item) => (
                 <a
                   key={item.href}

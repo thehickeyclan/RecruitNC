@@ -21,6 +21,10 @@ export type HubEvent = {
   eventSlug: string
   eventName: string
   roster: HubRegistration[]
+  /** Registrations for the current user (parent_email match) — their form data. */
+  myRegistrations: HubRegistration[]
+  /** Messaging thread ID for this event (context_type=event, context_id=eventSlug), if one exists. */
+  threadId: string | null
 }
 
 export type HubResponse = {
@@ -80,11 +84,30 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     eventSlugsToShow = [...myEventSlugs]
   }
 
-  const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => ({
-    eventSlug,
-    eventName: getEventName(eventSlug),
-    roster: paidRegs.filter((r) => r.event_slug === eventSlug),
-  }))
+  const emailLower = user.email!.toLowerCase()
+
+  const { data: eventThreads } = await admin
+    .from("messaging_threads")
+    .select("id, context_id")
+    .eq("context_type", "event")
+    .in("context_id", eventSlugsToShow)
+  const threadIdByEvent = new Map<string, string>()
+  for (const row of eventThreads ?? []) {
+    const r = row as { id: string; context_id: string | null }
+    if (r.context_id) threadIdByEvent.set(r.context_id, r.id)
+  }
+
+  const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
+    const roster = paidRegs.filter((r) => r.event_slug === eventSlug)
+    const myRegistrations = roster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    return {
+      eventSlug,
+      eventName: getEventName(eventSlug),
+      roster,
+      myRegistrations,
+      threadId: threadIdByEvent.get(eventSlug) ?? null,
+    }
+  })
 
   return NextResponse.json({
     allowed: true,

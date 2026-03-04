@@ -12,6 +12,7 @@ export default function ThreadPage() {
   const { user, isLoading } = useAuth()
   const threadId = typeof params?.threadId === "string" ? params.threadId : ""
   const [threadName, setThreadName] = useState<string>("")
+  const [isEventThread, setIsEventThread] = useState(false)
   const [forbidden, setForbidden] = useState(false)
 
   useEffect(() => {
@@ -21,7 +22,10 @@ export default function ThreadPage() {
         if (r.status === 403) setForbidden(true)
         return r.json()
       })
-      .then((data) => setThreadName(data?.thread?.name ?? ""))
+      .then((data) => {
+        setThreadName(data?.thread?.name ?? "")
+        setIsEventThread(data?.thread?.context_type === "event")
+      })
       .catch(() => setForbidden(true))
   }, [threadId, user])
 
@@ -62,6 +66,14 @@ export default function ThreadPage() {
           </a>
         </Button>
         <h1 className="text-lg font-semibold truncate flex-1">{threadName || "…"}</h1>
+        {isEventThread && (
+          <a
+            href="/national-team/hub"
+            className="shrink-0 text-sm font-medium text-[#003366] hover:underline"
+          >
+            Team hub
+          </a>
+        )}
       </div>
       <div className="flex-1 min-h-0 flex flex-col">
         <ThreadView

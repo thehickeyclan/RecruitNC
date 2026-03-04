@@ -58,10 +58,15 @@ export default function MessagesPage() {
       <div className="max-w-2xl mx-auto">
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
           <h1 className="text-xl font-bold text-[#003366]">Messages</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Your conversations</p>
+          <p className="text-sm text-gray-500 mt-0.5">Your groups. Tap one to open. Search for groups and direct messages coming soon.</p>
         </div>
         <Card className="rounded-none border-x-0 border-b-0 shadow-none">
           <CardContent className="p-0">
+            {threads.length > 0 && (
+              <div className="px-4 pt-3 pb-1">
+                <h2 className="text-sm font-semibold text-gray-700">Your groups</h2>
+              </div>
+            )}
             <InboxList threads={threads} loading={loading} />
           </CardContent>
         </Card>
