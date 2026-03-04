@@ -224,12 +224,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">NHSCA Analytics</span>
               </Button>
             </Link>
-            <Link href="/admin/national-team-submissions">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#003366] hover:from-[#003366] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
-                <Users className="h-6 w-6" />
-                <span className="text-sm font-semibold">National Team Submissions</span>
-              </Button>
-            </Link>
+            <HardLink href="/admin/national-team" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <Trophy className="h-6 w-6" />
+                <span className="text-sm font-semibold">National team</span>
+              </span>
+            </HardLink>
             <Link href="/admin/blue">
               <Button className="w-full h-20 bg-gradient-to-br from-[#003366] to-[#0a2571] hover:from-[#0a2571] hover:to-[#003366] text-white shadow-lg flex flex-col items-center justify-center gap-2">
                 <CreditCard className="h-6 w-6" />
@@ -331,16 +331,16 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* National Team Submissions */}
-            <Link href="/admin/national-team-submissions">
-              <Card className="border-t-4 border-t-[#003366] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+            {/* National team — interest forms + event payments (e.g. NHSCA 2026) */}
+            <HardLink href="/admin/national-team" className="block h-full">
+              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
-                  <Users className="h-10 w-10 text-[#003366] mb-3" />
-                  <h3 className="font-bold text-[#003366] mb-1">National Team Submissions</h3>
-                  <p className="text-xs text-gray-600">Interest form responses</p>
+                  <Trophy className="h-10 w-10 text-[#003366] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">National team</h3>
+                  <p className="text-xs text-gray-600">Interest forms and event payments</p>
                 </CardContent>
               </Card>
-            </Link>
+            </HardLink>
 
             {/* Blue Program — hub for subscriptions, invites, reports, promo codes, images, interest */}
             <Link href="/admin/blue">

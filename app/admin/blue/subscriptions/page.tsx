@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Loader2, ExternalLink } from "lucide-react"
 import type { BlueSubscriptionRow, BlueSignupRow } from "@/app/api/admin/blue/subscriptions/route"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
 type Tab = "good_standing" | "paused" | "canceled"
 
@@ -20,6 +21,7 @@ export default function AdminBlueSubscriptionsPage() {
   const [signupFilter, setSignupFilter] = useState<"all" | "paid" | "pending">("all")
   const [signupsError, setSignupsError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [membershipsError, setMembershipsError] = useState<string | null>(null)
 
   const filteredSignups =
     signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
@@ -49,6 +51,7 @@ export default function AdminBlueSubscriptionsPage() {
         setSubscriptions(data.subscriptions ?? [])
         setSignups(data.signups ?? [])
         setSignupsError(data.signupsError ?? null)
+        setMembershipsError(data.membershipsError ?? null)
         setStats(data.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
       })
       .catch((err) => {
@@ -84,11 +87,36 @@ export default function AdminBlueSubscriptionsPage() {
           </div>
         </div>
 
+        {loadError && isBlueAuthError(loadError) && (
+          <BlueAdminAuthBanner returnTo="/admin/blue/subscriptions" />
+        )}
         {loadError && (
           <div className="mb-6 py-4 px-4 rounded-lg bg-red-50 border border-red-200">
             <p className="font-medium text-red-800">Could not load data</p>
             <p className="mt-1 text-sm text-red-700">{loadError}</p>
+            {(loadError === "Not signed in." || loadError?.includes("401") || loadError === "Admin access required." || loadError?.includes("403")) && (
+              <p className="mt-3">
+                <a href="/auth/signin?returnTo=/admin/blue/subscriptions" className="text-[#003366] font-medium underline">
+                  Sign in again
+                </a>
+              </p>
+            )}
           </div>
+        )}
+
+        {(membershipsError || (signupsError && signupsError.includes("does not exist"))) && !loading && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800">Setup required</CardTitle>
+              <CardDescription className="text-amber-700">
+                Create the Blue tables in Supabase so this page can show data. Run the SQL in the docs (Supabase → SQL Editor).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-amber-800">
+              {membershipsError && <p>• {membershipsError}</p>}
+              {signupsError && signupsError.includes("blue_signups") && <p>• {signupsError}</p>}
+            </CardContent>
+          </Card>
         )}
 
         <Card className="mb-6">
@@ -98,8 +126,10 @@ export default function AdminBlueSubscriptionsPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-[#003366]" />
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-[#003366]" />
+                <p className="text-sm text-gray-600">Loading subscriptions and signups…</p>
+                <p className="text-xs text-gray-500">Data can be slow to load; please wait.</p>
               </div>
             ) : loadError ? (
               <div className="py-6 px-4 rounded-lg bg-red-50 border border-red-200">
@@ -259,8 +289,9 @@ export default function AdminBlueSubscriptionsPage() {
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-[#003366]" />
+                <p className="text-sm text-gray-600">Loading… data can be slow; please wait.</p>
               </div>
             ) : filtered.length === 0 ? (
               <p className="py-8 text-center text-gray-500">

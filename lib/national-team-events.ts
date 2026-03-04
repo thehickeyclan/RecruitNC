@@ -1,0 +1,69 @@
+/**
+ * National team events: one place to add display names and URL → DB slug mapping.
+ * Used by registration pages, success pages, and APIs (success/cancel URLs).
+ * Add a new event: add an entry here and create invite codes in Admin → National team → Invite codes (select event).
+ */
+
+export type NationalTeamEventConfig = {
+  /** Display name for the event (e.g. "NHSCA Duals 2026") */
+  name: string
+  /** If set, this URL slug maps to a different event_slug in the DB (e.g. nhsca-2026 → nhsca-duals-2026) */
+  eventSlug?: string
+}
+
+/** URL slug → display name and optional DB event_slug. Keys are what appears in /national-team/register/[eventSlug]. */
+export const NATIONAL_TEAM_EVENTS: Record<string, NationalTeamEventConfig> = {
+  "nhsca-2026": {
+    name: "NHSCA Duals 2026",
+    eventSlug: "nhsca-duals-2026",
+  },
+  "nhsca-duals-2026": {
+    name: "NHSCA Duals 2026",
+  },
+  "aau-2026": {
+    name: "AAU 2026",
+  },
+  "deep-south-2026": {
+    name: "Deep South 2026",
+  },
+}
+
+/** Resolve URL slug to the event_slug used in DB/API (invite codes, registrations). */
+export function getEventSlugForApi(urlSlug: string): string {
+  const config = NATIONAL_TEAM_EVENTS[urlSlug]
+  if (config?.eventSlug) return config.eventSlug
+  return urlSlug
+}
+
+/** Get display name for an event (URL slug or API slug). */
+export function getEventName(slug: string): string {
+  const byUrl = NATIONAL_TEAM_EVENTS[slug]
+  if (byUrl) return byUrl.name
+  const byApi = Object.entries(NATIONAL_TEAM_EVENTS).find(
+    ([_, c]) => c.eventSlug === slug || (!c.eventSlug && _ === slug)
+  )
+  if (byApi) return byApi[1].name
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/** All event slugs that have a config (for validation/404). */
+export function getKnownEventUrlSlugs(): string[] {
+  return Object.keys(NATIONAL_TEAM_EVENTS)
+}
+
+/** API (DB) event slugs that are valid for invite codes / registrations. */
+export function getEventSlugsForAdmin(): string[] {
+  const slugs = new Set<string>()
+  for (const [urlSlug, config] of Object.entries(NATIONAL_TEAM_EVENTS)) {
+    slugs.add(config.eventSlug ?? urlSlug)
+  }
+  return Array.from(slugs).sort()
+}
+
+/** Preferred URL slug to use in registration links for a given API slug (e.g. nhsca-duals-2026 → nhsca-2026). */
+export function getUrlSlugForRegistration(apiSlug: string): string {
+  const entry = Object.entries(NATIONAL_TEAM_EVENTS).find(
+    ([url, c]) => (c.eventSlug ?? url) === apiSlug
+  )
+  return entry ? entry[0] : apiSlug
+}

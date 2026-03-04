@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { RefreshCw, Loader2, Users, ArrowLeft, FileSpreadsheet, Mail, Check } from "lucide-react"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
 const BLANK_VALUE = "__none__"
 
@@ -114,11 +115,11 @@ export default function AdminBlueInterestPage() {
       })
       const data = await res.json()
 
+      const isAuthError = res.status === 401 || res.status === 403
       const shouldRetry =
+        !isAuthError &&
         retryCount < 5 &&
-        (res.status === 401 ||
-          res.status === 403 ||
-          res.status === 500 ||
+        (res.status === 500 ||
           res.status === 503 ||
           (res.status === 200 && !data.ok))
       if (shouldRetry) {
@@ -304,6 +305,10 @@ export default function AdminBlueInterestPage() {
             </Button>
           </div>
         </div>
+
+        {error && isBlueAuthError(error) && (
+          <BlueAdminAuthBanner returnTo="/admin/blue/interest" />
+        )}
 
         <Card>
           <CardHeader>

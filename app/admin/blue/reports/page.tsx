@@ -21,6 +21,7 @@ import {
 } from "recharts"
 import { ArrowLeft, Loader2, TrendingUp, Users, GraduationCap, DollarSign } from "lucide-react"
 import type { BlueReportsData } from "@/app/api/admin/blue/reports/route"
+import { BlueAdminAuthBanner } from "@/components/blue-admin-auth-banner"
 
 const NAVY = "#13294B"
 const GOLD = "#D3B574"
@@ -29,12 +30,24 @@ export default function AdminBlueReportsPage() {
   const [data, setData] = useState<BlueReportsData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [authError, setAuthError] = useState(false)
+
   useEffect(() => {
     let cancelled = false
+    setAuthError(false)
     fetch("/api/admin/blue/reports", { credentials: "include" })
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.status === 401 || r.status === 403) {
+          if (!cancelled) setAuthError(true)
+          return null
+        }
+        return r.json()
+      })
       .then((d) => {
-        if (!cancelled) setData(d)
+        if (cancelled) return
+        if (d && !d.error) setData(d)
+        else if (d?.error && (d.error === "Unauthorized" || d.error === "Admin required")) setAuthError(true)
+        else setData(null)
       })
       .catch(() => {
         if (!cancelled) setData(null)
@@ -53,7 +66,18 @@ export default function AdminBlueReportsPage() {
     )
   }
 
-  if (!data) {
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <BlueAdminAuthBanner returnTo="/admin/blue/reports" />
+        <Button variant="outline" asChild className="mt-4">
+          <Link href="/admin/blue" prefetch={false}>Back to Blue</Link>
+        </Button>
+      </div>
+    )
+  }
+
+  if (!data || !data.membershipTrend) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <p className="text-gray-600">Failed to load reports.</p>

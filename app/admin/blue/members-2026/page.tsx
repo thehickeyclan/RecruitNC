@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -99,6 +100,10 @@ export default function AdminBlueMembers2026Page() {
             <p className="text-sm text-gray-600">Active Blue program members (default: class of 2026 and on). Add prior years with the filter below. Data from <code className="rounded bg-gray-200 px-1">wrestling_nchsaa_results</code>.</p>
           </div>
         </div>
+
+        {error && isBlueAuthError(error) && (
+          <BlueAdminAuthBanner returnTo="/admin/blue/members-2026" />
+        )}
 
         <Card className="mb-6 border border-gray-200">
           <CardContent className="pt-4">

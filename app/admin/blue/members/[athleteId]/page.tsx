@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2, User, ExternalLink } from "lucide-react"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
 type SignupData = {
   parent_first_name: string
@@ -88,6 +89,9 @@ export default function AdminBlueMemberDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-4 md:p-8">
         <div className="max-w-lg mx-auto">
+          {error && isBlueAuthError(error) && (
+            <BlueAdminAuthBanner returnTo={`/admin/blue/members/${encodeURIComponent(athleteId)}`} />
+          )}
           <Card>
             <CardHeader>
               <CardTitle className="text-red-600">Error</CardTitle>

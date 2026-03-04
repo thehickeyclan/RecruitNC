@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Loader2, Plus, Copy, Check, Mail } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
 type InviteRow = {
   id: string
@@ -194,6 +195,10 @@ ${registerUrl}
             <p className="text-sm text-gray-600">One registration link for everyone. Optionally create invites to track or pre-fill email.</p>
           </div>
         </div>
+
+        {listError && isBlueAuthError(listError) && (
+          <BlueAdminAuthBanner returnTo="/admin/blue/invites" />
+        )}
 
         <Card className="mb-6 border-[#13294B]/30">
           <CardHeader>

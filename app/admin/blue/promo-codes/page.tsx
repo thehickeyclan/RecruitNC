@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Loader2, Plus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
 type PromoRow = {
   id: string
@@ -35,13 +36,23 @@ export default function AdminBluePromoCodesPage() {
   const [notes, setNotes] = useState("")
   const { toast } = useToast()
 
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   const loadCodes = async () => {
     setLoading(true)
+    setLoadError(null)
     try {
       const res = await fetch("/api/admin/blue/promo-codes", { credentials: "include" })
       const data = await res.json()
-      if (res.ok) setCodes(data.codes ?? [])
+      if (res.ok) {
+        setCodes(data.codes ?? [])
+      } else {
+        setLoadError(data.error || `Failed to load (${res.status})`)
+        setCodes([])
+      }
     } catch {
+      setLoadError("Network error. Try again.")
+      setCodes([])
       toast({ title: "Failed to load codes", variant: "destructive" })
     } finally {
       setLoading(false)
@@ -119,6 +130,17 @@ export default function AdminBluePromoCodesPage() {
             <p className="text-sm text-gray-600">Create codes for Blue checkout. Parents enter the code on the registration form.</p>
           </div>
         </div>
+
+        {loadError && isBlueAuthError(loadError) && (
+          <BlueAdminAuthBanner returnTo="/admin/blue/promo-codes" />
+        )}
+        {loadError && !isBlueAuthError(loadError) && (
+          <div className="mb-6 py-4 px-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+            <p className="font-medium">Could not load codes</p>
+            <p className="mt-1">{loadError}</p>
+            <Button variant="outline" size="sm" className="mt-3 border-red-300 text-red-700 hover:bg-red-100" onClick={loadCodes}>Retry</Button>
+          </div>
+        )}
 
         <Card className="mb-8">
           <CardHeader>

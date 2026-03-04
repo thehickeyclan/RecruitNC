@@ -58,12 +58,16 @@ export async function GET() {
     .select("id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id")
     .order("created_at", { ascending: false })
 
-  if (error) {
-    if (error.code === "42P01") return NextResponse.json({ error: "Table blue_memberships does not exist." }, { status: 503 })
+  const membershipsError: string | null =
+    error?.code === "42P01"
+      ? "Table blue_memberships does not exist. Run the SQL in docs/blue-membership-tables.md (Section 3) to see subscriptions."
+      : null
+
+  if (error && error.code !== "42P01") {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if (!rows?.length) {
+  const emptyPayload = async () => {
     let signups: BlueSignupRow[] = []
     let signupsError: string | null = null
     const { data: signupRows, error: signupError } = await admin
@@ -90,13 +94,25 @@ export async function GET() {
         stripe_customer_id: r.stripe_customer_id ?? null,
       }))
     }
-    if (signupError) signupsError = signupError.message
+    if (signupError) {
+      signupsError =
+        signupError.code === "42P01"
+          ? "Table blue_signups does not exist. Run the SQL in docs/blue-signups-table.md."
+          : signupError.code === "42501"
+            ? "RLS is blocking read. In Supabase SQL Editor run: DROP POLICY IF EXISTS \"Service role full access blue_signups\" ON public.blue_signups; CREATE POLICY \"Service role full access blue_signups\" ON public.blue_signups FOR ALL TO service_role USING (true) WITH CHECK (true);"
+            : signupError.message
+    }
     return NextResponse.json({
       subscriptions: [],
       stats: { active: 0, paused: 0, cancelled: 0, pending_payment: 0 },
       signups,
       signupsError,
+      membershipsError: membershipsError ?? undefined,
     })
+  }
+
+  if (membershipsError || !rows?.length) {
+    return emptyPayload()
   }
 
   const athleteIds = [...new Set(rows.map((r) => r.athlete_id))]
@@ -165,7 +181,9 @@ export async function GET() {
     .order("created_at", { ascending: false })
   if (signupError) {
     console.error("[admin/blue/subscriptions] blue_signups select:", signupError.code, signupError.message)
-    if (signupError.code === "42501") {
+    if (signupError.code === "42P01") {
+      signupsError = "Table blue_signups does not exist. Run the SQL in docs/blue-signups-table.md."
+    } else if (signupError.code === "42501") {
       signupsError = "RLS is blocking read. In Supabase SQL Editor run: DROP POLICY IF EXISTS \"Service role full access blue_signups\" ON public.blue_signups; CREATE POLICY \"Service role full access blue_signups\" ON public.blue_signups FOR ALL TO service_role USING (true) WITH CHECK (true);"
     } else {
       signupsError = signupError.message

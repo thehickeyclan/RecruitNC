@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Loader2, ExternalLink, DollarSign } from "lucide-react"
+import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
 type Registration = {
   id: string
@@ -89,10 +90,18 @@ export default function AdminBlueNationalTeamPaymentsPage() {
           </div>
         </div>
 
+        {error && isBlueAuthError(error) && (
+          <BlueAdminAuthBanner returnTo="/admin/blue/national-team-payments" />
+        )}
         {error && (
           <Card className="mb-6 border-destructive">
             <CardContent className="pt-6">
               <p className="text-destructive">{error}</p>
+              {(error === "Not signed in." || error === "Admin access required.") && (
+                <p className="mt-3">
+                  <a href="/auth/signin?returnTo=/admin/blue/national-team-payments" className="text-[#003366] font-medium underline">Sign in again</a>
+                </p>
+              )}
               {error.includes("208") && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   Run the SQL in <code className="bg-muted px-1 rounded">scripts/208-national-team-registrations-and-products.sql</code> in Supabase SQL Editor, then ensure the two products (NHSCA 2026 – Registration, NHSCA 2026 – Apparel) exist under category <code className="bg-muted px-1 rounded">national_team</code>.
