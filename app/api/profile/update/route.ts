@@ -15,7 +15,7 @@ async function handleUpdate(request: Request) {
   }
 
   const body = await request.json()
-  const { name, role, cell_phone, location, bio } = body
+  const { name, role, cell_phone, location, bio, notify_sms_new_messages, notify_email_new_messages } = body
 
   const updatePayload: Record<string, unknown> = {}
   if (name !== undefined) updatePayload.full_name = name
@@ -23,6 +23,8 @@ async function handleUpdate(request: Request) {
   if (cell_phone !== undefined) updatePayload.cell_phone = normalizePhoneForStorage(cell_phone)
   if (location !== undefined) updatePayload.location = location
   if (bio !== undefined) updatePayload.bio = bio
+  if (typeof notify_sms_new_messages === "boolean") updatePayload.notify_sms_new_messages = notify_sms_new_messages
+  if (typeof notify_email_new_messages === "boolean") updatePayload.notify_email_new_messages = notify_email_new_messages
 
   if (Object.keys(updatePayload).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 })
@@ -39,7 +41,7 @@ async function handleUpdate(request: Request) {
   if (error) {
     const msg = String(error.message || "").toLowerCase()
     const maybeMissingColumn = msg.includes("column") && (msg.includes("does not exist") || msg.includes("undefined"))
-      if (maybeMissingColumn && (updatePayload.location !== undefined || updatePayload.bio !== undefined || updatePayload.role !== undefined)) {
+    if (maybeMissingColumn && (updatePayload.location !== undefined || updatePayload.bio !== undefined || updatePayload.role !== undefined || updatePayload.notify_sms_new_messages !== undefined || updatePayload.notify_email_new_messages !== undefined)) {
       const safePayload: Record<string, unknown> = {}
       if (name !== undefined) safePayload.full_name = name
       if (cell_phone !== undefined) safePayload.cell_phone = normalizePhoneForStorage(cell_phone)

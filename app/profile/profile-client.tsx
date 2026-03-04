@@ -13,7 +13,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2 } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -34,6 +35,8 @@ interface UserProfile {
   created_at: string
   athlete_id?: string
   athlete_name?: string
+  notify_sms_new_messages?: boolean
+  notify_email_new_messages?: boolean
 }
 
 export function ProfileClient() {
@@ -250,6 +253,8 @@ export function ProfileClient() {
           cell_phone: normalizePhoneForStorage(profile.cell_phone),
           location: profile.location,
           bio: profile.bio,
+          notify_sms_new_messages: profile.notify_sms_new_messages,
+          notify_email_new_messages: profile.notify_email_new_messages,
         }),
       })
 
@@ -436,6 +441,54 @@ export function ProfileClient() {
                     )}
                   </Button>
                 </form>
+              </CardContent>
+            </Card>
+
+            {/* Notification preferences — messaging (SMS & email) */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Message notifications
+                </CardTitle>
+                <CardDescription>Get notified when someone messages you in RecruitNC Messages. Save your profile after changing these.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <MessageCircle className="h-4 w-4 text-[#003366]" />
+                      Text me when I get new messages
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      SMS to your cell number above when you get a new message in a thread.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!profile.notify_sms_new_messages}
+                    onCheckedChange={(checked) => profile && setProfile({ ...profile, notify_sms_new_messages: checked })}
+                  />
+                </div>
+                {!profile.cell_phone?.trim() && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                    Add your cell phone in Profile Information above so we can send you texts.
+                  </p>
+                )}
+                <div className="flex items-center justify-between gap-4 pt-2 border-t">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Mail className="h-4 w-4 text-[#003366]" />
+                      Email me when I get new messages
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Email to your sign-in address when you get a new message in a thread.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!!profile.notify_email_new_messages}
+                    onCheckedChange={(checked) => profile && setProfile({ ...profile, notify_email_new_messages: checked })}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>

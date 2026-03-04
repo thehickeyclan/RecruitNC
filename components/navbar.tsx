@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, ShoppingCart, MessageCircle } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, ShoppingCart, MessageCircle, ShoppingBag } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -25,10 +25,27 @@ import { StoreNavLink } from "@/components/store-nav-link"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
+
+  // Fetch total unread message count when user is logged in
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessages(0)
+      return
+    }
+    fetch("/api/messaging/inbox", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        const threads = data?.threads ?? []
+        const total = threads.reduce((sum: number, t: { unread_count?: number }) => sum + (t.unread_count ?? 0), 0)
+        setUnreadMessages(total)
+      })
+      .catch(() => setUnreadMessages(0))
+  }, [user, pathname])
 
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href))
   const isDropdownActive = (items: { href: string }[]) => items.some((item) => isActive(item.href))
@@ -76,7 +93,7 @@ export function Navbar() {
   const handleNav = (_e: React.MouseEvent, _url: string) => {}
   const handleNavMobile = () => setIsOpen(false)
 
-  // Primary nav: Home, Athletes, Events (States + Nationals), Calendar, Programs, News, Store, LegacyNC.
+  // Primary nav: Home, Athletes, Events, Calendar, Programs, News, Messages, LegacyNC, then [Commitments etc]. Right block: Store, Cart (only when items), Sign In/Account.
   const commitmentItems = [
     { href: "/athletes", label: "All Commitments" },
     { href: "/high-schools", label: "By High School" },
@@ -132,7 +149,7 @@ export function Navbar() {
   return (
     <nav className="bg-[#003366] shadow-md touch-scroll sticky top-0 z-50" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center min-h-[72px] py-4">
           {/* Logo — white on blue; use transparent PNG at this path to avoid blend (no black background) */}
           <div className="flex-shrink-0 bg-[#003366]">
             <Link href="/" className="flex items-center space-x-2 mobile-optimized block">
@@ -248,21 +265,6 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
-              {user && (
-                <a href="/messages" className={navLinkClass("/messages") + " flex items-center gap-1"}>
-                  <MessageCircle className="h-5 w-5" />
-                  Messages
-                </a>
-              )}
-              <StoreButton className={navLinkClass("/store-app") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0"}>Store</StoreButton>
-              <a href="/cart" target="_top" className={navLinkClass("/cart") + " flex items-center gap-1"} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
-                    {cartCount}
-                  </span>
-                )}
-              </a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
                   LegacyNC
@@ -308,8 +310,30 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-3">
+          {/* Icons: Messages, Store, Cart (cart only when items) + Auth */}
+          <div className="hidden md:flex items-center gap-1 sm:gap-2">
+            {user && (
+              <a href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
+                <MessageCircle className="h-5 w-5" />
+                {unreadMessages > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </span>
+                )}
+              </a>
+            )}
+            <StoreButton aria-label="Store" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer bg-transparent border-0 p-0">
+              <ShoppingBag className="h-5 w-5" />
+            </StoreButton>
+            {cartCount > 0 && (
+              <a href="/cart" target="_top" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={`Cart (${cartCount} items)`}>
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              </a>
+            )}
+            <div className="w-px h-6 bg-white/30 mx-1" aria-hidden />
             {isLoading ? (
               <div className="flex space-x-2">
                 <div className="w-20 h-9 bg-white/20 animate-pulse rounded-md"></div>
@@ -321,7 +345,7 @@ export function Navbar() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex items-center space-x-2 bg-transparent border-white text-white hover:bg-white hover:text-[#003366] mobile-optimized"
+                    className="h-10 flex items-center space-x-2 bg-transparent border-white text-white hover:bg-white hover:text-[#003366] mobile-optimized rounded-lg"
                   >
                     <User className="h-4 w-4" />
                     <span>Account</span>
@@ -353,16 +377,16 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex space-x-2">
+              <div className="flex items-center gap-2">
                 <Button
                   asChild
                   variant="outline"
                   size="sm"
-                  className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized"
+                  className="h-10 border-white text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized rounded-lg"
                 >
                   <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-red-600 text-white hover:bg-red-700 mobile-optimized">
+                <Button asChild size="sm" className="h-10 bg-red-600 text-white hover:bg-red-700 mobile-optimized rounded-lg">
                   <Link href="/auth/signup" target="_top" rel="noopener">Sign Up</Link>
                 </Button>
               </div>
@@ -371,6 +395,15 @@ export function Navbar() {
 
           {/* Mobile menu button and auth buttons */}
           <div className="md:hidden flex items-center gap-2">
+            {/* Cart icon top-right when items in cart */}
+            {cartCount > 0 && (
+              <a href="/cart" target="_top" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={`Cart (${cartCount} items)`}>
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              </a>
+            )}
             {/* Sign In and Sign Up buttons - only show when not logged in */}
             {!isLoading && !user && (
               <div className="flex items-center gap-2">
@@ -452,13 +485,16 @@ export function Navbar() {
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   {user && (
-                    <a href="/messages" className={mobileLinkClass("/messages")} onClick={() => setIsOpen(false)}>Messages</a>
+                    <a href="/messages" className={mobileLinkClass("/messages") + " flex items-center gap-2 relative"} onClick={() => setIsOpen(false)}>
+                      <MessageCircle className="h-5 w-5 shrink-0" />
+                      <span>Messages</span>
+                      {unreadMessages > 0 && (
+                        <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+                          {unreadMessages > 99 ? "99+" : unreadMessages}
+                        </span>
+                      )}
+                    </a>
                   )}
-                  <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
-                  <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
-                    <ShoppingCart className="h-5 w-5 shrink-0" />
-                    <span>Cart{cartCount > 0 ? ` (${cartCount})` : ""}</span>
-                  </a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
                     <div className="space-y-2">
@@ -467,6 +503,13 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
+                  <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
+                  {cartCount > 0 && (
+                    <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={`Cart (${cartCount} items)`}>
+                      <ShoppingCart className="h-5 w-5 shrink-0" />
+                      <span>Cart ({cartCount})</span>
+                    </a>
+                  )}
                   {highlightNavItems.map((item) => (
                     <a
                       key={item.href}

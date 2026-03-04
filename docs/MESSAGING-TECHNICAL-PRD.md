@@ -244,4 +244,40 @@ Use these as sequential prompts so the implementation stays consistent.
 - Public/semi-public channels (Phase 4).
 - Message edit/delete (optional “delete for me” can be added later with a soft-delete column).
 
+---
+
+## 11. SMS notifications (optional)
+
+Users can opt in to receive an SMS when they get a new message. Uses the profile **cell phone** and preference **notify_sms_new_messages**.
+
+**Schema (run in Supabase SQL Editor):**
+
+```sql
+ALTER TABLE user_profiles
+  ADD COLUMN IF NOT EXISTS notify_sms_new_messages boolean NOT NULL DEFAULT false;
+ALTER TABLE user_profiles
+  ADD COLUMN IF NOT EXISTS notify_email_new_messages boolean NOT NULL DEFAULT false;
+
+COMMENT ON COLUMN user_profiles.notify_sms_new_messages IS 'When true, user receives an SMS (to cell_phone) when they get a new message in a thread.';
+COMMENT ON COLUMN user_profiles.notify_email_new_messages IS 'When true, user receives an email (to auth email) when they get a new message in a thread.';
+```
+
+**Profile:** User sets in Profile → Notification preferences:
+- "Text me when I get new messages" (uses profile cell phone) — **Twilio**
+- "Email me when I get new messages" (uses sign-in email) — **Resend**
+
+**Sending:** When a message is posted (POST .../messages), we notify each thread member (except the sender):
+- **SMS:** those with `notify_sms_new_messages = true` and non-null `cell_phone`. Body: `RecruitNC: New message in [thread name]: [first 60 chars]…`
+- **Email:** those with `notify_email_new_messages = true`; recipient = auth user email. Resend email with thread name, preview, and "Open Messages" link.
+
+**Twilio (SMS):** Set in Vercel (or .env):
+
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_PHONE_NUMBER` (E.164, e.g. +15551234567)
+
+If any are missing, SMS is skipped (no-op). Implementation: `lib/sms.ts` (`sendSms`, `toE164`).
+
+**Resend (email):** Already used elsewhere (Blue invite, order confirmation). Set `RESEND_API_KEY`. New-message emails use `sendNewMessageNotificationEmail` in `lib/email.ts`. From address: same as Blue (`info@ncwrestlingunited.com`).
+
 Use this doc as the single technical source of truth when implementing RecruitNC Messaging Phase 1.

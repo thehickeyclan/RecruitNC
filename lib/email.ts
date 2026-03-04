@@ -250,3 +250,67 @@ export async function sendOrderConfirmationEmail(
   }
 }
 
+/** New RecruitNC message notification (Resend). Used when a user has "Email me when I get new messages" on. */
+export async function sendNewMessageNotificationEmail(
+  to: string,
+  threadName: string,
+  messagePreview: string,
+  inboxUrl: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[RecruitNC email] Skipped (RESEND_API_KEY not set): new message notification to", to)
+    }
+    return { success: false, error: "Email service not configured" }
+  }
+
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 22px;">RecruitNC Messages</h1>
+  </div>
+  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>You have a new message in <strong>${escapeHtml(threadName)}</strong>.</p>
+    <p style="background: #f3f4f6; padding: 12px; border-radius: 6px; font-size: 14px;">${escapeHtml(messagePreview)}</p>
+    <p style="margin: 24px 0;">
+      <a href="${escapeHtml(inboxUrl)}" style="display: inline-block; background: #003366; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold;">Open Messages</a>
+    </p>
+    <p style="color: #6b7280; font-size: 14px;">If the button doesn't work, copy and paste this link: ${escapeHtml(inboxUrl)}</p>
+  </div>
+</body>
+</html>
+    `
+
+    const result = await resend.emails.send({
+      from: FROM_BLUE,
+      to: [to.trim()],
+      subject: `New message in ${threadName} – RecruitNC`,
+      html,
+    })
+
+    if (result.error) {
+      console.error("[RecruitNC] Resend new-message error:", result.error)
+      return { success: false, error: result.error.message }
+    }
+    return { success: true }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send email"
+    console.error("sendNewMessageNotificationEmail:", err)
+    return { success: false, error: message }
+  }
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+}

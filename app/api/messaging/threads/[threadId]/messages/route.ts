@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getMessagingUser } from "@/lib/messaging-auth"
+import { sendSms, toE164 } from "@/lib/sms"
+import { sendNewMessageNotificationEmail } from "@/lib/email"
 
 const DEFAULT_LIMIT = 50
 const MAX_LIMIT = 100
@@ -128,5 +131,57 @@ export async function POST(
     .update({ last_message_at: new Date().toISOString() })
     .eq("id", threadId)
 
+  // Notify thread members who opted into SMS (fire-and-forget)
+  notifyThreadMembersBySms(threadId, text, user.id).catch((err) =>
+    console.error("[messaging/messages] SMS notify error:", err)
+  )
+
   return NextResponse.json(message)
+}
+
+const PREVIEW_LEN = 60
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
+
+async function notifyThreadMembersBySms(threadId: string, messageBody: string, senderId: string): Promise<void> {
+  const admin = createAdminClient()
+  const { data: thread } = await admin.from("messaging_threads").select("name").eq("id", threadId).single()
+  const threadName = (thread as { name?: string } | null)?.name ?? "RecruitNC"
+  const { data: members } = await admin
+    .from("messaging_thread_members")
+    .select("user_id")
+    .eq("thread_id", threadId)
+    .neq("user_id", senderId)
+  const userIds = (members ?? []).map((m) => (m as { user_id: string }).user_id)
+  if (userIds.length === 0) return
+  const preview = messageBody.slice(0, PREVIEW_LEN) + (messageBody.length > PREVIEW_LEN ? "…" : "")
+  const inboxUrl = `${BASE_URL.replace(/\/$/, "")}/messages`
+
+  // SMS: users with notify_sms_new_messages and cell_phone
+  const { data: smsProfiles } = await admin
+    .from("user_profiles")
+    .select("user_id, cell_phone")
+    .in("user_id", userIds)
+    .eq("notify_sms_new_messages", true)
+    .not("cell_phone", "is", null)
+  const smsBody = `RecruitNC: New message in ${threadName}: ${preview}`
+  for (const row of smsProfiles ?? []) {
+    const r = row as { user_id: string; cell_phone: string }
+    const e164 = toE164(r.cell_phone)
+    if (e164) await sendSms(e164, smsBody)
+  }
+
+  // Email: users with notify_email_new_messages; get email from auth
+  const { data: emailProfiles } = await admin
+    .from("user_profiles")
+    .select("user_id")
+    .in("user_id", userIds)
+    .eq("notify_email_new_messages", true)
+  for (const row of emailProfiles ?? []) {
+    const uid = (row as { user_id: string }).user_id
+    const { data: authUser } = await admin.auth.admin.getUserById(uid)
+    const email = authUser?.user?.email
+    if (email?.trim()) {
+      await sendNewMessageNotificationEmail(email.trim(), threadName, preview, inboxUrl)
+    }
+  }
 }
