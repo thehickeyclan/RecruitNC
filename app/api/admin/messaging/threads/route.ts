@@ -53,7 +53,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: threadError.message }, { status: 500 })
   }
 
-  const { error: memberError } = await admin
+  // Insert membership with user's session so RLS lets them see the thread immediately (requires INSERT policy for creator).
+  const userClient = await createClient()
+  const { error: memberError } = await userClient
     .from("messaging_thread_members")
     .insert({
       thread_id: thread.id,
@@ -66,20 +68,7 @@ export async function POST(request: NextRequest) {
   if (memberError) {
     console.error("[admin/messaging/threads POST] member insert", memberError)
     await admin.from("messaging_threads").delete().eq("id", thread.id)
-    return NextResponse.json({ error: "Failed to add you to the group" }, { status: 500 })
-  }
-
-  // Ensure the creator can see the thread with their session (RLS) before returning
-  const userClient = await createClient()
-  for (let i = 0; i < 3; i++) {
-    const { data: memberRow } = await userClient
-      .from("messaging_thread_members")
-      .select("thread_id")
-      .eq("thread_id", thread.id)
-      .eq("user_id", auth.user.id)
-      .single()
-    if (memberRow) return NextResponse.json({ threadId: thread.id, name: thread.name })
-    await new Promise((r) => setTimeout(r, 100 * (i + 1)))
+    return NextResponse.json({ error: "Failed to add you to the group. Ensure RLS policy messaging_thread_members_insert_self_creator exists." }, { status: 500 })
   }
 
   return NextResponse.json({ threadId: thread.id, name: thread.name })

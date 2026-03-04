@@ -10,28 +10,34 @@ export async function GET() {
 
   const supabase = await createClient()
 
+  // Get my thread IDs from membership first (avoids RLS edge cases and empty .in() below)
+  const { data: myMembers, error: membersError } = await supabase
+    .from("messaging_thread_members")
+    .select("thread_id, last_read_at")
+    .eq("user_id", user.id)
+
+  if (membersError) {
+    console.error("[messaging/inbox] members", membersError)
+    return NextResponse.json({ error: membersError.message }, { status: 500 })
+  }
+  const threadIds = [...new Set((myMembers ?? []).map((m) => m.thread_id))]
+  if (threadIds.length === 0) return NextResponse.json({ threads: [] })
+
   const { data: threads, error: threadsError } = await supabase
     .from("messaging_threads")
     .select("id, name, type, context_type, context_id, last_message_at")
+    .in("id", threadIds)
     .order("last_message_at", { ascending: false })
 
   if (threadsError) {
-    console.error("[messaging/inbox]", threadsError)
+    console.error("[messaging/inbox] threads", threadsError)
     return NextResponse.json({ error: threadsError.message }, { status: 500 })
   }
   if (!threads?.length) return NextResponse.json({ threads: [] })
 
-  const threadIds = threads.map((t) => t.id)
-
-  const { data: members } = await supabase
-    .from("messaging_thread_members")
-    .select("thread_id, last_read_at")
-    .eq("user_id", user.id)
-    .in("thread_id", threadIds)
-
   const lastReadByThread = new Map<string, string | null>()
-  for (const m of members ?? []) {
-    lastReadByThread.set(m.thread_id, m.last_read_at ?? null)
+  for (const m of myMembers ?? []) {
+    lastReadByThread.set(m.thread_id, (m as { last_read_at?: string | null }).last_read_at ?? null)
   }
 
   const { data: messages } = await supabase

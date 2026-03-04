@@ -95,6 +95,8 @@ CREATE POLICY custom_emoji_select ON custom_emoji FOR SELECT USING (true);
 
 -- Migrations (run after initial schema if tables already exist):
 -- ALTER TABLE messaging_messages ADD COLUMN IF NOT EXISTS edited_at timestamptz;
+-- For "New group" to work (creator sees thread immediately), add:
+-- CREATE POLICY messaging_thread_members_insert_self_creator ON messaging_thread_members FOR INSERT WITH CHECK (user_id = auth.uid() AND EXISTS (SELECT 1 FROM messaging_threads t WHERE t.id = messaging_thread_members.thread_id AND t.created_by_user_id = auth.uid()));
 
 -- RLS: enable and define policies so users only see their threads/messages.
 ALTER TABLE messaging_threads ENABLE ROW LEVEL SECURITY;
@@ -112,6 +114,12 @@ CREATE POLICY messaging_thread_members_select ON messaging_thread_members
   FOR SELECT USING (user_id = auth.uid() OR thread_id IN (SELECT thread_id FROM messaging_thread_members WHERE user_id = auth.uid()));
 CREATE POLICY messaging_thread_members_update_own ON messaging_thread_members
   FOR UPDATE USING (user_id = auth.uid());
+-- Creator of a thread can add themselves (so session sees the row immediately).
+CREATE POLICY messaging_thread_members_insert_self_creator ON messaging_thread_members
+  FOR INSERT WITH CHECK (
+    user_id = auth.uid() AND
+    EXISTS (SELECT 1 FROM messaging_threads t WHERE t.id = messaging_thread_members.thread_id AND t.created_by_user_id = auth.uid())
+  );
 
 -- Messages: visible only if user is a thread member.
 CREATE POLICY messaging_messages_select ON messaging_messages
