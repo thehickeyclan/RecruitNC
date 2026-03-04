@@ -104,6 +104,17 @@ ALTER TABLE messaging_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messaging_thread_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messaging_messages ENABLE ROW LEVEL SECURITY;
 
+-- Helper to avoid infinite recursion: policy must not SELECT from messaging_thread_members itself.
+CREATE OR REPLACE FUNCTION public.get_my_messaging_thread_ids()
+RETURNS SETOF uuid
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT thread_id FROM messaging_thread_members WHERE user_id = auth.uid();
+$$;
+
 -- Threads: visible to members, or to the creator (so creator can add themselves as member).
 CREATE POLICY messaging_threads_select_member ON messaging_threads
   FOR SELECT USING (
@@ -112,9 +123,9 @@ CREATE POLICY messaging_threads_select_member ON messaging_threads
 CREATE POLICY messaging_threads_select_creator ON messaging_threads
   FOR SELECT USING (created_by_user_id = auth.uid());
 
--- Thread members: users see only rows for threads they're in (and their own row for last_read_at updates).
+-- Thread members: users see own rows and other members in threads they belong to (no self-query = no recursion).
 CREATE POLICY messaging_thread_members_select ON messaging_thread_members
-  FOR SELECT USING (user_id = auth.uid() OR thread_id IN (SELECT thread_id FROM messaging_thread_members WHERE user_id = auth.uid()));
+  FOR SELECT USING (user_id = auth.uid() OR thread_id IN (SELECT get_my_messaging_thread_ids()));
 CREATE POLICY messaging_thread_members_update_own ON messaging_thread_members
   FOR UPDATE USING (user_id = auth.uid());
 -- Creator of a thread can add themselves (so session sees the row immediately).
@@ -153,6 +164,25 @@ CREATE POLICY messaging_attachments_insert ON messaging_attachments
 
 -- Realtime: allow authenticated users to listen to messages in threads they belong to.
 -- (Supabase Realtime uses RLS; ensure service role or anon can't bypass; clients use auth.uid().)
+```
+
+**If you already ran the schema and see "infinite recursion detected in policy for relation messaging_thread_members":** run the fix below in SQL Editor (creates a helper function and replaces the recursive policy).
+
+```sql
+-- Fix: infinite recursion in messaging_thread_members SELECT policy
+CREATE OR REPLACE FUNCTION public.get_my_messaging_thread_ids()
+RETURNS SETOF uuid
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT thread_id FROM messaging_thread_members WHERE user_id = auth.uid();
+$$;
+
+DROP POLICY IF EXISTS messaging_thread_members_select ON messaging_thread_members;
+CREATE POLICY messaging_thread_members_select ON messaging_thread_members
+  FOR SELECT USING (user_id = auth.uid() OR thread_id IN (SELECT get_my_messaging_thread_ids()));
 ```
 
 **Optional:** If you use service-role for server-side inbox (e.g. admin or server-computed membership), you may need a separate policy or bypass for admin. For Phase 1, client + RLS is enough.
