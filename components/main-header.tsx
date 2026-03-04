@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ShoppingCart } from "lucide-react"
 import { StoreButton } from "@/components/store-button"
 import { useCartStore } from "@/lib/store/cart-store"
 
@@ -29,9 +30,10 @@ export function MainHeader({
           <a
             href="/cart"
             target="_top"
-            className="relative flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground bg-transparent border-0 cursor-pointer p-0"
+            className="relative flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground bg-transparent border-0 cursor-pointer p-0"
           >
-            Cart
+            <ShoppingCart className="h-4 w-4 shrink-0" />
+            <span>Cart</span>
             {count > 0 && (
               <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#003366] px-1.5 text-xs text-white">
                 {count}

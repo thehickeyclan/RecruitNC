@@ -13,7 +13,7 @@ async function requireAdmin() {
   return { ok: true as const, user }
 }
 
-/** POST: Create a new group thread. Admin only. Creator is added as thread admin. */
+/** POST: Create a new group thread. Admin only. Creator is always added as the first member (admin); if that fails, the thread is deleted so the group is never left without them. */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: threadError.message }, { status: 500 })
   }
 
-  // Insert membership with user's session so RLS lets them see the thread immediately (requires INSERT policy for creator).
+  // Creator is always the first member. Use user's session so RLS lets them see the thread (requires messaging_threads_select_creator + messaging_thread_members_insert_self_creator).
   const userClient = await createClient()
   const { error: memberError } = await userClient
     .from("messaging_thread_members")

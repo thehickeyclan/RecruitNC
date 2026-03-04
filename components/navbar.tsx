@@ -311,7 +311,7 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Icons: Messages, Store, Cart (cart only when items) + Auth */}
+          {/* Icons: Messages, Store, Cart (shopping cart icon) + Auth */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
             {user && (
               <a href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
@@ -326,14 +326,14 @@ export function Navbar() {
             <StoreButton aria-label="Store" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer bg-transparent border-0 p-0">
               <ShoppingBag className="h-5 w-5" />
             </StoreButton>
-            {cartCount > 0 && (
-              <a href="/cart" target="_top" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={`Cart (${cartCount} items)`}>
-                <ShoppingCart className="h-5 w-5" />
+            <a href="/cart" target="_top" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
                 <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
-              </a>
-            )}
+              )}
+            </a>
             <div className="w-px h-6 bg-white/30 mx-1" aria-hidden />
             {isLoading ? (
               <div className="flex space-x-2">
@@ -396,15 +396,15 @@ export function Navbar() {
 
           {/* Mobile menu button and auth buttons */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Cart icon top-right when items in cart */}
-            {cartCount > 0 && (
-              <a href="/cart" target="_top" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={`Cart (${cartCount} items)`}>
-                <ShoppingCart className="h-5 w-5" />
+            {/* Cart icon (shopping cart) - always visible */}
+            <a href="/cart" target="_top" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
                 <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
-              </a>
-            )}
+              )}
+            </a>
             {/* Sign In and Sign Up buttons - only show when not logged in */}
             {!isLoading && !user && (
               <div className="flex items-center gap-2">
@@ -519,12 +519,10 @@ export function Navbar() {
                     </div>
                   </div>
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
-                  {cartCount > 0 && (
-                    <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={`Cart (${cartCount} items)`}>
-                      <ShoppingCart className="h-5 w-5 shrink-0" />
-                      <span>Cart ({cartCount})</span>
-                    </a>
-                  )}
+                  <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
+                    <ShoppingCart className="h-5 w-5 shrink-0" />
+                    <span>Cart{cartCount > 0 ? ` (${cartCount})` : ""}</span>
+                  </a>
                   {highlightNavItems.map((item) => (
                     <a
                       key={item.href}

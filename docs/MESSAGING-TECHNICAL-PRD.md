@@ -95,7 +95,8 @@ CREATE POLICY custom_emoji_select ON custom_emoji FOR SELECT USING (true);
 
 -- Migrations (run after initial schema if tables already exist):
 -- ALTER TABLE messaging_messages ADD COLUMN IF NOT EXISTS edited_at timestamptz;
--- For "New group" to work (creator sees thread immediately), add:
+-- For "New group" to work (creator sees thread immediately), add both:
+-- CREATE POLICY messaging_threads_select_creator ON messaging_threads FOR SELECT USING (created_by_user_id = auth.uid());
 -- CREATE POLICY messaging_thread_members_insert_self_creator ON messaging_thread_members FOR INSERT WITH CHECK (user_id = auth.uid() AND EXISTS (SELECT 1 FROM messaging_threads t WHERE t.id = messaging_thread_members.thread_id AND t.created_by_user_id = auth.uid()));
 
 -- RLS: enable and define policies so users only see their threads/messages.
@@ -103,11 +104,13 @@ ALTER TABLE messaging_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messaging_thread_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messaging_messages ENABLE ROW LEVEL SECURITY;
 
--- Threads: visible only to members.
+-- Threads: visible to members, or to the creator (so creator can add themselves as member).
 CREATE POLICY messaging_threads_select_member ON messaging_threads
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM messaging_thread_members m WHERE m.thread_id = messaging_threads.id AND m.user_id = auth.uid())
   );
+CREATE POLICY messaging_threads_select_creator ON messaging_threads
+  FOR SELECT USING (created_by_user_id = auth.uid());
 
 -- Thread members: users see only rows for threads they're in (and their own row for last_read_at updates).
 CREATE POLICY messaging_thread_members_select ON messaging_thread_members
@@ -278,7 +281,7 @@ Phase 1 groups are **created and populated from existing data**, not by end user
 - **NHSCA Duals 2026:** One thread with `context_type = 'event'`, `context_id = 'nhsca-duals-2026'`. Members = users whose email matches `national_team_event_registrations.parent_email` (or `parent_user_id`) for that event and status = paid. Create thread once; sync members via a script or admin job (e.g. “Sync NHSCA Duals 2026 members”).
 - **Blue 2026:** Same idea with `context_type = 'program'`, `context_id = 'blue-2026'`; members from Blue membership table (active for 2026).
 
-No “create group” in the UI for Phase 1. Admin or a one-off script creates the thread and inserts `messaging_thread_members` from the source tables. **In-app create group (admin only):** Admins see a "New group" button on the Messages page; the dialog POSTs to `/api/admin/messaging/threads` (name required; optional `context_type`/`context_id`). The creator is added as thread admin.
+No “create group” in the UI for Phase 1. Admin or a one-off script creates the thread and inserts `messaging_thread_members` from the source tables. **In-app create group (admin only):** Admins see a "New group" button on the Messages page; the dialog POSTs to `/api/admin/messaging/threads` (name required; optional `context_type`/`context_id`). Creating a group always makes the creator its first member (admin role). If adding the creator fails, the thread is deleted so the group is never left without them.
 
 **Add members & invite link:** Thread **admins** see **Add** and **Link** in the members pane. **Add** opens a search dialog (by name or email); selecting a user adds them to the group and sends them an email ("You've been added to [group]" with link to the thread). **Link** copies a shareable invite URL (`/messages/join?token=...`). Anyone with the link can open it; if signed in they are added to the group and redirected to the thread; if not, they sign in first then are added. APIs: `GET/POST .../members`, `GET .../members/search?q=`, `GET .../invite-link`, `POST /api/messaging/join` (body `{ token }`). Requires `messaging_threads.invite_token` column (see migration above).
 
