@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, ShoppingCart } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -249,10 +249,10 @@ export function Navbar() {
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
               <StoreButton className={navLinkClass("/store-app") + " cursor-pointer bg-transparent border-0 font-inherit text-inherit p-0"}>Store</StoreButton>
-              <a href="/cart" target="_top" className={navLinkClass("/cart") + " flex items-center"}>
-                Cart
+              <a href="/cart" target="_top" className={navLinkClass("/cart") + " flex items-center gap-1"} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
+                <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
-                  <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/20 px-1.5 text-xs text-white">
                     {cartCount}
                   </span>
                 )}
@@ -443,8 +443,9 @@ export function Navbar() {
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
-                  <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " block min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)}>
-                    Cart{cartCount > 0 ? ` (${cartCount})` : ""}
+                  <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
+                    <ShoppingCart className="h-5 w-5 shrink-0" />
+                    <span>Cart{cartCount > 0 ? ` (${cartCount})` : ""}</span>
                   </a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
