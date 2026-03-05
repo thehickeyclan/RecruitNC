@@ -150,7 +150,7 @@ export async function GET() {
     {} as Record<string, { name: string; email: string | null }>
   )
 
-  const subscriptions: BlueSubscriptionRow[] = rows.map((r) => {
+  const allSubscriptions: BlueSubscriptionRow[] = rows.map((r) => {
     const payer = payers[r.payer_user_id]
     return {
       id: r.id,
@@ -167,6 +167,20 @@ export async function GET() {
       resume_at: (r as { resume_at?: string | null }).resume_at ?? null,
     }
   })
+
+  // One row per athlete: prefer the membership that has stripe_subscription_id (the "live" one with Pause/Cancel/Delete)
+  const byAthlete = new Map<string, BlueSubscriptionRow>()
+  for (const sub of allSubscriptions) {
+    const existing = byAthlete.get(sub.athlete_id)
+    const preferThis =
+      !existing ||
+      (sub.stripe_subscription_id && !existing.stripe_subscription_id) ||
+      (Boolean(sub.stripe_subscription_id) === Boolean(existing.stripe_subscription_id) && sub.created_at > existing.created_at)
+    if (preferThis) byAthlete.set(sub.athlete_id, sub)
+  }
+  const subscriptions = Array.from(byAthlete.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
 
   const stats = {
     active: subscriptions.filter((s) => s.status === "active").length,

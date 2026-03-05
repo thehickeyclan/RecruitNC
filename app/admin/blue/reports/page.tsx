@@ -35,6 +35,8 @@ export default function AdminBlueReportsPage() {
   const [data, setData] = useState<BlueReportsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [backfilling, setBackfilling] = useState(false)
+  const [syncDropInsLoading, setSyncDropInsLoading] = useState(false)
+  const [syncDropInsResult, setSyncDropInsResult] = useState<string | null>(null)
   const [authError, setAuthError] = useState(false)
   const [billingView, setBillingView] = useState<BillingView>("month")
   const { isLoading: authLoading } = useAuth()
@@ -118,6 +120,23 @@ export default function AdminBlueReportsPage() {
     }
   }
 
+  const runSyncDropInsFromStripe = async () => {
+    setSyncDropInsLoading(true)
+    setSyncDropInsResult(null)
+    try {
+      const r = await fetch("/api/admin/blue/sync-drop-ins-from-stripe", { method: "POST", credentials: "include" })
+      const j = await r.json().catch(() => ({}))
+      if (r.ok) {
+        setSyncDropInsResult(j.message ?? `Synced: ${j.synced ?? 0}, skipped: ${j.skipped ?? 0}`)
+        loadReports()
+      } else {
+        setSyncDropInsResult(j.error ?? `Failed (${r.status})`)
+      }
+    } finally {
+      setSyncDropInsLoading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
@@ -171,7 +190,7 @@ export default function AdminBlueReportsPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-[#13294B]">Blue Reports</h1>
-            <p className="text-sm text-gray-600">Billings, growth, and class distribution for churn planning.</p>
+            <p className="text-sm text-gray-600">Blue MRR (subscriptions only), drop-ins, and class distribution. Store/orders tracks all orders (apparel, tournaments, etc.).</p>
           </div>
         </div>
 
@@ -197,7 +216,7 @@ export default function AdminBlueReportsPage() {
           </Card>
         )}
 
-        {/* Summary cards: MRR, churn, new customers, active base */}
+        {/* Summary cards: MRR (Blue subs only), churn, new customers, active base */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
@@ -206,7 +225,7 @@ export default function AdminBlueReportsPage() {
                 <span className="text-sm">MRR</span>
               </div>
               <p className="text-2xl font-bold text-[#13294B]">${(data.estimatedMRR ?? 0).toLocaleString()}</p>
-              <p className="text-xs text-gray-500">Active + paused × $55/mo</p>
+              <p className="text-xs text-gray-500">Blue subs only: active + paused × $55/mo</p>
             </CardContent>
           </Card>
           <Card>
@@ -216,7 +235,7 @@ export default function AdminBlueReportsPage() {
                 <span className="text-sm">New MRR (this month)</span>
               </div>
               <p className="text-2xl font-bold text-[#13294B]">${(data.newMRRThisMonth ?? 0).toLocaleString()}</p>
-              <p className="text-xs text-gray-500">{(data.newSubsThisMonth ?? 0)} new × $55</p>
+              <p className="text-xs text-gray-500">{(data.newSubsThisMonth ?? 0)} new Blue subs × $55</p>
             </CardContent>
           </Card>
           <Card>
@@ -291,6 +310,43 @@ export default function AdminBlueReportsPage() {
               <p className="text-xs text-gray-500">From memberships table</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Drop-ins: from orders only; not MRR. Sync from Stripe pulls full history into orders. */}
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={syncDropInsLoading}
+              onClick={runSyncDropInsFromStripe}
+              className="gap-2"
+            >
+              {syncDropInsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {syncDropInsLoading ? "Syncing…" : "Sync drop-ins from Stripe"}
+            </Button>
+            {syncDropInsResult && (
+              <span className="text-sm text-[#13294B]">{syncDropInsResult}</span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="border-[#13294B]/20">
+              <CardContent className="pt-6">
+                <div className="text-sm text-gray-600 mb-1">Drop-ins (this month)</div>
+                <p className="text-2xl font-bold text-[#13294B]">{(data.dropInCountThisMonth ?? 0).toLocaleString()}</p>
+                <p className="text-sm text-[#13294B]">${(data.dropInRevenueThisMonth ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} revenue</p>
+                <p className="text-xs text-gray-500">Practice drop-ins from orders. Not MRR.</p>
+              </CardContent>
+            </Card>
+            <Card className="border-[#13294B]/20">
+              <CardContent className="pt-6">
+                <div className="text-sm text-gray-600 mb-1">Drop-ins (last 12 mo)</div>
+                <p className="text-2xl font-bold text-[#13294B]">{(data.dropInCountLast12Months ?? 0).toLocaleString()}</p>
+                <p className="text-sm text-[#13294B]">${(data.dropInRevenueLast12Months ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} revenue</p>
+                <p className="text-xs text-gray-500">Use “Sync drop-ins from Stripe” to pull in full history.</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Membership over time */}

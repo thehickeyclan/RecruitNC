@@ -62,9 +62,19 @@ export type BlueReportsData = {
   billingByWeek: { period: string; amount: number; count: number }[]
   /** Per-membership next billing (for table): { membershipId, athleteName, nextBillingAt, amountCents }[]. */
   upcomingBillingRows?: { membershipId: string; athleteName: string; nextBillingAt: string; amountCents: number }[]
+  /** Drop-ins from orders (practice drop-in); not MRR. Store/orders tracks all orders. */
+  dropInCountThisMonth?: number
+  dropInRevenueThisMonth?: number
+  dropInCountLast12Months?: number
+  dropInRevenueLast12Months?: number
 }
 
-/** GET: Blue reports for charts — trends, class distribution, MRR */
+/**
+ * GET: Blue reports — MRR, churn, signups, class distribution.
+ * MRR and all subscription metrics use only blue_memberships (Blue subs). Store/orders is the
+ * source of truth for all other revenue (apparel, tournaments, etc.). Drop-ins are included
+ * separately from orders and are not MRR.
+ */
 export async function GET() {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -267,6 +277,36 @@ export async function GET() {
       }))
   }
 
+  // Drop-ins: from orders only (practice drop-in). Not MRR; store/orders is source for all orders.
+  let dropInCountThisMonth = 0
+  let dropInRevenueThisMonth = 0
+  let dropInCountLast12Months = 0
+  let dropInRevenueLast12Months = 0
+  const { data: orderRows } = await admin
+    .from("orders")
+    .select("id, total, created_at, shipping_method")
+    .eq("status", "paid")
+  if (orderRows && Array.isArray(orderRows)) {
+    const twelveMonthsAgo = new Date(now)
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    for (const o of orderRows) {
+      const method = (o as { shipping_method?: { name?: string } }).shipping_method
+      const name = (method?.name ?? "").toString().toLowerCase()
+      if (!name.includes("practice") && !name.includes("drop-in")) continue
+      const created = new Date((o as { created_at: string }).created_at)
+      const total = Number((o as { total?: number }).total ?? 0)
+      if (created >= twelveMonthsAgo) {
+        dropInCountLast12Months += 1
+        dropInRevenueLast12Months += total
+      }
+      if (created >= thisMonthStart) {
+        dropInCountThisMonth += 1
+        dropInRevenueThisMonth += total
+      }
+    }
+  }
+
   const data: BlueReportsData = {
     membershipTrend: trend,
     currentActive,
@@ -286,6 +326,10 @@ export async function GET() {
     billingByWeek,
     ...(upcomingBillingRows.length > 0 && { upcomingBillingRows }),
     ...(signupsError && { signupsError }),
+    dropInCountThisMonth,
+    dropInRevenueThisMonth,
+    dropInCountLast12Months,
+    dropInRevenueLast12Months,
   }
 
   return NextResponse.json(data)
