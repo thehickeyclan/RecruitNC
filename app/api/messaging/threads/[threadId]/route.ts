@@ -28,8 +28,12 @@ export async function PATCH(
     .eq("thread_id", threadId)
     .eq("user_id", user.id)
     .single()
-  if (!member || (member as { role?: string }).role !== "admin") {
-    return NextResponse.json({ error: "Only group admins can update the group" }, { status: 403 })
+  if (!member) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const isThreadAdmin = (member as { role?: string }).role === "admin"
+  const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).maybeSingle()
+  const isPlatformAdmin = !!(profile as { is_admin?: boolean } | null)?.is_admin
+  if (!isThreadAdmin && !isPlatformAdmin) {
+    return NextResponse.json({ error: "Only group admins or platform admins can update the group" }, { status: 403 })
   }
 
   const updates: { name?: string; visibility?: string } = {}

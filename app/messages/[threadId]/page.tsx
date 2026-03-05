@@ -220,7 +220,7 @@ export default function ThreadPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {isThreadAdmin && (
+                {(isThreadAdmin || isAdmin) && (
                   <>
                     <DropdownMenuItem onClick={() => { setRenameValue(threadName); setRenameOpen(true) }}>
                       <Pencil className="h-4 w-4 mr-2" />
@@ -246,7 +246,7 @@ export default function ThreadPage() {
                     </DropdownMenuSub>
                   </>
                 )}
-                {isThreadAdmin && isAdmin && <DropdownMenuSeparator />}
+                {(isThreadAdmin || isAdmin) && isAdmin && <DropdownMenuSeparator />}
                 {isAdmin && (
                   <DropdownMenuItem onClick={handleArchive} disabled={archiving} className="text-red-600 focus:text-red-600">
                     {archiving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Archive className="h-4 w-4 mr-2" />}
