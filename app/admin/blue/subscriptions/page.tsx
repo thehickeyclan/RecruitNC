@@ -1,12 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeft, Loader2, ExternalLink } from "lucide-react"
 import type { BlueSubscriptionRow, BlueSignupRow } from "@/app/api/admin/blue/subscriptions/route"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
+
+const BLUE_DATA_RETRY_MS = 2000
 
 type Tab = "good_standing" | "paused" | "canceled"
 
@@ -24,50 +27,64 @@ export default function AdminBlueSubscriptionsPage() {
   const [membershipsError, setMembershipsError] = useState<string | null>(null)
   const [syncFromStripeLoading, setSyncFromStripeLoading] = useState(false)
   const [syncFromStripeResult, setSyncFromStripeResult] = useState<string | null>(null)
+  const { isLoading: authLoading } = useAuth()
+  const retryCountRef = useRef(0)
 
   const filteredSignups =
     signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
 
   useEffect(() => {
+    if (authLoading) return
     let cancelled = false
     setLoadError(null)
-    fetch("/api/admin/blue/subscriptions", { credentials: "include" })
-      .then((r) => {
-        if (!r.ok) {
-          const msg =
-            r.status === 401
-              ? "Not signed in."
-              : r.status === 403
-                ? "Admin access required."
-                : `Could not load (${r.status}).`
-          throw new Error(msg)
-        }
-        return r.json()
-      })
-      .then((data) => {
-        if (cancelled) return
-        if (data?.error) {
-          setLoadError(data.error)
-          return
-        }
-        setSubscriptions(data.subscriptions ?? [])
-        setSignups(data.signups ?? [])
-        setSignupsError(data.signupsError ?? null)
-        setMembershipsError(data.membershipsError ?? null)
-        setStats(data.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setLoadError(err?.message ?? "Could not load subscriptions.")
-          setSubscriptions([])
-          setSignups([])
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+
+    const load = () => {
+      if (!cancelled) setLoading(true)
+      fetch("/api/admin/blue/subscriptions", { credentials: "include" })
+        .then((r) => {
+          if (!r.ok) {
+            const msg =
+              r.status === 401
+                ? "Not signed in."
+                : r.status === 403
+                  ? "Admin access required."
+                  : `Could not load (${r.status}).`
+            throw new Error(msg)
+          }
+          return r.json()
+        })
+        .then((data) => {
+          if (cancelled) return
+          if (data?.error) {
+            setLoadError(data.error)
+            return
+          }
+          setSubscriptions(data.subscriptions ?? [])
+          setSignups(data.signups ?? [])
+          setSignupsError(data.signupsError ?? null)
+          setMembershipsError(data.membershipsError ?? null)
+          setStats(data.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            const msg = err?.message ?? "Could not load subscriptions."
+            setLoadError(msg)
+            setSubscriptions([])
+            setSignups([])
+            if (isBlueAuthError(msg) && retryCountRef.current < 1) {
+              retryCountRef.current += 1
+              setTimeout(load, BLUE_DATA_RETRY_MS)
+            }
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false)
+        })
+    }
+
+    load()
     return () => { cancelled = true }
-  }, [])
+  }, [authLoading])
 
   const runSyncFromStripe = async () => {
     setSyncFromStripeLoading(true)

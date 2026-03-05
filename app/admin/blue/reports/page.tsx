@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -26,6 +27,7 @@ import { BlueAdminAuthBanner } from "@/components/blue-admin-auth-banner"
 
 const NAVY = "#13294B"
 const GOLD = "#D3B574"
+const BLUE_DATA_RETRY_MS = 2000
 
 type BillingView = "week" | "month"
 
@@ -35,6 +37,8 @@ export default function AdminBlueReportsPage() {
   const [backfilling, setBackfilling] = useState(false)
   const [authError, setAuthError] = useState(false)
   const [billingView, setBillingView] = useState<BillingView>("month")
+  const { isLoading: authLoading } = useAuth()
+  const retryCountRef = useRef(0)
 
   const loadReports = () => {
     setLoading(true)
@@ -45,30 +49,48 @@ export default function AdminBlueReportsPage() {
   }
 
   useEffect(() => {
+    if (authLoading) return
     let cancelled = false
     setAuthError(false)
-    fetch("/api/admin/blue/reports", { credentials: "include" })
-      .then((r) => {
-        if (r.status === 401 || r.status === 403) {
-          if (!cancelled) setAuthError(true)
-          return null
-        }
-        return r.json()
-      })
-      .then((d) => {
-        if (cancelled) return
-        if (d && !d.error) setData(d)
-        else if (d?.error && (d.error === "Unauthorized" || d.error === "Admin required")) setAuthError(true)
-        else setData(null)
-      })
-      .catch(() => {
-        if (!cancelled) setData(null)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+
+    const load = () => {
+      setLoading(true)
+      fetch("/api/admin/blue/reports", { credentials: "include" })
+        .then((r) => {
+          if (r.status === 401 || r.status === 403) {
+            if (!cancelled) {
+              setAuthError(true)
+              if (retryCountRef.current < 1) {
+                retryCountRef.current += 1
+                setTimeout(load, BLUE_DATA_RETRY_MS)
+              }
+            }
+            return null
+          }
+          return r.json()
+        })
+        .then((d) => {
+          if (cancelled) return
+          if (d && !d.error) setData(d)
+          else if (d?.error && (d.error === "Unauthorized" || d.error === "Admin required")) {
+            setAuthError(true)
+            if (retryCountRef.current < 1) {
+              retryCountRef.current += 1
+              setTimeout(load, BLUE_DATA_RETRY_MS)
+            }
+          } else setData(null)
+        })
+        .catch(() => {
+          if (!cancelled) setData(null)
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false)
+        })
+    }
+
+    load()
     return () => { cancelled = true }
-  }, [])
+  }, [authLoading])
 
   const paidSignups = data?.signupPaid ?? 0
   const activePlusPaused = (data?.currentActive ?? 0) + (data?.currentPaused ?? 0)

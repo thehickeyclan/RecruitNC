@@ -54,7 +54,7 @@ export async function POST(request: Request) {
 
     const { data: order, error: orderError } = await admin
       .from("orders")
-      .select("id, stripe_payment_intent_id")
+      .select("id, stripe_payment_intent_id, total")
       .eq("id", orderId)
       .single()
 
@@ -94,8 +94,41 @@ export async function POST(request: Request) {
     }
 
     if (items.length === 0) {
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: piId, limit: 1 })
+      const session = sessions.data?.[0]
+      if (session?.id) {
+        const sessionWithItems = await stripe.checkout.sessions.retrieve(session.id, { expand: ["line_items"] })
+        const lineItems = (sessionWithItems as { line_items?: { data?: Array<{ description?: string; quantity?: number; amount_subtotal?: number }> } }).line_items?.data ?? []
+        if (lineItems.length > 0) {
+          items = lineItems.map((li) => ({
+            id: "session-item",
+            name: li.description ?? "Item",
+            quantity: li.quantity ?? 1,
+            price: ((li.amount_subtotal ?? 0) / 100) / (li.quantity ?? 1),
+            variant: { color: "N/A", size: "N/A" },
+          }))
+        }
+      }
+    }
+
+    if (items.length === 0) {
+      const orderTotal = Number((order as { total?: number }).total) || 0
+      if (orderTotal > 0) {
+        items = [
+          {
+            id: "recovered",
+            name: "Recovered item",
+            quantity: 1,
+            price: orderTotal,
+            variant: { color: "N/A", size: "N/A" },
+          },
+        ]
+      }
+    }
+
+    if (items.length === 0) {
       return NextResponse.json(
-        { success: false, error: "No items found in Stripe metadata." },
+        { success: false, error: "No items in Stripe (Payment Intent or Session) and order has no total. Nothing to recover." },
         { status: 400 }
       )
     }
