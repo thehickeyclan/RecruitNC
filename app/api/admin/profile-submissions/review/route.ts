@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { autoFetchNHSCAForProfile } from "@/lib/nhsca-auto-fetch"
 
 export async function POST(request: NextRequest) {
@@ -60,10 +62,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update submission" }, { status: 500 })
     }
 
-    // If approved, create athlete profile
+    // If approved, create or update athlete profile (avoid duplicates: same name + grad year = update existing)
     if (action === "approve") {
       const athleteName = `${submission.firstname} ${submission.lastname}`
-      
+      const gradYear = Number(submission.graduationyear)
+      const admin = createAdminClient()
+
       // Auto-fetch NHSCA placements (last 4 years)
       const nhscaResults = await autoFetchNHSCAForProfile(
         supabase,
@@ -71,7 +75,7 @@ export async function POST(request: NextRequest) {
         submission.graduationyear
       )
 
-      const { error: createError } = await supabase.from("athletes").insert({
+      const payload = {
         // Basic info
         firstName: submission.firstname,
         lastName: submission.lastname,
@@ -140,11 +144,32 @@ export async function POST(request: NextRequest) {
         
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      })
+      }
 
-      if (createError) {
-        console.error("Error creating athlete profile:", createError)
-        return NextResponse.json({ error: "Failed to create athlete profile" }, { status: 500 })
+      const existing = Number.isFinite(gradYear)
+        ? await findExistingAthlete(admin, {
+            name: athleteName,
+            graduationYear: gradYear,
+            school: submission.highschool ?? undefined,
+          })
+        : null
+
+      if (existing) {
+        const { created_at: _c, ...updatePayload } = payload as Record<string, unknown>
+        const { error: updateError } = await admin
+          .from("athletes")
+          .update({ ...updatePayload, updated_at: new Date().toISOString() })
+          .eq("id", existing.id)
+        if (updateError) {
+          console.error("Error updating existing athlete profile:", updateError)
+          return NextResponse.json({ error: "Failed to update athlete profile" }, { status: 500 })
+        }
+      } else {
+        const { error: createError } = await admin.from("athletes").insert(payload)
+        if (createError) {
+          console.error("Error creating athlete profile:", createError)
+          return NextResponse.json({ error: "Failed to create athlete profile" }, { status: 500 })
+        }
       }
     }
 

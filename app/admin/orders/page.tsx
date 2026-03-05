@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { AdminOrdersClient } from "@/components/admin/admin-orders-client"
-import type { Order } from "@/lib/admin-data"
+import type { Order, OrderCategory } from "@/lib/admin-data"
 
 export const dynamic = "force-dynamic"
 
@@ -16,6 +16,61 @@ function isPlaceholderCustomer(email: string | null, name: string | null): boole
   const n = String(name).trim().toLowerCase()
   if (n === "unknown" || n === "customer" || n === "guest") return true
   return false
+}
+
+/** Derive display category from order_items, shipping_method, and total. Every order gets a category. */
+function deriveCategory(
+  orderItems: { product_name?: string }[],
+  shippingMethodStr: string,
+  totalDollars?: number
+): OrderCategory {
+  const names = (orderItems || []).map((i) => (i.product_name || "").toLowerCase())
+  const method = (shippingMethodStr || "").toLowerCase()
+  const total = Number(totalDollars) || 0
+  if (names.some((n) => n.includes("blue") && (n.includes("monthly") || n.includes("subscription")))) return "Blue Sub"
+  if (names.some((n) => n.includes("practice") || n.includes("drop-in") || n.includes("dropin"))) return "Drop-In"
+  if (method.includes("blue membership")) return "Blue Sub"
+  if (method.includes("practice") || method.includes("pickup") || method.includes("drop-in") || method.includes("drop in")) return "Drop-In"
+  if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) return "Tournament Fee"
+  if (method.includes("national team")) return "Tournament Fee"
+  if (total >= 20 && total <= 30 && (method.includes("pickup") || method.includes("practice") || names.length === 0)) return "Drop-In"
+  if (names.length > 0) return "Apparel"
+  return "Other"
+}
+
+/** Build one-line product name/summary. Every order gets a product name (never "—" when category is known). */
+function productSummary(
+  orderItems: { product_name?: string }[],
+  category: OrderCategory,
+  shippingMethodStr?: string
+): string {
+  const names = (orderItems || []).map((i) => (i.product_name || "").trim()).filter(Boolean)
+  if (category === "Drop-In") {
+    if (names.length === 1) return names[0]
+    if (names.some((n) => /practice|drop-in|dropin/i.test(n))) return names.find((n) => /practice|drop-in|dropin/i.test(n)) || names[0] || "Practice Drop-In"
+    return "Practice Drop-In"
+  }
+  if (category === "Blue Sub") {
+    if (names.some((n) => /blue/i.test(n))) return names.find((n) => /blue/i.test(n)) || names[0] || "NC United Blue – Monthly"
+    return "NC United Blue – Monthly"
+  }
+  if (category === "Tournament Fee") {
+    if (names.length > 0) return names.find((n) => /nhsca|national|registration/i.test(n)) || names[0]
+    return "Tournament / Event"
+  }
+  if (category === "Apparel" && names.length > 0) {
+    if (names.length <= 2) return names.join(", ")
+    return `${names[0]} +${names.length - 1} more`
+  }
+  if (category === "Other" && names.length > 0) {
+    if (names.length <= 2) return names.join(", ")
+    return `${names[0]} +${names.length - 1} more`
+  }
+  const method = (shippingMethodStr || "").toLowerCase()
+  if (method.includes("blue")) return "NC United Blue – Monthly"
+  if (method.includes("practice") || method.includes("pickup")) return "Practice Drop-In"
+  if (method.includes("national team")) return "Tournament / Event"
+  return category === "Other" ? "Order" : category
 }
 
 export default async function OrdersPage() {
@@ -47,11 +102,31 @@ export default async function OrdersPage() {
       offset += CHUNK_SIZE
     }
 
+    // Deduplicate: one order per id; then one order per Stripe payment (same pi/session = one row; keep earliest)
+    const byId = new Map<string, any>()
+    for (const o of allOrders) {
+      const id = o?.id
+      if (!id) continue
+      const existing = byId.get(id)
+      if (!existing || new Date(o.created_at) < new Date(existing.created_at)) byId.set(id, o)
+    }
+    const byStripeKey = new Map<string, any>()
+    for (const o of byId.values()) {
+      const pi = o?.stripe_payment_intent_id
+      const sid = o?.stripe_session_id
+      const key = pi ? `pi:${pi}` : sid ? `session:${sid}` : `id:${o.id}`
+      const existing = byStripeKey.get(key)
+      if (!existing || new Date(o.created_at) < new Date(existing.created_at)) byStripeKey.set(key, o)
+    }
+    const uniqueOrders = Array.from(byStripeKey.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+
     // Enrich Guest/No email from national_team_event_registrations and blue_signups
-    const orderIdsNeedingEnrich = allOrders
+    const orderIdsNeedingEnrich = uniqueOrders
       .filter((o: any) => isPlaceholderCustomer(o.customer_email ?? null, o.customer_name ?? null))
       .map((o: any) => o.id)
-    const sessionIdsNeedingEnrich = allOrders
+    const sessionIdsNeedingEnrich = uniqueOrders
       .filter((o: any) => isPlaceholderCustomer(o.customer_email ?? null, o.customer_name ?? null) && o.stripe_session_id)
       .map((o: any) => o.stripe_session_id)
 
@@ -90,55 +165,56 @@ export default async function OrdersPage() {
       }
     }
 
-    const formattedOrders: Order[] = allOrders.map((order: any) => {
+    const formattedOrders: Order[] = uniqueOrders.map((order: any) => {
       const enriched = byOrderId[order.id] ?? (order.stripe_session_id ? bySessionId[order.stripe_session_id] : null)
       const addr = order.shipping_address || {}
-      const firstName = (addr.firstName ?? addr.first_name ?? "").trim()
-      const lastName = (addr.lastName ?? addr.last_name ?? "").trim()
-      const hasValidName =
+      const firstName = (addr.firstName ?? addr.first_name ?? order.shipping_first_name ?? "").trim()
+      const lastName = (addr.lastName ?? addr.last_name ?? order.shipping_last_name ?? "").trim()
+      const hasValidAddressName =
         firstName &&
         lastName &&
         firstName !== "Unknown" &&
         firstName !== "Customer" &&
-        lastName !== "Customer"
+        lastName !== "Customer" &&
+        firstName !== "Recovered"
 
-      let customerName = hasValidName
-        ? `${firstName} ${lastName}`
-        : firstName && firstName !== "Unknown" && firstName !== "Customer"
-          ? firstName
-          : order.customer_email &&
-              order.customer_email !== "unknown@example.com" &&
-              order.customer_email !== "No email"
-            ? order.customer_email.split("@")[0] || "Guest"
-            : order.customer_name && order.customer_name !== "Unknown"
-              ? order.customer_name
-              : "Guest"
+      const rawOrderName = (order.customer_name || "").trim()
+      const orderNameNotPlaceholder =
+        rawOrderName &&
+        !["unknown", "customer", "guest", "recovered"].includes(rawOrderName.toLowerCase())
 
-      let customerEmail =
-        order.customer_email &&
-        order.customer_email !== "unknown@example.com"
-          ? order.customer_email
-          : "No email"
+      const rawOrderEmail = (order.customer_email || "").trim()
+      const orderEmailNotPlaceholder =
+        rawOrderEmail &&
+        rawOrderEmail !== "unknown@example.com" &&
+        !rawOrderEmail.toLowerCase().includes("placeholder") &&
+        rawOrderEmail.includes("@")
 
-      if (enriched) {
-        if (enriched.email) customerEmail = enriched.email
-        if (enriched.name) customerName = enriched.name
-      }
+      let customerName: string
+      if (enriched?.name) customerName = enriched.name
+      else if (orderNameNotPlaceholder) customerName = rawOrderName
+      else if (hasValidAddressName) customerName = `${firstName} ${lastName}`
+      else if (orderEmailNotPlaceholder && rawOrderEmail) customerName = rawOrderEmail.split("@")[0] || "Guest"
+      else customerName = "Guest"
+
+      let customerEmail: string
+      if (enriched?.email) customerEmail = enriched.email
+      else if (orderEmailNotPlaceholder) customerEmail = rawOrderEmail
+      else customerEmail = "—"
 
       const itemsCount = order.order_items?.length || 0
       const orderItems = order.order_items || []
-      const hasDropInProduct = orderItems.some((item: any) => {
-        const name = (item.product_name || "").toLowerCase()
-        return (
-          name.includes("practice") ||
-          name.includes("drop-in") ||
-          name.includes("dropin")
-        )
-      })
       const shippingMethodStr =
         typeof order.shipping_method === "string"
           ? order.shipping_method
           : (order.shipping_method?.name ?? order.shipping_method?.description ?? "")
+      const category = deriveCategory(orderItems, shippingMethodStr, Number(order.total))
+      const productSummaryStr = productSummary(orderItems, category, shippingMethodStr)
+
+      const hasDropInProduct = orderItems.some((item: any) => {
+        const name = (item.product_name || "").toLowerCase()
+        return name.includes("practice") || name.includes("drop-in") || name.includes("dropin")
+      })
       const isLikelyDropIn =
         itemsCount === 0 &&
         Number(order.total) >= 20 &&
@@ -166,6 +242,8 @@ export default async function OrdersPage() {
         status: (order.status || "pending") as Order["status"],
         items: itemsCount,
         total: Number(order.total ?? 0),
+        category,
+        productSummary: productSummaryStr,
         orderType: orderType as "product" | "practice-dropin",
         shippingAddress: {
           line1: String(line1).trim() || "",

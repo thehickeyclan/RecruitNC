@@ -22,6 +22,9 @@ export default function AthletesPage() {
   const [yearFilter, setYearFilter] = useState<string>("all")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [duplicateGroups, setDuplicateGroups] = useState<{ name: string; graduationYear: string; count: number; athletes: { id: string; name: string; highschool: string | null }[] }[]>([])
+  const [duplicatesLoading, setDuplicatesLoading] = useState(false)
+  const [duplicatesExpanded, setDuplicatesExpanded] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -97,6 +100,21 @@ export default function AthletesPage() {
 
     fetchAthletes()
   }, [toast])
+
+  const loadDuplicates = async () => {
+    setDuplicatesLoading(true)
+    try {
+      const res = await fetch("/api/admin/athletes/duplicates")
+      if (!res.ok) throw new Error("Failed to load duplicates")
+      const data = await res.json()
+      setDuplicateGroups(data.groups ?? [])
+      setDuplicatesExpanded(true)
+    } catch {
+      toast({ title: "Error", description: "Could not load duplicate report", variant: "destructive" })
+    } finally {
+      setDuplicatesLoading(false)
+    }
+  }
 
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}?`)) {
@@ -205,12 +223,20 @@ export default function AthletesPage() {
               <h1 className="text-3xl md:text-4xl font-bold mb-2">Manage Athletes</h1>
               <p className="text-blue-200">Admin Dashboard - Athlete Management</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 flex-wrap">
               <Button asChild className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">
                 <Link href="/admin/athletes/add">Add Athlete</Link>
               </Button>
               <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
                 <Link href="/admin/athletes/bulk-import">Bulk Import</Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="border-white text-white hover:bg-white/10"
+                onClick={loadDuplicates}
+                disabled={duplicatesLoading}
+              >
+                {duplicatesLoading ? "Loading…" : "Find duplicates"}
               </Button>
             </div>
           </div>
@@ -300,6 +326,35 @@ export default function AthletesPage() {
           ) : null}
         </CardContent>
       </Card>
+
+      {duplicatesExpanded && duplicateGroups.length > 0 && (
+        <Card className="mb-6 shadow-lg border-t-4 border-t-amber-500">
+          <CardHeader className="bg-amber-50">
+            <CardTitle className="text-[#002147]">Possible duplicates ({duplicateGroups.length} groups)</CardTitle>
+            <p className="text-sm text-gray-600">
+              Same name + graduation year. Review and delete or merge duplicates; keep one profile per athlete.
+            </p>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <ul className="space-y-3">
+              {duplicateGroups.map((g) => (
+                <li key={g.name + g.graduationYear} className="flex flex-wrap items-center gap-2 border-b pb-2 last:border-0">
+                  <span className="font-medium">{g.name}</span>
+                  <Badge variant="secondary">{g.graduationYear}</Badge>
+                  <span className="text-sm text-gray-500">{g.count} profiles</span>
+                  {g.athletes.map((a) => (
+                    <Button key={a.id} asChild variant="outline" size="sm">
+                      <Link href={`/admin/athletes/edit?id=${encodeURIComponent(a.id)}`}>
+                        Edit {a.highschool ? `(${a.highschool})` : a.id.slice(0, 8)}
+                      </Link>
+                    </Button>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {!loading && !error && filteredAthletes.length > 0 && (
         <Card className="shadow-lg border-t-4 border-t-[#B31B1B]">

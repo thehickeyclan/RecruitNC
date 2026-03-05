@@ -3,6 +3,7 @@
 import { stripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendOrderConfirmationEmail } from "@/lib/email"
+import { shippingNameFromCustomerName, flatShippingFromAddress } from "@/lib/order-shipping"
 
 export type CreatePaymentIntentParams = {
   customerEmail: string
@@ -19,15 +20,6 @@ export type CreatePaymentIntentParams = {
 }
 
 const ORDER_NUMBER_PREFIX = "NC"
-
-/** Derive shipping first/last for DB columns that may be NOT NULL. Never returns null/empty. */
-function shippingNameFromCustomerName(customerName: string): { shipping_first_name: string; shipping_last_name: string } {
-  const name = (customerName || "").trim() || "Recovered"
-  const parts = name.split(/\s+/).filter(Boolean)
-  const first = parts[0] ?? "Recovered"
-  const last = parts.slice(1).join(" ") || "Customer"
-  return { shipping_first_name: first, shipping_last_name: last }
-}
 
 function generateOrderNumber(): string {
   const t = Date.now().toString(36).toUpperCase().slice(-6)
@@ -135,6 +127,7 @@ async function createFreeOrderInternal(
   const orderId = crypto.randomUUID()
 
   const shippingName = shippingNameFromCustomerName(params.customerName)
+  const flatShipping = flatShippingFromAddress(params.shippingAddress as Record<string, unknown>)
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
     order_number: orderNumber,
@@ -142,6 +135,7 @@ async function createFreeOrderInternal(
     customer_name: params.customerName,
     shipping_first_name: shippingName.shipping_first_name,
     shipping_last_name: shippingName.shipping_last_name,
+    ...flatShipping,
     shipping_address: params.shippingAddress,
     shipping_method: params.shippingMethod,
     subtotal: params.subtotal,
@@ -234,6 +228,7 @@ async function createOrderFromPaymentIntentMetadata(
   const orderNumber = generateOrderNumber()
   const orderId = crypto.randomUUID()
   const shippingName = shippingNameFromCustomerName(payload.customerName)
+  const flatShipping = flatShippingFromAddress(payload.shippingAddress as Record<string, unknown>)
 
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
@@ -242,6 +237,7 @@ async function createOrderFromPaymentIntentMetadata(
     customer_name: payload.customerName,
     shipping_first_name: shippingName.shipping_first_name,
     shipping_last_name: shippingName.shipping_last_name,
+    ...flatShipping,
     shipping_address: payload.shippingAddress,
     shipping_method: payload.shippingMethod,
     subtotal: payload.subtotal,
@@ -361,6 +357,7 @@ async function createOrderFromCharge(
     const orderNumber = generateOrderNumber()
     const orderId = crypto.randomUUID()
     const shippingName = shippingNameFromCustomerName(customerName)
+    const flatShipping = flatShippingFromAddress(shippingAddress as Record<string, unknown>)
     const { error: orderError } = await supabase.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
@@ -368,6 +365,7 @@ async function createOrderFromCharge(
       customer_name: customerName,
       shipping_first_name: shippingName.shipping_first_name,
       shipping_last_name: shippingName.shipping_last_name,
+      ...flatShipping,
       shipping_address: shippingAddress,
       shipping_method: { name: "Recovered", price: 0 },
       subtotal: amount,
@@ -597,6 +595,7 @@ export async function createOrderFromSession(
       const total = (session.amount_total ?? 0) / 100
       const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id ?? null
       const shippingName = shippingNameFromCustomerName(customerName)
+      const flatShipping = flatShippingFromAddress(shippingAddress as Record<string, unknown>)
       await supabase.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
@@ -604,6 +603,7 @@ export async function createOrderFromSession(
         customer_name: customerName,
         shipping_first_name: shippingName.shipping_first_name,
         shipping_last_name: shippingName.shipping_last_name,
+        ...flatShipping,
         shipping_address: shippingAddress,
         shipping_method: {},
         subtotal,
@@ -645,6 +645,7 @@ export async function createOrderFromSession(
     const orderId = crypto.randomUUID()
     const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id ?? null
     const shippingName = shippingNameFromCustomerName(payload.customerName)
+    const flatShipping = flatShippingFromAddress(payload.shippingAddress as Record<string, unknown>)
     const { error: orderErr } = await supabase.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
@@ -652,6 +653,7 @@ export async function createOrderFromSession(
       customer_name: payload.customerName,
       shipping_first_name: shippingName.shipping_first_name,
       shipping_last_name: shippingName.shipping_last_name,
+      ...flatShipping,
       shipping_address: payload.shippingAddress,
       shipping_method: payload.shippingMethod,
       subtotal: payload.subtotal,

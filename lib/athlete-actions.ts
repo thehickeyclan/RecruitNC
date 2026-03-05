@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { mapAthleteToDb, mapDbToAthlete } from "./athlete-utils"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 
 export async function getAthletesAction() {
   try {
@@ -198,11 +199,30 @@ export async function createAthleteAction(athleteData: any) {
       athleteData.name = `${athleteData.firstName} ${athleteData.lastName}`.trim()
     }
 
+    const adminSupabase = createAdminClient()
+    const gradYear = athleteData.graduationYear != null
+      ? Number(athleteData.graduationYear)
+      : athleteData.graduationyear != null
+        ? Number(athleteData.graduationyear)
+        : NaN
+    if (Number.isFinite(gradYear)) {
+      const existing = await findExistingAthlete(adminSupabase, {
+        name: athleteData.name,
+        graduationYear: gradYear,
+        school: athleteData.highSchool ?? athleteData.highschool ?? undefined,
+      })
+      if (existing && !athleteData.forceCreateDuplicate) {
+        return {
+          success: false,
+          error: "An athlete with this name and graduation year already exists. Edit the existing profile or use a different name/year.",
+          existingId: existing.id,
+          code: "DUPLICATE_ATHLETE",
+        }
+      }
+    }
+
     // Map frontend fields to database fields
     const dbData = await mapAthleteToDb(athleteData)
-
-    // Use admin client to bypass RLS; filter payload to only valid columns (avoids 500 from schema mismatch)
-    const adminSupabase = createAdminClient()
     const columns = await getAthletesColumnNames(adminSupabase)
     const filteredPayload = filterPayloadToSchema(dbData as Record<string, unknown>, columns)
 

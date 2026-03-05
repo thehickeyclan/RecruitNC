@@ -49,6 +49,10 @@ export default function AdminBlueReportsPage() {
   }
 
   useEffect(() => {
+    document.title = "Blue Reports | Admin"
+  }, [])
+
+  useEffect(() => {
     if (authLoading) return
     let cancelled = false
     setAuthError(false)
@@ -166,7 +170,7 @@ export default function AdminBlueReportsPage() {
             <Link href="/admin/blue" prefetch={false}><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-[#13294B]">Blue reports</h1>
+            <h1 className="text-2xl font-bold text-[#13294B]">Blue Reports</h1>
             <p className="text-sm text-gray-600">Billings, growth, and class distribution for churn planning.</p>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { sendOrderConfirmationEmail } from "@/lib/email"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { orderShippingFields } from "@/lib/order-shipping"
 
 export const dynamic = "force-dynamic"
 
@@ -169,6 +170,7 @@ export async function POST(request: NextRequest) {
               order_number: orderNumber,
               customer_email: customerEmail,
               customer_name: customerName,
+              ...orderShippingFields(customerName, {}),
               shipping_address: {},
               shipping_method: { name: "National team event", price: 0 },
               subtotal: totalCents / 100,
@@ -360,6 +362,7 @@ export async function POST(request: NextRequest) {
       order_number: orderNumber,
       customer_email: payload.customerEmail,
       customer_name: payload.customerName,
+      ...orderShippingFields(payload.customerName, payload.shippingAddress as Record<string, unknown>),
       shipping_address: payload.shippingAddress,
       shipping_method: payload.shippingMethod,
       subtotal: payload.subtotal,
@@ -571,6 +574,7 @@ export async function POST(request: NextRequest) {
           order_number: orderNumber,
           customer_email: customerEmail || "blue-signup@placeholder.com",
           customer_name: customerName,
+          ...orderShippingFields(customerName, {}),
           shipping_address: {},
           shipping_method: { name: "Blue membership", price: 0 },
           subtotal: amountTotal,
@@ -655,6 +659,7 @@ export async function POST(request: NextRequest) {
           order_number: orderNumber,
           customer_email: customerEmail,
           customer_name: customerName,
+          ...orderShippingFields(customerName, {}),
           shipping_address: {},
           shipping_method: { name: "National team event", price: 0 },
           subtotal: totalCents / 100,
@@ -734,6 +739,7 @@ export async function POST(request: NextRequest) {
           order_number: orderNumber,
           customer_email: customerEmail,
           customer_name: customerName,
+          ...orderShippingFields(customerName, shippingAddress),
           shipping_address: shippingAddress,
           shipping_method: { name: "Practice Drop-in", price: 0 },
           subtotal: amountTotal,

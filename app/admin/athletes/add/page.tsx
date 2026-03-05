@@ -21,6 +21,18 @@ export default function AddAthletePage() {
       const result = await createAthleteAction(data)
 
       if (!result.success) {
+        if ((result as { code?: string }).existingId && (result as { code?: string }).code === "DUPLICATE_ATHLETE") {
+          const existingId = (result as { existingId?: string }).existingId
+          toast({
+            title: "Duplicate athlete",
+            description: result.error + (existingId ? " You can edit the existing profile." : ""),
+            variant: "destructive",
+          })
+          if (existingId) {
+            window.location.href = `/admin/athletes/edit?id=${encodeURIComponent(existingId)}`
+            return
+          }
+        }
         throw new Error(result.error)
       }
 

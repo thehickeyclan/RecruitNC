@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User } from "lucide-react"
+import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User, CloudDownload } from "lucide-react"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
 import { deleteOrder, updateOrderStatus } from "@/app/actions/orders"
 import { toast } from "sonner"
@@ -36,6 +36,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [orderTypeFilter, setOrderTypeFilter] = useState("all")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [selectedOrders, setSelectedOrders] = useState<string[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
@@ -43,18 +44,22 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<Order | null>(null)
   const [isFixingAllOrders, setIsFixingAllOrders] = useState(false)
   const [isBackfillingCustomers, setIsBackfillingCustomers] = useState(false)
+  const [isSyncingStripe, setIsSyncingStripe] = useState(false)
 
   const filteredOrders = initialOrders.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())
+      (order.customerEmail !== "—" && order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (order.productSummary && order.productSummary.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesStatus = statusFilter === "all" || order.status === statusFilter
 
     const matchesOrderType = orderTypeFilter === "all" || order.orderType === orderTypeFilter
 
-    return matchesSearch && matchesStatus && matchesOrderType
+    const matchesCategory = categoryFilter === "all" || order.category === categoryFilter
+
+    return matchesSearch && matchesStatus && matchesOrderType && matchesCategory
   })
 
   const toggleOrderSelection = (orderId: string) => {
@@ -138,6 +143,33 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
     }
   }
 
+  const handleSyncFromStripe = async () => {
+    setIsSyncingStripe(true)
+    try {
+      const res = await fetch("/api/admin/orders/sync-stripe", { method: "POST" })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Sync failed")
+        return
+      }
+      if (data.created > 0) {
+        toast.success(`Synced ${data.created} new order(s) from Stripe. Refreshing list.`)
+        router.refresh()
+      } else if (data.errors?.length > 0) {
+        toast.warning(`Sync complete. ${data.skipped} already in DB. Some errors: ${data.errors.slice(0, 3).join("; ")}`)
+        router.refresh()
+      } else {
+        toast.success(`No new orders. ${data.skipped} already in sync.`)
+        router.refresh()
+      }
+    } catch (e) {
+      toast.error("Sync from Stripe failed")
+      console.error("[RecruitNC] sync-stripe:", e)
+    } finally {
+      setIsSyncingStripe(false)
+    }
+  }
+
   const handleBackfillCustomers = async () => {
     if (!confirm("Fetch customer email/name from Stripe for orders that show Guest/No email? This updates the database.")) return
     setIsBackfillingCustomers(true)
@@ -193,6 +225,24 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
             )}
           </Button>
           <Button
+            onClick={handleSyncFromStripe}
+            disabled={isSyncingStripe}
+            variant="outline"
+            className="whitespace-nowrap"
+          >
+            {isSyncingStripe ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <CloudDownload className="mr-2 h-4 w-4" />
+                Sync from Stripe
+              </>
+            )}
+          </Button>
+          <Button
             onClick={handleBackfillCustomers}
             disabled={isBackfillingCustomers}
             variant="outline"
@@ -232,14 +282,27 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                 />
               </div>
             </div>
-            <Select value={orderTypeFilter} onValueChange={setOrderTypeFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Order Type" />
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="product">Product Orders</SelectItem>
-                <SelectItem value="practice-dropin">Practice Drop-ins</SelectItem>
+                <SelectItem value="all">All categories</SelectItem>
+                <SelectItem value="Apparel">Apparel</SelectItem>
+                <SelectItem value="Drop-In">Drop-In</SelectItem>
+                <SelectItem value="Blue Sub">Blue Sub</SelectItem>
+                <SelectItem value="Tournament Fee">Tournament Fee</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={orderTypeFilter} onValueChange={setOrderTypeFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Order type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="product">Product</SelectItem>
+                <SelectItem value="practice-dropin">Practice Drop-in</SelectItem>
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -274,6 +337,8 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                 <TableHead>Order #</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Date & Time</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Product</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-center">Items</TableHead>
                 <TableHead className="text-right">Total</TableHead>
@@ -283,7 +348,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
             <TableBody>
               {filteredOrders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                     {initialOrders.length === 0
                       ? "No orders yet. They will appear here once customers start purchasing."
                       : "No orders found matching your criteria"}
@@ -319,7 +384,15 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                         <div className="text-xs text-muted-foreground">{order.customerEmail}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{formatDateTime(order.date)}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{formatDateTime(order.date)}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-normal text-xs">
+                        {order.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate" title={order.productSummary}>
+                      {order.productSummary}
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

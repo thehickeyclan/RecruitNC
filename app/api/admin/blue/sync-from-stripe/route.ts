@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { orderShippingFields } from "@/lib/order-shipping"
 
 export const dynamic = "force-dynamic"
 
@@ -243,6 +244,7 @@ export async function POST() {
         order_number: orderNumber,
         customer_email: customerEmail || "blue-signup@placeholder.com",
         customer_name: customerName,
+        ...orderShippingFields(customerName, {}),
         shipping_address: {},
         shipping_method: { name: "Blue membership", price: 0 },
         subtotal: amountTotal,
@@ -426,6 +428,7 @@ export async function POST() {
         order_number: orderNumber,
         customer_email: sessionCustomerEmail || "blue-signup@placeholder.com",
         customer_name: customerName,
+        ...orderShippingFields(customerName, {}),
         shipping_address: {},
         shipping_method: { name: "Blue membership", price: 0 },
         subtotal: amountTotal,
