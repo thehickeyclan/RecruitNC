@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw } from "lucide-react"
+import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User } from "lucide-react"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
 import { deleteOrder, updateOrderStatus } from "@/app/actions/orders"
 import { toast } from "sonner"
@@ -42,6 +42,7 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [orderToUpdateStatus, setOrderToUpdateStatus] = useState<Order | null>(null)
   const [isFixingAllOrders, setIsFixingAllOrders] = useState(false)
+  const [isBackfillingCustomers, setIsBackfillingCustomers] = useState(false)
 
   const filteredOrders = initialOrders.filter((order) => {
     const matchesSearch =
@@ -137,6 +138,26 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
     }
   }
 
+  const handleBackfillCustomers = async () => {
+    if (!confirm("Fetch customer email/name from Stripe for orders that show Guest/No email? This updates the database.")) return
+    setIsBackfillingCustomers(true)
+    try {
+      const res = await fetch("/api/admin/orders/backfill-customers", { method: "POST" })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Updated ${data.updated} order(s) with customer info.${data.failed > 0 ? ` ${data.failed} failed.` : ""}`)
+        router.refresh()
+      } else {
+        toast.error(data.error || "Failed to backfill customers")
+      }
+    } catch (err) {
+      toast.error("Failed to backfill customers")
+      console.error(err)
+    } finally {
+      setIsBackfillingCustomers(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -168,6 +189,24 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Fix Missing Items
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleBackfillCustomers}
+            disabled={isBackfillingCustomers}
+            variant="outline"
+            className="whitespace-nowrap"
+          >
+            {isBackfillingCustomers ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Recovering...
+              </>
+            ) : (
+              <>
+                <User className="mr-2 h-4 w-4" />
+                Recover customer info
               </>
             )}
           </Button>

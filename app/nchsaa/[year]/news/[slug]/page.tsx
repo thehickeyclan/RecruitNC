@@ -47,6 +47,9 @@ export default async function NCHSAAArticlePage({
         {article.published && content ? (
           <>
             <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">
+              <div className="mb-6 pb-6 border-b border-slate-200">
+                <NchsaaArticleReactions articleSlug={slug} />
+              </div>
               {content}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <NchsaaArticleReactions articleSlug={slug} />

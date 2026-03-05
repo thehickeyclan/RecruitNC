@@ -128,6 +128,7 @@ export function Navbar() {
   const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
   const nationalTeamItems = [
+    { href: "/national-team/hub", label: "Team hub", description: "Your event workspace — roster, chat, logistics (invite-only)", icon: Users },
     { href: "/national-team", label: "About", description: "Learn about the NC United National Team", icon: Users },
     { href: "/national-team/ucd-2024-results", label: "UCD 2024", description: "Ultimate Club Duals 2024 results and highlights", icon: Trophy },
     { href: "/national-team/ucd-2025-results", label: "UCD 2025", description: "Ultimate Club Duals 2025 results and highlights", icon: Trophy },
@@ -378,6 +379,9 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <a href="/messages">Messages</a>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/national-team/hub">Team hub</a>
+                  </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />
@@ -585,6 +589,15 @@ export function Navbar() {
                             <User className="h-4 w-4 mr-2" />
                             Profile
                           </Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                        >
+                          <a href="/national-team/hub" onClick={() => setIsOpen(false)}>
+                            Team hub
+                          </a>
                         </Button>
                         {showMyRecruits && (
                           <Button

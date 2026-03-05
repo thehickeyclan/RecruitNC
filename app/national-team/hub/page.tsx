@@ -74,7 +74,12 @@ export default function NationalTeamHubPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-[#003366]">National Team Hub</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-[#003366]">National Team Hub</h1>
+            {data.isAdmin && (
+              <p className="text-sm text-amber-700 mt-1">Admin: you see the full list of event workspaces.</p>
+            )}
+          </div>
           <Button asChild variant="outline" size="sm">
             <a href="/national-team">Back to National Team</a>
           </Button>
