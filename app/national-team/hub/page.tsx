@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, Award, BookOpen, History, ExternalLink, UsersRound, AlertCircle } from "lucide-react"
+import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
@@ -176,128 +176,145 @@ export default function NationalTeamHubPage() {
   )
 }
 
-/** Full NHSCA Duals 2026 event info for the hub: contacts, coaches, schedule, format, rules. */
+/** Full NHSCA Duals 2026 event info for the hub: logo, event pic, contacts, coaches, schedule, format, rules. */
 function NHSCA2026HubInfo() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#003366]/15 bg-white shadow-sm">
-      {/* Header strip — brand */}
-      <div className="bg-gradient-to-r from-[#002147] to-[#003366] px-4 py-3 sm:px-5 sm:py-3.5">
-        <h3 className="text-sm font-semibold tracking-wide text-white/95 sm:text-base">Event info</h3>
-        <p className="text-xs text-white/80 mt-0.5 sm:text-sm">NHSCA Duals 2026 · Virginia Beach</p>
+    <div className="overflow-hidden rounded-2xl border border-[#003366]/15 bg-white shadow-md">
+      {/* Hero: logo + event image */}
+      <div className="relative bg-gradient-to-br from-[#002147] to-[#003366]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-5 sm:px-6 sm:py-6">
+          <div className="flex items-center justify-center sm:justify-start">
+            <Image
+              src="/images/nhsca-national-duals-logo.png"
+              alt="NHSCA National Duals"
+              width={140}
+              height={56}
+              className="h-12 w-auto sm:h-14 object-contain"
+            />
+          </div>
+          <p className="text-center sm:text-right text-white/90 text-sm font-medium">27th Annual · May 23–25, 2026</p>
+        </div>
+        <div className="aspect-video w-full max-h-[200px] sm:max-h-[240px] relative bg-[#002147]">
+          <Image
+            src="/images/nhsca-virginia-beach-arena.png"
+            alt="Virginia Beach Sports Center — NHSCA National Duals venue"
+            fill
+            className="object-cover opacity-90"
+            sizes="(max-width: 640px) 100vw, 672px"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#002147]/80 via-transparent to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4">
+            <p className="text-white text-sm font-semibold drop-shadow">Virginia Beach Sports Center</p>
+            <p className="text-white/90 text-xs">The largest and most competitive duals event in the country</p>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-5 p-4 sm:p-5">
-        {/* Main contact — gold accent, touch-friendly */}
+      <div className="p-4 sm:p-6 space-y-6">
+        {/* Main contact — prominent, gold */}
         <a
           href="tel:+16316625409"
-          className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-xl bg-[#D3B574]/15 px-4 py-3 text-[#002147] transition-colors hover:bg-[#D3B574]/25 active:bg-[#D3B574]/30 border border-[#D3B574]/30"
+          className="flex min-h-[52px] flex-wrap items-center justify-center gap-2 rounded-xl bg-[#D3B574]/20 px-4 py-3 text-[#002147] transition-colors hover:bg-[#D3B574]/30 active:bg-[#D3B574]/40 border-2 border-[#D3B574]/40"
         >
           <Phone className="h-5 w-5 shrink-0 text-[#003366]" />
           <span className="font-semibold text-sm sm:text-base">Main contact:</span>
           <span className="font-medium text-sm sm:text-base">Matt Hickey (631) 662-5409</span>
         </a>
 
-        {/* Coaches — responsive grid, tap-friendly phones */}
-        <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-3 flex items-center gap-2">
-            <UsersRound className="h-4 w-4" /> Coaches
-          </h4>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {[
-              { name: "Colton Palmer", tel: "+19194519864", display: "(919) 451-9864", bio: "NC State · 2x state champ · NC all-time wins", img: "/images/coach-palmer.png", alt: "Colton Palmer" },
-              { name: "Michael Macchiavello", tel: "+17048917436", display: "(704) 891-7436", bio: "2018 NCAA Champion · Team USA · NC United founder", img: "/images/coach-macchiavello.png", alt: "Michael Macchiavello" },
-              { name: "Araad Fischer", tel: "+19194508266", display: "(919) 450-8266", bio: "Duke · 4-year starter · State finalist", img: BLUE_IMAGE_KEYS.blue_coach_araad_fischer, alt: "Araad Fischer" },
-            ].map((c) => (
-              <div key={c.name} className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-3 sm:p-3.5">
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gray-200 ring-2 ring-[#003366]/10">
-                  <Image src={c.img} alt={c.alt} fill className="object-cover" sizes="48px" unoptimized={c.name === "Araad Fischer"} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-[#002147] text-sm">{c.name}</p>
-                  <a href={`tel:${c.tel}`} className="mt-1 inline-block min-h-[44px] py-1.5 text-sm font-medium text-[#003366] hover:underline focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-1 rounded">
+        {/* Two-column layout on desktop: left = when/where + schedule, right = coaches */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="rounded-xl border border-[#003366]/10 bg-[#003366]/[0.03] p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-2 flex items-center gap-2">
+                <Calendar className="h-4 w-4" /> When & where
+              </h4>
+              <p className="text-sm text-gray-700 leading-relaxed">May 23–25, 2026 (Memorial Day weekend) · Virginia Beach Sports Center · 208 teams · Min 6 matches.</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-1.5 flex items-center gap-2">
+                <Clock className="h-4 w-4" /> Schedule
+              </h4>
+              <p className="text-xs text-amber-700/90 mb-2 flex items-center gap-1.5">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Tentative; subject to change.
+              </p>
+              <ul className="space-y-1.5 text-sm text-gray-700">
+                <li><strong className="text-[#002147]">Fri May 22:</strong> Weigh-ins 2pm / 6pm · close 4pm / 7:30pm</li>
+                <li><strong className="text-[#002147]">Sat–Mon:</strong> Day 1 · Day 2 · Day 3 (championship)</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-[#003366]/15 bg-[#003366]/5 p-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] flex items-center gap-2">
+                <Scale className="h-4 w-4" /> Early weigh-ins
+              </h4>
+              <p className="text-sm text-gray-700 mt-1">NC United has purchased. Teams need 7+ wrestlers.</p>
+              <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-[#003366] hover:underline">
+                Directions (official site) <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+
+          {/* Coaches — visual cards */}
+          <div className="lg:col-span-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-3 flex items-center gap-2">
+              <UsersRound className="h-4 w-4" /> Coaches
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { name: "Colton Palmer", tel: "+19194519864", display: "(919) 451-9864", bio: "NC State · 2x state champ · NC all-time wins", img: "/images/coach-palmer.png", alt: "Colton Palmer" },
+                { name: "Michael Macchiavello", tel: "+17048917436", display: "(704) 891-7436", bio: "2018 NCAA Champion · Team USA · NC United founder", img: "/images/coach-macchiavello.png", alt: "Michael Macchiavello" },
+                { name: "Araad Fischer", tel: "+19194508266", display: "(919) 450-8266", bio: "Duke · 4-year starter · State finalist", img: BLUE_IMAGE_KEYS.blue_coach_araad_fischer, alt: "Araad Fischer" },
+              ].map((c) => (
+                <div key={c.name} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow transition-shadow">
+                  <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-full bg-gray-100 ring-2 ring-[#003366]/10">
+                    <Image src={c.img} alt={c.alt} fill className="object-cover" sizes="80px" unoptimized={c.name === "Araad Fischer"} />
+                  </div>
+                  <p className="mt-3 text-center font-semibold text-[#002147] text-sm">{c.name}</p>
+                  <a href={`tel:${c.tel}`} className="mt-1 flex justify-center min-h-[44px] items-center py-1.5 text-sm font-medium text-[#003366] hover:underline">
                     {c.display}
                   </a>
-                  <p className="text-xs text-gray-600 mt-0.5 leading-snug">{c.bio}</p>
+                  <p className="text-center text-xs text-gray-600 mt-1 leading-snug">{c.bio}</p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* When & where */}
-        <div className="rounded-xl border border-gray-100 bg-gray-50/30 px-4 py-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-1.5 flex items-center gap-2">
-            <Calendar className="h-4 w-4" /> When & where
-          </h4>
-          <p className="text-sm text-gray-700 leading-relaxed">May 23–25, 2026 (Memorial Day weekend) · Virginia Beach Sports Center · Boys HS 208 teams · Min 6 matches per team.</p>
-        </div>
-
-        {/* Schedule */}
-        <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] mb-1.5 flex items-center gap-2">
-            <Clock className="h-4 w-4" /> Schedule
-          </h4>
-          <p className="text-xs text-amber-700/90 mb-2 flex items-center gap-1.5">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" /> Tentative; subject to change by NHSCA / City of Virginia Beach.
-          </p>
-          <ul className="space-y-1.5 text-sm text-gray-700">
-            <li className="rounded-lg bg-gray-50/60 px-3 py-2"><strong className="text-[#002147]">Fri May 22:</strong> 2pm early weigh-ins · 3pm onsite sales · 4pm close · 6pm regular weigh-ins · 7:30pm close</li>
-            <li className="rounded-lg bg-gray-50/60 px-3 py-2"><strong className="text-[#002147]">Sat–Mon:</strong> May 23 Day 1 · May 24 Day 2 · May 25 Day 3 (championship)</li>
-          </ul>
-        </div>
-
-        {/* Early weigh-ins */}
-        <div className="rounded-xl border border-[#003366]/15 bg-[#003366]/5 px-4 py-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[#003366] flex items-center gap-2">
-            <Scale className="h-4 w-4" /> Early weigh-ins
-          </h4>
-          <p className="text-sm text-gray-700 mt-1">NC United has purchased early weigh-ins. Teams need 7+ wrestlers.</p>
-          <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-[#003366] hover:underline focus:outline-none focus:ring-2 focus:ring-[#003366]/30 rounded">
-            Directions (official site) <ExternalLink className="h-3.5 w-3.5" />
-          </a>
-        </div>
-
-        {/* Format · Weights · Match times — cards on mobile, grid on desktop */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-gray-100 bg-gray-50/30 px-3 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">Format</p>
-            <p className="text-xs text-gray-700 mt-1 leading-relaxed">Day 1: pools of 4, 3 matches. Day 2: champ/consi, min 3. Day 3: bracket, min 2.</p>
-          </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/30 px-3 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">Weights</p>
-            <p className="text-xs text-gray-700 mt-1 leading-relaxed">106–285 (+3 lb). Singlet weigh-in; actual weight = that + one above.</p>
-          </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/30 px-3 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">Match times</p>
-            <p className="text-xs text-gray-700 mt-1">HS: 1:30–1:30–1:30</p>
+        {/* Quick ref: format, weights, match times, awards, rules — compact row */}
+        <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="font-semibold text-[#002147] text-xs uppercase tracking-wider">Format</p>
+              <p className="text-gray-700 mt-0.5 text-xs">Day 1: pools, 3 matches. Day 2: champ/consi, min 3. Day 3: bracket, min 2.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-[#002147] text-xs uppercase tracking-wider">Weights</p>
+              <p className="text-gray-700 mt-0.5 text-xs">106–285 (+3 lb). Singlet weigh-in.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-[#002147] text-xs uppercase tracking-wider">Match times</p>
+              <p className="text-gray-700 mt-0.5 text-xs">HS: 1:30–1:30–1:30</p>
+            </div>
+            <div>
+              <p className="font-semibold text-[#002147] text-xs uppercase tracking-wider">Awards & rules</p>
+              <p className="text-gray-700 mt-0.5 text-xs">Top 5: medals. Headgear optional · college OB · OT :60/:30/:30.</p>
+            </div>
           </div>
         </div>
 
-        {/* Team awards · Rules */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-gray-100 bg-gray-50/30 px-3 py-3">
-            <p className="text-xs font-semibold text-[#002147] flex items-center gap-1.5"><Award className="h-4 w-4 text-[#003366]" /> Team awards</p>
-            <p className="text-xs text-gray-700 mt-1">Top 5: award + medals. 1st: championship bracket.</p>
-          </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/30 px-3 py-3">
-            <p className="text-xs font-semibold text-[#002147] flex items-center gap-1.5"><BookOpen className="h-4 w-4 text-[#003366]" /> Rules</p>
-            <p className="text-xs text-gray-700 mt-1">Headgear optional · mouth guards for braces · college OB · 2 coaches/corner · OT :60/:30/:30.</p>
-          </div>
-        </div>
-
-        {/* Primary links — pill buttons, mobile-friendly */}
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+        {/* Primary actions */}
+        <div className="flex flex-wrap gap-3 pt-2">
           <a
             href="https://nhsca-events.com/national-duals/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#003366] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#002147] active:bg-[#002147] focus:outline-none focus:ring-2 focus:ring-[#003366]/50 focus:ring-offset-2"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#003366] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#002147] focus:outline-none focus:ring-2 focus:ring-[#003366]/50 focus:ring-offset-2"
           >
             Official event & registration <ExternalLink className="h-4 w-4" />
           </a>
           <a
             href="/national-team/nhsca-2025-results"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-4 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 active:bg-[#003366]/10 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
           >
             <History className="h-4 w-4" /> 2025 results
           </a>
@@ -450,10 +467,6 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             </div>
           </div>
         )}
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Payment status</h3>
-          <p className="text-sm text-gray-600">All listed athletes are paid. Equipment due date and any balance will be shared by the organizer.</p>
-        </div>
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Athlete cards (IG)</h3>
           <p className="text-sm text-gray-500">Individual cards for social announcements will be added here.</p>
