@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getEventName } from "@/lib/national-team-events"
+import { getEventName, getEventSlugForApi } from "@/lib/national-team-events"
 
 export type HubRegistration = {
   id: string
@@ -84,16 +84,18 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const paidRegs = (allRegs ?? []) as (HubRegistration & { parent_user_id?: string | null })[]
 
+  // Use canonical API slug so "nhsca-2026" and "nhsca-duals-2026" both map to nhsca-duals-2026 (thread context_id).
+  const toCanonical = (slug: string) => getEventSlugForApi(slug || "").trim() || slug
   let eventSlugsToShow: string[]
   if (isAdmin) {
-    const fromRegs = [...new Set(paidRegs.map((r) => r.event_slug))]
+    const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]
     eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026"]
   } else {
     const emailLower = user.email.toLowerCase()
     const myEventSlugs = new Set(
       paidRegs
         .filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
-        .map((r) => r.event_slug)
+        .map((r) => toCanonical(r.event_slug))
     )
     try {
       const { data: workspaceRows } = await admin
@@ -101,7 +103,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
         .select("event_slug")
         .eq("user_id", user.id)
       for (const row of workspaceRows ?? []) {
-        myEventSlugs.add((row as { event_slug: string }).event_slug)
+        myEventSlugs.add(toCanonical((row as { event_slug: string }).event_slug))
       }
     } catch {
       // event_workspace_members table may not exist
@@ -201,7 +203,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
     // 2) Workspace members = distinct parent_user_id from paid regs + parent_email resolved to user_id + event_workspace_members.
     const workspaceUserIds = new Set<string>()
-    const regsForEvent = paidRegs.filter((r) => r.event_slug === eventSlug)
+    const regsForEvent = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
     for (const r of regsForEvent) {
       if (r.parent_user_id) workspaceUserIds.add(r.parent_user_id)
     }
@@ -298,7 +300,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   }
 
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
-    const roster = paidRegs.filter((r) => r.event_slug === eventSlug)
+    const roster = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
     const myRegistrations = roster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
     return {
       eventSlug,

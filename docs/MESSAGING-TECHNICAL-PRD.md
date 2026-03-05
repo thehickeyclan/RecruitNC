@@ -297,6 +297,13 @@ ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS invite_token text UNIQUE;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_messaging_threads_invite_token ON messaging_threads (invite_token) WHERE invite_token IS NOT NULL;
 ```
 
+**Group visibility (private vs public):** Run this so thread admins can set a group as public (visible to all RecruitNC users) or private (invite only):
+
+```sql
+ALTER TABLE messaging_threads ADD COLUMN IF NOT EXISTS visibility text NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'public'));
+COMMENT ON COLUMN messaging_threads.visibility IS 'private = invite only; public = visible to all RecruitNC users (e.g. discover/browse).';
+```
+
 ---
 
 ## 2. API routes (Next.js App Router)
@@ -317,6 +324,8 @@ Base path: `/api/messaging/`. All routes require auth (session); return 401 if u
 | POST | `/api/admin/custom-emoji` | (Admin) Upload logo → resize to 64×64, store in Blob, insert row. FormData: file, slug, category (hs\|college\|club\|ncu\|other), display_name. |
 | PATCH/DELETE | `/api/admin/custom-emoji/[id]` | (Admin) Update or delete custom emoji. |
 | PATCH | `/api/messaging/threads/[threadId]/notifications` | Set notification_level (all \| mentions \| muted). |
+| PATCH | `/api/messaging/threads/[threadId]` | (Thread admin) Update name and/or visibility (body: `name`, `visibility`: 'private' \| 'public'). |
+| GET | `/api/messaging/threads/public` | List public groups (for discover/browse). Returns `threads: [{ id, name, type, last_message_at }]`. |
 
 **Inbox response shape (GET /api/messaging/inbox):**
 
