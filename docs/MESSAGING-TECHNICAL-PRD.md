@@ -490,6 +490,8 @@ COMMENT ON COLUMN user_profiles.notify_email_new_messages IS 'When true, user re
 
 If any are missing, SMS is skipped (no-op). Implementation: `lib/sms.ts` (`sendSms`, `toE164`).
 
+**Not getting texts?** (1) Run the SQL above so `user_profiles` has `notify_sms_new_messages` and `notify_email_new_messages`. (2) In **Profile** → Notification preferences, set **Cell phone** and turn on **"Text me when I get new messages"**. (3) Set all three Twilio env vars in Vercel → Settings → Environment Variables and **redeploy**. (4) Check Vercel function logs for `[RecruitNC] SMS` — they will say whether Twilio is missing, the query failed, or 0 recipients had opt-in + phone.
+
 **Resend (email):** Already used elsewhere (Blue invite, order confirmation). Set `RESEND_API_KEY`. New-message emails use `sendNewMessageNotificationEmail` in `lib/email.ts`. From address: same as Blue (`info@ncwrestlingunited.com`).
 
 Use this doc as the single technical source of truth when implementing RecruitNC Messaging Phase 1.

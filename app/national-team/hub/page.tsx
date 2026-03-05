@@ -10,13 +10,20 @@ import { ThreadView } from "@/components/messaging/thread-view"
 
 const PAYMENT_DUE = "Sunday, March 14, 2026"
 
+const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
+
 export default function NationalTeamHubPage() {
   const { user } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [regPageUrl, setRegPageUrl] = useState("")
 
   useEffect(() => {
-    fetch("/api/national-team/hub")
+    setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/national-team/hub", { credentials: "include" })
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
@@ -86,30 +93,62 @@ export default function NationalTeamHubPage() {
         )}
 
         {events.length === 0 ? (
-          <Card className="border-[#003366]/20">
-            <CardHeader>
-              <CardTitle className="text-[#003366]">Your team hub</CardTitle>
-              <CardDescription>
-                Once you register and pay for an event, this page will show your event roster, your registration details, and the team group chat — all in one place.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600">
-                If you have an invite to <strong>NHSCA Duals 2026</strong>, use your registration link to sign up. After payment, come back here to see the roster and team messaging.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild className="bg-[#003366] hover:bg-[#003366]/90">
-                  <a href="/national-team/nhsca-2026">NHSCA 2026 event page</a>
-                </Button>
-                <Button asChild variant="outline">
-                  <a href="/national-team">National Team overview</a>
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">
-                Already registered? Sign in with the parent email from your registration so your events appear here.
-              </p>
-            </CardContent>
-          </Card>
+          <>
+            <Card className="border-[#003366]/20">
+              <CardHeader>
+                <CardTitle className="text-[#003366]">Your team hub</CardTitle>
+                <CardDescription>
+                  Once you register and pay for an event, this page will show your event roster, your registration details, and the team group chat — all in one place.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  If you have an invite to <strong>NHSCA Duals 2026</strong>, use your registration link to sign up. After payment, come back here to see the roster and team messaging.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild className="bg-[#003366] hover:bg-[#003366]/90">
+                    <a href="/national-team/nhsca-2026">NHSCA 2026 event page</a>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <a href={REG_PAGE_PATH}>Registration page</a>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <a href="/national-team">National Team overview</a>
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Already registered? Sign in with the parent email from your registration so your events appear here.
+                </p>
+              </CardContent>
+            </Card>
+
+            {data.isAdmin && (
+              <Card className="border-amber-300 bg-amber-50/50">
+                <CardHeader>
+                  <CardTitle className="text-amber-900 text-base">Send to families</CardTitle>
+                  <CardDescription>
+                    As admin you can share the registration page and create invite codes. Recipients need an invite code to register.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-1">Registration page (copy and send)</p>
+                    <p className="text-sm text-gray-600 font-mono bg-white border rounded px-2 py-1.5 break-all">
+                      {regPageUrl || REG_PAGE_PATH}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm" className="bg-[#003366] hover:bg-[#003366]/90">
+                      <a href={REG_PAGE_PATH}>Open registration page</a>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <a href="/admin/national-team/invite-codes">Create invite codes</a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
         ) : (
           events.map((event) => (
             <EventHubSection key={event.eventSlug} event={event} currentUserId={user?.id ?? ""} />

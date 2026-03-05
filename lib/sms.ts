@@ -23,9 +23,9 @@ export function toE164(phone: string | null | undefined): string | null {
  */
 export async function sendSms(toE164: string, body: string): Promise<boolean> {
   if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("[RecruitNC SMS] Skipped (Twilio not configured):", toE164.slice(0, 6) + "…", body.slice(0, 40) + "…")
-    }
+    console.warn(
+      "[RecruitNC SMS] Skipped — Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in Vercel (or .env) and redeploy."
+    )
     return false
   }
   const from = TWILIO_PHONE_NUMBER.trim()

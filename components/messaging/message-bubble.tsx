@@ -222,7 +222,7 @@ export function MessageBubble(
   }
 
   return (
-    <div className={cn("flex flex-col gap-0.5", isOwn ? "items-end" : "items-start")}>
+    <div className={cn("flex flex-col gap-0", isOwn ? "items-end" : "items-start")}>
       <div
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm",
@@ -284,10 +284,10 @@ export function MessageBubble(
           </>
         )}
       </div>
-      <div className="flex items-center gap-1.5 px-1 flex-wrap">
-        <span className="text-xs text-gray-400">{time}</span>
+      <div className="flex items-center gap-1.5 px-1 flex-wrap min-h-0">
+        <span className="text-xs text-gray-400 leading-tight">{time}</span>
         {message.edited_at && (
-          <span className="text-xs text-gray-400">· Edited</span>
+          <span className="text-xs text-gray-400 leading-tight">· Edited</span>
         )}
         {showEdit && !editing && (
           <>
@@ -297,7 +297,7 @@ export function MessageBubble(
                 setEditBody(message.body)
                 setEditing(true)
               }}
-              className="text-xs text-gray-500 hover:text-[#003366] hover:underline"
+              className="text-xs text-gray-500 hover:text-[#003366] hover:underline leading-tight"
               aria-label="Edit message"
             >
               Edit
@@ -365,79 +365,82 @@ export function MessageBubble(
             )}
           </>
         )}
-      </div>
-      {(reactions.length > 0 || onReactionChange) && (
-        <div className="flex items-center gap-1 flex-wrap mt-0.5">
-          {reactions.map((r) => {
-            const haveReacted = r.user_ids.includes(props.currentUserId)
-            return (
-              <button
-                key={r.emoji}
-                type="button"
-                onClick={() => onReactionChange && toggleReaction(r.emoji)}
-                disabled={reacting}
-                className={cn(
-                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors",
-                  haveReacted ? "bg-[#003366]/20 border-[#003366]/40 text-[#003366]" : "bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200"
-                )}
-              >
-                {renderReactionEmoji(r.emoji)}
-                {r.count > 1 && <span>{r.count}</span>}
-              </button>
-            )
-          })}
-          {onReactionChange && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                  aria-label="Add reaction"
-                  disabled={reacting}
-                >
-                  <SmilePlus className="h-3.5 w-3.5" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align={isOwn ? "end" : "start"} className="w-auto p-2">
-                <div className="flex flex-wrap gap-1">
-                  {QUICK_EMOJI.map((e) => (
+        {(reactions.length > 0 || onReactionChange) && (
+          <>
+            {reactions.length > 0 && <span className="text-gray-300 mx-0.5" aria-hidden>·</span>}
+            <span className="flex items-center gap-1 flex-wrap">
+              {reactions.map((r) => {
+                const haveReacted = r.user_ids.includes(props.currentUserId)
+                return (
+                  <button
+                    key={r.emoji}
+                    type="button"
+                    onClick={() => onReactionChange && toggleReaction(r.emoji)}
+                    disabled={reacting}
+                    className={cn(
+                      "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-colors",
+                      haveReacted ? "bg-[#003366]/20 border-[#003366]/40 text-[#003366]" : "bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200"
+                    )}
+                  >
+                    {renderReactionEmoji(r.emoji)}
+                    {r.count > 1 && <span>{r.count}</span>}
+                  </button>
+                )
+              })}
+              {onReactionChange && (
+                <Popover>
+                  <PopoverTrigger asChild>
                     <button
-                      key={e}
                       type="button"
-                      className="p-1.5 rounded hover:bg-gray-100 text-lg"
-                      onClick={() => toggleReaction(e)}
+                      className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      aria-label="Add reaction"
+                      disabled={reacting}
                     >
-                      {e}
+                      <SmilePlus className="h-3.5 w-3.5" />
                     </button>
-                  ))}
-                  {customEmojiMap &&
-                    (() => {
-                      const seen = new Set<string>()
-                      return Object.keys(customEmojiMap)
-                        .filter((k) => {
-                          const low = k.toLowerCase()
-                          if (seen.has(low)) return false
-                          seen.add(low)
-                          return true
-                        })
-                        .slice(0, 6)
-                        .map((slug) => (
-                          <button
-                            key={slug}
-                            type="button"
-                            className="p-1 rounded hover:bg-gray-100"
-                            onClick={() => toggleReaction(slug)}
-                          >
-                            <img src={customEmojiMap[slug]} alt={slug} className="w-5 h-5 object-contain" />
-                          </button>
-                        ))
-                    })()}
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
-      )}
+                  </PopoverTrigger>
+                  <PopoverContent align={isOwn ? "end" : "start"} className="w-auto p-2">
+                    <div className="flex flex-wrap gap-1">
+                      {QUICK_EMOJI.map((e) => (
+                        <button
+                          key={e}
+                          type="button"
+                          className="p-1.5 rounded hover:bg-gray-100 text-lg"
+                          onClick={() => toggleReaction(e)}
+                        >
+                          {e}
+                        </button>
+                      ))}
+                      {customEmojiMap &&
+                        (() => {
+                          const seen = new Set<string>()
+                          return Object.keys(customEmojiMap)
+                            .filter((k) => {
+                              const low = k.toLowerCase()
+                              if (seen.has(low)) return false
+                              seen.add(low)
+                              return true
+                            })
+                            .slice(0, 6)
+                            .map((slug) => (
+                              <button
+                                key={slug}
+                                type="button"
+                                className="p-1 rounded hover:bg-gray-100"
+                                onClick={() => toggleReaction(slug)}
+                              >
+                                <img src={customEmojiMap[slug]} alt={slug} className="w-5 h-5 object-contain" />
+                              </button>
+                            ))
+                        })()}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </span>
+          </>
+        )}
+      </div>
     </div>
   )
 }

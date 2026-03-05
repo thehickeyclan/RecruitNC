@@ -237,28 +237,48 @@ async function notifyThreadMembersBySms(threadId: string, messageBody: string, s
   const admin = createAdminClient()
   const { data: thread } = await admin.from("messaging_threads").select("name").eq("id", threadId).single()
   const threadName = (thread as { name?: string } | null)?.name ?? "RecruitNC"
-  const { data: members } = await admin
+  const { data: members, error: membersErr } = await admin
     .from("messaging_thread_members")
     .select("user_id")
     .eq("thread_id", threadId)
     .neq("user_id", senderId)
+  if (membersErr) {
+    console.error("[RecruitNC] SMS notify: members query failed", membersErr.message)
+    return
+  }
   const userIds = (members ?? []).map((m) => (m as { user_id: string }).user_id)
   if (userIds.length === 0) return
-  const preview = messageBody.slice(0, PREVIEW_LEN) + (messageBody.length > PREVIEW_LEN ? "…" : "")
-  const inboxUrl = `${BASE_URL.replace(/\/$/, "")}/messages`
 
-  // SMS: users with notify_sms_new_messages and cell_phone
-  const { data: smsProfiles } = await admin
+  const preview = messageBody.slice(0, PREVIEW_LEN) + (messageBody.length > PREVIEW_LEN ? "…" : "")
+  const base = BASE_URL.replace(/\/$/, "")
+  const inboxUrl = `${base}/messages`
+  const threadUrl = `${base}/messages/${threadId}`
+
+  // SMS: users with notify_sms_new_messages and cell_phone (columns must exist on user_profiles — see PRD §11)
+  const { data: smsProfiles, error: smsQueryErr } = await admin
     .from("user_profiles")
     .select("user_id, cell_phone")
     .in("user_id", userIds)
     .eq("notify_sms_new_messages", true)
     .not("cell_phone", "is", null)
-  const smsBody = `RecruitNC: New message in ${threadName}: ${preview}`
+  if (smsQueryErr) {
+    console.error("[RecruitNC] SMS notify: user_profiles query failed (missing notify_sms_new_messages/cell_phone?)", smsQueryErr.message)
+    return
+  }
+  const smsBody = `RecruitNC: New message in ${threadName}: ${preview} ${threadUrl}`
+  let sent = 0
   for (const row of smsProfiles ?? []) {
     const r = row as { user_id: string; cell_phone: string }
     const e164 = toE164(r.cell_phone)
-    if (e164) await sendSms(e164, smsBody)
+    if (e164) {
+      const ok = await sendSms(e164, smsBody)
+      if (ok) sent++
+    }
+  }
+  if (sent > 0) {
+    try { console.log("[RecruitNC] SMS notify: sent", sent, "to thread", threadId) } catch (_) {}
+  } else if ((smsProfiles?.length ?? 0) === 0 && userIds.length > 0) {
+    try { console.log("[RecruitNC] SMS notify: 0 recipients (opt-in + cell_phone). Thread members:", userIds.length, "— ensure Profile has cell phone and 'Text me for new messages' on.") } catch (_) {}
   }
 
   // Email: users with notify_email_new_messages; get email from auth

@@ -31,6 +31,8 @@ export type HubResponse = {
   allowed: boolean
   reason?: "signed_out" | "no_access"
   events?: HubEvent[]
+  /** True when current user is admin (so UI can show reg link / invite code info). */
+  isAdmin?: boolean
 }
 
 export async function GET(): Promise<NextResponse<HubResponse>> {
@@ -42,13 +44,23 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const admin = createAdminClient()
 
-  const { data: profile } = await supabase
+  // Use admin client so RLS never hides the profile; reliable admin check.
+  let profile = (await admin
     .from("user_profiles")
-    .select("is_admin")
+    .select("is_admin, role")
     .eq("user_id", user.id)
-    .single()
+    .maybeSingle()).data as { is_admin?: boolean; role?: string } | null
 
-  const isAdmin = !!profile?.is_admin
+  // Fallback: look up by email in case profile is keyed differently
+  if (!profile && user.email) {
+    profile = (await admin
+      .from("user_profiles")
+      .select("is_admin, role")
+      .ilike("email", user.email)
+      .maybeSingle()).data as { is_admin?: boolean; role?: string } | null
+  }
+
+  const isAdmin = !!profile?.is_admin || profile?.role === "admin"
 
   const { data: allRegs, error: regError } = await admin
     .from("national_team_event_registrations")
@@ -58,7 +70,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   if (regError) {
     if (isAdmin) {
       console.warn("[national-team/hub] Admin access: registrations query failed", regError)
-      return NextResponse.json({ allowed: true, events: [] })
+      return NextResponse.json({ allowed: true, events: [], isAdmin: true })
     }
     if ((regError as { code?: string })?.code === "42P01") {
       return NextResponse.json(
@@ -74,7 +86,8 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   let eventSlugsToShow: string[]
   if (isAdmin) {
-    eventSlugsToShow = [...new Set(paidRegs.map((r) => r.event_slug))]
+    const fromRegs = [...new Set(paidRegs.map((r) => r.event_slug))]
+    eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026"]
   } else {
     const emailLower = user.email.toLowerCase()
     const myEventSlugs = new Set(
@@ -116,5 +129,6 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   return NextResponse.json({
     allowed: true,
     events,
+    isAdmin,
   })
 }
