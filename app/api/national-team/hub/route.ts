@@ -205,38 +205,42 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     for (const r of regsForEvent) {
       if (r.parent_user_id) workspaceUserIds.add(r.parent_user_id)
     }
-    // Resolve parent_email → user_id for regs where we don't have parent_user_id yet (so parents who haven't visited the hub still get added to the forum).
+    // Resolve parent_email → user_id (user_profiles first; then Auth as fallback for profiles missing email).
     const parentEmailsToResolve = [...new Set(
       regsForEvent
         .filter((r) => !r.parent_user_id && (r.parent_email ?? "").trim())
         .map((r) => (r.parent_email ?? "").trim().toLowerCase())
-    )]
-    if (parentEmailsToResolve.length > 0) {
-      const orClause = parentEmailsToResolve.map((e) => `email.ilike.${e}`).join(",")
-      const { data: profiles } = await admin
+    )].slice(0, 200)
+    const emailToUserId = new Map<string, string>()
+    for (const email of parentEmailsToResolve) {
+      const { data: rows } = await admin
         .from("user_profiles")
         .select("user_id, email")
-        .or(orClause)
-      const emailToUserId = new Map<string, string>()
-      for (const p of profiles ?? []) {
-        const row = p as { user_id: string; email?: string | null }
-        const em = (row.email ?? "").trim().toLowerCase()
-        if (em) {
-          emailToUserId.set(em, row.user_id)
-          workspaceUserIds.add(row.user_id)
-        }
+        .ilike("email", email)
+        .limit(1)
+      let row = rows?.[0] as { user_id: string; email?: string | null } | undefined
+      if (!row) {
+        const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+        const match = users?.find((u) => (u.email ?? "").toLowerCase() === email)
+        if (match) row = { user_id: match.id, email: match.email ?? undefined }
       }
-      // Backfill parent_user_id on regs so next time we don't need to resolve.
-      for (const r of regsForEvent) {
-        if (r.parent_user_id) continue
-        const em = (r.parent_email ?? "").trim().toLowerCase()
-        const uid = em ? emailToUserId.get(em) : null
-        if (uid) {
-          await admin
-            .from("national_team_event_registrations")
-            .update({ parent_user_id: uid, updated_at: now })
-            .eq("id", r.id)
-        }
+      if (row) {
+        const em = (row.email ?? "").trim().toLowerCase() || email
+        emailToUserId.set(em, row.user_id)
+        workspaceUserIds.add(row.user_id)
+      }
+    }
+    console.warn("[RecruitNC] hub sync", eventSlug, "regs:", regsForEvent.length, "emails to resolve:", parentEmailsToResolve.length, "resolved:", emailToUserId.size, "workspace members:", workspaceUserIds.size)
+    // Backfill parent_user_id on regs so next time we don't need to resolve.
+    for (const r of regsForEvent) {
+      if (r.parent_user_id) continue
+      const em = (r.parent_email ?? "").trim().toLowerCase()
+      const uid = em ? emailToUserId.get(em) : null
+      if (uid) {
+        await admin
+          .from("national_team_event_registrations")
+          .update({ parent_user_id: uid, updated_at: now })
+          .eq("id", r.id)
       }
     }
     try {
