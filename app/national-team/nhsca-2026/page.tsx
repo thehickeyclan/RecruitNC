@@ -437,10 +437,11 @@ export default function NHSCA2026EventPage() {
           </CardContent>
         </Card>
 
-        <div className="text-center pt-4">
+        <div className="text-center pt-4 pb-8">
           <Link href="/national-team" className="text-[#003366] hover:underline font-medium">
             ← Back to National Team
           </Link>
+          <p className="mt-3 text-xs text-gray-400">Event info · Coaches · Schedule · Updated March 2026</p>
         </div>
       </div>
     </div>
