@@ -64,7 +64,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const { data: allRegs, error: regError } = await admin
     .from("national_team_event_registrations")
-    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, status, created_at")
+    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at")
     .eq("status", "paid")
 
   if (regError) {
@@ -82,7 +82,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     return NextResponse.json({ allowed: false, reason: "no_access" }, { status: 200 })
   }
 
-  const paidRegs = (allRegs ?? []) as HubRegistration[]
+  const paidRegs = (allRegs ?? []) as (HubRegistration & { parent_user_id?: string | null })[]
 
   let eventSlugsToShow: string[]
   if (isAdmin) {
@@ -95,6 +95,17 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
         .filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
         .map((r) => r.event_slug)
     )
+    try {
+      const { data: workspaceRows } = await admin
+        .from("event_workspace_members")
+        .select("event_slug")
+        .eq("user_id", user.id)
+      for (const row of workspaceRows ?? []) {
+        myEventSlugs.add((row as { event_slug: string }).event_slug)
+      }
+    } catch {
+      // event_workspace_members table may not exist
+    }
     if (myEventSlugs.size === 0) {
       return NextResponse.json({ allowed: false, reason: "no_access" })
     }
@@ -102,6 +113,18 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   }
 
   const emailLower = user.email!.toLowerCase()
+
+  // Backfill parent_user_id on registrations where current user's email matches parent_email (so workspace membership is stable).
+  const myRegIds = paidRegs
+    .filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    .map((r) => r.id)
+  if (myRegIds.length > 0) {
+    await admin
+      .from("national_team_event_registrations")
+      .update({ parent_user_id: user.id, updated_at: new Date().toISOString() })
+      .in("id", myRegIds)
+      .eq("status", "paid")
+  }
 
   const { data: eventThreads } = await admin
     .from("messaging_threads")
@@ -154,27 +177,83 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     }
   }
 
-  // Ensure current user is a member of each event thread they have access to (so group chat doesn't show Forbidden).
-  const threadIdsForUser = eventSlugsToShow.map((slug) => threadIdByEvent.get(slug)).filter(Boolean) as string[]
-  if (threadIdsForUser.length > 0) {
-    const { data: existingMembers } = await admin
+  // Workspace ↔ forum sync: everyone who can see the workspace is in the forum; everyone in the forum can see the workspace.
+  const now = new Date().toISOString()
+
+  // 1) Ensure current user is in event_workspace_members for each event they have access to (source: registration).
+  try {
+    for (const eventSlug of eventSlugsToShow) {
+      await admin.from("event_workspace_members").upsert(
+        { event_slug: eventSlug, user_id: user.id, source: "registration", created_at: now },
+        { onConflict: "event_slug,user_id", ignoreDuplicates: true }
+      )
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if ((e as { code?: string })?.code !== "42P01") {
+      console.warn("[national-team/hub] event_workspace_members upsert (table may not exist)", msg)
+    }
+  }
+
+  for (const eventSlug of eventSlugsToShow) {
+    const threadId = threadIdByEvent.get(eventSlug)
+    if (!threadId) continue
+
+    // 2) Workspace members = distinct parent_user_id from paid regs (this event) + event_workspace_members.
+    const workspaceUserIds = new Set<string>()
+    for (const r of paidRegs) {
+      if (r.event_slug === eventSlug && r.parent_user_id) workspaceUserIds.add(r.parent_user_id)
+    }
+    try {
+      const { data: explicitRows } = await admin
+        .from("event_workspace_members")
+        .select("user_id")
+        .eq("event_slug", eventSlug)
+      for (const row of explicitRows ?? []) {
+        workspaceUserIds.add((row as { user_id: string }).user_id)
+      }
+    } catch {
+      // table may not exist
+    }
+
+    // 3) Sync workspace → forum: add every workspace member to the thread.
+    const { data: existingThreadMembers } = await admin
       .from("messaging_thread_members")
-      .select("thread_id")
-      .eq("user_id", user.id)
-      .in("thread_id", threadIdsForUser)
-    const alreadyMember = new Set((existingMembers ?? []).map((r) => (r as { thread_id: string }).thread_id))
-    const now = new Date().toISOString()
-    for (const threadId of threadIdsForUser) {
-      if (alreadyMember.has(threadId)) continue
+      .select("user_id")
+      .eq("thread_id", threadId)
+    const inThread = new Set((existingThreadMembers ?? []).map((r) => (r as { user_id: string }).user_id))
+    for (const uid of workspaceUserIds) {
+      if (inThread.has(uid)) continue
       const { error: addErr } = await admin.from("messaging_thread_members").insert({
         thread_id: threadId,
-        user_id: user.id,
+        user_id: uid,
         role: "member",
         notification_level: "all",
         joined_at: now,
       })
       if (addErr && (addErr as { code?: string }).code !== "23505") {
-        console.warn("[national-team/hub] Could not add user to event thread", threadId, addErr.message)
+        console.warn("[national-team/hub] Could not add workspace member to thread", eventSlug, uid, addErr.message)
+      } else {
+        inThread.add(uid)
+      }
+    }
+
+    // 4) Sync forum → workspace: add every thread member to event_workspace_members (so invite-link joiners see the hub).
+    try {
+      const { data: threadMemberRows } = await admin
+        .from("messaging_thread_members")
+        .select("user_id")
+        .eq("thread_id", threadId)
+      for (const row of threadMemberRows ?? []) {
+        const uid = (row as { user_id: string }).user_id
+        await admin.from("event_workspace_members").upsert(
+          { event_slug: eventSlug, user_id: uid, source: "forum_invite", created_at: now },
+          { onConflict: "event_slug,user_id", ignoreDuplicates: true }
+        )
+      }
+    } catch (e) {
+      if ((e as { code?: string })?.code !== "42P01") {
+        console.warn("[national-team/hub] event_workspace_members sync from forum", (e as Error).message)
       }
     }
   }

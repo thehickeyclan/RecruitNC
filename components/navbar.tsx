@@ -45,13 +45,9 @@ export function Navbar() {
 
   const fetchUnreadMessages = useCallback(() => {
     if (!user) return
-    fetch("/api/messaging/inbox", { credentials: "include" })
+    fetch("/api/messaging/unread-count", { credentials: "include" })
       .then((r) => r.json())
-      .then((data) => {
-        const threads = data?.threads ?? []
-        const total = threads.reduce((sum: number, t: { unread_count?: number }) => sum + (t.unread_count ?? 0), 0)
-        setUnreadMessages(total)
-      })
+      .then((data) => setUnreadMessages(typeof data?.count === "number" ? data.count : 0))
       .catch(() => setUnreadMessages(0))
   }, [user])
 
@@ -433,6 +429,17 @@ export function Navbar() {
 
           {/* Mobile menu button and auth buttons */}
           <div className="md:hidden flex items-center gap-2">
+            {/* Messages icon with unread badge - when logged in */}
+            {user && (
+              <a href="/messages" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
+                <MessageCircle className="h-5 w-5" />
+                {unreadMessages > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </span>
+                )}
+              </a>
+            )}
             {/* Cart icon (shopping cart) - always visible */}
             <a href="/cart" target="_top" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
               <ShoppingCart className="h-5 w-5" />

@@ -111,8 +111,10 @@ export async function POST(
     .maybeSingle()
   if (existing) return NextResponse.json({ error: "User is already in the group" }, { status: 400 })
 
-  const { data: thread } = await admin.from("messaging_threads").select("name").eq("id", threadId).single()
+  const { data: thread } = await admin.from("messaging_threads").select("name, context_type, context_id").eq("id", threadId).single()
   const threadName = (thread as { name?: string } | null)?.name ?? "Group"
+  const contextType = (thread as { context_type?: string | null } | null)?.context_type
+  const contextId = (thread as { context_id?: string | null } | null)?.context_id
 
   const now = new Date().toISOString()
   const { error: insertErr } = await admin.from("messaging_thread_members").insert({
@@ -125,6 +127,25 @@ export async function POST(
   if (insertErr) {
     console.error("[messaging/threads/members POST]", insertErr)
     return NextResponse.json({ error: insertErr.message }, { status: 500 })
+  }
+
+  // If this is an event-linked thread, add the user to the event workspace so they see the hub.
+  if (contextType === "event" && contextId) {
+    try {
+      await admin.from("event_workspace_members").upsert(
+        {
+          event_slug: contextId,
+          user_id: userIdToAdd,
+          source: "forum_invite",
+          created_at: now,
+        },
+        { onConflict: "event_slug,user_id", ignoreDuplicates: true }
+      )
+    } catch (e) {
+      if ((e as { code?: string })?.code !== "42P01") {
+        console.warn("[messaging/threads/members] event_workspace_members upsert", (e as Error).message)
+      }
+    }
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"

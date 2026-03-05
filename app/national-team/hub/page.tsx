@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { MessageCircle, Loader2, Lock } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { MessageCircle, Loader2, Lock, UserPlus } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
 
@@ -165,6 +166,39 @@ export default function NationalTeamHubPage() {
 function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
+  const [addEmail, setAddEmail] = useState("")
+  const [addLoading, setAddLoading] = useState(false)
+  const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  const handleAddMember = async () => {
+    const email = addEmail.trim().toLowerCase()
+    if (!email) return
+    setAddMessage(null)
+    setAddLoading(true)
+    try {
+      const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        setAddMessage({ type: "success", text: "Added. They can now see this event and the group chat." })
+        setAddEmail("")
+      } else {
+        setAddMessage({
+          type: "error",
+          text: data?.error ?? (res.status === 404 ? "No RecruitNC account found for that email. They need to sign up first." : "Could not add member."),
+        })
+      }
+    } catch {
+      setAddMessage({ type: "error", text: "Request failed. Try again." })
+    } finally {
+      setAddLoading(false)
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -190,6 +224,34 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             </div>
           </div>
         )}
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            Add family or teammate
+          </h3>
+          <p className="text-xs text-gray-500 mb-2">
+            Anyone you add will see this event workspace and the group chat. They need a RecruitNC account (same email they use to sign in).
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <Input
+              type="email"
+              placeholder="their@email.com"
+              value={addEmail}
+              onChange={(e) => setAddEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
+              className="max-w-xs"
+              disabled={addLoading}
+            />
+            <Button onClick={handleAddMember} disabled={addLoading || !addEmail.trim()} size="sm" className="bg-[#003366] hover:bg-[#003366]/90">
+              {addLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add to workspace"}
+            </Button>
+          </div>
+          {addMessage && (
+            <p className={`text-sm mt-2 ${addMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>
+              {addMessage.text}
+            </p>
+          )}
+        </div>
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Roster ({event.roster.length})</h3>
           <div className="border rounded-md overflow-hidden">

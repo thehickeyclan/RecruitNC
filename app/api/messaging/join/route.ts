@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: thread, error: threadErr } = await admin
     .from("messaging_threads")
-    .select("id, name")
+    .select("id, name, context_type, context_id")
     .eq("invite_token", token)
     .single()
 
@@ -29,6 +29,9 @@ export async function POST(request: Request) {
   }
 
   const threadId = (thread as { id: string }).id
+  const contextType = (thread as { context_type?: string | null }).context_type
+  const contextId = (thread as { context_id?: string | null }).context_id
+
   const { data: existing } = await admin
     .from("messaging_thread_members")
     .select("user_id")
@@ -50,6 +53,25 @@ export async function POST(request: Request) {
   if (insertErr) {
     console.error("[messaging/join]", insertErr)
     return NextResponse.json({ error: "Failed to join group" }, { status: 500 })
+  }
+
+  // If this is an event-linked thread, add user to event workspace so they see the hub (roster, etc.).
+  if (contextType === "event" && contextId) {
+    try {
+      await admin.from("event_workspace_members").upsert(
+        {
+          event_slug: contextId,
+          user_id: user.id,
+          source: "forum_invite",
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: "event_slug,user_id", ignoreDuplicates: true }
+      )
+    } catch (e) {
+      if ((e as { code?: string })?.code !== "42P01") {
+        console.warn("[messaging/join] event_workspace_members upsert", (e as Error).message)
+      }
+    }
   }
 
   return NextResponse.json({ threadId, name: (thread as { name?: string }).name })
