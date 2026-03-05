@@ -70,7 +70,7 @@ export default async function OrdersPage() {
         const first = ((r as { athlete_first_name?: string }).athlete_first_name ?? "").trim()
         const last = ((r as { athlete_last_name?: string }).athlete_last_name ?? "").trim()
         const name = [first, last].filter(Boolean).join(" ") || "Registrant"
-        if (email || name) byOrderId[oid] = { email: email || byOrderId[oid]?.email ?? "", name: name || byOrderId[oid]?.name ?? "" }
+        if (email || name) byOrderId[oid] = { email: email || (byOrderId[oid]?.email ?? ""), name: name || (byOrderId[oid]?.name ?? "") }
       }
     }
 
@@ -86,7 +86,7 @@ export default async function OrdersPage() {
         const first = ((s as { parent_first_name?: string }).parent_first_name ?? "").trim()
         const last = ((s as { parent_last_name?: string }).parent_last_name ?? "").trim()
         const name = [first, last].filter(Boolean).join(" ") || "Blue signup"
-        if (email || name) bySessionId[sid] = { email: email || bySessionId[sid]?.email ?? "", name: name || bySessionId[sid]?.name ?? "" }
+        if (email || name) bySessionId[sid] = { email: email || (bySessionId[sid]?.email ?? ""), name: name || (bySessionId[sid]?.name ?? "") }
       }
     }
 

@@ -227,7 +227,7 @@ export function MessageBubble(
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm",
           isAnnouncement && "bg-amber-100 text-amber-900 border border-amber-200",
-          !isAnnouncement && isOwn && "bg-[#003366] text-white",
+          !isAnnouncement && isOwn && "bg-[#1a5280] text-white",
           !isAnnouncement && !isOwn && "bg-gray-100 text-gray-900"
         )}
       >
@@ -305,8 +305,8 @@ export function MessageBubble(
                             : "bg-amber-100/80 border-amber-300/50 hover:bg-amber-200/70"
                           : isOwn
                             ? haveReacted
-                              ? "bg-white/25 border-white/40"
-                              : "bg-white/15 border-white/20 hover:bg-white/25"
+                              ? "bg-white/35 border-white/50"
+                              : "bg-white/25 border-white/30 hover:bg-white/35"
                             : haveReacted
                               ? "bg-[#003366]/15 border-[#003366]/30"
                               : "bg-gray-200/80 border-gray-300 hover:bg-gray-300/80"
