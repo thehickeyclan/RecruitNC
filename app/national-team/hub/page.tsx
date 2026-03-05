@@ -8,8 +8,6 @@ import { MessageCircle, Loader2, Lock } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
 
-const PAYMENT_DUE = "Sunday, March 14, 2026"
-
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
 export default function NationalTeamHubPage() {
@@ -81,16 +79,6 @@ export default function NationalTeamHubPage() {
             <a href="/national-team">Back to National Team</a>
           </Button>
         </div>
-
-        {events.length > 0 && (
-          <Card className="border-amber-200 bg-amber-50/50">
-            <CardContent className="py-3">
-              <p className="text-sm text-amber-800 font-medium">
-                Payment due: {PAYMENT_DUE}
-              </p>
-            </CardContent>
-          </Card>
-        )}
 
         {events.length === 0 ? (
           <>

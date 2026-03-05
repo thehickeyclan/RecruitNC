@@ -114,6 +114,46 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     if (r.context_id) threadIdByEvent.set(r.context_id, r.id)
   }
 
+  // If admin and an event has no group chat thread yet, create it so the forum appears.
+  if (isAdmin) {
+    const userClient = await createClient()
+    for (const eventSlug of eventSlugsToShow) {
+      if (threadIdByEvent.has(eventSlug)) continue
+      const eventName = getEventName(eventSlug)
+      const now = new Date().toISOString()
+      const { data: newThread, error: createErr } = await admin
+        .from("messaging_threads")
+        .insert({
+          type: "group",
+          name: `${eventName} chat`,
+          context_type: "event",
+          context_id: eventSlug,
+          created_by_user_id: user.id,
+          created_at: now,
+          last_message_at: now,
+        })
+        .select("id")
+        .single()
+      if (createErr || !newThread) {
+        console.warn("[national-team/hub] Could not create event thread", eventSlug, createErr)
+        continue
+      }
+      threadIdByEvent.set(eventSlug, newThread.id)
+      const memberRow = {
+        thread_id: newThread.id,
+        user_id: user.id,
+        role: "admin" as const,
+        notification_level: "all" as const,
+        joined_at: now,
+      }
+      const { error: memberErr } = await userClient.from("messaging_thread_members").insert(memberRow)
+      if (memberErr) {
+        const { error: adminMemberErr } = await admin.from("messaging_thread_members").insert(memberRow)
+        if (adminMemberErr) console.warn("[national-team/hub] Could not add admin to event thread", eventSlug, adminMemberErr)
+      }
+    }
+  }
+
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
     const roster = paidRegs.filter((r) => r.event_slug === eventSlug)
     const myRegistrations = roster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
