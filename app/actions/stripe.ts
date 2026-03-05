@@ -3,7 +3,8 @@
 import { stripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendOrderConfirmationEmail } from "@/lib/email"
-import { shippingNameFromCustomerName, flatShippingFromAddress } from "@/lib/order-shipping"
+import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
+import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
 
 export type CreatePaymentIntentParams = {
   customerEmail: string
@@ -128,16 +129,19 @@ async function createFreeOrderInternal(
 
   const shippingName = shippingNameFromCustomerName(params.customerName)
   const flatShipping = flatShippingFromAddress(params.shippingAddress as Record<string, unknown>)
+  const flatBilling = flatBillingFromAddress(params.shippingAddress as Record<string, unknown>)
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
     order_number: orderNumber,
     customer_email: params.customerEmail,
+    email: params.customerEmail,
     customer_name: params.customerName,
     shipping_first_name: shippingName.shipping_first_name,
     shipping_last_name: shippingName.shipping_last_name,
     billing_first_name: shippingName.shipping_first_name,
     billing_last_name: shippingName.shipping_last_name,
     ...flatShipping,
+    ...flatBilling,
     shipping_address: params.shippingAddress,
     shipping_method: params.shippingMethod,
     subtotal: params.subtotal,
@@ -231,17 +235,19 @@ async function createOrderFromPaymentIntentMetadata(
   const orderId = crypto.randomUUID()
   const shippingName = shippingNameFromCustomerName(payload.customerName)
   const flatShipping = flatShippingFromAddress(payload.shippingAddress as Record<string, unknown>)
-
+  const flatBilling = flatBillingFromAddress(payload.shippingAddress as Record<string, unknown>)
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
     order_number: orderNumber,
     customer_email: payload.customerEmail,
+    email: payload.customerEmail,
     customer_name: payload.customerName,
     shipping_first_name: shippingName.shipping_first_name,
     shipping_last_name: shippingName.shipping_last_name,
     billing_first_name: shippingName.shipping_first_name,
     billing_last_name: shippingName.shipping_last_name,
     ...flatShipping,
+    ...flatBilling,
     shipping_address: payload.shippingAddress,
     shipping_method: payload.shippingMethod,
     subtotal: payload.subtotal,
@@ -311,6 +317,17 @@ async function createOrderFromPaymentIntentMetadata(
     price: i.price,
   }))
 
+  try {
+    const enrichPayload = enrichmentFromOrderCustomer({
+      customer_email: payload.customerEmail,
+      customer_name: payload.customerName,
+      shipping_address: payload.shippingAddress as Record<string, unknown>,
+    })
+    await findAndEnrichAthlete(supabase, { email: payload.customerEmail, name: payload.customerName }, enrichPayload)
+  } catch (enrichErr) {
+    console.error("[store] athlete enrichment from PI metadata:", enrichErr)
+  }
+
   return {
     orderId,
     orderNumber,
@@ -362,16 +379,19 @@ async function createOrderFromCharge(
     const orderId = crypto.randomUUID()
     const shippingName = shippingNameFromCustomerName(customerName)
     const flatShipping = flatShippingFromAddress(shippingAddress as Record<string, unknown>)
+    const flatBilling = flatBillingFromAddress(shippingAddress as Record<string, unknown>)
     const { error: orderError } = await supabase.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
       customer_email: customerEmail,
+      email: customerEmail,
       customer_name: customerName,
       shipping_first_name: shippingName.shipping_first_name,
       shipping_last_name: shippingName.shipping_last_name,
       billing_first_name: shippingName.shipping_first_name,
       billing_last_name: shippingName.shipping_last_name,
       ...flatShipping,
+      ...flatBilling,
       shipping_address: shippingAddress,
       shipping_method: { name: "Recovered", price: 0 },
       subtotal: amount,
@@ -400,6 +420,16 @@ async function createOrderFromCharge(
       console.error("[store] createOrderFromCharge insert order_items:", itemsError)
       await supabase.from("orders").delete().eq("id", orderId)
       return null
+    }
+    try {
+      const enrichPayload = enrichmentFromOrderCustomer({
+        customer_email: customerEmail,
+        customer_name: customerName,
+        shipping_address: shippingAddress as Record<string, unknown>,
+      })
+      await findAndEnrichAthlete(supabase, { email: customerEmail, name: customerName }, enrichPayload)
+    } catch (enrichErr) {
+      console.error("[store] athlete enrichment from charge:", enrichErr)
     }
     return {
       orderId,
@@ -602,16 +632,19 @@ export async function createOrderFromSession(
       const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id ?? null
       const shippingName = shippingNameFromCustomerName(customerName)
       const flatShipping = flatShippingFromAddress(shippingAddress as Record<string, unknown>)
+      const flatBilling = flatBillingFromAddress(shippingAddress as Record<string, unknown>)
       await supabase.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
         customer_email: customerEmail,
+        email: customerEmail,
         customer_name: customerName,
         shipping_first_name: shippingName.shipping_first_name,
         shipping_last_name: shippingName.shipping_last_name,
         billing_first_name: shippingName.shipping_first_name,
         billing_last_name: shippingName.shipping_last_name,
         ...flatShipping,
+        ...flatBilling,
         shipping_address: shippingAddress,
         shipping_method: {},
         subtotal,
@@ -631,6 +664,16 @@ export async function createOrderFromSession(
           quantity: li.quantity ?? 1,
           price: (li.amount_subtotal ?? 0) / 100 / (li.quantity ?? 1),
         })
+      }
+      try {
+        const enrichPayload = enrichmentFromOrderCustomer({
+          customer_email: customerEmail,
+          customer_name: customerName,
+          shipping_address: shippingAddress as Record<string, unknown>,
+        })
+        await findAndEnrichAthlete(supabase, { email: customerEmail, name: customerName }, enrichPayload)
+      } catch (enrichErr) {
+        console.error("[store] athlete enrichment from session (no metadata):", enrichErr)
       }
       const items = lineItems.map((li: { description: string; quantity: number; amount_subtotal: number }) => ({
         name: li.description ?? "Item",
@@ -654,16 +697,19 @@ export async function createOrderFromSession(
     const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id ?? null
     const shippingName = shippingNameFromCustomerName(payload.customerName)
     const flatShipping = flatShippingFromAddress(payload.shippingAddress as Record<string, unknown>)
+    const flatBilling = flatBillingFromAddress(payload.shippingAddress as Record<string, unknown>)
     const { error: orderErr } = await supabase.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
       customer_email: payload.customerEmail,
+      email: payload.customerEmail,
       customer_name: payload.customerName,
       shipping_first_name: shippingName.shipping_first_name,
       shipping_last_name: shippingName.shipping_last_name,
       billing_first_name: shippingName.shipping_first_name,
       billing_last_name: shippingName.shipping_last_name,
       ...flatShipping,
+      ...flatBilling,
       shipping_address: payload.shippingAddress,
       shipping_method: payload.shippingMethod,
       subtotal: payload.subtotal,
@@ -694,6 +740,16 @@ export async function createOrderFromSession(
       console.error("[store] createOrderFromSession insert order_items:", itemsErr)
       await supabase.from("orders").delete().eq("id", orderId)
       return { success: false, error: itemsErr.message }
+    }
+    try {
+      const enrichPayload = enrichmentFromOrderCustomer({
+        customer_email: payload.customerEmail,
+        customer_name: payload.customerName,
+        shipping_address: payload.shippingAddress as Record<string, unknown>,
+      })
+      await findAndEnrichAthlete(supabase, { email: payload.customerEmail, name: payload.customerName }, enrichPayload)
+    } catch (enrichErr) {
+      console.error("[store] athlete enrichment from session:", enrichErr)
     }
     return {
       success: true,

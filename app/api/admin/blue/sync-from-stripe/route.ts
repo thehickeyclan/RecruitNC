@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { athleteEnrichmentFromSignup } from "@/lib/blue-signup-enrich-athlete"
 import { orderShippingFields } from "@/lib/order-shipping"
 
 export const dynamic = "force-dynamic"
@@ -88,7 +89,7 @@ export async function POST() {
 
     const { data: signupRow } = await admin
       .from("blue_signups")
-      .select("id, status, stripe_session_id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, tshirt_size")
+      .select("id, status, stripe_session_id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size")
       .eq("id", signupId)
       .single()
 
@@ -140,6 +141,11 @@ export async function POST() {
           athlete_graduation_year?: number
           athlete_high_school?: string
           athlete_weight_class?: string
+          athlete_cell_phone?: string
+          athlete_email?: string
+          athlete_gpa?: string
+          athlete_wrestling_club?: string
+          highest_achievement?: string
           tshirt_size?: string
         }
         const parentEmail = (row.parent_email ?? "").trim().toLowerCase()
@@ -178,6 +184,7 @@ export async function POST() {
           }
         }
         if (payerUserId && athleteName && Number.isFinite(gradYear) && gradYear >= 2020 && gradYear <= 2040) {
+          const enrichment = athleteEnrichmentFromSignup(row)
           const existingAthlete = await findExistingAthlete(admin, { name: athleteName, graduationYear: gradYear, school: highSchool })
           let athleteId: string | undefined = existingAthlete?.id
           if (!athleteId) {
@@ -194,9 +201,16 @@ export async function POST() {
               is_prospect: true,
               profile_verified: false,
               updated_at: new Date().toISOString(),
+              ...enrichment,
             }, columns)
             const { data: newAthlete, error: athleteErr } = await admin.from("athletes").insert(athletePayload).select("id").single()
             if (!athleteErr && newAthlete?.id) athleteId = newAthlete.id
+          } else {
+            const columns = await getAthletesColumnNames(admin)
+            const updatePayload = filterPayloadToSchema({ ...enrichment, updated_at: new Date().toISOString() }, columns)
+            if (Object.keys(updatePayload).length > 1) {
+              await admin.from("athletes").update(updatePayload).eq("id", athleteId)
+            }
           }
           if (athleteId) {
             let nextBillingAt: string | null = null
@@ -239,10 +253,12 @@ export async function POST() {
       const customerName = ((session.customer_details as { name?: string })?.name ?? "").trim() || "Blue member"
       const orderNumber = generateOrderNumber()
       const orderId = crypto.randomUUID()
+      const orderEmail = customerEmail || "blue-signup@placeholder.com"
       const { error: orderErr } = await admin.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
-        customer_email: customerEmail || "blue-signup@placeholder.com",
+        customer_email: orderEmail,
+        email: orderEmail,
         customer_name: customerName,
         ...orderShippingFields(customerName, {}),
         shipping_address: {},
@@ -276,7 +292,7 @@ export async function POST() {
   }
 
   // Email fallback: sessions with no signup_id (webhook missed or metadata lost) — match by customer email to exactly one pending signup
-  const signupSelect = "id, status, stripe_session_id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, tshirt_size"
+  const signupSelect = "id, status, stripe_session_id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size"
   for (const session of sessionsWithoutSignupId) {
     const email = customerEmail(session)
     if (!email) continue
@@ -298,6 +314,11 @@ export async function POST() {
       athlete_graduation_year?: number
       athlete_high_school?: string
       athlete_weight_class?: string
+      athlete_cell_phone?: string
+      athlete_email?: string
+      athlete_gpa?: string
+      athlete_wrestling_club?: string
+      highest_achievement?: string
       tshirt_size?: string
     }
     const signupId = signupRow.id
@@ -363,6 +384,7 @@ export async function POST() {
           }
         }
         if (payerUserId && athleteName && Number.isFinite(gradYear) && gradYear >= 2020 && gradYear <= 2040) {
+          const enrichment = athleteEnrichmentFromSignup(row)
           const existingAthlete = await findExistingAthlete(admin, { name: athleteName, graduationYear: gradYear, school: highSchool })
           let athleteId: string | undefined = existingAthlete?.id
           if (!athleteId) {
@@ -379,9 +401,16 @@ export async function POST() {
               is_prospect: true,
               profile_verified: false,
               updated_at: new Date().toISOString(),
+              ...enrichment,
             }, columns)
             const { data: newAthlete, error: athleteErr } = await admin.from("athletes").insert(athletePayload).select("id").single()
             if (!athleteErr && newAthlete?.id) athleteId = newAthlete.id
+          } else {
+            const columns = await getAthletesColumnNames(admin)
+            const updatePayload = filterPayloadToSchema({ ...enrichment, updated_at: new Date().toISOString() }, columns)
+            if (Object.keys(updatePayload).length > 1) {
+              await admin.from("athletes").update(updatePayload).eq("id", athleteId)
+            }
           }
           if (athleteId) {
             let nextBillingAt: string | null = null
@@ -423,10 +452,12 @@ export async function POST() {
       const customerName = ((session.customer_details as { name?: string })?.name ?? "").trim() || "Blue member"
       const orderNumber = generateOrderNumber()
       const orderId = crypto.randomUUID()
+      const orderEmail = sessionCustomerEmail || "blue-signup@placeholder.com"
       const { error: orderErr } = await admin.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
-        customer_email: sessionCustomerEmail || "blue-signup@placeholder.com",
+        customer_email: orderEmail,
+        email: orderEmail,
         customer_name: customerName,
         ...orderShippingFields(customerName, {}),
         shipping_address: {},

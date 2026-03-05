@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 
 export const dynamic = "force-dynamic"
 
@@ -104,6 +105,27 @@ export async function POST(request: NextRequest) {
       }
       console.error("[national-team/register] insert:", regError)
       return NextResponse.json({ error: "Failed to save registration. Please try again." }, { status: 500 })
+    }
+
+    try {
+      const gradYear = parseInt(graduationYear, 10)
+      const enrichPayload = buildEnrichmentPayload({
+        contact_email: athleteEmail,
+        phone: athletePhone,
+        firstname: athleteFirstName,
+        lastname: athleteLastName,
+        highschool: highSchool,
+        weightclass: primaryWeight,
+        wrestling_club: clubTeam,
+      })
+      await findAndEnrichAthlete(admin, {
+        email: athleteEmail,
+        name: `${athleteFirstName} ${athleteLastName}`.trim(),
+        graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
+        school: highSchool,
+      }, enrichPayload)
+    } catch (enrichErr) {
+      console.error("[national-team/register] athlete enrichment:", enrichErr)
     }
 
     if (!stripeSecret) {

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { athleteEnrichmentFromSignup } from "@/lib/blue-signup-enrich-athlete"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +25,7 @@ export async function POST() {
 
   const { data: paidSignups, error: signupErr } = await admin
     .from("blue_signups")
-    .select("id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, tshirt_size, stripe_customer_id")
+    .select("id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size, stripe_customer_id")
     .eq("status", "paid")
     .order("created_at", { ascending: true })
 
@@ -48,6 +49,11 @@ export async function POST() {
     athlete_graduation_year: number
     athlete_high_school: string
     athlete_weight_class?: string
+    athlete_cell_phone?: string | null
+    athlete_email?: string | null
+    athlete_gpa?: string | null
+    athlete_wrestling_club?: string | null
+    highest_achievement?: string | null
     tshirt_size?: string
     stripe_customer_id?: string | null
   }>) {
@@ -103,6 +109,7 @@ export async function POST() {
       continue
     }
 
+    const enrichment = athleteEnrichmentFromSignup(signup)
     const existingAthlete = await findExistingAthlete(admin, {
       name: athleteName,
       graduationYear: gradYear,
@@ -123,6 +130,7 @@ export async function POST() {
         is_prospect: true,
         profile_verified: false,
         updated_at: new Date().toISOString(),
+        ...enrichment,
       }, columns)
       const { data: newAthlete, error: athleteErr } = await admin
         .from("athletes")
@@ -134,6 +142,12 @@ export async function POST() {
         continue
       }
       athleteId = newAthlete.id
+    } else {
+      const columns = await getAthletesColumnNames(admin)
+      const updatePayload = filterPayloadToSchema({ ...enrichment, updated_at: new Date().toISOString() }, columns)
+      if (Object.keys(updatePayload).length > 1) {
+        await admin.from("athletes").update(updatePayload).eq("id", athleteId)
+      }
     }
 
     const { data: existingMembership } = await admin

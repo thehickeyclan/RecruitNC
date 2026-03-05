@@ -1,6 +1,14 @@
 /**
- * Helpers for orders table shipping columns that may be NOT NULL.
+ * Helpers for orders table shipping/billing columns that may be NOT NULL.
  * Use in recover-order, webhook, and any code that inserts into orders.
+ *
+ * Columns we provide (all NOT NULL-safe): shipping_first_name, shipping_last_name,
+ * billing_first_name, billing_last_name; shipping_address_line1/2, shipping_city,
+ * (email is set separately in each insert, same as customer_email.)
+ * shipping_state, shipping_postal_code, shipping_country, shipping_phone;
+ * billing_address_line1/2, billing_city, billing_state, billing_postal_code,
+ * billing_country, billing_phone. If your DB has more NOT NULL columns, run the
+ * query in docs/ORDERS-TABLE-REQUIRED-COLUMNS.md and add them here or relax the constraint.
  */
 
 export function shippingNameFromCustomerName(customerName: string): {
@@ -42,7 +50,29 @@ export function flatShippingFromAddress(addr: Record<string, unknown> | null | u
   }
 }
 
-/** All shipping + billing name fields needed for orders insert when DB has NOT NULL on these columns. */
+/** Billing address columns (NOT NULL-safe). Use same address as shipping or empty defaults for recovered orders. */
+export function flatBillingFromAddress(addr: Record<string, unknown> | null | undefined): {
+  billing_address_line1: string
+  billing_address_line2: string
+  billing_city: string
+  billing_state: string
+  billing_postal_code: string
+  billing_country: string
+  billing_phone: string
+} {
+  const ship = flatShippingFromAddress(addr)
+  return {
+    billing_address_line1: ship.shipping_address_line1,
+    billing_address_line2: ship.shipping_address_line2,
+    billing_city: ship.shipping_city,
+    billing_state: ship.shipping_state,
+    billing_postal_code: ship.shipping_postal_code,
+    billing_country: ship.shipping_country,
+    billing_phone: ship.shipping_phone,
+  }
+}
+
+/** All shipping + billing name and address fields needed for orders insert when DB has NOT NULL on these columns. */
 export function orderShippingFields(customerName: string, address: Record<string, unknown> | null | undefined) {
   const names = shippingNameFromCustomerName(customerName)
   return {
@@ -50,5 +80,6 @@ export function orderShippingFields(customerName: string, address: Record<string
     billing_first_name: names.shipping_first_name,
     billing_last_name: names.shipping_last_name,
     ...flatShippingFromAddress(address),
+    ...flatBillingFromAddress(address),
   }
 }

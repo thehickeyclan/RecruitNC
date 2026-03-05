@@ -42,3 +42,24 @@ export async function findExistingAthlete(
   }
   return null
 }
+
+/**
+ * Find an athlete by contact email. Used to enrich profile when we get
+ * customer/registrant data from orders, drop-in, tournament signup, etc.
+ */
+export async function findAthleteByEmail(
+  supabase: SupabaseClient,
+  email: string
+): Promise<{ id: string; name: string } | null> {
+  const raw = (email ?? "").trim().toLowerCase()
+  if (!raw || !raw.includes("@")) return null
+  const { data: rows, error } = await supabase
+    .from("athletes")
+    .select("id, name, firstname, lastname, firstName, lastName")
+    .ilike("contact_email", raw)
+    .limit(1)
+  if (error || !rows?.length) return null
+  const row = rows[0] as Record<string, unknown>
+  const name = getFullName(row)
+  return { id: row.id as string, name: name || (row.name as string) || "Athlete" }
+}

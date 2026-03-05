@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, User, AlertCircle } from "lucide-react"
+import { EnrichAthleteButton } from "./enrich-athlete-button"
 
 type SignupRow = {
   id: string
@@ -277,6 +278,11 @@ export default async function AdminBlueSignupDetailPage({
                 <p className="font-medium font-mono text-xs break-all">{data.stripe_customer_id}</p>
               </div>
             )}
+            <div className="pt-4 border-t mt-4">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Enrich athlete profile</p>
+              <p className="text-sm text-gray-600 mb-2">Push this signup’s data (cell, email, GPA, club, highest achievement) to the matching athlete profile so it shows on their view-profile page.</p>
+              <EnrichAthleteButton signupId={signupId} />
+            </div>
           </CardContent>
         </Card>
 

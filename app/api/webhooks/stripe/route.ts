@@ -5,6 +5,7 @@ import { sendOrderConfirmationEmail } from "@/lib/email"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
+import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import { orderShippingFields } from "@/lib/order-shipping"
 
 export const dynamic = "force-dynamic"
@@ -170,6 +171,7 @@ export async function POST(request: NextRequest) {
               id: orderId,
               order_number: orderNumber,
               customer_email: customerEmail,
+              email: customerEmail,
               customer_name: customerName,
               ...orderShippingFields(customerName, {}),
               shipping_address: {},
@@ -207,6 +209,27 @@ export async function POST(request: NextRequest) {
                 updated_at: new Date().toISOString(),
               })
               .eq("id", regId)
+            try {
+              const r = reg as { athlete_first_name?: string; athlete_last_name?: string; athlete_email?: string; athlete_phone?: string | null; high_school?: string; club_team?: string | null; graduation_year?: string; primary_weight?: string }
+              const enrichPayload = buildEnrichmentPayload({
+                contact_email: r.athlete_email,
+                phone: r.athlete_phone,
+                firstname: r.athlete_first_name,
+                lastname: r.athlete_last_name,
+                highschool: r.high_school,
+                weightclass: r.primary_weight,
+                wrestling_club: r.club_team,
+              })
+              const gradYear = parseInt(String(r.graduation_year ?? ""), 10)
+              await findAndEnrichAthlete(admin, {
+                email: r.athlete_email,
+                name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" "),
+                graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
+                school: r.high_school,
+              }, enrichPayload)
+            } catch (enrichErr) {
+              console.error("[webhooks/stripe] national team athlete enrichment (payment_intent):", enrichErr)
+            }
           }
           return NextResponse.json({ received: true })
         }
@@ -362,6 +385,7 @@ export async function POST(request: NextRequest) {
       id: orderId,
       order_number: orderNumber,
       customer_email: payload.customerEmail,
+      email: payload.customerEmail,
       customer_name: payload.customerName,
       ...orderShippingFields(payload.customerName, payload.shippingAddress as Record<string, unknown>),
       shipping_address: payload.shippingAddress,
@@ -405,6 +429,16 @@ export async function POST(request: NextRequest) {
     } catch (emailErr) {
       console.error("[webhooks/stripe] sendOrderConfirmationEmail failed:", emailErr)
     }
+    try {
+      const enrichPayload = enrichmentFromOrderCustomer({
+        customer_email: payload.customerEmail,
+        customer_name: payload.customerName,
+        shipping_address: payload.shippingAddress as Record<string, unknown>,
+      })
+      await findAndEnrichAthlete(admin, { email: payload.customerEmail, name: payload.customerName }, enrichPayload)
+    } catch (enrichErr) {
+      console.error("[webhooks/stripe] athlete enrichment from store order:", enrichErr)
+    }
     return NextResponse.json({ received: true })
   }
 
@@ -440,7 +474,7 @@ export async function POST(request: NextRequest) {
         if (!existingMembership) {
           const { data: signupRow } = await admin
             .from("blue_signups")
-            .select("parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, tshirt_size")
+            .select("parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size")
             .eq("id", signupId)
             .single()
           if (signupRow) {
@@ -488,6 +522,8 @@ export async function POST(request: NextRequest) {
               }
             }
             if (payerUserId && athleteName && Number.isFinite(gradYear) && gradYear >= 2020 && gradYear <= 2040) {
+              const { athleteEnrichmentFromSignup } = await import("@/lib/blue-signup-enrich-athlete")
+              const enrichment = athleteEnrichmentFromSignup(signupRow as import("@/lib/blue-signup-enrich-athlete").BlueSignupRow)
               const existingAthlete = await findExistingAthlete(admin, {
                 name: athleteName,
                 graduationYear: gradYear,
@@ -508,6 +544,7 @@ export async function POST(request: NextRequest) {
                   is_prospect: true,
                   profile_verified: false,
                   updated_at: new Date().toISOString(),
+                  ...enrichment,
                 }, columns)
                 const { data: newAthlete, error: athleteErr } = await admin
                   .from("athletes")
@@ -518,6 +555,15 @@ export async function POST(request: NextRequest) {
                   console.error("[webhooks/stripe] blue_signups→membership: create athlete failed", athleteErr?.message)
                 } else {
                   athleteId = newAthlete.id
+                }
+              } else {
+                const columns = await getAthletesColumnNames(admin)
+                const updatePayload = filterPayloadToSchema(
+                  { ...enrichment, updated_at: new Date().toISOString() },
+                  columns
+                )
+                if (Object.keys(updatePayload).length > 1) {
+                  await admin.from("athletes").update(updatePayload).eq("id", athleteId)
                 }
               }
               if (athleteId) {
@@ -574,6 +620,7 @@ export async function POST(request: NextRequest) {
           id: orderId,
           order_number: orderNumber,
           customer_email: customerEmail || "blue-signup@placeholder.com",
+          email: customerEmail || "blue-signup@placeholder.com",
           customer_name: customerName,
           ...orderShippingFields(customerName, {}),
           shipping_address: {},
@@ -659,6 +706,7 @@ export async function POST(request: NextRequest) {
           id: orderId,
           order_number: orderNumber,
           customer_email: customerEmail,
+          email: customerEmail,
           customer_name: customerName,
           ...orderShippingFields(customerName, {}),
           shipping_address: {},
@@ -697,6 +745,27 @@ export async function POST(request: NextRequest) {
               updated_at: new Date().toISOString(),
             })
             .eq("id", registrationId)
+        }
+        try {
+          const r = reg as { athlete_first_name?: string; athlete_last_name?: string; athlete_email?: string; athlete_phone?: string | null; high_school?: string; club_team?: string | null; graduation_year?: string; primary_weight?: string }
+          const enrichPayload = buildEnrichmentPayload({
+            contact_email: r.athlete_email,
+            phone: r.athlete_phone,
+            firstname: r.athlete_first_name,
+            lastname: r.athlete_last_name,
+            highschool: r.high_school,
+            weightclass: r.primary_weight,
+            wrestling_club: r.club_team,
+          })
+          const gradYear = parseInt(String(r.graduation_year ?? ""), 10)
+          await findAndEnrichAthlete(admin, {
+            email: r.athlete_email,
+            name: [r.athlete_first_name, r.athlete_last_name].filter(Boolean).join(" "),
+            graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
+            school: r.high_school,
+          }, enrichPayload)
+        } catch (enrichErr) {
+          console.error("[webhooks/stripe] national team athlete enrichment (session):", enrichErr)
         }
       }
       return NextResponse.json({ received: true })
@@ -739,6 +808,7 @@ export async function POST(request: NextRequest) {
           id: orderId,
           order_number: orderNumber,
           customer_email: customerEmail,
+          email: customerEmail,
           customer_name: customerName,
           ...orderShippingFields(customerName, shippingAddress),
           shipping_address: shippingAddress,
@@ -768,6 +838,16 @@ export async function POST(request: NextRequest) {
           price: amountTotal,
           image_url: null,
         })
+        try {
+          const enrichPayload = enrichmentFromOrderCustomer({
+            customer_email: customerEmail,
+            customer_name: customerName,
+            shipping_address: shippingAddress as Record<string, unknown>,
+          })
+          await findAndEnrichAthlete(admin, { email: customerEmail, name: customerName }, enrichPayload)
+        } catch (enrichErr) {
+          console.error("[webhooks/stripe] athlete enrichment from drop-in order:", enrichErr)
+        }
       }
     }
   }

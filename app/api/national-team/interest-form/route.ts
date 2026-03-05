@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
+import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,6 +71,27 @@ export async function POST(request: NextRequest) {
     if (dbError) {
       console.error("Database error:", dbError)
       return NextResponse.json({ ok: false, error: "Failed to save submission" }, { status: 500 })
+    }
+
+    try {
+      const gradYear = typeof body.graduationYear === "number" ? body.graduationYear : parseInt(String(body.graduationYear), 10)
+      const enrichPayload = buildEnrichmentPayload({
+        contact_email: body.email.trim(),
+        phone: body.cellPhone?.trim() ? normalizePhoneForStorage(body.cellPhone.trim()) : undefined,
+        firstname: body.firstName.trim(),
+        lastname: body.lastName.trim(),
+        highschool: body.highSchool.trim(),
+        weightclass: body.primaryWeight,
+        wrestling_club: body.clubTeam?.trim() || undefined,
+      })
+      await findAndEnrichAthlete(adminClient, {
+        email: body.email.trim(),
+        name: `${body.firstName} ${body.lastName}`.trim(),
+        graduationYear: Number.isFinite(gradYear) ? gradYear : undefined,
+        school: body.highSchool?.trim(),
+      }, enrichPayload)
+    } catch (enrichErr) {
+      console.error("[national-team/interest-form] athlete enrichment:", enrichErr)
     }
 
     // Format email content
