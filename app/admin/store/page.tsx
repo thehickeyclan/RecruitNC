@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ShoppingBag, Package, Ticket, ArrowRight, ArrowLeft } from "lucide-react"
+import { ShoppingBag, Package, Ticket, ArrowRight, ArrowLeft, DollarSign } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 
 const STORE_GREEN = "#1a5f4a"
@@ -13,6 +13,12 @@ const sections = [
     title: "Orders",
     description: "Order history, fulfillment, and customer details. All revenue (store, national team, drop-in) appears here.",
     icon: ShoppingBag,
+  },
+  {
+    href: "/admin/orders/payouts",
+    title: "Payouts",
+    description: "Stripe payouts report. Amount, destination bank, arrive-by date, and status — same as Stripe Dashboard.",
+    icon: DollarSign,
   },
   {
     href: "/admin/products",

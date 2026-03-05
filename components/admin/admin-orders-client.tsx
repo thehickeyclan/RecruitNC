@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User, CloudDownload } from "lucide-react"
+import { Download, Search, MoreVertical, Eye, Printer, RefreshCw, Trash2, RotateCcw, User, CloudDownload, DollarSign } from "lucide-react"
 import { formatCurrency, formatDateTime, getStatusColor, type Order } from "@/lib/admin-data"
 import { deleteOrder, updateOrderStatus } from "@/app/actions/orders"
 import { toast } from "sonner"
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 
 interface AdminOrdersClientProps {
   initialOrders: Order[]
@@ -241,6 +242,12 @@ export function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
                 Sync from Stripe
               </>
             )}
+          </Button>
+          <Button variant="outline" className="whitespace-nowrap" asChild>
+            <HardLink href="/admin/orders/payouts" className="inline-flex items-center">
+              <DollarSign className="mr-2 h-4 w-4" />
+              Payouts
+            </HardLink>
           </Button>
           <Button
             onClick={handleBackfillCustomers}

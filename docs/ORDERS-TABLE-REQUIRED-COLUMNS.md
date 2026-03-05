@@ -37,7 +37,7 @@ All order inserts go through `lib/order-shipping.ts` and/or `app/actions/stripe.
 - `shipping_first_name`, `shipping_last_name`
 - `billing_first_name`, `billing_last_name`
 - `shipping_address_line1`, `shipping_address_line2`, `shipping_city`, `shipping_state`, `shipping_postal_code`, `shipping_country`, `shipping_phone`
-- `billing_address_line1`, `billing_address_line2`, `billing_city`, `billing_state`, `billing_postal_code`, `billing_country`, `billing_phone`
+- `billing_address_line1`, `billing_address_line2`, `billing_city`, `billing_state`, `billing_postal_code`, `billing_country` (no `billing_phone` — omit if your table doesn’t have it)
 
 **From `app/actions/stripe.ts` (and same spread in webhook where applicable):**
 
