@@ -81,10 +81,11 @@ export async function GET() {
 
   const admin = createAdminClient()
 
-  let rows: Array<{ id: string; athlete_id: string; status: string; started_at: string; ended_at: string | null; created_at: string; next_billing_at?: string }> | null = null
+  type MembershipRow = { id: string; athlete_id: string; status: string; started_at: string; ended_at: string | null; created_at: string; next_billing_at?: string; stripe_subscription_id?: string | null }
+  let rows: MembershipRow[] | null = null
   const { data: rowsWithBilling, error: err1 } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, status, started_at, ended_at, created_at, next_billing_at")
+    .select("id, athlete_id, status, started_at, ended_at, created_at, next_billing_at, stripe_subscription_id")
     .order("created_at", { ascending: true })
   let billingColumnExists = true
   if (err1) {
@@ -93,16 +94,31 @@ export async function GET() {
       billingColumnExists = false
       const { data: rowsBasic, error: err2 } = await admin
         .from("blue_memberships")
-        .select("id, athlete_id, status, started_at, ended_at, created_at")
+        .select("id, athlete_id, status, started_at, ended_at, created_at, stripe_subscription_id")
         .order("created_at", { ascending: true })
       if (err2) return NextResponse.json({ error: err2.message }, { status: 500 })
-      rows = rowsBasic as typeof rows
+      rows = (rowsBasic as MembershipRow[]) ?? null
     } else {
       return NextResponse.json({ error: err1.message }, { status: 500 })
     }
   } else {
-    rows = rowsWithBilling as typeof rows
+    rows = (rowsWithBilling as MembershipRow[]) ?? null
   }
+
+  // One row per athlete (same as subscriptions list): prefer the membership with stripe_subscription_id so MRR/stats match reality
+  const allRows = rows ?? []
+  const byAthlete = new Map<string, MembershipRow>()
+  for (const r of allRows) {
+    const existing = byAthlete.get(r.athlete_id)
+    const hasStripe = !!(r as MembershipRow).stripe_subscription_id
+    const existingHasStripe = existing ? !!(existing as MembershipRow).stripe_subscription_id : false
+    const preferThis =
+      !existing ||
+      (hasStripe && !existingHasStripe) ||
+      (hasStripe === existingHasStripe && r.created_at > (existing?.created_at ?? ""))
+    if (preferThis) byAthlete.set(r.athlete_id, r)
+  }
+  const dedupedRows = Array.from(byAthlete.values())
 
   // Signups (blue_signups): everyone who submitted the registration form
   let signupTotal = 0
@@ -131,15 +147,15 @@ export async function GET() {
 
   const trend = months.map(({ year, month, key }) => {
     const endDate = endOfMonth(year, month + 1)
-    const newCount = (rows ?? []).filter((r) => {
+    const newCount = dedupedRows.filter((r) => {
       const created = new Date(r.created_at)
       return created.getFullYear() === year && created.getMonth() === month
     }).length
-    const endedCount = (rows ?? []).filter((r) => {
+    const endedCount = dedupedRows.filter((r) => {
       const ended = r.ended_at ? new Date(r.ended_at) : null
       return ended && ended.getFullYear() === year && ended.getMonth() === month
     }).length
-    const activeAtEnd = (rows ?? []).filter((r) => {
+    const activeAtEnd = dedupedRows.filter((r) => {
       const started = new Date(r.started_at)
       const ended = r.ended_at ? new Date(r.ended_at) : null
       return started <= endDate && (!ended || ended > endDate)
@@ -153,8 +169,8 @@ export async function GET() {
     }
   })
 
-  const activeRows = (rows ?? []).filter((r) => r.status === "active")
-  const pausedRows = (rows ?? []).filter((r) => r.status === "paused")
+  const activeRows = dedupedRows.filter((r) => r.status === "active")
+  const pausedRows = dedupedRows.filter((r) => r.status === "paused")
   const currentActive = activeRows.length
   const currentPaused = pausedRows.length
   const estimatedMRR = (currentActive + currentPaused) * BLUE_PRICE
@@ -203,7 +219,7 @@ export async function GET() {
   const newMRRThisMonth = newSubsThisMonth * BLUE_PRICE
 
   // Projected MRR: bucket each member's renewal (next_billing_at) by week and by month
-  const billingRows = (rows ?? []).filter(
+  const billingRows = dedupedRows.filter(
     (r) => (r.status === "active" || r.status === "paused") && (r as { next_billing_at?: string }).next_billing_at
   ) as Array<{ id: string; athlete_id: string; next_billing_at: string }>
   const dayBuckets: Record<string, number> = {}
