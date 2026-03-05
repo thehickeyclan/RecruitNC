@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input"
 import { MessageCircle, Loader2, Lock, UserPlus } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
+import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
 export default function NationalTeamHubPage() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [regPageUrl, setRegPageUrl] = useState("")
@@ -77,9 +78,19 @@ export default function NationalTeamHubPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#003366]">National Team Hub</h1>
-            {data.isAdmin && (
-              <p className="text-sm text-amber-700 mt-1">Admin: you see the full list of event workspaces.</p>
-            )}
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              {data.isAdmin && (
+                <p className="text-sm text-amber-700">Admin: you see the full list of event workspaces.</p>
+              )}
+              {user?.id && (
+                <HubPresenceBubbles
+                  channelId="hub"
+                  currentUserId={user.id}
+                  displayName={profile?.full_name ?? null}
+                  email={user.email ?? null}
+                />
+              )}
+            </div>
           </div>
           <Button asChild variant="outline" size="sm">
             <a href="/national-team">Back to National Team</a>

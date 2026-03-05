@@ -61,6 +61,54 @@ CREATE UNIQUE INDEX IF NOT EXISTS orders_stripe_payment_intent_id_key
   WHERE stripe_payment_intent_id IS NOT NULL;
 ```
 
+**If you see "Could not find the 'customer_email' column of 'orders' in the schema cache":** Your `orders` table is missing columns the app expects. Run **Step 1** below in Supabase → SQL Editor. If Step 1 fails with "Key (stripe_payment_intent_id)=... is duplicated", run **Step 0** first to fix duplicates, then run Step 1 again.
+
+**Step 0 — Fix duplicate stripe_payment_intent_id (run only if the unique index fails):**
+```sql
+-- Keep one order per stripe_payment_intent_id (the one with the smallest id), clear the others so the unique index can be created
+UPDATE orders o
+SET stripe_payment_intent_id = NULL
+WHERE o.stripe_payment_intent_id IS NOT NULL
+  AND o.id NOT IN (
+    SELECT DISTINCT ON (stripe_payment_intent_id) id
+    FROM orders
+    WHERE stripe_payment_intent_id IS NOT NULL
+    ORDER BY stripe_payment_intent_id, created_at ASC NULLS LAST, id ASC
+  );
+```
+
+**Step 1 — Add missing columns and create unique index (safe to run multiple times):**
+```sql
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address jsonb;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_method jsonb;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS subtotal numeric;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_cost numeric;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tax numeric;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount numeric;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS total numeric;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS status text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_session_id text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes text;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_info jsonb;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS updated_at timestamptz;
+
+CREATE UNIQUE INDEX IF NOT EXISTS orders_stripe_payment_intent_id_key
+  ON orders (stripe_payment_intent_id)
+  WHERE stripe_payment_intent_id IS NOT NULL;
+
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS product_id text;
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS product_name text;
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS variant jsonb;
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS quantity integer;
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS price numeric;
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS image_url text;
+```
+
 ---
 
 ## 5. Admin (store)

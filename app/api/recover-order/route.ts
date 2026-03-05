@@ -48,6 +48,12 @@ export async function POST(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to recover order"
     console.error("[recover-order]", err)
-    return NextResponse.json({ success: false, error: message }, { status: 500 })
+    const isSchemaError =
+      typeof message === "string" &&
+      (message.includes("customer_email") || message.includes("schema cache") || message.includes("column") && message.includes("orders"))
+    const error = isSchemaError
+      ? "Your orders table is missing columns (e.g. customer_email). Run the migration in docs/STORE_FLOWS_FOR_RECRUITNC.md in Supabase → SQL Editor (search for \"customer_email\"), then try again."
+      : message
+    return NextResponse.json({ success: false, error }, { status: 500 })
   }
 }
