@@ -119,6 +119,8 @@ export async function GET() {
     if (preferThis) byAthlete.set(r.athlete_id, r)
   }
   const dedupedRows = Array.from(byAthlete.values())
+  const hasStripeSub = (r: MembershipRow) => !!(r.stripe_subscription_id && String(r.stripe_subscription_id).trim())
+  const dedupedWithStripe = dedupedRows.filter(hasStripeSub)
 
   // Signups (blue_signups): everyone who submitted the registration form
   let signupTotal = 0
@@ -147,15 +149,15 @@ export async function GET() {
 
   const trend = months.map(({ year, month, key }) => {
     const endDate = endOfMonth(year, month + 1)
-    const newCount = dedupedRows.filter((r) => {
+    const newCount = dedupedWithStripe.filter((r) => {
       const created = new Date(r.created_at)
       return created.getFullYear() === year && created.getMonth() === month
     }).length
-    const endedCount = dedupedRows.filter((r) => {
+    const endedCount = dedupedWithStripe.filter((r) => {
       const ended = r.ended_at ? new Date(r.ended_at) : null
       return ended && ended.getFullYear() === year && ended.getMonth() === month
     }).length
-    const activeAtEnd = dedupedRows.filter((r) => {
+    const activeAtEnd = dedupedWithStripe.filter((r) => {
       const started = new Date(r.started_at)
       const ended = r.ended_at ? new Date(r.ended_at) : null
       return started <= endDate && (!ended || ended > endDate)
@@ -169,13 +171,14 @@ export async function GET() {
     }
   })
 
-  const activeRows = dedupedRows.filter((r) => r.status === "active")
-  const pausedRows = dedupedRows.filter((r) => r.status === "paused")
+  // Only count rows with a live Stripe subscription for MRR and active count (excludes orphan/duplicate rows)
+  const activeRows = dedupedRows.filter((r) => r.status === "active" && hasStripeSub(r))
+  const pausedRows = dedupedRows.filter((r) => r.status === "paused" && hasStripeSub(r))
   const currentActive = activeRows.length
   const currentPaused = pausedRows.length
   const estimatedMRR = (currentActive + currentPaused) * BLUE_PRICE
 
-  // By class (graduation year) for active + paused
+  // By class (graduation year) for active + paused (same: only with Stripe sub)
   const athleteIds = [...new Set([...activeRows, ...pausedRows].map((r) => r.athlete_id))]
   let byClass: { graduationYear: number; count: number; isAnticipatedChurn: boolean }[] = []
   if (athleteIds.length > 0) {
@@ -215,12 +218,18 @@ export async function GET() {
   const last12Trends = trend.slice(-12)
   const churnThisMonth = currentMonthTrend?.endedCount ?? 0
   const churnLast12Months = last12Trends.reduce((s, t) => s + t.endedCount, 0)
-  const newSubsThisMonth = currentMonthTrend?.newCount ?? 0
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const newSubsThisMonth = dedupedRows.filter(
+    (r) => hasStripeSub(r) && new Date(r.created_at) >= thisMonthStart
+  ).length
   const newMRRThisMonth = newSubsThisMonth * BLUE_PRICE
 
-  // Projected MRR: bucket each member's renewal (next_billing_at) by week and by month
+  // Projected MRR: bucket each member's renewal (next_billing_at) by week and by month (only with Stripe sub)
   const billingRows = dedupedRows.filter(
-    (r) => (r.status === "active" || r.status === "paused") && (r as { next_billing_at?: string }).next_billing_at
+    (r) =>
+      hasStripeSub(r) &&
+      (r.status === "active" || r.status === "paused") &&
+      (r as { next_billing_at?: string }).next_billing_at
   ) as Array<{ id: string; athlete_id: string; next_billing_at: string }>
   const dayBuckets: Record<string, number> = {}
   const weekBuckets: Record<string, number> = {}
@@ -268,26 +277,69 @@ export async function GET() {
 
   let upcomingBillingRows: { membershipId: string; athleteName: string; nextBillingAt: string; amountCents: number }[] = []
   if (billingRows.length > 0) {
-    const bAthleteIds = [...new Set(billingRows.map((r) => r.athlete_id))]
-    const { data: bAthletes } = await admin.from("athletes").select("id, name, firstname, lastname, firstName, lastName").in("id", bAthleteIds)
+    const bAthleteIds = [...new Set(billingRows.map((r) => r.athlete_id).filter(Boolean))]
+    const { data: bAthletes } =
+      bAthleteIds.length > 0
+        ? await admin.from("athletes").select("id, name, firstName, lastName, graduationyear, highschool").in("id", bAthleteIds)
+        : { data: [] }
     const nameMap = (bAthletes ?? []).reduce(
       (acc, a) => {
         const row = a as Record<string, unknown>
-        const id = String(row.id)
-        const name = String(row.name ?? "").trim()
-          || [row.firstname ?? row.firstName, row.lastname ?? row.lastName].filter(Boolean).join(" ").trim()
-        acc[id] = name || "—"
+        const id = String(row.id ?? "").toLowerCase()
+        const name =
+          String(row.name ?? "").trim() ||
+          [row.firstName ?? row.firstname, row.lastName ?? row.lastname]
+            .filter(Boolean)
+            .map(String)
+            .join(" ")
+            .trim()
+        acc[id] = name || `Athlete …${id.slice(-6)}`
         return acc
       },
       {} as Record<string, string>
     )
+    const needName = bAthleteIds.filter((id) => (nameMap[String(id).toLowerCase()] ?? "").startsWith("Athlete …"))
+    if (needName.length > 0) {
+      const { data: signups } = await admin
+        .from("blue_signups")
+        .select("athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school")
+        .order("created_at", { ascending: false })
+      const athletesNeedingName = (bAthletes ?? []).filter((a) => {
+        const id = String((a as { id?: string }).id ?? "").toLowerCase()
+        return needName.includes(id) || needName.includes((a as { id?: string }).id)
+      }) as Array<{ id: string; graduationyear?: number | null; highschool?: string | null }>
+      const norm = (s: string) => (s ?? "").toString().trim().toLowerCase()
+      for (const ath of athletesNeedingName) {
+        const aid = String(ath.id ?? "").toLowerCase()
+        const grad = ath.graduationyear != null ? Number(ath.graduationyear) : null
+        const school = norm(ath.highschool ?? "")
+        const matches = (signups ?? []).filter(
+          (s) =>
+            (grad == null || Number((s as { athlete_graduation_year?: number }).athlete_graduation_year) === grad) &&
+            (!school || norm((s as { athlete_high_school?: string }).athlete_high_school ?? "") === school)
+        ) as Array<{ athlete_first_name?: string; athlete_last_name?: string }>
+        const match = matches[0]
+        if (match && ((match.athlete_first_name ?? "").trim() || (match.athlete_last_name ?? "").trim())) {
+          const first = (match.athlete_first_name ?? "").trim()
+          const last = (match.athlete_last_name ?? "").trim()
+          const full = [first, last].filter(Boolean).join(" ").trim()
+          if (full) {
+            nameMap[aid] = full
+            await admin
+              .from("athletes")
+              .update({ name: full, firstName: first || null, lastName: last || null } as Record<string, unknown>)
+              .eq("id", ath.id)
+          }
+        }
+      }
+    }
     upcomingBillingRows = billingRows
       .filter((r) => new Date(r.next_billing_at) >= now)
       .sort((a, b) => a.next_billing_at.localeCompare(b.next_billing_at))
       .slice(0, 60)
       .map((r) => ({
         membershipId: r.id,
-        athleteName: nameMap[r.athlete_id] ?? "—",
+        athleteName: nameMap[String(r.athlete_id ?? "").toLowerCase()] ?? nameMap[r.athlete_id] ?? "—",
         nextBillingAt: r.next_billing_at,
         amountCents: BLUE_PRICE * 100,
       }))
