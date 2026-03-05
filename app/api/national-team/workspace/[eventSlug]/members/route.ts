@@ -101,13 +101,14 @@ export async function POST(
   // Add to forum (event thread) so they see the group chat and get sync both ways.
   const { data: thread } = await admin
     .from("messaging_threads")
-    .select("id")
+    .select("id, name")
     .eq("context_type", "event")
     .eq("context_id", eventSlug)
     .maybeSingle()
 
   if (thread) {
     const threadId = (thread as { id: string }).id
+    const threadName = (thread as { name?: string }).name ?? "Event group"
     const { data: existing } = await admin
       .from("messaging_thread_members")
       .select("user_id")
@@ -122,6 +123,15 @@ export async function POST(
         notification_level: "all",
         joined_at: now,
       })
+    }
+    // Notify the user they were added — email with link to the group (Messages). From the thread they can open Team hub for the event workspace.
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://www.ncwrestlingunited.com"
+    const threadUrl = `${baseUrl.replace(/\/$/, "")}/messages/${threadId}`
+    try {
+      const { sendAddedToGroupEmail } = await import("@/lib/email")
+      await sendAddedToGroupEmail(email, threadName, threadUrl)
+    } catch (e) {
+      console.error("[RecruitNC] workspace add-member email:", e)
     }
   }
 

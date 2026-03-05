@@ -227,15 +227,15 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
             <UserPlus className="h-4 w-4" />
-            Add family or teammate
+            Add RecruitNC user
           </h3>
           <p className="text-xs text-gray-500 mb-2">
-            Anyone you add will see this event workspace and the group chat. They need a RecruitNC account (same email they use to sign in).
+            Look up a user by the email they use to sign in. Only people with an <strong>active free RecruitNC account</strong> can be added — they’ll then see this event workspace and the group chat. Don’t have an account? <a href="/auth/signup" className="text-[#003366] hover:underline">Sign up free</a>.
           </p>
           <div className="flex flex-wrap items-end gap-2">
             <Input
               type="email"
-              placeholder="their@email.com"
+              placeholder="RecruitNC sign-in email"
               value={addEmail}
               onChange={(e) => setAddEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
