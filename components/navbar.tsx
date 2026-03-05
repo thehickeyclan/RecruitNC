@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Trophy, Medal, ShoppingCart, MessageCircle, ShoppingBag } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Users2, Trophy, Medal, ShoppingCart, MessageCircle, ShoppingBag } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -26,10 +26,22 @@ import { StoreNavLink } from "@/components/store-nav-link"
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [hubAccess, setHubAccess] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
+
+  useEffect(() => {
+    if (!user) {
+      setHubAccess(false)
+      return
+    }
+    fetch("/api/national-team/hub-access", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setHubAccess(!!data?.allowed))
+      .catch(() => setHubAccess(false))
+  }, [user])
 
   const fetchUnreadMessages = useCallback(() => {
     if (!user) return
@@ -331,7 +343,7 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Icons: Messages, Store, Cart (shopping cart icon) + Auth */}
+          {/* Icons: Messages, Team hub (if access), Cart + Auth. Store is in main nav. */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
             {user && (
               <a href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
@@ -343,9 +355,11 @@ export function Navbar() {
                 )}
               </a>
             )}
-            <StoreButton aria-label="Store" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer bg-transparent border-0 p-0">
-              <ShoppingBag className="h-5 w-5" />
-            </StoreButton>
+            {user && hubAccess && (
+              <a href="/national-team/hub" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Team hub">
+                <Users2 className="h-5 w-5" />
+              </a>
+            )}
             <a href="/cart" target="_top" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
@@ -590,15 +604,18 @@ export function Navbar() {
                             Profile
                           </Link>
                         </Button>
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
-                        >
-                          <a href="/national-team/hub" onClick={() => setIsOpen(false)}>
-                            Team hub
-                          </a>
-                        </Button>
+                        {hubAccess && (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                          >
+                            <a href="/national-team/hub" onClick={() => setIsOpen(false)}>
+                              <Users2 className="h-4 w-4 mr-2" />
+                              Team hub
+                            </a>
+                          </Button>
+                        )}
                         {showMyRecruits && (
                           <Button
                             asChild
