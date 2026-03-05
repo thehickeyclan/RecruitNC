@@ -154,6 +154,31 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     }
   }
 
+  // Ensure current user is a member of each event thread they have access to (so group chat doesn't show Forbidden).
+  const threadIdsForUser = eventSlugsToShow.map((slug) => threadIdByEvent.get(slug)).filter(Boolean) as string[]
+  if (threadIdsForUser.length > 0) {
+    const { data: existingMembers } = await admin
+      .from("messaging_thread_members")
+      .select("thread_id")
+      .eq("user_id", user.id)
+      .in("thread_id", threadIdsForUser)
+    const alreadyMember = new Set((existingMembers ?? []).map((r) => (r as { thread_id: string }).thread_id))
+    const now = new Date().toISOString()
+    for (const threadId of threadIdsForUser) {
+      if (alreadyMember.has(threadId)) continue
+      const { error: addErr } = await admin.from("messaging_thread_members").insert({
+        thread_id: threadId,
+        user_id: user.id,
+        role: "member",
+        notification_level: "all",
+        joined_at: now,
+      })
+      if (addErr && (addErr as { code?: string }).code !== "23505") {
+        console.warn("[national-team/hub] Could not add user to event thread", threadId, addErr.message)
+      }
+    }
+  }
+
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
     const roster = paidRegs.filter((r) => r.event_slug === eventSlug)
     const myRegistrations = roster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)

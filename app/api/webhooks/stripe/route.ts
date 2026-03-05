@@ -112,6 +112,86 @@ export async function POST(request: NextRequest) {
   if (event.type === "payment_intent.succeeded") {
     const paymentIntent = event.data.object as Stripe.PaymentIntent
     const meta = (paymentIntent.metadata || {}) as Record<string, string>
+    const description = (paymentIntent.description || "").toLowerCase()
+    const hasStoreMetadata = !!(meta.items || meta.customer_email)
+    const isSubscriptionPayment =
+      description.includes("subscription") ||
+      (Object.keys(meta).length === 0 && (paymentIntent as { invoice?: string }).invoice) ||
+      (!hasStoreMetadata && paymentIntent.amount === 5500)
+    if (isSubscriptionPayment) {
+      return NextResponse.json({ received: true })
+    }
+
+    // Fallback: national team $250 payment — if checkout.session.completed didn't run or failed, mark registration paid from payment_intent.succeeded
+    if (!hasStoreMetadata && paymentIntent.amount === 25000) {
+      try {
+        const stripe = getStripe()
+        const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent.id, limit: 1 })
+        const session = sessions.data[0]
+        const regId = session?.metadata?.registration_id
+        if (session?.metadata?.source === "national_team" && regId) {
+          const admin = createAdminClient()
+          const { data: reg } = await admin.from("national_team_event_registrations").select("*").eq("id", regId).single()
+          if (reg && reg.status !== "paid") {
+            const { data: products } = await admin.from("products").select("id, name, slug").eq("category", "national_team")
+            const bundleProduct = (products ?? []).find((p: { slug?: string }) => p.slug === "nhsca-2026-bundle") ?? (products ?? [])[0]
+            const orderNumber = generateOrderNumber()
+            const orderId = crypto.randomUUID()
+            const regCents = Number(reg.reg_fee_cents) || 0
+            const apparelCents = Number(reg.apparel_fee_cents) || 0
+            const totalCents = regCents + apparelCents
+            const customerEmail = (reg.parent_email as string) ?? ""
+            const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
+            const { error: orderErr } = await admin.from("orders").insert({
+              id: orderId,
+              order_number: orderNumber,
+              customer_email: customerEmail,
+              customer_name: customerName,
+              shipping_address: {},
+              shipping_method: { name: "National team event", price: 0 },
+              subtotal: totalCents / 100,
+              shipping_cost: 0,
+              tax: 0,
+              discount: 0,
+              total: totalCents / 100,
+              status: "paid",
+              stripe_payment_intent_id: paymentIntent.id,
+              promo_code: null,
+            })
+            let orderIdToUse = orderId
+            if ((orderErr as { code?: string })?.code === "23505") {
+              const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntent.id).maybeSingle()
+              orderIdToUse = (existingOrder as { id?: string } | null)?.id ?? orderId
+            } else if (!orderErr && totalCents > 0) {
+              await admin.from("order_items").insert({
+                order_id: orderId,
+                product_id: (bundleProduct as { id?: string } | null)?.id ?? null,
+                product_name: (bundleProduct as { name?: string } | null)?.name ?? "NHSCA 2026 – Registration + Apparel",
+                variant: { color: "N/A", size: "N/A" },
+                quantity: 1,
+                price: totalCents / 100,
+                image_url: null,
+              })
+            }
+            await admin
+              .from("national_team_event_registrations")
+              .update({
+                status: "paid",
+                order_id: orderIdToUse,
+                stripe_session_id: session.id,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", regId)
+          }
+          return NextResponse.json({ received: true })
+        }
+      } catch (e) {
+        console.warn("[webhooks/stripe] national team fallback in payment_intent.succeeded:", e)
+      }
+      // $250 with no store metadata is national team; don't fall through to store order path (avoids 500 from other deployments)
+      return NextResponse.json({ received: true })
+    }
+
     let chargeBilling: { email?: string; name?: string } = {}
     if (paymentIntent.latest_charge) {
       try {
@@ -515,10 +595,11 @@ export async function POST(request: NextRequest) {
           stripe_payment_intent_id: paymentIntentId,
           promo_code: null,
         })
+        let orderIdToUse = orderId
         if ((orderErr as { code?: string })?.code === "23505") {
-          return NextResponse.json({ received: true })
-        }
-        if (!orderErr && totalCents > 0) {
+          const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()
+          orderIdToUse = (existingOrder as { id?: string } | null)?.id ?? orderId
+        } else if (!orderErr && totalCents > 0) {
           await admin.from("order_items").insert({
             order_id: orderId,
             product_id: bundleProduct?.id ?? null,
@@ -528,11 +609,13 @@ export async function POST(request: NextRequest) {
             price: totalCents / 100,
             image_url: null,
           })
+        }
+        if (totalCents > 0) {
           await admin
             .from("national_team_event_registrations")
             .update({
               status: "paid",
-              order_id: orderId,
+              order_id: orderIdToUse,
               stripe_session_id: session.id,
               updated_at: new Date().toISOString(),
             })

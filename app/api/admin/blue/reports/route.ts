@@ -7,6 +7,17 @@ export const dynamic = "force-dynamic"
 const MONTHS_BACK = 24
 const BLUE_PRICE = 55
 
+/** ISO week key e.g. "2026-W14" */
+function weekKey(d: Date): string {
+  const t = new Date(d)
+  t.setHours(0, 0, 0, 0)
+  t.setDate(t.getDate() + 4 - (t.getDay() || 7))
+  const y = t.getFullYear()
+  const start = new Date(y, 0, 1)
+  const week = Math.ceil((((t.getTime() - start.getTime()) / 86400000) + 1) / 7)
+  return `${y}-W${String(week).padStart(2, "0")}`
+}
+
 async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -45,8 +56,10 @@ export type BlueReportsData = {
   signupsError?: string
   /** Upcoming billing: date string (YYYY-MM-DD) → { date, amountCents, count }. Next 90 days. */
   upcomingBilling: { date: string; amountCents: number; count: number }[]
-  /** Expected billing by month (next 12 months): month key → total $ from members whose next_billing_at falls in that month. */
-  billingByMonth: { month: string; amount: number; count: number }[]
+  /** Expected billing by month (next 12 months): from renewal dates. */
+  billingByMonth: { period: string; amount: number; count: number }[]
+  /** Expected billing by week (next 26 weeks): from renewal dates. */
+  billingByWeek: { period: string; amount: number; count: number }[]
   /** Per-membership next billing (for table): { membershipId, athleteName, nextBillingAt, amountCents }[]. */
   upcomingBillingRows?: { membershipId: string; athleteName: string; nextBillingAt: string; amountCents: number }[]
 }
@@ -63,6 +76,7 @@ export async function GET() {
     .from("blue_memberships")
     .select("id, athlete_id, status, started_at, ended_at, created_at, next_billing_at")
     .order("created_at", { ascending: true })
+  let billingColumnExists = true
   if (err1) {
     if (err1.code === "42P01") return NextResponse.json({ error: "Table blue_memberships does not exist." }, { status: 503 })
     if (err1.code === "42703") {
@@ -178,11 +192,12 @@ export async function GET() {
   const newSubsThisMonth = currentMonthTrend?.newCount ?? 0
   const newMRRThisMonth = newSubsThisMonth * BLUE_PRICE
 
-  // Upcoming billing (next 90 days) and billing by month (next 12 months) from next_billing_at
+  // Projected MRR: bucket each member's renewal (next_billing_at) by week and by month
   const billingRows = (rows ?? []).filter(
     (r) => (r.status === "active" || r.status === "paused") && (r as { next_billing_at?: string }).next_billing_at
   ) as Array<{ id: string; athlete_id: string; next_billing_at: string }>
   const dayBuckets: Record<string, number> = {}
+  const weekBuckets: Record<string, number> = {}
   const monthBuckets: Record<string, number> = {}
   const ninetyDaysOut = new Date(now)
   ninetyDaysOut.setDate(ninetyDaysOut.getDate() + 90)
@@ -193,21 +208,36 @@ export async function GET() {
     if (d <= ninetyDaysOut) {
       dayBuckets[dateKey] = (dayBuckets[dateKey] ?? 0) + 1
     }
-    const monthKeyB = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    const wk = weekKey(d)
+    weekBuckets[wk] = (weekBuckets[wk] ?? 0) + 1
+    const monthKeyB = monthKey(d)
     monthBuckets[monthKeyB] = (monthBuckets[monthKeyB] ?? 0) + 1
   }
   const upcomingBilling = Object.entries(dayBuckets)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, count]) => ({ date, amountCents: count * BLUE_PRICE * 100, count }))
-  const next12Months: { year: number; month: number; key: string }[] = []
+  const next12Months: { key: string }[] = []
   for (let i = 0; i < 12; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() + i, 1)
-    next12Months.push({ year: d.getFullYear(), month: d.getMonth(), key: monthKey(d) })
+    next12Months.push({ key: monthKey(d) })
   }
   const billingByMonth = next12Months.map(({ key }) => ({
-    month: key,
-    amount: ((monthBuckets[key] ?? 0) * BLUE_PRICE),
+    period: key,
+    amount: (monthBuckets[key] ?? 0) * BLUE_PRICE,
     count: monthBuckets[key] ?? 0,
+  }))
+  const next26Weeks: { key: string }[] = []
+  const weekStart = new Date(now)
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+  for (let i = 0; i < 26; i++) {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + i * 7)
+    next26Weeks.push({ key: weekKey(d) })
+  }
+  const billingByWeek = next26Weeks.map(({ key }) => ({
+    period: key,
+    amount: (weekBuckets[key] ?? 0) * BLUE_PRICE,
+    count: weekBuckets[key] ?? 0,
   }))
 
   let upcomingBillingRows: { membershipId: string; athleteName: string; nextBillingAt: string; amountCents: number }[] = []
@@ -253,6 +283,7 @@ export async function GET() {
     newSubsThisMonth,
     upcomingBilling,
     billingByMonth,
+    billingByWeek,
     ...(upcomingBillingRows.length > 0 && { upcomingBillingRows }),
     ...(signupsError && { signupsError }),
   }

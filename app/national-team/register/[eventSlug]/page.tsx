@@ -32,8 +32,6 @@ const NHSCA_2026_EVENT_DETAILS = {
 
 const NHSCA_2026_COST = {
   amount: 250,
-  label: "Registration + team apparel bundle",
-  note: "One-time payment at checkout.",
   dueDate: "Sunday, March 14, 2026",
 }
 
@@ -199,10 +197,23 @@ export default function NationalTeamRegisterEventPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg">Cost and what’s included</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-1 text-sm">
-                <p className="font-semibold text-[#003366]">${NHSCA_2026_COST.amount} — {NHSCA_2026_COST.label}</p>
-                <p className="text-gray-600">Event registration plus team apparel. {NHSCA_2026_COST.note}</p>
-                <p className="text-amber-800 font-medium mt-2">Payment due: {NHSCA_2026_COST.dueDate}</p>
+              <CardContent className="space-y-3 text-sm">
+                <p className="font-semibold text-[#003366] text-base">${NHSCA_2026_COST.amount} — one-time payment at checkout</p>
+                <div>
+                  <p className="font-medium text-gray-800 mb-1">This cost includes:</p>
+                  <ul className="list-disc list-inside text-gray-700 space-y-0.5">
+                    <li>Team registration fee</li>
+                    <li>Apparel: singlets, shirt, and shorts</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 mb-1">This cost does <strong>not</strong> include:</p>
+                  <ul className="list-disc list-inside text-gray-700 space-y-0.5">
+                    <li>Travel</li>
+                    <li>Hotel</li>
+                  </ul>
+                </div>
+                <p className="text-amber-800 font-medium pt-1">Payment due: {NHSCA_2026_COST.dueDate}</p>
               </CardContent>
             </Card>
           </>

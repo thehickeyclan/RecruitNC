@@ -20,17 +20,21 @@ import {
   Area,
 } from "recharts"
 import { ArrowLeft, Loader2, TrendingUp, Users, GraduationCap, DollarSign } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { BlueReportsData } from "@/app/api/admin/blue/reports/route"
 import { BlueAdminAuthBanner } from "@/components/blue-admin-auth-banner"
 
 const NAVY = "#13294B"
 const GOLD = "#D3B574"
 
+type BillingView = "week" | "month"
+
 export default function AdminBlueReportsPage() {
   const [data, setData] = useState<BlueReportsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [backfilling, setBackfilling] = useState(false)
   const [authError, setAuthError] = useState(false)
+  const [billingView, setBillingView] = useState<BillingView>("month")
 
   const loadReports = () => {
     setLoading(true)
@@ -319,19 +323,35 @@ export default function AdminBlueReportsPage() {
           </CardContent>
         </Card>
 
-        {/* Expected billing by month (next 12 months) */}
-        {(data.billingByMonth?.length ?? 0) > 0 ? (
+        {/* Projected MRR from renewal dates — by week or by month */}
+        {(data.billingByMonth?.length ?? 0) > 0 || (data.billingByWeek?.length ?? 0) > 0 ? (
           <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Expected billing by month</CardTitle>
-              <CardDescription>How much will be billed each month (next 12 months) based on each member’s next billing date. Synced from Stripe.</CardDescription>
+            <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
+              <div>
+                <CardTitle>Projected MRR (from renewal dates)</CardTitle>
+                <CardDescription>
+                  Revenue expected each period based on each member’s next billing date. Synced from Stripe.
+                </CardDescription>
+              </div>
+              <Select value={billingView} onValueChange={(v) => setBillingView(v as BillingView)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="week">By week</SelectItem>
+                  <SelectItem value="month">By month</SelectItem>
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
               <div className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.billingByMonth ?? []} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <BarChart
+                    data={billingView === "week" ? (data.billingByWeek ?? []) : (data.billingByMonth ?? [])}
+                    margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
                     <Tooltip
                       formatter={(value: number, name: string, props: { payload?: { count: number } }) => [
