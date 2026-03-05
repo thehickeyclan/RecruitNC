@@ -296,6 +296,7 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
               <h3 className="text-sm font-semibold text-[#002147] flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-[#003366]" />
                 Group chat
+                <span className="rounded bg-[#003366]/10 px-1.5 py-0.5 text-[10px] font-normal text-[#003366] uppercase tracking-wide">Forum</span>
               </h3>
               <p className="text-xs text-gray-600 mt-1.5">
                 {event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")
