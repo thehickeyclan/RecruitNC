@@ -199,10 +199,45 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     const threadId = threadIdByEvent.get(eventSlug)
     if (!threadId) continue
 
-    // 2) Workspace members = distinct parent_user_id from paid regs (this event) + event_workspace_members.
+    // 2) Workspace members = distinct parent_user_id from paid regs + parent_email resolved to user_id + event_workspace_members.
     const workspaceUserIds = new Set<string>()
-    for (const r of paidRegs) {
-      if (r.event_slug === eventSlug && r.parent_user_id) workspaceUserIds.add(r.parent_user_id)
+    const regsForEvent = paidRegs.filter((r) => r.event_slug === eventSlug)
+    for (const r of regsForEvent) {
+      if (r.parent_user_id) workspaceUserIds.add(r.parent_user_id)
+    }
+    // Resolve parent_email → user_id for regs where we don't have parent_user_id yet (so parents who haven't visited the hub still get added to the forum).
+    const parentEmailsToResolve = [...new Set(
+      regsForEvent
+        .filter((r) => !r.parent_user_id && (r.parent_email ?? "").trim())
+        .map((r) => (r.parent_email ?? "").trim().toLowerCase())
+    )]
+    if (parentEmailsToResolve.length > 0) {
+      const orClause = parentEmailsToResolve.map((e) => `email.ilike.${e}`).join(",")
+      const { data: profiles } = await admin
+        .from("user_profiles")
+        .select("user_id, email")
+        .or(orClause)
+      const emailToUserId = new Map<string, string>()
+      for (const p of profiles ?? []) {
+        const row = p as { user_id: string; email?: string | null }
+        const em = (row.email ?? "").trim().toLowerCase()
+        if (em) {
+          emailToUserId.set(em, row.user_id)
+          workspaceUserIds.add(row.user_id)
+        }
+      }
+      // Backfill parent_user_id on regs so next time we don't need to resolve.
+      for (const r of regsForEvent) {
+        if (r.parent_user_id) continue
+        const em = (r.parent_email ?? "").trim().toLowerCase()
+        const uid = em ? emailToUserId.get(em) : null
+        if (uid) {
+          await admin
+            .from("national_team_event_registrations")
+            .update({ parent_user_id: uid, updated_at: now })
+            .eq("id", r.id)
+        }
+      }
     }
     try {
       const { data: explicitRows } = await admin
