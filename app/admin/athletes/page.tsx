@@ -227,12 +227,12 @@ export default function AthletesPage() {
               <Button asChild className="bg-[#B31B1B] hover:bg-[#8B1515] text-white">
                 <Link href="/admin/athletes/add">Add Athlete</Link>
               </Button>
-              <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
+              <Button asChild variant="outline" className="bg-white/15 text-white border-white/60 hover:bg-white/25 hover:border-white">
                 <Link href="/admin/athletes/bulk-import">Bulk Import</Link>
               </Button>
               <Button
                 variant="outline"
-                className="border-white text-white hover:bg-white/10"
+                className="bg-white/15 text-white border-white/60 hover:bg-white/25 hover:border-white"
                 onClick={loadDuplicates}
                 disabled={duplicatesLoading}
               >

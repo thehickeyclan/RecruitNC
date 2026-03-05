@@ -42,10 +42,13 @@ export function flatShippingFromAddress(addr: Record<string, unknown> | null | u
   }
 }
 
-/** All shipping fields needed for orders insert when DB has NOT NULL on shipping columns. */
+/** All shipping + billing name fields needed for orders insert when DB has NOT NULL on these columns. */
 export function orderShippingFields(customerName: string, address: Record<string, unknown> | null | undefined) {
+  const names = shippingNameFromCustomerName(customerName)
   return {
-    ...shippingNameFromCustomerName(customerName),
+    ...names,
+    billing_first_name: names.shipping_first_name,
+    billing_last_name: names.shipping_last_name,
     ...flatShippingFromAddress(address),
   }
 }

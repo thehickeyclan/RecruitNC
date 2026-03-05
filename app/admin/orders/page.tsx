@@ -28,12 +28,13 @@ function deriveCategory(
   const method = (shippingMethodStr || "").toLowerCase()
   const total = Number(totalDollars) || 0
   if (names.some((n) => n.includes("blue") && (n.includes("monthly") || n.includes("subscription")))) return "Blue Sub"
-  if (names.some((n) => n.includes("practice") || n.includes("drop-in") || n.includes("dropin"))) return "Drop-In"
   if (method.includes("blue membership")) return "Blue Sub"
-  if (method.includes("practice") || method.includes("pickup") || method.includes("drop-in") || method.includes("drop in")) return "Drop-In"
+  // Drop-In only when a line item name explicitly indicates drop-in (not from shipping method alone)
+  if (names.some((n) => /drop-?in|dropin/.test(n) || (n.includes("practice") && n.includes("drop")))) return "Drop-In"
   if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) return "Tournament Fee"
   if (method.includes("national team")) return "Tournament Fee"
-  if (total >= 20 && total <= 30 && (method.includes("pickup") || method.includes("practice") || names.length === 0)) return "Drop-In"
+  // Recovered/minimal orders with no line items: use total + method as fallback for Drop-In
+  if (names.length === 0 && total >= 20 && total <= 35 && (method.includes("pickup") || method.includes("practice") || method.includes("drop-in") || method.includes("drop in"))) return "Drop-In"
   if (names.length > 0) return "Apparel"
   return "Other"
 }
