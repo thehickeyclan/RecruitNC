@@ -291,21 +291,28 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
           </div>
         </div>
         {hasThread && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <MessageCircle className="h-4 w-4" />
-              Group chat
-            </h3>
-            <div className="border rounded-lg overflow-hidden bg-white" style={{ minHeight: 280, maxHeight: 400 }}>
+          <div className="rounded-xl border-2 border-[#003366]/20 bg-white shadow-sm overflow-hidden">
+            <div className="bg-[#003366]/5 px-4 py-3 border-b border-[#003366]/10">
+              <h3 className="text-sm font-semibold text-[#002147] flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-[#003366]" />
+                Group chat
+              </h3>
+              <p className="text-xs text-gray-600 mt-1.5">
+                {event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")
+                  ? "This chat is a dedicated forum for communication on NHSCA Duals 2026."
+                  : `This chat is a dedicated forum for communication on ${event.eventName}.`}
+              </p>
+            </div>
+            <div className="flex flex-col h-[360px]">
               <ThreadView
                 threadId={event.threadId!}
                 threadName={`${event.eventName} chat`}
                 currentUserId={currentUserId}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              <a href="/messages" className="text-[#003366] hover:underline">Open in Messages</a> for full view
-            </p>
+            <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+              <a href="/messages" className="text-xs text-[#003366] font-medium hover:underline">Open in Messages</a> for full view
+            </div>
           </div>
         )}
         <div>

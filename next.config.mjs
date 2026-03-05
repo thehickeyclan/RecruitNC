@@ -18,6 +18,7 @@ const nextConfig = {
     unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "hebbkx1anhila5yf.public.blob.vercel-storage.com", port: "", pathname: "/**" },
+      { protocol: "https", hostname: "w8v0puzioqkz0xzh.public.blob.vercel-storage.com", port: "", pathname: "/**" },
     ],
   },
   experimental: {
