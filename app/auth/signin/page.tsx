@@ -32,7 +32,7 @@ export default function SignInPage() {
     setClearingCooldown(false)
   }
 
-  const { signIn, user, isLoading } = useAuth()
+  const { user, isLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || searchParams.get("redirect")
@@ -73,72 +73,43 @@ export default function SignInPage() {
     setLoading(true)
     setError("")
 
-    console.log("[v0] Sign in attempt for:", email)
-
     const isAdminTarget = returnTo?.startsWith("/admin") || returnTo?.startsWith("/users-dashboard")
 
-    // For admin: use server-side login so cookies are set reliably (client-side session often doesn't survive nav)
+    // Always use server-side sign-in so we avoid Supabase anon-key rate limits in production.
     if (isAdminTarget) {
-      try {
-        const res = await fetch("/api/auth/admin-login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ email, password }),
-        })
-        if (res.ok) {
-          const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
-          setTimeout(() => { window.location.href = next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin" }, 1200)
-          return
-        }
-        const err = await res.json().catch(() => ({}))
-        if (res.status === 401) setError(err.error || "Invalid email or password.")
-        else if (res.status === 403) setError(err.error || "Admin access required.")
-        else setError(err.error || "Login failed")
-        setLoading(false)
-        return
-      } catch {
-        // Fallback to regular sign-in
-        const result = await signIn(email, password)
-        if (result.error) setError(result.error.message || "Login failed")
-        else {
-          const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
-          setTimeout(() => { window.location.href = next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin" }, 2500)
-        }
-        setLoading(false)
+      const res = await fetch("/api/auth/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      })
+      const err = await res.json().catch(() => ({}))
+      if (res.ok) {
+        const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
+        setTimeout(() => { window.location.href = next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin" }, 800)
         return
       }
-    }
-
-    // Non-admin: regular sign in
-    const result = await signIn(email, password)
-    if (result.error && (result.error.message?.includes("rate limit") || result.error.message?.includes("429"))) {
-      try {
-        const res = await fetch("/api/auth/admin-login", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          credentials: "include", body: JSON.stringify({ email, password }),
-        })
-        if (res.ok) {
-          setTimeout(() => { window.location.href = returnTo || "/" }, 1000)
-          return
-        }
-      } catch {}
-      // Set cooldown so we stop hitting Supabase from this browser (helps Chrome desktop)
-      const cooldownUntil = Date.now()
-      if (typeof document !== "undefined") {
-        document.cookie = `rate_limit_cooldown=${cooldownUntil}; path=/; max-age=120; SameSite=Lax`
-        try { sessionStorage.setItem("rate_limit_cooldown", String(cooldownUntil)) } catch {}
-      }
-      setError("Rate limited. Please wait a few minutes.")
+      if (res.status === 401) setError(err.error || "Invalid email or password.")
+      else if (res.status === 403) setError(err.error || "Admin access required.")
+      else setError(err.error || "Login failed")
       setLoading(false)
       return
     }
-    if (result.error) {
-      setError(result.error.message || "Invalid email or password.")
-      setLoading(false)
-    } else {
-      setTimeout(() => { window.location.href = returnTo || "/" }, 2500)
+
+    const res = await fetch("/api/auth/signin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (res.ok) {
+      const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
+      setTimeout(() => { window.location.href = target }, 800)
+      return
     }
+    setError(data.error || "Invalid email or password.")
+    setLoading(false)
   }
 
   // When stuck in iframe, cookies are blocked — show only "open in new tab"
