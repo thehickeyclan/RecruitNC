@@ -71,7 +71,7 @@ export async function GET(
   return NextResponse.json({ members: result, current_user_role: currentUserRole })
 }
 
-/** POST: Add a member to the thread. Thread admin only. Sends "You've been added" email with link. */
+/** POST: Add a member to the thread. Any thread member can add. Sends "You've been added" email with link. */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ threadId: string }> }
@@ -85,13 +85,11 @@ export async function POST(
   const supabase = await createClient()
   const { data: myMember } = await supabase
     .from("messaging_thread_members")
-    .select("role")
+    .select("thread_id")
     .eq("thread_id", threadId)
     .eq("user_id", user.id)
     .single()
-  if (!myMember || (myMember as { role?: string }).role !== "admin") {
-    return NextResponse.json({ error: "Only group admins can add members" }, { status: 403 })
-  }
+  if (!myMember) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   let body: { user_id?: string } = {}
   try {

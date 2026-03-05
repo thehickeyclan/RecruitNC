@@ -526,6 +526,55 @@ export async function POST(request: NextRequest) {
           }
         }
       }
+      // Create store order for Blue signup so revenue appears in store orders and reports
+      let piForOrder = paymentIntentId
+      if (!piForOrder && subscriptionId) {
+        try {
+          const sub = await getStripe().subscriptions.retrieve(subscriptionId, { expand: ["latest_invoice"] })
+          const inv = (sub as { latest_invoice?: Stripe.Invoice | string }).latest_invoice
+          if (inv && typeof inv === "object" && inv.payment_intent) {
+            piForOrder = typeof inv.payment_intent === "string" ? inv.payment_intent : (inv.payment_intent as { id?: string })?.id ?? null
+          }
+        } catch (_) {}
+      }
+      const amountTotal = ((session as { amount_total?: number }).amount_total ?? 0) / 100
+      const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? ""
+      const customerName = ((session.customer_details as { name?: string })?.name ?? "").trim() || "Blue member"
+      const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_session_id", session.id).maybeSingle()
+      if (!existingOrder && (amountTotal > 0 || piForOrder)) {
+        const orderNumber = generateOrderNumber()
+        const orderId = crypto.randomUUID()
+        const { error: orderErr } = await admin.from("orders").insert({
+          id: orderId,
+          order_number: orderNumber,
+          customer_email: customerEmail || "blue-signup@placeholder.com",
+          customer_name: customerName,
+          shipping_address: {},
+          shipping_method: { name: "Blue membership", price: 0 },
+          subtotal: amountTotal,
+          shipping_cost: 0,
+          tax: 0,
+          discount: 0,
+          total: amountTotal,
+          status: "paid",
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: piForOrder ?? null,
+          promo_code: null,
+        })
+        if (!orderErr) {
+          await admin.from("order_items").insert({
+            order_id: orderId,
+            product_id: null,
+            product_name: "NC United Blue – Monthly",
+            variant: { color: "N/A", size: "N/A" },
+            quantity: 1,
+            price: amountTotal,
+            image_url: null,
+          })
+        } else if ((orderErr as { code?: string }).code !== "23505") {
+          console.error("[webhooks/stripe] Blue signup order insert:", orderErr.message)
+        }
+      }
       return NextResponse.json({ received: true })
     }
 

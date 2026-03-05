@@ -129,8 +129,7 @@ export function ThreadMembersPane({
           Members
         </h2>
         <p className="text-xs text-gray-500 mt-0.5">{members.length} {members.length === 1 ? "member" : "members"}</p>
-        {isAdmin && (
-          <div className="mt-2 flex gap-2">
+        <div className="mt-2 flex gap-2">
             <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline" className="flex-1 gap-1">
@@ -140,8 +139,8 @@ export function ThreadMembersPane({
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Add member</DialogTitle>
-                  <DialogDescription>Search by name or email. They’ll get an email with a link to the group.</DialogDescription>
+                  <DialogTitle>Add RecruitNC user</DialogTitle>
+                  <DialogDescription>Search by name or email. They must have a RecruitNC account. They’ll get an email with a link to the group.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2">
                   <Label htmlFor="add-search">Search</Label>
@@ -174,6 +173,7 @@ export function ThreadMembersPane({
                 </div>
               </DialogContent>
             </Dialog>
+            {isAdmin && (
             <Button
               size="sm"
               variant="outline"
@@ -185,8 +185,8 @@ export function ThreadMembersPane({
               {copyLinkStatus === "copying" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
               {copyLinkStatus === "copied" ? "Copied!" : copyLinkStatus === "error" ? "Error" : "Link"}
             </Button>
-          </div>
-        )}
+            )}
+        </div>
         <input
           type="search"
           placeholder="Find a member"

@@ -208,12 +208,14 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
       if (r.parent_user_id) workspaceUserIds.add(r.parent_user_id)
     }
     // Resolve parent_email → user_id (user_profiles first; then Auth as fallback for profiles missing email).
+    // Only the parent/guardian email is used; if that email has no RecruitNC account, nobody is added for that registration (see docs/event-thread-sync-why.md).
     const parentEmailsToResolve = [...new Set(
       regsForEvent
         .filter((r) => !r.parent_user_id && (r.parent_email ?? "").trim())
         .map((r) => (r.parent_email ?? "").trim().toLowerCase())
     )].slice(0, 200)
     const emailToUserId = new Map<string, string>()
+    const unresolvedEmails: string[] = []
     for (const email of parentEmailsToResolve) {
       const { data: rows } = await admin
         .from("user_profiles")
@@ -230,7 +232,12 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
         const em = (row.email ?? "").trim().toLowerCase() || email
         emailToUserId.set(em, row.user_id)
         workspaceUserIds.add(row.user_id)
+      } else {
+        unresolvedEmails.push(email)
       }
+    }
+    if (unresolvedEmails.length > 0) {
+      console.warn("[RecruitNC] hub sync: parent_email had no RecruitNC account (no thread add)", eventSlug, "unresolved:", unresolvedEmails.join(", "), "— registrations with these emails need that user to sign up at RecruitNC or be added manually to the group.")
     }
     console.warn("[RecruitNC] hub sync", eventSlug, "regs:", regsForEvent.length, "emails to resolve:", parentEmailsToResolve.length, "resolved:", emailToUserId.size, "workspace members:", workspaceUserIds.size)
     // Backfill parent_user_id on regs so next time we don't need to resolve.

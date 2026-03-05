@@ -39,3 +39,5 @@ ALTER TABLE national_team_event_registrations ADD COLUMN IF NOT EXISTS parent_us
 - **Sync forum → workspace:** When loading hub or when someone joins via invite, for each member of the event’s thread, ensure a row in `event_workspace_members` (e.g. source = `forum_invite` if they weren’t from registration).
 
 - **Add family / kid:** Call add-workspace-member API (by email). Resolve email → user_id; insert `event_workspace_members` (source `family_add` or `athlete_linked`); then add that user to the event’s thread. They then see the workspace and forum.
+
+**Why a registration might not add anyone to the thread:** We only resolve **parent_email** to a RecruitNC user. If the parent registered with an email that has no RecruitNC account, nobody is added until they sign up or are added manually. See **docs/event-thread-sync-why.md**.

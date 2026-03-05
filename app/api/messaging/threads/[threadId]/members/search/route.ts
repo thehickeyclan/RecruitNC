@@ -6,7 +6,7 @@ import { getMessagingUser } from "@/lib/messaging-auth"
 const MIN_QUERY_LENGTH = 2
 const MAX_RESULTS = 20
 
-/** GET: Search users to add to the thread (not already members). Thread admin only. */
+/** GET: Search RecruitNC users to add to the thread (not already members). Any thread member can search. */
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ threadId: string }> }
@@ -20,13 +20,11 @@ export async function GET(
   const supabase = await createClient()
   const { data: myMember } = await supabase
     .from("messaging_thread_members")
-    .select("role")
+    .select("thread_id")
     .eq("thread_id", threadId)
     .eq("user_id", user.id)
     .single()
-  if (!myMember || (myMember as { role?: string }).role !== "admin") {
-    return NextResponse.json({ error: "Only group admins can search for members" }, { status: 403 })
-  }
+  if (!myMember) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   const { searchParams } = new URL(request.url)
   const q = (searchParams.get("q") ?? "").trim()

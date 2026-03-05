@@ -22,6 +22,8 @@ export default function AdminBlueSubscriptionsPage() {
   const [signupsError, setSignupsError] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [membershipsError, setMembershipsError] = useState<string | null>(null)
+  const [syncFromStripeLoading, setSyncFromStripeLoading] = useState(false)
+  const [syncFromStripeResult, setSyncFromStripeResult] = useState<string | null>(null)
 
   const filteredSignups =
     signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
@@ -67,6 +69,32 @@ export default function AdminBlueSubscriptionsPage() {
     return () => { cancelled = true }
   }, [])
 
+  const runSyncFromStripe = async () => {
+    setSyncFromStripeLoading(true)
+    setSyncFromStripeResult(null)
+    try {
+      const r = await fetch("/api/admin/blue/sync-from-stripe", { method: "POST", credentials: "include" })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        setSyncFromStripeResult(data?.error ?? `Failed (${r.status})`)
+        return
+      }
+      setSyncFromStripeResult(data?.message ?? `Synced: ${data.synced ?? 0}, skipped: ${data.skipped ?? 0}, failed: ${data.failed ?? 0}`)
+      if ((data.synced ?? 0) > 0) {
+        setLoadError(null)
+        const res = await fetch("/api/admin/blue/subscriptions", { credentials: "include" })
+        if (res.ok) {
+          const d = await res.json()
+          if (d?.signups) setSignups(d.signups ?? [])
+          if (d?.subscriptions) setSubscriptions(d.subscriptions ?? [])
+          if (d?.stats) setStats(d.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
+        }
+      }
+    } finally {
+      setSyncFromStripeLoading(false)
+    }
+  }
+
   const filtered =
     tab === "good_standing"
       ? subscriptions.filter((s) => s.status === "active" || s.status === "pending_payment")
@@ -77,15 +105,30 @@ export default function AdminBlueSubscriptionsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 flex flex-wrap items-center gap-4">
           <Button variant="outline" size="icon" asChild>
             <a href="/admin/blue"><ArrowLeft className="h-4 w-4" /></a>
           </Button>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold text-[#003366]">Blue member cockpit</h1>
             <p className="text-sm text-gray-600">All Blue members and subscriptions in one view</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={syncFromStripeLoading}
+            onClick={runSyncFromStripe}
+            className="gap-2"
+          >
+            {syncFromStripeLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {syncFromStripeLoading ? "Syncing…" : "Sync Blue from Stripe"}
+          </Button>
         </div>
+        {syncFromStripeResult && (
+          <div className="mb-4 rounded-lg border border-[#003366]/20 bg-[#003366]/5 px-4 py-2 text-sm text-[#003366]">
+            {syncFromStripeResult}
+          </div>
+        )}
 
         {loadError && isBlueAuthError(loadError) && (
           <BlueAdminAuthBanner returnTo="/admin/blue/subscriptions" />

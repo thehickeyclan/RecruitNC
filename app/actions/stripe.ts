@@ -312,6 +312,87 @@ async function createOrderFromPaymentIntentMetadata(
   }
 }
 
+/** Create a minimal order from a Stripe Charge when PI/Session have no metadata (e.g. old or external checkout). */
+async function createOrderFromCharge(
+  supabase: ReturnType<typeof createAdminClient>,
+  paymentIntentId: string,
+  chargeId: string
+): Promise<{
+  orderId: string
+  orderNumber: string
+  totals: Record<string, number>
+  items: unknown[]
+  shippingAddress: unknown
+  shippingMethod: unknown
+} | null> {
+  try {
+    const charge = await stripe.charges.retrieve(chargeId)
+    const amount = (charge.amount ?? 0) / 100
+    const billing = charge.billing_details ?? {}
+    const addr = billing.address
+    const customerEmail = (billing.email ?? "").trim() || `recovered-${paymentIntentId.slice(-8)}@placeholder.com`
+    const customerName = (billing.name ?? "").trim() || "Customer"
+    const shippingAddress = addr
+      ? {
+          address1: addr.line1 ?? "",
+          address2: addr.line2 ?? "",
+          city: addr.city ?? "",
+          state: addr.state ?? "",
+          zipCode: addr.postal_code ?? "",
+          country: addr.country ?? "US",
+        }
+      : {}
+
+    const orderNumber = generateOrderNumber()
+    const orderId = crypto.randomUUID()
+    const { error: orderError } = await supabase.from("orders").insert({
+      id: orderId,
+      order_number: orderNumber,
+      customer_email: customerEmail,
+      customer_name: customerName,
+      shipping_address: shippingAddress,
+      shipping_method: { name: "Recovered", price: 0 },
+      subtotal: amount,
+      shipping_cost: 0,
+      tax: 0,
+      discount: 0,
+      total: amount,
+      status: "paid",
+      stripe_payment_intent_id: paymentIntentId,
+      promo_code: null,
+    })
+    if (orderError) {
+      console.error("[store] createOrderFromCharge insert order:", orderError)
+      return null
+    }
+    const { error: itemsError } = await supabase.from("order_items").insert({
+      order_id: orderId,
+      product_id: null,
+      product_name: "Recovered item",
+      variant: { color: "N/A", size: "N/A" },
+      quantity: 1,
+      price: amount,
+      image_url: null,
+    })
+    if (itemsError) {
+      console.error("[store] createOrderFromCharge insert order_items:", itemsError)
+      await supabase.from("orders").delete().eq("id", orderId)
+      return null
+    }
+    return {
+      orderId,
+      orderNumber,
+      totals: { subtotal: amount, shipping: 0, tax: 0, discount: 0, total: amount },
+      items: [{ name: "Recovered item", variant: {}, quantity: 1, price: amount }],
+      shippingAddress,
+      shippingMethod: { name: "Recovered", price: 0 },
+    }
+  } catch (err) {
+    console.error("[store] createOrderFromCharge:", err)
+    return null
+  }
+}
+
 export async function getOrder(
   orderId: string
 ): Promise<
@@ -366,7 +447,7 @@ export async function getOrder(
 export async function createOrderFromPaymentIntent(
   paymentIntentId: string
 ): Promise<
-  | { success: true; orderId: string; orderNumber: string; totals: Record<string, number>; items: unknown[]; shippingAddress: unknown; shippingMethod: unknown }
+  | { success: true; orderId: string; orderNumber: string; totals: Record<string, number>; items: unknown[]; shippingAddress: unknown; shippingMethod: unknown; alreadyExisted?: boolean }
   | { success: false; error?: string }
 > {
   try {
@@ -396,13 +477,40 @@ export async function createOrderFromPaymentIntent(
         })),
         shippingAddress: existing.shipping_address ?? {},
         shippingMethod: existing.shipping_method ?? {},
+        alreadyExisted: true,
       }
     }
 
     const pi = await stripe.paymentIntents.retrieve(paymentIntentId)
     const meta = (pi.metadata || {}) as Record<string, string>
-    const created = await createOrderFromPaymentIntentMetadata(supabase, paymentIntentId, meta)
-    if (!created) return { success: false, error: "Could not create order from payment." }
+    let created = await createOrderFromPaymentIntentMetadata(supabase, paymentIntentId, meta)
+
+    // Fallback: Payment Intent from Checkout Session often has no metadata; find Session and create order from it.
+    if (!created) {
+      const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 })
+      const sessionId = sessions.data?.[0]?.id
+      if (sessionId) {
+        console.warn("[RecruitNC] recover order: PI metadata empty, using Checkout Session", sessionId)
+        const sessionResult = await createOrderFromSession(sessionId)
+        if (sessionResult.success) return sessionResult
+        return { success: false, error: sessionResult.error ?? "Could not create order from session." }
+      }
+
+      // Last resort: create minimal order from Charge (amount + billing_details) so we have a record.
+      const chargeId = pi.latest_charge
+      if (chargeId && typeof chargeId === "string") {
+        console.warn("[RecruitNC] recover order: creating minimal order from Charge", chargeId)
+        created = await createOrderFromCharge(supabase, paymentIntentId, chargeId)
+      }
+    }
+
+    if (!created) {
+      return {
+        success: false,
+        error:
+          "Could not create order from payment. The Payment Intent has no order metadata, no linked Checkout Session, or charge data could not be used. If this was a store checkout, try recovering by Checkout Session ID (cs_...) if you have it.",
+      }
+    }
     return { success: true, orderId: created.orderId, ...created }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Payment lookup failed"
@@ -414,7 +522,7 @@ export async function createOrderFromPaymentIntent(
 export async function createOrderFromSession(
   sessionId: string
 ): Promise<
-  | { success: true; orderId: string; orderNumber: string; totals: Record<string, number>; items: unknown[]; shippingAddress: unknown; shippingMethod: unknown }
+  | { success: true; orderId: string; orderNumber: string; totals: Record<string, number>; items: unknown[]; shippingAddress: unknown; shippingMethod: unknown; alreadyExisted?: boolean }
   | { success: false; error?: string }
 > {
   try {
@@ -445,6 +553,7 @@ export async function createOrderFromSession(
         })),
         shippingAddress: existingSessionOrder.shipping_address ?? {},
         shippingMethod: existingSessionOrder.shipping_method ?? {},
+        alreadyExisted: true,
       }
     }
 
@@ -468,6 +577,7 @@ export async function createOrderFromSession(
       } : {}
       const subtotal = lineItems.reduce((s: number, li: { amount_subtotal: number }) => s + (li.amount_subtotal ?? 0) / 100, 0)
       const total = (session.amount_total ?? 0) / 100
+      const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id ?? null
       await supabase.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
@@ -482,11 +592,13 @@ export async function createOrderFromSession(
         total,
         status: "paid",
         stripe_session_id: sessionId,
+        stripe_payment_intent_id: piId,
       })
       for (const li of lineItems) {
         await supabase.from("order_items").insert({
           order_id: orderId,
           product_name: li.description ?? "Item",
+          variant: { color: "N/A", size: "N/A" },
           quantity: li.quantity ?? 1,
           price: (li.amount_subtotal ?? 0) / 100 / (li.quantity ?? 1),
         })
