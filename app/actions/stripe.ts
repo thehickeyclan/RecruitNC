@@ -20,6 +20,15 @@ export type CreatePaymentIntentParams = {
 
 const ORDER_NUMBER_PREFIX = "NC"
 
+/** Derive shipping first/last for DB columns that may be NOT NULL. Never returns null/empty. */
+function shippingNameFromCustomerName(customerName: string): { shipping_first_name: string; shipping_last_name: string } {
+  const name = (customerName || "").trim() || "Recovered"
+  const parts = name.split(/\s+/).filter(Boolean)
+  const first = parts[0] ?? "Recovered"
+  const last = parts.slice(1).join(" ") || "Customer"
+  return { shipping_first_name: first, shipping_last_name: last }
+}
+
 function generateOrderNumber(): string {
   const t = Date.now().toString(36).toUpperCase().slice(-6)
   const r = Math.random().toString(36).slice(2, 6).toUpperCase()
@@ -125,11 +134,14 @@ async function createFreeOrderInternal(
   const orderNumber = generateOrderNumber()
   const orderId = crypto.randomUUID()
 
+  const shippingName = shippingNameFromCustomerName(params.customerName)
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
     order_number: orderNumber,
     customer_email: params.customerEmail,
     customer_name: params.customerName,
+    shipping_first_name: shippingName.shipping_first_name,
+    shipping_last_name: shippingName.shipping_last_name,
     shipping_address: params.shippingAddress,
     shipping_method: params.shippingMethod,
     subtotal: params.subtotal,
@@ -221,12 +233,15 @@ async function createOrderFromPaymentIntentMetadata(
 
   const orderNumber = generateOrderNumber()
   const orderId = crypto.randomUUID()
+  const shippingName = shippingNameFromCustomerName(payload.customerName)
 
   const { error: orderError } = await supabase.from("orders").insert({
     id: orderId,
     order_number: orderNumber,
     customer_email: payload.customerEmail,
     customer_name: payload.customerName,
+    shipping_first_name: shippingName.shipping_first_name,
+    shipping_last_name: shippingName.shipping_last_name,
     shipping_address: payload.shippingAddress,
     shipping_method: payload.shippingMethod,
     subtotal: payload.subtotal,
@@ -345,11 +360,14 @@ async function createOrderFromCharge(
 
     const orderNumber = generateOrderNumber()
     const orderId = crypto.randomUUID()
+    const shippingName = shippingNameFromCustomerName(customerName)
     const { error: orderError } = await supabase.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
       customer_email: customerEmail,
       customer_name: customerName,
+      shipping_first_name: shippingName.shipping_first_name,
+      shipping_last_name: shippingName.shipping_last_name,
       shipping_address: shippingAddress,
       shipping_method: { name: "Recovered", price: 0 },
       subtotal: amount,
@@ -578,11 +596,14 @@ export async function createOrderFromSession(
       const subtotal = lineItems.reduce((s: number, li: { amount_subtotal: number }) => s + (li.amount_subtotal ?? 0) / 100, 0)
       const total = (session.amount_total ?? 0) / 100
       const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id ?? null
+      const shippingName = shippingNameFromCustomerName(customerName)
       await supabase.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
         customer_email: customerEmail,
         customer_name: customerName,
+        shipping_first_name: shippingName.shipping_first_name,
+        shipping_last_name: shippingName.shipping_last_name,
         shipping_address: shippingAddress,
         shipping_method: {},
         subtotal,
@@ -623,11 +644,14 @@ export async function createOrderFromSession(
     const orderNumber = generateOrderNumber()
     const orderId = crypto.randomUUID()
     const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id ?? null
+    const shippingName = shippingNameFromCustomerName(payload.customerName)
     const { error: orderErr } = await supabase.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
       customer_email: payload.customerEmail,
       customer_name: payload.customerName,
+      shipping_first_name: shippingName.shipping_first_name,
+      shipping_last_name: shippingName.shipping_last_name,
       shipping_address: payload.shippingAddress,
       shipping_method: payload.shippingMethod,
       subtotal: payload.subtotal,

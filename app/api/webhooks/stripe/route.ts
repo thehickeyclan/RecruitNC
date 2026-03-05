@@ -8,7 +8,15 @@ import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-sc
 
 export const dynamic = "force-dynamic"
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+/** One or more signing secrets (comma-separated). Use multiple when different Stripe destinations/endpoints send to this URL so updating one doesn't break others. */
+function getWebhookSecrets(): string[] {
+  const raw = process.env.STRIPE_WEBHOOK_SECRET ?? ""
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+}
+
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
 function getStripe(): Stripe {
@@ -21,7 +29,8 @@ function generateOrderNumber(): string {
 }
 
 export async function POST(request: NextRequest) {
-  if (!webhookSecret || !stripeSecret) {
+  const webhookSecrets = getWebhookSecrets()
+  if (webhookSecrets.length === 0 || !stripeSecret) {
     console.error("[webhooks/stripe] STRIPE_WEBHOOK_SECRET or STRIPE_SECRET_KEY not set")
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 })
   }
@@ -38,13 +47,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 })
   }
 
-  let event: Stripe.Event
-  try {
-    event = Stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error"
-    console.error("[webhooks/stripe] Signature verification failed:", message)
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+  let event: Stripe.Event | undefined
+  let lastError: string = "Unknown error"
+  for (const secret of webhookSecrets) {
+    try {
+      event = Stripe.webhooks.constructEvent(rawBody, signature, secret)
+      break
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : "Unknown error"
+      continue
+    }
+  }
+  if (!event) {
+    console.error("[webhooks/stripe] Signature verification failed with all configured secrets:", lastError)
+    return NextResponse.json(
+      {
+        error: "Invalid signature",
+        hint: "STRIPE_WEBHOOK_SECRET must include the signing secret for the Stripe destination that sent this event. You can set multiple secrets comma-separated (e.g. whsec_Blue,whsec_Store) so Blue, Store, and other flows all work. In Stripe: Event destinations (or Webhooks) → each destination → Signing secret.",
+      },
+      { status: 400 }
+    )
   }
 
   const admin = createAdminClient()

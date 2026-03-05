@@ -29,7 +29,7 @@ In **`.env.local`** (and in your host’s env, e.g. Vercel), set:
 |----------|----------|--------|
 | `STRIPE_SECRET_KEY` | Yes | Stripe API (use **Test** key first: `sk_test_...`). |
 | `STRIPE_BLUE_PRICE_ID` | Yes | Blue subscription price (from script below). |
-| `STRIPE_WEBHOOK_SECRET` | Yes | Webhook signing secret (`whsec_...`) so payment completion activates the membership. |
+| `STRIPE_WEBHOOK_SECRET` | Yes | Webhook signing secret(s). **Multiple destinations?** Use comma-separated secrets (e.g. `whsec_Blue,whsec_Store`) so Blue, Store, and other Stripe flows all work without one env update breaking another. |
 | `NEXT_PUBLIC_APP_URL` | Yes | Full app URL (e.g. `https://recruitnc.com` or your Vercel URL). Used in invite links and Stripe success/cancel URLs. |
 | `RESEND_API_KEY` | Optional but recommended | Sends invite emails when you create an invite with an email. Without it, you can still create invites and copy the link to send yourself. |
 
@@ -49,17 +49,23 @@ STRIPE_BLUE_PRICE_ID=price_xxxxxxxxxxxx
 
 ## 3. Stripe webhook
 
-1. **Stripe Dashboard** → Developers → Webhooks → **Add endpoint**.
-2. **Endpoint URL:** `https://app.ncwrestlingunited.com/api/webhooks/stripe` (must match `NEXT_PUBLIC_APP_URL`).
-3. **Events:** select **`checkout.session.completed`**.
-4. After saving, copy the **Signing secret** (`whsec_...`) and set:
+**If you use Event destinations** (Stripe Dashboard → Developers → **Event destinations**):
 
-   ```bash
-   STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxx
-   ```
+1. Open your destination (e.g. **Blue-Subscription**) that sends to `https://app.ncwrestlingunited.com/api/webhooks/stripe`.
+2. Copy the **Signing secret** shown on that destination’s details (click **Signing secret** to reveal).
+3. In **Vercel** → your project → Settings → Environment Variables, set **`STRIPE_WEBHOOK_SECRET`** to that exact value for the **Production** environment.
+4. **Redeploy** (or trigger a new deployment). The secret must match the destination that sends events; using a different secret (e.g. from the classic Webhooks page) causes **400 Invalid signature** and events will fail.
 
-5. **Redeploy** so the app has the new secret.  
-6. For **local testing**, use Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` and use the printed `whsec_...` as `STRIPE_WEBHOOK_SECRET` in `.env.local`.
+**If you use classic Webhooks** (Developers → Webhooks → Add endpoint):
+
+1. **Endpoint URL:** `https://app.ncwrestlingunited.com/api/webhooks/stripe` (must match `NEXT_PUBLIC_APP_URL`).
+2. **Events:** include **`checkout.session.completed`**, **`payment_intent.succeeded`**, **`customer.subscription.updated`**, **`customer.subscription.deleted`** (and any others the app expects).
+3. After saving, copy the **Signing secret** (`whsec_...`) and set **`STRIPE_WEBHOOK_SECRET`** in Vercel (Production).
+4. **Redeploy.**
+
+**Local testing:** use Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` and use the printed `whsec_...` as `STRIPE_WEBHOOK_SECRET` in `.env.local`.
+
+**Multiple destinations / endpoints:** If more than one Stripe destination or webhook endpoint sends to the same URL (e.g. Blue-Subscription + Store), set **`STRIPE_WEBHOOK_SECRET`** to a comma-separated list of all their signing secrets (e.g. `whsec_abc,whsec_def`). The app tries each in turn so no single flow breaks when you add or change another.
 
 ---
 

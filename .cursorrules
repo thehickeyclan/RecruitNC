@@ -25,3 +25,10 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 
 # Scripts that need to be run
 - When adding or referencing any script that the user must run (e.g. SQL in Supabase SQL Editor, migrations, one-off commands), **always show the full runnable script in the chat** in addition to (or instead of) only putting it in a file. That way the user can copy and run it immediately without opening the file.
+
+# Stripe webhook / shared env (Blue, Store, national team, drop-ins, etc.)
+- **Reference:** See `docs/STRIPE-ENV-AND-FLOWS.md` for which env vars affect which flows (store, Blue, NHSCA/national team, drop-ins) and which support multiple values.
+- **Before recommending any change to `STRIPE_WEBHOOK_SECRET` (or other env used by multiple flows):** Assume multiple Stripe destinations or endpoints may send to the same URL (Blue-Subscription, Store, national team, etc.). Recommending "set to X" can break other flows that use a different signing secret.
+- **Always:** For webhook secret, recommend adding the new secret to the existing value (comma-separated) or listing all required secrets, not replacing. Example: "Add this destination’s secret to STRIPE_WEBHOOK_SECRET; if you already have another (e.g. Store), use comma-separated: whsec_A,whsec_B."
+- **Other Stripe env:** `STRIPE_BLUE_PRICE_ID` only affects Blue; `STRIPE_SECRET_KEY` is one per account (all flows). Only `STRIPE_WEBHOOK_SECRET` has "multiple secrets, one env" — use comma-separated.
+- **Docs and error hints:** When documenting webhook setup or returning errors about invalid signature, mention that multiple secrets are supported (comma-separated) so one env update doesn’t break other parts of the platform.

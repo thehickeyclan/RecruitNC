@@ -265,8 +265,8 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
         </div>
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Roster ({event.roster.length})</h3>
-          <div className="border rounded-md overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="border rounded-md overflow-hidden overflow-x-auto">
+            <table className="w-full text-sm min-w-[320px]">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="text-left p-2">Name</th>
