@@ -45,3 +45,31 @@ export async function PATCH(
 
   return NextResponse.json({ ok: true })
 }
+
+/** DELETE: Permanently delete a thread (admin only). Removes thread and related rows. */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ threadId: string }> }
+) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const { threadId } = await params
+  if (!threadId) return NextResponse.json({ error: "threadId required" }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { data: messages } = await admin.from("messaging_messages").select("id").eq("thread_id", threadId)
+  for (const m of messages ?? []) {
+    await admin.from("messaging_reactions").delete().eq("message_id", m.id)
+  }
+  await admin.from("messaging_messages").delete().eq("thread_id", threadId)
+  await admin.from("messaging_thread_members").delete().eq("thread_id", threadId)
+  const { error } = await admin.from("messaging_threads").delete().eq("id", threadId)
+
+  if (error) {
+    console.error("[admin/messaging/threads DELETE]", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

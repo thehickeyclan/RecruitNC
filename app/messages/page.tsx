@@ -216,6 +216,9 @@ export default function MessagesPage() {
               loading={loading}
               emptyFiltered={filter === "unread" && threads.length > 0 && filteredThreads.length === 0}
               emptySearch={!!q && byFilter.length > 0 && filteredThreads.length === 0}
+              isAdmin={isAdmin}
+              onArchive={isAdmin ? (threadId) => setThreads((prev) => prev.filter((t) => t.id !== threadId)) : undefined}
+              onDelete={isAdmin ? (threadId) => setThreads((prev) => prev.filter((t) => t.id !== threadId)) : undefined}
             />
           </CardContent>
         </Card>
