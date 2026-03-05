@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
       : null
     const isDeleted = event.type === "customer.subscription.deleted"
     const isCanceled = isDeleted || status === "canceled" || status === "unpaid" || status === "incomplete_expired"
-    const dbStatus = isCanceled ? "cancelled" : status === "past_due" ? "active" : status === "active" || status === "trialing" ? "active" : "cancelled"
+    const isPaused = status === "paused"
+    const dbStatus = isCanceled ? "cancelled" : isPaused ? "paused" : status === "past_due" ? "active" : status === "active" || status === "trialing" ? "active" : "cancelled"
     const updatePayload: Record<string, unknown> = {
       status: dbStatus,
       updated_at: new Date().toISOString(),

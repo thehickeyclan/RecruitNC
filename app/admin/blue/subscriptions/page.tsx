@@ -5,7 +5,20 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Loader2, ExternalLink } from "lucide-react"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { ArrowLeft, Loader2, ExternalLink, Pause, Ban, Trash2 } from "lucide-react"
 import type { BlueSubscriptionRow, BlueSignupRow } from "@/app/api/admin/blue/subscriptions/route"
 import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-auth-banner"
 
@@ -27,8 +40,73 @@ export default function AdminBlueSubscriptionsPage() {
   const [membershipsError, setMembershipsError] = useState<string | null>(null)
   const [syncFromStripeLoading, setSyncFromStripeLoading] = useState(false)
   const [syncFromStripeResult, setSyncFromStripeResult] = useState<string | null>(null)
+  const [actionSub, setActionSub] = useState<BlueSubscriptionRow | null>(null)
+  const [actionType, setActionType] = useState<"pause" | "cancel" | "delete" | null>(null)
+  const [resumeAt, setResumeAt] = useState("")
+  const [actionLoading, setActionLoading] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const { isLoading: authLoading } = useAuth()
   const retryCountRef = useRef(0)
+
+  const runSubscriptionAction = async () => {
+    if (!actionSub || !actionType) return
+    setActionLoading(true)
+    setActionError(null)
+    try {
+      if (actionType === "pause") {
+        if (!resumeAt || !/^\d{4}-\d{2}-\d{2}$/.test(resumeAt)) {
+          setActionError("Enter a resume date (YYYY-MM-DD)")
+          return
+        }
+        const r = await fetch(`/api/admin/blue/subscriptions/${encodeURIComponent(actionSub.id)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ action: "pause", resumeAt }),
+        })
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          setActionError(data.error || "Failed")
+          return
+        }
+      } else if (actionType === "cancel") {
+        const r = await fetch(`/api/admin/blue/subscriptions/${encodeURIComponent(actionSub.id)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ action: "cancel", atPeriodEnd: true }),
+        })
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          setActionError(data.error || "Failed")
+          return
+        }
+      } else if (actionType === "delete") {
+        const r = await fetch(`/api/admin/blue/subscriptions/${encodeURIComponent(actionSub.id)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ action: "delete" }),
+        })
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+          setActionError(data.error || "Failed")
+          return
+        }
+      }
+      setActionSub(null)
+      setActionType(null)
+      setResumeAt("")
+      const res = await fetch("/api/admin/blue/subscriptions", { credentials: "include" })
+      if (res.ok) {
+        const d = await res.json()
+        if (d?.subscriptions) setSubscriptions(d.subscriptions ?? [])
+        if (d?.stats) setStats(d.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
+      }
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   const filteredSignups =
     signupFilter === "paid" ? signups.filter((s) => s.status === "paid") : signupFilter === "pending" ? signups.filter((s) => s.status !== "paid") : signups
@@ -396,6 +474,9 @@ export default function AdminBlueSubscriptionsPage() {
                         <TableCell className="text-sm text-gray-600">
                           <span className="block">Started {new Date(sub.started_at).toLocaleDateString()}</span>
                           <span className="block">Created {new Date(sub.created_at).toLocaleDateString()}</span>
+                          {sub.status === "paused" && sub.resume_at && (
+                            <span className="block text-amber-600">Resumes {new Date(sub.resume_at).toLocaleDateString()}</span>
+                          )}
                           <span className="block text-gray-400">Next due: see Stripe</span>
                         </TableCell>
                         <TableCell>
@@ -415,6 +496,34 @@ export default function AdminBlueSubscriptionsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-2">
+                            {sub.stripe_subscription_id && (sub.status === "active" || sub.status === "pending_payment") && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-amber-700 border-amber-300 hover:bg-amber-50"
+                                  onClick={() => { setActionSub(sub); setActionType("pause"); setResumeAt(""); setActionError(null) }}
+                                >
+                                  <Pause className="h-3 w-3 mr-1" /> Pause
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-gray-700"
+                                  onClick={() => { setActionSub(sub); setActionType("cancel"); setActionError(null) }}
+                                >
+                                  <Ban className="h-3 w-3 mr-1" /> Cancel
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-700 border-red-300 hover:bg-red-50"
+                                  onClick={() => { setActionSub(sub); setActionType("delete"); setActionError(null) }}
+                                >
+                                  <Trash2 className="h-3 w-3 mr-1" /> Delete
+                                </Button>
+                              </>
+                            )}
                             {sub.athlete_id && (
                               <>
                                 <a href={`/admin/blue/members/${encodeURIComponent(sub.athlete_id)}`} className="text-sm text-[#003366] hover:underline">Registration</a>
@@ -441,6 +550,59 @@ export default function AdminBlueSubscriptionsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Pause dialog: pick resume date */}
+        <Dialog open={actionType === "pause" && !!actionSub} onOpenChange={(open) => { if (!open) { setActionSub(null); setActionType(null); setActionError(null) } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Pause subscription</DialogTitle>
+              <DialogDescription>
+                {actionSub && <>Pause billing for {actionSub.athlete_name}. Choose the date to automatically resume.</>}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-2 py-2">
+              <Label htmlFor="resumeAt">Resume on date</Label>
+              <Input
+                id="resumeAt"
+                type="date"
+                value={resumeAt}
+                onChange={(e) => setResumeAt(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+              />
+              {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setActionSub(null); setActionType(null) }}>Cancel</Button>
+              <Button onClick={runSubscriptionAction} disabled={actionLoading || !resumeAt}>
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pause"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Cancel / Delete confirmation */}
+        <AlertDialog open={(actionType === "cancel" || actionType === "delete") && !!actionSub} onOpenChange={(open) => { if (!open) { setActionSub(null); setActionType(null) } }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{actionType === "cancel" ? "Cancel at period end?" : "Delete subscription?"}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {actionSub && actionType === "cancel" && (
+                  <>Subscription for {actionSub.athlete_name} will stop at the end of the current billing period. No immediate charge.</>
+                )}
+                {actionSub && actionType === "delete" && (
+                  <>Cancel {actionSub.athlete_name}&apos;s subscription immediately. Access ends now.</>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => { setActionSub(null); setActionType(null) }}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={runSubscriptionAction} disabled={actionLoading} className={actionType === "delete" ? "bg-red-600 hover:bg-red-700" : ""}>
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : actionType === "cancel" ? "Cancel at period end" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )

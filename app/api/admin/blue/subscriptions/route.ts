@@ -25,6 +25,7 @@ export type BlueSubscriptionRow = {
   started_at: string
   created_at: string
   stripe_subscription_id: string | null
+  resume_at: string | null
 }
 
 export type BlueSignupRow = {
@@ -55,7 +56,7 @@ export async function GET() {
 
   const { data: rows, error } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id")
+    .select("id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id, resume_at")
     .order("created_at", { ascending: false })
 
   const membershipsError: string | null =
@@ -163,6 +164,7 @@ export async function GET() {
       started_at: r.started_at,
       created_at: r.created_at,
       stripe_subscription_id: r.stripe_subscription_id ?? null,
+      resume_at: (r as { resume_at?: string | null }).resume_at ?? null,
     }
   })
 

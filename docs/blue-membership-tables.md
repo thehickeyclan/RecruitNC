@@ -210,6 +210,15 @@ alter table public.blue_memberships add column if not exists tshirt_size text;
 
 Allowed values: `YS`, `YM`, `YL`, `S`, `M`, `L`, `XL`, `2XL`, `3XL`.
 
+## Pause and auto-resume date
+
+When a subscription is paused (admin or user), we store when it should resume. A cron or the resume-check API resumes it on that date:
+
+```sql
+alter table public.blue_memberships add column if not exists resume_at timestamptz;
+create index if not exists idx_blue_memberships_resume_at on public.blue_memberships(resume_at) where resume_at is not null and status = 'paused';
+```
+
 ---
 
 ## Blue invites flow and testing

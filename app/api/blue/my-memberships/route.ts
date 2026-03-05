@@ -19,7 +19,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: rows, error } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, status, started_at, stripe_customer_id")
+    .select("id, athlete_id, status, started_at, stripe_customer_id, stripe_subscription_id, resume_at")
     .eq("payer_user_id", user.id)
     .order("started_at", { ascending: false })
 
@@ -55,6 +55,8 @@ export async function GET() {
     status: r.status,
     startedAt: r.started_at,
     stripeCustomerId: r.stripe_customer_id ?? null,
+    stripeSubscriptionId: (r as { stripe_subscription_id?: string }).stripe_subscription_id ?? null,
+    resumeAt: (r as { resume_at?: string | null }).resume_at ?? null,
   }))
 
   return NextResponse.json({ memberships })
