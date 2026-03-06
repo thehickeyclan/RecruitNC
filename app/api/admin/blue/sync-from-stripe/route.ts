@@ -327,7 +327,6 @@ export async function POST() {
     }
     const signupId = signupRow.id
     const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null
-    const subscriptionId = typeof session.subscription === "string" ? session.subscription : (session.subscription as { id?: string })?.id ?? null
     const alreadyPaid = signupRow.status === "paid" && signupRow.stripe_session_id
     const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_session_id", session.id).maybeSingle()
     // Don't skip: we may need to backfill membership even when signup is already paid (we already continued above if membership exists)
