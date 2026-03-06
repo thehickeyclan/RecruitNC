@@ -17,10 +17,12 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { MessageCircle, Search, Plus } from "lucide-react"
+import { MessageCircle, Search, Plus, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type FilterTab = "all" | "unread"
+
+type DmSearchUser = { user_id: string; email: string | null; display_name: string }
 
 export default function MessagesPage() {
   const router = useRouter()
@@ -33,6 +35,12 @@ export default function MessagesPage() {
   const [newGroupName, setNewGroupName] = useState("")
   const [newGroupSubmitting, setNewGroupSubmitting] = useState(false)
   const [newGroupError, setNewGroupError] = useState<string | null>(null)
+  const [dmOpen, setDmOpen] = useState(false)
+  const [dmSearch, setDmSearch] = useState("")
+  const [dmResults, setDmResults] = useState<DmSearchUser[]>([])
+  const [dmSearching, setDmSearching] = useState(false)
+  const [dmSubmitting, setDmSubmitting] = useState(false)
+  const [dmError, setDmError] = useState<string | null>(null)
   const isAdmin = profile?.is_admin === true
 
   useEffect(() => {
@@ -46,6 +54,54 @@ export default function MessagesPage() {
       .catch(() => setThreads([]))
       .finally(() => setLoading(false))
   }, [user])
+
+  // DM user search (debounced)
+  useEffect(() => {
+    if (!dmOpen || dmSearch.trim().length < 2) {
+      setDmResults([])
+      return
+    }
+    const t = setTimeout(() => {
+      setDmSearching(true)
+      fetch(`/api/messaging/users/search?q=${encodeURIComponent(dmSearch.trim())}`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => setDmResults(data.users ?? []))
+        .catch(() => setDmResults([]))
+        .finally(() => setDmSearching(false))
+    }, 300)
+    return () => clearTimeout(t)
+  }, [dmOpen, dmSearch])
+
+  async function handleStartDm(otherUserId: string) {
+    setDmError(null)
+    setDmSubmitting(true)
+    try {
+      const res = await fetch("/api/messaging/dm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ other_user_id: otherUserId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Failed to start conversation")
+      setDmOpen(false)
+      setDmSearch("")
+      setDmResults([])
+      setThreads((prev) => {
+        const existing = prev.find((t) => t.id === data.threadId)
+        if (existing) return prev
+        return [
+          { id: data.threadId, name: data.name, type: "dm", context_type: null, context_id: null, last_message_at: new Date().toISOString(), last_message_preview: null, unread_count: 0 },
+          ...prev,
+        ]
+      })
+      router.push(`/messages/${data.threadId}`)
+    } catch (err) {
+      setDmError(err instanceof Error ? err.message : "Failed to start conversation")
+    } finally {
+      setDmSubmitting(false)
+    }
+  }
 
   const byFilter = filter === "unread" ? threads.filter((t) => t.unread_count > 0) : threads
   const q = searchQuery.trim().toLowerCase()
@@ -118,10 +174,54 @@ export default function MessagesPage() {
         <div className="sticky top-0 z-10 bg-white border-b px-4 py-4">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h1 className="text-xl font-bold text-[#003366]">Messages</h1>
-              <p className="text-sm text-gray-500 mt-0.5">Your groups. Tap one to open. Use search to find a chat.</p>
+              <h1 className="text-xl font-bold text-[#003366]">Inbox</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Groups and direct messages. Tap one to open.</p>
             </div>
-            {isAdmin && (
+            <div className="flex items-center gap-2 shrink-0">
+              <Dialog open={dmOpen} onOpenChange={(open) => { setDmOpen(open); if (!open) { setDmSearch(""); setDmResults([]); setDmError(null) } }}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    New message
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Direct message</DialogTitle>
+                    <DialogDescription>Search for a RecruitNC user by name or email to start a private conversation.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-2 pt-2">
+                    <Input
+                      placeholder="Search by name or email…"
+                      value={dmSearch}
+                      onChange={(e) => setDmSearch(e.target.value)}
+                      className="w-full"
+                      autoFocus
+                    />
+                    <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1 bg-gray-50/50">
+                      {dmSearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
+                      {!dmSearching && dmSearch.trim().length >= 2 && dmResults.length === 0 && (
+                        <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
+                      )}
+                      {!dmSearching &&
+                        dmResults.map((u) => (
+                          <button
+                            key={u.user_id}
+                            type="button"
+                            onClick={() => handleStartDm(u.user_id)}
+                            disabled={dmSubmitting}
+                            className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
+                          >
+                            <span className="font-medium text-gray-900">{u.display_name}</span>
+                            {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
+                          </button>
+                        ))}
+                    </div>
+                    {dmError && <p className="text-sm text-red-600">{dmError}</p>}
+                  </div>
+                </DialogContent>
+              </Dialog>
+              {isAdmin && (
               <Dialog open={newGroupOpen} onOpenChange={(open) => { setNewGroupOpen(open); if (!open) setNewGroupError(null) }}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="shrink-0 bg-[#003366] hover:bg-[#003366]/90">
@@ -159,7 +259,8 @@ export default function MessagesPage() {
                   </form>
                 </DialogContent>
               </Dialog>
-            )}
+              )}
+            </div>
           </div>
           {threads.length > 0 && (
             <>
@@ -208,7 +309,7 @@ export default function MessagesPage() {
           <CardContent className="p-0">
             {filteredThreads.length > 0 && (
               <div className="px-4 pt-3 pb-1">
-                <h2 className="text-sm font-semibold text-gray-700">Your groups</h2>
+                <h2 className="text-sm font-semibold text-gray-700">Conversations</h2>
               </div>
             )}
             <InboxList

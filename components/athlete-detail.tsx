@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Edit, GraduationCap, Award, TrendingUp, Trophy, Video, ExternalLink, Shield, Share2, Phone } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
+import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { useAuth } from "@/contexts/auth-context"
@@ -726,6 +727,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <Share2 className="w-4 h-4 mr-1.5" />
                   Share
                 </Button>
+                {athlete.claimed_by_user_id && athlete.claimed_by_user_id !== currentUserId && (
+                  <MessageAthleteButton
+                    athleteId={athlete.id}
+                    claimedByUserId={athlete.claimed_by_user_id}
+                    athleteName={athleteName}
+                    className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
+                    size="md"
+                    iconClassName="w-4 h-4 mr-1"
+                  />
+                )}
                 <WatchListButton athleteId={athlete.id} />
               </div>
 
@@ -880,7 +891,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
             <div className="relative min-h-[360px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
               <div className="absolute inset-0 bg-black/10" />
 
-              {/* Share + Star - Top Right */}
+              {/* Share + Message + Star - Top Right */}
               <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
                 <Button
                   size="sm"
@@ -892,6 +903,16 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <Share2 className="w-4 h-4 mr-2" />
                   Share profile
                 </Button>
+                {athlete.claimed_by_user_id && athlete.claimed_by_user_id !== currentUserId && (
+                  <MessageAthleteButton
+                    athleteId={athlete.id}
+                    claimedByUserId={athlete.claimed_by_user_id}
+                    athleteName={athleteName}
+                    className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
+                    size="md"
+                    iconClassName="w-4 h-4 mr-1"
+                  />
+                )}
                 <WatchListButton athleteId={athlete.id} />
               </div>
 

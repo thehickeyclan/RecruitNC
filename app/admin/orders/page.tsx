@@ -29,10 +29,14 @@ function deriveCategory(
   const total = Number(totalDollars) || 0
   if (names.some((n) => n.includes("blue") && (n.includes("monthly") || n.includes("subscription")))) return "Blue Sub"
   if (method.includes("blue membership")) return "Blue Sub"
+  // When no line items: infer Blue Sub from typical monthly price
+  if (names.length === 0 && total >= 50 && total <= 60) return "Blue Sub"
   // Drop-In only when a line item name explicitly indicates drop-in (not from shipping method alone)
   if (names.some((n) => /drop-?in|dropin/.test(n) || (n.includes("practice") && n.includes("drop")))) return "Drop-In"
   if (names.some((n) => n.includes("nhsca") || n.includes("national team") || n.includes("registration + apparel"))) return "Tournament Fee"
   if (method.includes("national team")) return "Tournament Fee"
+  // When no line items: infer Tournament Fee from typical event total
+  if (names.length === 0 && total >= 200 && total <= 300) return "Tournament Fee"
   // Recovered/minimal orders with no line items: use total + method as fallback for Drop-In
   if (names.length === 0 && total >= 20 && total <= 35 && (method.includes("pickup") || method.includes("practice") || method.includes("drop-in") || method.includes("drop in"))) return "Drop-In"
   if (names.length > 0) return "Apparel"
@@ -71,6 +75,10 @@ function productSummary(
   if (method.includes("blue")) return "NC United Blue – Monthly"
   if (method.includes("practice") || method.includes("pickup")) return "Practice Drop-In"
   if (method.includes("national team")) return "Tournament / Event"
+  // When category was inferred from total (no line items), still show a proper product label
+  if (category === "Blue Sub") return "NC United Blue – Monthly"
+  if (category === "Tournament Fee") return "Tournament / Event"
+  if (category === "Drop-In") return "Practice Drop-In"
   return category === "Other" ? "Order" : category
 }
 
@@ -203,7 +211,7 @@ export default async function OrdersPage() {
       else if (orderEmailNotPlaceholder) customerEmail = rawOrderEmail
       else customerEmail = "—"
 
-      const itemsCount = order.order_items?.length || 0
+      const rawItemsCount = order.order_items?.length || 0
       const orderItems = order.order_items || []
       const shippingMethodStr =
         typeof order.shipping_method === "string"
@@ -211,13 +219,20 @@ export default async function OrdersPage() {
           : (order.shipping_method?.name ?? order.shipping_method?.description ?? "")
       const category = deriveCategory(orderItems, shippingMethodStr, Number(order.total))
       const productSummaryStr = productSummary(orderItems, category, shippingMethodStr)
+      // When DB has no order_items but we inferred a single-product category, show 1 item so totals make sense
+      const itemsCount =
+        rawItemsCount > 0
+          ? rawItemsCount
+          : category === "Blue Sub" || category === "Tournament Fee" || category === "Drop-In"
+            ? 1
+            : 0
 
       const hasDropInProduct = orderItems.some((item: any) => {
         const name = (item.product_name || "").toLowerCase()
         return name.includes("practice") || name.includes("drop-in") || name.includes("dropin")
       })
       const isLikelyDropIn =
-        itemsCount === 0 &&
+        rawItemsCount === 0 &&
         Number(order.total) >= 20 &&
         Number(order.total) <= 30 &&
         (shippingMethodStr.toLowerCase().includes("pickup") ||

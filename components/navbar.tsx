@@ -390,6 +390,9 @@ export function Navbar() {
                     <a href="/messages">Messages</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <a href="/forum">Community</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <a href="/national-team/hub">Team hub</a>
                   </DropdownMenuItem>
                   {showMyRecruits && (
@@ -544,15 +547,21 @@ export function Navbar() {
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   {user && (
-                    <a href="/messages" className={mobileLinkClass("/messages") + " flex items-center gap-2 relative"} onClick={() => setIsOpen(false)}>
-                      <MessageCircle className="h-5 w-5 shrink-0" />
-                      <span>Messages</span>
-                      {unreadMessages > 0 && (
-                        <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
-                          {unreadMessages > 99 ? "99+" : unreadMessages}
-                        </span>
-                      )}
-                    </a>
+                    <>
+                      <a href="/messages" className={mobileLinkClass("/messages") + " flex items-center gap-2 relative"} onClick={() => setIsOpen(false)}>
+                        <MessageCircle className="h-5 w-5 shrink-0" />
+                        <span>Messages</span>
+                        {unreadMessages > 0 && (
+                          <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
+                            {unreadMessages > 99 ? "99+" : unreadMessages}
+                          </span>
+                        )}
+                      </a>
+                      <a href="/forum" className={mobileLinkClass("/forum") + " flex items-center gap-2"} onClick={() => setIsOpen(false)}>
+                        <Users className="h-5 w-5 shrink-0" />
+                        <span>Community</span>
+                      </a>
+                    </>
                   )}
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(legacyNcItems))}>LegacyNC</div>
