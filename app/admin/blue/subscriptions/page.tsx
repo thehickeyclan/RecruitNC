@@ -206,7 +206,7 @@ export default function AdminBlueSubscriptionsPage() {
           </Button>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold text-[#003366]">Blue member cockpit</h1>
-            <p className="text-sm text-gray-600">All Blue members and subscriptions in one view</p>
+            <p className="text-sm text-gray-600">All Blue members and subscriptions. If someone paid in Stripe but isn’t listed, run Sync below.</p>
           </div>
           <Button
             variant="outline"

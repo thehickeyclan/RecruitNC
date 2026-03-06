@@ -100,8 +100,12 @@ export async function POST() {
 
     const alreadyPaid = (signupRow as { status?: string }).status === "paid" && (signupRow as { stripe_session_id?: string }).stripe_session_id
     const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_session_id", session.id).maybeSingle()
+    const { data: existingMembership } = subscriptionId
+      ? await admin.from("blue_memberships").select("id").eq("stripe_subscription_id", subscriptionId).maybeSingle()
+      : { data: null }
 
-    if (alreadyPaid && existingOrder) {
+    // Skip only when signup is paid, order exists, and membership exists (nothing to backfill)
+    if (alreadyPaid && existingOrder && existingMembership) {
       skipped++
       continue
     }
@@ -125,13 +129,7 @@ export async function POST() {
       didSync = true
     }
 
-    if (subscriptionId) {
-      const { data: existingMembership } = await admin
-        .from("blue_memberships")
-        .select("id")
-        .eq("stripe_subscription_id", subscriptionId)
-        .maybeSingle()
-      if (!existingMembership && signupRow) {
+    if (subscriptionId && !existingMembership && signupRow) {
         const row = signupRow as {
           parent_email?: string
           parent_first_name?: string
@@ -207,7 +205,7 @@ export async function POST() {
             if (!athleteErr && newAthlete?.id) athleteId = newAthlete.id
           } else {
             const columns = await getAthletesColumnNames(admin)
-            const updatePayload = filterPayloadToSchema({ ...enrichment, updated_at: new Date().toISOString() }, columns)
+            const updatePayload = filterPayloadToSchema({ ...enrichment, ncUnitedTeam: "blue", updated_at: new Date().toISOString() }, columns)
             if (Object.keys(updatePayload).length > 1) {
               await admin.from("athletes").update(updatePayload).eq("id", athleteId)
             }
@@ -234,7 +232,6 @@ export async function POST() {
             })
           }
         }
-      }
     }
 
     if (!existingOrder) {
@@ -291,18 +288,25 @@ export async function POST() {
     if (didSync) synced++
   }
 
-  // Email fallback: sessions with no signup_id (webhook missed or metadata lost) — match by customer email to exactly one pending signup
+  // Email fallback: sessions with no signup_id (webhook missed or metadata lost) — match by customer email to a signup (pending or paid)
   const signupSelect = "id, status, stripe_session_id, parent_email, parent_first_name, parent_last_name, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_weight_class, athlete_cell_phone, athlete_email, athlete_gpa, athlete_wrestling_club, highest_achievement, tshirt_size"
   for (const session of sessionsWithoutSignupId) {
     const email = customerEmail(session)
     if (!email) continue
-    const { data: pendingList } = await admin
+    const subscriptionId = typeof session.subscription === "string" ? session.subscription : (session.subscription as { id?: string })?.id ?? null
+    if (subscriptionId) {
+      const { data: existingMembership } = await admin.from("blue_memberships").select("id").eq("stripe_subscription_id", subscriptionId).maybeSingle()
+      if (existingMembership) continue // already in cockpit
+    }
+    const { data: signupList } = await admin
       .from("blue_signups")
       .select(signupSelect)
       .ilike("parent_email", email)
-      .neq("status", "paid")
-    if (!pendingList || pendingList.length !== 1) continue
-    const signupRow = pendingList[0] as {
+      .order("created_at", { ascending: false })
+      .limit(5)
+    if (!signupList?.length) continue
+    // Prefer pending signup; otherwise use most recent (e.g. paid but membership missing)
+    const signupRow = (signupList.find((s) => (s as { status?: string }).status !== "paid") ?? signupList[0]) as {
       id: string
       status?: string
       stripe_session_id?: string
@@ -326,7 +330,7 @@ export async function POST() {
     const subscriptionId = typeof session.subscription === "string" ? session.subscription : (session.subscription as { id?: string })?.id ?? null
     const alreadyPaid = signupRow.status === "paid" && signupRow.stripe_session_id
     const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_session_id", session.id).maybeSingle()
-    if (alreadyPaid && existingOrder) continue
+    // Don't skip: we may need to backfill membership even when signup is already paid (we already continued above if membership exists)
     let didSync = false
     if (!alreadyPaid) {
       const { error: signupUpdateErr } = await admin
@@ -407,7 +411,7 @@ export async function POST() {
             if (!athleteErr && newAthlete?.id) athleteId = newAthlete.id
           } else {
             const columns = await getAthletesColumnNames(admin)
-            const updatePayload = filterPayloadToSchema({ ...enrichment, updated_at: new Date().toISOString() }, columns)
+            const updatePayload = filterPayloadToSchema({ ...enrichment, ncUnitedTeam: "blue", updated_at: new Date().toISOString() }, columns)
             if (Object.keys(updatePayload).length > 1) {
               await admin.from("athletes").update(updatePayload).eq("id", athleteId)
             }

@@ -109,16 +109,7 @@ export function AIChatWidget() {
     }
   }, [])
 
-  // Check if user has seen splash screen
-  useEffect(() => {
-    const hasSeenIntro = localStorage.getItem("data-dawg-intro-seen")
-    if (!hasSeenIntro) {
-      setShowSplash(true)
-      setAvatarState("greeting")
-      // Reset to idle after greeting animation
-      setTimeout(() => setAvatarState("idle"), 2000)
-    }
-  }, [])
+  // Intro splash disabled: do not pop up Data Dawg on login/visit (mobile or desktop). Users can open the chat via the floating button.
 
   // Set avatar state based on loading
   useEffect(() => {

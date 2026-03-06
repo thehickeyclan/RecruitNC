@@ -144,7 +144,7 @@ export async function POST() {
       athleteId = newAthlete.id
     } else {
       const columns = await getAthletesColumnNames(admin)
-      const updatePayload = filterPayloadToSchema({ ...enrichment, updated_at: new Date().toISOString() }, columns)
+      const updatePayload = filterPayloadToSchema({ ...enrichment, ncUnitedTeam: "blue", updated_at: new Date().toISOString() }, columns)
       if (Object.keys(updatePayload).length > 1) {
         await admin.from("athletes").update(updatePayload).eq("id", athleteId)
       }

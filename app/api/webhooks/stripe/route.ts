@@ -559,7 +559,7 @@ export async function POST(request: NextRequest) {
               } else {
                 const columns = await getAthletesColumnNames(admin)
                 const updatePayload = filterPayloadToSchema(
-                  { ...enrichment, updated_at: new Date().toISOString() },
+                  { ...enrichment, ncUnitedTeam: "blue", updated_at: new Date().toISOString() },
                   columns
                 )
                 if (Object.keys(updatePayload).length > 1) {

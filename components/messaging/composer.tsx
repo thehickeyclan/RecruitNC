@@ -298,7 +298,7 @@ export function Composer({
   const canSend = (body.trim().length > 0 || pendingAttachments.length > 0) && !sending && !disabled
 
   return (
-    <div className="border-t bg-white p-3">
+    <div className="w-full border-t-2 border-[#003366]/15 bg-[#003366]/[0.03] px-2 py-3 sm:px-3">
       {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
       {/* @mentions dropdown */}
       {mentionQuery !== null && members.length > 0 && (
@@ -363,86 +363,89 @@ export function Composer({
           ))}
         </div>
       )}
-      <div className="flex gap-2 items-end">
-        <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-          <PopoverTrigger asChild>
-            <span className="inline-flex shrink-0 gap-0">
-              {hasLogos && (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="h-11 w-11 text-gray-500 hover:text-[#003366]"
-                  aria-label="Insert logo"
-                  onClick={() => setPickerOpenToLogos(true)}
-                >
-                  <ImageIcon className="h-5 w-5" />
-                </Button>
-              )}
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="h-11 w-11 text-gray-500 hover:text-[#003366]"
-                aria-label={hasLogos ? "Insert emoji" : "Insert emoji or logo"}
-                onClick={() => setPickerOpenToLogos(false)}
-              >
-                <SmilePlus className="h-5 w-5" />
-              </Button>
-            </span>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto p-0">
-            <EmojiStrip
-              onPick={(emoji) => {
-                insertAtCursor(emoji)
-                setPickerOpen(false)
-              }}
-              customEmoji={customEmoji}
-              defaultTab={pickerOpenToLogos ? "logos" : "standard"}
-            />
-          </PopoverContent>
-        </Popover>
-        <Button
-          type="button"
-          size="icon"
-          variant="ghost"
-          className="shrink-0 h-11 w-11 text-gray-500 hover:text-[#003366]"
-          aria-label="Add photo"
-          disabled={uploading || sending || disabled}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
-        </Button>
+      {/* Textarea full width on first row; pic, emoji, add photo, send on second row so the text box is wider. */}
+      <div className="flex flex-col gap-2 w-full min-w-0">
         <Textarea
           ref={textareaRef}
-          placeholder="Send a message… Use @ to mention · Attach or paste images"
+          placeholder="Send a message…"
           value={body}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           disabled={sending || disabled}
-          className="flex-1 min-h-[44px] max-h-32 resize-none"
+          className="w-full min-w-0 min-h-[52px] max-h-28 resize-none rounded-xl border-[#003366]/20 bg-white px-4 py-3 text-base shadow-inner focus:ring-2 focus:ring-[#003366]/30"
           rows={2}
           maxLength={MAX_LENGTH + 100}
         />
-        <Button
-          type="button"
-          size="icon"
-          className="shrink-0 h-11 w-11 bg-[#003366] hover:bg-[#003366]/90"
-          onClick={send}
-          disabled={!canSend}
-          aria-label="Send"
-        >
-          {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-1 w-full justify-end shrink-0">
+            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <PopoverTrigger asChild>
+                <span className="inline-flex shrink-0 gap-0">
+                  {hasLogos && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-11 w-11 text-[#003366]/70 hover:text-[#003366] hover:bg-[#003366]/10 rounded-full"
+                      aria-label="Insert logo"
+                      onClick={() => setPickerOpenToLogos(true)}
+                    >
+                      <ImageIcon className="h-5 w-5" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-11 w-11 text-[#003366]/70 hover:text-[#003366] hover:bg-[#003366]/10 rounded-full"
+                    aria-label={hasLogos ? "Insert emoji" : "Insert emoji or logo"}
+                    onClick={() => setPickerOpenToLogos(false)}
+                  >
+                    <SmilePlus className="h-5 w-5" />
+                  </Button>
+                </span>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto p-0">
+                <EmojiStrip
+                  onPick={(emoji) => {
+                    insertAtCursor(emoji)
+                    setPickerOpen(false)
+                  }}
+                  customEmoji={customEmoji}
+                  defaultTab={pickerOpenToLogos ? "logos" : "standard"}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className="shrink-0 h-11 w-11 text-[#003366]/70 hover:text-[#003366] hover:bg-[#003366]/10 rounded-full"
+              aria-label="Add photo"
+              disabled={uploading || sending || disabled}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              className="shrink-0 h-11 w-11 rounded-full bg-[#003366] hover:bg-[#002147] text-white shadow-md"
+              onClick={send}
+              disabled={!canSend}
+              aria-label="Send"
+            >
+              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            </Button>
+          </div>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 mt-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 mt-1.5 md:mt-1.5">
         <ComposerPreview body={body} customEmoji={customEmoji} />
         {body.length > MAX_LENGTH * 0.9 && (
           <p className="text-xs text-gray-500">{body.length} / {MAX_LENGTH}</p>
         )}
-        <p className="text-xs text-gray-400">
-          @ mention · {hasLogos ? "Logos · " : ""}Emoji · Add photo or paste image · Links open in new tab
+        <p className="text-xs text-gray-500 hidden sm:block">
+          @ mention · {hasLogos ? "Logos · " : ""}Emoji · Add photo or paste image
         </p>
       </div>
     </div>

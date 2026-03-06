@@ -412,7 +412,7 @@ export default function AdminBlueReportsPage() {
               <div>
                 <CardTitle>Projected MRR (from renewal dates)</CardTitle>
                 <CardDescription>
-                  Revenue expected each period based on each member’s next billing date. Synced from Stripe.
+                  Each bar = revenue from members whose <strong>next billing date</strong> falls in that month. New signups (e.g. today 3/5) appear in the month of their <strong>first renewal</strong>, not the signup month. Synced from Stripe.
                 </CardDescription>
               </div>
               <Select value={billingView} onValueChange={(v) => setBillingView(v as BillingView)}>

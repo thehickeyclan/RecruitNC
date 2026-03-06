@@ -4,7 +4,6 @@ import { Calendar, MapPin, Users, Lock, Trophy, Scale, Clock, AlertCircle, Award
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { BLUE_IMAGE_KEYS } from "@/lib/blue-content"
 
 export default function NHSCA2026EventPage() {
   return (
@@ -129,12 +128,11 @@ export default function NHSCA2026EventPage() {
               <div className="text-center sm:col-span-2 lg:col-span-1">
                 <div className="relative w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gray-100 ring-2 ring-[#003366]/20">
                   <Image
-                    src={BLUE_IMAGE_KEYS.blue_coach_araad_fischer}
+                    src="/images/coach-araad-fischer.png"
                     alt="Araad Fischer"
                     fill
                     className="object-cover"
                     sizes="128px"
-                    unoptimized
                   />
                 </div>
                 <h3 className="text-lg font-bold text-[#002147]">Araad Fischer</h3>

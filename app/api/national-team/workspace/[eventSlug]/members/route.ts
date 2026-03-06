@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-/** POST: Add a member to the event workspace by email (family or kid). They are auto-added to the forum. Caller must be a workspace member. */
+/** POST: Add a member to the event workspace by email or user_id (RecruitNC user). They are auto-added to the forum. Caller must be a workspace member. */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ eventSlug: string }> }
@@ -18,14 +18,17 @@ export async function POST(
     return NextResponse.json({ error: "eventSlug is required" }, { status: 400 })
   }
 
-  let body: { email?: string; source?: string } = {}
+  let body: { email?: string; user_id?: string; source?: string } = {}
   try {
     body = await request.json()
   } catch {
     body = {}
   }
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : ""
-  if (!email) return NextResponse.json({ error: "email is required" }, { status: 400 })
+  const emailInput = typeof body.email === "string" ? body.email.trim().toLowerCase() : ""
+  const userIdInput = typeof body.user_id === "string" ? body.user_id.trim() : ""
+  if (!userIdInput && !emailInput) {
+    return NextResponse.json({ error: "email or user_id is required" }, { status: 400 })
+  }
   const source = (body.source === "athlete_linked" ? "athlete_linked" : "family_add") as "family_add" | "athlete_linked"
 
   const admin = createAdminClient()
@@ -57,18 +60,37 @@ export async function POST(
     return NextResponse.json({ error: "You must be a member of this event workspace to add others" }, { status: 403 })
   }
 
-  // Resolve email → user_id (user_profiles; auth users have profiles after signup).
-  const { data: profile } = await admin
-    .from("user_profiles")
-    .select("user_id")
-    .ilike("email", email)
-    .maybeSingle()
-  const userIdToAdd = (profile as { user_id?: string } | null)?.user_id
-  if (!userIdToAdd) {
-    return NextResponse.json(
-      { error: "No RecruitNC account found for that email. They need to sign up first, then you can add them." },
-      { status: 404 }
-    )
+  let userIdToAdd: string
+  let emailForNotification: string
+
+  if (userIdInput) {
+    // Add by user_id (from RecruitNC user lookup).
+    const { data: profile } = await admin
+      .from("user_profiles")
+      .select("user_id, email")
+      .eq("user_id", userIdInput)
+      .maybeSingle()
+    if (!profile) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 })
+    }
+    userIdToAdd = (profile as { user_id: string }).user_id
+    emailForNotification = (profile as { email?: string | null }).email ?? ""
+  } else {
+    // Resolve email → user_id (user_profiles; auth users have profiles after signup).
+    const { data: profile } = await admin
+      .from("user_profiles")
+      .select("user_id, email")
+      .ilike("email", emailInput)
+      .maybeSingle()
+    const uid = (profile as { user_id?: string } | null)?.user_id
+    if (!uid) {
+      return NextResponse.json(
+        { error: "No RecruitNC account found for that email. They need to sign up first, then you can add them." },
+        { status: 404 }
+      )
+    }
+    userIdToAdd = uid
+    emailForNotification = (profile as { email?: string | null })?.email ?? emailInput
   }
 
   if (userIdToAdd === user.id) {
@@ -129,7 +151,7 @@ export async function POST(
     const threadUrl = `${baseUrl.replace(/\/$/, "")}/messages/${threadId}`
     try {
       const { sendAddedToGroupEmail } = await import("@/lib/email")
-      await sendAddedToGroupEmail(email, threadName, threadUrl)
+      await sendAddedToGroupEmail(emailForNotification, threadName, threadUrl)
     } catch (e) {
       console.error("[RecruitNC] workspace add-member email:", e)
     }

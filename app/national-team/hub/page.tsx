@@ -10,7 +10,6 @@ import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import Image from "next/image"
-import { BLUE_IMAGE_KEYS } from "@/lib/blue-content"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
@@ -263,11 +262,11 @@ function NHSCA2026HubInfo() {
               {[
                 { name: "Colton Palmer", tel: "+19194519864", display: "(919) 451-9864", bio: "NC State · 2x state champ · NC all-time wins", img: "/images/coach-palmer.png", alt: "Colton Palmer" },
                 { name: "Michael Macchiavello", tel: "+17048917436", display: "(704) 891-7436", bio: "2018 NCAA Champion · Team USA · NC United founder", img: "/images/coach-macchiavello.png", alt: "Michael Macchiavello" },
-                { name: "Araad Fischer", tel: "+19194508266", display: "(919) 450-8266", bio: "Duke · 4-year starter · State finalist", img: BLUE_IMAGE_KEYS.blue_coach_araad_fischer, alt: "Araad Fischer" },
+                { name: "Araad Fischer", tel: "+19194508266", display: "(919) 450-8266", bio: "Duke · 4-year starter · State finalist", img: "/images/coach-araad-fischer.png", alt: "Araad Fischer" },
               ].map((c) => (
                 <div key={c.name} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow transition-shadow">
                   <div className="relative mx-auto h-20 w-20 overflow-hidden rounded-full bg-gray-100 ring-2 ring-[#003366]/10">
-                    <Image src={c.img} alt={c.alt} fill className="object-cover" sizes="80px" unoptimized={c.name === "Araad Fischer"} />
+                    <Image src={c.img} alt={c.alt} fill className="object-cover" sizes="80px" />
                   </div>
                   <p className="mt-3 text-center font-semibold text-[#002147] text-sm">{c.name}</p>
                   <a href={`tel:${c.tel}`} className="mt-1 flex justify-center min-h-[44px] items-center py-1.5 text-sm font-medium text-[#003366] hover:underline">
@@ -324,39 +323,57 @@ function NHSCA2026HubInfo() {
   )
 }
 
+type SearchUser = { user_id: string; email: string | null; display_name: string }
+
 function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
-  const [addEmail, setAddEmail] = useState("")
-  const [addLoading, setAddLoading] = useState(false)
+  const [addSearchQuery, setAddSearchQuery] = useState("")
+  const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
+  const [addSearching, setAddSearching] = useState(false)
+  const [addingId, setAddingId] = useState<string | null>(null)
   const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-  const handleAddMember = async () => {
-    const email = addEmail.trim().toLowerCase()
-    if (!email) return
+  useEffect(() => {
+    if (addSearchQuery.trim().length < 2) {
+      setAddSearchResults([])
+      return
+    }
+    const t = setTimeout(() => {
+      setAddSearching(true)
+      fetch(
+        `/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/users/search?q=${encodeURIComponent(addSearchQuery.trim())}`,
+        { credentials: "include" }
+      )
+        .then((r) => r.json())
+        .then((data) => setAddSearchResults(data.users ?? []))
+        .catch(() => setAddSearchResults([]))
+        .finally(() => setAddSearching(false))
+    }, 300)
+    return () => clearTimeout(t)
+  }, [addSearchQuery, event.eventSlug])
+
+  const handleAddMember = async (userId: string) => {
     setAddMessage(null)
-    setAddLoading(true)
+    setAddingId(userId)
     try {
       const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ user_id: userId }),
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
         setAddMessage({ type: "success", text: "Added. They can now see this event and the group chat." })
-        setAddEmail("")
+        setAddSearchResults((prev) => prev.filter((u) => u.user_id !== userId))
       } else {
-        setAddMessage({
-          type: "error",
-          text: data?.error ?? (res.status === 404 ? "No RecruitNC account found for that email. They need to sign up first." : "Could not add member."),
-        })
+        setAddMessage({ type: "error", text: data?.error ?? "Could not add member." })
       }
     } catch {
       setAddMessage({ type: "error", text: "Request failed. Try again." })
     } finally {
-      setAddLoading(false)
+      setAddingId(null)
     }
   }
 
@@ -392,21 +409,34 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             Add RecruitNC user
           </h3>
           <p className="text-xs text-gray-500 mb-2">
-            Look up a user by the email they use to sign in. Only people with an <strong>active free RecruitNC account</strong> can be added — they’ll then see this event workspace and the group chat. Don’t have an account? <a href="/auth/signup" className="text-[#003366] hover:underline">Sign up free</a>.
+            Search by name or email. Only people with an <strong>active RecruitNC account</strong> can be added — they’ll then see this event workspace and the group chat. Don’t have an account? <a href="/auth/signup" className="text-[#003366] hover:underline">Sign up free</a>.
           </p>
-          <div className="flex flex-wrap items-end gap-2">
-            <Input
-              type="email"
-              placeholder="RecruitNC sign-in email"
-              value={addEmail}
-              onChange={(e) => setAddEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
-              className="w-full min-w-0 sm:max-w-xs"
-              disabled={addLoading}
-            />
-            <Button onClick={handleAddMember} disabled={addLoading || !addEmail.trim()} size="sm" className="bg-[#003366] hover:bg-[#003366]/90">
-              {addLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add to workspace"}
-            </Button>
+          <Input
+            type="text"
+            placeholder="Search by name or email…"
+            value={addSearchQuery}
+            onChange={(e) => setAddSearchQuery(e.target.value)}
+            className="w-full max-w-sm mb-2"
+          />
+          <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1 bg-gray-50/50">
+            {addSearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
+            {!addSearching && addSearchQuery.trim().length >= 2 && addSearchResults.length === 0 && (
+              <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
+            )}
+            {!addSearching &&
+              addSearchResults.map((u) => (
+                <button
+                  key={u.user_id}
+                  type="button"
+                  onClick={() => handleAddMember(u.user_id)}
+                  disabled={!!addingId}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
+                >
+                  <span className="font-medium text-gray-900">{u.display_name}</span>
+                  {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
+                  {addingId === u.user_id && <span className="text-xs text-[#003366]">Adding…</span>}
+                </button>
+              ))}
           </div>
           {addMessage && (
             <p className={`text-sm mt-2 ${addMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>

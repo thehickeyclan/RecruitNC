@@ -210,7 +210,7 @@ export function ThreadView({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 min-h-0"
+        className="flex-1 overflow-y-auto px-4 py-4 min-h-0 bg-gray-50/50"
       >
         {loadingMore && (
           <div className="flex justify-center py-2">
@@ -222,7 +222,7 @@ export function ThreadView({
           {messageGroupsWithDates(messages).map(({ dateLabel, items }) => (
             <div key={dateLabel} className="space-y-4">
               <div className="flex justify-center">
-                <span className="text-xs font-medium text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+                <span className="text-xs font-medium text-[#003366]/60 bg-[#003366]/10 px-3 py-1 rounded-full">
                   {dateLabel}
                 </span>
               </div>
