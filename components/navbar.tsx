@@ -147,7 +147,7 @@ export function Navbar() {
   const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
   const nationalTeamItems = [
-    { href: "/national-team/hub", label: "Team hub", description: "Your event workspace — roster, chat, logistics (invite-only)", icon: Users },
+    { href: "/national-team/hub", label: "Workspace", description: "Event roster & logistics (e.g. NHSCA) — for registered users", icon: Users },
     { href: "/national-team", label: "About", description: "Learn about the NC United National Team", icon: Users },
     { href: "/national-team/ucd-2024-results", label: "UCD 2024", description: "Ultimate Club Duals 2024 results and highlights", icon: Trophy },
     { href: "/national-team/ucd-2025-results", label: "UCD 2025", description: "Ultimate Club Duals 2025 results and highlights", icon: Trophy },
@@ -353,7 +353,7 @@ export function Navbar() {
           {/* Icons: Messages, Notifications, Team hub (if access), Cart + Auth. Store is in main nav. */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
             {user && (
-              <a href="/forum" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Community">
+              <a href="/forum" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Community — messaging, groups, and DMs">
                 <Users2 className="h-5 w-5" />
               </a>
             )}
@@ -416,8 +416,8 @@ export function Navbar() {
               </Popover>
             )}
             {user && hubAccess && (
-              <a href="/national-team/hub" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Team hub">
-                <Users2 className="h-5 w-5" />
+              <a href="/national-team/hub" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Workspace — event roster and logistics">
+                <Trophy className="h-5 w-5" />
               </a>
             )}
             <a href="/cart" target="_top" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
@@ -454,7 +454,7 @@ export function Navbar() {
                     <a href="/forum">Community</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/national-team/hub">Team hub</a>
+                    <a href="/national-team/hub">Workspace</a>
                   </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
@@ -733,8 +733,8 @@ export function Navbar() {
                             className="w-full bg-transparent mobile-optimized min-h-[44px]"
                           >
                             <a href="/national-team/hub" onClick={() => setIsOpen(false)}>
-                              <Users2 className="h-4 w-4 mr-2" />
-                              Team hub
+                              <Trophy className="h-4 w-4 mr-2" />
+                              Workspace
                             </a>
                           </Button>
                         )}

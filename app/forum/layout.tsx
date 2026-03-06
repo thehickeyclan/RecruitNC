@@ -118,7 +118,36 @@ export default function ForumLayout({
         </div>
 
         <div className="flex-1 overflow-y-auto py-2">
-          <div className="flex items-center justify-between px-3 mb-2">
+          {sidebarLoading ? (
+            <p className="px-3 text-sm text-white/50">Loading…</p>
+          ) : (
+            <>
+          {/* Direct messages first (Slack-style) */}
+          <p className="px-3 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            Direct messages
+          </p>
+          {filteredDms.length === 0 ? (
+            <p className="px-3 text-sm text-white/50">No conversations yet.</p>
+          ) : (
+            <ul className="space-y-0.5">
+              {filteredDms.map((dm) => (
+                <li key={dm.id}>
+                  <HardLink
+                    href={`/forum/dm/${dm.id}`}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
+                      pathname === `/forum/dm/${dm.id}` ? "bg-[#0B2545]/50 border-[#C8A94A] text-white" : "border-transparent text-white/80 hover:bg-white/5"
+                    )}
+                  >
+                    <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Conversation</span>
+                  </HardLink>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="flex items-center justify-between px-3 mt-4 mb-2">
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
               Groups
             </p>
@@ -181,66 +210,35 @@ export default function ForumLayout({
               </DialogContent>
             </Dialog>
           </div>
-          {sidebarLoading ? (
-            <p className="px-3 text-sm text-white/50">Loading…</p>
-          ) : filteredGroups.length === 0 ? (
+          {filteredGroups.length === 0 ? (
             <p className="px-3 text-sm text-white/50">No groups yet.</p>
           ) : (
             <ul className="space-y-0.5">
-              {filteredGroups.map((group) => (
-                <li key={group.id}>
-                  <p className="px-3 py-1.5 text-sm font-medium text-white/80 truncate" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                    {group.name}
-                  </p>
-                  <ul className="ml-2">
-                    {group.channels.map((ch) => {
-                      const href = `/forum/groups/${group.id}/channels/${ch.id}`
-                      const active = pathname === href
-                      return (
-                        <li key={ch.id}>
-                          <HardLink
-                            href={href}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
-                              active
-                                ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
-                                : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
-                            )}
-                            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                          >
-                            <span className="truncate">{ch.name}</span>
-                          </HardLink>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </li>
-              ))}
+              {filteredGroups.map((group) => {
+                const singleChannel = group.channels.find((c) => c.name === "general") ?? group.channels[0]
+                if (!singleChannel) return null
+                const href = `/forum/groups/${group.id}/channels/${singleChannel.id}`
+                const active = pathname === href
+                return (
+                  <li key={group.id}>
+                    <HardLink
+                      href={href}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
+                        active
+                          ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
+                          : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
+                      )}
+                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                    >
+                      <span className="truncate">{group.name}</span>
+                    </HardLink>
+                  </li>
+                )
+              })}
             </ul>
           )}
-
-          <p className="px-3 text-xs font-semibold text-white/50 uppercase tracking-wider mt-4 mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            Direct messages
-          </p>
-          {filteredDms.length === 0 ? (
-            <p className="px-3 text-sm text-white/50">No conversations yet.</p>
-          ) : (
-            <ul className="space-y-0.5">
-              {filteredDms.map((dm) => (
-                <li key={dm.id}>
-                  <HardLink
-                    href={`/forum/dm/${dm.id}`}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
-                      pathname === `/forum/dm/${dm.id}` ? "bg-[#0B2545]/50 border-[#C8A94A] text-white" : "border-transparent text-white/80 hover:bg-white/5"
-                    )}
-                  >
-                    <MessageCircle className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate">Conversation</span>
-                  </HardLink>
-                </li>
-              ))}
-            </ul>
+            </>
           )}
         </div>
 
