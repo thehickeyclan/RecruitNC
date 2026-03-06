@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 /**
  * POST /api/forum/groups
  * Body: { name: string, visibility?: 'public' | 'private' }
- * Creates a group with 3 default channels (announcements, general, logistics) and adds current user as admin.
+ * Creates a group with one default channel (general) — one place to chat, like GroupMe. Adds current user as admin.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -43,21 +43,13 @@ export async function POST(request: NextRequest) {
 
   const groupId = (group as { id: string }).id
 
-  const defaultChannels = [
-    { name: "announcements", type: "announcement", position: 0 },
-    { name: "general", type: "chat", position: 1 },
-    { name: "logistics", type: "forum", position: 2 },
-  ]
-
-  for (const ch of defaultChannels) {
-    await admin.from("forum_channels").insert({
-      group_id: groupId,
-      name: ch.name,
-      type: ch.type,
-      position: ch.position,
-      coach_only: ch.type === "announcement",
-    })
-  }
+  await admin.from("forum_channels").insert({
+    group_id: groupId,
+    name: "general",
+    type: "chat",
+    position: 0,
+    coach_only: false,
+  })
 
   await admin.from("forum_members").insert({
     group_id: groupId,

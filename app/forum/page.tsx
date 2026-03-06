@@ -1,6 +1,5 @@
 "use client"
 
-import { HardLink } from "@/components/hard-link"
 import { MessageCircle } from "lucide-react"
 
 export default function ForumPage() {
@@ -11,14 +10,8 @@ export default function ForumPage() {
         Community
       </h1>
       <p className="text-white/70 max-w-md mb-6">
-        Pick a group and channel from the sidebar, or start a direct message. This replaces GroupMe so your community stays in RecruitNC.
+        <strong className="text-white/90">Click a channel</strong> in the left sidebar (e.g. general) to open the message board and post. This replaces GroupMe so your community stays in RecruitNC.
       </p>
-      <HardLink
-        href="/messages"
-        className="text-[#C8A94A] hover:underline font-medium"
-      >
-        Open existing Messages (inbox) →
-      </HardLink>
     </div>
   )
 }

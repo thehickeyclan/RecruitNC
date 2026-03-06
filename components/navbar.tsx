@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Users2, Trophy, Medal, ShoppingCart, MessageCircle, ShoppingBag, Bell } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Users2, Trophy, Medal, ShoppingCart, ShoppingBag, Bell } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -28,7 +28,6 @@ type NavNotification = { id: string; type: string; title: string; body: string |
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const [unreadMessages, setUnreadMessages] = useState(0)
   const [hubAccess, setHubAccess] = useState(false)
   const [notifications, setNotifications] = useState<NavNotification[]>([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -48,37 +47,6 @@ export function Navbar() {
       .then((data) => setHubAccess(!!data?.allowed))
       .catch(() => setHubAccess(false))
   }, [user])
-
-  const fetchUnreadMessages = useCallback(() => {
-    if (!user) return
-    fetch("/api/messaging/unread-count", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setUnreadMessages(typeof data?.count === "number" ? data.count : 0))
-      .catch(() => setUnreadMessages(0))
-  }, [user])
-
-  // Fetch unread count when user or pathname changes
-  useEffect(() => {
-    if (!user) {
-      setUnreadMessages(0)
-      return
-    }
-    fetchUnreadMessages()
-  }, [user, pathname, fetchUnreadMessages])
-
-  // Poll for new messages every 30s and refetch when tab gains focus (so badge updates without refresh)
-  useEffect(() => {
-    if (!user) return
-    const interval = setInterval(fetchUnreadMessages, 30_000)
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") fetchUnreadMessages()
-    }
-    document.addEventListener("visibilitychange", onVisibilityChange)
-    return () => {
-      clearInterval(interval)
-      document.removeEventListener("visibilitychange", onVisibilityChange)
-    }
-  }, [user, fetchUnreadMessages])
 
   const fetchNotifications = useCallback(() => {
     if (!user) return
@@ -385,13 +353,8 @@ export function Navbar() {
           {/* Icons: Messages, Notifications, Team hub (if access), Cart + Auth. Store is in main nav. */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
             {user && (
-              <a href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
-                <MessageCircle className="h-5 w-5" />
-                {unreadMessages > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                    {unreadMessages > 99 ? "99+" : unreadMessages}
-                  </span>
-                )}
+              <a href="/forum" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Community">
+                <Users2 className="h-5 w-5" />
               </a>
             )}
             {user && (
@@ -488,9 +451,6 @@ export function Navbar() {
                     <a href="/profile">Profile</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/messages">Messages</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <a href="/forum">Community</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -535,13 +495,8 @@ export function Navbar() {
           <div className="md:hidden flex items-center gap-2">
             {/* Messages icon with unread badge - when logged in */}
             {user && (
-              <a href="/messages" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
-                <MessageCircle className="h-5 w-5" />
-                {unreadMessages > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                    {unreadMessages > 99 ? "99+" : unreadMessages}
-                  </span>
-                )}
+              <a href="/forum" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label="Community">
+                <Users2 className="h-5 w-5" />
               </a>
             )}
             {/* Notifications bell - when logged in */}
@@ -708,17 +663,8 @@ export function Navbar() {
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   {user && (
                     <>
-                      <a href="/messages" className={mobileLinkClass("/messages") + " flex items-center gap-2 relative"} onClick={() => setIsOpen(false)}>
-                        <MessageCircle className="h-5 w-5 shrink-0" />
-                        <span>Messages</span>
-                        {unreadMessages > 0 && (
-                          <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
-                            {unreadMessages > 99 ? "99+" : unreadMessages}
-                          </span>
-                        )}
-                      </a>
                       <a href="/forum" className={mobileLinkClass("/forum") + " flex items-center gap-2"} onClick={() => setIsOpen(false)}>
-                        <Users className="h-5 w-5 shrink-0" />
+                        <Users2 className="h-5 w-5 shrink-0" />
                         <span>Community</span>
                       </a>
                     </>

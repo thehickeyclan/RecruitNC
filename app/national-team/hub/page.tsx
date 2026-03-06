@@ -493,7 +493,7 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
               />
             </div>
             <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
-              <a href="/messages" className="text-xs text-[#003366] font-medium hover:underline">Open in Messages</a> for full view
+              <a href="/forum" className="text-xs text-[#003366] font-medium hover:underline">Open in Community</a> for full view
             </div>
           </div>
         )}

@@ -48,7 +48,7 @@ export function MessageAthleteButton({
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data?.error ?? "Failed to start conversation")
-        window.location.href = `/messages/${data.threadId}`
+        window.location.href = "/forum"
       } catch (e) {
         setError(e instanceof Error ? e.message : "Something went wrong")
       } finally {
