@@ -42,13 +42,13 @@ export async function GET(
 
   const { data: profiles } = await admin
     .from("user_profiles")
-    .select("user_id, email, full_name, first_name, last_name")
+    .select("user_id, email, full_name, first_name, last_name, headshot_url")
     .in("user_id", userIds)
 
   const profileMap = new Map(
     (profiles ?? []).map((p) => [
       (p as { user_id: string }).user_id,
-      p as { user_id: string; email?: string | null; full_name?: string | null; first_name?: string | null; last_name?: string | null },
+      p as { user_id: string; email?: string | null; full_name?: string | null; first_name?: string | null; last_name?: string | null; headshot_url?: string | null },
     ])
   )
 
@@ -66,6 +66,7 @@ export async function GET(
       joined_at: row.joined_at,
       display_name: displayName,
       email: profile?.email ?? null,
+      headshot_url: profile?.headshot_url ?? null,
     }
   })
 

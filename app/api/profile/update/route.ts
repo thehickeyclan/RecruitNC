@@ -15,7 +15,7 @@ async function handleUpdate(request: Request) {
   }
 
   const body = await request.json()
-  const { name, role, cell_phone, location, bio, notify_sms_new_messages, notify_email_new_messages } = body
+  const { name, role, cell_phone, location, bio, notify_sms_new_messages, notify_email_new_messages, headshot_url } = body
 
   const updatePayload: Record<string, unknown> = {}
   if (name !== undefined) updatePayload.full_name = name
@@ -25,6 +25,7 @@ async function handleUpdate(request: Request) {
   if (bio !== undefined) updatePayload.bio = bio
   if (typeof notify_sms_new_messages === "boolean") updatePayload.notify_sms_new_messages = notify_sms_new_messages
   if (typeof notify_email_new_messages === "boolean") updatePayload.notify_email_new_messages = notify_email_new_messages
+  if (headshot_url !== undefined) updatePayload.headshot_url = headshot_url === "" || headshot_url === null ? null : headshot_url
 
   if (Object.keys(updatePayload).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 })

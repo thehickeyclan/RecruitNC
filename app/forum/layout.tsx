@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { HardLink } from "@/components/hard-link"
 import { MessageCircle, Search, Users, ChevronRight, Menu, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Dialog,
   DialogContent,
@@ -38,13 +39,22 @@ export default function ForumLayout({
   const [newGroupOpen, setNewGroupOpen] = useState(false)
   const [newGroupName, setNewGroupName] = useState("")
   const [newGroupSubmitting, setNewGroupSubmitting] = useState(false)
+  const [currentUserProfile, setCurrentUserProfile] = useState<{ name: string; headshot_url?: string | null } | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     if (!user) {
       setSidebarLoading(false)
+      setCurrentUserProfile(null)
       return
     }
+    fetch("/api/profile", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        const name = data?.name ?? data?.full_name ?? ""
+        setCurrentUserProfile({ name, headshot_url: data?.headshot_url ?? null })
+      })
+      .catch(() => setCurrentUserProfile(null))
     fetch("/api/forum/sidebar", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
@@ -243,10 +253,13 @@ export default function ForumLayout({
         </div>
 
         <div className="p-2 border-t border-white/10 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#C8A94A]/30 flex items-center justify-center text-sm font-semibold">
-            {user?.email?.slice(0, 1).toUpperCase() ?? "?"}
-          </div>
-          <span className="text-sm text-white/80 truncate flex-1 min-w-0">{user?.email ?? "—"}</span>
+          <Avatar className="h-8 w-8 flex-shrink-0 rounded-full border border-white/20">
+            <AvatarImage src={currentUserProfile?.headshot_url ?? undefined} alt="" />
+            <AvatarFallback className="bg-[#C8A94A]/30 text-[#0B2545] text-sm font-semibold">
+              {(currentUserProfile?.name || user?.email || "?").slice(0, 2).toUpperCase().replace(/[^A-Z0-9]/gi, "") || "?"}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-sm text-white/80 truncate flex-1 min-w-0">{currentUserProfile?.name || user?.email ?? "—"}</span>
         </div>
       </aside>
 

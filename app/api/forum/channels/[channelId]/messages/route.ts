@@ -46,7 +46,7 @@ export async function GET(
 
   let query = admin
     .from("forum_messages")
-    .select("id, channel_id, author_id, body, attachments, pinned, pin_order, created_at, edited_at")
+    .select("id, channel_id, author_id, body, attachments, pinned, pin_order, created_at, edited_at, parent_id")
     .eq("channel_id", channelId)
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -103,7 +103,7 @@ export async function POST(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  let body: { body?: string } = {}
+  let body: { body?: string; parent_id?: string | null } = {}
   try {
     body = await request.json()
   } catch {
@@ -112,6 +112,7 @@ export async function POST(
   const text = typeof body.body === "string" ? body.body.trim() : ""
   if (!text) return NextResponse.json({ error: "body is required" }, { status: 400 })
   if (text.length > 2000) return NextResponse.json({ error: "body max 2000 characters" }, { status: 400 })
+  const parentId = typeof body.parent_id === "string" && body.parent_id.trim() ? body.parent_id.trim() : null
 
   const admin = createAdminClient()
 
@@ -162,6 +163,7 @@ export async function POST(
       body: (inserted as { body: string }).body,
       created_at: (inserted as { created_at: string }).created_at,
       edited_at: (inserted as { edited_at?: string | null }).edited_at ?? null,
+      parent_id: (inserted as { parent_id?: string | null }).parent_id ?? null,
     },
   })
 }

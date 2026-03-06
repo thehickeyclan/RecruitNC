@@ -28,18 +28,27 @@ export async function GET(
 
   if (error || !channel) return NextResponse.json({ error: "Channel not found" }, { status: 404 })
 
+  const groupId = (channel as { group_id: string }).group_id
   const { data: member } = await admin
     .from("forum_members")
     .select("id")
-    .eq("group_id", (channel as { group_id: string }).group_id)
+    .eq("group_id", groupId)
     .eq("user_id", user.id)
     .maybeSingle()
 
   if (!member) return NextResponse.json({ error: "Not a member" }, { status: 403 })
 
+  const { data: group } = await admin
+    .from("forum_groups")
+    .select("name")
+    .eq("id", groupId)
+    .single()
+
   return NextResponse.json({
     id: (channel as { id: string }).id,
     name: (channel as { name: string }).name,
+    group_id: groupId,
+    group_name: group ? (group as { name: string }).name : null,
     type: (channel as { type: string }).type,
     coach_only: (channel as { coach_only: boolean }).coach_only,
   })

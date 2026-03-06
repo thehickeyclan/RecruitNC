@@ -3,8 +3,12 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Send, Loader2 } from "lucide-react"
+import { Send, Loader2, Pencil, Reply, Smile, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ForumMessageBody, type CustomEmojiItem } from "@/components/forum/forum-message-body"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type Message = {
   id: string
@@ -16,7 +20,13 @@ type Message = {
   pin_order: number | null
   created_at: string
   edited_at: string | null
+  parent_id?: string | null
 }
+
+const EMOJI_GRID = [
+  "👍", "❤️", "😂", "😊", "🎉", "🔥", "👏", "🙌", "💪", "⭐", "🤔", "😅",
+  "👋", "🙏", "💯", "😎", "🥳", "😢", "😤", "🤷", "✅", "❌", "⚠️", "📌",
+]
 
 export default function ForumChannelPage() {
   const params = useParams()
@@ -29,9 +39,15 @@ export default function ForumChannelPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [draft, setDraft] = useState("")
   const [sending, setSending] = useState(false)
-  const [channelName, setChannelName] = useState<string>("Channel")
+  const [channelName, setChannelName] = useState<string>("")
+  const [groupName, setGroupName] = useState<string | null>(null)
+  const [customEmoji, setCustomEmoji] = useState<CustomEmojiItem[]>([])
+  const [replyingTo, setReplyingTo] = useState<{ id: string; snippet: string } | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState("")
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const loadMessages = useCallback(
     async (beforeId?: string) => {
@@ -55,6 +71,22 @@ export default function ForumChannelPage() {
   )
 
   useEffect(() => {
+    fetch("/api/messaging/custom-emoji", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setCustomEmoji((data?.emoji ?? []).map((e: { slug: string; image_url: string }) => ({ slug: e.slug, image_url: e.image_url }))))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const authorIds = [...new Set(messages.map((m) => m.author_id).filter(Boolean))]
+    if (authorIds.length === 0) return
+    fetch(`/api/forum/authors?ids=${authorIds.join(",")}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setAuthors(data.authors ?? {}))
+      .catch(() => {})
+  }, [messages])
+
+  useEffect(() => {
     if (!channelId) {
       setLoading(false)
       return
@@ -64,6 +96,7 @@ export default function ForumChannelPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data?.name) setChannelName(data.name)
+        if (data?.group_name) setGroupName(data.group_name)
       })
       .catch(() => {})
     loadMessages()
@@ -101,18 +134,20 @@ export default function ForumChannelPage() {
     const text = draft.trim()
     if (!text || sending || !channelId) return
     setSending(true)
+    const parentId = replyingTo?.id ?? null
     try {
       const res = await fetch(`/api/forum/channels/${channelId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ body: text }),
+        body: JSON.stringify({ body: text, parent_id: parentId || undefined }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error ?? "Failed to send")
       const newMsg = data.message as Message
       setMessages((prev) => [newMsg, ...prev])
       setDraft("")
+      setReplyingTo(null)
       try {
         localStorage.removeItem(`forum-draft-${channelId}`)
       } catch {}
@@ -121,7 +156,45 @@ export default function ForumChannelPage() {
     } finally {
       setSending(false)
     }
-  }, [channelId, draft, sending])
+  }, [channelId, draft, sending, replyingTo])
+
+  const handleEdit = useCallback(
+    async (messageId: string, newBody: string) => {
+      if (!channelId || !newBody.trim()) return
+      const res = await fetch(`/api/forum/channels/${channelId}/messages/${messageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ body: newBody.trim() }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error ?? "Failed to edit")
+      const updated = data.message as { id: string; body: string; edited_at: string }
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, body: updated.body, edited_at: updated.edited_at } : m))
+      )
+      setEditingId(null)
+      setEditDraft("")
+    },
+    [channelId]
+  )
+
+  const insertEmoji = useCallback((emoji: string) => {
+    const ta = textareaRef.current
+    if (ta) {
+      const start = ta.selectionStart
+      const end = ta.selectionEnd
+      const before = draft.slice(0, start)
+      const after = draft.slice(end)
+      setDraft(before + emoji + after)
+      setTimeout(() => {
+        ta.focus()
+        ta.setSelectionRange(start + emoji.length, start + emoji.length)
+      }, 0)
+    } else {
+      setDraft((d) => d + emoji)
+    }
+  }, [draft])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -139,7 +212,7 @@ export default function ForumChannelPage() {
     <div className="flex flex-col h-full">
       <div className="flex-shrink-0 px-4 py-2 border-b border-white/10">
         <h1 className="text-lg font-bold text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          #{channelName}
+          {groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}
         </h1>
       </div>
 
@@ -170,30 +243,96 @@ export default function ForumChannelPage() {
                     </button>
                   </div>
                 )}
-                {chronological.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={cn(
-                      "rounded-lg p-3",
-                      msg.pinned ? "border-l-4 border-[#C8A94A] bg-[#C8A94A]/10" : "bg-white/5"
-                    )}
-                  >
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-semibold text-white text-sm" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                        {msg.author_id === user?.id ? "You" : "Member"}
-                      </span>
-                      <span className="text-xs text-white/50">
-                        {new Date(msg.created_at).toLocaleString()}
-                      </span>
-                      {msg.pinned && (
-                        <span className="text-xs text-[#C8A94A] font-medium">PINNED</span>
+                {chronological.map((msg) => {
+                  const parentMsg = msg.parent_id ? messages.find((m) => m.id === msg.parent_id) : null
+                  const isOwn = msg.author_id === user?.id
+                  const isEditing = editingId === msg.id
+                  const author = authors[msg.author_id]
+                  const displayName = author?.display_name ?? (isOwn ? "You" : "Member")
+                  const headshotUrl = author?.headshot_url ?? null
+                  const initialsForAvatar = (author?.display_name ?? displayName).slice(0, 2).toUpperCase().replace(/[^A-Z0-9]/gi, "") || "?"
+                  return (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "rounded-lg p-3 group",
+                        msg.pinned ? "border-l-4 border-[#C8A94A] bg-[#C8A94A]/10" : "bg-white/5"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <Avatar className="h-8 w-8 flex-shrink-0 rounded-full border border-white/20">
+                          <AvatarImage src={headshotUrl ?? undefined} alt="" />
+                          <AvatarFallback className="bg-white/10 text-white text-xs">{initialsForAvatar}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-semibold text-white text-sm" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                          {isOwn ? "You" : displayName}
+                        </span>
+                        <span className="text-xs text-white/50">
+                          {new Date(msg.created_at).toLocaleString()}
+                        </span>
+                        {msg.edited_at && (
+                          <span className="text-xs text-white/40">(edited)</span>
+                        )}
+                        {msg.pinned && (
+                          <span className="text-xs text-[#C8A94A] font-medium">PINNED</span>
+                        )}
+                        {!isEditing && (
+                          <span className="flex-1 inline-flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {isOwn && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingId(msg.id)
+                                  setEditDraft(msg.body)
+                                }}
+                                className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white"
+                                aria-label="Edit message"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setReplyingTo({ id: msg.id, snippet: msg.body.slice(0, 80) + (msg.body.length > 80 ? "…" : "") })}
+                              className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white"
+                              aria-label="Reply"
+                            >
+                              <Reply className="w-3.5 h-3.5" />
+                            </button>
+                          </span>
+                        )}
+                      </div>
+                      {parentMsg && (
+                        <p className="text-xs text-white/50 mb-1 border-l-2 border-white/20 pl-2">
+                          Replying to {parentMsg.author_id === user?.id ? "You" : (authors[parentMsg.author_id]?.display_name ?? "Member")}: {parentMsg.body.slice(0, 60)}{parentMsg.body.length > 60 ? "…" : ""}
+                        </p>
+                      )}
+                      {isEditing ? (
+                        <div className="flex flex-col gap-2">
+                          <textarea
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                            rows={3}
+                            className="w-full rounded-lg bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleEdit(msg.id, editDraft)} className="bg-[#C8A94A] text-[#0B2545] hover:bg-[#E2C46A]">
+                              Save
+                            </Button>
+                            <Button size="sm" variant="outline" className="border-white/30 text-white" onClick={() => { setEditingId(null); setEditDraft("") }}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-[#F0F4FF] text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                          <ForumMessageBody body={msg.body} customEmoji={customEmoji} />
+                        </p>
                       )}
                     </div>
-                    <p className="text-[#F0F4FF] text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                      {msg.body}
-                    </p>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </>
@@ -201,16 +340,53 @@ export default function ForumChannelPage() {
       </div>
 
       <div className="flex-shrink-0 p-3 border-t border-white/10">
+        {replyingTo && (
+          <div className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded bg-white/10 border border-white/10 text-sm text-white/80">
+            <Reply className="w-4 h-4 flex-shrink-0 text-[#C8A94A]" />
+            <span className="truncate flex-1">Replying to: {replyingTo.snippet}</span>
+            <button type="button" onClick={() => setReplyingTo(null)} className="p-1 rounded hover:bg-white/10 text-white" aria-label="Cancel reply">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div className="flex gap-2">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Message… (Enter to send, Shift+Enter for new line)"
-            rows={2}
-            className="flex-1 min-h-[44px] max-h-32 resize-y rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          />
+          <div className="flex-1 flex gap-1 min-w-0">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex-shrink-0 h-[44px] w-10 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 flex items-center justify-center"
+                  aria-label="Insert emoji"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2 bg-[#0D1F3C] border-white/20" align="start">
+                <div className="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto">
+                  {EMOJI_GRID.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="w-8 h-8 rounded hover:bg-white/10 flex items-center justify-center text-lg"
+                      onClick={() => insertEmoji(emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            <textarea
+              ref={textareaRef}
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Message… (Enter to send, Shift+Enter for new line)"
+              rows={2}
+              className="flex-1 min-h-[44px] max-h-32 resize-y rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            />
+          </div>
           <button
             type="button"
             onClick={handleSend}

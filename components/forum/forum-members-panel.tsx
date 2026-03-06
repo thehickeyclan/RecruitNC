@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { Link2, UserPlus, Users, Loader2, Copy, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-type Member = { user_id: string; role: string; display_name: string; email: string | null }
+type Member = { user_id: string; role: string; display_name: string; email: string | null; headshot_url?: string | null }
 type SearchUser = { user_id: string; email: string | null; display_name: string }
 
 export function ForumMembersPanel({ pathname }: { pathname: string }) {
@@ -153,19 +154,19 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
   }
 
   return (
-    <aside className="hidden sm:flex flex-col w-[260px] flex-shrink-0 bg-[#0D1F3C] border-l border-white/10 overflow-y-auto">
+    <aside className="hidden sm:flex flex-col w-[260px] flex-shrink-0 bg-[#0D1F3C] border-l border-white/10 overflow-y-auto text-[#F0F4FF] [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_input::placeholder]:!text-white/40 [&_label]:!text-[#F0F4FF]">
       <div className="p-3 border-b border-white/10">
-        <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+        <p className="text-sm font-semibold text-[#F0F4FF]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
           Members
         </p>
-        <p className="text-xs text-white/50 mt-0.5">{members.length} member(s)</p>
+        <p className="text-xs text-white/60 mt-0.5">{members.length} member(s)</p>
       </div>
 
       <div className="p-3 space-y-3 border-b border-white/10">
         <Button
           size="sm"
           variant="outline"
-          className="w-full border-[#C8A94A]/40 text-[#C8A94A] hover:bg-[#C8A94A]/10"
+          className="w-full border-[#C8A94A]/50 text-[#C8A94A] hover:bg-[#C8A94A]/15 bg-transparent"
           onClick={handleGenerateInvite}
           disabled={inviteGenerating}
         >
@@ -174,7 +175,7 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
         </Button>
         {inviteUrl && (
           <div className="flex items-center gap-2">
-            <input readOnly value={inviteUrl} className="flex-1 min-w-0 rounded bg-white/5 border border-white/10 px-2 py-1.5 text-xs text-white truncate" />
+            <input readOnly value={inviteUrl} className="flex-1 min-w-0 rounded bg-[#1a2d4a] border border-white/20 px-2 py-1.5 text-xs text-[#F0F4FF] truncate" />
             <button type="button" onClick={copyInvite} className="p-1.5 rounded hover:bg-white/10 text-white" title="Copy">
               {inviteCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
             </button>
@@ -182,21 +183,21 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
         )}
 
         <Dialog open={addMemberOpen} onOpenChange={(o) => { setAddMemberOpen(o); if (!o) setAddError(null) }}>
-          <Button size="sm" variant="outline" className="w-full border-white/20 text-white/90 hover:bg-white/10" onClick={() => setAddMemberOpen(true)}>
+          <Button size="sm" variant="outline" className="w-full border-white/30 text-[#F0F4FF] hover:bg-white/10 bg-transparent" onClick={() => setAddMemberOpen(true)}>
             <UserPlus className="w-4 h-4 mr-2" />
             Add member
           </Button>
-          <DialogContent className="bg-[#0D1F3C] border-white/10 text-white max-w-md">
+          <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
             <DialogHeader>
-              <DialogTitle className="text-white">Add member</DialogTitle>
-              <DialogDescription className="text-white/70">Search by name or email. They must have a RecruitNC account.</DialogDescription>
+            <DialogTitle className="text-[#F0F4FF]">Add member</DialogTitle>
+            <DialogDescription className="text-white/70">Search by name or email. They must have a RecruitNC account.</DialogDescription>
             </DialogHeader>
             <div className="space-y-3 pt-2">
               <Input
                 placeholder="Search name or email…"
                 value={addSearch}
                 onChange={(e) => setAddSearch(e.target.value)}
-                className="bg-white/5 border-white/10 text-white"
+                className="!bg-[#1a2d4a] !border-white/20 !text-[#F0F4FF] placeholder:!text-white/40"
               />
               <div className="max-h-48 overflow-y-auto space-y-1">
                 {addSearching && <p className="text-sm text-white/50">Searching…</p>}
@@ -207,10 +208,10 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
                     type="button"
                     onClick={() => handleAddMember(u.user_id)}
                     disabled={addSubmitting}
-                    className="w-full text-left px-3 py-2 rounded bg-white/5 hover:bg-white/10 text-sm flex flex-col gap-0.5"
+                    className="w-full text-left px-3 py-2 rounded bg-white/10 hover:bg-white/15 text-sm flex flex-col gap-0.5 text-[#F0F4FF]"
                   >
                     <span className="font-medium">{u.display_name}</span>
-                    {u.email && <span className="text-xs text-white/50">{u.email}</span>}
+                    {u.email && <span className="text-xs text-white/60">{u.email}</span>}
                   </button>
                 ))}
               </div>
@@ -220,22 +221,22 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
         </Dialog>
 
         <Dialog open={syncOpen} onOpenChange={(o) => { setSyncOpen(o); if (!o) setSyncResult(null) }}>
-          <Button size="sm" variant="outline" className="w-full border-white/20 text-white/90 hover:bg-white/10" onClick={() => setSyncOpen(true)}>
+          <Button size="sm" variant="outline" className="w-full border-white/30 text-[#F0F4FF] hover:bg-white/10 bg-transparent" onClick={() => setSyncOpen(true)}>
             <Users className="w-4 h-4 mr-2" />
             Add from event
           </Button>
-          <DialogContent className="bg-[#0D1F3C] border-white/10 text-white max-w-md">
+          <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
             <DialogHeader>
-              <DialogTitle className="text-white">Add members from event</DialogTitle>
+              <DialogTitle className="text-[#F0F4FF]">Add members from event</DialogTitle>
               <DialogDescription className="text-white/70">Add everyone with a paid registration for this event who has a RecruitNC account.</DialogDescription>
             </DialogHeader>
             <div className="space-y-3 pt-2">
-              <Label className="text-white/80">Event slug</Label>
+              <Label className="text-[#F0F4FF]">Event slug</Label>
               <Input
                 value={syncSlug}
                 onChange={(e) => setSyncSlug(e.target.value)}
                 placeholder="nhsca-duals-2026"
-                className="bg-white/5 border-white/10 text-white"
+                className="!bg-[#1a2d4a] !border-white/20 !text-[#F0F4FF] placeholder:!text-white/40"
               />
               <Button onClick={handleSyncEvent} disabled={syncSubmitting} className="w-full bg-[#C8A94A] text-[#0B2545] hover:bg-[#E2C46A]">
                 {syncSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
@@ -256,11 +257,19 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
           <ul className="space-y-2">
             {members.map((m) => (
               <li key={m.user_id} className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{m.display_name}</p>
-                  <p className="text-xs text-white/50 truncate">{m.role}</p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Avatar className="h-8 w-8 flex-shrink-0 rounded-full border border-white/20">
+                    <AvatarImage src={m.headshot_url ?? undefined} alt="" />
+                    <AvatarFallback className="bg-white/10 text-white text-xs">
+                      {m.display_name.slice(0, 2).toUpperCase().replace(/[^A-Z0-9]/gi, "") || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[#F0F4FF] truncate">{m.display_name}</p>
+                    <p className="text-xs text-white/60 truncate">{m.role}</p>
+                  </div>
                 </div>
-                <span className={cn("text-xs px-2 py-0.5 rounded", m.role === "admin" || m.role === "coach" ? "bg-[#C8A94A]/20 text-[#C8A94A]" : "bg-white/10 text-white/70")}>
+                <span className={cn("text-xs px-2 py-0.5 rounded flex-shrink-0", m.role === "admin" || m.role === "coach" ? "bg-[#C8A94A]/20 text-[#C8A94A]" : "bg-white/10 text-white/70")}>
                   {m.role}
                 </span>
               </li>

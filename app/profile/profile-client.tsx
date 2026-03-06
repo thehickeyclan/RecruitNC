@@ -24,7 +24,8 @@ import {
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Pause, Ban } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Pause, Ban, Upload, X } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -48,6 +49,7 @@ interface UserProfile {
   athlete_name?: string
   notify_sms_new_messages?: boolean
   notify_email_new_messages?: boolean
+  headshot_url?: string | null
 }
 
 export function ProfileClient() {
@@ -72,6 +74,7 @@ export function ProfileClient() {
   const [athleteSearchResults, setAthleteSearchResults] = useState<{ id: string; name: string; highschool: string | null; graduationyear: number | null; alreadyLinked: boolean }[]>([])
   const [athleteSearchLoading, setAthleteSearchLoading] = useState(false)
   const [linkAthleteLoading, setLinkAthleteLoading] = useState<string | null>(null)
+  const [headshotUploading, setHeadshotUploading] = useState(false)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -342,6 +345,56 @@ export function ProfileClient() {
     }
   }
 
+  const handleHeadshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !profile) return
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be less than 5MB")
+      return
+    }
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file")
+      return
+    }
+    setHeadshotUploading(true)
+    setError("")
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/profile/headshot-upload", { method: "POST", credentials: "include", body: formData })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error ?? "Upload failed")
+      setProfile({ ...profile, headshot_url: data.url })
+      setSuccess("Profile photo updated.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload photo")
+    } finally {
+      setHeadshotUploading(false)
+      e.target.value = ""
+    }
+  }
+
+  const handleRemoveHeadshot = async () => {
+    if (!profile) return
+    setHeadshotUploading(true)
+    setError("")
+    try {
+      const res = await fetch("/api/profile/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ headshot_url: null }),
+      })
+      if (!res.ok) throw new Error("Failed to remove photo")
+      setProfile({ ...profile, headshot_url: null })
+      setSuccess("Profile photo removed.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove photo")
+    } finally {
+      setHeadshotUploading(false)
+    }
+  }
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -432,6 +485,43 @@ export function ProfileClient() {
                     <AlertDescription className="text-green-800">{success}</AlertDescription>
                   </Alert>
                 )}
+
+                {/* Profile photo (headshot) — used in Community/messaging avatar */}
+                <div className="mb-6 pb-6 border-b">
+                  <Label className="text-sm font-medium">Profile photo</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5 mb-3">Shown next to your name in Community and messaging.</p>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-20 w-20 rounded-full border-2 border-gray-200">
+                      <AvatarImage src={profile.headshot_url ?? undefined} alt="Profile" />
+                      <AvatarFallback className="bg-gray-200 text-gray-600 text-xl">
+                        {(profile.name || profile.email || "?").slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col gap-2">
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="sr-only"
+                          disabled={headshotUploading}
+                          onChange={handleHeadshotUpload}
+                        />
+                        <Button type="button" variant="outline" size="sm" className="pointer-events-none" asChild>
+                          <span>
+                            {headshotUploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                            {headshotUploading ? "Uploading…" : "Upload headshot"}
+                          </span>
+                        </Button>
+                      </label>
+                      {profile.headshot_url && (
+                        <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" disabled={headshotUploading} onClick={handleRemoveHeadshot}>
+                          <X className="h-4 w-4 mr-2" />
+                          Remove photo
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 <form onSubmit={handleSave} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
