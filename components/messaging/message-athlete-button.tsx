@@ -2,12 +2,6 @@
 
 import { useState, useCallback } from "react"
 import { Mail } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useAuth } from "@/contexts/auth-context"
 
 interface MessageAthleteButtonProps {
@@ -86,51 +80,38 @@ export function MessageAthleteButton({
     await startDm(otherUserId)
   }, [user, athleteId, claimedByUserId, startDm])
 
+  const label = athleteName ? `Message ${athleteName}` : "Message"
+  const titleText = error ?? (loading ? "Opening conversation…" : label)
+
   if (!user) {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <a
-              href={`/auth/signin?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/")}`}
-              className={
-                className ??
-                "inline-flex h-8 w-8 items-center justify-center rounded border border-transparent text-gray-500 hover:bg-gray-100 hover:text-[#003366]"
-              }
-              aria-label={athleteName ? `Message ${athleteName}` : "Message"}
-            >
-              <Mail className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} />
-            </a>
-          </TooltipTrigger>
-          <TooltipContent>Sign in to message</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <a
+        href={`/auth/signin?returnTo=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "/")}`}
+        className={
+          className ??
+          "inline-flex h-8 w-8 items-center justify-center rounded border border-transparent text-gray-500 hover:bg-gray-100 hover:text-[#003366]"
+        }
+        aria-label={athleteName ? `Message ${athleteName}` : "Message"}
+        title="Sign in to message"
+      >
+        <Mail className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} />
+      </a>
     )
   }
 
-  const label = athleteName ? `Message ${athleteName}` : "Message"
-
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={handleClick}
-            disabled={loading}
-            className={
-              className ??
-              "inline-flex h-8 w-8 items-center justify-center rounded border border-transparent text-gray-500 hover:bg-gray-100 hover:text-[#003366] disabled:opacity-50"
-            }
-            aria-label={label}
-          >
-            <Mail className={iconClassName ?? (size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4")} />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent>
-          {error ?? (loading ? "Opening conversation…" : label)}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      title={titleText}
+      className={
+        className ??
+        "inline-flex h-8 w-8 items-center justify-center rounded border border-transparent text-gray-500 hover:bg-gray-100 hover:text-[#003366] disabled:opacity-50"
+      }
+      aria-label={label}
+    >
+      <Mail className={iconClassName ?? (size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4")} />
+    </button>
   )
 }
