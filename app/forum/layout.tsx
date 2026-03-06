@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ForumMembersPanel } from "@/components/forum/forum-members-panel"
 
 type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
 type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
@@ -276,16 +277,7 @@ export default function ForumLayout({
           <div className="flex-1 overflow-auto min-w-0">
             {children}
           </div>
-          {membersOpen && (
-            <aside className="hidden sm:flex flex-col w-[260px] flex-shrink-0 bg-[#0D1F3C] border-l border-white/10 overflow-y-auto">
-              <div className="p-3 border-b border-white/10">
-                <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-                  Members
-                </p>
-                <p className="text-xs text-white/50 mt-0.5">Panel — add member list when viewing a group channel</p>
-              </div>
-            </aside>
-          )}
+          {membersOpen && <ForumMembersPanel pathname={pathname} />}
         </div>
       </main>
     </div>

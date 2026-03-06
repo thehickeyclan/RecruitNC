@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Users2, Trophy, Medal, ShoppingCart, MessageCircle, ShoppingBag } from "lucide-react"
+import { Menu, User, LogOut, Star, ChevronDown, Users, Users2, Trophy, Medal, ShoppingCart, MessageCircle, ShoppingBag, Bell } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -22,15 +22,21 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
+type NavNotification = { id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
   const [hubAccess, setHubAccess] = useState(false)
+  const [notifications, setNotifications] = useState<NavNotification[]>([])
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
+  const unreadNotifications = notifications.filter((n) => !n.read_at).length
 
   useEffect(() => {
     if (!user) {
@@ -73,6 +79,43 @@ export function Navbar() {
       document.removeEventListener("visibilitychange", onVisibilityChange)
     }
   }, [user, fetchUnreadMessages])
+
+  const fetchNotifications = useCallback(() => {
+    if (!user) return
+    fetch("/api/notifications", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setNotifications(Array.isArray(data?.notifications) ? data.notifications : []))
+      .catch(() => setNotifications([]))
+  }, [user])
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([])
+      return
+    }
+    fetchNotifications()
+  }, [user, fetchNotifications])
+
+  useEffect(() => {
+    if (user && notificationsOpen) fetchNotifications()
+  }, [user, notificationsOpen, fetchNotifications])
+
+  const markNotificationRead = useCallback((id: string) => {
+    fetch(`/api/notifications/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ read: true }),
+    }).then(() => {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)))
+    })
+  }, [])
+
+  const markAllNotificationsRead = useCallback(() => {
+    fetch("/api/notifications/read-all", { method: "PATCH", credentials: "include" }).then(() => {
+      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })))
+    })
+  }, [])
 
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href))
   const isDropdownActive = (items: { href: string }[]) => items.some((item) => isActive(item.href))
@@ -339,7 +382,7 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Icons: Messages, Team hub (if access), Cart + Auth. Store is in main nav. */}
+          {/* Icons: Messages, Notifications, Team hub (if access), Cart + Auth. Store is in main nav. */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
             {user && (
               <a href="/messages" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
@@ -350,6 +393,64 @@ export function Navbar() {
                   </span>
                 )}
               </a>
+            )}
+            {user && (
+              <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors"
+                    aria-label={unreadNotifications > 0 ? `Notifications (${unreadNotifications} unread)` : "Notifications"}
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-[340px] p-0" sideOffset={8}>
+                  <div className="border-b px-3 py-2 flex items-center justify-between">
+                    <span className="font-semibold text-sm">Notifications</span>
+                    {unreadNotifications > 0 && (
+                      <button
+                        type="button"
+                        onClick={markAllNotificationsRead}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">No notifications yet.</p>
+                    ) : (
+                      notifications.map((n) => {
+                        const href = n.link || "#"
+                        return (
+                          <a
+                            key={n.id}
+                            href={href}
+                            onClick={() => {
+                              markNotificationRead(n.id)
+                              setNotificationsOpen(false)
+                            }}
+                            className={`block px-3 py-2.5 text-left border-b border-border/50 last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
+                          >
+                            <p className="text-sm font-medium">{n.title}</p>
+                            {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                            </p>
+                          </a>
+                        )
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
             {user && hubAccess && (
               <a href="/national-team/hub" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Team hub">
@@ -442,6 +543,65 @@ export function Navbar() {
                   </span>
                 )}
               </a>
+            )}
+            {/* Notifications bell - when logged in */}
+            {user && (
+              <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]"
+                    aria-label={unreadNotifications > 0 ? `Notifications (${unreadNotifications} unread)` : "Notifications"}
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </span>
+                    )}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-[min(340px,100vw-24px)] p-0" sideOffset={8}>
+                  <div className="border-b px-3 py-2 flex items-center justify-between">
+                    <span className="font-semibold text-sm">Notifications</span>
+                    {unreadNotifications > 0 && (
+                      <button
+                        type="button"
+                        onClick={markAllNotificationsRead}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-muted-foreground text-center">No notifications yet.</p>
+                    ) : (
+                      notifications.map((n) => {
+                        const href = n.link || "#"
+                        return (
+                          <a
+                            key={n.id}
+                            href={href}
+                            onClick={() => {
+                              markNotificationRead(n.id)
+                              setNotificationsOpen(false)
+                            }}
+                            className={`block px-3 py-2.5 text-left border-b border-border/50 last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
+                          >
+                            <p className="text-sm font-medium">{n.title}</p>
+                            {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                            </p>
+                          </a>
+                        )
+                      })
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
             {/* Cart icon (shopping cart) - always visible */}
             <a href="/cart" target="_top" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
