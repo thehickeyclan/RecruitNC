@@ -169,7 +169,7 @@ export default function ForumLayout({
                 <li>{forYou.eventsThisWeek} event{forYou.eventsThisWeek !== 1 ? "s" : ""} this week</li>
               )}
               {forYou.unreadChatCount > 0 && (
-                <li>{forYou.unreadChatCount} unread in chat</li>
+                <li>{forYou.unreadChatCount} unread</li>
               )}
             </ul>
           </div>
@@ -492,7 +492,7 @@ export default function ForumLayout({
             <HardLink
               href="/forum"
               className="min-h-[44px] px-2 flex items-center justify-center gap-1 rounded hover:bg-white/10 text-sm text-white/70 touch-manipulation"
-              aria-label="Search chats and messages"
+              aria-label="Search messages"
               title="Search"
             >
               <Search className="w-5 h-5 sm:w-4 sm:h-4" />

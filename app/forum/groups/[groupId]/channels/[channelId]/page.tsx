@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus, Users } from "lucide-react"
+import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus, Users, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ForumMessageBody, type CustomEmojiItem } from "@/components/forum/forum-message-body"
 import { useForumLayout } from "@/contexts/forum-layout-context"
@@ -11,6 +11,7 @@ import { ForumEmojiPicker, type CustomEmojiWithCategory } from "@/components/for
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { HardLink } from "@/components/hard-link"
 
 type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
 
@@ -321,8 +322,11 @@ export default function ForumChannelPage() {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-shrink-0 px-4 py-2 border-b border-white/10 flex items-center justify-between gap-2">
-        <h1 className="text-lg font-bold text-white min-w-0 truncate" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          {groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}
+        <h1 className="text-lg font-bold text-white min-w-0 truncate flex items-center gap-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <HardLink href="/national-team/hub" className="text-white hover:text-[#C8A94A] truncate flex items-center gap-1.5 min-h-[44px] touch-manipulation">
+            {groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}
+            <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-70" aria-hidden />
+          </HardLink>
         </h1>
         {showPeopleIcon && (
           <button

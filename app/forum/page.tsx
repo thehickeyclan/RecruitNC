@@ -19,7 +19,7 @@ export default function ForumPage() {
   const [hubData, setHubData] = useState<HubData | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeFilter, setActiveFilter] = useState<"dms" | "groups" | "hubs">("dms")
+  const [activeFilter, setActiveFilter] = useState<"dms" | "groups" | "hubs">("groups")
 
   useEffect(() => {
     if (!user) {
@@ -85,15 +85,15 @@ export default function ForumPage() {
           <input
             id="forum-search"
             type="search"
-            placeholder="Search chats and messages"
+            placeholder="Search messages"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
-            aria-label="Search chats and messages"
+            aria-label="Search messages"
           />
         </div>
         <div className="flex gap-2">
-          {(["dms", "groups", "hubs"] as const).map((filter) => (
+          {(["groups", "dms", "hubs"] as const).map((filter) => (
             <button
               key={filter}
               type="button"
@@ -105,8 +105,8 @@ export default function ForumPage() {
                   : "bg-white/10 text-white/80 hover:bg-white/15"
               )}
             >
-              {filter === "dms" && "DMs"}
               {filter === "groups" && "Groups"}
+              {filter === "dms" && "DMs"}
               {filter === "hubs" && "Hubs"}
             </button>
           ))}
@@ -120,42 +120,6 @@ export default function ForumPage() {
           </div>
         ) : (
           <>
-            {activeFilter === "dms" && (
-              <ul className="space-y-0.5">
-                {dms.length === 0 ? (
-                  <li className="px-4 py-6 text-center text-white/50 text-sm">
-                    {q ? "No DMs match your search." : "No direct messages yet. Use + in the sidebar to message someone."}
-                  </li>
-                ) : (
-                  dms.map((dm) => {
-                    const unread = dm.unread_count ?? 0
-                    const hasUnread = unread > 0
-                    return (
-                      <li key={dm.id}>
-                        <HardLink
-                          href={`/forum/dm/${dm.id}`}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors touch-manipulation"
-                        >
-                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#C8A94A]/20 flex items-center justify-center">
-                            <MessageCircle className="w-6 h-6 text-[#C8A94A]" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className={cn("font-medium text-white truncate", hasUnread && "font-bold")}>{dm.name}</p>
-                            <p className="text-xs text-white/50 truncate">Direct message</p>
-                          </div>
-                          {hasUnread && (
-                            <span className="flex-shrink-0 min-w-[24px] h-6 px-2 rounded-full bg-[#C8A94A] text-[#0B2545] text-xs font-bold flex items-center justify-center">
-                              {unread > 99 ? "99+" : unread}
-                            </span>
-                          )}
-                        </HardLink>
-                      </li>
-                    )
-                  })
-                )}
-              </ul>
-            )}
-
             {activeFilter === "groups" && (
               <div className="space-y-4">
                 {groups.length === 0 ? (
@@ -231,11 +195,47 @@ export default function ForumPage() {
               </div>
             )}
 
+            {activeFilter === "dms" && (
+              <ul className="space-y-0.5">
+                {dms.length === 0 ? (
+                  <li className="px-4 py-6 text-center text-white/50 text-sm">
+                    {q ? "No DMs match your search." : "No direct messages yet. Use + in the sidebar to message someone."}
+                  </li>
+                ) : (
+                  dms.map((dm) => {
+                    const unread = dm.unread_count ?? 0
+                    const hasUnread = unread > 0
+                    return (
+                      <li key={dm.id}>
+                        <HardLink
+                          href={`/forum/dm/${dm.id}`}
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors touch-manipulation"
+                        >
+                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#C8A94A]/20 flex items-center justify-center">
+                            <MessageCircle className="w-6 h-6 text-[#C8A94A]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={cn("font-medium text-white truncate", hasUnread && "font-bold")}>{dm.name}</p>
+                            <p className="text-xs text-white/50 truncate">Direct message</p>
+                          </div>
+                          {hasUnread && (
+                            <span className="flex-shrink-0 min-w-[24px] h-6 px-2 rounded-full bg-[#C8A94A] text-[#0B2545] text-xs font-bold flex items-center justify-center">
+                              {unread > 99 ? "99+" : unread}
+                            </span>
+                          )}
+                        </HardLink>
+                      </li>
+                    )
+                  })
+                )}
+              </ul>
+            )}
+
             {activeFilter === "hubs" && (
               <ul className="space-y-0.5">
                 {hubs.length === 0 ? (
                   <li className="px-4 py-6 text-center text-white/50 text-sm">
-                    {q ? "No hubs match your search." : "No event hubs with chat yet. Register for an event to see it here."}
+                    {q ? "No hubs match your search." : "No event hubs yet. Register for an event to see it here."}
                   </li>
                 ) : (
                   hubs.map((event) => {
@@ -251,7 +251,7 @@ export default function ForumPage() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-white truncate">{event.eventName}</p>
-                            <p className="text-xs text-white/50 truncate">Event hub · Chat</p>
+                            <p className="text-xs text-white/50 truncate">Event hub</p>
                           </div>
                         </HardLink>
                       </li>
