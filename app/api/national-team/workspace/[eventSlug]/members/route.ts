@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getEventName } from "@/lib/national-team-events"
 
-/** POST: Add a member to the event workspace by email or user_id (RecruitNC user). They are auto-added to the forum. Caller must be a workspace member. */
+/** POST: Add a member to the event workspace by email or user_id (RecruitNC user). They are auto-added to the forum. Caller must be a workspace member. Sends email + SMS with hub link. */
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ eventSlug: string }> }
@@ -62,24 +63,27 @@ export async function POST(
 
   let userIdToAdd: string
   let emailForNotification: string
+  let cellPhoneForSms: string | null = null
 
   if (userIdInput) {
     // Add by user_id (from RecruitNC user lookup).
     const { data: profile } = await admin
       .from("user_profiles")
-      .select("user_id, email")
+      .select("user_id, email, cell_phone")
       .eq("user_id", userIdInput)
       .maybeSingle()
     if (!profile) {
       return NextResponse.json({ error: "User not found." }, { status: 404 })
     }
-    userIdToAdd = (profile as { user_id: string }).user_id
-    emailForNotification = (profile as { email?: string | null }).email ?? ""
+    const p = profile as { user_id: string; email?: string | null; cell_phone?: string | null }
+    userIdToAdd = p.user_id
+    emailForNotification = p.email ?? ""
+    cellPhoneForSms = (p.cell_phone ?? "").trim() || null
   } else {
     // Resolve email → user_id (user_profiles; auth users have profiles after signup).
     const { data: profile } = await admin
       .from("user_profiles")
-      .select("user_id, email")
+      .select("user_id, email, cell_phone")
       .ilike("email", emailInput)
       .maybeSingle()
     const uid = (profile as { user_id?: string } | null)?.user_id
@@ -89,8 +93,10 @@ export async function POST(
         { status: 404 }
       )
     }
+    const p = profile as { user_id: string; email?: string | null; cell_phone?: string | null }
     userIdToAdd = uid
-    emailForNotification = (profile as { email?: string | null })?.email ?? emailInput
+    emailForNotification = p.email ?? emailInput
+    cellPhoneForSms = (p.cell_phone ?? "").trim() || null
   }
 
   if (userIdToAdd === user.id) {
@@ -146,14 +152,29 @@ export async function POST(
         joined_at: now,
       })
     }
-    // Notify the user they were added — email with link to the group (Messages). From the thread they can open Team hub for the event workspace.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://www.ncwrestlingunited.com"
-    const threadUrl = `${baseUrl.replace(/\/$/, "")}/messages/${threadId}`
+  }
+
+  // Notify the user they were added: email + SMS with link to the hub (not just the thread).
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://www.ncwrestlingunited.com"
+  const hubUrl = `${baseUrl.replace(/\/$/, "")}/national-team/hub`
+  const eventName = getEventName(eventSlug)
+  if (emailForNotification) {
     try {
-      const { sendAddedToGroupEmail } = await import("@/lib/email")
-      await sendAddedToGroupEmail(emailForNotification, threadName, threadUrl)
+      const { sendAddedToHubEmail } = await import("@/lib/email")
+      await sendAddedToHubEmail(emailForNotification, eventName, hubUrl)
     } catch (e) {
       console.error("[RecruitNC] workspace add-member email:", e)
+    }
+  }
+  if (cellPhoneForSms) {
+    try {
+      const { sendSms, toE164 } = await import("@/lib/sms")
+      const e164 = toE164(cellPhoneForSms)
+      if (e164) {
+        await sendSms(e164, `RecruitNC: You've been added to ${eventName}. View hub: ${hubUrl}`)
+      }
+    } catch (e) {
+      console.error("[RecruitNC] workspace add-member SMS:", e)
     }
   }
 
