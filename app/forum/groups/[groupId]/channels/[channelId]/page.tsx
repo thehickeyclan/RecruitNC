@@ -42,6 +42,7 @@ export default function ForumChannelPage() {
   const [channelName, setChannelName] = useState<string>("")
   const [groupName, setGroupName] = useState<string | null>(null)
   const [customEmoji, setCustomEmoji] = useState<CustomEmojiItem[]>([])
+  const [authors, setAuthors] = useState<Record<string, { display_name: string; headshot_url: string | null }>>({})
   const [replyingTo, setReplyingTo] = useState<{ id: string; snippet: string } | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState("")
