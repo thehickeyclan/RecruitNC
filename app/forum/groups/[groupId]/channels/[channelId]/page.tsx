@@ -3,9 +3,10 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus } from "lucide-react"
+import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ForumMessageBody, type CustomEmojiItem } from "@/components/forum/forum-message-body"
+import { useForumLayout } from "@/contexts/forum-layout-context"
 import { ForumEmojiPicker, type CustomEmojiWithCategory } from "@/components/forum/forum-emoji-picker"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -314,13 +315,26 @@ export default function ForumChannelPage() {
   )
 
   const chronological = [...messages].reverse()
+  const forumLayout = useForumLayout()
+  const showPeopleIcon = forumLayout?.isGroupChannel
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-shrink-0 px-4 py-2 border-b border-white/10">
-        <h1 className="text-lg font-bold text-white" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+      <div className="flex-shrink-0 px-4 py-2 border-b border-white/10 flex items-center justify-between gap-2">
+        <h1 className="text-lg font-bold text-white min-w-0 truncate" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
           {groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}
         </h1>
+        {showPeopleIcon && (
+          <button
+            type="button"
+            onClick={() => forumLayout?.openMembersPanel()}
+            className="flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-white/90 hover:text-white hover:bg-white/10 touch-manipulation"
+            aria-label="Members — add people or share invite link"
+            title="Members — add people or share invite link"
+          >
+            <Users className="w-6 h-6" />
+          </button>
+        )}
       </div>
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col-reverse min-h-0">

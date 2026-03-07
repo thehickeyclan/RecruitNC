@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic"
 export type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
 export type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
 export type ForumDmConversation = { id: string; type: string; last_message_at: string | null }
-export type LegacyDm = { id: string; name: string }
+export type LegacyDm = { id: string; name: string; unread_count: number }
 
 /**
  * GET /api/forum/sidebar
@@ -100,9 +100,34 @@ export async function GET() {
       .in("id", legacyThreadIds)
       .eq("type", "dm")
       .order("last_message_at", { ascending: false })
+    const { data: memberRows } = await supabase
+      .from("messaging_thread_members")
+      .select("thread_id, last_read_at")
+      .eq("user_id", user.id)
+      .in("thread_id", legacyThreadIds)
+    const lastReadByThread = new Map<string, string | null>()
+    for (const m of memberRows ?? []) {
+      const row = m as { thread_id: string; last_read_at: string | null }
+      lastReadByThread.set(row.thread_id, row.last_read_at ?? null)
+    }
+    const { data: msgRows } = await supabase
+      .from("messaging_messages")
+      .select("thread_id, created_at, sender_id")
+      .in("thread_id", legacyThreadIds)
+      .neq("sender_id", user.id)
+    const unreadByThread = new Map<string, number>()
+    for (const tid of legacyThreadIds) unreadByThread.set(tid, 0)
+    for (const msg of msgRows ?? []) {
+      const row = msg as { thread_id: string; created_at: string; sender_id: string }
+      const lastRead = lastReadByThread.get(row.thread_id) ?? "1970-01-01T00:00:00Z"
+      if (new Date(row.created_at).getTime() > new Date(lastRead).getTime()) {
+        unreadByThread.set(row.thread_id, (unreadByThread.get(row.thread_id) ?? 0) + 1)
+      }
+    }
     legacyDms = (threadRows ?? []).map((r) => ({
       id: (r as { id: string }).id,
       name: (r as { name?: string | null }).name ?? "Direct message",
+      unread_count: unreadByThread.get((r as { id: string }).id) ?? 0,
     }))
   }
 

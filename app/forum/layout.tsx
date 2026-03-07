@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { HardLink } from "@/components/hard-link"
-import { MessageCircle, Search, Users, ChevronRight, Menu, Plus, LayoutDashboard, Bell } from "lucide-react"
+import { MessageCircle, Search, Users, ChevronRight, Menu, Plus, LayoutDashboard, Bell, Lock, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -18,11 +18,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ForumMembersPanel } from "@/components/forum/forum-members-panel"
+import { ForumLayoutProvider } from "@/contexts/forum-layout-context"
 
 type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
 type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
 type ForumDm = { id: string; type: string; last_message_at: string | null }
-type LegacyDm = { id: string; name: string }
+type LegacyDm = { id: string; name: string; unread_count?: number }
 type SearchUser = { user_id: string; display_name: string; email?: string | null }
 
 export default function ForumLayout({
@@ -87,6 +88,8 @@ export default function ForumLayout({
   const filteredGroups = q
     ? groups.filter((g) => g.name.toLowerCase().includes(q))
     : groups
+  const filteredPrivateGroups = filteredGroups.filter((g) => (g as { visibility?: string }).visibility === "public" ? false : true)
+  const filteredPublicGroups = filteredGroups.filter((g) => (g as { visibility?: string }).visibility === "public")
   const filteredDms = q
     ? dmConversations.filter((d) => d.id.includes(q))
     : dmConversations
@@ -260,20 +263,29 @@ export default function ForumLayout({
             <p className="px-3 text-sm text-white/50">No conversations yet. Use + to message any user.</p>
           ) : (
             <ul className="space-y-0.5">
-              {filteredLegacyDms.map((dm) => (
-                <li key={`legacy-${dm.id}`}>
-                  <HardLink
-                    href={`/forum/dm/${dm.id}`}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
-                      pathname === `/forum/dm/${dm.id}` ? "bg-[#0B2545]/50 border-[#C8A94A] text-white" : "border-transparent text-white/80 hover:bg-white/5"
-                    )}
-                  >
-                    <MessageCircle className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate">{dm.name}</span>
-                  </HardLink>
-                </li>
-              ))}
+              {filteredLegacyDms.map((dm) => {
+                const unread = dm.unread_count ?? 0
+                const hasUnread = unread > 0
+                return (
+                  <li key={`legacy-${dm.id}`}>
+                    <HardLink
+                      href={`/forum/dm/${dm.id}`}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
+                        pathname === `/forum/dm/${dm.id}` ? "bg-[#0B2545]/50 border-[#C8A94A] text-white" : "border-transparent text-white/80 hover:bg-white/5"
+                      )}
+                    >
+                      <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                      <span className={cn("truncate flex-1 min-w-0", hasUnread && "font-bold text-white")}>{dm.name}</span>
+                      {hasUnread && (
+                        <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-[#C8A94A] text-[#0B2545] text-xs font-bold flex items-center justify-center">
+                          {unread > 99 ? "99+" : unread}
+                        </span>
+                      )}
+                    </HardLink>
+                  </li>
+                )
+              })}
               {filteredDms.map((dm) => (
                 <li key={dm.id}>
                   <HardLink
@@ -293,11 +305,11 @@ export default function ForumLayout({
 
           <div className="flex items-center justify-between px-3 mt-4 mb-2">
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Groups
+              Private groups
             </p>
             <Dialog open={newGroupOpen} onOpenChange={(o) => { setNewGroupOpen(o); if (!o) setNewGroupName("") }}>
               <DialogTrigger asChild>
-                <button type="button" className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white" aria-label="New group">
+                <button type="button" className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation" aria-label="New group">
                   <Plus className="w-4 h-4" />
                 </button>
               </DialogTrigger>
@@ -354,33 +366,70 @@ export default function ForumLayout({
               </DialogContent>
             </Dialog>
           </div>
-          {filteredGroups.length === 0 ? (
+          {filteredPrivateGroups.length === 0 && filteredPublicGroups.length === 0 ? (
             <p className="px-3 text-sm text-white/50">No groups yet.</p>
           ) : (
-            <ul className="space-y-0.5">
-              {filteredGroups.map((group) => {
-                const singleChannel = group.channels.find((c) => c.name === "general") ?? group.channels[0]
-                if (!singleChannel) return null
-                const href = `/forum/groups/${group.id}/channels/${singleChannel.id}`
-                const active = pathname === href
-                return (
-                  <li key={group.id}>
-                    <HardLink
-                      href={href}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2 min-h-[44px]",
-                        active
-                          ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
-                          : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
-                      )}
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                    >
-                      <span className="truncate">{group.name}</span>
-                    </HardLink>
-                  </li>
-                )
-              })}
-            </ul>
+            <>
+              {filteredPrivateGroups.length > 0 && (
+                <ul className="space-y-0.5 mb-2">
+                  {filteredPrivateGroups.map((group) => {
+                    const singleChannel = group.channels.find((c) => c.name === "general") ?? group.channels[0]
+                    if (!singleChannel) return null
+                    const href = `/forum/groups/${group.id}/channels/${singleChannel.id}`
+                    const active = pathname === href
+                    return (
+                      <li key={group.id}>
+                        <HardLink
+                          href={href}
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2 min-h-[44px] touch-manipulation",
+                            active
+                              ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
+                              : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
+                          )}
+                          style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                        >
+                          <Lock className="w-4 h-4 flex-shrink-0 text-white/60" />
+                          <span className="truncate">{group.name}</span>
+                        </HardLink>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              {filteredPublicGroups.length > 0 && (
+                <>
+                  <p className="px-3 pt-2 pb-1 text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    Public groups
+                  </p>
+                  <ul className="space-y-0.5">
+                    {filteredPublicGroups.map((group) => {
+                      const singleChannel = group.channels.find((c) => c.name === "general") ?? group.channels[0]
+                      if (!singleChannel) return null
+                      const href = `/forum/groups/${group.id}/channels/${singleChannel.id}`
+                      const active = pathname === href
+                      return (
+                        <li key={group.id}>
+                          <HardLink
+                            href={href}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2 min-h-[44px] touch-manipulation",
+                              active
+                                ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
+                                : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
+                            )}
+                            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                          >
+                            <Globe className="w-4 h-4 flex-shrink-0 text-white/60" />
+                            <span className="truncate">{group.name}</span>
+                          </HardLink>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </>
+              )}
+            </>
           )}
 
           <p className="px-3 text-xs font-semibold text-white/50 uppercase tracking-wider mt-4 mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
@@ -439,19 +488,36 @@ export default function ForumLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
+          {pathname !== "/forum" && (
+            <HardLink
+              href="/forum"
+              className="min-h-[44px] px-2 flex items-center justify-center gap-1 rounded hover:bg-white/10 text-sm text-white/70 touch-manipulation"
+              aria-label="Search chats and messages"
+              title="Search"
+            >
+              <Search className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Search</span>
+            </HardLink>
+          )}
           <button
             type="button"
             onClick={() => setMembersOpen((o) => !o)}
             className="ml-auto min-h-[44px] min-w-[44px] sm:min-w-0 sm:px-2 flex items-center justify-center sm:justify-start gap-1 rounded hover:bg-white/10 text-sm text-white/70 touch-manipulation"
-            aria-label={membersOpen ? "Hide members" : "Show members"}
+            aria-label={membersOpen ? "Hide members" : "Members — add people or share invite link"}
+            title="Members — add people or share invite link"
           >
             <Users className="w-5 h-5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Members</span>
+            <span className="inline">Members</span>
           </button>
         </header>
         <div className="flex-1 overflow-hidden flex relative">
           <div className="flex-1 overflow-auto min-w-0">
-            {children}
+            <ForumLayoutProvider
+              openMembersPanel={() => setMembersOpen(true)}
+              isGroupChannel={/\/forum\/groups\/[^/]+\/channels\//.test(pathname)}
+            >
+              {children}
+            </ForumLayoutProvider>
           </div>
           {membersOpen && (
             <>

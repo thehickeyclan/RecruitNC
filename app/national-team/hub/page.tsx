@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
+import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 
@@ -111,11 +112,12 @@ export default function NationalTeamHubPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {eventsWithChat.map((e) => {
                 const count = e.forumMessageCount ?? 0
+                const forumHref = `/forum/groups/${e.forumGroupId}/channels/${e.forumChannelId}`
                 return (
-                  <a
+                  <HardLink
                     key={e.eventSlug}
-                    href={`/forum/groups/${e.forumGroupId}/channels/${e.forumChannelId}`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#003366]/30 bg-white px-3 py-2 text-sm font-medium text-[#003366] hover:bg-[#003366]/5 transition-colors"
+                    href={forumHref}
+                    className="inline-flex items-center gap-2 min-h-[44px] rounded-lg border border-[#003366]/30 bg-white px-4 py-3 text-sm font-medium text-[#003366] hover:bg-[#003366]/5 transition-colors touch-manipulation"
                   >
                     <MessageCircle className="h-4 w-4" />
                     {e.eventName}
@@ -125,7 +127,7 @@ export default function NationalTeamHubPage() {
                       </span>
                     )}
                     <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                  </a>
+                  </HardLink>
                 )
               })}
             </div>
