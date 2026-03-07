@@ -28,9 +28,25 @@ export default function ForumDmPage() {
         }
         return r.json()
       })
-      .then((data) => {
-        if (data?.thread?.name) setThreadName(data.thread.name)
-        else setNotFound(true)
+      .then(async (data) => {
+        if (!data?.thread) {
+          setNotFound(true)
+          return
+        }
+        const name = data.thread.name?.trim()
+        if (name) {
+          setThreadName(name)
+          return
+        }
+        try {
+          const membersRes = await fetch(`/api/messaging/threads/${conversationId}/members`, { credentials: "include" })
+          const membersData = await membersRes.json()
+          const members = (membersData?.members ?? []) as { user_id: string; display_name: string }[]
+          const other = members.find((m) => m.user_id !== user?.id)
+          setThreadName(other?.display_name?.trim() || "Direct message")
+        } catch {
+          setThreadName("Direct message")
+        }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
