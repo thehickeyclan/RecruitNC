@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
-import { ThreadView } from "@/components/messaging/thread-view"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -411,6 +410,7 @@ function HubDocumentsList({ contextType, contextId }: { contextType: string; con
 function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
+  const hasForumChat = !!(event.forumGroupId && event.forumChannelId)
   const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
   const [addSearchQuery, setAddSearchQuery] = useState("")
   const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
@@ -481,34 +481,40 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             Dashboard
           </button>
           {hasThread && (
-            <>
-              <button
-                type="button"
-                onClick={() => setActiveTab("updates")}
-                className={cn(
-                  "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
-                  activeTab === "updates"
-                    ? "border-[#003366] text-[#003366] bg-white"
-                    : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
-                )}
-              >
-                <Megaphone className="inline-block w-4 h-4 mr-1.5 align-middle" />
-                Updates
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("chat")}
-                className={cn(
-                  "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
-                  activeTab === "chat"
-                    ? "border-[#003366] text-[#003366] bg-white"
-                    : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
-                )}
-              >
-                <MessageCircle className="inline-block w-4 h-4 mr-1.5 align-middle" />
-                Chat
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => setActiveTab("updates")}
+              className={cn(
+                "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+                activeTab === "updates"
+                  ? "border-[#003366] text-[#003366] bg-white"
+                  : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+              )}
+            >
+              <Megaphone className="inline-block w-4 h-4 mr-1.5 align-middle" />
+              Updates
+            </button>
+          )}
+          {hasForumChat && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("chat")}
+              className={cn(
+                "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+                activeTab === "chat"
+                  ? "border-[#003366] text-[#003366] bg-white"
+                  : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+              )}
+            >
+              <MessageCircle className="inline-block w-4 h-4 mr-1.5 align-middle" />
+              Chat
+              {(event.forumMessageCount ?? 0) > 0 && (
+                <span className="ml-1.5 rounded-full bg-[#003366]/15 px-1.5 py-0.5 text-xs font-medium text-[#003366]">
+                  {event.forumMessageCount}
+                </span>
+              )}
+              <span className="ml-1 text-xs text-gray-500 font-normal">· {event.eventName}</span>
+            </button>
           )}
         </div>
       </CardHeader>
@@ -519,17 +525,27 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             <HubUpdatesList threadId={event.threadId!} />
           </div>
         )}
-        {activeTab === "chat" && hasThread && (
+        {activeTab === "chat" && hasForumChat && (
           <div className="rounded-2xl border border-[#003366]/15 bg-white overflow-hidden">
-            <div className="flex flex-col h-[420px]">
-              <ThreadView
-                threadId={event.threadId!}
-                threadName={`${event.eventName} chat`}
-                currentUserId={currentUserId}
-              />
-            </div>
-            <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
-              <a href="/forum" className="text-xs text-[#003366] font-medium hover:underline">Open in Community</a> for full view
+            <div className="p-6 space-y-4">
+              <h3 className="text-base font-semibold text-[#002147] flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-[#003366]" />
+                {event.eventName} — Community chat
+              </h3>
+              <p className="text-sm text-gray-600">
+                All event conversation happens in Community. Open the channel to read and send messages.
+              </p>
+              <Button asChild className="bg-[#003366] hover:bg-[#003366]/90">
+                <a href={`/forum/groups/${event.forumGroupId}/channels/${event.forumChannelId}`}>
+                  Open in Community
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+              {(event.forumMessageCount ?? 0) > 0 && (
+                <p className="text-xs text-gray-500">
+                  {event.forumMessageCount} message{(event.forumMessageCount ?? 0) !== 1 ? "s" : ""} in this channel
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -622,24 +638,28 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             </table>
           </div>
         </div>
-        {hasThread && (
+        {hasForumChat && (
           <div className="rounded-2xl border border-[#003366]/15 bg-white shadow-sm overflow-hidden">
             <div className="bg-gradient-to-r from-[#002147]/08 to-[#003366]/08 px-4 py-3 sm:px-5 border-b border-[#003366]/10">
               <h3 className="text-sm font-semibold text-[#002147] flex items-center gap-2">
                 <MessageCircle className="h-4 w-4 text-[#003366]" />
                 Group chat
-                <span className="rounded bg-[#003366]/10 px-1.5 py-0.5 text-[10px] font-normal text-[#003366] uppercase tracking-wide">Forum</span>
+                <span className="rounded bg-[#003366]/10 px-1.5 py-0.5 text-[10px] font-normal text-[#003366] uppercase tracking-wide">Community</span>
               </h3>
               <p className="text-xs text-gray-600 mt-1.5">
-                Use the <strong>Chat</strong> tab for full conversation. <a href="/forum" className="text-[#003366] hover:underline">Open in Community</a>
+                Use the <strong>Chat</strong> tab to open the event channel in Community.
+                {(event.forumMessageCount ?? 0) > 0 && (
+                  <span className="ml-1 text-[#003366] font-medium">{event.forumMessageCount} message{(event.forumMessageCount ?? 0) !== 1 ? "s" : ""}</span>
+                )}
               </p>
             </div>
-            <div className="flex flex-col h-[280px]">
-              <ThreadView
-                threadId={event.threadId!}
-                threadName={`${event.eventName} chat`}
-                currentUserId={currentUserId}
-              />
+            <div className="p-4">
+              <Button asChild variant="outline" size="sm" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
+                <a href={`/forum/groups/${event.forumGroupId}/channels/${event.forumChannelId}`}>
+                  Open in Community
+                  <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
+                </a>
+              </Button>
             </div>
           </div>
         )}

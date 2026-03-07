@@ -23,8 +23,14 @@ export type HubEvent = {
   roster: HubRegistration[]
   /** Registrations for the current user (parent_email match) — their form data. */
   myRegistrations: HubRegistration[]
-  /** Messaging thread ID for this event (context_type=event, context_id=eventSlug), if one exists. */
+  /** @deprecated Use forumGroupId/forumChannelId and Community page. Legacy thread ID for updates tab. */
   threadId: string | null
+  /** Forum group ID when group name matches this event (e.g. "NHSCA Duals 2026") — link Chat tab to Community. */
+  forumGroupId: string | null
+  /** First channel ID of that forum group. */
+  forumChannelId: string | null
+  /** Message count in that channel (for badge on Chat tab). */
+  forumMessageCount: number
 }
 
 export type HubResponse = {
@@ -306,15 +312,62 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     }
   }
 
+  // Resolve forum group + channel by event name (e.g. "NHSCA Duals 2026" → group with that name).
+  const eventNames = eventSlugsToShow.map((s) => getEventName(s))
+  const { data: forumGroupsByName } = await admin
+    .from("forum_groups")
+    .select("id, name")
+    .in("name", eventNames)
+  const nameToForumGroup = new Map<string, { id: string }>()
+  for (const g of forumGroupsByName ?? []) {
+    const row = g as { id: string; name: string }
+    nameToForumGroup.set(row.name, { id: row.id })
+  }
+  const forumGroupIds = [...new Set((forumGroupsByName ?? []).map((g) => (g as { id: string }).id))]
+  const { data: forumChannels } = forumGroupIds.length > 0
+    ? await admin
+        .from("forum_channels")
+        .select("id, group_id")
+        .in("group_id", forumGroupIds)
+        .order("position", { ascending: true })
+    : { data: [] }
+  const firstChannelByGroupId = new Map<string, string>()
+  for (const c of forumChannels ?? []) {
+    const row = c as { id: string; group_id: string }
+    if (!firstChannelByGroupId.has(row.group_id)) firstChannelByGroupId.set(row.group_id, row.id)
+  }
+  const channelIdsForCount = [...firstChannelByGroupId.values()]
+  const messageCountByChannel = new Map<string, number>()
+  if (channelIdsForCount.length > 0) {
+    const { data: countRows } = await admin
+      .from("forum_messages")
+      .select("channel_id")
+      .in("channel_id", channelIdsForCount)
+    const byChannel = new Map<string, number>()
+    for (const r of countRows ?? []) {
+      const id = (r as { channel_id: string }).channel_id
+      byChannel.set(id, (byChannel.get(id) ?? 0) + 1)
+    }
+    byChannel.forEach((count, id) => messageCountByChannel.set(id, count))
+  }
+
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
     const roster = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
     const myRegistrations = roster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    const eventName = getEventName(eventSlug)
+    const fg = nameToForumGroup.get(eventName)
+    const forumGroupId = fg?.id ?? null
+    const forumChannelId = forumGroupId ? firstChannelByGroupId.get(forumGroupId) ?? null : null
+    const forumMessageCount = forumChannelId ? messageCountByChannel.get(forumChannelId) ?? 0 : 0
     return {
       eventSlug,
-      eventName: getEventName(eventSlug),
+      eventName,
       roster,
       myRegistrations,
       threadId: threadIdByEvent.get(eventSlug) ?? null,
+      forumGroupId,
+      forumChannelId,
+      forumMessageCount,
     }
   })
 

@@ -10,7 +10,7 @@ const DEFAULT_MAX_USES = 50
 
 /**
  * POST /api/forum/groups/[groupId]/invite-links
- * Create an invite link for the group. Caller must be admin or coach.
+ * Create an invite link for the group. Caller must be group admin.
  * Returns { code, url, expires_at, max_uses }.
  */
 export async function POST(
@@ -32,8 +32,8 @@ export async function POST(
     .eq("user_id", user.id)
     .maybeSingle()
   const role = (member as { role?: string } | null)?.role
-  if (!member || (role !== "admin" && role !== "coach")) {
-    return NextResponse.json({ error: "Only admins and coaches can create invite links" }, { status: 403 })
+  if (!member || role !== "admin") {
+    return NextResponse.json({ error: "Only group admins can create invite links" }, { status: 403 })
   }
 
   let body: { expires_days?: number; max_uses?: number } = {}

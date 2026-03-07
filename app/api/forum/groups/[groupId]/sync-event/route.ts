@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
  * Body: { event_slug: string } (e.g. "nhsca-duals-2026").
  * Adds all paid registrations for that event to the group (as athlete).
  * Resolves parent_email to user_id via user_profiles. Only adds users who have a RecruitNC account.
- * Caller must be admin or coach of the group.
+ * Caller must be group admin.
  */
 export async function POST(
   request: NextRequest,
@@ -39,8 +39,8 @@ export async function POST(
     .eq("group_id", groupId)
     .eq("user_id", user.id)
     .maybeSingle()
-  if (!myMember || ((myMember as { role: string }).role !== "admin" && (myMember as { role: string }).role !== "coach")) {
-    return NextResponse.json({ error: "Only admins and coaches can sync from event" }, { status: 403 })
+  if (!myMember || (myMember as { role: string }).role !== "admin") {
+    return NextResponse.json({ error: "Only group admins can sync from event" }, { status: 403 })
   }
 
   const { data: regs } = await admin

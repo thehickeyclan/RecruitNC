@@ -77,7 +77,7 @@ export async function GET(
 /**
  * POST /api/forum/groups/[groupId]/members
  * Add a member. Body: { user_id: string, role?: 'athlete'|'parent'|'coach'|'admin' }.
- * Caller must be admin or coach.
+ * Caller must be group admin.
  */
 export async function POST(
   request: NextRequest,
@@ -108,8 +108,8 @@ export async function POST(
     .eq("user_id", user.id)
     .maybeSingle()
   const myRole = (myMember as { role?: string } | null)?.role
-  if (!myMember || (myRole !== "admin" && myRole !== "coach")) {
-    return NextResponse.json({ error: "Only admins and coaches can add members" }, { status: 403 })
+  if (!myMember || myRole !== "admin") {
+    return NextResponse.json({ error: "Only group admins can add members" }, { status: 403 })
   }
 
   const { data: existing } = await admin
@@ -195,7 +195,7 @@ export async function POST(
 /**
  * DELETE /api/forum/groups/[groupId]/members
  * Remove a member. Body: { user_id: string } or query user_id=.
- * Caller must be admin or coach. Cannot remove the last admin.
+ * Caller must be group admin. Cannot remove the last admin.
  */
 export async function DELETE(
   request: NextRequest,
@@ -226,8 +226,8 @@ export async function DELETE(
     .eq("user_id", user.id)
     .maybeSingle()
   const myRole = (myMember as { role?: string } | null)?.role
-  if (!myMember || (myRole !== "admin" && myRole !== "coach")) {
-    return NextResponse.json({ error: "Only admins and coaches can remove members" }, { status: 403 })
+  if (!myMember || myRole !== "admin") {
+    return NextResponse.json({ error: "Only group admins can remove members" }, { status: 403 })
   }
 
   if (userIdToRemove === user.id) {

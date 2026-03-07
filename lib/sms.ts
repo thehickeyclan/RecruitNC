@@ -37,8 +37,10 @@ export async function sendSms(toE164: string, body: string): Promise<boolean> {
   const params: Record<string, string> = { To: to, Body: body }
   if (useMessagingService) {
     params.MessagingServiceSid = TWILIO_MESSAGING_SERVICE_SID
+    console.log("[RecruitNC SMS] Sending via Messaging Service (10DLC)")
   } else {
     params.From = TWILIO_PHONE_NUMBER!.trim()
+    console.log("[RecruitNC SMS] Sending from number (not Messaging Service — 30034 likely)")
   }
   const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`
   const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64")

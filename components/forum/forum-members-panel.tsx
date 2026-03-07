@@ -100,7 +100,8 @@ export function ForumMembersPanel({ pathname, currentUserId }: { pathname: strin
   }, [addMemberOpen, addSearch, members])
 
   const currentUserRole = currentUserId ? members.find((m) => m.user_id === currentUserId)?.role : null
-  const canRemoveMembers = currentUserRole === "admin" || currentUserRole === "coach"
+  const isGroupAdmin = currentUserRole === "admin"
+  const canRemoveMembers = isGroupAdmin
 
   const handleRemoveMember = (userId: string) => {
     if (!groupId || removingId) return
@@ -185,30 +186,32 @@ export function ForumMembersPanel({ pathname, currentUserId }: { pathname: strin
       </div>
 
       <div className="p-3 space-y-3 border-b border-white/10">
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full border-[#C8A94A]/50 text-[#C8A94A] hover:bg-[#C8A94A]/15 bg-transparent"
-          onClick={handleGenerateInvite}
-          disabled={inviteGenerating}
-        >
-          {inviteGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
-          Generate invite link
-        </Button>
-        {inviteUrl && (
-          <div className="flex items-center gap-2">
-            <input readOnly value={inviteUrl} className="flex-1 min-w-0 rounded bg-[#1a2d4a] border border-white/20 px-2 py-1.5 text-xs text-[#F0F4FF] truncate" />
-            <button type="button" onClick={copyInvite} className="p-1.5 rounded hover:bg-white/10 text-white" title="Copy">
-              {inviteCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            </button>
-          </div>
-        )}
+        {isGroupAdmin && (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full border-[#C8A94A]/50 text-[#C8A94A] hover:bg-[#C8A94A]/15 bg-transparent"
+              onClick={handleGenerateInvite}
+              disabled={inviteGenerating}
+            >
+              {inviteGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Link2 className="w-4 h-4 mr-2" />}
+              Generate invite link
+            </Button>
+            {inviteUrl && (
+              <div className="flex items-center gap-2">
+                <input readOnly value={inviteUrl} className="flex-1 min-w-0 rounded bg-[#1a2d4a] border border-white/20 px-2 py-1.5 text-xs text-[#F0F4FF] truncate" />
+                <button type="button" onClick={copyInvite} className="p-1.5 rounded hover:bg-white/10 text-white" title="Copy">
+                  {inviteCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            )}
 
-        <Dialog open={addMemberOpen} onOpenChange={(o) => { setAddMemberOpen(o); if (!o) setAddError(null) }}>
-          <Button size="sm" variant="outline" className="w-full border-white/30 text-[#F0F4FF] hover:bg-white/10 bg-transparent" onClick={() => setAddMemberOpen(true)}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add member
-          </Button>
+            <Dialog open={addMemberOpen} onOpenChange={(o) => { setAddMemberOpen(o); if (!o) setAddError(null) }}>
+              <Button size="sm" variant="outline" className="w-full border-white/30 text-[#F0F4FF] hover:bg-white/10 bg-transparent" onClick={() => setAddMemberOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add member
+              </Button>
           <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
             <DialogHeader>
             <DialogTitle className="text-[#F0F4FF]">Add member</DialogTitle>
@@ -242,32 +245,34 @@ export function ForumMembersPanel({ pathname, currentUserId }: { pathname: strin
           </DialogContent>
         </Dialog>
 
-        <Dialog open={syncOpen} onOpenChange={(o) => { setSyncOpen(o); if (!o) setSyncResult(null) }}>
-          <Button size="sm" variant="outline" className="w-full border-white/30 text-[#F0F4FF] hover:bg-white/10 bg-transparent" onClick={() => setSyncOpen(true)}>
-            <Users className="w-4 h-4 mr-2" />
-            Add from event
-          </Button>
-          <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
-            <DialogHeader>
-              <DialogTitle className="text-[#F0F4FF]">Add members from event</DialogTitle>
-              <DialogDescription className="text-white/70">Add everyone with a paid registration for this event who has a RecruitNC account.</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 pt-2">
-              <Label className="text-[#F0F4FF]">Event slug</Label>
-              <Input
-                value={syncSlug}
-                onChange={(e) => setSyncSlug(e.target.value)}
-                placeholder="nhsca-duals-2026"
-                className="!bg-[#1a2d4a] !border-white/20 !text-[#F0F4FF] placeholder:!text-white/40"
-              />
-              <Button onClick={handleSyncEvent} disabled={syncSubmitting} className="w-full bg-[#C8A94A] text-[#0B2545] hover:bg-[#E2C46A]">
-                {syncSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                {syncSubmitting ? "Syncing…" : "Sync now"}
+            <Dialog open={syncOpen} onOpenChange={(o) => { setSyncOpen(o); if (!o) setSyncResult(null) }}>
+              <Button size="sm" variant="outline" className="w-full border-white/30 text-[#F0F4FF] hover:bg-white/10 bg-transparent" onClick={() => setSyncOpen(true)}>
+                <Users className="w-4 h-4 mr-2" />
+                Add from event
               </Button>
-              {syncResult && <p className="text-sm text-white/80">{syncResult}</p>}
-            </div>
-          </DialogContent>
-        </Dialog>
+              <DialogContent className="bg-[#0D1F3C] border-white/10 text-[#F0F4FF] max-w-md [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_label]:!text-[#F0F4FF]">
+                <DialogHeader>
+                  <DialogTitle className="text-[#F0F4FF]">Add members from event</DialogTitle>
+                  <DialogDescription className="text-white/70">Add everyone with a paid registration for this event who has a RecruitNC account.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 pt-2">
+                  <Label className="text-[#F0F4FF]">Event slug</Label>
+                  <Input
+                    value={syncSlug}
+                    onChange={(e) => setSyncSlug(e.target.value)}
+                    placeholder="nhsca-duals-2026"
+                    className="!bg-[#1a2d4a] !border-white/20 !text-[#F0F4FF] placeholder:!text-white/40"
+                  />
+                  <Button onClick={handleSyncEvent} disabled={syncSubmitting} className="w-full bg-[#C8A94A] text-[#0B2545] hover:bg-[#E2C46A]">
+                    {syncSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    {syncSubmitting ? "Syncing…" : "Sync now"}
+                  </Button>
+                  {syncResult && <p className="text-sm text-white/80">{syncResult}</p>}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">

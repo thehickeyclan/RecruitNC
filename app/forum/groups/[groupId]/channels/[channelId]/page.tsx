@@ -3,12 +3,14 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Send, Loader2, Pencil, Reply, Smile, X } from "lucide-react"
+import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ForumMessageBody, type CustomEmojiItem } from "@/components/forum/forum-message-body"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
 
 type Message = {
   id: string
@@ -21,6 +23,7 @@ type Message = {
   created_at: string
   edited_at: string | null
   parent_id?: string | null
+  reactions?: ReactionAgg[]
 }
 
 const EMOJI_GRID = [
@@ -180,6 +183,59 @@ export default function ForumChannelPage() {
     [channelId]
   )
 
+  const handleDelete = useCallback(
+    async (messageId: string) => {
+      if (!channelId || !user?.id) return
+      if (!confirm("Delete this message?")) return
+      const res = await fetch(`/api/forum/channels/${channelId}/messages/${messageId}`, { method: "DELETE", credentials: "include" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        console.error("[forum] delete error", data?.error)
+        return
+      }
+      setMessages((prev) => prev.filter((m) => m.id !== messageId))
+    },
+    [channelId, user?.id]
+  )
+
+  const handleReaction = useCallback(
+    async (messageId: string, emoji: string, currentReaction: ReactionAgg | undefined) => {
+      if (!channelId || !user?.id) return
+      const haveReacted = currentReaction?.user_ids.includes(user.id)
+      const url = `/api/forum/channels/${channelId}/messages/${messageId}/reactions`
+      if (haveReacted) {
+        const res = await fetch(url, { method: "DELETE", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ emoji }) })
+        if (!res.ok) return
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.id !== messageId) return m
+            const reactions = (m.reactions ?? [])
+              .map((r) => {
+                if (r.emoji !== emoji) return r
+                if (r.count <= 1) return null
+                return { ...r, count: r.count - 1, user_ids: r.user_ids.filter((id) => id !== user.id) }
+              })
+              .filter((x): x is ReactionAgg => x != null)
+            return { ...m, reactions }
+          })
+        )
+      } else {
+        const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ emoji }) })
+        if (!res.ok) return
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.id !== messageId) return m
+            const list = m.reactions ?? []
+            const existing = list.find((r) => r.emoji === emoji)
+            if (existing) return { ...m, reactions: list.map((r) => (r.emoji !== emoji ? r : { ...r, count: r.count + 1, user_ids: [...r.user_ids, user.id] })) }
+            return { ...m, reactions: [...list, { emoji, count: 1, user_ids: [user.id] }] }
+          })
+        )
+      }
+    },
+    [channelId, user?.id]
+  )
+
   const insertEmoji = useCallback((emoji: string) => {
     const ta = textareaRef.current
     if (ta) {
@@ -280,17 +336,27 @@ export default function ForumChannelPage() {
                         {!isEditing && (
                           <span className="flex-1 inline-flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {isOwn && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingId(msg.id)
-                                  setEditDraft(msg.body)
-                                }}
-                                className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white"
-                                aria-label="Edit message"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingId(msg.id)
+                                    setEditDraft(msg.body)
+                                  }}
+                                  className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white"
+                                  aria-label="Edit message"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(msg.id)}
+                                  className="p-1 rounded hover:bg-red-500/20 text-white/70 hover:text-red-300"
+                                  aria-label="Delete message"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </>
                             )}
                             <button
                               type="button"
@@ -327,9 +393,55 @@ export default function ForumChannelPage() {
                           </div>
                         </div>
                       ) : (
-                        <p className="text-[#F0F4FF] text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                          <ForumMessageBody body={msg.body} customEmoji={customEmoji} />
-                        </p>
+                        <>
+                          <p className="text-[#F0F4FF] text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                            <ForumMessageBody body={msg.body} customEmoji={customEmoji} />
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center gap-1">
+                            {(msg.reactions ?? []).map((r) => {
+                              const haveReacted = r.user_ids.includes(user?.id ?? "")
+                              return (
+                                <button
+                                  key={r.emoji}
+                                  type="button"
+                                  onClick={() => handleReaction(msg.id, r.emoji, r)}
+                                  className={cn(
+                                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm border transition-colors",
+                                    haveReacted ? "border-[#C8A94A]/50 bg-[#C8A94A]/10 text-white" : "border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
+                                  )}
+                                >
+                                  <span>{r.emoji}</span>
+                                  {r.count > 1 && <span className="text-xs">{r.count}</span>}
+                                </button>
+                              )
+                            })}
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center rounded-full px-2 py-0.5 text-sm border border-white/20 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 transition-opacity opacity-0 group-hover:opacity-100"
+                                  aria-label="Add reaction"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-2 bg-[#0D1F3C] border-white/20" align="start">
+                                <div className="grid grid-cols-6 gap-1 max-h-32 overflow-y-auto">
+                                  {EMOJI_GRID.map((emoji) => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      className="w-8 h-8 rounded hover:bg-white/10 flex items-center justify-center text-lg"
+                                      onClick={() => handleReaction(msg.id, emoji, (msg.reactions ?? []).find((x) => x.emoji === emoji))}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </>
                       )}
                     </div>
                   )

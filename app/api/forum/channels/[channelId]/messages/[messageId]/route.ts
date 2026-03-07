@@ -60,3 +60,37 @@ export async function PATCH(
     },
   })
 }
+
+/**
+ * DELETE /api/forum/channels/[channelId]/messages/[messageId]
+ * Only the author can delete their own message. Reactions are removed by FK CASCADE.
+ */
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ channelId: string; messageId: string }> }
+) {
+  const { channelId, messageId } = await params
+  if (!channelId || !messageId) return NextResponse.json({ error: "channelId and messageId required" }, { status: 400 })
+
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const admin = createAdminClient()
+  const { data: msg, error: fetchErr } = await admin
+    .from("forum_messages")
+    .select("id, author_id")
+    .eq("id", messageId)
+    .eq("channel_id", channelId)
+    .single()
+
+  if (fetchErr || !msg) return NextResponse.json({ error: "Message not found" }, { status: 404 })
+  if ((msg as { author_id: string }).author_id !== user.id) return NextResponse.json({ error: "Only the author can delete this message" }, { status: 403 })
+
+  const { error: deleteErr } = await admin.from("forum_messages").delete().eq("id", messageId)
+  if (deleteErr) {
+    console.error("[forum/messages DELETE]", deleteErr)
+    return NextResponse.json({ error: "Failed to delete message" }, { status: 500 })
+  }
+  return NextResponse.json({ ok: true })
+}

@@ -69,6 +69,32 @@ export async function GET(
     return NextResponse.json({ error: "Failed to load messages" }, { status: 500 })
   }
 
+  const messageIds = (rows ?? []).map((m) => (m as { id: string }).id)
+  type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
+  const reactionsByMessageId = new Map<string, ReactionAgg[]>()
+  if (messageIds.length > 0) {
+    try {
+      const { data: reactionRows } = await admin
+        .from("forum_message_reactions")
+        .select("message_id, user_id, emoji")
+        .in("message_id", messageIds)
+      for (const r of reactionRows ?? []) {
+        const row = r as { message_id: string; user_id: string; emoji: string }
+        let list = reactionsByMessageId.get(row.message_id) ?? []
+        const existing = list.find((x) => x.emoji === row.emoji)
+        if (existing) {
+          existing.count += 1
+          if (!existing.user_ids.includes(row.user_id)) existing.user_ids.push(row.user_id)
+        } else {
+          list = [...list, { emoji: row.emoji, count: 1, user_ids: [row.user_id] }]
+        }
+        reactionsByMessageId.set(row.message_id, list)
+      }
+    } catch {
+      // Table may not exist yet
+    }
+  }
+
   const messages = (rows ?? []).map((m) => ({
     id: (m as { id: string }).id,
     channel_id: (m as { channel_id: string }).channel_id,
@@ -79,6 +105,7 @@ export async function GET(
     pin_order: (m as { pin_order?: number | null }).pin_order ?? null,
     created_at: (m as { created_at: string }).created_at,
     edited_at: (m as { edited_at?: string | null }).edited_at ?? null,
+    reactions: reactionsByMessageId.get((m as { id: string }).id) ?? [],
   }))
 
   return NextResponse.json({
