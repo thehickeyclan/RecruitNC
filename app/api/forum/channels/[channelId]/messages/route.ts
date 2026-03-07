@@ -46,7 +46,7 @@ export async function GET(
 
   let query = admin
     .from("forum_messages")
-    .select("id, channel_id, author_id, body, attachments, pinned, pin_order, created_at, edited_at, parent_id")
+    .select("id, channel_id, author_id, body, attachments, pinned, pin_order, created_at, edited_at")
     .eq("channel_id", channelId)
     .order("created_at", { ascending: false })
     .limit(limit)

@@ -1,12 +1,15 @@
 /**
  * Send SMS via Twilio. Used for new-message notifications.
- * Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in env.
- * If any are missing, sendSms no-ops and returns false.
+ * Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and either:
+ * - TWILIO_PHONE_NUMBER (send from this number), or
+ * - TWILIO_MESSAGING_SERVICE_SID (send via this A2P Messaging Service — recommended for 10DLC).
+ * If using a Messaging Service, the From number in its Sender Pool is used and the message is tied to your A2P campaign.
  */
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER
+const TWILIO_MESSAGING_SERVICE_SID = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim()
 
 /** Convert (xxx) xxx-xxxx or digits to E.164 +1xxxxxxxxxx for US. */
 export function toE164(phone: string | null | undefined): string | null {
@@ -22,14 +25,21 @@ export function toE164(phone: string | null | undefined): string | null {
  * Does not throw.
  */
 export async function sendSms(toE164: string, body: string): Promise<boolean> {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+  const useMessagingService = !!TWILIO_MESSAGING_SERVICE_SID
+  const hasFrom = !!TWILIO_PHONE_NUMBER?.trim()
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || (!useMessagingService && !hasFrom)) {
     console.warn(
-      "[RecruitNC SMS] Skipped — Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in Vercel (or .env) and redeploy."
+      "[RecruitNC SMS] Skipped — Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER or TWILIO_MESSAGING_SERVICE_SID in Vercel (or .env) and redeploy."
     )
     return false
   }
-  const from = TWILIO_PHONE_NUMBER.trim()
   const to = toE164.startsWith("+") ? toE164 : `+${toE164}`
+  const params: Record<string, string> = { To: to, Body: body }
+  if (useMessagingService) {
+    params.MessagingServiceSid = TWILIO_MESSAGING_SERVICE_SID
+  } else {
+    params.From = TWILIO_PHONE_NUMBER!.trim()
+  }
   const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`
   const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64")
   try {
@@ -39,7 +49,7 @@ export async function sendSms(toE164: string, body: string): Promise<boolean> {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization: `Basic ${auth}`,
       },
-      body: new URLSearchParams({ To: to, From: from, Body: body }),
+      body: new URLSearchParams(params),
     })
     if (!res.ok) {
       const err = await res.text()
