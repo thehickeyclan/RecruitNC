@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Link2, UserPlus, Users, Loader2, Copy, Check, UserMinus, X } from "lucide-react"
+import { Link2, UserPlus, Users, Loader2, Copy, Check, UserMinus, X, LayoutDashboard } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -169,10 +169,21 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
     return (
       <aside className={asideClass + " overflow-y-auto"}>
         {onClose && (
-          <div className="flex items-center justify-between p-3 border-b border-white/10">
-            <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Members</p>
-            <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 text-white" aria-label="Close"> <X className="w-5 h-5" /> </button>
-          </div>
+          <>
+            <div className="flex items-center justify-between p-3 border-b border-white/10">
+              <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Members</p>
+              <button type="button" onClick={onClose} className="min-h-[44px] px-3 flex items-center justify-center gap-2 rounded-lg hover:bg-white/10 text-white border border-white/20 touch-manipulation" aria-label="Close members panel">
+                <X className="w-5 h-5" />
+                <span className="text-sm font-medium">Close</span>
+              </button>
+            </div>
+            <div className="p-3 border-b border-white/10">
+              <HardLink href="/forum" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
+                <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+                Forum home — DMs, Groups, Hubs
+              </HardLink>
+            </div>
+          </>
         )}
         {!onClose && (
           <div className="p-3 border-b border-white/10">
@@ -194,11 +205,21 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
           <p className="text-xs text-white/60 mt-0.5">{members.length} member(s)</p>
         </div>
         {onClose && (
-          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 text-white flex-shrink-0" aria-label="Close members">
+          <button type="button" onClick={onClose} className="min-h-[44px] px-3 flex items-center justify-center gap-2 rounded-lg hover:bg-white/10 text-white flex-shrink-0 touch-manipulation border border-white/20" aria-label="Close members panel">
             <X className="w-5 h-5" />
+            <span className="text-sm font-medium">Close</span>
           </button>
         )}
       </div>
+
+      {onClose && (
+        <div className="p-3 border-b border-white/10">
+          <HardLink href="/forum" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
+            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+            Forum home — DMs, Groups, Hubs
+          </HardLink>
+        </div>
+      )}
 
       <div className="p-3 space-y-3 border-b border-white/10">
         {isGroupAdmin && (

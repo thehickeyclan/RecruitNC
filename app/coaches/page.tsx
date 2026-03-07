@@ -93,8 +93,8 @@ export default function CoachesPage() {
       {/* Header */}
       <div className="bg-primary text-primary-foreground py-12">
         <div className="max-w-6xl mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">College Wrestling Coaches</h1>
-          <p className="text-xl opacity-90">Connect with verified college wrestling coaches across North Carolina</p>
+          <h1 className="text-4xl font-bold mb-4">Browse Elite Coaches</h1>
+          <p className="text-xl opacity-90">Find elite coaches and NCAA athletes to refine your technique</p>
         </div>
       </div>
 
@@ -223,8 +223,8 @@ export default function CoachesPage() {
           <Card>
             <CardContent className="text-center py-12">
               <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Coaches Found</h3>
-              <p className="text-muted-foreground">Try adjusting your search criteria</p>
+              <h3 className="text-lg font-medium mb-2">No elite coaches available yet</h3>
+              <p className="text-muted-foreground">Check back soon! We&apos;re working on getting more elite coaches on the platform.</p>
             </CardContent>
           </Card>
         )}

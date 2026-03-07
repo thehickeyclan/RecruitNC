@@ -43,7 +43,7 @@ export default function ForumLayout({
   const [newMessageSearching, setNewMessageSearching] = useState(false)
   const [newMessageStarting, setNewMessageStarting] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [membersOpen, setMembersOpen] = useState(true)
+  const [membersOpen, setMembersOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [newGroupOpen, setNewGroupOpen] = useState(false)
   const [newGroupName, setNewGroupName] = useState("")

@@ -112,7 +112,7 @@ export default function NationalTeamHubPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {eventsWithChat.map((e) => {
                 const count = e.forumMessageCount ?? 0
-                const forumHref = `/forum/groups/${e.forumGroupId}/channels/${e.forumChannelId}`
+                const forumHref = "/forum"
                 return (
                   <HardLink
                     key={e.eventSlug}
