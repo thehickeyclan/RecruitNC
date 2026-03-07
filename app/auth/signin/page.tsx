@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,7 @@ export default function SignInPage() {
   const [error, setError] = useState("")
   const [stuckInIframe, setStuckInIframe] = useState(false)
   const [clearingCooldown, setClearingCooldown] = useState(false)
+  const mountedAt = useRef<number>(0)
 
   const clearRateLimitCooldown = async () => {
     setClearingCooldown(true)
@@ -86,7 +87,7 @@ export default function SignInPage() {
       const err = await res.json().catch(() => ({}))
       if (res.ok) {
         const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
-        setTimeout(() => { window.location.href = next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin" }, 800)
+        setTimeout(() => { window.location.replace(next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin") }, 1200)
         return
       }
       if (res.status === 401) setError(err.error || "Invalid email or password.")
@@ -105,7 +106,8 @@ export default function SignInPage() {
     const data = await res.json().catch(() => ({}))
     if (res.ok) {
       const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
-      setTimeout(() => { window.location.href = target }, 800)
+      // Use replace() and 1.2s delay so cookies from response are applied before navigation (reduces flicker).
+      setTimeout(() => { window.location.replace(target) }, 1200)
       return
     }
     setError(data.error || "Invalid email or password.")

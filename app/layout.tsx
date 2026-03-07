@@ -97,6 +97,7 @@ export default function RootLayout({
       </head>
       <body
         className="min-h-screen bg-background font-sans antialiased"
+        suppressHydrationWarning
         style={{
           touchAction: "pan-y",
           WebkitOverflowScrolling: "touch",
@@ -107,7 +108,7 @@ export default function RootLayout({
           scrollBehavior: "smooth",
         }}
       >
-        <ThemeProvider attribute="class" defaultTheme="light">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <AuthProvider>
             <BulletproofInternalLinks />
             <LayoutOptionalClients />
