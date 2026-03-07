@@ -352,7 +352,7 @@ export default function ForumLayout({
           <div className="flex-1 overflow-auto min-w-0">
             {children}
           </div>
-          {membersOpen && <ForumMembersPanel pathname={pathname} />}
+          {membersOpen && <ForumMembersPanel pathname={pathname} currentUserId={user?.id ?? null} />}
         </div>
       </main>
     </div>

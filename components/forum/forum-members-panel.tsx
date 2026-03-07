@@ -12,19 +12,20 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Link2, UserPlus, Users, Loader2, Copy, Check } from "lucide-react"
+import { Link2, UserPlus, Users, Loader2, Copy, Check, UserMinus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type Member = { user_id: string; role: string; display_name: string; email: string | null; headshot_url?: string | null }
 type SearchUser = { user_id: string; email: string | null; display_name: string }
 
-export function ForumMembersPanel({ pathname }: { pathname: string }) {
+export function ForumMembersPanel({ pathname, currentUserId }: { pathname: string; currentUserId?: string | null }) {
   const match = pathname.match(/^\/forum\/groups\/([^/]+)\/channels\//)
   const groupId = match?.[1] ?? null
 
   const [members, setMembers] = useState<Member[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
+  const [removingId, setRemovingId] = useState<string | null>(null)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [inviteGenerating, setInviteGenerating] = useState(false)
   const [inviteCopied, setInviteCopied] = useState(false)
@@ -98,6 +99,27 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
     return () => clearTimeout(t)
   }, [addMemberOpen, addSearch, members])
 
+  const currentUserRole = currentUserId ? members.find((m) => m.user_id === currentUserId)?.role : null
+  const canRemoveMembers = currentUserRole === "admin" || currentUserRole === "coach"
+
+  const handleRemoveMember = (userId: string) => {
+    if (!groupId || removingId) return
+    setRemovingId(userId)
+    fetch(`/api/forum/groups/${groupId}/members`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ user_id: userId }),
+    })
+      .then(async (res) => {
+        const data = await res.json()
+        if (!res.ok) throw new Error(data?.error ?? "Failed")
+        loadMembers()
+      })
+      .catch((e) => console.error("[ForumMembersPanel] remove:", e))
+      .finally(() => setRemovingId(null))
+  }
+
   const handleAddMember = (userId: string) => {
     if (!groupId || addSubmitting) return
     setAddError(null)
@@ -106,7 +128,7 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ user_id: userId, role: "athlete" }),
+      body: JSON.stringify({ user_id: userId }),
     })
       .then(async (res) => {
         const data = await res.json()
@@ -269,9 +291,23 @@ export function ForumMembersPanel({ pathname }: { pathname: string }) {
                     <p className="text-xs text-white/60 truncate">{m.role}</p>
                   </div>
                 </div>
-                <span className={cn("text-xs px-2 py-0.5 rounded flex-shrink-0", m.role === "admin" || m.role === "coach" ? "bg-[#C8A94A]/20 text-[#C8A94A]" : "bg-white/10 text-white/70")}>
-                  {m.role}
-                </span>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className={cn("text-xs px-2 py-0.5 rounded", m.role === "admin" || m.role === "coach" ? "bg-[#C8A94A]/20 text-[#C8A94A]" : "bg-white/10 text-white/70")}>
+                    {m.role}
+                  </span>
+                  {canRemoveMembers && m.user_id !== currentUserId && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMember(m.user_id)}
+                      disabled={!!removingId}
+                      className="p-1.5 rounded text-white/50 hover:text-red-400 hover:bg-white/10 disabled:opacity-50"
+                      title="Remove from group"
+                      aria-label={`Remove ${m.display_name} from group`}
+                    >
+                      <UserMinus className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

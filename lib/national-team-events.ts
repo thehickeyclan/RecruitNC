@@ -67,3 +67,17 @@ export function getUrlSlugForRegistration(apiSlug: string): string {
   )
   return entry ? entry[0] : apiSlug
 }
+
+/** If groupName matches a known event display name (e.g. "NHSCA Duals 2026"), return that event's API slug for hub link. */
+export function getEventSlugFromGroupName(groupName: string): string | null {
+  const name = (groupName ?? "").trim()
+  if (!name) return null
+  const nameLower = name.toLowerCase()
+  for (const [, config] of Object.entries(NATIONAL_TEAM_EVENTS)) {
+    const eventName = config.name
+    if (eventName.toLowerCase() === nameLower || nameLower.includes(eventName.toLowerCase())) {
+      return config.eventSlug ?? eventName.replace(/\s+/g, "-").toLowerCase()
+    }
+  }
+  return null
+}
