@@ -72,6 +72,7 @@ export default function NationalTeamHubPage() {
   }
 
   const events = data.events ?? []
+  const eventsWithChat = events.filter((e) => e.forumGroupId && e.forumChannelId)
 
   return (
     <div className="min-h-screen bg-gray-50/80 py-6 sm:py-8 px-4 sm:px-6">
@@ -97,6 +98,39 @@ export default function NationalTeamHubPage() {
             <a href="/national-team">Back to National Team</a>
           </Button>
         </div>
+
+        {eventsWithChat.length > 0 && (
+          <div className="rounded-xl border border-[#003366]/20 bg-[#003366]/5 px-4 py-3 sm:px-5">
+            <p className="text-sm font-medium text-[#002147] flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-[#003366] flex-shrink-0" />
+              We’ll be communicating and engaging via the Community chat.
+            </p>
+            <p className="text-sm text-gray-700 mt-1">
+              Open your event’s chat below to join the conversation.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {eventsWithChat.map((e) => {
+                const count = e.forumMessageCount ?? 0
+                return (
+                  <a
+                    key={e.eventSlug}
+                    href={`/forum/groups/${e.forumGroupId}/channels/${e.forumChannelId}`}
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#003366]/30 bg-white px-3 py-2 text-sm font-medium text-[#003366] hover:bg-[#003366]/5 transition-colors"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    {e.eventName}
+                    {count > 0 && (
+                      <span className="rounded-full bg-[#003366]/15 px-2 py-0.5 text-xs font-semibold">
+                        {count} message{count !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                    <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {events.length === 0 ? (
           <>
@@ -410,7 +444,6 @@ function HubDocumentsList({ contextType, contextId }: { contextType: string; con
 function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
-  const hasForumChat = !!(event.forumGroupId && event.forumChannelId)
   const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
   const [addSearchQuery, setAddSearchQuery] = useState("")
   const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
@@ -465,7 +498,7 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
     <Card className="overflow-hidden rounded-2xl border-[#003366]/15 shadow-sm">
       <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{event.eventName}</CardTitle>
-        <CardDescription className="text-gray-600">Dashboard, updates, and group chat</CardDescription>
+        <CardDescription className="text-gray-600">Dashboard and updates</CardDescription>
         <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
           <button
             type="button"
@@ -495,27 +528,6 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
               Updates
             </button>
           )}
-          {hasForumChat && (
-            <button
-              type="button"
-              onClick={() => setActiveTab("chat")}
-              className={cn(
-                "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
-                activeTab === "chat"
-                  ? "border-[#003366] text-[#003366] bg-white"
-                  : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
-              )}
-            >
-              <MessageCircle className="inline-block w-4 h-4 mr-1.5 align-middle" />
-              Chat
-              {(event.forumMessageCount ?? 0) > 0 && (
-                <span className="ml-1.5 rounded-full bg-[#003366]/15 px-1.5 py-0.5 text-xs font-medium text-[#003366]">
-                  {event.forumMessageCount}
-                </span>
-              )}
-              <span className="ml-1 text-xs text-gray-500 font-normal">· {event.eventName}</span>
-            </button>
-          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -523,30 +535,6 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-3">Announcements</h3>
             <HubUpdatesList threadId={event.threadId!} />
-          </div>
-        )}
-        {activeTab === "chat" && hasForumChat && (
-          <div className="rounded-2xl border border-[#003366]/15 bg-white overflow-hidden">
-            <div className="p-6 space-y-4">
-              <h3 className="text-base font-semibold text-[#002147] flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-[#003366]" />
-                {event.eventName} — Community chat
-              </h3>
-              <p className="text-sm text-gray-600">
-                All event conversation happens in Community. Open the channel to read and send messages.
-              </p>
-              <Button asChild className="bg-[#003366] hover:bg-[#003366]/90">
-                <a href={`/forum/groups/${event.forumGroupId}/channels/${event.forumChannelId}`}>
-                  Open in Community
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-              {(event.forumMessageCount ?? 0) > 0 && (
-                <p className="text-xs text-gray-500">
-                  {event.forumMessageCount} message{(event.forumMessageCount ?? 0) !== 1 ? "s" : ""} in this channel
-                </p>
-              )}
-            </div>
           </div>
         )}
         {activeTab === "dashboard" && (
@@ -638,31 +626,6 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             </table>
           </div>
         </div>
-        {hasForumChat && (
-          <div className="rounded-2xl border border-[#003366]/15 bg-white shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-[#002147]/08 to-[#003366]/08 px-4 py-3 sm:px-5 border-b border-[#003366]/10">
-              <h3 className="text-sm font-semibold text-[#002147] flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-[#003366]" />
-                Group chat
-                <span className="rounded bg-[#003366]/10 px-1.5 py-0.5 text-[10px] font-normal text-[#003366] uppercase tracking-wide">Community</span>
-              </h3>
-              <p className="text-xs text-gray-600 mt-1.5">
-                Use the <strong>Chat</strong> tab to open the event channel in Community.
-                {(event.forumMessageCount ?? 0) > 0 && (
-                  <span className="ml-1 text-[#003366] font-medium">{event.forumMessageCount} message{(event.forumMessageCount ?? 0) !== 1 ? "s" : ""}</span>
-                )}
-              </p>
-            </div>
-            <div className="p-4">
-              <Button asChild variant="outline" size="sm" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
-                <a href={`/forum/groups/${event.forumGroupId}/channels/${event.forumChannelId}`}>
-                  Open in Community
-                  <ExternalLink className="ml-1.5 h-3.5 w-3.5" />
-                </a>
-              </Button>
-            </div>
-          </div>
-        )}
         <HubDocumentsList contextType="event" contextId={event.eventSlug} />
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Athlete cards (IG)</h3>

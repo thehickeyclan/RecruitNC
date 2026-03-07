@@ -39,12 +39,13 @@ export function ForumMessageBody({
           <img
             key={`e-${keyIdx++}-${slug}`}
             src={url}
-            alt={`:${match[1]}:`}
+            alt=""
+            role="presentation"
             className="inline-block w-5 h-5 align-middle mx-0.5"
           />
         )
       } else {
-        list.push(<span key={`t-${keyIdx++}`}>{match[0]}</span>)
+        list.push(<span key={`t-${keyIdx++}`} className="inline-block w-5 h-5 align-middle mx-0.5" aria-hidden />)
       }
       lastIndex = regex.lastIndex
     }
