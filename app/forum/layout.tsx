@@ -259,7 +259,7 @@ export default function ForumLayout({
               {(currentUserProfile?.name || user?.email || "?").slice(0, 2).toUpperCase().replace(/[^A-Z0-9]/gi, "") || "?"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-white/80 truncate flex-1 min-w-0">{currentUserProfile?.name || user?.email ?? "—"}</span>
+          <span className="text-sm text-white/80 truncate flex-1 min-w-0">{currentUserProfile?.name || user?.email || "—"}</span>
         </div>
       </aside>
 
