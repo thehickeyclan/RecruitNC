@@ -774,10 +774,23 @@ export async function POST(request: NextRequest) {
     const amountTotal = ((session as { amount_total?: number }).amount_total ?? 0) / 100
     const hasStoreMetadata = !!(session.metadata?.items && session.metadata?.customer_email)
     const shippingLower = (session.metadata?.shipping_method as string)?.toLowerCase() ?? ""
-    const isLikelyDropIn =
+    let isLikelyDropIn =
       amountTotal >= 20 &&
       amountTotal <= 30 &&
       (shippingLower.includes("practice") || shippingLower.includes("pickup") || shippingLower.includes("suite") || !hasStoreMetadata)
+    let sessionForLineItems: typeof session = session
+    if (!isLikelyDropIn && amountTotal >= 20 && amountTotal <= 30) {
+      try {
+        const expanded = await getStripe().checkout.sessions.retrieve(session.id, { expand: ["line_items"] })
+        const desc = (expanded as { line_items?: { data?: { description?: string }[] } }).line_items?.data?.[0]?.description ?? ""
+        if (/drop-in|practice/i.test(desc)) {
+          isLikelyDropIn = true
+          sessionForLineItems = expanded as typeof session
+        }
+      } catch (_) {
+        /* ignore */
+      }
+    }
     if (paymentIntentId && isLikelyDropIn) {
       const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntentId).maybeSingle()
       if (!existingOrder) {
@@ -801,7 +814,7 @@ export async function POST(request: NextRequest) {
         const shippingAddress = addr
           ? { address1: addr.line1 ?? "", address2: addr.line2 ?? "", city: addr.city ?? "", state: addr.state ?? "", zipCode: addr.postal_code ?? "" }
           : {}
-        const dropInName = (session as { line_items?: { data?: { description?: string }[] } }).line_items?.data?.[0]?.description ?? "Practice Drop-in"
+        const dropInName = (sessionForLineItems as { line_items?: { data?: { description?: string }[] } }).line_items?.data?.[0]?.description ?? "Practice Drop-in"
         const orderNumber = generateOrderNumber()
         const orderId = crypto.randomUUID()
         const { error: orderErr } = await admin.from("orders").insert({
@@ -820,6 +833,7 @@ export async function POST(request: NextRequest) {
           total: amountTotal,
           status: "paid",
           stripe_payment_intent_id: paymentIntentId,
+          stripe_session_id: session.id,
           promo_code: null,
         })
         if ((orderErr as { code?: string })?.code === "23505") {

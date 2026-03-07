@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle } from "lucide-react"
+import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { ThreadView } from "@/components/messaging/thread-view"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
+import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
@@ -301,13 +302,29 @@ function NHSCA2026HubInfo() {
           </div>
         </div>
 
-        {/* Primary actions */}
+        {/* Primary actions: Add to Calendar, Open in Maps, Official site */}
         <div className="flex flex-wrap gap-3 pt-2">
+          <a
+            href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=NHSCA+National+Duals+2026&dates=20260523/20260526&details=Virginia+Beach+Sports+Center&location=Virginia+Beach+Sports+Center,+VA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#003366] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#002147] focus:outline-none focus:ring-2 focus:ring-[#003366]/50 focus:ring-offset-2"
+          >
+            <Calendar className="h-4 w-4" /> Add to Calendar
+          </a>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Virginia+Beach+Sports+Center"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
+          >
+            <MapPin className="h-4 w-4" /> Open in Maps
+          </a>
           <a
             href="https://nhsca-events.com/national-duals/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#003366] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#002147] focus:outline-none focus:ring-2 focus:ring-[#003366]/50 focus:ring-offset-2"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
           >
             Official event & registration <ExternalLink className="h-4 w-4" />
           </a>
@@ -325,9 +342,76 @@ function NHSCA2026HubInfo() {
 
 type SearchUser = { user_id: string; email: string | null; display_name: string }
 
+type HubTab = "dashboard" | "updates" | "chat"
+
+function HubUpdatesList({ threadId }: { threadId: string }) {
+  const [messages, setMessages] = useState<Array<{ id: string; body: string; created_at: string; sender_id: string }>>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    fetch(`/api/messaging/threads/${threadId}/messages?type=announcement&limit=50`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setMessages(data.messages ?? []))
+      .catch(() => setMessages([]))
+      .finally(() => setLoading(false))
+  }, [threadId])
+  if (loading) return <p className="text-sm text-gray-500 py-4 text-center">Loading updates…</p>
+  if (messages.length === 0) return <p className="text-sm text-gray-500 py-4 text-center">No announcements yet. Coaches and admins can post updates here.</p>
+  return (
+    <ul className="space-y-4">
+      {messages.map((m) => (
+        <li key={m.id} className="rounded-lg border border-[#003366]/10 bg-amber-50/50 p-4">
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{m.body}</p>
+          <p className="text-xs text-gray-500 mt-2">{new Date(m.created_at).toLocaleString()}</p>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function HubDocumentsList({ contextType, contextId }: { contextType: string; contextId: string }) {
+  const [documents, setDocuments] = useState<Array<{ id: string; file_url: string; name: string; content_type?: string | null; uploaded_at: string }>>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    fetch(
+      `/api/communities/hub/documents?context_type=${encodeURIComponent(contextType)}&context_id=${encodeURIComponent(contextId)}`,
+      { credentials: "include" }
+    )
+      .then((r) => r.json())
+      .then((data) => setDocuments(data.documents ?? []))
+      .catch(() => setDocuments([]))
+      .finally(() => setLoading(false))
+  }, [contextType, contextId])
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-gray-700 mb-2">Documents</h3>
+      {loading && <p className="text-sm text-gray-500 py-2">Loading…</p>}
+      {!loading && documents.length === 0 && <p className="text-sm text-gray-500 py-2">No documents yet.</p>}
+      {!loading && documents.length > 0 && (
+        <ul className="space-y-2">
+          {documents.map((d) => (
+            <li key={d.id}>
+              <a
+                href={d.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-[#003366] hover:underline inline-flex items-center gap-1.5"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {d.name}
+              </a>
+              <span className="text-xs text-gray-500 ml-2">{new Date(d.uploaded_at).toLocaleDateString()}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
+  const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
   const [addSearchQuery, setAddSearchQuery] = useState("")
   const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
   const [addSearching, setAddSearching] = useState(false)
@@ -381,9 +465,76 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
     <Card className="overflow-hidden rounded-2xl border-[#003366]/15 shadow-sm">
       <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{event.eventName}</CardTitle>
-        <CardDescription className="text-gray-600">Roster, your registration, and group chat</CardDescription>
+        <CardDescription className="text-gray-600">Dashboard, updates, and group chat</CardDescription>
+        <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab("dashboard")}
+            className={cn(
+              "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+              activeTab === "dashboard"
+                ? "border-[#003366] text-[#003366] bg-white"
+                : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+            )}
+          >
+            <LayoutDashboard className="inline-block w-4 h-4 mr-1.5 align-middle" />
+            Dashboard
+          </button>
+          {hasThread && (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveTab("updates")}
+                className={cn(
+                  "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+                  activeTab === "updates"
+                    ? "border-[#003366] text-[#003366] bg-white"
+                    : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+                )}
+              >
+                <Megaphone className="inline-block w-4 h-4 mr-1.5 align-middle" />
+                Updates
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("chat")}
+                className={cn(
+                  "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+                  activeTab === "chat"
+                    ? "border-[#003366] text-[#003366] bg-white"
+                    : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+                )}
+              >
+                <MessageCircle className="inline-block w-4 h-4 mr-1.5 align-middle" />
+                Chat
+              </button>
+            </>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {activeTab === "updates" && hasThread && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Announcements</h3>
+            <HubUpdatesList threadId={event.threadId!} />
+          </div>
+        )}
+        {activeTab === "chat" && hasThread && (
+          <div className="rounded-2xl border border-[#003366]/15 bg-white overflow-hidden">
+            <div className="flex flex-col h-[420px]">
+              <ThreadView
+                threadId={event.threadId!}
+                threadName={`${event.eventName} chat`}
+                currentUserId={currentUserId}
+              />
+            </div>
+            <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+              <a href="/forum" className="text-xs text-[#003366] font-medium hover:underline">Open in Community</a> for full view
+            </div>
+          </div>
+        )}
+        {activeTab === "dashboard" && (
+          <>
         {(event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && <NHSCA2026HubInfo />}
         {myRegs.length > 0 && (
           <div>
@@ -480,27 +631,25 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
                 <span className="rounded bg-[#003366]/10 px-1.5 py-0.5 text-[10px] font-normal text-[#003366] uppercase tracking-wide">Forum</span>
               </h3>
               <p className="text-xs text-gray-600 mt-1.5">
-                {event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")
-                  ? "This chat is a dedicated forum for communication on NHSCA Duals 2026."
-                  : `This chat is a dedicated forum for communication on ${event.eventName}.`}
+                Use the <strong>Chat</strong> tab for full conversation. <a href="/forum" className="text-[#003366] hover:underline">Open in Community</a>
               </p>
             </div>
-            <div className="flex flex-col h-[360px]">
+            <div className="flex flex-col h-[280px]">
               <ThreadView
                 threadId={event.threadId!}
                 threadName={`${event.eventName} chat`}
                 currentUserId={currentUserId}
               />
             </div>
-            <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
-              <a href="/forum" className="text-xs text-[#003366] font-medium hover:underline">Open in Community</a> for full view
-            </div>
           </div>
         )}
+        <HubDocumentsList contextType="event" contextId={event.eventSlug} />
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2">Athlete cards (IG)</h3>
           <p className="text-sm text-gray-500">Individual cards for social announcements will be added here.</p>
         </div>
+          </>
+        )}
       </CardContent>
     </Card>
   )

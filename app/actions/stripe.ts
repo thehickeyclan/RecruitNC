@@ -618,14 +618,14 @@ export async function createOrderFromSession(
       const orderId = crypto.randomUUID()
       const customerEmail = session.customer_email || (session as any).customer_details?.email || ""
       const customerName = (session as any).customer_details?.name || ""
-      const addr = (session as any).shipping_details?.address
+      const addr = (session as any).shipping_details?.address ?? (session as any).customer_details?.address
       const shippingAddress = addr ? {
-        address1: addr.line1,
+        address1: addr.line1 ?? "",
         address2: addr.line2 ?? "",
-        city: addr.city,
-        state: addr.state,
-        zipCode: addr.postal_code,
-        country: addr.country,
+        city: addr.city ?? "",
+        state: addr.state ?? "",
+        zipCode: addr.postal_code ?? "",
+        country: addr.country ?? "US",
       } : {}
       const subtotal = lineItems.reduce((s: number, li: { amount_subtotal: number }) => s + (li.amount_subtotal ?? 0) / 100, 0)
       const total = (session.amount_total ?? 0) / 100

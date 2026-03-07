@@ -1,0 +1,68 @@
+import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { getEventName, getEventSlugForApi } from "@/lib/national-team-events"
+
+export const dynamic = "force-dynamic"
+
+export type HubListItem = {
+  id: string
+  slug: string
+  name: string
+  href: string
+  type: "hub"
+}
+
+/**
+ * GET /api/communities/hubs
+ * Returns the list of event/program hubs the current user belongs to (for Community sidebar).
+ * Lightweight: does not run full hub sync.
+ */
+export async function GET() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+  if (authError || !user?.id) {
+    return NextResponse.json({ hubs: [] })
+  }
+
+  const admin = createAdminClient()
+  const emailLower = (user.email ?? "").trim().toLowerCase()
+  const toCanonical = (slug: string) => getEventSlugForApi(slug || "").trim() || slug
+  const eventSlugs = new Set<string>()
+
+  // From paid registrations (parent_email match)
+  const { data: regs } = await admin
+    .from("national_team_event_registrations")
+    .select("event_slug")
+    .eq("status", "paid")
+    .ilike("parent_email", emailLower)
+  for (const r of regs ?? []) {
+    eventSlugs.add(toCanonical((r as { event_slug: string }).event_slug))
+  }
+
+  // From event_workspace_members (invite, add member, etc.)
+  try {
+    const { data: rows } = await admin
+      .from("event_workspace_members")
+      .select("event_slug")
+      .eq("user_id", user.id)
+    for (const row of rows ?? []) {
+      eventSlugs.add(toCanonical((row as { event_slug: string }).event_slug))
+    }
+  } catch {
+    // table may not exist
+  }
+
+  const hubs: HubListItem[] = [...eventSlugs].sort().map((slug) => ({
+    id: slug,
+    slug,
+    name: getEventName(slug),
+    href: "/national-team/hub",
+    type: "hub" as const,
+  }))
+
+  return NextResponse.json({ hubs })
+}

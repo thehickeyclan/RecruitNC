@@ -7,7 +7,7 @@
  * (email is set separately in each insert, same as customer_email.)
  * shipping_state, shipping_postal_code, shipping_country, shipping_phone;
  * billing_address_line1/2, billing_city, billing_state, billing_postal_code,
- * billing_country. (billing_phone omitted — add back if your orders table has it.) If your DB has more NOT NULL columns, run the
+ * billing_country. (billing_phone omitted — add to flatBillingFromAddress with default "" if your orders table has it NOT NULL.) If your DB has more NOT NULL columns, run the
  * query in docs/ORDERS-TABLE-REQUIRED-COLUMNS.md and add them here or relax the constraint.
  */
 
@@ -50,7 +50,7 @@ export function flatShippingFromAddress(addr: Record<string, unknown> | null | u
   }
 }
 
-/** Billing address columns (NOT NULL-safe). Use same address as shipping or empty defaults for recovered orders. No billing_phone — many orders tables don't have it. */
+/** Billing address columns (NOT NULL-safe). Use same address as shipping or empty defaults for recovered orders. No billing_phone — add it here with default "" if your orders table has it NOT NULL. */
 export function flatBillingFromAddress(addr: Record<string, unknown> | null | undefined): {
   billing_address_line1: string
   billing_address_line2: string

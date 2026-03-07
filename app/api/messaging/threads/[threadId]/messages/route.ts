@@ -43,12 +43,17 @@ export async function GET(
 
   const searchParams = request.nextUrl.searchParams
   const beforeId = searchParams.get("before")
+  const typeFilter = searchParams.get("type") // e.g. "announcement" for Updates tab
   const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT))
 
   let query = supabase
     .from("messaging_messages")
     .select("id, thread_id, sender_id, type, body, created_at, edited_at")
     .eq("thread_id", threadId)
+
+  if (typeFilter === "announcement" || typeFilter === "message") {
+    query = query.eq("type", typeFilter)
+  }
 
   if (beforeId) {
     const { data: cursorRow } = await supabase

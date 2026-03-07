@@ -6,6 +6,77 @@
 
 ---
 
+## 0. Unified Communities experience (one place, better than Slack)
+
+**Goal:** One place for parents to navigate: **Messages** (DMs), **Groups** (chat communities), and **Hubs** (event/program dashboards). Differentiated from Slack by program-first hubs, Updates vs Chat, event-aware actions, and mobile-ready design (MVP today, iPhone app later).
+
+### 0.1 One place to navigate
+
+- **Single destination:** Community (e.g. `/forum`) is the one entry. Sidebar shows, in one list:
+  - **Direct messages** — 1:1 conversations
+  - **Groups** — chat communities (forum groups with channels)
+  - **Hubs** — event/program dashboards the user belongs to (e.g. NHSCA Duals 2026, Blue)
+- No separate “Messages” vs “Hubs” in top-level nav; everything lives under Community. `/messages` redirects to `/forum`.
+
+### 0.2 Hubs = program-first, chat inside
+
+- A **hub** is an event or program (e.g. NHSCA Duals 2026) with:
+  - **Dashboard first:** event info, roster, schedule, contacts, documents
+  - **Updates** — org/coach-only announcements (read-only for parents); backed by `messaging_messages` with `type = 'announcement'`
+  - **Chat** — everyone can reply; same thread, filter by `type = 'message'` or show all
+  - **Schedule / Roster / Documents** — hub-scoped content (schedule and roster from existing data; documents in `hub_documents` or attachments)
+- Hub entry in sidebar links to the hub page (e.g. `/national-team/hub` with event context, or `/communities/hub/[slug]`). Opening the hub shows **dashboard first**; Chat and Updates are tabs/sections.
+
+### 0.3 Announcements vs Chat
+
+- **Updates (announcements):** Only admins/coaches can post; rendered as a distinct feed (e.g. “Updates” tab). Stored as `messaging_messages.type = 'announcement'`.
+- **Chat:** All members can post; normal messages. Enables “check Updates first” behavior and clearer push semantics (e.g. “New announcement” vs “New message”).
+
+### 0.4 Event-aware and actionable
+
+- On hub dashboard: one-tap **Add to Calendar** (e.g. event date/time), **Open in Maps** (venue), **View Roster** (existing table). Data comes from event/registration tables and hub config.
+
+### 0.5 “For you” digest
+
+- **API:** `GET /api/communities/for-you` returns a short summary for the current user, e.g. `{ newAnnouncements: number, eventsThisWeek: number, unreadChatCount: number }`. Used to show a “For you” strip or badge at top of Community sidebar.
+- Enables “2 new updates, 1 event this week” without opening each hub; supports future push copy (“You have 2 updates in NHSCA Duals”).
+
+### 0.6 Simple language
+
+- **UI copy:** Use “Direct messages,” “Groups,” “Communities” (or “Hubs” for the list of event/program dashboards). Avoid “channels,” “workspaces.” Inside a hub: “Updates,” “Chat,” “Schedule,” “Roster,” “Documents.”
+
+### 0.7 Mobile-first / iPhone-ready
+
+- **Shallow nav:** Community → one list (DMs, Groups, Hubs). Hub → Dashboard / Updates / Chat (tabs). No deep channel → thread → reply trees.
+- **Big tap targets:** Buttons and list rows min ~44px; avoid hover-only actions.
+- **Single primary nav:** e.g. bottom bar on phone: Home, **Community** (opens this one place), Notifications, Profile.
+- **Pull-to-refresh** and “Load more” for lists; avoid infinite scroll where possible.
+- **Cacheable hub content:** Dashboard (schedule, roster, last announcements) can be cached so it works offline or in low signal (e.g. gym).
+
+### 0.8 Hub documents
+
+- **Table:** `hub_documents` — `(id uuid, context_type text, context_id text, file_url text, name text, content_type text, uploaded_at timestamptz, uploaded_by uuid)`. Optional for MVP.
+- **API:** `GET /api/communities/hub/documents?context_type=event&context_id=<slug>` returns list; `POST` (upload) for admins. Documents appear in hub “Documents” tab/section. See migration in `scripts/hub-documents.sql`.
+
+### 0.9 Role-aware
+
+- **Parent:** Sees “my” communities and hubs; Updates read-only; can post in Chat.
+- **Coach/Admin:** Can post announcements (Updates); can upload hub documents; same one-place nav with manage options where relevant.
+
+### 0.10 Lightweight presence (web) / Green “who’s online” (iPhone app)
+
+- **Web MVP:** Prefer “Last activity: 5m ago” or “Updated 2h ago” over full “who’s online.” Reduces implementation and keeps focus on content.
+- **iPhone app (future):** A **green “who’s online” indicator** is required next to the person’s picture (avatar circle) in Community — e.g. in the members list, next to message senders, in DMs list, and in hub presence. Design avatar components so a small status dot (green = online) can be added without layout shift (e.g. wrapper with `position: relative`, dot at bottom-right of the circle). Backend: presence can be inferred from last active timestamp (e.g. “online” if activity in last N minutes) or a dedicated presence/heartbeat API when building the native app.
+
+### 0.11 Implementation notes
+
+- **Sidebar:** `GET /api/forum/sidebar` extended to return `hubs: [{ id, slug, name, href, type: 'hub' }]` (from hub API or event_workspace_members + event metadata). Forum layout renders DMs, then Groups, then Hubs in one scrollable list.
+- **Hub page:** Existing `/national-team/hub` (or `/communities/hub/[slug]`) gets tabs: **Dashboard** (current content), **Updates** (announcements from linked thread), **Chat** (thread view). Add “Add to Calendar” / “Open in Maps” where event details exist.
+- **For you:** Implement `GET /api/communities/for-you`; show summary at top of Community sidebar or as a compact strip above the list.
+- **Avatars:** Use a wrapper (e.g. `relative` container) around profile pics/circles so the iPhone app can add a green “who’s online” dot (e.g. bottom-right of circle) without layout changes.
+
+---
+
 ## 1. Supabase schema (production-ready)
 
 Run in **Supabase → SQL Editor**. Create in this order.

@@ -162,6 +162,7 @@ export async function POST() {
       total: amountTotal,
       status: "paid",
       stripe_payment_intent_id: paymentIntentId,
+      stripe_session_id: session.id,
       promo_code: null,
     })
     if ((orderErr as { code?: string })?.code === "23505") {

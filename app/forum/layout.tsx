@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { HardLink } from "@/components/hard-link"
-import { MessageCircle, Search, Users, ChevronRight, Menu, Plus } from "lucide-react"
+import { MessageCircle, Search, Users, ChevronRight, Menu, Plus, LayoutDashboard, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -40,12 +40,16 @@ export default function ForumLayout({
   const [newGroupName, setNewGroupName] = useState("")
   const [newGroupSubmitting, setNewGroupSubmitting] = useState(false)
   const [currentUserProfile, setCurrentUserProfile] = useState<{ name: string; headshot_url?: string | null } | null>(null)
+  const [hubs, setHubs] = useState<HubListItem[]>([])
+  const [forYou, setForYou] = useState<ForYou | null>(null)
   const router = useRouter()
 
   useEffect(() => {
     if (!user) {
       setSidebarLoading(false)
       setCurrentUserProfile(null)
+      setHubs([])
+      setForYou(null)
       return
     }
     fetch("/api/profile", { credentials: "include" })
@@ -55,11 +59,16 @@ export default function ForumLayout({
         setCurrentUserProfile({ name, headshot_url: data?.headshot_url ?? null })
       })
       .catch(() => setCurrentUserProfile(null))
-    fetch("/api/forum/sidebar", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        setGroups(data.groups ?? [])
-        setDmConversations(data.dmConversations ?? [])
+    Promise.all([
+      fetch("/api/forum/sidebar", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/communities/hubs", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/communities/for-you", { credentials: "include" }).then((r) => r.json()),
+    ])
+      .then(([sidebar, hubsRes, forYouRes]) => {
+        setGroups(sidebar.groups ?? [])
+        setDmConversations(sidebar.dmConversations ?? [])
+        setHubs(hubsRes.hubs ?? [])
+        setForYou(forYouRes)
       })
       .catch(() => {})
       .finally(() => setSidebarLoading(false))
@@ -72,6 +81,10 @@ export default function ForumLayout({
   const filteredDms = q
     ? dmConversations.filter((d) => d.id.includes(q))
     : dmConversations
+  const filteredHubs = q ? hubs.filter((h) => h.name.toLowerCase().includes(q)) : hubs
+  const hasForYou =
+    forYou &&
+    (forYou.newAnnouncements > 0 || forYou.eventsThisWeek > 0 || forYou.unreadChatCount > 0)
 
   if (!user && !isLoading) {
     return (
@@ -126,6 +139,26 @@ export default function ForumLayout({
             />
           </div>
         </div>
+
+        {hasForYou && forYou && (
+          <div className="mx-2 mt-2 mb-1 rounded-lg bg-[#C8A94A]/20 border border-[#C8A94A]/30 px-3 py-2 text-sm">
+            <p className="font-medium text-[#E2C46A] flex items-center gap-2">
+              <Bell className="w-4 h-4 flex-shrink-0" />
+              For you
+            </p>
+            <ul className="mt-1 space-y-0.5 text-white/90 text-xs">
+              {forYou.newAnnouncements > 0 && (
+                <li>{forYou.newAnnouncements} new update{forYou.newAnnouncements !== 1 ? "s" : ""}</li>
+              )}
+              {forYou.eventsThisWeek > 0 && (
+                <li>{forYou.eventsThisWeek} event{forYou.eventsThisWeek !== 1 ? "s" : ""} this week</li>
+              )}
+              {forYou.unreadChatCount > 0 && (
+                <li>{forYou.unreadChatCount} unread in chat</li>
+              )}
+            </ul>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto py-2">
           {sidebarLoading ? (
@@ -242,6 +275,37 @@ export default function ForumLayout({
                       style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                     >
                       <span className="truncate">{group.name}</span>
+                    </HardLink>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+
+          <p className="px-3 text-xs font-semibold text-white/50 uppercase tracking-wider mt-4 mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            Hubs
+          </p>
+          {filteredHubs.length === 0 ? (
+            <p className="px-3 text-sm text-white/50">No event hubs yet.</p>
+          ) : (
+            <ul className="space-y-0.5">
+              {filteredHubs.map((hub) => {
+                const href = hub.href
+                const active = pathname === "/national-team/hub"
+                return (
+                  <li key={hub.id}>
+                    <HardLink
+                      href={href}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2 min-h-[44px]",
+                        active
+                          ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
+                          : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
+                      )}
+                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                    >
+                      <LayoutDashboard className="w-4 h-4 flex-shrink-0 text-white/70" />
+                      <span className="truncate">{hub.name}</span>
                     </HardLink>
                   </li>
                 )
