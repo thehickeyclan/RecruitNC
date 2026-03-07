@@ -170,13 +170,11 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
       <aside className={asideClass + " overflow-y-auto"}>
         {onClose && (
           <>
-            <div className="relative p-3 border-b border-white/10">
-              {onClose && (
-                <button type="button" onClick={onClose} className="absolute top-2 right-2 z-10 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white touch-manipulation border-2 border-white/30" aria-label="Close">
-                  <X className="w-6 h-6" />
-                </button>
-              )}
-              <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Members</p>
+            <div className="flex-shrink-0 border-b border-white/20 bg-[#0B2545] p-3">
+              <button type="button" onClick={onClose} className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#C8A94A] text-[#0B2545] font-semibold touch-manipulation hover:bg-[#E2C46A] border-2 border-[#C8A94A]" aria-label="Close members panel">
+                <X className="w-6 h-6" />
+                Close
+              </button>
             </div>
             <div className="p-3 border-b border-white/10">
               <HardLink href="/forum" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
@@ -197,16 +195,19 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
   }
 
   return (
-    <aside className={cn(asideClass, "relative text-[#F0F4FF] [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_input::placeholder]:!text-white/40 [&_label]:!text-[#F0F4FF]")}>
+    <aside className={cn(asideClass, "text-[#F0F4FF] [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_input::placeholder]:!text-white/40 [&_label]:!text-[#F0F4FF]")}>
       {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-2 right-2 z-10 min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white touch-manipulation border-2 border-white/30"
-          aria-label="Close"
-        >
-          <X className="w-6 h-6" />
-        </button>
+        <div className="flex-shrink-0 border-b border-white/20 bg-[#0B2545] p-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-[#C8A94A] text-[#0B2545] font-semibold touch-manipulation hover:bg-[#E2C46A] border-2 border-[#C8A94A]"
+            aria-label="Close members panel"
+          >
+            <X className="w-6 h-6" />
+            Close
+          </button>
+        </div>
       )}
       <div className="p-3 border-b border-white/10 flex items-center justify-between gap-2">
         <div>
@@ -218,11 +219,15 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
       </div>
 
       {onClose && (
-        <div className="p-3 border-b border-white/10">
+        <div className="p-3 border-b border-white/10 space-y-2">
           <HardLink href="/forum" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
             <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
             Forum home — Groups, DMs, Hubs
           </HardLink>
+          <a href="/national-team/hub" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
+            <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+            Back to hub
+          </a>
         </div>
       )}
 
@@ -231,8 +236,7 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
           <>
             <Button
               size="sm"
-              variant="outline"
-              className="w-full border-[#C8A94A]/50 text-[#C8A94A] hover:bg-[#C8A94A]/15 bg-transparent"
+              className="w-full bg-[#C8A94A] text-[#0B2545] hover:bg-[#E2C46A] border-2 border-[#C8A94A] font-medium"
               onClick={handleGenerateInvite}
               disabled={inviteGenerating}
             >
