@@ -130,16 +130,25 @@ export async function POST(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  let body: { body?: string; parent_id?: string | null } = {}
+  let body: { body?: string; parent_id?: string | null; attachment_urls?: { url: string; content_type?: string; filename?: string }[] } = {}
   try {
     body = await request.json()
   } catch {
     body = {}
   }
   const text = typeof body.body === "string" ? body.body.trim() : ""
-  if (!text) return NextResponse.json({ error: "body is required" }, { status: 400 })
+  const attachmentUrls = Array.isArray(body.attachment_urls)
+    ? body.attachment_urls.filter((a) => a && typeof a.url === "string" && a.url.trim().length > 0)
+    : []
+  const hasContent = text.length > 0 || attachmentUrls.length > 0
+  if (!hasContent) return NextResponse.json({ error: "body or attachment_urls required" }, { status: 400 })
   if (text.length > 2000) return NextResponse.json({ error: "body max 2000 characters" }, { status: 400 })
   const parentId = typeof body.parent_id === "string" && body.parent_id.trim() ? body.parent_id.trim() : null
+  const attachments = attachmentUrls.map((a) => ({
+    url: (a as { url: string }).url.trim(),
+    content_type: typeof (a as { content_type?: string }).content_type === "string" ? (a as { content_type: string }).content_type : null,
+    filename: typeof (a as { filename?: string }).filename === "string" ? (a as { filename: string }).filename : null,
+  }))
 
   const admin = createAdminClient()
 
@@ -171,8 +180,8 @@ export async function POST(
     .insert({
       channel_id: channelId,
       author_id: user.id,
-      body: text,
-      attachments: [],
+      body: text || " ",
+      attachments,
     })
     .select("id, channel_id, author_id, body, created_at, edited_at")
     .single()
@@ -187,7 +196,8 @@ export async function POST(
       id: (inserted as { id: string }).id,
       channel_id: (inserted as { channel_id: string }).channel_id,
       author_id: (inserted as { author_id: string }).author_id,
-      body: (inserted as { body: string }).body,
+      body: (inserted as { body: string }).body?.trim() || "",
+      attachments: (inserted as { attachments?: unknown }).attachments ?? [],
       created_at: (inserted as { created_at: string }).created_at,
       edited_at: (inserted as { edited_at?: string | null }).edited_at ?? null,
       parent_id: (inserted as { parent_id?: string | null }).parent_id ?? null,

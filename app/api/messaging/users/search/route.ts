@@ -5,7 +5,7 @@ import { getMessagingUser } from "@/lib/messaging-auth"
 const MIN_QUERY_LENGTH = 2
 const MAX_RESULTS = 20
 
-/** GET: Search RecruitNC users for starting a direct message. Any authenticated user. Excludes self. */
+/** GET: Search RecruitNC users by name or email (for starting a new DM). */
 export async function GET(request: Request) {
   const user = await getMessagingUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -26,12 +26,10 @@ export async function GET(request: Request) {
 
   const filtered = (profiles ?? []).filter((p: { user_id: string }) => p.user_id !== user.id).slice(0, MAX_RESULTS)
 
-  const list = filtered.map(
-    (p: { user_id: string; email?: string | null; full_name?: string | null; first_name?: string | null; last_name?: string | null }) => ({
-      user_id: p.user_id,
-      email: p.email ?? null,
-      display_name: p.full_name?.trim() || [p.first_name, p.last_name].filter(Boolean).join(" ").trim() || p.email || "User",
-    })
-  )
+  const list = filtered.map((p: { user_id: string; email?: string | null; full_name?: string | null; first_name?: string | null; last_name?: string | null }) => ({
+    user_id: p.user_id,
+    email: p.email ?? null,
+    display_name: p.full_name?.trim() || [p.first_name, p.last_name].filter(Boolean).join(" ").trim() || p.email || "User",
+  }))
   return NextResponse.json({ users: list })
 }

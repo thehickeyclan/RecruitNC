@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Send, Loader2, Pencil, Reply, Smile, X, Trash2 } from "lucide-react"
+import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ForumMessageBody, type CustomEmojiItem } from "@/components/forum/forum-message-body"
 import { ForumEmojiPicker, type CustomEmojiWithCategory } from "@/components/forum/forum-emoji-picker"
@@ -13,12 +13,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
 
+type Attachment = { url: string; content_type?: string | null; filename?: string | null }
 type Message = {
   id: string
   channel_id: string
   author_id: string
   body: string
-  attachments: unknown[]
+  attachments: Attachment[]
   pinned: boolean
   pin_order: number | null
   created_at: string
@@ -46,6 +47,9 @@ export default function ForumChannelPage() {
   const [replyingTo, setReplyingTo] = useState<{ id: string; snippet: string } | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState("")
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -137,7 +141,8 @@ export default function ForumChannelPage() {
 
   const handleSend = useCallback(async () => {
     const text = draft.trim()
-    if (!text || sending || !channelId) return
+    const hasContent = text || pendingAttachments.length > 0
+    if (!hasContent || sending || !channelId) return
     setSending(true)
     const parentId = replyingTo?.id ?? null
     try {
@@ -145,13 +150,20 @@ export default function ForumChannelPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ body: text, parent_id: parentId || undefined }),
+        body: JSON.stringify({
+          body: text || undefined,
+          parent_id: parentId || undefined,
+          attachment_urls: pendingAttachments.length > 0
+            ? pendingAttachments.map((a) => ({ url: a.url, content_type: a.content_type, filename: a.filename }))
+            : undefined,
+        }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error ?? "Failed to send")
       const newMsg = data.message as Message
       setMessages((prev) => [newMsg, ...prev])
       setDraft("")
+      setPendingAttachments([])
       setReplyingTo(null)
       try {
         localStorage.removeItem(`forum-draft-${channelId}`)
@@ -161,7 +173,44 @@ export default function ForumChannelPage() {
     } finally {
       setSending(false)
     }
-  }, [channelId, draft, sending, replyingTo])
+  }, [channelId, draft, sending, replyingTo, pendingAttachments])
+
+  const uploadFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const list = Array.from(files).filter((f) => f.type.startsWith("image/"))
+      if (list.length === 0) return
+      setUploading(true)
+      try {
+        const form = new FormData()
+        form.set("channelId", channelId)
+        list.forEach((f) => form.append("file", f))
+        const res = await fetch("/api/forum/upload", { method: "POST", credentials: "include", body: form })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data?.error ?? "Upload failed")
+        const uploads = (data.uploads ?? []) as Attachment[]
+        setPendingAttachments((prev) => [...prev, ...uploads])
+      } catch (e) {
+        console.error("[forum] upload error", e)
+      } finally {
+        setUploading(false)
+      }
+    },
+    [channelId]
+  )
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.files
+      if (items?.length && fileInputRef.current) {
+        const files = Array.from(items).filter((f) => f.type.startsWith("image/"))
+        if (files.length) {
+          e.preventDefault()
+          uploadFiles(files)
+        }
+      }
+    },
+    [uploadFiles]
+  )
 
   const handleEdit = useCallback(
     async (messageId: string, newBody: string) => {
@@ -290,12 +339,12 @@ export default function ForumChannelPage() {
             ) : (
               <div className="p-4 space-y-4">
                 {hasMore && (
-                  <div className="flex justify-center">
+                  <div className="flex justify-center py-2">
                     <button
                       type="button"
                       onClick={loadMore}
                       disabled={loadingMore}
-                      className="text-sm text-[#C8A94A] hover:underline disabled:opacity-50"
+                      className="min-h-[44px] px-4 text-sm text-[#C8A94A] hover:underline disabled:opacity-50 touch-manipulation"
                     >
                       {loadingMore ? "Loading…" : "Load older messages"}
                     </button>
@@ -335,7 +384,7 @@ export default function ForumChannelPage() {
                           <span className="text-xs text-[#C8A94A] font-medium">PINNED</span>
                         )}
                         {!isEditing && (
-                          <span className="flex-1 inline-flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="flex-1 inline-flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             {isOwn && (
                               <>
                                 <button
@@ -344,28 +393,28 @@ export default function ForumChannelPage() {
                                     setEditingId(msg.id)
                                     setEditDraft(msg.body)
                                   }}
-                                  className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white"
+                                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 text-white/70 hover:text-white touch-manipulation"
                                   aria-label="Edit message"
                                 >
-                                  <Pencil className="w-3.5 h-3.5" />
+                                  <Pencil className="w-4 h-4" />
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleDelete(msg.id)}
-                                  className="p-1 rounded hover:bg-red-500/20 text-white/70 hover:text-red-300"
+                                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-red-500/20 text-white/70 hover:text-red-300 touch-manipulation"
                                   aria-label="Delete message"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </>
                             )}
                             <button
                               type="button"
                               onClick={() => setReplyingTo({ id: msg.id, snippet: msg.body.slice(0, 80) + (msg.body.length > 80 ? "…" : "") })}
-                              className="p-1 rounded hover:bg-white/10 text-white/70 hover:text-white"
+                              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 text-white/70 hover:text-white touch-manipulation"
                               aria-label="Reply"
                             >
-                              <Reply className="w-3.5 h-3.5" />
+                              <Reply className="w-4 h-4" />
                             </button>
                           </span>
                         )}
@@ -395,9 +444,30 @@ export default function ForumChannelPage() {
                         </div>
                       ) : (
                         <>
-                          <p className="text-[#F0F4FF] text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                            <ForumMessageBody body={msg.body} customEmoji={customEmoji} />
-                          </p>
+                          {msg.body?.trim() ? (
+                            <div className="text-[#F0F4FF] text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                              <ForumMessageBody body={msg.body} customEmoji={customEmoji} />
+                            </div>
+                          ) : null}
+                          {(msg.attachments ?? []).length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {(msg.attachments as Attachment[]).map((att, idx) => (
+                                <a
+                                  key={`${msg.id}-att-${idx}`}
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block rounded-lg overflow-hidden border border-white/20 max-w-[200px] hover:opacity-90"
+                                >
+                                  <img
+                                    src={att.url}
+                                    alt={att.filename ?? "Attachment"}
+                                    className="w-full h-auto max-h-40 object-cover"
+                                  />
+                                </a>
+                              ))}
+                            </div>
+                          )}
                           <div className="mt-2 flex flex-wrap items-center gap-1">
                             {(msg.reactions ?? []).map((r) => {
                               const haveReacted = r.user_ids.includes(user?.id ?? "")
@@ -429,10 +499,10 @@ export default function ForumChannelPage() {
                               <PopoverTrigger asChild>
                                 <button
                                   type="button"
-                                  className="inline-flex items-center rounded-full px-2 py-0.5 text-sm border border-white/20 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 transition-opacity opacity-0 group-hover:opacity-100"
+                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80 transition-opacity opacity-100 md:opacity-0 md:group-hover:opacity-100 touch-manipulation"
                                   aria-label="Add reaction"
                                 >
-                                  <Smile className="w-3.5 h-3.5" />
+                                  <Smile className="w-5 h-5" />
                                 </button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 bg-[#0D1F3C] border-white/20 max-h-64" align="start">
@@ -455,7 +525,7 @@ export default function ForumChannelPage() {
         )}
       </div>
 
-      <div className="flex-shrink-0 p-3 border-t border-white/10">
+      <div className="flex-shrink-0 p-3 border-t border-white/10 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {replyingTo && (
           <div className="flex items-center gap-2 mb-2 py-1.5 px-2 rounded bg-white/10 border border-white/10 text-sm text-white/80">
             <Reply className="w-4 h-4 flex-shrink-0 text-[#C8A94A]" />
@@ -465,8 +535,46 @@ export default function ForumChannelPage() {
             </button>
           </div>
         )}
+        {pendingAttachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {pendingAttachments.map((att, idx) => (
+              <div key={idx} className="relative rounded-lg overflow-hidden border border-white/20 w-14 h-14">
+                <img src={att.url} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                  className="absolute top-0 right-0 p-0.5 bg-black/60 text-white rounded-bl"
+                  aria-label="Remove"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <div className="flex-1 flex gap-1 min-w-0">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = e.target.files
+                if (files?.length) uploadFiles(files)
+                e.target.value = ""
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex-shrink-0 h-[44px] w-10 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 flex items-center justify-center disabled:opacity-50"
+              aria-label="Add photo"
+            >
+              {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5" />}
+            </button>
             <Popover>
               <PopoverTrigger asChild>
                 <button
@@ -490,7 +598,8 @@ export default function ForumChannelPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Message… (Enter to send, Shift+Enter for new line)"
+              onPaste={handlePaste}
+              placeholder="Message… Paste a link for a clickable hyperlink. Add photos with the + button or paste."
               rows={2}
               className="flex-1 min-h-[44px] max-h-32 resize-y rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
@@ -499,7 +608,7 @@ export default function ForumChannelPage() {
           <button
             type="button"
             onClick={handleSend}
-            disabled={!draft.trim() || sending}
+            disabled={(!draft.trim() && pendingAttachments.length === 0) || sending}
             className="flex-shrink-0 h-[44px] px-4 rounded-lg bg-[#C8A94A] text-[#0B2545] font-semibold hover:bg-[#E2C46A] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

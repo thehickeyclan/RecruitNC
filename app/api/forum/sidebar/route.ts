@@ -6,11 +6,12 @@ export const dynamic = "force-dynamic"
 export type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
 export type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
 export type ForumDmConversation = { id: string; type: string; last_message_at: string | null }
+export type LegacyDm = { id: string; name: string }
 
 /**
  * GET /api/forum/sidebar
- * Returns groups (with channels) and DM conversations for the current user.
- * RLS on forum_* tables filters by membership.
+ * Returns groups (with channels), forum DM conversations, and legacy messaging DMs for the current user.
+ * RLS on forum_* and messaging_* tables filters by membership.
  */
 export async function GET() {
   const supabase = await createClient()
@@ -19,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const [groupsRes, dmRes] = await Promise.all([
+  const [groupsRes, dmRes, legacyDmRes] = await Promise.all([
     supabase
       .from("forum_members")
       .select("group_id")
@@ -28,14 +29,15 @@ export async function GET() {
       .from("forum_dm_participants")
       .select("conversation_id")
       .eq("user_id", user.id),
+    supabase
+      .from("messaging_thread_members")
+      .select("thread_id")
+      .eq("user_id", user.id),
   ])
 
   const groupIds = (groupsRes.data ?? []).map((r) => (r as { group_id: string }).group_id)
   const conversationIds = (dmRes.data ?? []).map((r) => (r as { conversation_id: string }).conversation_id)
-
-  if (groupIds.length === 0 && conversationIds.length === 0) {
-    return NextResponse.json({ groups: [], dmConversations: [] })
-  }
+  const legacyThreadIds = (legacyDmRes.data ?? []).map((r) => (r as { thread_id: string }).thread_id)
 
   const groups: ForumGroup[] = []
   if (groupIds.length > 0) {
@@ -90,5 +92,19 @@ export async function GET() {
     }))
   }
 
-  return NextResponse.json({ groups, dmConversations })
+  let legacyDms: LegacyDm[] = []
+  if (legacyThreadIds.length > 0) {
+    const { data: threadRows } = await supabase
+      .from("messaging_threads")
+      .select("id, name")
+      .in("id", legacyThreadIds)
+      .eq("type", "dm")
+      .order("last_message_at", { ascending: false })
+    legacyDms = (threadRows ?? []).map((r) => ({
+      id: (r as { id: string }).id,
+      name: (r as { name?: string | null }).name ?? "Direct message",
+    }))
+  }
+
+  return NextResponse.json({ groups, dmConversations, legacyDms })
 }

@@ -28,6 +28,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { formatMessageBody } from "@/lib/format-message-body"
 
 export type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
 
@@ -260,7 +261,9 @@ export function MessageBubble(
         ) : (
           <>
             <div className="whitespace-pre-wrap break-words">
-              {linkifyAndMentions(message.body, isOwn, customEmojiMap)}
+              {formatMessageBody(message.body, {
+                renderInline: (text) => linkifyAndMentions(text, isOwn, customEmojiMap),
+              })}
             </div>
             {message.attachments && message.attachments.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">

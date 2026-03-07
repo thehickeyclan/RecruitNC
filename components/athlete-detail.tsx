@@ -727,7 +727,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <Share2 className="w-4 h-4 mr-1.5" />
                   Share
                 </Button>
-                {athlete.claimed_by_user_id && athlete.claimed_by_user_id !== currentUserId && (
+                {athlete.id && !isViewingOwnProfile && (
                   <MessageAthleteButton
                     athleteId={athlete.id}
                     claimedByUserId={athlete.claimed_by_user_id}
@@ -903,7 +903,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
                   <Share2 className="w-4 h-4 mr-2" />
                   Share profile
                 </Button>
-                {athlete.claimed_by_user_id && athlete.claimed_by_user_id !== currentUserId && (
+                {athlete.id && !isViewingOwnProfile && (
                   <MessageAthleteButton
                     athleteId={athlete.id}
                     claimedByUserId={athlete.claimed_by_user_id}

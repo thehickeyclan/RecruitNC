@@ -22,6 +22,8 @@ import { ForumMembersPanel } from "@/components/forum/forum-members-panel"
 type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
 type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
 type ForumDm = { id: string; type: string; last_message_at: string | null }
+type LegacyDm = { id: string; name: string }
+type SearchUser = { user_id: string; display_name: string; email?: string | null }
 
 export default function ForumLayout({
   children,
@@ -32,7 +34,13 @@ export default function ForumLayout({
   const { user, isLoading } = useAuth()
   const [groups, setGroups] = useState<ForumGroup[]>([])
   const [dmConversations, setDmConversations] = useState<ForumDm[]>([])
+  const [legacyDms, setLegacyDms] = useState<LegacyDm[]>([])
   const [sidebarLoading, setSidebarLoading] = useState(true)
+  const [newMessageOpen, setNewMessageOpen] = useState(false)
+  const [newMessageQuery, setNewMessageQuery] = useState("")
+  const [newMessageUsers, setNewMessageUsers] = useState<SearchUser[]>([])
+  const [newMessageSearching, setNewMessageSearching] = useState(false)
+  const [newMessageStarting, setNewMessageStarting] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [membersOpen, setMembersOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -67,6 +75,7 @@ export default function ForumLayout({
       .then(([sidebar, hubsRes, forYouRes]) => {
         setGroups(sidebar.groups ?? [])
         setDmConversations(sidebar.dmConversations ?? [])
+        setLegacyDms(sidebar.legacyDms ?? [])
         setHubs(hubsRes.hubs ?? [])
         setForYou(forYouRes)
       })
@@ -81,6 +90,9 @@ export default function ForumLayout({
   const filteredDms = q
     ? dmConversations.filter((d) => d.id.includes(q))
     : dmConversations
+  const filteredLegacyDms = q
+    ? legacyDms.filter((d) => d.name.toLowerCase().includes(q))
+    : legacyDms
   const filteredHubs = q ? hubs.filter((h) => h.name.toLowerCase().includes(q)) : hubs
   const hasForYou =
     forYou &&
@@ -165,14 +177,103 @@ export default function ForumLayout({
             <p className="px-3 text-sm text-white/50">Loading…</p>
           ) : (
             <>
-          {/* Direct messages first (Slack-style) */}
-          <p className="px-3 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            Direct messages
-          </p>
-          {filteredDms.length === 0 ? (
-            <p className="px-3 text-sm text-white/50">No conversations yet.</p>
+          {/* Direct messages: New message + legacy DMs (Messages) + forum DMs */}
+          <div className="flex items-center justify-between px-3 mb-2">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              Direct messages
+            </p>
+            <Dialog open={newMessageOpen} onOpenChange={(o) => { setNewMessageOpen(o); if (!o) { setNewMessageQuery(""); setNewMessageUsers([]) } }}>
+              <DialogTrigger asChild>
+                <button type="button" className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white" aria-label="New message">
+                  <Plus className="w-4 h-4" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#0D1F3C] border-white/10 text-white max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-[#F0F4FF]">Message a RecruitNC user</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-white/80">Search by name or email</Label>
+                    <Input
+                      placeholder="Type to search…"
+                      value={newMessageQuery}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setNewMessageQuery(v)
+                        if (v.trim().length >= 2) {
+                          setNewMessageSearching(true)
+                          fetch(`/api/messaging/users/search?q=${encodeURIComponent(v.trim())}`, { credentials: "include" })
+                            .then((r) => r.json())
+                            .then((data) => setNewMessageUsers(data.users ?? []))
+                            .catch(() => setNewMessageUsers([]))
+                            .finally(() => setNewMessageSearching(false))
+                        } else {
+                          setNewMessageUsers([])
+                        }
+                      }}
+                      className="mt-1 bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  {newMessageSearching && <p className="text-sm text-white/50">Searching…</p>}
+                  <ul className="max-h-48 overflow-y-auto space-y-1 border border-white/10 rounded-lg p-2">
+                    {newMessageUsers.length === 0 && !newMessageSearching && newMessageQuery.trim().length >= 2 && (
+                      <li className="text-sm text-white/50 px-2">No users found.</li>
+                    )}
+                    {newMessageUsers.map((u) => (
+                      <li key={u.user_id}>
+                        <button
+                          type="button"
+                          disabled={newMessageStarting}
+                          className="w-full text-left px-3 py-2 rounded text-sm text-white/90 hover:bg-white/10 flex items-center justify-between gap-2"
+                          onClick={async () => {
+                            setNewMessageStarting(true)
+                            try {
+                              const res = await fetch("/api/messaging/dm", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                credentials: "include",
+                                body: JSON.stringify({ other_user_id: u.user_id }),
+                              })
+                              const data = await res.json()
+                              if (!res.ok) throw new Error(data?.error ?? "Failed to start conversation")
+                              const threadId = data?.threadId
+                              setNewMessageOpen(false)
+                              window.location.href = threadId ? `/forum/dm/${threadId}` : "/forum"
+                            } catch (err) {
+                              console.error(err)
+                              setNewMessageStarting(false)
+                            }
+                          }}
+                        >
+                          <span className="truncate">{u.display_name || u.email || "User"}</span>
+                          {u.email && <span className="text-white/50 text-xs truncate max-w-[140px]">{u.email}</span>}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          {filteredLegacyDms.length === 0 && filteredDms.length === 0 ? (
+            <p className="px-3 text-sm text-white/50">No conversations yet. Use + to message any user.</p>
           ) : (
             <ul className="space-y-0.5">
+              {filteredLegacyDms.map((dm) => (
+                <li key={`legacy-${dm.id}`}>
+                  <HardLink
+                    href={`/forum/dm/${dm.id}`}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
+                      pathname === `/forum/dm/${dm.id}` ? "bg-[#0B2545]/50 border-[#C8A94A] text-white" : "border-transparent text-white/80 hover:bg-white/5"
+                    )}
+                  >
+                    <MessageCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">{dm.name}</span>
+                  </HardLink>
+                </li>
+              ))}
               {filteredDms.map((dm) => (
                 <li key={dm.id}>
                   <HardLink
@@ -267,7 +368,7 @@ export default function ForumLayout({
                     <HardLink
                       href={href}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2",
+                        "flex items-center gap-2 px-3 py-2 text-sm rounded-r-lg border-l-2 min-h-[44px]",
                         active
                           ? "bg-[#0B2545]/50 border-[#C8A94A] text-white font-medium"
                           : "border-transparent text-white/80 hover:bg-white/5 hover:text-white"
@@ -329,11 +430,11 @@ export default function ForumLayout({
 
       {/* Main content */}
       <main className="flex-1 flex flex-col min-w-0 bg-[#0B2545]">
-        <header className="flex-shrink-0 h-12 border-b border-white/10 flex items-center gap-2 px-4">
+        <header className="flex-shrink-0 min-h-[44px] border-b border-white/10 flex items-center gap-2 px-2 sm:px-4">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 -ml-2 rounded hover:bg-white/10"
+            className="md:hidden min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 touch-manipulation"
             aria-label="Open sidebar"
           >
             <Menu className="w-5 h-5" />
@@ -341,18 +442,28 @@ export default function ForumLayout({
           <button
             type="button"
             onClick={() => setMembersOpen((o) => !o)}
-            className="ml-auto p-2 rounded hover:bg-white/10 flex items-center gap-1 text-sm text-white/70"
+            className="ml-auto min-h-[44px] min-w-[44px] sm:min-w-0 sm:px-2 flex items-center justify-center sm:justify-start gap-1 rounded hover:bg-white/10 text-sm text-white/70 touch-manipulation"
             aria-label={membersOpen ? "Hide members" : "Show members"}
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-5 h-5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Members</span>
           </button>
         </header>
-        <div className="flex-1 overflow-hidden flex">
+        <div className="flex-1 overflow-hidden flex relative">
           <div className="flex-1 overflow-auto min-w-0">
             {children}
           </div>
-          {membersOpen && <ForumMembersPanel pathname={pathname} currentUserId={user?.id ?? null} />}
+          {membersOpen && (
+            <>
+              <div className="hidden sm:block"><ForumMembersPanel pathname={pathname} currentUserId={user?.id ?? null} /></div>
+              <div className="sm:hidden fixed inset-0 z-30 flex justify-end">
+                <button type="button" className="absolute inset-0 bg-black/50" onClick={() => setMembersOpen(false)} aria-label="Close members" />
+                <div className="relative w-[280px] max-w-[85vw] h-full bg-[#0D1F3C] border-l border-white/10 overflow-y-auto">
+                  <ForumMembersPanel pathname={pathname} currentUserId={user?.id ?? null} onClose={() => setMembersOpen(false)} />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>

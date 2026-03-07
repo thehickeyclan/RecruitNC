@@ -12,14 +12,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Link2, UserPlus, Users, Loader2, Copy, Check, UserMinus } from "lucide-react"
+import { Link2, UserPlus, Users, Loader2, Copy, Check, UserMinus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type Member = { user_id: string; role: string; display_name: string; email: string | null; headshot_url?: string | null }
 type SearchUser = { user_id: string; email: string | null; display_name: string }
 
-export function ForumMembersPanel({ pathname, currentUserId }: { pathname: string; currentUserId?: string | null }) {
+export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathname: string; currentUserId?: string | null; onClose?: () => void }) {
   const match = pathname.match(/^\/forum\/groups\/([^/]+)\/channels\//)
   const groupId = match?.[1] ?? null
 
@@ -163,26 +163,41 @@ export function ForumMembersPanel({ pathname, currentUserId }: { pathname: strin
       .finally(() => setSyncSubmitting(false))
   }
 
+  const asideClass = onClose ? "flex flex-col w-full flex-1 min-h-0 bg-[#0D1F3C]" : "hidden sm:flex flex-col w-[260px] flex-shrink-0 bg-[#0D1F3C] border-l border-white/10 overflow-y-auto"
+
   if (!groupId) {
     return (
-      <aside className="hidden sm:flex flex-col w-[260px] flex-shrink-0 bg-[#0D1F3C] border-l border-white/10 overflow-y-auto">
-        <div className="p-3 border-b border-white/10">
-          <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            Members
-          </p>
-          <p className="text-xs text-white/50 mt-0.5">Select a group channel to see members and invite.</p>
-        </div>
+      <aside className={asideClass + " overflow-y-auto"}>
+        {onClose && (
+          <div className="flex items-center justify-between p-3 border-b border-white/10">
+            <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Members</p>
+            <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 text-white" aria-label="Close"> <X className="w-5 h-5" /> </button>
+          </div>
+        )}
+        {!onClose && (
+          <div className="p-3 border-b border-white/10">
+            <p className="text-sm font-semibold text-white/80" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Members</p>
+            <p className="text-xs text-white/50 mt-0.5">Select a group channel to see members and invite.</p>
+          </div>
+        )}
       </aside>
     )
   }
 
   return (
-    <aside className="hidden sm:flex flex-col w-[260px] flex-shrink-0 bg-[#0D1F3C] border-l border-white/10 overflow-y-auto text-[#F0F4FF] [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_input::placeholder]:!text-white/40 [&_label]:!text-[#F0F4FF]">
-      <div className="p-3 border-b border-white/10">
-        <p className="text-sm font-semibold text-[#F0F4FF]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          Members
-        </p>
-        <p className="text-xs text-white/60 mt-0.5">{members.length} member(s)</p>
+    <aside className={cn(asideClass, "text-[#F0F4FF] [&_input]:!bg-[#1a2d4a] [&_input]:!text-[#F0F4FF] [&_input]:!border-white/20 [&_input::placeholder]:!text-white/40 [&_label]:!text-[#F0F4FF]")}>
+      <div className="p-3 border-b border-white/10 flex items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-[#F0F4FF]" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+            Members
+          </p>
+          <p className="text-xs text-white/60 mt-0.5">{members.length} member(s)</p>
+        </div>
+        {onClose && (
+          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded hover:bg-white/10 text-white flex-shrink-0" aria-label="Close members">
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       <div className="p-3 space-y-3 border-b border-white/10">
