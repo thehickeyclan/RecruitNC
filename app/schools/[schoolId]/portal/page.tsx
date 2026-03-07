@@ -2368,7 +2368,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         <img
                           src={activity.athlete_photo || "/placeholder.svg?height=40&width=40"}
                           alt={activity.athlete_name}
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="w-10 h-10 rounded-full object-cover object-top"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm text-foreground">{activity.athlete_name}</p>
@@ -2746,7 +2746,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                               <img
                                 src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
                                 alt={prospect.name}
-                                className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
+                                className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover object-top border border-border flex-shrink-0 ${
                                   committedElsewhere ? 'grayscale' : ''
                                 }`}
                               />
@@ -3021,7 +3021,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 <img
                                   src={prospect.photourl}
                                   alt={prospect.name}
-                                  className="w-10 h-10 rounded-lg object-cover border border-border"
+                                  className="w-10 h-10 rounded-lg object-cover object-top border border-border"
                                 />
                               ) : (
                                 <div
@@ -3564,7 +3564,7 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                   <img
                     src={selectedAthlete.photourl || "/placeholder.svg?height=80&width=80&query=wrestler"}
                     alt={selectedAthlete.name}
-                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                    className="w-20 h-20 rounded-lg object-cover object-top flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <DialogTitle className="text-xl md:text-2xl text-foreground mb-1">{selectedAthlete.name}</DialogTitle>

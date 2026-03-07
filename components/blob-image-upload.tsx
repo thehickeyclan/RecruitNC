@@ -132,7 +132,7 @@ export function BlobImageUpload({
         {previewUrl ? (
           <div className="relative w-full h-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover" />
+            <img src={previewUrl || "/placeholder.svg"} alt="Preview" className="w-full h-full object-cover object-top" />
             <Button
               type="button"
               size="icon"

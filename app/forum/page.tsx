@@ -239,7 +239,7 @@ export default function ForumPage() {
                   </li>
                 ) : (
                   hubs.map((event) => {
-                    const href = `/forum/groups/${event.forumGroupId}/channels/${event.forumChannelId}`
+                    const href = "/national-team/hub"
                     return (
                       <li key={event.eventSlug}>
                         <HardLink

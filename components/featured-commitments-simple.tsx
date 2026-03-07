@@ -46,7 +46,7 @@ export function FeaturedCommitmentsSimple({ athletes }: FeaturedCommitmentsSimpl
                     <img
                       src={athlete.headshot_url || athlete.photourl}
                       alt={athlete.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-top"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-400 to-red-400 flex items-center justify-center text-white font-bold">

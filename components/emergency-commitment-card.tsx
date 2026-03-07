@@ -98,7 +98,7 @@ export function EmergencyCommitmentCard({ athlete }: EmergencyCommitmentCardProp
               src={athlete.photourl || "/placeholder.svg"}
               alt={athlete.name}
               fill
-              className="object-cover"
+              className="object-cover object-top"
               onError={() => setImageError(true)}
             />
           ) : (

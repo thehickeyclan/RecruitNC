@@ -522,7 +522,7 @@ export default function ForumLayout({
           {membersOpen && (
             <>
               <div className="hidden sm:block"><ForumMembersPanel pathname={pathname} currentUserId={user?.id ?? null} /></div>
-              <div className="sm:hidden fixed inset-0 z-30 flex justify-end">
+              <div className="sm:hidden fixed inset-0 z-[60] flex justify-end">
                 <button type="button" className="absolute inset-0 bg-black/50" onClick={() => setMembersOpen(false)} aria-label="Close members" />
                 <div className="relative w-[280px] max-w-[85vw] h-full bg-[#0D1F3C] border-l border-white/10 overflow-y-auto">
                   <ForumMembersPanel pathname={pathname} currentUserId={user?.id ?? null} onClose={() => setMembersOpen(false)} />

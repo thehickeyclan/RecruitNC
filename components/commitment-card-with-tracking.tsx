@@ -74,7 +74,7 @@ export function CommitmentCardWithTracking({ athlete }: CommitmentCardProps) {
               <img
                 src={athlete.image_url || "/placeholder.svg"}
                 alt={athlete.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
                 loading="lazy"
               />
             ) : (

@@ -377,7 +377,7 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
     if (athleteName.includes("lorenzo alston")) {
       return "object-cover object-[center_30%]"
     }
-    return "object-cover object-center"
+    return "object-cover object-top"
   }
 
   const hasValidClub = () => {

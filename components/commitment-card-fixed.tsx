@@ -125,7 +125,7 @@ export function CommitmentCardFixed(props: any) {
       <CardContent className="p-0 h-full">
         {/* Athlete Photo */}
         <div className="relative h-48 bg-gray-100">
-          <AthleteImage src={athlete.photourl} alt={athlete.name} fill className="object-cover" />
+          <AthleteImage src={athlete.photourl} alt={athlete.name} fill className="object-cover object-top" />
 
           {/* Division Badge */}
           <div className="absolute top-2 right-2">

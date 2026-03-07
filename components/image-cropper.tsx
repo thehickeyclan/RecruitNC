@@ -28,20 +28,25 @@ export default function ImageCropper({ src, onCropComplete, onCancel, aspectRati
     (e: React.SyntheticEvent<HTMLImageElement>) => {
       const { width, height } = e.currentTarget
 
-      // Make a centered crop with the specified aspect ratio
-      const crop = centerCrop(
-        makeAspectCrop(
-          {
-            unit: "%",
-            width: 90,
-          },
-          aspectRatio,
-          width,
-          height,
-        ),
+      const baseCrop = makeAspectCrop(
+        {
+          unit: "%",
+          width: 90,
+        },
+        aspectRatio,
         width,
         height,
       )
+
+      // For square (headshot) aspect ratio, align crop to top so face/head stays in frame
+      const crop =
+        aspectRatio === 1
+          ? {
+              ...baseCrop,
+              x: (100 - (baseCrop.width ?? 0)) / 2,
+              y: 0,
+            }
+          : centerCrop(baseCrop, width, height)
 
       setCrop(crop)
     },

@@ -51,7 +51,7 @@ export default async function LiamHickeyPage() {
                     src={commitmentPhotoUrl || "/placeholder.svg"}
                     alt={`${athlete.name} commitment photo`}
                     fill
-                    className="object-cover"
+                    className="object-cover object-top"
                     sizes="(max-width: 768px) 100vw, 33vw"
                     priority
                   />

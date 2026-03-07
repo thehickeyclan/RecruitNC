@@ -65,7 +65,7 @@ export function CommitmentCardSimple({ athlete }: CommitmentCardProps) {
           src={athlete.photourl || "/wrestler-silhouette.png"}
           alt={athlete.name}
           fill
-          className="object-cover"
+          className="object-cover object-top"
           onError={(e) => {
             const target = e.target as HTMLImageElement
             target.src = "/wrestler-silhouette.png"

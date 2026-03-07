@@ -364,7 +364,7 @@ export default function Class2028RankingsPage() {
                   <img
                     src="/images/coach-macchiavello-celebration.png"
                     alt="Coach Mike Macchiavello celebrating with team"
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#D3B574]"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover object-top border-4 border-[#D3B574]"
                   />
                 </div>
                 <div className="flex-1">

@@ -17,6 +17,12 @@
     display: none;
   }
 
+  /* Headshot/avatar: keep face in frame when object-cover crops (prioritize top) */
+  .headshot-cover {
+    object-fit: cover;
+    object-position: top center;
+  }
+
   /* Added mobile-first responsive utilities */
   .touch-scroll {
     -webkit-overflow-scrolling: touch;

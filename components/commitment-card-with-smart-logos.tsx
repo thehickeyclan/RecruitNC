@@ -89,7 +89,7 @@ export function CommitmentCardWithSmartLogos({ athlete, showMatchInfo = false }:
                 src={photoUrl || "/placeholder.svg"}
                 alt={normalizedAthlete.name}
                 fill
-                className="object-cover"
+                className="object-cover object-top"
                 onError={() => setImageError(true)}
               />
             ) : (
