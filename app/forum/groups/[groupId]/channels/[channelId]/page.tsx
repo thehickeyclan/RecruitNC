@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus, Users, ExternalLink } from "lucide-react"
+import { Send, Loader2, Pencil, Reply, Smile, X, Trash2, ImagePlus, Users, ExternalLink, ImageIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ForumMessageBody, type CustomEmojiItem } from "@/components/forum/forum-message-body"
 import { useForumLayout } from "@/contexts/forum-layout-context"
@@ -13,6 +13,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type ReactionAgg = { emoji: string; count: number; user_ids: string[] }
+
+/** Quick-reaction emojis shown on message hover (one-click, like GroupMe). */
+const QUICK_REACTION_EMOJIS = ["❤️", "👍", "👎", "😂", "😮"]
 
 type Attachment = { url: string; content_type?: string | null; filename?: string | null }
 type Message = {
@@ -42,6 +45,9 @@ export default function ForumChannelPage() {
   const [sending, setSending] = useState(false)
   const [channelName, setChannelName] = useState<string>("")
   const [groupName, setGroupName] = useState<string | null>(null)
+  const [groupLogoUrl, setGroupLogoUrl] = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const logoInputRef = useRef<HTMLInputElement>(null)
   const [customEmoji, setCustomEmoji] = useState<CustomEmojiItem[]>([])
   const [customEmojiWithCategory, setCustomEmojiWithCategory] = useState<CustomEmojiWithCategory[]>([])
   const [authors, setAuthors] = useState<Record<string, { display_name: string; headshot_url: string | null }>>({})
@@ -107,6 +113,7 @@ export default function ForumChannelPage() {
       .then((data) => {
         if (data?.name) setChannelName(data.name)
         if (data?.group_name) setGroupName(data.group_name)
+        setGroupLogoUrl(data?.group_logo_url ?? null)
       })
       .catch(() => {})
     loadMessages()
@@ -322,8 +329,50 @@ export default function ForumChannelPage() {
     <div className="flex flex-col h-full">
       <div className="flex-shrink-0 px-4 py-2 border-b border-white/10 flex items-center justify-between gap-2">
         <h1 className="text-lg font-bold text-white min-w-0 truncate flex items-center gap-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-          <a href="/national-team/hub" className="text-white hover:text-[#C8A94A] truncate flex items-center gap-1.5 min-h-[44px] touch-manipulation">
-            {groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ""
+              if (!file || !groupId || logoUploading) return
+              if (file.size > 2 * 1024 * 1024) return
+              setLogoUploading(true)
+              try {
+                const fd = new FormData()
+                fd.set("file", file)
+                const res = await fetch(`/api/forum/groups/${encodeURIComponent(groupId)}/logo`, {
+                  method: "POST",
+                  credentials: "include",
+                  body: fd,
+                })
+                const data = await res.json().catch(() => ({}))
+                if (res.ok && data.logo_url) setGroupLogoUrl(data.logo_url)
+              } finally {
+                setLogoUploading(false)
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => logoInputRef.current?.click()}
+            disabled={logoUploading}
+            className="flex-shrink-0 w-9 h-9 rounded-full border-2 border-white/20 bg-white/10 overflow-hidden flex items-center justify-center touch-manipulation"
+            aria-label="Room logo — click to upload"
+            title="Upload room logo"
+          >
+            {groupLogoUrl ? (
+              <img src={groupLogoUrl} alt="" className="w-full h-full object-cover" />
+            ) : logoUploading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-[#C8A94A]" />
+            ) : (
+              <ImageIcon className="w-5 h-5 text-white/60" />
+            )}
+          </button>
+          <a href="/national-team/hub" className="text-white hover:text-[#C8A94A] truncate flex items-center gap-1.5 min-h-[44px] touch-manipulation flex-1 min-w-0">
+            <span className="truncate">{groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}</span>
             <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-70" aria-hidden />
           </a>
         </h1>
@@ -435,6 +484,28 @@ export default function ForumChannelPage() {
                             </button>
                           </span>
                         )}
+                      </div>
+                      {/* Quick-reaction bar on hover (one-click emoji, like GroupMe) */}
+                      <div className="flex items-center gap-0.5 mb-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        {QUICK_REACTION_EMOJIS.map((emoji) => {
+                          const current = (msg.reactions ?? []).find((r) => r.emoji === emoji)
+                          const haveReacted = current?.user_ids.includes(user?.id ?? "")
+                          return (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleReaction(msg.id, emoji, current)}
+                              className={cn(
+                                "min-h-[36px] min-w-[36px] flex items-center justify-center rounded text-base hover:bg-white/10 touch-manipulation",
+                                haveReacted && "bg-[#C8A94A]/20"
+                              )}
+                              aria-label={`React with ${emoji}`}
+                              title={`React ${emoji}`}
+                            >
+                              {emoji}
+                            </button>
+                          )
+                        })}
                       </div>
                       {parentMsg && (
                         <p className="text-xs text-white/50 mb-1 border-l-2 border-white/20 pl-2">

@@ -51,6 +51,11 @@ const adminNavItems = [
     icon: "💳",
   },
   {
+    title: "Messaging",
+    href: "/admin/messaging",
+    icon: "📬",
+  },
+  {
     title: "NCHSAA",
     href: "/admin/nchsaa",
     icon: "📑",

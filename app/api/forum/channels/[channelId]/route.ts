@@ -40,15 +40,17 @@ export async function GET(
 
   const { data: group } = await admin
     .from("forum_groups")
-    .select("name")
+    .select("name, logo_url")
     .eq("id", groupId)
     .single()
 
+  const g = group as { name: string; logo_url?: string | null } | null
   return NextResponse.json({
     id: (channel as { id: string }).id,
     name: (channel as { name: string }).name,
     group_id: groupId,
-    group_name: group ? (group as { name: string }).name : null,
+    group_name: g?.name ?? null,
+    group_logo_url: g?.logo_url ?? null,
     type: (channel as { type: string }).type,
     coach_only: (channel as { coach_only: boolean }).coach_only,
   })

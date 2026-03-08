@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 export const dynamic = "force-dynamic"
 
 export type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
-export type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
+export type ForumGroup = { id: string; name: string; visibility: string; logo_url?: string | null; channels: ForumChannel[] }
 export type ForumDmConversation = { id: string; type: string; last_message_at: string | null }
 export type LegacyDm = { id: string; name: string; unread_count: number }
 
@@ -43,12 +43,12 @@ export async function GET() {
   if (groupIds.length > 0) {
     const { data: groupRows } = await supabase
       .from("forum_groups")
-      .select("id, name, visibility")
+      .select("id, name, visibility, logo_url")
       .in("id", groupIds)
     const groupsById = new Map<string | null, ForumGroup>()
     for (const g of groupRows ?? []) {
-      const row = g as { id: string; name: string; visibility: string }
-      groupsById.set(row.id, { id: row.id, name: row.name, visibility: row.visibility, channels: [] })
+      const row = g as { id: string; name: string; visibility: string; logo_url?: string | null }
+      groupsById.set(row.id, { id: row.id, name: row.name, visibility: row.visibility, logo_url: row.logo_url ?? null, channels: [] })
     }
 
     const { data: channelRows } = await supabase

@@ -577,3 +577,37 @@ If any are missing, SMS is skipped (no-op). Implementation: `lib/sms.ts` (`sendS
 **Resend (email):** Already used elsewhere (Blue invite, order confirmation). Set `RESEND_API_KEY`. New-message emails use `sendNewMessageNotificationEmail` in `lib/email.ts`. From address: same as Blue (`info@ncwrestlingunited.com`).
 
 Use this doc as the single technical source of truth when implementing RecruitNC Messaging Phase 1.
+
+---
+
+## 12. Admin Command Center — blast composer and formatting
+
+**Goal:** One audience (RecruitNC members, filter by profile and group), three delivery paths: **RecruitNC Messenger** (in-app), **Email**, and **SMS (text)**. Where the channel supports it, the composer should offer **full formatting**: bold, underline, hyperlinks, photo attachments, bullets, numbering, and emoji.
+
+### 12.1 Formatting support by channel
+
+| Feature | RecruitNC Messenger | Email | SMS (text) |
+|--------|----------------------|-------|------------|
+| **Bold** | ✅ (Markdown or rich editor) | ✅ (HTML) | ❌ (plain text only) |
+| **Underline** | ✅ | ✅ (HTML) | ❌ |
+| **Hyperlinks** | ✅ (clickable links) | ✅ (HTML `<a>`) | ✅ (plain URL in body) |
+| **Photo attachments** | ✅ (existing forum/hub upload) | ✅ (inline or attachment) | ❌ (MMS not in scope; link to image URL if needed) |
+| **Bullets / numbering** | ✅ (Markdown or rich) | ✅ (HTML list) | ✅ (plain: "1. Item 2. Item" or "- Item") |
+| **Emoji** | ✅ (picker + unicode) | ✅ (unicode in HTML) | ✅ (unicode) |
+
+- **RecruitNC Messenger:** Use the same rich input as forum/thread composer: Markdown or a simple rich editor (e.g. TipTap/Slate) so pasted links are auto-linked, and support **bold**, *italic*, underline, bullet/numbered lists, and image upload. Emoji picker already exists (`ForumEmojiPicker`, custom emoji API). Store body as Markdown or HTML; render in message bubble with the same `ForumMessageBody`-style rendering.
+- **Email:** Send HTML body via Resend. Composer produces HTML (or Markdown compiled to HTML). Support inline images (hosted URLs) and/or attachments. Plain-text fallback: strip tags for the `text` part of the email.
+- **SMS:** Plain text only. Strip all formatting; send links as raw URLs. Emoji and plain bullets/numbering (e.g. "• Item" or "1. Item") are preserved. No images (no MMS in initial scope).
+
+### 12.2 Composer UX (when building the blast flow)
+
+- **Single composer** with a toggle or tabs: “Send via: In-app ✓ | Email ✓ | SMS ✓”. User selects one or more channels; the same content is used and adapted per channel (rich for in-app/email, plain for SMS).
+- **Toolbar or shortcuts:** Bold, underline, link, bullet list, numbered list, emoji picker, attach image (for in-app and email; disabled or “link only” for SMS).
+- **Preview:** Optional “Preview as in-app” / “Preview as email” / “Preview as SMS” so the sender sees how each channel will render.
+- **Validation:** SMS length (e.g. 1600 chars for long concatenated segments); email subject line required when Email is selected.
+
+### 12.3 Implementation notes
+
+- **Messenger path:** Reuse forum/hub message body rendering (links, line breaks, custom emoji). For announcements/blasts, post to the appropriate thread(s) or create a one-off announcement; store body in the same format as existing messages (e.g. Markdown or HTML in `messaging_messages.body`).
+- **Email path:** Resend `html` + optional `text`; attachments array if supporting file attach. From address and template per existing `lib/email.ts` patterns.
+- **SMS path:** `lib/sms.ts` `sendSms(to, body)`. Body = plain text only; optionally truncate with “…” and link to full message in-app.

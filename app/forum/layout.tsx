@@ -21,7 +21,7 @@ import { ForumMembersPanel } from "@/components/forum/forum-members-panel"
 import { ForumLayoutProvider } from "@/contexts/forum-layout-context"
 
 type ForumChannel = { id: string; name: string; type: string; coach_only: boolean }
-type ForumGroup = { id: string; name: string; visibility: string; channels: ForumChannel[] }
+type ForumGroup = { id: string; name: string; visibility: string; logo_url?: string | null; channels: ForumChannel[] }
 type ForumDm = { id: string; type: string; last_message_at: string | null }
 type LegacyDm = { id: string; name: string; unread_count?: number }
 type SearchUser = { user_id: string; display_name: string; email?: string | null }
@@ -389,7 +389,13 @@ export default function ForumLayout({
                           )}
                           style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                         >
-                          <Lock className="w-4 h-4 flex-shrink-0 text-white/60" />
+                          {(group as ForumGroup).logo_url ? (
+                            <span className="flex-shrink-0 w-8 h-8 rounded-full border border-white/20 overflow-hidden bg-white/10">
+                              <img src={(group as ForumGroup).logo_url!} alt="" className="w-full h-full object-cover" />
+                            </span>
+                          ) : (
+                            <Lock className="w-4 h-4 flex-shrink-0 text-white/60" />
+                          )}
                           <span className="truncate">{group.name}</span>
                         </HardLink>
                       </li>
@@ -420,7 +426,13 @@ export default function ForumLayout({
                             )}
                             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
                           >
-                            <Globe className="w-4 h-4 flex-shrink-0 text-white/60" />
+                            {(group as ForumGroup).logo_url ? (
+                              <span className="flex-shrink-0 w-8 h-8 rounded-full border border-white/20 overflow-hidden bg-white/10">
+                                <img src={(group as ForumGroup).logo_url!} alt="" className="w-full h-full object-cover" />
+                              </span>
+                            ) : (
+                              <Globe className="w-4 h-4 flex-shrink-0 text-white/60" />
+                            )}
                             <span className="truncate">{group.name}</span>
                           </HardLink>
                         </li>
