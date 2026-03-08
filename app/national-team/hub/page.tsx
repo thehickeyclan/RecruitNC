@@ -11,6 +11,7 @@ import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import { getHubGroupForEvent, HUB_EVENT_GROUPS } from "@/lib/national-team-events"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
@@ -192,9 +193,61 @@ export default function NationalTeamHubPage() {
             )}
           </>
         ) : (
-          events.map((event) => (
-            <EventHubSection key={event.eventSlug} event={event} currentUserId={user?.id ?? ""} />
-          ))
+          (() => {
+            type Section =
+              | { type: "single"; event: HubEvent }
+              | { type: "group"; groupKey: string; groupName: string; eventsWithLabels: { event: HubEvent; label: string }[] }
+            const eventBySlug = new Map(events.map((e) => [e.eventSlug, e]))
+            const groupKeyToEvents = new Map<string, HubEvent[]>()
+            const standalone: HubEvent[] = []
+            for (const event of events) {
+              const group = getHubGroupForEvent(event.eventSlug)
+              if (!group) {
+                standalone.push(event)
+                continue
+              }
+              const list = groupKeyToEvents.get(group.groupKey) ?? []
+              list.push(event)
+              groupKeyToEvents.set(group.groupKey, list)
+            }
+            const sections: Section[] = []
+            for (const [groupKey, groupEvents] of groupKeyToEvents) {
+              if (groupEvents.length >= 2) {
+                const members = HUB_EVENT_GROUPS[groupKey] ?? []
+                const ordered = members
+                  .map((m) => {
+                    const ev = eventBySlug.get(m.eventSlug)
+                    return ev ? { event: ev, label: m.label } as const : null
+                  })
+                  .filter((x): x is { event: HubEvent; label: string } => !!x)
+                if (ordered.length >= 2) {
+                  sections.push({
+                    type: "group",
+                    groupKey,
+                    groupName: getHubGroupForEvent(ordered[0].event.eventSlug)!.groupName,
+                    eventsWithLabels: ordered,
+                  })
+                  continue
+                }
+              }
+              for (const e of groupEvents) standalone.push(e)
+            }
+            for (const event of standalone) {
+              sections.push({ type: "single", event })
+            }
+            return sections.map((s) =>
+              s.type === "single" ? (
+                <EventHubSection key={s.event.eventSlug} event={s.event} currentUserId={user?.id ?? ""} />
+              ) : (
+                <GroupedEventHubSection
+                  key={s.groupKey}
+                  groupName={s.groupName}
+                  eventsWithLabels={s.eventsWithLabels}
+                  currentUserId={user?.id ?? ""}
+                />
+              )
+            )
+          })()
         )}
 
         {/* Single “what’s coming” note instead of three placeholder cards */}
@@ -633,6 +686,224 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
           <h3 className="text-sm font-medium text-gray-700 mb-2">Athlete cards (IG)</h3>
           <p className="text-sm text-gray-500">Individual cards for social announcements will be added here.</p>
         </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Shared hub section when multiple teams (e.g. Main + Select) share one hub. */
+function GroupedEventHubSection({
+  groupName,
+  eventsWithLabels,
+  currentUserId,
+}: {
+  groupName: string
+  eventsWithLabels: { event: HubEvent; label: string }[]
+  currentUserId: string
+}) {
+  const events = eventsWithLabels.map((x) => x.event)
+  const firstEvent = events[0]
+  const myRegs = events.flatMap((e) => e.myRegistrations ?? [])
+  const hasThread = !!firstEvent?.threadId && !!currentUserId
+  const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
+  const [addSearchQuery, setAddSearchQuery] = useState("")
+  const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
+  const [addSearching, setAddSearching] = useState(false)
+  const [addingId, setAddingId] = useState<string | null>(null)
+  const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  useEffect(() => {
+    if (addSearchQuery.trim().length < 2) {
+      setAddSearchResults([])
+      return
+    }
+    const t = setTimeout(() => {
+      setAddSearching(true)
+      fetch(
+        `/api/national-team/workspace/${encodeURIComponent(firstEvent.eventSlug)}/users/search?q=${encodeURIComponent(addSearchQuery.trim())}`,
+        { credentials: "include" }
+      )
+        .then((r) => r.json())
+        .then((data) => setAddSearchResults(data.users ?? []))
+        .catch(() => setAddSearchResults([]))
+        .finally(() => setAddSearching(false))
+    }, 300)
+    return () => clearTimeout(t)
+  }, [addSearchQuery, firstEvent.eventSlug])
+
+  const handleAddMember = async (userId: string) => {
+    setAddMessage(null)
+    setAddingId(userId)
+    try {
+      let lastError: string | null = null
+      for (const event of events) {
+        const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/members`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ user_id: userId }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) lastError = data?.error ?? "Could not add member."
+      }
+      if (!lastError) {
+        setAddMessage({ type: "success", text: "Added to all teams. They can now see this hub and the group chat." })
+        setAddSearchResults((prev) => prev.filter((u) => u.user_id !== userId))
+      } else {
+        setAddMessage({ type: "error", text: lastError })
+      }
+    } catch {
+      setAddMessage({ type: "error", text: "Request failed. Try again." })
+    } finally {
+      setAddingId(null)
+    }
+  }
+
+  const isNHSCA = firstEvent.eventSlug === "nhsca-duals-2026" || firstEvent.eventName.toLowerCase().includes("nhsca")
+
+  return (
+    <Card className="overflow-hidden rounded-2xl border-[#003366]/15 shadow-sm">
+      <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+        <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{groupName}</CardTitle>
+        <CardDescription className="text-gray-600">Dashboard and updates — both teams</CardDescription>
+        <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab("dashboard")}
+            className={cn(
+              "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+              activeTab === "dashboard"
+                ? "border-[#003366] text-[#003366] bg-white"
+                : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+            )}
+          >
+            <LayoutDashboard className="inline-block w-4 h-4 mr-1.5 align-middle" />
+            Dashboard
+          </button>
+          {hasThread && (
+            <button
+              type="button"
+              onClick={() => setActiveTab("updates")}
+              className={cn(
+                "min-h-[44px] px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 -mb-px transition-colors",
+                activeTab === "updates"
+                  ? "border-[#003366] text-[#003366] bg-white"
+                  : "border-transparent text-gray-600 hover:text-[#003366] hover:bg-white/50"
+              )}
+            >
+              <Megaphone className="inline-block w-4 h-4 mr-1.5 align-middle" />
+              Updates
+            </button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {activeTab === "updates" && hasThread && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Announcements</h3>
+            <HubUpdatesList threadId={firstEvent.threadId!} />
+          </div>
+        )}
+        {activeTab === "dashboard" && (
+          <>
+            {isNHSCA && <NHSCA2026HubInfo />}
+            {myRegs.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Your registration</h3>
+                <div className="rounded-md border bg-gray-50/50 p-4 space-y-3">
+                  {myRegs.map((r) => (
+                    <div key={r.id} className="text-sm">
+                      <p className="font-medium text-[#003366]">
+                        {r.athlete_first_name} {r.athlete_last_name}
+                      </p>
+                      <p className="text-gray-600 mt-0.5">
+                        Weight: {r.primary_weight} · School: {r.high_school || "—"} · Grad: {r.graduation_year}
+                      </p>
+                      <p className="text-gray-500 mt-0.5">Status: {r.status}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Add RecruitNC user
+              </h3>
+              <p className="text-xs text-gray-500 mb-2">
+                Search by name or email. Added users will see this hub (both teams) and the group chat.
+              </p>
+              <Input
+                type="text"
+                placeholder="Search by name or email…"
+                value={addSearchQuery}
+                onChange={(e) => setAddSearchQuery(e.target.value)}
+                className="w-full max-w-sm mb-2"
+              />
+              <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1 bg-gray-50/50">
+                {addSearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
+                {!addSearching && addSearchQuery.trim().length >= 2 && addSearchResults.length === 0 && (
+                  <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
+                )}
+                {!addSearching &&
+                  addSearchResults.map((u) => (
+                    <button
+                      key={u.user_id}
+                      type="button"
+                      onClick={() => handleAddMember(u.user_id)}
+                      disabled={!!addingId}
+                      className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
+                    >
+                      <span className="font-medium text-gray-900">{u.display_name}</span>
+                      {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
+                      {addingId === u.user_id && <span className="text-xs text-[#003366]">Adding…</span>}
+                    </button>
+                  ))}
+              </div>
+              {addMessage && (
+                <p className={`text-sm mt-2 ${addMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>
+                  {addMessage.text}
+                </p>
+              )}
+            </div>
+            {eventsWithLabels.map(({ event: ev, label }) => (
+              <div key={ev.eventSlug}>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  {label} roster ({ev.roster.length})
+                </h3>
+                <div className="border rounded-md overflow-hidden overflow-x-auto">
+                  <table className="w-full text-sm min-w-[320px]">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="text-left p-2">Name</th>
+                        <th className="text-left p-2">Weight</th>
+                        <th className="text-left p-2">School</th>
+                        <th className="text-left p-2">Grad</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ev.roster.map((r) => (
+                        <tr key={r.id} className="border-t">
+                          <td className="p-2">
+                            {r.athlete_first_name} {r.athlete_last_name}
+                          </td>
+                          <td className="p-2">{r.primary_weight}</td>
+                          <td className="p-2">{r.high_school || "—"}</td>
+                          <td className="p-2">{r.graduation_year}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+            <HubDocumentsList contextType="event" contextId={firstEvent.eventSlug} />
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Athlete cards (IG)</h3>
+              <p className="text-sm text-gray-500">Individual cards for social announcements will be added here.</p>
+            </div>
           </>
         )}
       </CardContent>

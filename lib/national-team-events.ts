@@ -20,6 +20,9 @@ export const NATIONAL_TEAM_EVENTS: Record<string, NationalTeamEventConfig> = {
   "nhsca-duals-2026": {
     name: "NHSCA Duals 2026",
   },
+  "nhsca-duals-2026-select": {
+    name: "NHSCA Duals 2026 – Select",
+  },
   "aau-2026": {
     name: "AAU 2026",
   },
@@ -77,6 +80,31 @@ export function getEventSlugFromGroupName(groupName: string): string | null {
     const eventName = config.name
     if (eventName.toLowerCase() === nameLower || nameLower.includes(eventName.toLowerCase())) {
       return config.eventSlug ?? eventName.replace(/\s+/g, "-").toLowerCase()
+    }
+  }
+  return null
+}
+
+/** Hub display grouping: one hub section per key, with multiple event slugs and labels (e.g. Main / Select). */
+export const HUB_EVENT_GROUPS: Record<string, { eventSlug: string; label: string }[]> = {
+  "nhsca-duals-2026": [
+    { eventSlug: "nhsca-duals-2026", label: "Main" },
+    { eventSlug: "nhsca-duals-2026-select", label: "Select" },
+  ],
+}
+
+export type HubGroupInfo = {
+  groupKey: string
+  groupName: string
+  members: { eventSlug: string; label: string }[]
+}
+
+/** If this event slug is part of a hub group, return the group info; otherwise null. */
+export function getHubGroupForEvent(eventSlug: string): HubGroupInfo | null {
+  for (const [groupKey, members] of Object.entries(HUB_EVENT_GROUPS)) {
+    if (members.some((m) => m.eventSlug === eventSlug)) {
+      const groupName = getEventName(members[0].eventSlug)
+      return { groupKey, groupName, members }
     }
   }
   return null
