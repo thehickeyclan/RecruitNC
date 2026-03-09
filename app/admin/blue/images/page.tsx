@@ -51,6 +51,7 @@ export default function AdminBlueImagesPage() {
     try {
       const res = await fetch("/api/blue/content", {
         cache: "no-store",
+        credentials: "include",
         headers: { "Cache-Control": "no-cache, no-store" },
       })
       if (!res.ok) throw new Error("Failed to load")
@@ -86,6 +87,7 @@ export default function AdminBlueImagesPage() {
       const res = await fetch("/api/admin/blue/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ key, value: url }),
       })
       const errBody = await res.json().catch(() => ({}))

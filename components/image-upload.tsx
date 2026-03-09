@@ -2,19 +2,10 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useId } from "react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
-
-interface ImageUploadProps {
-  category: string
-  onUploadComplete: (url: string) => void
-  existingImageUrl?: string
-  entityName?: string
-  aspectRatio?: "square" | "announcement" | "wide"
-  disabled?: boolean
-}
 
 interface ImageUploadProps {
   category: string
@@ -90,10 +81,11 @@ export function ImageUpload({
         }
       }
 
-      // Upload via the API route
+      // Upload via the API route (credentials so cookies sent on same-origin)
       const response = await fetch("/api/images/upload", {
         method: "POST",
         body: formData,
+        credentials: "include",
       })
 
       if (!response.ok) {
@@ -133,6 +125,8 @@ export function ImageUpload({
       setUploadSuccess(false)
     } finally {
       setIsUploading(false)
+      // Reset input so same file can be selected again
+      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
@@ -202,17 +196,27 @@ export function ImageUpload({
         )}
       </div>
 
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+      <input
+        id={inputId}
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="sr-only"
+        tabIndex={-1}
+      />
 
       <div className="flex space-x-2">
         <Button
           type="button"
           variant="outline"
-          onClick={() => fileInputRef.current?.click()}
           disabled={isUploading || disabled}
           className="bg-white dark:bg-slate-900/70 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+          asChild
         >
-          {isUploading ? "Uploading..." : previewUrl ? "Change Image" : "Upload Image"}
+          <label htmlFor={inputId} className="cursor-pointer flex items-center justify-center min-w-[8rem]">
+            {isUploading ? "Uploading..." : previewUrl ? "Change Image" : "Upload Image"}
+          </label>
         </Button>
 
         {previewUrl && !disabled && (
