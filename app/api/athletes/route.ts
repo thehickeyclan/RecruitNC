@@ -71,7 +71,13 @@ export async function GET(request: Request) {
       }
 
       if (genderFilter && genderFilter !== "all") {
-        query = query.eq("gender", genderFilter)
+        if (genderFilter === "male") {
+          query = query.or("gender.ilike.male,gender.ilike.m,gender.ilike.men")
+        } else if (genderFilter === "female") {
+          query = query.or("gender.ilike.female,gender.ilike.f,gender.ilike.women")
+        } else {
+          query = query.ilike("gender", `%${genderFilter}%`)
+        }
         console.log(`🤼 Athletes API: Filtering by gender: ${genderFilter}`)
       }
 
