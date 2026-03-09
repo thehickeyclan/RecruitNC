@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -37,7 +37,7 @@ export default function HighSchoolsPage() {
     return gender
   }
 
-  const handleStatsUpdate = (s: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueSchools: number }) => {
+  const handleStatsUpdate = useCallback((s: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueSchools: number }) => {
     setStats({
       totalCommits: s.totalCommits,
       maleCommits: s.maleCommits,
@@ -45,7 +45,7 @@ export default function HighSchoolsPage() {
       uniqueSchools: s.uniqueSchools,
     })
     setStatsLoading(false)
-  }
+  }, [])
 
   // Reset banner loading when filters change so we show "..." until leaderboard reports
   useEffect(() => {

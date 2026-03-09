@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
-import { Search, Users, Trophy, FileSearch } from "lucide-react"
+import { Search, Users, Trophy, FileSearch, LayoutGrid, List } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { AthletesLegacySearchContent } from "@/components/athletes-legacy-search-content"
+import { HardLink } from "@/components/hard-link"
 
 const NC_NAVY = "#003366"
 interface Athlete {
@@ -43,6 +44,7 @@ interface StatsData {
 }
 
 type AthletesTab = "commitments" | "legacy"
+type CommitViewMode = "cards" | "table"
 
 export default function AthletesPage() {
   const searchParams = useSearchParams()
@@ -66,6 +68,7 @@ export default function AthletesPage() {
     divisions: { D1: 0, D2: 0, D3: 0, NAIA: 0, NJCAA: 0 },
   })
   const [statsLoading, setStatsLoading] = useState(true)
+  const [commitViewMode, setCommitViewMode] = useState<CommitViewMode>("cards")
 
   useEffect(() => {
     async function fetchAthletes() {
@@ -460,6 +463,29 @@ export default function AthletesPage() {
         </div>
 
         <div className="container mx-auto px-4 py-8">
+          {!loading && filteredAthletes.length > 0 && (
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <span className="text-sm text-gray-600">View:</span>
+              <Button
+                variant={commitViewMode === "cards" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCommitViewMode("cards")}
+                style={commitViewMode === "cards" ? { backgroundColor: NC_NAVY } : {}}
+              >
+                <LayoutGrid className="h-4 w-4 mr-1.5" />
+                Cards
+              </Button>
+              <Button
+                variant={commitViewMode === "table" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCommitViewMode("table")}
+                style={commitViewMode === "table" ? { backgroundColor: NC_NAVY } : {}}
+              >
+                <List className="h-4 w-4 mr-1.5" />
+                Table
+              </Button>
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
@@ -468,6 +494,42 @@ export default function AthletesPage() {
           ) : filteredAthletes.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600">No athletes found matching your criteria.</p>
+            </div>
+          ) : commitViewMode === "table" ? (
+            <div className="border rounded-lg overflow-hidden overflow-x-auto bg-white">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="text-left p-3 font-semibold text-gray-700">Name</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Class</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">College</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Division</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">High School</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Weight</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Gender</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {normalizeAthleteList(filteredAthletes).map((athlete) => (
+                    <tr key={athlete.id} className="border-b border-gray-100 hover:bg-gray-50/80">
+                      <td className="p-3">
+                        <HardLink
+                          href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
+                          className="font-medium text-[#003366] hover:underline"
+                        >
+                          {athlete.name}
+                        </HardLink>
+                      </td>
+                      <td className="p-3 text-gray-700">{athlete.graduationyear ?? "—"}</td>
+                      <td className="p-3 text-gray-700">{athlete.college || "—"}</td>
+                      <td className="p-3 text-gray-700">{athlete.division || "—"}</td>
+                      <td className="p-3 text-gray-700">{athlete.highschool || "—"}</td>
+                      <td className="p-3 text-gray-700">{athlete.weightclass ?? "—"}</td>
+                      <td className="p-3 text-gray-700">{athlete.gender || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

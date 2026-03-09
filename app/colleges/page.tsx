@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -33,14 +33,14 @@ function NewCollegesPage() {
     return gender !== "all" || year !== "all" || searchTerm !== "" || division !== "all" || metric !== "total_commits"
   }
 
-  // Handle stats update from the leaderboard component
-  const handleStatsUpdate = (stats: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueColleges: number }) => {
+  // Handle stats update from the leaderboard component (stable ref to avoid effect loop)
+  const handleStatsUpdate = useCallback((stats: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueColleges: number }) => {
     setTotalCommits(stats.totalCommits)
     setMaleCommits(stats.maleCommits)
     setFemaleCommits(stats.femaleCommits)
     setUniqueColleges(stats.uniqueColleges)
     setLoading(false)
-  }
+  }, [])
 
   const hasActiveFilters = checkActiveFilters()
 
