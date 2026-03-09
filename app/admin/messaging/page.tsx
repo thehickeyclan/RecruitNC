@@ -369,6 +369,7 @@ export default function AdminMessagingPage() {
         )}
 
         {activeTab === "compose" && (
+        <>
         <Card className="max-w-3xl border-[#003366]/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#003366]">
@@ -582,6 +583,8 @@ export default function AdminMessagingPage() {
               </Button>
             </CardContent>
           </Card>
+        )}
+        </>
         )}
       </div>
     </div>
