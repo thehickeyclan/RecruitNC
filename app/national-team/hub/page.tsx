@@ -871,7 +871,7 @@ function GroupedEventHubSection({
             {eventsWithLabels.map(({ event: ev, label }) => (
               <div key={ev.eventSlug}>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">
-                  {label} roster ({ev.roster.length})
+                  {label} Roster ({ev.roster.length})
                 </h3>
                 <div className="border rounded-md overflow-hidden overflow-x-auto">
                   <table className="w-full text-sm min-w-[320px]">

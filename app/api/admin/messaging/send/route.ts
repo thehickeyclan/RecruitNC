@@ -165,6 +165,30 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  try {
+    await admin.from("admin_blast_log").insert({
+      sent_by_user_id: adminUserId,
+      sent_at: new Date().toISOString(),
+      audience_profile: profile ?? null,
+      audience_group: group ?? null,
+      subject,
+      body: rawBody,
+      body_snippet: rawBody.slice(0, 200),
+      channels_in_app: channels.inApp,
+      channels_email: channels.email,
+      channels_sms: channels.sms,
+      recipient_count: recipients.length,
+      result_in_app_sent: result.inApp?.sent ?? null,
+      result_in_app_thread_id: result.inApp?.threadId ?? null,
+      result_email_sent: result.email.sent,
+      result_email_failed: result.email.failed,
+      result_sms_sent: result.sms.sent,
+      result_sms_failed: result.sms.failed,
+    })
+  } catch (e) {
+    console.warn("[admin/messaging/send] admin_blast_log insert skipped:", (e as Error).message)
+  }
+
   return NextResponse.json({
     ok: true,
     recipientCount: recipients.length,

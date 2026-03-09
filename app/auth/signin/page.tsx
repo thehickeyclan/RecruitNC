@@ -20,6 +20,7 @@ export default function SignInPage() {
   const [error, setError] = useState("")
   const [stuckInIframe, setStuckInIframe] = useState(false)
   const [clearingCooldown, setClearingCooldown] = useState(false)
+  const [redirectingAfterSignIn, setRedirectingAfterSignIn] = useState(false)
   const mountedAt = useRef<number>(0)
 
   const clearRateLimitCooldown = async () => {
@@ -60,13 +61,20 @@ export default function SignInPage() {
     }
   }, [])
 
-  // If already logged in, redirect to returnTo or home to break redirect loops
+  // If already logged in, redirect only after server confirms session (avoids Chrome blink:
+  // stale client session → redirect → target page has no cookie → redirect back to signin).
   useEffect(() => {
-    if (isLoading) return
-    if (user) {
-      const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
-      window.location.href = target
-    }
+    if (isLoading || !user) return
+    let cancelled = false
+    const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
+    fetch("/api/profile", { credentials: "include" })
+      .then((r) => {
+        if (cancelled) return
+        if (r.ok) window.location.href = target
+        // 401 = server doesn't see session (e.g. Chrome dropped cookie); don't redirect so user can sign in again
+      })
+      .catch(() => { if (!cancelled) { /* stay on page */ } })
+    return () => { cancelled = true }
   }, [user, isLoading, returnTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,6 +94,7 @@ export default function SignInPage() {
       })
       const err = await res.json().catch(() => ({}))
       if (res.ok) {
+        setRedirectingAfterSignIn(true)
         const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
         setTimeout(() => { window.location.replace(next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin") }, 1200)
         return
@@ -105,9 +114,27 @@ export default function SignInPage() {
     })
     const data = await res.json().catch(() => ({}))
     if (res.ok) {
+      setRedirectingAfterSignIn(true)
       const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
-      // Use replace() and 1.2s delay so cookies from response are applied before navigation (reduces flicker).
-      setTimeout(() => { window.location.replace(target) }, 1200)
+      // Confirm cookie is readable (Chrome can drop it); then full-page redirect so session sticks.
+      const confirmThenGo = () => {
+        fetch("/api/profile", { credentials: "include" })
+          .then((r) => {
+            if (r.ok) {
+              window.location.replace(target)
+            } else {
+              setRedirectingAfterSignIn(false)
+              setLoading(false)
+              setError("Sign-in succeeded but the session didn’t stick in this browser. Try opening this page in a new tab (File → New Tab, then go to Sign In), or try another browser.")
+            }
+          })
+          .catch(() => {
+            setRedirectingAfterSignIn(false)
+            setLoading(false)
+            setError("Sign-in succeeded but we couldn’t verify the session. Try opening the app in a new tab and sign in again.")
+          })
+      }
+      setTimeout(confirmThenGo, 800)
       return
     }
     setError(data.error || "Invalid email or password.")
@@ -286,9 +313,9 @@ export default function SignInPage() {
                 <Button 
                   type="submit" 
                   className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold" 
-                  disabled={loading}
+                  disabled={loading || redirectingAfterSignIn}
                 >
-                  {loading ? "Signing in..." : "Sign In"}
+                  {redirectingAfterSignIn ? "Sign-in successful, redirecting…" : loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
               <div className="mt-4 text-center space-y-2">

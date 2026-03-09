@@ -15,9 +15,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send } from "lucide-react"
+import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send, Inbox, FolderOpen, Trash2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
 import type { RecipientRow } from "@/app/api/admin/messaging/recipients/route"
+import type { SentBlastRow } from "@/app/api/admin/messaging/sent/route"
 
 export default function AdminMessagingPage() {
   const [profiles, setProfiles] = useState<ProfileOption[]>([])
@@ -35,6 +37,16 @@ export default function AdminMessagingPage() {
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{ recipientCount: number; result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } } | null>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
+
+  const [activeTab, setActiveTab] = useState<"compose" | "sent" | "folders">("compose")
+  const [sent, setSent] = useState<SentBlastRow[]>([])
+  const [sentHasMore, setSentHasMore] = useState(false)
+  const [sentLoading, setSentLoading] = useState(false)
+  const [folders, setFolders] = useState<{ id: string; name: string; sort_order: number }[]>([])
+  const [threads, setThreads] = useState<{ id: string; name: string; type: string; context_type: string | null; context_id: string | null; last_message_at: string; folder_id: string | null }[]>([])
+  const [foldersLoading, setFoldersLoading] = useState(false)
+  const [newFolderName, setNewFolderName] = useState("")
+  const [creatingFolder, setCreatingFolder] = useState(false)
 
   const insertAtCursor = (before: string, after: string = "") => {
     const ta = bodyRef.current
@@ -94,6 +106,42 @@ export default function AdminMessagingPage() {
     }
   }, [loadingAudiences, profile, group])
 
+  const loadSent = (before?: string) => {
+    setSentLoading(true)
+    const url = before ? `/api/admin/messaging/sent?before=${encodeURIComponent(before)}&limit=30` : "/api/admin/messaging/sent?limit=30"
+    fetch(url, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        const list = data.sent ?? []
+        if (before) setSent((prev) => [...prev, ...list])
+        else setSent(list)
+        setSentHasMore(!!data.hasMore)
+      })
+      .catch(() => setSent([]))
+      .finally(() => setSentLoading(false))
+  }
+
+  const loadFoldersAndThreads = () => {
+    setFoldersLoading(true)
+    Promise.all([
+      fetch("/api/admin/messaging/folders", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/admin/messaging/threads", { credentials: "include" }).then((r) => r.json()),
+    ])
+      .then(([foldersRes, threadsRes]) => {
+        setFolders(foldersRes.folders ?? [])
+        setThreads(threadsRes.threads ?? [])
+      })
+      .catch(() => { setFolders([]); setThreads([]) })
+      .finally(() => setFoldersLoading(false))
+  }
+
+  useEffect(() => {
+    if (activeTab === "sent") loadSent()
+  }, [activeTab])
+  useEffect(() => {
+    if (activeTab === "folders") loadFoldersAndThreads()
+  }, [activeTab])
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-[#003366] to-[#004080] text-white shadow-lg">
@@ -116,6 +164,211 @@ export default function AdminMessagingPage() {
       <div className="container mx-auto px-4 py-8">
         <AdminHeader />
 
+        <div className="flex gap-1 border-b border-[#003366]/20 mb-6 max-w-3xl">
+          <button
+            type="button"
+            onClick={() => setActiveTab("compose")}
+            className={cn(
+              "min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === "compose" ? "border-[#003366] text-[#003366]" : "border-transparent text-gray-600 hover:text-[#003366]"
+            )}
+          >
+            <Send className="inline w-4 h-4 mr-2" />
+            Compose
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("sent")}
+            className={cn(
+              "min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === "sent" ? "border-[#003366] text-[#003366]" : "border-transparent text-gray-600 hover:text-[#003366]"
+            )}
+          >
+            <Inbox className="inline w-4 h-4 mr-2" />
+            Sent
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("folders")}
+            className={cn(
+              "min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+              activeTab === "folders" ? "border-[#003366] text-[#003366]" : "border-transparent text-gray-600 hover:text-[#003366]"
+            )}
+          >
+            <FolderOpen className="inline w-4 h-4 mr-2" />
+            Folders
+          </button>
+        </div>
+
+        {activeTab === "sent" && (
+          <Card className="max-w-3xl border-[#003366]/20">
+            <CardHeader>
+              <CardTitle className="text-[#003366]">Sent</CardTitle>
+              <CardDescription>History of blasts you’ve sent from Command Center.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {sentLoading && sent.length === 0 ? (
+                <div className="flex items-center gap-2 text-gray-500 py-8"><Loader2 className="h-5 w-5 animate-spin" /> Loading…</div>
+              ) : sent.length === 0 ? (
+                <p className="text-gray-500 py-8">No sent blasts yet. Use Compose to send one.</p>
+              ) : (
+                <>
+                  <div className="border rounded-md overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left p-2">Date</th>
+                          <th className="text-left p-2">Audience</th>
+                          <th className="text-left p-2">Subject</th>
+                          <th className="text-left p-2">Channels</th>
+                          <th className="text-right p-2">Recipients</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sent.map((row) => (
+                          <tr key={row.id} className="border-t">
+                            <td className="p-2 whitespace-nowrap">{new Date(row.sent_at).toLocaleString()}</td>
+                            <td className="p-2">
+                              {row.audience_group || row.audience_profile || "All"}
+                            </td>
+                            <td className="p-2 max-w-[180px] truncate" title={row.subject ?? undefined}>{row.subject || "—"}</td>
+                            <td className="p-2">
+                              {[row.channels_in_app && "In-app", row.channels_email && "Email", row.channels_sms && "SMS"].filter(Boolean).join(", ")}
+                            </td>
+                            <td className="p-2 text-right">{row.recipient_count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {sentHasMore && (
+                    <Button variant="outline" className="mt-4" disabled={sentLoading} onClick={() => loadSent(sent[sent.length - 1]?.id)}>
+                      {sentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Load more"}
+                    </Button>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "folders" && (
+          <Card className="max-w-3xl border-[#003366]/20">
+            <CardHeader>
+              <CardTitle className="text-[#003366]">Folders</CardTitle>
+              <CardDescription>Organize threads into folders. Create a folder, then assign threads below.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex gap-2 flex-wrap items-end">
+                <div>
+                  <Label className="text-[#003366] text-xs">New folder</Label>
+                  <Input
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    placeholder="e.g. Blue, NHSCA"
+                    className="mt-1 w-48"
+                  />
+                </div>
+                <Button
+                  disabled={!newFolderName.trim() || creatingFolder}
+                  onClick={async () => {
+                    setCreatingFolder(true)
+                    try {
+                      const res = await fetch("/api/admin/messaging/folders", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ name: newFolderName.trim() }),
+                      })
+                      const data = await res.json()
+                      if (res.ok && data.folder) {
+                        setNewFolderName("")
+                        loadFoldersAndThreads()
+                      } else {
+                        setError(data.error ?? "Failed to create folder")
+                      }
+                    } finally {
+                      setCreatingFolder(false)
+                    }
+                  }}
+                >
+                  {creatingFolder ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create folder"}
+                </Button>
+              </div>
+              {folders.length > 0 && (
+                <div>
+                  <Label className="text-[#003366] text-sm">Your folders</Label>
+                  <ul className="mt-2 space-y-1">
+                    {folders.map((f) => (
+                      <li key={f.id} className="flex items-center justify-between py-2 border-b">
+                        <span className="font-medium">{f.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={async () => {
+                            if (!confirm("Delete this folder? Threads will be unassigned.")) return
+                            const res = await fetch(`/api/admin/messaging/folders/${f.id}`, { method: "DELETE", credentials: "include" })
+                            if (res.ok) loadFoldersAndThreads()
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div>
+                <Label className="text-[#003366] text-sm">Threads — assign to folder</Label>
+                {foldersLoading && threads.length === 0 ? (
+                  <p className="text-gray-500 py-4">Loading threads…</p>
+                ) : threads.length === 0 ? (
+                  <p className="text-gray-500 py-4">No threads. You’ll see threads here when you’re a member of event or group chats (e.g. from hub).</p>
+                ) : (
+                  <div className="mt-2 border rounded-md divide-y">
+                    {threads.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between gap-4 p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{t.name}</p>
+                          <p className="text-xs text-gray-500">{t.context_type}/{t.context_id || "—"}</p>
+                        </div>
+                        <Select
+                          value={t.folder_id ?? "none"}
+                          onValueChange={async (val) => {
+                            const folderId = val === "none" ? null : val
+                            const res = await fetch(`/api/admin/messaging/threads/${t.id}/folder`, {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "include",
+                              body: JSON.stringify({ folder_id: folderId }),
+                            })
+                            if (res.ok) loadFoldersAndThreads()
+                          }}
+                        >
+                          <SelectTrigger className="w-40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No folder</SelectItem>
+                            {folders.map((f) => (
+                              <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button variant="ghost" size="sm" asChild>
+                          <a href={`/forum`}>Open</a>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === "compose" && (
         <Card className="max-w-3xl border-[#003366]/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#003366]">

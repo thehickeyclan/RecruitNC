@@ -88,7 +88,7 @@ export function getEventSlugFromGroupName(groupName: string): string | null {
 /** Hub display grouping: one hub section per key, with multiple event slugs and labels (e.g. Main / Select). */
 export const HUB_EVENT_GROUPS: Record<string, { eventSlug: string; label: string }[]> = {
   "nhsca-duals-2026": [
-    { eventSlug: "nhsca-duals-2026", label: "Main" },
+    { eventSlug: "nhsca-duals-2026", label: "National" },
     { eventSlug: "nhsca-duals-2026-select", label: "Select" },
   ],
 }
