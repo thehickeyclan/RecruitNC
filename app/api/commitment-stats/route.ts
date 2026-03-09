@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getCollegesByIds } from "@/lib/colleges"
+import { matchesDivisionFilter } from "@/lib/division-display"
 
 export const dynamic = "force-dynamic"
 
@@ -19,6 +20,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const yearParam = searchParams.get("year")
+    const genderParam = searchParams.get("gender")
+    const divisionParam = searchParams.get("division")
 
     const supabase = await createClient()
     let query = supabase
@@ -31,6 +34,14 @@ export async function GET(request: Request) {
     if (yearParam && yearParam !== "all") {
       const y = Number.parseInt(yearParam, 10)
       if (Number.isFinite(y)) query = query.eq("graduationyear", y)
+    }
+
+    if (genderParam && genderParam !== "all") {
+      if (genderParam === "male") {
+        query = query.or("gender.ilike.male,gender.ilike.m,gender.ilike.men")
+      } else if (genderParam === "female") {
+        query = query.or("gender.ilike.female,gender.ilike.f,gender.ilike.women")
+      }
     }
 
     const { data: rows, error } = await query
@@ -46,14 +57,23 @@ export async function GET(request: Request) {
     const collegeIds = [...new Set((rows ?? []).map((r) => r.college_id).filter(Boolean))]
     const collegesMap = collegeIds.length > 0 ? await getCollegesByIds(supabase, collegeIds) : new Map()
 
+    // Apply division filter (division comes from colleges table)
+    let filteredRows = rows ?? []
+    if (divisionParam && divisionParam !== "all") {
+      filteredRows = filteredRows.filter((r) => {
+        const division = r.college_id ? collegesMap.get(r.college_id)?.division : null
+        return matchesDivisionFilter(division, divisionParam)
+      })
+    }
+
     const stats = {
-      totalCommitments: (rows ?? []).length,
+      totalCommitments: filteredRows.length,
       byYear: { "2025": 0, "2026": 0, other: 0 },
       byDivision: { D1: 0, D2: 0, D3: 0, NAIA: 0, NJCAA: 0 },
       byGender: { male: 0, female: 0 },
     }
 
-    for (const r of rows ?? []) {
+    for (const r of filteredRows) {
       const y = r.graduationyear
       if (y === 2025) stats.byYear["2025"]++
       else if (y === 2026) stats.byYear["2026"]++

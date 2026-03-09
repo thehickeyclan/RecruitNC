@@ -90,13 +90,17 @@ export default function AthletesPage() {
     fetchAthletes()
   }, [selectedGender, selectedYear, selectedDivision])
 
-  // Fetch stats from commitment-stats (division from colleges table); supports year filter
+  // Fetch stats from commitment-stats; banner follows all filters (year, gender, division)
   useEffect(() => {
     async function fetchStats() {
       try {
         setStatsLoading(true)
-        const yearParam = selectedYear !== "all" ? `?year=${selectedYear}` : ""
-        const response = await fetch(`/api/commitment-stats${yearParam}`, { cache: "no-store" })
+        const params = new URLSearchParams()
+        if (selectedYear !== "all") params.set("year", selectedYear)
+        if (selectedGender !== "all") params.set("gender", selectedGender)
+        if (selectedDivision !== "all") params.set("division", selectedDivision)
+        const qs = params.toString()
+        const response = await fetch(`/api/commitment-stats${qs ? `?${qs}` : ""}`, { cache: "no-store" })
         if (response.ok) {
           const data = await response.json()
           if (data.success && data.stats) {
@@ -122,7 +126,7 @@ export default function AthletesPage() {
       }
     }
     fetchStats()
-  }, [selectedYear])
+  }, [selectedYear, selectedGender, selectedDivision])
 
   const filteredAthletes = athletes.filter((athlete) => {
     const matchesSearch =

@@ -43,6 +43,7 @@ interface HighSchoolLeaderboardProps {
   year?: "all" | "2024" | "2025" | "2026" | "2027"
   limit?: number
   searchTerm?: string
+  onStatsUpdate?: (stats: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueSchools: number }) => void
 }
 
 export function HighSchoolLeaderboard({
@@ -51,6 +52,7 @@ export function HighSchoolLeaderboard({
   year = "all",
   limit = 10,
   searchTerm = "",
+  onStatsUpdate,
 }: HighSchoolLeaderboardProps) {
   const [schools, setSchools] = useState<HighSchoolStats[]>([])
   const [loading, setLoading] = useState(true)
@@ -119,6 +121,24 @@ export function HighSchoolLeaderboard({
 
     fetchLeaderboard()
   }, [metric, gender, year])
+
+  // Report banner stats from current (search-filtered) list so banner follows filters
+  useEffect(() => {
+    if (onStatsUpdate) {
+      const searchFiltered = searchTerm
+        ? schools.filter((s) => s.school_name.toLowerCase().includes(searchTerm.toLowerCase()))
+        : schools
+      const totalCommits = searchFiltered.reduce((sum, s) => sum + s.total_commits, 0)
+      const maleCommits = searchFiltered.reduce((sum, s) => sum + s.male_commits, 0)
+      const femaleCommits = searchFiltered.reduce((sum, s) => sum + s.female_commits, 0)
+      onStatsUpdate({
+        totalCommits,
+        maleCommits,
+        femaleCommits,
+        uniqueSchools: searchFiltered.length,
+      })
+    }
+  }, [schools, searchTerm, onStatsUpdate])
 
   useEffect(() => {
     const fetchSchoolLogos = async () => {

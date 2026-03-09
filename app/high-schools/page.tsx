@@ -22,6 +22,7 @@ export default function HighSchoolsPage() {
   const [selectedGender, setSelectedGender] = useState<"all" | "male" | "female">("all")
   const [selectedYear, setSelectedYear] = useState<"all" | "2024" | "2025" | "2026" | "2027">("all")
   const [stats, setStats] = useState<Stats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
 
   const normalizeGenderForAPI = (gender: "all" | "male" | "female"): "all" | "male" | "female" => {
     if (gender === "all") return "all"
@@ -36,24 +37,19 @@ export default function HighSchoolsPage() {
     return gender
   }
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const params = new URLSearchParams()
-        const normalizedGender = normalizeGenderForAPI(selectedGender)
-        if (normalizedGender !== "all") params.set("gender", normalizedGender)
-        if (selectedYear !== "all") params.set("year", selectedYear)
+  const handleStatsUpdate = (s: { totalCommits: number; maleCommits: number; femaleCommits: number; uniqueSchools: number }) => {
+    setStats({
+      totalCommits: s.totalCommits,
+      maleCommits: s.maleCommits,
+      femaleCommits: s.femaleCommits,
+      uniqueSchools: s.uniqueSchools,
+    })
+    setStatsLoading(false)
+  }
 
-        const response = await fetch(`/api/high-schools/stats?${params.toString()}`)
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data)
-        }
-      } catch (error) {
-        console.error("Failed to fetch stats:", error)
-      }
-    }
-    fetchStats()
+  // Reset banner loading when filters change so we show "..." until leaderboard reports
+  useEffect(() => {
+    setStatsLoading(true)
   }, [selectedGender, selectedYear])
 
   const clearFilters = () => {
@@ -78,39 +74,38 @@ export default function HighSchoolsPage() {
           </div>
         </div>
 
-        {stats && (
-          <div className="bg-gradient-to-r from-red-600 to-red-700 text-white">
-            <div className="container mx-auto px-4 py-8">
-              <div className="text-center mb-6">
-                <h2 className="text-3xl font-bold mb-2">HIGH SCHOOL WRESTLING EXCELLENCE</h2>
-                <p className="text-red-100 text-lg">North Carolina College Recruitment Pipeline</p>
-                <p className="text-red-200 text-sm mt-2">
-                  Total commits, men's wrestling, women's wrestling, and high schools represent data from the class of
-                  2025 onwards
-                </p>
-              </div>
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold mb-2">HIGH SCHOOL WRESTLING EXCELLENCE</h2>
+              <p className="text-red-100 text-lg">North Carolina College Recruitment Pipeline</p>
+              <p className="text-red-200 text-sm mt-2">
+                {selectedYear !== "all" || selectedGender !== "all" || searchTerm
+                  ? "Banner reflects current filters and search."
+                  : "Total commits, men's wrestling, women's wrestling, and high schools represent data from the class of 2025 onwards."}
+              </p>
+            </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold">{stats.totalCommits}</div>
-                  <div className="text-red-100 text-sm">Total Commits</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold">{stats.uniqueSchools}</div>
-                  <div className="text-red-100 text-sm">High Schools</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold">{stats.maleCommits}</div>
-                  <div className="text-red-100 text-sm">Men's Wrestling</div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                  <div className="text-3xl font-bold">{stats.femaleCommits}</div>
-                  <div className="text-red-100 text-sm">Women's Wrestling</div>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold">{statsLoading ? "..." : stats?.totalCommits ?? 0}</div>
+                <div className="text-red-100 text-sm">Total Commits</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold">{statsLoading ? "..." : stats?.uniqueSchools ?? 0}</div>
+                <div className="text-red-100 text-sm">High Schools</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold">{statsLoading ? "..." : stats?.maleCommits ?? 0}</div>
+                <div className="text-red-100 text-sm">Men's Wrestling</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <div className="text-3xl font-bold">{statsLoading ? "..." : stats?.femaleCommits ?? 0}</div>
+                <div className="text-red-100 text-sm">Women's Wrestling</div>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-6">
@@ -198,6 +193,7 @@ export default function HighSchoolsPage() {
             gender={normalizeGenderForAPI(selectedGender)}
             year={selectedYear}
             searchTerm={searchTerm}
+            onStatsUpdate={handleStatsUpdate}
           />
 
           <Card className="bg-amber-50 border-amber-200 mt-8">
