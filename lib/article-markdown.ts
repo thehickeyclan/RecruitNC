@@ -120,6 +120,11 @@ export function articleMarkdownToHtml(md: string): string {
           let formatted = inlineFormat(cell)
             .replace(/\u0000BR\u0000/g, "<br/>")
             .replace(/\u0001SMALL\u0001([\s\S]*?)\u0001\/SMALL\u0001/g, "<small class=\"text-white/70 text-xs\">$1</small>")
+          // Visual half-star: ★ clipped to 50% width (for ½ rating)
+          formatted = formatted.replace(
+            /<strong>½<\/strong>/g,
+            '<span class="inline-flex items-baseline align-middle" title="½ star"><span class="inline-block w-[0.5em] overflow-hidden text-white/90">★</span></span>'
+          )
           out.push(
             `<td class="border border-white/20 px-3 py-2 text-white/90">${formatted}</td>`
           )

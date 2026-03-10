@@ -49,7 +49,7 @@ This regional clustering reinforces why tournaments in Virginia and North Caroli
 | Journeymen | ★★★★ | Multiple placers | ~$630 | Out-of-Region (NY) | Folkstyle |
 | **NC State Championships** | **★★** | **98 State Champs, 392 State placers** | **NA** | **In-State (NC)** | **Folkstyle** |
 | **Fargo** | **★** | **0 placements** | **~$3,000+** | **Out-of-Region (ND)** | **Freestyle / Greco** |
-| **Junior National Duals** | **½** | **Poor NC participation, no team 2024** | **~$2,000+** | **Out-of-Region (WI)** | **Freestyle** |
+| **Junior National Duals** | **½** | **Poor NC participation, no team 2025** | **~$2,000+** | **Out-of-Region (WI)** | **Freestyle** |
 
 **Data based on North Carolina wrestlers from the Classes of 2025 and 2026. Tournament impact and success rates will differ in other states and regions.**
 
@@ -317,7 +317,7 @@ Participation among NC commits grew over 300% year-over-year, with 7 Division I 
 
 ## Junior National Duals (Milwaukee, WI)
 
-Junior National Duals is a freestyle dual-team event held in mid-June in Milwaukee, WI—often used to prepare for Fargo with a large volume of matches. It is expensive, requires significant travel, and has seen poor participation from North Carolina; the state did not field a team last year due to an inability to field a full roster. Both Junior National Duals and Fargo have historically had poor participation rates from North Carolina’s elite—the majority do not participate. For those reasons Junior National Duals is not included among the primary recruiting tournaments in this analysis; the folkstyle path (NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen) remains where NC commits most often appear.
+Junior National Duals is a freestyle dual-team event held in mid-June in Milwaukee, WI—often used to prepare for Fargo with a large volume of matches. It is expensive, requires significant travel, and has seen poor participation from North Carolina; the state did not field a team in 2025 due to an inability to field a full roster. Both Junior National Duals and Fargo have historically had poor participation rates from North Carolina’s elite—the majority do not participate. For those reasons Junior National Duals is not included among the primary recruiting tournaments in this analysis; the folkstyle path (NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen) remains where NC commits most often appear.
 
 ---
 
