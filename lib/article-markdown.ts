@@ -17,18 +17,25 @@ export function articleMarkdownToHtml(md: string): string {
   }
 
   function inlineFormat(text: string): string {
+    const linkPlaceholders: string[] = []
     let s = text
-    // [text](url) first (before escaping)
+    // [text](url) → placeholder so inserted HTML is not escaped below
     s = s.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (_, t, url) => {
       const u = escapeHtml(String(url))
       const t2 = inlineFormat(String(t)) // allow bold inside link text
-      return `<a href="${u}" class="text-[#003366] underline">${t2}</a>`
+      const tag = `<a href="${u}" class="text-[#003366] underline">${t2}</a>`
+      const idx = linkPlaceholders.length
+      linkPlaceholders.push(tag)
+      return `\u0000L${idx}\u0000`
     })
     s = escapeHtml(s)
     s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>")
     s = s.replace(/__([^_]+)__/g, "<strong>$1</strong>")
     s = s.replace(/_([^_]+)_/g, "<em>$1</em>")
+    linkPlaceholders.forEach((tag, i) => {
+      s = s.replace(`\u0000L${i}\u0000`, tag)
+    })
     return s
   }
 
