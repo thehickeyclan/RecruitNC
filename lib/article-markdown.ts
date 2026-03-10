@@ -106,9 +106,13 @@ export function articleMarkdownToHtml(md: string): string {
       for (const row of bodyRows) {
         out.push("<tr>")
         for (const c of row) {
-          // Allow <br> in cells: replace with placeholder, format, then restore <br/>
-          const withBr = c.replace(/<br\s*\/?>/gi, "\u0000BR\u0000")
-          const formatted = inlineFormat(withBr).replace(/\u0000BR\u0000/g, "<br/>")
+          // Allow <small>...</small> in cells (displayed as small text)
+          let cell = c.replace(/<small>([\s\S]*?)<\/small>/gi, "\u0001SMALL\u0001$1\u0001/SMALL\u0001")
+          // Allow <br> in cells
+          cell = cell.replace(/<br\s*\/?>/gi, "\u0000BR\u0000")
+          let formatted = inlineFormat(cell)
+            .replace(/\u0000BR\u0000/g, "<br/>")
+            .replace(/\u0001SMALL\u0001([\s\S]*?)\u0001\/SMALL\u0001/g, "<small class=\"text-white/70 text-xs\">$1</small>")
           out.push(
             `<td class="border border-white/20 px-3 py-2 text-white/90">${formatted}</td>`
           )
@@ -153,6 +157,18 @@ export function articleMarkdownToHtml(md: string): string {
       continue
     }
 
+    // Image: ![alt](url)
+    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)$/)
+    if (imgMatch) {
+      const alt = escapeHtml(imgMatch[1])
+      const src = escapeHtml(imgMatch[2])
+      out.push(
+        `<figure class="my-6"><img src="${src}" alt="${alt}" class="w-full max-w-2xl rounded-lg border border-white/20" /><figcaption class="mt-2 text-sm text-white/70">${alt || ""}</figcaption></figure>`
+      )
+      i++
+      continue
+    }
+
     // Paragraph: collect consecutive non-empty, non-special lines
     const paraLines: string[] = []
     while (
@@ -162,7 +178,8 @@ export function articleMarkdownToHtml(md: string): string {
       !lines[i].trim().startsWith("|") &&
       !/^---+$/.test(lines[i].trim()) &&
       !/^[-*]\s+/.test(lines[i].trim()) &&
-      !/^\d+\.\s+/.test(lines[i].trim())
+      !/^\d+\.\s+/.test(lines[i].trim()) &&
+      !/^!\[([^\]]*)\]\(([^)]+)\)$/.test(lines[i].trim())
     ) {
       paraLines.push(lines[i].trim())
       i++

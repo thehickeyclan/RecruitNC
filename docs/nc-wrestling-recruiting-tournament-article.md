@@ -44,9 +44,9 @@ This regional clustering reinforces why tournaments in Virginia and North Caroli
 |------------|------------|----------------------|-----------|----------|-------|
 | NHSCA Nationals | 11 All-Americans | ★★★★★ | ~$500 | Regional (VA) | Folkstyle |
 | Super 32 | 1 All-American | ★★★★★ | ~$250 | In-State (NC) | Folkstyle |
-| College Opens<br>*300% YoY Growth* | Multiple placers | ★★★★ | ~$110 | Regional | Folkstyle |
+| College Opens | Multiple placers | ★★★★ | ~$110 | Regional | Folkstyle |
 | NHSCA Duals | Gold Pool 7-1 | ★★★★ | ~$650 | Regional (VA) | Folkstyle |
-| Journeymen<br>*300% YoY Growth* | Multiple placers | ★★★ | ~$630 | Out-of-Region (NY) | Folkstyle |
+| Journeymen | Multiple placers | ★★★ | ~$630 | Out-of-Region (NY) | Folkstyle |
 | **NC State Championships** | **98 State Champs, 392 State placers** | **★★** | **NA** | **In-State (NC)** | **Folkstyle** |
 | **Fargo** | **0 placements** | **★** | **~$3,000+** | **Out-of-Region (ND)** | **Freestyle / Greco** |
 
@@ -80,38 +80,38 @@ The table below shows tournament participation for all 27 Division I commits fro
 
 | Athlete | College | NHSCA Result | Super 32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
-| Ian Fritz | Utah Valley | All-American 7-2 (2024 Jr), 4-2 (2023 So), 4-2 (2022 Fr) | 2-2 (2024), 0-2 (2023), 2-2 (2022) | DNC | - | - |
-| Liam Hickey | UNC | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | DNC | Patriot Open placer, Southeast Open | Journeymen |
-| Colt Campbell | App State | 3rd (2025 Sr), 5-2 (2024 Jr) | 3-2 (2024), 0-2 (2022) | DNC | Pembroke Open Champion | - |
-| Nathan McCartney | Gardner Webb | 5th (2025 Sr), competed 2024 Jr, 2023 So | DNC | DNC | - | - |
-| Everest Ouellette | NC State | 3rd (2025 Sr) | 1-2 (2024) | DNC | Patriot Open | - |
-| Cooper Foster | App State | 3rd (2025 Sr), 3rd (2024 Jr) | 4-2 (2023), 1-2 (2022) | DNC | DNC | - |
-| Kyser Kostoff | Presbyterian | DNC | 4-2 (2024) | DNC | DNC | - |
-| Xavier Wilson | NC State | 4th (2024 Jr) | DNC | DNC | - | - |
-| Alex Schweitzer | Presbyterian | 0-2 (2024 Jr) | DNC | 2-2 | DNC | - |
-| Damien Couture | Ohio U | 6th (2025 Sr) | 3-2 (2024) | 1-2 (2024), 1-2 (2025) | DNC | - |
-| Hayden Haynes | App State | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | 0-2 | DNC | - |
-| Kenneth Pritz | App State | 4-2 (2025 Sr), 4-2 (2024 Jr) | 1-2 (2024), 1-2 (2022) | DNC | DNC | - |
-| Kaden Helms | Gardner Webb | 1-2 (2025 Sr), 1-1 (2024 Jr) | 0-2 (2024) | DNC | - | - |
-| Till Helms | Gardner Webb | 3-2 (2025 Sr), 3-2 (2024 Jr) | 1-2 (2024) | DNC | - | - |
-| Gage Helms | Gardner Webb | 1-2 (2025 Sr), 0-2 (2024 Jr) | 0-2 (2024) | DNC | - | - |
-| Ryan Mann | Presbyterian | 0-2 (2025 Sr), 3-2 (2024 Jr), 2-2 (2023 So) | 2-2 (2024), 1-2 (2023), 0-2 (2022) | DNC | - | - |
-| John Henry Ehrenberger | VMI | DNC | DNC | DNC | DNC | - |
+| [Ian Fritz](/unified-profile/by-name?name=Ian+Fritz&year=2025) | Utah Valley | All-American 7-2 (2024 Jr), 4-2 (2023 So), 4-2 (2022 Fr) | 2-2 (2024), 0-2 (2023), 2-2 (2022) | DNC | - | - |
+| [Liam Hickey](/unified-profile/by-name?name=Liam+Hickey&year=2025) | UNC | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | DNC | Patriot Open placer, Southeast Open | Journeymen |
+| [Colt Campbell](/unified-profile/by-name?name=Colt+Campbell&year=2025) | App State | 3rd (2025 Sr), 5-2 (2024 Jr) | 3-2 (2024), 0-2 (2022) | DNC | Pembroke Open Champion | NHSCA Duals (2024) |
+| [Nathan McCartney](/unified-profile/by-name?name=Nathan+McCartney&year=2025) | Gardner Webb | 5th (2025 Sr), competed 2024 Jr, 2023 So | DNC | DNC | - | NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Everest Ouellette](/unified-profile/by-name?name=Everest+Ouellette&year=2025) | NC State | 3rd (2025 Sr) | 1-2 (2024) | DNC | Patriot Open | NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Cooper Foster](/unified-profile/by-name?name=Cooper+Foster&year=2025) | App State | 3rd (2025 Sr), 3rd (2024 Jr) | 4-2 (2023), 1-2 (2022) | DNC | DNC | NHSCA Duals (2024) |
+| [Kyser Kostoff](/unified-profile/by-name?name=Kyser+Kostoff&year=2025) | Presbyterian | DNC | 4-2 (2024) | DNC | DNC | NHSCA Duals (2025) |
+| [Xavier Wilson](/unified-profile/by-name?name=Xavier+Wilson&year=2025) | NC State | 4th (2024 Jr) | DNC | DNC | - | NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Alex Schweitzer](/unified-profile/by-name?name=Alex+Schweitzer&year=2025) | Presbyterian | 0-2 (2024 Jr) | DNC | 2-2 | DNC | NHSCA Duals (2025) |
+| [Damien Couture](/unified-profile/by-name?name=Damien+Couture&year=2025) | Ohio U | 6th (2025 Sr) | 3-2 (2024) | 1-2 (2024), 1-2 (2025) | DNC | NHSCA Duals (2024) |
+| [Hayden Haynes](/unified-profile/by-name?name=Hayden+Haynes&year=2025) | App State | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | 0-2 | DNC | NHSCA Duals (2025) |
+| [Kenneth Pritz](/unified-profile/by-name?name=Kenneth+Pritz&year=2025) | App State | 4-2 (2025 Sr), 4-2 (2024 Jr) | 1-2 (2024), 1-2 (2022) | DNC | DNC | NHSCA Duals (2024) |
+| [Kaden Helms](/unified-profile/by-name?name=Kaden+Helms&year=2025) | Gardner Webb | 1-2 (2025 Sr), 1-1 (2024 Jr) | 0-2 (2024) | DNC | - | - |
+| [Till Helms](/unified-profile/by-name?name=Till+Helms&year=2025) | Gardner Webb | 3-2 (2025 Sr), 3-2 (2024 Jr) | 1-2 (2024) | DNC | - | - |
+| [Gage Helms](/unified-profile/by-name?name=Gage+Helms&year=2025) | Gardner Webb | 1-2 (2025 Sr), 0-2 (2024 Jr) | 0-2 (2024) | DNC | - | - |
+| [Ryan Mann](/unified-profile/by-name?name=Ryan+Mann&year=2025) | Presbyterian | 0-2 (2025 Sr), 3-2 (2024 Jr), 2-2 (2023 So) | 2-2 (2024), 1-2 (2023), 0-2 (2022) | DNC | - | NHSCA Duals (2024) |
+| [John Henry Ehrenberger](/unified-profile/by-name?name=John+Henry+Ehrenberger&year=2025) | VMI | DNC | DNC | DNC | DNC | - |
 
 ### Class of 2026 (10 D1 Commits)
 
 | Athlete | College | NHSCA Result | Super 32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
-| Bentley Sly | App State | 3rd (2025 Jr), 6th (2024 So) | 4th AA 8-2 (2025), 5-2 (2024) | 5-2 | App State 2nd, Southeast Open, Patriot Open | Iron Man, Journeymen |
-| Lorenzo Alston | NC State | 2nd (2025 Jr), 4th (2024 So) | 5-2 (2025), 2-2 (2024) | DNC | Southeast Open, Patriot Open | Journeymen |
-| Gabe Rogers | Binghamton | Competed 2025 Jr | 4-2 (2025), 2-2 (2024) | 3-2 | Pembroke Champion, Southeast Open | Journeymen |
-| Cael Dunn | Campbell | 3-2 (2024 So), 6th place 4-3 (2023 Fr) | 2-2 (2025), 3-2 (2024) | DNC | - | Journeymen |
-| Andrew Meadows | Citadel | 4-2 (2025 Jr), 4-2 (2024 So) | 0-2 (2025) | 1-2 | - | Beast of East, Journeymen |
-| Austin Laws | Duke | 2-2 (2025 Jr) | 1-2 (2025) | DNC | - | - |
-| Austin Green | Davidson | 2-2 (2024 So), 1-2 (2023 Fr) | DNC | DNC | - | - |
-| Alexander May | Mercyhurst | 1-2 (2024 So), 2-2 (2023 Fr) | 0-2 (2025) | DNC | - | - |
-| Avery Rhymer | App State | 1-2 (2025 Jr) | 1-2 (2025) | DNC | - | Journeymen |
-| Spear Gorelick | Davidson | 0-2 (2024 So) | 0-2 (2024) | DNC | - | - |
+| [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) | App State | 3rd (2025 Jr), 6th (2024 So) | 4th AA 8-2 (2025), 5-2 (2024) | 5-2 | App State 2nd, Southeast Open, Patriot Open | Iron Man, Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Lorenzo Alston](/unified-profile/by-name?name=Lorenzo+Alston&year=2026) | NC State | 2nd (2025 Jr), 4th (2024 So) | 5-2 (2025), 2-2 (2024) | DNC | Southeast Open, Patriot Open | Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) | Binghamton | Competed 2025 Jr | 4-2 (2025), 2-2 (2024) | 3-2 | Pembroke Champion, Southeast Open | Journeymen, NHSCA Duals (2025) |
+| [Cael Dunn](/unified-profile/by-name?name=Cael+Dunn&year=2026) | Campbell | 3-2 (2024 So), 6th place 4-3 (2023 Fr) | 2-2 (2025), 3-2 (2024) | DNC | - | Journeymen, NHSCA Duals (2024, 2025) |
+| [Andrew Meadows](/unified-profile/by-name?name=Andrew+Meadows&year=2026) | Citadel | 4-2 (2025 Jr), 4-2 (2024 So) | 0-2 (2025) | 1-2 | - | Beast of East, Journeymen, NHSCA Duals (2024, 2025) |
+| [Austin Laws](/unified-profile/by-name?name=Austin+Laws&year=2026) | Duke | 2-2 (2025 Jr) | 1-2 (2025) | DNC | - | - |
+| [Austin Green](/unified-profile/by-name?name=Austin+Green&year=2026) | Davidson | 2-2 (2024 So), 1-2 (2023 Fr) | DNC | DNC | - | - |
+| [Alexander May](/unified-profile/by-name?name=Alexander+May&year=2026) | Mercyhurst | 1-2 (2024 So), 2-2 (2023 Fr) | 0-2 (2025) | DNC | - | - |
+| [Avery Rhymer](/unified-profile/by-name?name=Avery+Rhymer&year=2026) | App State | 1-2 (2025 Jr) | 1-2 (2025) | DNC | - | Journeymen, NHSCA Duals (2025) |
+| [Spear Gorelick](/unified-profile/by-name?name=Spear+Gorelick&year=2026) | Davidson | 0-2 (2024 So) | 0-2 (2024) | DNC | - | - |
 
 **Key:**
 - DNC = Did Not Compete
@@ -119,8 +119,8 @@ The table below shows tournament participation for all 27 Division I commits fro
 
 **D1 Tournament Participation Summary:**
 - **NHSCA:** 25 of 27 (93%) - 10 All-Americans
-- **Super 32:** 20 of 27 (74%) - 1 All-American (Bentley Sly, 4th)
-- **Fargo:** 6 of 27 (22%) - 0 All-Americans (2 winning records: Bentley Sly 5-2, Gabe Rogers 3-2)
+- **Super 32:** 20 of 27 (74%) - 1 All-American ([Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026), 4th)
+- **Fargo:** 6 of 27 (22%) - 0 All-Americans (2 winning records: [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) 5-2, [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) 3-2)
 - **College Opens:** 8 participants - Multiple documented placers
 - **Journeymen:** 7 participants - Multiple placers
 
@@ -167,15 +167,17 @@ For North Carolina wrestlers pursuing college recruiting exposure, NHSCA Nationa
 
 NHSCA Nationals produced 24 All-Americans from North Carolina in 2025 alone, more than any other national event involving NC wrestlers.
 
+![NC Community of 2025 All Americans. 24 NC All Americans in 2025 — record best in NC history.](/images/nhsca-2025-nc-all-americans.png)
+
 Several Division I commits placed at NHSCA Nationals, including:
 
-- Cooper Foster → Appalachian State (3rd)
-- Liam Hickey → UNC Chapel Hill (4th)
-- Nathan McCartney → Gardner-Webb (5th)
-- Colt Campbell → Appalachian State (3rd)
-- Hayden Haynes → Appalachian State (4th)
-- Everest Ouellette → NC State (3rd)
-- Damien Couture → Ohio University (6th)
+- [Cooper Foster](/unified-profile/by-name?name=Cooper+Foster&year=2025) → Appalachian State (3rd)
+- [Liam Hickey](/unified-profile/by-name?name=Liam+Hickey&year=2025) → UNC Chapel Hill (4th)
+- [Nathan McCartney](/unified-profile/by-name?name=Nathan+McCartney&year=2025) → Gardner-Webb (5th)
+- [Colt Campbell](/unified-profile/by-name?name=Colt+Campbell&year=2025) → Appalachian State (3rd)
+- [Hayden Haynes](/unified-profile/by-name?name=Hayden+Haynes&year=2025) → Appalachian State (4th)
+- [Everest Ouellette](/unified-profile/by-name?name=Everest+Ouellette&year=2025) → NC State (3rd)
+- [Damien Couture](/unified-profile/by-name?name=Damien+Couture&year=2025) → Ohio University (6th)
 
 Virginia Beach is also within driving distance for most North Carolina families, making the tournament accessible while still offering national competition.
 
@@ -210,7 +212,7 @@ Because of the depth of competition, Super 32 serves as one of the clearest earl
 
 73% of Division I commits in this dataset competed at Super 32, winning at twice the rate of Division II commits (49% vs 24%), reflecting the elite level of competition. At ~$250 with no travel required for NC families, it combines national-level competition with accessibility.
 
-**Only one All-American from tracked commits:** Bentley Sly (4th place)
+**Only one All-American from tracked commits:** [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) (4th place)
 
 ---
 
@@ -244,7 +246,7 @@ Athletes should carefully consider which level of college open best matches thei
 
 Because college weights begin at 125 pounds, high school wrestlers who compete below that weight class generally should not compete in college opens, regardless of skill level or high school accomplishments, due to the size and maturity gap.
 
-At ~$110, college opens are the most cost-effective recruiting opportunity with immediate college coach evaluation. Multiple Division I commits placed at regional opens (App State, Pembroke, Patriot), with venues across North Carolina and the Southeast accessible within a few hours of most NC population centers.
+At ~$110, college opens are the most cost-effective recruiting opportunity with immediate college coach evaluation. NC participation in college opens has seen strong growth among commits in this dataset. Multiple Division I commits placed at regional opens (App State, Pembroke, Patriot), with venues across North Carolina and the Southeast accessible within a few hours of most NC population centers.
 
 ---
 
@@ -263,7 +265,9 @@ NHSCA Duals is best suited for wrestlers who:
 - Are seeking national team competition
 - Want exposure against top club programs from around the country
 
-The NC United National Team's 7-1 Gold Pool finish set a record for North Carolina teams, increasing exposure for NC athletes alongside top national programs like Shutt. Dual meet competition allows college coaches to evaluate athletes in high-level team environments against nationally ranked opponents.
+![NC United - NHSCA Duals 2025. Virginia Beach, VA • Historic 7-1 Record.](/images/nhsca-duals-2025-team.png)
+
+Among the 27 Division I commits from the Classes of 2025 and 2026 in this dataset, **17 competed at NHSCA Duals** (11 of 17 from the Class of 2025, 6 of 10 from the Class of 2026)—further evidence of the event’s role on the recruiting path. The NC United National Team's 7-1 Gold Pool finish set a record for North Carolina teams, increasing exposure for NC athletes alongside top national programs like Shutt. Dual meet competition allows college coaches to evaluate athletes in high-level team environments against nationally ranked opponents.
 
 ---
 
@@ -293,9 +297,9 @@ Participation among NC commits grew over 300% year-over-year, with 7 Division I 
 
 ## In Season Tournaments with the Biggest Recruiting Impact
 
-**Beast of the East (December 20–21)** – Premier East Coast tournament with strong college coach attendance. Andrew Meadows (Citadel) competed.*
+**Beast of the East (December 20–21)** – Premier East Coast tournament with strong college coach attendance. [Andrew Meadows](/unified-profile/by-name?name=Andrew+Meadows&year=2026) (Citadel) competed.*
 
-**Ironman (December 12–13)** – One of the most competitive in-season tournaments in the country. Bentley Sly (App State) competed.*
+**Ironman (December 12–13)** – One of the most competitive in-season tournaments in the country. [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) (App State) competed.*
 
 **Tiger Invitational (December 21–22, Chapel Hill)** – Premier in-state high school tournament attracting strong teams from Virginia, West Virginia, Tennessee, and surrounding states.
 
@@ -328,7 +332,7 @@ Freestyle is the most prevalent style after college and at the international lev
 
 Historically, many of North Carolina's most elite folkstyle wrestlers have not emphasized freestyle. As a result, qualifying tournaments in North Carolina may be less competitive than qualification pathways for events like Super 32. Qualifying for Fargo does not automatically mean it is the right investment of time and money.
 
-For athletes serious about freestyle or Greco long-term, Southeast Regionals is often the strongest qualifying pathway. Historically, the large majority of wrestlers who compete at Fargo finish with losing or even records.
+For athletes serious about freestyle or Greco long-term, Southeast Regionals is often the strongest qualifying pathway. Historically, the large majority of wrestlers who compete at Fargo finish with losing or even records. However, those that place at Southeast Regionals almost always have the best performances at Fargo.
 
 **Data from this study:**
 
@@ -345,7 +349,7 @@ Because this study focuses on the tournaments that appear most often in the recr
 
 ## NC State Championships and Recruiting Evaluation
 
-The NCHSAA State Championships remain one of the most meaningful accomplishments in North Carolina wrestling. However, the structure presents challenges as a recruiting evaluation environment: 98 state champions, 392 placers, 784 qualifiers, and 7 divisions competing simultaneously.
+The NCHSAA State Championships remain one of the most meaningful accomplishments in North Carolina wrestling. The state meet has been significantly diluted, however, with the move to a seven-class (7A) system—[as covered in our news article](/article/seven-divisions-98-brackets-784-qualifiers)—making it even less of a college recruiting showcase and more about personal accomplishment. The structure presents clear challenges as a recruiting evaluation environment: 98 state champions, 392 placers, 784 qualifiers, and 7 divisions competing simultaneously.
 
 College coaches often evaluate prospects more efficiently at national folkstyle tournaments and college open events, which is why the state championships were not included among the primary recruiting tournaments in this analysis.
 
