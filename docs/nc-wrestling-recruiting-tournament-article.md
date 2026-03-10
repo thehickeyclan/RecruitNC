@@ -34,25 +34,25 @@ Across Division I and Division III commits, approximately **80% compete within 3
 - **Division I:** 22 of 27 commits (81%) compete regionally
 - **Division III:** 15 of 20 commits (75%) compete regionally
 
-This regional clustering reinforces why tournaments in Virginia and North Carolina (NHSCA Nationals, Super 32, College Opens across NC/VA/SC) align with where NC wrestlers ultimately compete in college.
+This regional clustering reinforces why tournaments in Virginia and North Carolina (NHSCA Nationals, Super32, College Opens across NC/VA/SC) align with where NC wrestlers ultimately compete in college.
 
 ---
 
 ## Tournament Comparison: Class of 2025 and 2026 Data
 
-| Tournament | NC Results | NC Recruiting Impact | Est. Cost | Location | Style |
-|------------|------------|----------------------|-----------|----------|-------|
-| NHSCA Nationals | 11 All-Americans | ★★★★★ | ~$500 | Regional (VA) | Folkstyle |
-| Super 32 | 1 All-American | ★★★★★ | ~$250 | In-State (NC) | Folkstyle |
-| College Opens | Multiple placers | ★★★★ | ~$110 | Regional | Folkstyle |
-| NHSCA Duals | Gold Pool 7-1 | ★★★★ | ~$650 | Regional (VA) | Folkstyle |
-| Journeymen | Multiple placers | ★★★ | ~$630 | Out-of-Region (NY) | Folkstyle |
-| **NC State Championships** | **98 State Champs, 392 State placers** | **★★** | **NA** | **In-State (NC)** | **Folkstyle** |
-| **Fargo** | **0 placements** | **★** | **~$3,000+** | **Out-of-Region (ND)** | **Freestyle / Greco** |
+| Tournament | NC Recruiting Impact | NC Results | Est. Cost | Location | Style |
+|------------|----------------------|------------|-----------|----------|-------|
+| NHSCA Nationals | ★★★★★ | 11 All-Americans | ~$500 | Regional (VA) | Folkstyle |
+| Super32 | ★★★★★ | 1 All-American | ~$250 | In-State (NC) | Folkstyle |
+| College Opens | ★★★★ | Multiple placers | ~$110 | Regional | Folkstyle |
+| NHSCA Duals | ★★★★ | Gold Pool 7-1 | ~$650 | Regional (VA) | Folkstyle |
+| Journeymen | ★★★ | Multiple placers | ~$630 | Out-of-Region (NY) | Folkstyle |
+| **NC State Championships** | **★★** | **98 State Champs, 392 State placers** | **NA** | **In-State (NC)** | **Folkstyle** |
+| **Fargo** | **★** | **0 placements** | **~$3,000+** | **Out-of-Region (ND)** | **Freestyle / Greco** |
 
 **Data based on North Carolina wrestlers from the Classes of 2025 and 2026. Tournament impact and success rates will differ in other states and regions.**
 
-**Cost assumptions:** Estimates include registration, travel, hotel (shared room when applicable), and food. Super 32 and College Opens assume in-state or regional travel. Fargo estimates include qualifying tournaments, athlete travel, parent travel and hotel accommodations, and team gear.
+**Cost assumptions:** Estimates include registration, travel, hotel (shared room when applicable), and food. Super32 and College Opens assume in-state or regional travel. Fargo estimates include qualifying tournaments, athlete travel, parent travel and hotel accommodations, and team gear.
 
 ---
 
@@ -63,7 +63,7 @@ When examining only Division I commits from the dataset, the tournament patterns
 Among the 27 Division I commits from the Classes of 2025 and 2026:
 
 - **93% competed at NHSCA Nationals**
-- **74% competed at Super 32**
+- **74% competed at Super32**
 - **Multiple College Opens placers**
 - **NHSCA Duals — NC United Wrestling's 7-1 Gold Pool finish signaled a shift in how college coaches evaluate NC talent in team settings**
 - **Journeymen participation up over 300% year-over-year - direct impact on college recruiting exposure**
@@ -78,7 +78,7 @@ The table below shows tournament participation for all 27 Division I commits fro
 
 ### Class of 2025 (17 D1 Commits)
 
-| Athlete | College | NHSCA Result | Super 32 Result | Fargo | College Opens | Other Notable |
+| Athlete | College | NHSCA Result | Super32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
 | [Ian Fritz](/unified-profile/by-name?name=Ian+Fritz&year=2025) | Utah Valley | All-American 7-2 (2024 Jr), 4-2 (2023 So), 4-2 (2022 Fr) | 2-2 (2024), 0-2 (2023), 2-2 (2022) | DNC | - | - |
 | [Liam Hickey](/unified-profile/by-name?name=Liam+Hickey&year=2025) | UNC | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | DNC | Patriot Open placer, Southeast Open | Journeymen |
@@ -100,7 +100,7 @@ The table below shows tournament participation for all 27 Division I commits fro
 
 ### Class of 2026 (10 D1 Commits)
 
-| Athlete | College | NHSCA Result | Super 32 Result | Fargo | College Opens | Other Notable |
+| Athlete | College | NHSCA Result | Super32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
 | [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) | App State | 3rd (2025 Jr), 6th (2024 So) | 4th AA 8-2 (2025), 5-2 (2024) | 5-2 | App State 2nd, Southeast Open, Patriot Open | Iron Man, Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
 | [Lorenzo Alston](/unified-profile/by-name?name=Lorenzo+Alston&year=2026) | NC State | 2nd (2025 Jr), 4th (2024 So) | 5-2 (2025), 2-2 (2024) | DNC | Southeast Open, Patriot Open | Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
@@ -119,12 +119,12 @@ The table below shows tournament participation for all 27 Division I commits fro
 
 **D1 Tournament Participation Summary:**
 - **NHSCA:** 25 of 27 (93%) - 10 All-Americans
-- **Super 32:** 20 of 27 (74%) - 1 All-American ([Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026), 4th)
+- **Super32:** 20 of 27 (74%) - 1 All-American ([Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026), 4th)
 - **Fargo:** 6 of 27 (22%) - 0 All-Americans (2 winning records: [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) 5-2, [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) 3-2)
 - **College Opens:** 8 participants - Multiple documented placers
 - **Journeymen:** 7 participants - Multiple placers
 
-The pattern is clear: 93% of Division I commits in this dataset competed at NHSCA, and 74% competed at Super 32. These are the tournaments where North Carolina Division I commits most frequently competed and earned All-American honors, while College Opens and Journeymen are growing significantly for good reason.
+The pattern is clear: 93% of Division I commits in this dataset competed at NHSCA, and 74% competed at Super32. These are the tournaments where North Carolina Division I commits most frequently competed and earned All-American honors, while College Opens and Journeymen are growing significantly for good reason.
 
 ---
 
@@ -167,7 +167,7 @@ For North Carolina wrestlers pursuing college recruiting exposure, NHSCA Nationa
 
 NHSCA Nationals produced 24 All-Americans from North Carolina in 2025 alone, more than any other national event involving NC wrestlers.
 
-![NC Community of 2025 All Americans. 24 NC All Americans in 2025 — record best in NC history.](/images/nhsca-2025-nc-all-americans.png)
+![24 NC All-Americans in 2025 — record best in NC history.](/images/nhsca-2025-nc-all-americans.png)
 
 Several Division I commits placed at NHSCA Nationals, including:
 
@@ -178,39 +178,42 @@ Several Division I commits placed at NHSCA Nationals, including:
 - [Hayden Haynes](/unified-profile/by-name?name=Hayden+Haynes&year=2025) → Appalachian State (4th)
 - [Everest Ouellette](/unified-profile/by-name?name=Everest+Ouellette&year=2025) → NC State (3rd)
 - [Damien Couture](/unified-profile/by-name?name=Damien+Couture&year=2025) → Ohio University (6th)
+- [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) → App State (3rd)
+- [Lorenzo Alston](/unified-profile/by-name?name=Lorenzo+Alston&year=2026) → NC State (2nd)
+- [Ian Fritz](/unified-profile/by-name?name=Ian+Fritz&year=2025) → Utah Valley (All-American)
 
 Virginia Beach is also within driving distance for most North Carolina families, making the tournament accessible while still offering national competition.
 
 ---
 
-### 2. Super 32 – Greensboro, NC
+### 2. Super32 – Greensboro, NC
 
-Super 32 is widely considered the premier high school recruiting tournament in the country, regularly attracting nearly every nationally ranked high school wrestler in the United States.
+Super32 is widely considered the premier high school recruiting tournament in the country, regularly attracting nearly every nationally ranked high school wrestler in the United States.
 
 #### Who Can Compete
 
-Entry into the Super 32 High School Division is earned either through early entry qualification or through regional qualifying tournaments.
+Entry into the Super32 High School Division is earned either through early entry qualification or through regional qualifying tournaments.
 
 Early entry may be earned through high-level results such as:
 - State championship placement
 - National tournament placement
-- Previous Super 32 placement
+- Previous Super32 placement
 - NHSCA placement
 - National rankings
 - Designated early entry tournaments
 
-All other wrestlers must qualify through regional Super 32 qualifying tournaments.
+All other wrestlers must qualify through regional Super32 qualifying tournaments.
 
 #### Who Should Compete
 
-Super 32 is best suited for wrestlers who:
+Super32 is best suited for wrestlers who:
 - Have demonstrated success at state or national events
 - Are capable of competing against nationally ranked athletes
 - Are pursuing high-level college recruiting exposure
 
-Because of the depth of competition, Super 32 serves as one of the clearest early-season benchmarks for elite high school wrestlers.
+Because of the depth of competition, Super32 serves as one of the clearest early-season benchmarks for elite high school wrestlers.
 
-73% of Division I commits in this dataset competed at Super 32, winning at twice the rate of Division II commits (49% vs 24%), reflecting the elite level of competition. At ~$250 with no travel required for NC families, it combines national-level competition with accessibility.
+73% of Division I commits in this dataset competed at Super32, winning at twice the rate of Division II commits (49% vs 24%), reflecting the elite level of competition. At ~$250 with no travel required for NC families, it combines national-level competition with accessibility.
 
 **Only one All-American from tracked commits:** [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) (4th place)
 
@@ -289,7 +292,7 @@ Acceptance is typically based on performance indicators such as:
 Journeymen is best suited for wrestlers who:
 - Have demonstrated state or national success
 - Are seeking elite early-season national competition
-- Are preparing for major folkstyle events such as Super 32 or NHSCA Nationals
+- Are preparing for major folkstyle events such as Super32 or NHSCA Nationals
 
 Participation among NC commits grew over 300% year-over-year, with 7 Division I commits competing. Several secured college commitments shortly after the event, demonstrating its recruiting value. Journeymen events often feature nationally ranked competition early in the season.
 
@@ -330,7 +333,7 @@ Freestyle is the most prevalent style after college and at the international lev
 
 **North Carolina Context:**
 
-Historically, many of North Carolina's most elite folkstyle wrestlers have not emphasized freestyle. As a result, qualifying tournaments in North Carolina may be less competitive than qualification pathways for events like Super 32. Qualifying for Fargo does not automatically mean it is the right investment of time and money.
+Historically, many of North Carolina's most elite folkstyle wrestlers have not emphasized freestyle. As a result, qualifying tournaments in North Carolina may be less competitive than qualification pathways for events like Super32. Qualifying for Fargo does not automatically mean it is the right investment of time and money.
 
 For athletes serious about freestyle or Greco long-term, Southeast Regionals is often the strongest qualifying pathway. Historically, the large majority of wrestlers who compete at Fargo finish with losing or even records. However, those that place at Southeast Regionals almost always have the best performances at Fargo.
 
@@ -357,7 +360,7 @@ College coaches often evaluate prospects more efficiently at national folkstyle 
 
 ## Final Takeaway
 
-The data suggests that North Carolina's recruiting path most often runs through national folkstyle tournaments such as NHSCA Nationals, Super 32, College Opens, NHSCA Duals, and Journeymen. These five tournaments appear consistently in the competitive histories of 86 college commits, producing measurable results where NC wrestlers have competed and succeeded.
+The data suggests that North Carolina's recruiting path most often runs through national folkstyle tournaments such as NHSCA Nationals, Super32, College Opens, NHSCA Duals, and Journeymen. These five tournaments appear consistently in the competitive histories of 86 college commits, producing measurable results where NC wrestlers have competed and succeeded.
 
 Colleges need to see you compete against the best competition in the country. Any tournament that gives you an opportunity to wrestle against nationally ranked kids (for our most elite) will be the best path to exposure at all levels of college wrestling.
 

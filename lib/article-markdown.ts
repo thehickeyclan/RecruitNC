@@ -23,7 +23,7 @@ export function articleMarkdownToHtml(md: string): string {
     s = s.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (_, t, url) => {
       const u = escapeHtml(String(url))
       const t2 = inlineFormat(String(t)) // allow bold inside link text
-      const tag = `<a href="${u}" class="text-[#003366] underline">${t2}</a>`
+      const tag = `<a href="${u}" class="text-white font-bold underline hover:text-white/90">${t2}</a>`
       const idx = linkPlaceholders.length
       linkPlaceholders.push(tag)
       return `\u0000L${idx}\u0000`
