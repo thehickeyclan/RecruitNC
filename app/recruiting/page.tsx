@@ -141,7 +141,7 @@ export default function RecruitingPage() {
               Navigate the college wrestling recruiting journey with division-specific guidance, 
               timelines, NCAA rules, and expert advice for every level of competition.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
               <Link href="#for-families">
                 <Button 
                   size="lg" 
@@ -159,6 +159,15 @@ export default function RecruitingPage() {
                   For Coaches →
                 </Button>
               </Link>
+              <a href="/recruiting/tournaments">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-2 border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/10 px-8 py-6 text-lg"
+                >
+                  5 Most Impactful Tournaments →
+                </Button>
+              </a>
             </div>
           </div>
         </div>
