@@ -163,7 +163,7 @@ export default function RecruitingPage() {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-2 border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/10 px-8 py-6 text-lg"
+                  className="bg-white text-[#003366] border-2 border-white hover:bg-white/90 hover:text-[#003366] px-8 py-6 text-lg"
                 >
                   5 Most Impactful Tournaments →
                 </Button>

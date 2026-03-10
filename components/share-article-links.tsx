@@ -71,7 +71,7 @@ export function ShareArticleLinks({ title, path, className = "" }: ShareArticleL
         type="button"
         variant="outline"
         size="sm"
-        className="border-white/30 text-white hover:bg-white/10"
+        className="bg-white text-[#003366] border-white hover:bg-white/90 hover:text-[#003366]"
         onClick={handleCopyLink}
       >
         <Link2 className="h-4 w-4 mr-1.5" />
@@ -82,7 +82,7 @@ export function ShareArticleLinks({ title, path, className = "" }: ShareArticleL
           type="button"
           variant="outline"
           size="sm"
-          className="border-white/30 text-white hover:bg-white/10"
+          className="bg-white text-[#003366] border-white hover:bg-white/90 hover:text-[#003366]"
           onClick={handleShare}
         >
           <Share2 className="h-4 w-4 mr-1.5" />
