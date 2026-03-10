@@ -71,10 +71,10 @@ export function ShareArticleLinks({ title, path, className = "" }: ShareArticleL
         type="button"
         variant="outline"
         size="sm"
-        className="bg-white text-[#003366] border-white hover:bg-white/90 hover:text-[#003366]"
+        className="!bg-white !text-[#003366] border-white hover:!bg-white/90 hover:!text-[#003366] [&_svg]:!text-[#003366]"
         onClick={handleCopyLink}
       >
-        <Link2 className="h-4 w-4 mr-1.5" />
+        <Link2 className="h-4 w-4 mr-1.5 !text-[#003366]" />
         {copied ? "Copied!" : "Copy link"}
       </Button>
       {canNativeShare && (
@@ -82,10 +82,10 @@ export function ShareArticleLinks({ title, path, className = "" }: ShareArticleL
           type="button"
           variant="outline"
           size="sm"
-          className="bg-white text-[#003366] border-white hover:bg-white/90 hover:text-[#003366]"
+          className="!bg-white !text-[#003366] border-white hover:!bg-white/90 hover:!text-[#003366] [&_svg]:!text-[#003366]"
           onClick={handleShare}
         >
-          <Share2 className="h-4 w-4 mr-1.5" />
+          <Share2 className="h-4 w-4 mr-1.5 !text-[#003366]" />
           Share
         </Button>
       )}
