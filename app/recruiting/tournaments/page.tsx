@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises"
 import { join } from "path"
+import Image from "next/image"
 import { articleMarkdownToHtml } from "@/lib/article-markdown"
 import { HardLink } from "@/components/hard-link"
 import { ShareArticleLinks } from "@/components/share-article-links"
@@ -19,6 +20,17 @@ export default async function RecruitingTournamentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1e50] via-[#13294B] to-[#1e3a5f]">
+      {/* Hero banner */}
+      <div className="relative w-full aspect-[2.4/1] min-h-[180px] max-h-[320px] bg-[#0a1e50]">
+        <Image
+          src="/images/recruiting-tournaments-hero.png"
+          alt="The 5 Most Impactful Tournaments for NC College Recruiting"
+          fill
+          className="object-cover object-center"
+          priority
+          sizes="(max-width: 768px) 100vw, 1200px"
+        />
+      </div>
       <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <HardLink

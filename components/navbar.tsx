@@ -303,7 +303,7 @@ export function Navbar() {
                   </DropdownMenuSub>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/recruiting" className={navLinkClass("/recruiting")}>Recruiting</a>
+              <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
               <a href="/news" className={navLinkClass("/news")}>News</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(legacyNcItems)}>
@@ -661,7 +661,7 @@ export function Navbar() {
                       </div>
                     </div>
                   </div>
-                  <a href="/recruiting" className={mobileLinkClass("/recruiting")} onClick={() => setIsOpen(false)}>Recruiting</a>
+                  <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   {user && (
                     <>

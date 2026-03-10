@@ -28,6 +28,21 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "5-impactful-tournaments",
+    slug: "5-impactful-tournaments",
+    title: "The 5 Most Impactful Tournaments for NC College Recruiting",
+    summary: "Which ones made the list? Data from 86 NC commits (Classes of 2025–2026) on NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen, plus Fargo and Junior National Duals.",
+    href: "/recruiting/tournaments",
+    date: "2026-03-10",
+    image: "/images/5-impactful-tournaments-news.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    category: "RECRUITING",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "12 min read",
+    isAnnouncement: false,
+  },
+  {
     id: "first-flight-2026",
     slug: "first-flight-2026-nc-united-shoe",
     title: "First Flight: The Official 2026 NC United Shoe",
