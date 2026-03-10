@@ -20,14 +20,14 @@ export default async function RecruitingTournamentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1e50] via-[#13294B] to-[#1e3a5f]">
-      {/* Hero banner - contain so full image visible (no crop of title) */}
-      <div className="relative w-full min-h-[200px] bg-[#0a1e50] flex items-center justify-center">
+      {/* Hero banner - new image; full visibility on desktop, no top crop */}
+      <div className="relative w-full bg-[#0a1e50] flex items-center justify-center min-h-[220px] md:min-h-[320px]">
         <Image
           src="/images/recruiting-tournaments-hero.png"
           alt="The 5 Most Impactful Tournaments for NC College Recruiting"
           width={1200}
-          height={500}
-          className="w-full h-auto max-h-[50vh] object-contain object-center"
+          height={675}
+          className="w-full h-auto object-contain max-h-[45vh] md:max-h-[min(420px,55vh)]"
           priority
           sizes="(max-width: 768px) 100vw, 1200px"
         />
