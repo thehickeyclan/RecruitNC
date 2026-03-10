@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /public-rankings*, /nchsaa (listings), /store, /cart, /checkout.
+ * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /public-rankings*, /nchsaa (listings), /news*, /recruiting*, /store, /cart, /checkout.
  * NCHSAA article pages (/nchsaa/:year/news/:slug) require login. Everything else (admin, profile, coach-portal) requires AuthGuard.
  */
 export function ConditionalAuthGuard({
@@ -27,6 +27,8 @@ export function ConditionalAuthGuard({
   const isNchsaaArticle = /^\/nchsaa\/[^/]+\/news\/[^/]+$/.test(pathname ?? "")
   const isNchsaaListing = pathname === "/nchsaa" || pathname?.startsWith("/nchsaa/")
   const isNchsaaPublic = isNchsaaListing && !isNchsaaArticle
+  const isNews = pathname === "/news" || pathname?.startsWith("/news/")
+  const isRecruiting = pathname?.startsWith("/recruiting")
   const isPublic =
     !pathname ||
     isHomepage ||
@@ -37,6 +39,8 @@ export function ConditionalAuthGuard({
     isProspects ||
     isAthletes ||
     isPublicRankings ||
+    isNews ||
+    isRecruiting ||
     isStore ||
     isCart ||
     isCheckout ||
