@@ -72,6 +72,9 @@ export default function NewsPage() {
                       })}
                       {item.readTime && ` · ${item.readTime}`}
                     </p>
+                    <p className="mt-2 text-sm font-medium text-[#003366] group-hover:underline">
+                      Full Article →
+                    </p>
                   </div>
                 </div>
               </Link>
