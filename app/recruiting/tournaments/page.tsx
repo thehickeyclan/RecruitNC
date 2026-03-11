@@ -21,8 +21,8 @@ export default async function RecruitingTournamentsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1e50] via-[#13294B] to-[#1e3a5f]">
       {/* Hero: designed composition, not generic cover. Desktop = contain + background; mobile = tuned cover. */}
-      <header className="w-full overflow-hidden bg-[#0a1e50] pt-6">
-        <div className="relative w-full overflow-hidden bg-[#0a1e50] mx-auto h-[200px] md:h-auto md:aspect-[1920/600] md:max-h-[320px]">
+      <header className="w-full overflow-hidden bg-[#0a1e50] pt-2 md:pt-3">
+        <div className="relative mx-auto h-[200px] w-full overflow-hidden bg-[#0a1e50] md:h-auto md:aspect-[1920/600] md:max-h-[380px] lg:max-h-[420px]">
           <Image
             src="/images/recruiting-tournaments-hero.png"
             alt="The 5 Most Impactful Tournaments for NC College Recruiting"
