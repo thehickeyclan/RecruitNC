@@ -1,8 +1,5 @@
 # The 5 Most Impactful Tournaments on North Carolina's Path to College Recruiting
 
-**👍 Primary path:** NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen  
-**👎 Not in primary path:** Fargo, Junior National Duals (see analysis below)
-
 **NC United Wrestling** (a 501(c)(3) nonprofit) compiled tournament participation and recruiting data for **86 North Carolina wrestlers** who committed to college programs in the Classes of 2025 and 2026. By examining their competitive histories, clear patterns emerge regarding which tournaments appear most often in the recruiting journeys of North Carolina wrestlers.
 
 This analysis focuses on tournament participation patterns rather than individual recruiting decisions, allowing us to identify the competitive environments where North Carolina wrestlers most often gain national exposure.
