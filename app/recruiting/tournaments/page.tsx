@@ -35,26 +35,42 @@ export default async function RecruitingTournamentsPage() {
       <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <HardLink
-            href="/recruiting"
+            href="/news"
             className="text-white/80 hover:text-white text-sm"
           >
-            ← Recruiting Guide
+            ← Back to News
           </HardLink>
           <ShareArticleLinks
             title="The 5 Most Impactful Tournaments on North Carolina's Path to College Recruiting"
             path="/recruiting/tournaments"
           />
         </div>
+        <div className="mb-6 rounded-lg border-2 border-white/30 bg-white/10 px-5 py-4">
+          <p className="text-base font-semibold text-white">
+            <span aria-hidden className="mr-1.5 text-lg">👍</span> Primary path: NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen
+          </p>
+          <p className="mt-2 text-base font-semibold text-white">
+            <span aria-hidden className="mr-1.5 text-lg">👎</span> Not in primary path: Fargo, Junior National Duals (see analysis below)
+          </p>
+        </div>
         <article
           className="prose prose-invert max-w-none"
           dangerouslySetInnerHTML={{ __html: html }}
         />
+        <div className="mt-8 rounded-lg border-2 border-white/30 bg-white/10 px-5 py-4">
+          <p className="text-base font-semibold text-white">
+            <span aria-hidden className="mr-1.5 text-lg">👍</span> Primary path: NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen
+          </p>
+          <p className="mt-2 text-base font-semibold text-white">
+            <span aria-hidden className="mr-1.5 text-lg">👎</span> Not in primary path: Fargo, Junior National Duals
+          </p>
+        </div>
         <div className="mt-10 pt-6 border-t border-white/20 flex flex-wrap items-center justify-between gap-4">
           <HardLink
-            href="/recruiting"
+            href="/news"
             className="text-white/80 hover:text-white"
           >
-            ← Back to Recruiting Guide
+            ← Back to News
           </HardLink>
           <ShareArticleLinks
             title="The 5 Most Impactful Tournaments on North Carolina's Path to College Recruiting"
