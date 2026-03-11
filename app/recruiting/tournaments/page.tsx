@@ -20,17 +20,19 @@ export default async function RecruitingTournamentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1e50] via-[#13294B] to-[#1e3a5f]">
-      {/* Hero banner - 1920×600; preserve headline + shield, centered, no top crop */}
-      <div className="relative w-full overflow-hidden bg-[#0a1e50] aspect-[2/1] max-h-[260px] md:aspect-[1920/600] md:max-h-[320px]">
-        <Image
-          src="/images/recruiting-tournaments-hero.png"
-          alt="The 5 Most Impactful Tournaments for NC College Recruiting"
-          fill
-          className="object-cover object-[center_38%]"
-          priority
-          sizes="100vw"
-        />
-      </div>
+      {/* Hero: designed composition, not generic cover. Desktop = contain + background; mobile = tuned cover. */}
+      <header className="w-full overflow-hidden bg-[#0a1e50] pt-6">
+        <div className="relative w-full overflow-hidden bg-[#0a1e50] mx-auto h-[200px] md:h-auto md:aspect-[1920/600] md:max-h-[320px]">
+          <Image
+            src="/images/recruiting-tournaments-hero.png"
+            alt="The 5 Most Impactful Tournaments for NC College Recruiting"
+            fill
+            className="object-cover object-[center_35%] md:object-contain md:object-center"
+            priority
+            sizes="100vw"
+          />
+        </div>
+      </header>
       <div className="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <HardLink
