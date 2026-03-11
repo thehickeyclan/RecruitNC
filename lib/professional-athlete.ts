@@ -18,6 +18,8 @@ export type ProfessionalAthlete = {
   location?: string
   ncUnitedTeam?: string
   instagram?: string
+  nhsca_2025_record?: string
+  nhsca_2025_placement?: string
 }
 
 /**
@@ -92,6 +94,15 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
     input?.social_media?.instagram ??
     undefined
 
+  const nhsca_2025_record: string | undefined =
+    input?.nhsca_2025_record != null && String(input.nhsca_2025_record).trim() !== ""
+      ? String(input.nhsca_2025_record).trim()
+      : undefined
+  const nhsca_2025_placement: string | undefined =
+    input?.nhsca_2025_placement != null && String(input.nhsca_2025_placement).trim() !== ""
+      ? String(input.nhsca_2025_placement).trim()
+      : undefined
+
   return {
     id,
     name,
@@ -109,6 +120,8 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
     location,
     ncUnitedTeam,
     instagram,
+    nhsca_2025_record,
+    nhsca_2025_placement,
   }
 }
 

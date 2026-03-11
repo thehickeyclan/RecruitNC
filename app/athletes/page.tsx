@@ -28,6 +28,8 @@ interface Athlete {
   weightclass: string
   gender: string
   commitmentdate?: string
+  nhsca_2025_record?: string
+  nhsca_2025_placement?: string
 }
 
 interface StatsData {
@@ -507,6 +509,7 @@ export default function AthletesPage() {
                     <th className="text-left p-3 font-semibold text-gray-700">High School</th>
                     <th className="text-left p-3 font-semibold text-gray-700">Weight</th>
                     <th className="text-left p-3 font-semibold text-gray-700">Gender</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">NHSCA 2025</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -526,6 +529,13 @@ export default function AthletesPage() {
                       <td className="p-3 text-gray-700">{athlete.highschool || "—"}</td>
                       <td className="p-3 text-gray-700">{athlete.weightclass ?? "—"}</td>
                       <td className="p-3 text-gray-700">{athlete.gender || "—"}</td>
+                      <td className="p-3 text-gray-700">
+                        {athlete.nhsca_2025_placement
+                          ? athlete.nhsca_2025_placement
+                          : athlete.nhsca_2025_record
+                            ? athlete.nhsca_2025_record
+                            : "—"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

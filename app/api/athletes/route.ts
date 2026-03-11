@@ -57,7 +57,8 @@ export async function GET(request: Request) {
             graduationyear, photourl, commitmentPhotoUrl,
             weightclass, wrestlingClub,
             achievements, ncUnitedTeam, gender, commitmentdate,
-            firstName, lastName
+            firstName, lastName,
+            nhsca_2025_record, nhsca_2025_placement
           `,
           { count: "exact" },
         )
@@ -214,6 +215,8 @@ export async function GET(request: Request) {
         high_school: athlete.highschool || "",
         wrestling_club: athlete.wrestlingClub || "",
         commitment_date: athlete.commitmentdate || "",
+        nhsca_2025_record: athlete.nhsca_2025_record ?? undefined,
+        nhsca_2025_placement: athlete.nhsca_2025_placement ?? undefined,
       }
     })
 
