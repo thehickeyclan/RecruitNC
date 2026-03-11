@@ -4,6 +4,7 @@ import Image from "next/image"
 import { articleMarkdownToHtml } from "@/lib/article-markdown"
 import { HardLink } from "@/components/hard-link"
 import { ShareArticleLinks } from "@/components/share-article-links"
+import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 
 export const dynamic = "force-static"
 export const revalidate = 86400
@@ -45,10 +46,16 @@ export default async function RecruitingTournamentsPage() {
             path="/recruiting/tournaments"
           />
         </div>
+        <div className="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <NchsaaArticleReactions articleSlug="recruiting-tournaments" />
+        </div>
         <article
           className="prose prose-invert max-w-none"
           dangerouslySetInnerHTML={{ __html: html }}
         />
+        <div className="mt-8 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <NchsaaArticleReactions articleSlug="recruiting-tournaments" />
+        </div>
         <div className="mt-10 pt-6 border-t border-white/20 flex flex-wrap items-center justify-between gap-4">
           <HardLink
             href="/news"
