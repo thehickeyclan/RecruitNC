@@ -336,7 +336,7 @@ Freestyle is the most prevalent style after college and at the international lev
 
 Historically, many of North Carolina's most elite folkstyle wrestlers have not emphasized freestyle. As a result, qualifying tournaments in North Carolina may be less competitive than qualification pathways for events like Super32. Qualifying for Fargo does not automatically mean it is the right investment of time and money.
 
-For athletes serious about freestyle or Greco long-term, Southeast Regionals is often the strongest qualifying pathway. Historically, the large majority of wrestlers who compete at Fargo finish with losing or even records. However, those that place at Southeast Regionals almost always have the best performances at Fargo.
+For athletes serious about freestyle or Greco long-term, Southeast Regionals is often the strongest qualifying pathway. Among North Carolina participants at Fargo, the average is fewer than two wins per wrestler, and more than a quarter go 0-2. Those who place at Southeast Regionals, however, tend to have the strongest showings at Fargo.
 
 **Data from this study:**
 
