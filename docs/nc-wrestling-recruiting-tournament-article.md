@@ -355,7 +355,7 @@ Because this study focuses on the tournaments that appear most often in the recr
 
 Junior National Duals is a freestyle dual-team event held in mid-June in Milwaukee, WI. The event provides high-volume match opportunities and is often used as preparation for Fargo.
 
-Within this dataset, North Carolina did not field a team in 2025. Participation in freestyle events has historically been lower among North Carolina wrestlers compared to folkstyle competitions. Because this study focuses on the tournaments that appear most often in the recruiting paths of North Carolina college commits, Junior National Duals was not included among the primary recruiting tournaments highlighted. The folkstyle path (NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen) remains where NC commits most often appear.
+Within this dataset, North Carolina did not field a juniors team in 2025. NC college commits have historically not had a strong presence at Junior National Duals, and participation in freestyle events has been lower among North Carolina wrestlers compared to folkstyle competitions. Because this study focuses on the tournaments that appear most often in the recruiting paths of North Carolina college commits, Junior National Duals was not included among the primary recruiting tournaments highlighted. The folkstyle path (NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen) remains where NC commits most often appear.
 
 ---
 
