@@ -319,9 +319,9 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* Icons: Messages, Notifications, Team hub (if access), Cart + Auth. Store is in main nav. */}
+          {/* Icons: Community (hide when already on forum), Notifications, Cart + Auth. */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
-            {user && (
+            {user && !pathname.startsWith("/forum") && (
               <a href="/forum" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Community — messaging, groups, and DMs">
                 <Users2 className="h-5 w-5" />
               </a>
@@ -457,8 +457,7 @@ export function Navbar() {
 
           {/* Mobile menu button and auth buttons */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Messages icon with unread badge - when logged in */}
-            {user && (
+            {user && !pathname.startsWith("/forum") && (
               <a href="/forum" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label="Community">
                 <Users2 className="h-5 w-5" />
               </a>

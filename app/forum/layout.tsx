@@ -349,15 +349,23 @@ export default function ForumLayout({
                       setNewGroupName("")
                       setNewGroupError(null)
                       const channelId = data.channelId ?? data.group?.channelId
-                      if (channelId) {
-                        router.push(`/forum/groups/${data.group.id}/channels/${channelId}`)
-                      } else {
-                        const chRes = await fetch("/api/forum/sidebar", { credentials: "include" })
-                        const sidebar = await chRes.json()
-                        setGroups(sidebar.groups ?? [])
-                        const created = (sidebar.groups ?? []).find((g: ForumGroup) => g.id === data.group.id)
+                      const groupId = data.group?.id
+                      const href = channelId && groupId ? `/forum/groups/${groupId}/channels/${channelId}` : null
+                      const sidebarRes = await fetch("/api/forum/sidebar", { credentials: "include" })
+                      const sidebarData = await sidebarRes.json()
+                      const list = sidebarData.groups ?? []
+                      setGroups(list)
+                      if (list.length === 0) {
+                        const groupsRes = await fetch("/api/forum/groups", { credentials: "include" })
+                        const groupsData = await groupsRes.json()
+                        if (groupsData.groups?.length) setGroups(groupsData.groups)
+                      }
+                      if (href) router.push(href)
+                      else if (groupId) {
+                        const fallback = (await fetch("/api/forum/groups", { credentials: "include" }).then((r) => r.json())).groups ?? []
+                        const created = fallback.find((g: ForumGroup) => g.id === groupId)
                         const firstCh = created?.channels?.[0]
-                        if (firstCh) router.push(`/forum/groups/${data.group.id}/channels/${firstCh.id}`)
+                        if (firstCh) router.push(`/forum/groups/${groupId}/channels/${firstCh.id}`)
                       }
                     } catch (err) {
                       console.error("[RecruitNC] Create forum group", err)
@@ -534,16 +542,18 @@ export default function ForumLayout({
               <span className="hidden sm:inline">Search</span>
             </HardLink>
           )}
-          <button
-            type="button"
-            onClick={() => setMembersOpen((o) => !o)}
-            className="ml-auto min-h-[44px] min-w-[44px] sm:min-w-0 sm:px-2 flex items-center justify-center sm:justify-start gap-1 rounded hover:bg-white/10 text-sm text-white/70 touch-manipulation"
-            aria-label={membersOpen ? "Hide members" : "Members — add people or share invite link"}
-            title="Members — add people or share invite link"
-          >
-            <Users className="w-5 h-5 sm:w-4 sm:h-4" />
-            <span className="inline">Members</span>
-          </button>
+          {/\/forum\/groups\/[^/]+\/channels\//.test(pathname) && (
+            <button
+              type="button"
+              onClick={() => setMembersOpen((o) => !o)}
+              className="ml-auto min-h-[44px] min-w-[44px] sm:min-w-0 sm:px-2 flex items-center justify-center sm:justify-start gap-1 rounded hover:bg-white/10 text-sm text-white/70 touch-manipulation"
+              aria-label={membersOpen ? "Hide members" : "Members — add people or share invite link"}
+              title="Members — add people or share invite link"
+            >
+              <Users className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="inline">Members</span>
+            </button>
+          )}
         </header>
         <div className="flex-1 overflow-hidden flex relative">
           <div className="flex-1 overflow-auto min-w-0">
