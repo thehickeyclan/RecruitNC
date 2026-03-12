@@ -34,7 +34,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const update: Record<string, string | null> = { updated_at: new Date().toISOString() }
+  const now = new Date().toISOString()
+  const update: Record<string, string | null> = { updated_at: now, updated_by_user_id: user.id }
   if (Object.prototype.hasOwnProperty.call(body, "shirt_size")) update.shirt_size = parseSize(body.shirt_size)
   if (Object.prototype.hasOwnProperty.call(body, "singlet_size")) update.singlet_size = parseSize(body.singlet_size)
   if (Object.prototype.hasOwnProperty.call(body, "shorts_size")) update.shorts_size = parseSize(body.shorts_size)
@@ -61,7 +62,19 @@ export async function PATCH(
   const isParent =
     row.parent_user_id === user.id ||
     (user.email && (row.parent_email ?? "").toLowerCase() === user.email.toLowerCase())
+
+  let isAdmin = false
   if (!isParent) {
+    const { data: profile } = await admin
+      .from("user_profiles")
+      .select("is_admin, role")
+      .eq("user_id", user.id)
+      .maybeSingle()
+    const p = profile as { is_admin?: boolean; role?: string } | null
+    isAdmin = !!p?.is_admin || p?.role === "admin"
+  }
+
+  if (!isParent && !isAdmin) {
     return NextResponse.json({ error: "You can only update your own registration" }, { status: 403 })
   }
 

@@ -26,6 +26,10 @@ export type HubRegistration = {
   nhsca_duals_starter?: boolean
   /** Optional profile/headshot URL when linked to an athlete (future). */
   photo_url?: string | null
+  /** When the registration row was last updated (e.g. gear sizes). */
+  updated_at?: string | null
+  /** Display name of user who last updated (for "Last edited by" under name). */
+  updated_by_display_name?: string | null
 }
 
 export type HubEvent = {
@@ -83,7 +87,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const { data: allRegs, error: regError } = await admin
     .from("national_team_event_registrations")
-    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at, shirt_size, singlet_size, shorts_size")
+    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at, updated_at, updated_by_user_id, shirt_size, singlet_size, shorts_size")
     .eq("status", "paid")
 
   if (regError && !isAdmin) {
@@ -100,7 +104,27 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     console.warn("[national-team/hub] Admin access: registrations query failed", regError)
   }
 
-  const paidRegs = (regError ? [] : (allRegs ?? [])) as (HubRegistration & { parent_user_id?: string | null })[]
+  const paidRegs = (regError ? [] : (allRegs ?? [])) as (HubRegistration & { parent_user_id?: string | null; updated_at?: string | null; updated_by_user_id?: string | null })[]
+
+  // Resolve updated_by_user_id → display name for "Last edited by" under each name
+  const updatedByUserIds = [...new Set(paidRegs.map((r) => r.updated_by_user_id).filter(Boolean))] as string[]
+  const updatedByDisplayNames = new Map<string, string>()
+  if (updatedByUserIds.length > 0) {
+    const { data: profiles } = await admin
+      .from("user_profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", updatedByUserIds)
+    for (const p of profiles ?? []) {
+      const row = p as { user_id: string; full_name?: string | null; email?: string | null }
+      const name = (row.full_name ?? row.email ?? "Someone")?.trim() || "Someone"
+      updatedByDisplayNames.set(row.user_id, name)
+    }
+  }
+  for (const r of paidRegs) {
+    if (r.updated_by_user_id) {
+      (r as HubRegistration).updated_by_display_name = updatedByDisplayNames.get(r.updated_by_user_id) ?? null
+    }
+  }
 
   // Use canonical API slug so "nhsca-2026" and "nhsca-duals-2026" both map to nhsca-duals-2026 (thread context_id).
   const toCanonical = (slug: string) => getEventSlugForApi(normalizeEventSlugForLookup(slug || "")) || slug

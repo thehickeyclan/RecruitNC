@@ -1085,7 +1085,15 @@ function EventHubSection({
                           </div>
                         )}
                       </td>
-                      <td className="py-2 px-2 font-medium text-gray-900">{r.athlete_first_name} {r.athlete_last_name}</td>
+                      <td className="py-2 px-2 text-gray-900">
+                        <span className="font-medium">{r.athlete_first_name} {r.athlete_last_name}</span>
+                        {r.updated_at && (
+                          <p className="text-xs font-normal text-gray-500 mt-0.5">
+                            Last edited {new Date(r.updated_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                            {r.updated_by_display_name ? ` by ${r.updated_by_display_name}` : ""}
+                          </p>
+                        )}
+                      </td>
                       <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
                       <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
                       <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
@@ -1283,7 +1291,15 @@ function GroupedEventHubSection({
                                   </div>
                                 )}
                               </td>
-                              <td className="py-2 px-2 font-medium text-gray-900">{r.athlete_first_name} {r.athlete_last_name}</td>
+                              <td className="py-2 px-2 text-gray-900">
+                                <span className="font-medium">{r.athlete_first_name} {r.athlete_last_name}</span>
+                                {r.updated_at && (
+                                  <p className="text-xs font-normal text-gray-500 mt-0.5">
+                                    Last edited {new Date(r.updated_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                                    {r.updated_by_display_name ? ` by ${r.updated_by_display_name}` : ""}
+                                  </p>
+                                )}
+                              </td>
                               <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
                               <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
                               <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
