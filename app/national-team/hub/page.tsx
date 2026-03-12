@@ -156,7 +156,6 @@ export default function NationalTeamHubPage() {
     )
   }
 
-  const events = data.events ?? []
   const eventsWithChat = events.filter((e) => e.forumGroupId && e.forumChannelId)
 
   return (
