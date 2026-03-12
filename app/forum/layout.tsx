@@ -48,6 +48,7 @@ export default function ForumLayout({
   const [newGroupOpen, setNewGroupOpen] = useState(false)
   const [newGroupName, setNewGroupName] = useState("")
   const [newGroupSubmitting, setNewGroupSubmitting] = useState(false)
+  const [newGroupError, setNewGroupError] = useState<string | null>(null)
   const [currentUserProfile, setCurrentUserProfile] = useState<{ name: string; headshot_url?: string | null } | null>(null)
   const [hubs, setHubs] = useState<HubListItem[]>([])
   const [forYou, setForYou] = useState<ForYou | null>(null)
@@ -307,7 +308,7 @@ export default function ForumLayout({
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
               Private groups
             </p>
-            <Dialog open={newGroupOpen} onOpenChange={(o) => { setNewGroupOpen(o); if (!o) setNewGroupName("") }}>
+            <Dialog open={newGroupOpen} onOpenChange={(o) => { setNewGroupOpen(o); if (!o) { setNewGroupName(""); setNewGroupError(null) } }}>
               <DialogTrigger asChild>
                 <button type="button" className="p-1.5 rounded hover:bg-white/10 text-white/70 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation" aria-label="New group">
                   <Plus className="w-4 h-4" />
@@ -323,6 +324,7 @@ export default function ForumLayout({
                     const name = newGroupName.trim()
                     if (!name || newGroupSubmitting) return
                     setNewGroupSubmitting(true)
+                    setNewGroupError(null)
                     try {
                       const res = await fetch("/api/forum/groups", {
                         method: "POST",
@@ -331,17 +333,28 @@ export default function ForumLayout({
                         body: JSON.stringify({ name, visibility: "private" }),
                       })
                       const data = await res.json()
-                      if (!res.ok) throw new Error(data?.error ?? "Failed")
+                      if (!res.ok) {
+                        const msg = typeof data?.error === "string" ? data.error : "Failed to create group"
+                        setNewGroupError(msg)
+                        return
+                      }
                       setNewGroupOpen(false)
                       setNewGroupName("")
-                      const chRes = await fetch("/api/forum/sidebar", { credentials: "include" })
-                      const sidebar = await chRes.json()
-                      setGroups(sidebar.groups ?? [])
-                      const created = (sidebar.groups ?? []).find((g: ForumGroup) => g.id === data.group.id)
-                      const firstCh = created?.channels?.[0]
-                      if (firstCh) router.push(`/forum/groups/${data.group.id}/channels/${firstCh.id}`)
+                      setNewGroupError(null)
+                      const channelId = data.channelId ?? data.group?.channelId
+                      if (channelId) {
+                        router.push(`/forum/groups/${data.group.id}/channels/${channelId}`)
+                      } else {
+                        const chRes = await fetch("/api/forum/sidebar", { credentials: "include" })
+                        const sidebar = await chRes.json()
+                        setGroups(sidebar.groups ?? [])
+                        const created = (sidebar.groups ?? []).find((g: ForumGroup) => g.id === data.group.id)
+                        const firstCh = created?.channels?.[0]
+                        if (firstCh) router.push(`/forum/groups/${data.group.id}/channels/${firstCh.id}`)
+                      }
                     } catch (err) {
-                      console.error(err)
+                      console.error("[RecruitNC] Create forum group", err)
+                      setNewGroupError("Something went wrong. Please try again.")
                     } finally {
                       setNewGroupSubmitting(false)
                     }
@@ -353,12 +366,15 @@ export default function ForumLayout({
                     <Input
                       id="group-name"
                       value={newGroupName}
-                      onChange={(e) => setNewGroupName(e.target.value)}
+                      onChange={(e) => { setNewGroupName(e.target.value); setNewGroupError(null) }}
                       placeholder="e.g. NHSCA Duals 2026"
                       className="mt-1 bg-white/5 border-white/10 text-white"
                       required
                     />
                   </div>
+                  {newGroupError && (
+                    <p className="text-sm text-red-400" role="alert">{newGroupError}</p>
+                  )}
                   <Button type="submit" disabled={!newGroupName.trim() || newGroupSubmitting} className="bg-[#C8A94A] text-[#0B2545] hover:bg-[#E2C46A]">
                     {newGroupSubmitting ? "Creating…" : "Create"}
                   </Button>

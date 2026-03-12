@@ -50,6 +50,8 @@ export type HubResponse = {
   events?: HubEvent[]
   /** True when current user is admin (so UI can show reg link / invite code info). */
   isAdmin?: boolean
+  /** True when current user has at least one paid registration (parent_email) for an event they see. False = family member (workspace access only). */
+  isPrimaryRegistrant?: boolean
 }
 
 export async function GET(): Promise<NextResponse<HubResponse>> {
@@ -459,9 +461,12 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     }
   })
 
+  const isPrimaryRegistrant = events.some((e) => e.myRegistrations.length > 0)
+
   return NextResponse.json({
     allowed: true,
     events,
     isAdmin,
+    isPrimaryRegistrant,
   })
 }

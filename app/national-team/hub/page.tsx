@@ -267,26 +267,34 @@ export default function NationalTeamHubPage() {
           </div>
         )}
 
-        {/* Add family members — registration link + invite code */}
+        {/* Add family members — different copy for primary (paid) vs family member (workspace-only) */}
         {events.length > 0 && (
           <section className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
               <UserPlus className="h-4 w-4 text-[#003366] flex-shrink-0" />
               Add family members
             </p>
-            <p className="text-sm text-gray-700 mt-1">
-              Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register. After they sign up, they’ll see this hub. You can also add existing RecruitNC users in the Roster section below (search by name or email).
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <span className="text-xs font-mono text-gray-600 bg-white/80 px-2 py-1.5 rounded border border-[#CBAF5D]/30 break-all">
-                {regPageUrl || REG_PAGE_PATH}
-              </span>
-              {data?.isAdmin && (
-                <Button asChild size="sm" variant="outline" className="rounded-xl border-[#003366] text-[#003366] hover:bg-[#003366]/10 font-medium">
-                  <a href="/admin/national-team/invite-codes">Create invite codes</a>
-                </Button>
-              )}
-            </div>
+            {data?.isPrimaryRegistrant ? (
+              <>
+                <p className="text-sm text-gray-700 mt-1">
+                  Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register and pay. After they complete registration, they’ll see this hub. You can also add existing RecruitNC users in the Roster section below (search by name or email).
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-mono text-gray-600 bg-white/80 px-2 py-1.5 rounded border border-[#CBAF5D]/30 break-all">
+                    {regPageUrl || REG_PAGE_PATH}
+                  </span>
+                  {data?.isAdmin && (
+                    <Button asChild size="sm" variant="outline" className="rounded-xl border-[#003366] text-[#003366] hover:bg-[#003366]/10 font-medium">
+                      <a href="/admin/national-team/invite-codes">Create invite codes</a>
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-700 mt-1">
+                You’re viewing this hub as an <strong>added family member</strong>. To add another parent or guardian, ask the person who registered and paid (the primary registrant) to share the registration link and invite code with them, or to add existing RecruitNC users in the Roster section below (search by name or email).
+              </p>
+            )}
           </section>
         )}
 
@@ -623,6 +631,64 @@ type SearchUser = { user_id: string; email: string | null; display_name: string 
 type HubTab = "dashboard" | "updates" | "chat"
 
 type GearField = "singlet_size" | "shorts_size" | "shirt_size"
+
+/** Inline table cell: dropdown for gear size with live PATCH, or plain text when row is not editable (e.g. interest-form only). */
+function RosterSizeCell({
+  registrationId,
+  field,
+  value,
+  sizes,
+  onSave,
+}: {
+  registrationId: string | null
+  field: GearField
+  value: string
+  sizes: string[]
+  onSave?: () => void
+}) {
+  const [saving, setSaving] = useState(false)
+  const editable = !!registrationId && !String(registrationId).startsWith("interest-")
+
+  const handleChange = (newVal: string) => {
+    if (!registrationId || !editable) return
+    setSaving(true)
+    fetch(`/api/national-team/registrations/${registrationId}/size`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ [field]: newVal || null }),
+    })
+      .then((r) => (r.ok ? Promise.resolve() : Promise.reject(new Error("Update failed"))))
+      .then(() => onSave?.())
+      .catch(() => {})
+      .finally(() => setSaving(false))
+  }
+
+  if (!editable) {
+    return (
+      <td className="py-2 px-2 text-center text-gray-700">
+        {value || "—"}
+      </td>
+    )
+  }
+  return (
+    <td className="py-2 px-2 text-center align-middle">
+      <select
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        disabled={saving}
+        className="rounded border border-gray-300 bg-white px-1.5 py-1 text-sm text-gray-800 focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366] min-w-[52px] w-full max-w-[72px]"
+        aria-label={field.replace("_", " ")}
+      >
+        <option value="">—</option>
+        {sizes.map((s) => (
+          <option key={s} value={s}>{s}</option>
+        ))}
+      </select>
+      {saving && <Loader2 className="h-3 w-3 animate-spin inline-block ml-0.5 text-[#003366]" aria-hidden />}
+    </td>
+  )
+}
 
 function HubGearSizeRow({
   registrationId,
@@ -1028,9 +1094,9 @@ function EventHubSection({
                       <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
                       <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
                       <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
-                      <td className="py-2 px-2 text-center text-gray-700">{r.singlet_size || "—"}</td>
-                      <td className="py-2 px-2 text-center text-gray-700">{r.shorts_size || "—"}</td>
-                      <td className="py-2 px-2 text-center text-gray-700">{r.shirt_size || "—"}</td>
+                      <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="singlet_size" value={r.singlet_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                      <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shorts_size" value={r.shorts_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                      <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shirt_size" value={r.shirt_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
                     </tr>
                   ))}
                 </tbody>
@@ -1319,9 +1385,9 @@ function GroupedEventHubSection({
                               <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
                               <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
                               <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
-                              <td className="py-2 px-2 text-center text-gray-700">{r.singlet_size || "—"}</td>
-                              <td className="py-2 px-2 text-center text-gray-700">{r.shorts_size || "—"}</td>
-                              <td className="py-2 px-2 text-center text-gray-700">{r.shirt_size || "—"}</td>
+                              <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="singlet_size" value={r.singlet_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                              <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shorts_size" value={r.shorts_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                              <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shirt_size" value={r.shirt_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
                             </tr>
                           ))}
                         </tbody>
