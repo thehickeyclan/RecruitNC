@@ -940,11 +940,15 @@ function GroupedEventHubSection({
   eventsWithLabels,
   currentUserId,
   onRefetch,
+  hideEventInfo,
+  sectionId,
 }: {
   groupName: string
   eventsWithLabels: { event: HubEvent; label: string }[]
   currentUserId: string
   onRefetch?: () => void
+  hideEventInfo?: boolean
+  sectionId?: string
 }) {
   const events = eventsWithLabels.map((x) => x.event)
   const firstEvent = events[0]
