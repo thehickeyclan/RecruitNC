@@ -33,11 +33,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const update: Record<string, string | null> = {}
+  const now = new Date().toISOString()
+  const update: Record<string, string | null | undefined> = {
+    updated_at: now,
+    updated_by_user_id: user.id,
+  }
   if (Object.prototype.hasOwnProperty.call(body, "shirt_size")) update.shirt_size = parseSize(body.shirt_size)
   if (Object.prototype.hasOwnProperty.call(body, "singlet_size")) update.singlet_size = parseSize(body.singlet_size)
   if (Object.prototype.hasOwnProperty.call(body, "shorts_size")) update.shorts_size = parseSize(body.shorts_size)
-  if (Object.keys(update).length === 0) {
+  if (Object.keys(update).length === 2) {
     return NextResponse.json({ error: "Send at least one of shirt_size, singlet_size, shorts_size" }, { status: 400 })
   }
 

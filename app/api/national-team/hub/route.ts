@@ -106,7 +106,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const paidRegs = (regError ? [] : (allRegs ?? [])) as (HubRegistration & { parent_user_id?: string | null; updated_at?: string | null; updated_by_user_id?: string | null })[]
 
-  // Resolve updated_by_user_id → display name for "Last edited by" under each name
+  // Resolve updated_by_user_id → display name for "Last edited by" (paid regs; interest-form ids added below)
   const updatedByUserIds = [...new Set(paidRegs.map((r) => r.updated_by_user_id).filter(Boolean))] as string[]
   const updatedByDisplayNames = new Map<string, string>()
   if (updatedByUserIds.length > 0) {
@@ -397,9 +397,22 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     try {
       const { data: interestRows } = await admin
         .from("national_team_interest_forms")
-        .select("id, first_name, last_name, high_school, graduation_year, primary_weight, nhsca_duals_team, nhsca_duals_starter, singlet_size, shorts_size, shirt_size")
+        .select("id, first_name, last_name, high_school, graduation_year, primary_weight, nhsca_duals_team, nhsca_duals_starter, singlet_size, shorts_size, shirt_size, updated_at, updated_by_user_id")
         .not("nhsca_duals_team", "is", null)
         .in("nhsca_duals_team", ["team_1", "team_2"])
+      const interestUpdatedByIds = [...new Set((interestRows ?? []).map((row: { updated_by_user_id?: string | null }) => row.updated_by_user_id).filter(Boolean))] as string[]
+      const missingIds = interestUpdatedByIds.filter((id) => !updatedByDisplayNames.has(id))
+      if (missingIds.length > 0) {
+        const { data: moreProfiles } = await admin
+          .from("user_profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", missingIds)
+        for (const p of moreProfiles ?? []) {
+          const row = p as { user_id: string; full_name?: string | null; email?: string | null }
+          const name = (row.full_name ?? row.email ?? "Someone")?.trim() || "Someone"
+          updatedByDisplayNames.set(row.user_id, name)
+        }
+      }
       for (const row of interestRows ?? []) {
         const r = row as {
           id: string
@@ -413,6 +426,8 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
           singlet_size?: string | null
           shorts_size?: string | null
           shirt_size?: string | null
+          updated_at?: string | null
+          updated_by_user_id?: string | null
         }
         const eventSlugForLineup = r.nhsca_duals_team === "team_2" ? nhscaSelectSlug : nhscaNationalSlug
         const list = interestLineupByEvent.get(eventSlugForLineup) ?? []
@@ -434,6 +449,8 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
           from_interest_form: true,
           nhsca_duals_team: r.nhsca_duals_team,
           nhsca_duals_starter: r.nhsca_duals_starter,
+          updated_at: r.updated_at ?? undefined,
+          updated_by_display_name: r.updated_by_user_id ? (updatedByDisplayNames.get(r.updated_by_user_id) ?? null) : undefined,
         })
         interestLineupByEvent.set(eventSlugForLineup, list)
       }
