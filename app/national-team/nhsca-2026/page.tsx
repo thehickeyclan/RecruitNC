@@ -8,32 +8,43 @@ import Image from "next/image"
 export default function NHSCA2026EventPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero with logo and title */}
-      <section className="bg-gradient-to-br from-[#002147] via-[#003366] to-[#002147] text-white py-12 md:py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      {/* Full-width banner — edge to edge */}
+      <section className="w-full bg-gradient-to-br from-[#002147] via-[#003366] to-[#002147] text-white">
+        <div className="relative w-full aspect-[21/9] min-h-[200px] md:min-h-[280px] max-h-[400px]">
           <Image
-            src="/images/nhsca-national-duals-logo.png"
-            alt="NHSCA"
-            width={160}
-            height={64}
-            className="mx-auto mb-6 h-14 w-auto object-contain"
+            src="/images/nhsca-virginia-beach-arena.png"
+            alt=""
+            fill
+            className="object-cover opacity-40"
+            sizes="100vw"
             priority
           />
-          <Badge className="mb-4 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0">
-            National Team
-          </Badge>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">27th Annual National Duals</h1>
-          <p className="text-blue-100 text-lg md:text-xl font-medium">Memorial Day Weekend · May 23–25, 2026</p>
-          <p className="text-[#D3B574] mt-2 text-base md:text-lg">The Largest and Most Competitive Duals Event in the Country</p>
-          <Button asChild variant="outline" className="mt-6 border-white/40 text-white hover:bg-white/10 hover:text-white">
+          <div className="absolute inset-0 bg-gradient-to-t from-[#002147] via-[#002147]/80 to-transparent" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+            <Image
+              src="/images/nhsca-national-duals-logo.png"
+              alt="NHSCA National Duals"
+              width={180}
+              height={72}
+              className="mb-4 h-14 md:h-16 w-auto object-contain drop-shadow-lg"
+              priority
+            />
+            <Badge className="mb-3 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0 font-semibold">
+              NC United National Team
+            </Badge>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow">27th Annual National Duals</h1>
+            <p className="text-blue-100 text-lg md:text-xl font-medium">Memorial Day Weekend · May 23–25, 2026</p>
+            <p className="text-[#D3B574] mt-2 text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
+          </div>
+        </div>
+        <div className="w-full bg-[#002147] px-4 py-4 flex flex-wrap items-center justify-center gap-4">
+          <Button asChild variant="outline" size="sm" className="border-white/40 text-white hover:bg-white/10 hover:text-white">
             <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
-              Official event info & registration
+              Official event & registration
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>
-          <p className="mt-6 text-white/80 text-sm max-w-xl mx-auto">
-            Your hub for event info, schedules, coaching staff, and NC United team updates. Everything you need in one place.
-          </p>
+          <a href="/national-team" className="text-sm text-white/90 hover:text-white underline">Back to National Team</a>
         </div>
       </section>
 

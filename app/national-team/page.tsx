@@ -158,34 +158,101 @@ export default function NCUnitedNationalTeam() {
         </div>
       </section>
 
-      {/* Our Mission Section */}
-      <section className="py-16 md:py-20 bg-white">
+      {/* Current events + Interest CTA — primary actions */}
+      <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <span className="text-[#CBAF5D] text-base md:text-lg font-semibold tracking-wide uppercase mb-4 block">
-              Our Mission
-            </span>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#002147] mb-6 md:mb-8">
-              MORE THAN A TEAM.
-              <br />
-              IT&apos;S A MOVEMENT.
-            </h2>
-            <div className="text-left max-w-3xl mx-auto space-y-6">
-              <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-                The NC United National Team was created to unite North Carolina&apos;s top wrestling talent into elite
-                teams that can compete at the highest levels of national competition.
-              </p>
-              <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-                As part of the broader NC United organization, our National Team provides elite wrestlers with
-                opportunities to compete against the best programs in the country while representing North Carolina with
-                pride.
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">Current</h2>
+            <p className="text-gray-600 text-center mb-8">Event pages, team hub, and registration</p>
+            <div className="grid sm:grid-cols-2 gap-4 mb-10">
+              <Link
+                href="/national-team/nhsca-2026"
+                className="flex flex-col rounded-2xl border-2 border-[#003366]/20 bg-[#003366]/5 p-6 hover:bg-[#003366]/10 hover:border-[#003366]/40 transition-all group"
+              >
+                <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">NHSCA Duals 2026</span>
+                <span className="text-sm text-gray-600 mt-1">May 23–25 · Virginia Beach · Event info &amp; details</span>
+              </Link>
+              <Link
+                href="/national-team/hub"
+                className="flex flex-col rounded-2xl border-2 border-[#003366]/20 bg-[#003366]/5 p-6 hover:bg-[#003366]/10 hover:border-[#003366]/40 transition-all group"
+              >
+                <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">Team Hub</span>
+                <span className="text-sm text-gray-600 mt-1">Roster, updates &amp; chat (for registered families)</span>
+              </Link>
+              <Link
+                href="/national-team/coming-soon?event=aau-2026"
+                className="flex flex-col rounded-2xl border-2 border-gray-200 bg-gray-50 p-6 opacity-90"
+              >
+                <span className="text-[#002147] font-bold text-lg">AAU Scholastic Duals 2026</span>
+                <span className="text-sm text-gray-500 mt-1">Coming soon</span>
+              </Link>
+              <Link
+                href="/national-team/coming-soon?event=deep-south-2026"
+                className="flex flex-col rounded-2xl border-2 border-gray-200 bg-gray-50 p-6 opacity-90"
+              >
+                <span className="text-[#002147] font-bold text-lg">Deep South 2026</span>
+                <span className="text-sm text-gray-500 mt-1">Coming soon</span>
+              </Link>
+            </div>
+            <div className="text-center">
+              <Link
+                href="/national-team/interest-form"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-[#B31B1B] px-8 py-4 text-lg font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors"
+              >
+                National Team Interest Form
+              </Link>
+              <p className="text-sm text-gray-600 mt-3 max-w-md mx-auto">
+                Express interest for Spring/Summer 2026. Coaching staff will review and reach out with next steps.
               </p>
             </div>
-            <div className="bg-[#002147] text-white p-6 md:p-8 rounded-lg mb-6 md:mb-8 mt-8 max-w-3xl mx-auto">
-              <p className="text-base md:text-lg italic font-light leading-relaxed">
-                &quot;North Carolina has the talent. North Carolina has the heart. What we needed was unity. NC United brings together our state&apos;s elite wrestlers to compete as one—proving that when North Carolina stands together, we can beat anyone in the nation.&quot;
-              </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Archives — previous national teams */}
+      <section id="archives" className="py-12 md:py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">Previous National Teams</h2>
+            <p className="text-gray-600 text-center mb-8">Results and highlights from past events</p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <Link
+                href="/national-team/ucd-2024-results"
+                className="rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-[#003366]/30 hover:shadow-md transition-all"
+              >
+                <span className="font-bold text-[#002147] block">UCD 2024</span>
+                <span className="text-sm text-gray-600">Ultimate Club Duals · Results</span>
+              </Link>
+              <Link
+                href="/national-team/ucd-2025-results"
+                className="rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-[#003366]/30 hover:shadow-md transition-all"
+              >
+                <span className="font-bold text-[#002147] block">UCD 2025</span>
+                <span className="text-sm text-gray-600">Ultimate Club Duals · Results</span>
+              </Link>
+              <Link
+                href="/national-team/nhsca-2025-results"
+                className="rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-[#003366]/30 hover:shadow-md transition-all"
+              >
+                <span className="font-bold text-[#002147] block">NHSCA 2025</span>
+                <span className="text-sm text-gray-600">National Duals · Results</span>
+              </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Mission — short */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-4">More than a team. It&apos;s a movement.</h2>
+            <p className="text-gray-700 leading-relaxed mb-6">
+              The NC United National Team unites North Carolina&apos;s top wrestling talent into elite teams that compete at the highest levels of national competition—representing our state with pride.
+            </p>
+            <p className="text-[#002147] italic font-light">
+              &quot;When North Carolina stands together, we can beat anyone in the nation.&quot;
+            </p>
           </div>
         </div>
       </section>

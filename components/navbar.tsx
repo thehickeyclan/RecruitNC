@@ -23,7 +23,6 @@ import {
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { TEAM_HUB_MENU } from "@/lib/national-team-events"
 
 type NavNotification = { id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
 
@@ -143,23 +142,7 @@ export function Navbar() {
   const athletesItems = [...commitmentItems, profilesItem, rankingsItem]
   const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
-  // National Team menu: grouped as About, Events, Results (with separators).
-  type NationalTeamItem = { href: string; label: string; comingSoon?: boolean }
-  const nationalTeamAbout: NationalTeamItem[] = [
-    { href: "/national-team", label: "About" },
-    { href: "/national-team/interest-form", label: "Interest Form" },
-  ]
-  const nationalTeamEvents: NationalTeamItem[] = TEAM_HUB_MENU.map((item) => ({
-    href: item.href ?? `/national-team/coming-soon?event=${encodeURIComponent(item.slug)}`,
-    label: item.label,
-    comingSoon: !item.href,
-  }))
-  const nationalTeamResults: NationalTeamItem[] = [
-    { href: "/national-team/ucd-2024-results", label: "UCD 2024" },
-    { href: "/national-team/ucd-2025-results", label: "UCD 2025" },
-    { href: "/national-team/nhsca-2025-results", label: "NHSCA 2025" },
-  ]
-  const nationalTeamItems = [...nationalTeamAbout, ...nationalTeamEvents, ...nationalTeamResults]
+  const nationalTeamItems = [{ href: "/national-team", label: "National Team" }]
 
   const nationalsItems = [
     { href: "/nhsca", label: "Tournament Overview", description: "About NHSCA Nationals & divisions", icon: Trophy },
@@ -287,36 +270,7 @@ export function Navbar() {
               </DropdownMenu>
               <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Calendar</a>
               <a href="/blue" className={navLinkClass("/blue")}>Blue</a>
-              <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass(nationalTeamItems)}>
-                  National Team
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel className="font-normal font-semibold">National Team</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {nationalTeamAbout.map((sub) => (
-                    <DropdownMenuItem key={sub.href} asChild>
-                      <a href={sub.href} className="block w-full cursor-pointer">{sub.label}</a>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  {nationalTeamEvents.map((sub) => (
-                    <DropdownMenuItem key={`${sub.href}-${sub.label}`} asChild>
-                      <a href={sub.href} className="flex items-center justify-between w-full cursor-pointer">
-                        {sub.label}
-                        {sub.comingSoon && <span className="text-xs text-muted-foreground">Coming soon</span>}
-                      </a>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  {nationalTeamResults.map((sub) => (
-                    <DropdownMenuItem key={sub.href} asChild>
-                      <a href={sub.href} className="block w-full cursor-pointer">{sub.label}</a>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <a href="/national-team" className={navLinkClass("/national-team")}>National Team</a>
               <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
               <a href="/news" className={navLinkClass("/news")}>News</a>
               <DropdownMenu>
@@ -659,25 +613,7 @@ export function Navbar() {
                   </div>
                   <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Calendar</a>
                   <a href="/blue" className={mobileLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue</a>
-                  <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive(nationalTeamItems))}>National Team</div>
-                    <div className="space-y-2">
-                      {nationalTeamAbout.map((sub) => (
-                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                      ))}
-                      <div className="border-t border-white/20 my-2" aria-hidden />
-                      {nationalTeamEvents.map((sub) => (
-                        <a key={`${sub.href}-${sub.label}`} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>
-                          {sub.label}
-                          {sub.comingSoon && <span className="text-xs text-gray-500 ml-1">(Coming soon)</span>}
-                        </a>
-                      ))}
-                      <div className="border-t border-white/20 my-2" aria-hidden />
-                      {nationalTeamResults.map((sub) => (
-                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                      ))}
-                    </div>
-                  </div>
+                  <a href="/national-team" className={mobileLinkClass("/national-team")} onClick={() => setIsOpen(false)}>National Team</a>
                   <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   {user && (
