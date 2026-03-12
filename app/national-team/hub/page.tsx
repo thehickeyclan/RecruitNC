@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,13 @@ export default function NationalTeamHubPage() {
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
+  }, [])
+
+  const refetchHub = useCallback(() => {
+    fetch("/api/national-team/hub", { credentials: "include" })
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -237,13 +244,14 @@ export default function NationalTeamHubPage() {
             }
             return sections.map((s) =>
               s.type === "single" ? (
-                <EventHubSection key={s.event.eventSlug} event={s.event} currentUserId={user?.id ?? ""} />
+                <EventHubSection key={s.event.eventSlug} event={s.event} currentUserId={user?.id ?? ""} onRefetch={refetchHub} />
               ) : (
                 <GroupedEventHubSection
                   key={s.groupKey}
                   groupName={s.groupName}
                   eventsWithLabels={s.eventsWithLabels}
                   currentUserId={user?.id ?? ""}
+                  onRefetch={refetchHub}
                 />
               )
             )
@@ -432,6 +440,96 @@ type SearchUser = { user_id: string; email: string | null; display_name: string 
 
 type HubTab = "dashboard" | "updates" | "chat"
 
+type GearField = "singlet_size" | "shorts_size" | "shirt_size"
+
+function HubGearSizeRow({
+  registrationId,
+  athleteName,
+  singletSize,
+  shortsSize,
+  shirtSize,
+  sizes,
+  onUpdate,
+}: {
+  registrationId: string
+  athleteName: string
+  singletSize: string
+  shortsSize: string
+  shirtSize: string
+  sizes: string[]
+  onUpdate: (field: GearField, value: string) => Promise<void>
+}) {
+  const [savingField, setSavingField] = useState<GearField | null>(null)
+  const [savedField, setSavedField] = useState<GearField | null>(null)
+
+  const handleChange = (field: GearField, value: string) => {
+    setSavingField(field)
+    setSavedField(null)
+    onUpdate(field, value)
+      .then(() => {
+        setSavingField(null)
+        setSavedField(field)
+        setTimeout(() => setSavedField(null), 2000)
+      })
+      .catch(() => setSavingField(null))
+  }
+
+  const selectClass = "rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-800 focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366] min-w-[72px]"
+  return (
+    <div className="flex flex-wrap items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+      <span className="font-medium text-[#002147] min-w-[120px]">{athleteName}</span>
+      <div className="flex items-center gap-2">
+        <label className="text-xs text-gray-500 whitespace-nowrap">Singlet</label>
+        <select
+          value={singletSize}
+          onChange={(e) => handleChange("singlet_size", e.target.value)}
+          disabled={savingField === "singlet_size"}
+          className={selectClass}
+        >
+          <option value="">—</option>
+          {sizes.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        {savingField === "singlet_size" && <Loader2 className="h-3.5 w-3.5 animate-spin text-[#003366]" />}
+        {savedField === "singlet_size" && <span className="text-xs text-green-600">Saved</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-xs text-gray-500 whitespace-nowrap">Shorts</label>
+        <select
+          value={shortsSize}
+          onChange={(e) => handleChange("shorts_size", e.target.value)}
+          disabled={savingField === "shorts_size"}
+          className={selectClass}
+        >
+          <option value="">—</option>
+          {sizes.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        {savingField === "shorts_size" && <Loader2 className="h-3.5 w-3.5 animate-spin text-[#003366]" />}
+        {savedField === "shorts_size" && <span className="text-xs text-green-600">Saved</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-xs text-gray-500 whitespace-nowrap">Shirt</label>
+        <select
+          value={shirtSize}
+          onChange={(e) => handleChange("shirt_size", e.target.value)}
+          disabled={savingField === "shirt_size"}
+          className={selectClass}
+        >
+          <option value="">—</option>
+          {sizes.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        {savingField === "shirt_size" && <Loader2 className="h-3.5 w-3.5 animate-spin text-[#003366]" />}
+        {savedField === "shirt_size" && <span className="text-xs text-green-600">Saved</span>}
+      </div>
+    </div>
+  )
+}
+
 function HubUpdatesList({ threadId }: { threadId: string }) {
   const [messages, setMessages] = useState<Array<{ id: string; body: string; created_at: string; sender_id: string }>>([])
   const [loading, setLoading] = useState(true)
@@ -496,7 +594,9 @@ function HubDocumentsList({ contextType, contextId }: { contextType: string; con
   )
 }
 
-function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUserId: string }) {
+const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"]
+
+function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent; currentUserId: string; onRefetch?: () => void }) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
   const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
@@ -505,6 +605,7 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
   const [addSearching, setAddSearching] = useState(false)
   const [addingId, setAddingId] = useState<string | null>(null)
   const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [sizeMessage, setSizeMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {
     if (addSearchQuery.trim().length < 2) {
@@ -613,6 +714,44 @@ function EventHubSection({ event, currentUserId }: { event: HubEvent; currentUse
             </div>
           </div>
         )}
+        {(event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && myRegs.length > 0 && (
+          <div className="rounded-md border border-[#003366]/15 bg-[#003366]/[0.03] p-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Gear size</h3>
+            <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically.</p>
+            <div className="space-y-0">
+              {myRegs.map((r) => (
+                <HubGearSizeRow
+                  key={r.id}
+                  registrationId={r.id}
+                  athleteName={`${r.athlete_first_name} ${r.athlete_last_name}`}
+                  singletSize={r.singlet_size ?? ""}
+                  shortsSize={r.shorts_size ?? ""}
+                  shirtSize={r.shirt_size ?? ""}
+                  sizes={TSHIRT_SIZES}
+                  onUpdate={async (field, value) => {
+                    setSizeMessage(null)
+                    const res = await fetch(`/api/national-team/registrations/${r.id}/size`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ [field]: value || "" }),
+                    })
+                    const data = await res.json().catch(() => ({}))
+                    if (res.ok) {
+                      onRefetch?.()
+                    } else {
+                      setSizeMessage({ type: "error", text: data?.error ?? "Could not save." })
+                      throw new Error(data?.error)
+                    }
+                  }}
+                />
+              ))}
+            </div>
+            {sizeMessage && (
+              <p className="text-sm mt-2 text-red-600">{sizeMessage.text}</p>
+            )}
+          </div>
+        )}
         <div>
           <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
             <UserPlus className="h-4 w-4" />
@@ -698,10 +837,12 @@ function GroupedEventHubSection({
   groupName,
   eventsWithLabels,
   currentUserId,
+  onRefetch,
 }: {
   groupName: string
   eventsWithLabels: { event: HubEvent; label: string }[]
   currentUserId: string
+  onRefetch?: () => void
 }) {
   const events = eventsWithLabels.map((x) => x.event)
   const firstEvent = events[0]
@@ -713,6 +854,7 @@ function GroupedEventHubSection({
   const [addSearching, setAddSearching] = useState(false)
   const [addingId, setAddingId] = useState<string | null>(null)
   const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [sizeMessage, setSizeMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {
     if (addSearchQuery.trim().length < 2) {
@@ -825,6 +967,44 @@ function GroupedEventHubSection({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {isNHSCA && myRegs.length > 0 && (
+              <div className="rounded-md border border-[#003366]/15 bg-[#003366]/[0.03] p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Gear size</h3>
+                <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically.</p>
+                <div className="space-y-0">
+                  {myRegs.map((r) => (
+                    <HubGearSizeRow
+                      key={r.id}
+                      registrationId={r.id}
+                      athleteName={`${r.athlete_first_name} ${r.athlete_last_name}`}
+                      singletSize={r.singlet_size ?? ""}
+                      shortsSize={r.shorts_size ?? ""}
+                      shirtSize={r.shirt_size ?? ""}
+                      sizes={TSHIRT_SIZES}
+                      onUpdate={async (field, value) => {
+                        setSizeMessage(null)
+                        const res = await fetch(`/api/national-team/registrations/${r.id}/size`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          credentials: "include",
+                          body: JSON.stringify({ [field]: value || "" }),
+                        })
+                        const data = await res.json().catch(() => ({}))
+                        if (res.ok) {
+                          onRefetch?.()
+                        } else {
+                          setSizeMessage({ type: "error", text: data?.error ?? "Could not save." })
+                          throw new Error(data?.error)
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+                {sizeMessage && (
+                  <p className="text-sm mt-2 text-red-600">{sizeMessage.text}</p>
+                )}
               </div>
             )}
             <div>

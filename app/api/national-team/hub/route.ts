@@ -15,6 +15,10 @@ export type HubRegistration = {
   primary_weight: string
   status: string
   created_at: string
+  /** Gear sizes; collected on hub for events like NHSCA Duals 2026. */
+  shirt_size: string | null
+  singlet_size: string | null
+  shorts_size: string | null
 }
 
 export type HubEvent = {
@@ -70,7 +74,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const { data: allRegs, error: regError } = await admin
     .from("national_team_event_registrations")
-    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at")
+    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at, shirt_size, singlet_size, shorts_size")
     .eq("status", "paid")
 
   if (regError) {
