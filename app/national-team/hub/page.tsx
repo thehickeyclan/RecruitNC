@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel } from "lucide-react"
+import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel, ChevronDown, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { NHSCA2026EventBlock } from "@/components/national-team/nhsca-2026-event-block"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
@@ -14,10 +14,41 @@ import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import { getHubGroupForEvent, HUB_EVENT_GROUPS } from "@/lib/national-team-events"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
 const WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
+
+/** Collapsible section for hub info blocks; keeps the page scannable and lets users jump to roster. */
+function HubCollapsibleSection({
+  id,
+  title,
+  defaultOpen = false,
+  children,
+  className = "",
+}: {
+  id?: string
+  title: string
+  defaultOpen?: boolean
+  children: React.ReactNode
+  className?: string
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <section id={id} className={cn("rounded-2xl border-2 overflow-hidden", className)}>
+        <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-5 py-4 text-left font-semibold text-[#002147] hover:bg-black/[0.02] transition-colors">
+          {title}
+          <span className="shrink-0 text-[#003366]" aria-hidden>
+            {open ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          </span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>{children}</CollapsibleContent>
+      </section>
+    </Collapsible>
+  )
+}
 
 export default function NationalTeamHubPage() {
   const { user, profile } = useAuth()
@@ -232,9 +263,8 @@ export default function NationalTeamHubPage() {
         </section>
 
         {/* Key links — clear labels, no confusion */}
-        <section className="rounded-2xl border-2 border-[#003366]/25 bg-white p-5 shadow-sm">
-          <h2 className="text-[#002147] font-bold text-lg mb-4 text-center">Key links</h2>
-          <div className="flex flex-wrap justify-center gap-3">
+        <HubCollapsibleSection title="Key links" defaultOpen className="border-[#003366]/25 bg-white shadow-sm">
+          <div className="px-5 pb-5 pt-0 flex flex-wrap justify-center gap-3">
             <Button asChild className="rounded-xl bg-[#003366] hover:bg-[#002147] text-white font-semibold">
               <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
                 NHSCA Official Page
@@ -248,7 +278,7 @@ export default function NationalTeamHubPage() {
               <a href="/national-team#archives">Read about past teams</a>
             </Button>
           </div>
-        </section>
+        </HubCollapsibleSection>
 
         {/* In-page nav */}
         <nav className="flex flex-wrap items-center justify-center gap-3 text-sm" aria-label="Jump to section">
@@ -271,59 +301,52 @@ export default function NationalTeamHubPage() {
 
         {/* Hotel — gold tile */}
         {events.length > 0 && (
-          <div className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 px-5 py-4">
-            <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
-              <Hotel className="h-4 w-4 text-[#B31B1B] flex-shrink-0" />
-              Hotel
-            </p>
-            <p className="text-sm text-gray-700 mt-1">
-              Hotel info coming soon; we&apos;ll post in the Hub and in the team chat.
-            </p>
-          </div>
+          <HubCollapsibleSection title="Hotel" className="border-[#CBAF5D]/50 bg-[#CBAF5D]/10">
+            <div className="px-5 pb-5 pt-0">
+              <p className="text-sm text-gray-700">
+                Hotel info coming soon; we&apos;ll post in the Hub and in the team chat.
+              </p>
+            </div>
+          </HubCollapsibleSection>
         )}
 
         {/* Team chat & comms — Forum for discussions and updates */}
         {eventsWithChat.length > 0 && (
-          <div className="rounded-2xl border-2 border-[#003366]/40 bg-[#003366]/10 px-5 py-4">
-            <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-[#003366] flex-shrink-0" />
-              Forum · Discussions &amp; updates
-            </p>
-            <p className="text-sm text-gray-700 mt-1">
-              Team chat and announcements live in the <strong>Community forum</strong>. Open the link below to join.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {eventsWithChat.map((e) => {
-                const count = e.forumMessageCount ?? 0
-                return (
-                  <HardLink
-                    key={e.eventSlug}
-                    href="/forum"
-                    className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2.5 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors touch-manipulation"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    {e.eventName}
-                    {count > 0 && (
-                      <span className="rounded-full bg-[#B31B1B] text-white px-2 py-0.5 text-xs font-semibold">
-                        {count} message{count !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                    <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                  </HardLink>
-                )
-              })}
+          <HubCollapsibleSection title="Forum · Discussions & updates" className="border-[#003366]/40 bg-[#003366]/10">
+            <div className="px-5 pb-5 pt-0">
+              <p className="text-sm text-gray-700 mb-3">
+                Team chat and announcements live in the <strong>Community forum</strong>. Open the link below to join.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {eventsWithChat.map((e) => {
+                  const count = e.forumMessageCount ?? 0
+                  return (
+                    <HardLink
+                      key={e.eventSlug}
+                      href="/forum"
+                      className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2.5 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors touch-manipulation"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      {e.eventName}
+                      {count > 0 && (
+                        <span className="rounded-full bg-[#B31B1B] text-white px-2 py-0.5 text-xs font-semibold">
+                          {count} message{count !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                      <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                    </HardLink>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          </HubCollapsibleSection>
         )}
 
         {/* Add family members — registration link, invite code, and add-by-search (primary only) */}
         {events.length > 0 && (
-          <section className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 px-5 py-4">
-            <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-[#003366] flex-shrink-0" />
-              Add family members
-            </p>
-            {data?.isPrimaryRegistrant ? (
+          <HubCollapsibleSection title="Add family members" className="border-[#CBAF5D]/50 bg-[#CBAF5D]/10">
+            <div className="px-5 pb-5 pt-0">
+              {data?.isPrimaryRegistrant ? (
               <>
                 <p className="text-sm text-gray-700 mt-1">
                   Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register and pay. After they complete registration, they’ll see this hub. Or add existing RecruitNC users below (search by name or email).
@@ -379,11 +402,16 @@ export default function NationalTeamHubPage() {
                 You’re viewing this hub as an <strong>added family member</strong>. To add another parent or guardian, ask the person who registered and paid (the primary registrant) to share the registration link and invite code with them, or to add existing RecruitNC users in this section (search by name or email).
               </p>
             )}
-          </section>
+            </div>
+          </HubCollapsibleSection>
         )}
 
         {/* Event content: coaches, details, venue, format, etc. — same as nhsca-2026 (use shared block) */}
-        <NHSCA2026EventBlock />
+        <HubCollapsibleSection id="event-details" title="Event details (coaches, schedule, venue)" className="border-[#003366]/20 bg-white shadow-sm">
+          <div className="p-4 pt-0">
+            <NHSCA2026EventBlock />
+          </div>
+        </HubCollapsibleSection>
 
         {events.length === 0 ? (
           <>
@@ -512,33 +540,31 @@ export default function NationalTeamHubPage() {
 
         {/* Single “what’s coming” note instead of three placeholder cards */}
         {events.length > 0 && (
-          <section className="rounded-2xl border-2 border-[#003366]/20 bg-white p-5 shadow-sm">
-            <h2 id="announcements" className="text-[#002147] font-bold text-lg mb-2 flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-[#003366]" />
-              Announcements by weight
-            </h2>
-            <p className="text-sm text-gray-600">
-              Posts and updates for each weight class will be added here. Check back before the event.
-            </p>
-          </section>
+          <HubCollapsibleSection id="announcements" title="Announcements by weight" className="border-[#003366]/20 bg-white shadow-sm">
+            <div className="px-5 pb-5 pt-0">
+              <p className="text-sm text-gray-600">
+                Posts and updates for each weight class will be added here. Check back before the event.
+              </p>
+            </div>
+          </HubCollapsibleSection>
         )}
 
-        <section id="qa" className="rounded-2xl border-2 border-[#003366]/20 bg-white p-5 shadow-sm scroll-mt-24">
-          <h2 className="text-[#002147] font-bold text-lg mb-2 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-[#003366]" />
-            Q&amp;A
-          </h2>
-          <p className="text-sm text-gray-600">
-            Common questions and answers will be added here. If you have a question now, post in the Forum or contact the staff.
-          </p>
-        </section>
-
-        {events.length > 0 && (
-          <div className="rounded-2xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 px-5 py-4">
-            <p className="text-sm text-gray-700">
-              <strong className="text-[#002147]">Apparel, schedule, coaches:</strong> Photos, sizing, daily agenda, and coach bios will be added here before the event.
+        <HubCollapsibleSection id="qa" title="Q&A" className="border-[#003366]/20 bg-white shadow-sm scroll-mt-24">
+          <div className="px-5 pb-5 pt-0">
+            <p className="text-sm text-gray-600">
+              Common questions and answers will be added here. If you have a question now, post in the Forum or contact the staff.
             </p>
           </div>
+        </HubCollapsibleSection>
+
+        {events.length > 0 && (
+          <HubCollapsibleSection title="Apparel, schedule & coaches" className="border-[#CBAF5D]/40 bg-[#CBAF5D]/10">
+            <div className="px-5 pb-5 pt-0">
+              <p className="text-sm text-gray-700">
+                Photos, sizing, daily agenda, and coach bios will be added here before the event.
+              </p>
+            </div>
+          </HubCollapsibleSection>
         )}
 
       </div>

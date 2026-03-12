@@ -9,51 +9,10 @@ export type ForumGroup = { id: string; name: string; visibility: string; logo_ur
 export type ForumDmConversation = { id: string; type: string; last_message_at: string | null }
 export type LegacyDm = { id: string; name: string; unread_count: number }
 
-async function loadGroupsForUser(
-  groupIds: string[],
-  supabase: Awaited<ReturnType<typeof createClient>>
-): Promise<ForumGroup[]> {
-  const groups: ForumGroup[] = []
-  if (groupIds.length === 0) return groups
-  const { data: groupRows } = await supabase
-    .from("forum_groups")
-    .select("id, name, visibility, logo_url")
-    .in("id", groupIds)
-  const groupsById = new Map<string | null, ForumGroup>()
-  for (const g of groupRows ?? []) {
-    const row = g as { id: string; name: string; visibility: string; logo_url?: string | null }
-    groupsById.set(row.id, { id: row.id, name: row.name, visibility: row.visibility, logo_url: row.logo_url ?? null, channels: [] })
-  }
-  const { data: channelRows } = await supabase
-    .from("forum_channels")
-    .select("id, group_id, name, type, coach_only")
-    .in("group_id", groupIds)
-    .order("position", { ascending: true })
-  for (const c of channelRows ?? []) {
-    const row = c as { id: string; group_id: string; name: string; type: string; coach_only: boolean }
-    const group = groupsById.get(row.group_id)
-    if (group) {
-      group.channels.push({
-        id: row.id,
-        name: row.name,
-        type: row.type,
-        coach_only: row.coach_only ?? false,
-      })
-    }
-  }
-  for (const g of groupRows ?? []) {
-    const row = g as { id: string }
-    const group = groupsById.get(row.id)
-    if (group) groups.push(group)
-  }
-  groups.sort((a, b) => a.name.localeCompare(b.name))
-  return groups
-}
-
 /**
  * GET /api/forum/sidebar
  * Returns groups (with channels), forum DM conversations, and legacy messaging DMs for the current user.
- * Site admins see all forum groups; others only see groups they are a member of.
+ * All forum groups are shown so users can see e.g. NHSCA Duals 2026; opening a group adds site admins as members if needed.
  */
 export async function GET() {
   const supabase = await createClient()
@@ -63,19 +22,8 @@ export async function GET() {
   }
 
   const admin = createAdminClient()
-  const { data: profile } = await admin
-    .from("user_profiles")
-    .select("is_admin, role")
-    .eq("user_id", user.id)
-    .maybeSingle()
-  const isSiteAdmin = !!(profile as { is_admin?: boolean; role?: string } | null)?.is_admin ||
-    (profile as { is_admin?: boolean; role?: string } | null)?.role === "admin"
 
-  const [groupsRes, dmRes, legacyDmRes] = await Promise.all([
-    supabase
-      .from("forum_members")
-      .select("group_id")
-      .eq("user_id", user.id),
+  const [dmRes, legacyDmRes] = await Promise.all([
     supabase
       .from("forum_dm_participants")
       .select("conversation_id")
@@ -86,44 +34,39 @@ export async function GET() {
       .eq("user_id", user.id),
   ])
 
-  const memberGroupIds = (groupsRes.data ?? []).map((r) => (r as { group_id: string }).group_id)
   const conversationIds = (dmRes.data ?? []).map((r) => (r as { conversation_id: string }).conversation_id)
   const legacyThreadIds = (legacyDmRes.data ?? []).map((r) => (r as { thread_id: string }).thread_id)
 
   let groups: ForumGroup[] = []
-  if (isSiteAdmin) {
-    const { data: allGroupRows } = await admin
-      .from("forum_groups")
-      .select("id, name, visibility, logo_url")
-    const allIds = (allGroupRows ?? []).map((r) => (r as { id: string }).id)
-    if (allIds.length > 0) {
-      const groupsById = new Map<string, ForumGroup>()
-      for (const g of allGroupRows ?? []) {
-        const row = g as { id: string; name: string; visibility: string; logo_url?: string | null }
-        groupsById.set(row.id, { id: row.id, name: row.name, visibility: row.visibility, logo_url: row.logo_url ?? null, channels: [] })
-      }
-      const { data: channelRows } = await admin
-        .from("forum_channels")
-        .select("id, group_id, name, type, coach_only")
-        .in("group_id", allIds)
-        .order("position", { ascending: true })
-      for (const c of channelRows ?? []) {
-        const row = c as { id: string; group_id: string; name: string; type: string; coach_only: boolean }
-        const group = groupsById.get(row.group_id)
-        if (group) {
-          group.channels.push({
-            id: row.id,
-            name: row.name,
-            type: row.type,
-            coach_only: row.coach_only ?? false,
-          })
-        }
-      }
-      groups = [...groupsById.values()]
-      groups.sort((a, b) => a.name.localeCompare(b.name))
+  const { data: allGroupRows } = await admin
+    .from("forum_groups")
+    .select("id, name, visibility, logo_url")
+  const allIds = (allGroupRows ?? []).map((r) => (r as { id: string }).id)
+  if (allIds.length > 0) {
+    const groupsById = new Map<string, ForumGroup>()
+    for (const g of allGroupRows ?? []) {
+      const row = g as { id: string; name: string; visibility: string; logo_url?: string | null }
+      groupsById.set(row.id, { id: row.id, name: row.name, visibility: row.visibility, logo_url: row.logo_url ?? null, channels: [] })
     }
-  } else {
-    groups = await loadGroupsForUser(memberGroupIds, supabase)
+    const { data: channelRows } = await admin
+      .from("forum_channels")
+      .select("id, group_id, name, type, coach_only")
+      .in("group_id", allIds)
+      .order("position", { ascending: true })
+    for (const c of channelRows ?? []) {
+      const row = c as { id: string; group_id: string; name: string; type: string; coach_only: boolean }
+      const group = groupsById.get(row.group_id)
+      if (group) {
+        group.channels.push({
+          id: row.id,
+          name: row.name,
+          type: row.type,
+          coach_only: row.coach_only ?? false,
+        })
+      }
+    }
+    groups = [...groupsById.values()]
+    groups.sort((a, b) => a.name.localeCompare(b.name))
   }
 
   let dmConversations: ForumDmConversation[] = []
