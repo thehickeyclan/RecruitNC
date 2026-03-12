@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { NHSCA2026EventBlock } from "@/components/national-team/nhsca-2026-event-block"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { HardLink } from "@/components/hard-link"
@@ -83,40 +85,81 @@ export default function NationalTeamHubPage() {
   const events = data.events ?? []
   const eventsWithChat = events.filter((e) => e.forumGroupId && e.forumChannelId)
 
+  // Use same layout as nhsca-2026 page: full-width banner then max-w-3xl content
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-gray-100/80 py-6 sm:py-10 px-4 sm:px-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#002147] tracking-tight">National Team Hub</h1>
-            <p className="text-sm text-gray-600 mt-1">Event rosters, updates, and team chat</p>
-            <div className="flex items-center gap-3 mt-3 flex-wrap">
-              {data.isAdmin && (
-                <span className="inline-flex items-center rounded-md bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
-                  Admin: full list of event workspaces
-                </span>
-              )}
-              {user?.id && (
-                <HubPresenceBubbles
-                  channelId="hub"
-                  currentUserId={user.id}
-                  displayName={profile?.full_name ?? null}
-                  email={user.email ?? null}
-                />
-              )}
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Same full-width banner as /national-team/nhsca-2026 */}
+      <section className="w-full bg-gradient-to-br from-[#002147] via-[#003366] to-[#002147] text-white">
+        <div className="relative w-full aspect-[21/9] min-h-[200px] md:min-h-[280px] max-h-[400px]">
+          <Image
+            src="/images/nhsca-virginia-beach-arena.png"
+            alt=""
+            fill
+            className="object-cover opacity-40"
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#002147] via-[#002147]/80 to-transparent" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+            <Image
+              src="/images/nhsca-national-duals-logo.png"
+              alt="NHSCA National Duals"
+              width={180}
+              height={72}
+              className="mb-4 h-14 md:h-16 w-auto object-contain drop-shadow-lg"
+              priority
+            />
+            <Badge className="mb-3 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0 font-semibold">
+              NC United National Team · Team Hub
+            </Badge>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow">27th Annual National Duals</h1>
+            <p className="text-blue-100 text-lg md:text-xl font-medium">Memorial Day Weekend · May 23–25, 2026</p>
+            <p className="text-[#D3B574] mt-2 text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
           </div>
-          <a
-            href="/national-team"
-            className="inline-flex items-center justify-center rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors"
-          >
-            Back to National Team
+        </div>
+        <div className="w-full bg-[#002147] px-4 py-4 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild variant="outline" size="sm" className="rounded-xl border-[#D3B574]/60 text-[#D3B574] hover:bg-[#D3B574]/20 hover:text-white font-medium">
+            <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
+              Official event & registration
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </a>
+          </Button>
+          <a href="/national-team/nhsca-2026" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors">
+            Event page
           </a>
-        </header>
+          <a href="/national-team" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors">
+            ← Back to National Team
+          </a>
+        </div>
+      </section>
 
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        {/* Quick links — same as nhsca-2026 + roster */}
+        <nav className="flex flex-wrap items-center justify-center gap-3 text-sm">
+          <a href="#coaches" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+            Coaches
+          </a>
+          <a href="#event-details" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+            Event details
+          </a>
+          <a href="#roster" className="rounded-full bg-[#B31B1B]/20 px-4 py-2 text-[#B31B1B] font-medium hover:bg-[#B31B1B]/30">
+            Roster &amp; gear
+          </a>
+          <a href="#schedule" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+            Schedule
+          </a>
+          <a href="/national-team/nhsca-2025-results" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+            2025 results
+          </a>
+          <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20 inline-flex items-center gap-1">
+            Official site
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </nav>
+
+        {/* Hotel — gold tile */}
         {events.length > 0 && (
-          <div className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 shadow-sm px-5 py-4">
+          <div className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
               <Hotel className="h-4 w-4 text-[#B31B1B] flex-shrink-0" />
               Hotel
@@ -127,8 +170,9 @@ export default function NationalTeamHubPage() {
           </div>
         )}
 
+        {/* Team chat & comms — blue tile */}
         {eventsWithChat.length > 0 && (
-          <div className="rounded-2xl border-2 border-[#003366]/40 bg-[#003366]/10 shadow-sm px-5 py-4">
+          <div className="rounded-2xl border-2 border-[#003366]/40 bg-[#003366]/10 px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-[#003366] flex-shrink-0" />
               Team chat &amp; comms
@@ -139,11 +183,10 @@ export default function NationalTeamHubPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {eventsWithChat.map((e) => {
                 const count = e.forumMessageCount ?? 0
-                const forumHref = "/forum"
                 return (
                   <HardLink
                     key={e.eventSlug}
-                    href={forumHref}
+                    href="/forum"
                     className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2.5 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors touch-manipulation"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -161,6 +204,9 @@ export default function NationalTeamHubPage() {
           </div>
         )}
 
+        {/* Event content: coaches, details, venue, format, etc. — same as nhsca-2026 (use shared block) */}
+        <NHSCA2026EventBlock />
+
         {events.length === 0 ? (
           <>
             <Card className="rounded-2xl border-[#003366]/20 bg-white shadow-sm overflow-hidden">
@@ -175,13 +221,13 @@ export default function NationalTeamHubPage() {
                   Have an invite to <strong>NHSCA Duals 2026</strong>? Use your registration link to sign up. After payment, return here to see the roster and team chat.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Button asChild className="bg-[#003366] hover:bg-[#002147] rounded-lg">
+                  <Button asChild className="rounded-xl bg-[#003366] hover:bg-[#002147] text-white font-semibold shadow-sm">
                     <a href="/national-team/hub">Team Hub</a>
                   </Button>
-                  <Button asChild variant="outline" className="rounded-lg border-[#003366]/30">
+                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#003366]/40 text-[#003366] hover:bg-[#003366]/10 font-medium">
                     <a href={REG_PAGE_PATH}>Registration page</a>
                   </Button>
-                  <Button asChild variant="outline" className="rounded-lg border-[#003366]/30">
+                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#003366]/40 text-[#003366] hover:bg-[#003366]/10 font-medium">
                     <a href="/national-team">National Team overview</a>
                   </Button>
                 </div>
@@ -261,9 +307,16 @@ export default function NationalTeamHubPage() {
             for (const event of standalone) {
               sections.push({ type: "single", event })
             }
-            return sections.map((s) =>
+            return sections.map((s, i) =>
               s.type === "single" ? (
-                <EventHubSection key={s.event.eventSlug} event={s.event} currentUserId={user?.id ?? ""} onRefetch={refetchHub} />
+                <EventHubSection
+                  key={s.event.eventSlug}
+                  event={s.event}
+                  currentUserId={user?.id ?? ""}
+                  onRefetch={refetchHub}
+                  hideEventInfo
+                  sectionId={i === 0 ? "roster" : undefined}
+                />
               ) : (
                 <GroupedEventHubSection
                   key={s.groupKey}
@@ -271,6 +324,8 @@ export default function NationalTeamHubPage() {
                   eventsWithLabels={s.eventsWithLabels}
                   currentUserId={user?.id ?? ""}
                   onRefetch={refetchHub}
+                  hideEventInfo
+                  sectionId={i === 0 ? "roster" : undefined}
                 />
               )
             )
@@ -615,7 +670,19 @@ function HubDocumentsList({ contextType, contextId }: { contextType: string; con
 
 const TSHIRT_SIZES = ["YS", "YM", "YL", "S", "M", "L", "XL", "2XL", "3XL"]
 
-function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent; currentUserId: string; onRefetch?: () => void }) {
+function EventHubSection({
+  event,
+  currentUserId,
+  onRefetch,
+  hideEventInfo,
+  sectionId,
+}: {
+  event: HubEvent
+  currentUserId: string
+  onRefetch?: () => void
+  hideEventInfo?: boolean
+  sectionId?: string
+}) {
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
   const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
@@ -670,7 +737,7 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg">
+    <Card id={sectionId} className={cn(sectionId && "scroll-mt-24", "overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg")}>
       <CardHeader className="bg-gradient-to-b from-[#003366]/15 to-[#003366]/5 border-b-2 border-[#003366]/20 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{event.eventName}</CardTitle>
         <CardDescription className="text-gray-600">Dashboard, roster with gear sizes, and updates</CardDescription>
@@ -714,7 +781,7 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
         )}
         {activeTab === "dashboard" && (
           <>
-        {(event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && <NHSCA2026HubInfo />}
+        {!hideEventInfo && (event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && <NHSCA2026HubInfo />}
         {myRegs.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-gray-700 mb-2">Your registration</h3>
@@ -818,7 +885,7 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
             {event.roster.length === 0 ? (
               <div className="py-10 px-4 text-center">
                 <p className="text-sm text-gray-500">No athletes on the roster yet.</p>
-                <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here. If you just registered, refresh in a moment.</p>
+                <p className="text-xs text-gray-400 mt-1">Assign athletes in Admin → National team submissions (Team 1 / Team 2), or paid registrations will appear here.</p>
               </div>
             ) : (
               <table className="w-full text-sm min-w-[520px]">
@@ -837,7 +904,10 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
                   {event.roster.map((r, i) => (
                     <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-[#003366]/[0.03]")}>
                       <td className="p-3 font-medium text-gray-900">
-                        {r.athlete_first_name} {r.athlete_last_name}
+                        <span>{r.athlete_first_name} {r.athlete_last_name}</span>
+                        {r.from_interest_form && (
+                          <span className="ml-2 inline-block rounded bg-[#CBAF5D]/30 px-1.5 py-0.5 text-xs font-medium text-[#002147]">Lineup</span>
+                        )}
                       </td>
                       <td className="p-3 text-gray-700">{r.primary_weight}</td>
                       <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
@@ -938,7 +1008,7 @@ function GroupedEventHubSection({
   const isNHSCA = firstEvent.eventSlug === "nhsca-duals-2026" || firstEvent.eventName.toLowerCase().includes("nhsca")
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg">
+    <Card id={sectionId} className={cn(sectionId && "scroll-mt-24", "overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg")}>
       <CardHeader className="bg-gradient-to-b from-[#003366]/15 to-[#003366]/5 border-b-2 border-[#003366]/20 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{groupName}</CardTitle>
         <CardDescription className="text-gray-600">Both rosters with gear sizes, updates &amp; comms</CardDescription>
@@ -982,7 +1052,7 @@ function GroupedEventHubSection({
         )}
         {activeTab === "dashboard" && (
           <>
-            {isNHSCA && <NHSCA2026HubInfo />}
+            {!hideEventInfo && isNHSCA && <NHSCA2026HubInfo />}
             {myRegs.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Your registration</h3>
@@ -1094,7 +1164,7 @@ function GroupedEventHubSection({
                     {ev.roster.length === 0 ? (
                       <div className="py-8 px-4 text-center">
                         <p className="text-sm text-gray-500">No athletes on the {label} roster yet.</p>
-                        <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here.</p>
+                        <p className="text-xs text-gray-400 mt-1">Assign in Admin → National team submissions (Team 1 = National, Team 2 = Select), or paid registrations will appear here.</p>
                       </div>
                     ) : (
                       <table className="w-full text-sm min-w-[520px]">
@@ -1113,7 +1183,10 @@ function GroupedEventHubSection({
                           {ev.roster.map((r, i) => (
                             <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
                               <td className="p-3 font-medium text-gray-900">
-                                {r.athlete_first_name} {r.athlete_last_name}
+                                <span>{r.athlete_first_name} {r.athlete_last_name}</span>
+                                {r.from_interest_form && (
+                                  <span className="ml-2 inline-block rounded bg-[#CBAF5D]/30 px-1.5 py-0.5 text-xs font-medium text-[#002147]">Lineup</span>
+                                )}
                               </td>
                               <td className="p-3 text-gray-700">{r.primary_weight}</td>
                               <td className="p-3 text-gray-700">{r.high_school || "—"}</td>

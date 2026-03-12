@@ -19,6 +19,11 @@ export type HubRegistration = {
   shirt_size: string | null
   singlet_size: string | null
   shorts_size: string | null
+  /** True when row came from admin lineup (national_team_interest_forms), not paid registration. */
+  from_interest_form?: boolean
+  /** For NHSCA: team_1 or team_2 from interest form. */
+  nhsca_duals_team?: string | null
+  nhsca_duals_starter?: boolean
 }
 
 export type HubEvent = {
@@ -98,7 +103,8 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   let eventSlugsToShow: string[]
   if (isAdmin) {
     const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]
-    eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026"]
+    // Default: show both National and Select so admin sees both rosters (including interest-form lineups).
+    eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026", "nhsca-duals-2026-select"]
   } else {
     const emailLower = user.email.toLowerCase()
     const myEventSlugs = new Set(
@@ -354,9 +360,86 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     byChannel.forEach((count, id) => messageCountByChannel.set(id, count))
   }
 
+  // Roster lineup: same source as Admin → National team submissions (Team 1 / Team 2).
+  // Table: national_team_interest_forms. Values: nhsca_duals_team = 'team_1' (National) | 'team_2' (Select).
+  const nhscaNationalSlug = "nhsca-duals-2026"
+  const nhscaSelectSlug = "nhsca-duals-2026-select"
+  const interestLineupByEvent = new Map<string, (HubRegistration & { from_interest_form: true })[]>()
+  if (eventSlugsToShow.includes(nhscaNationalSlug) || eventSlugsToShow.includes(nhscaSelectSlug)) {
+    try {
+      const { data: interestRows } = await admin
+        .from("national_team_interest_forms")
+        .select("id, first_name, last_name, high_school, graduation_year, primary_weight, nhsca_duals_team, nhsca_duals_starter")
+        .not("nhsca_duals_team", "is", null)
+        .in("nhsca_duals_team", ["team_1", "team_2"])
+      for (const row of interestRows ?? []) {
+        const r = row as {
+          id: string
+          first_name: string
+          last_name: string
+          high_school: string
+          graduation_year: string
+          primary_weight: string
+          nhsca_duals_team: string | null
+          nhsca_duals_starter: boolean
+        }
+        const eventSlugForLineup = r.nhsca_duals_team === "team_2" ? nhscaSelectSlug : nhscaNationalSlug
+        const list = interestLineupByEvent.get(eventSlugForLineup) ?? []
+        list.push({
+          id: `interest-${r.id}`,
+          event_slug: eventSlugForLineup,
+          athlete_first_name: r.first_name,
+          athlete_last_name: r.last_name,
+          athlete_email: "",
+          parent_email: "",
+          high_school: r.high_school ?? "",
+          graduation_year: r.graduation_year ?? "",
+          primary_weight: r.primary_weight ?? "",
+          status: "lineup",
+          created_at: "",
+          shirt_size: null,
+          singlet_size: null,
+          shorts_size: null,
+          from_interest_form: true,
+          nhsca_duals_team: r.nhsca_duals_team,
+          nhsca_duals_starter: r.nhsca_duals_starter,
+        })
+        interestLineupByEvent.set(eventSlugForLineup, list)
+      }
+    } catch (e) {
+      if ((e as { code?: string })?.code !== "42P01") {
+        console.warn("[national-team/hub] interest-form lineup fetch failed", (e as Error).message)
+      }
+    }
+  }
+
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
-    const roster = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
-    const myRegistrations = roster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    const paidRoster = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
+    const myRegistrations = paidRoster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    const interestLineup = interestLineupByEvent.get(eventSlug) ?? []
+    // Merge interest-form lineup into roster (admin lineups show). Paid regs first; then add lineup entries not already matched by name+weight.
+    let roster: HubRegistration[] = [...paidRoster]
+    if (interestLineup.length > 0) {
+      const paidKeys = new Set(
+        paidRoster.map(
+          (r) =>
+            `${(r.athlete_first_name ?? "").trim().toLowerCase()}-${(r.athlete_last_name ?? "").trim().toLowerCase()}-${r.primary_weight}`
+        )
+      )
+      for (const line of interestLineup) {
+        const key = `${(line.athlete_first_name ?? "").trim().toLowerCase()}-${(line.athlete_last_name ?? "").trim().toLowerCase()}-${line.primary_weight}`
+        if (!paidKeys.has(key)) {
+          roster.push(line)
+          paidKeys.add(key)
+        }
+      }
+      roster.sort((a, b) => {
+        const wA = parseInt(a.primary_weight, 10) || 0
+        const wB = parseInt(b.primary_weight, 10) || 0
+        if (wA !== wB) return wA - wB
+        return (a.athlete_last_name ?? "").localeCompare(b.athlete_last_name ?? "")
+      })
+    }
     const eventName = getEventName(eventSlug)
     const fg = nameToForumGroup.get(eventName)
     const forumGroupId = fg?.id ?? null

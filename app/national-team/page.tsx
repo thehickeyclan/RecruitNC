@@ -21,6 +21,14 @@ export default function NCUnitedNationalTeam() {
     overallWinPercentage: 0,
     teamRecordWinPercentage: 0,
   })
+  const [nhscaLineupCount, setNhscaLineupCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch("/api/national-team/lineup/nhsca-2026", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => (d.ok && typeof d.total === "number" ? setNhscaLineupCount(d.total) : null))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     async function loadTournaments() {
@@ -119,16 +127,22 @@ export default function NCUnitedNationalTeam() {
               Elite wrestlers representing North Carolina on the national stage
             </p>
 
-            {/* Interest CTA in banner */}
-            <div className="mb-10 md:mb-12">
+            {/* Hero CTAs — primary (interest) + secondary (schedule) */}
+            <div className="mb-10 md:mb-12 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/national-team/interest-form"
                 className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-6 py-3 text-base font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors border-2 border-white/20"
               >
-                National Team Interest Form
+                Express interest · 2026
               </Link>
-              <p className="text-sm text-blue-100/90 mt-2">Express interest for Spring/Summer 2026</p>
+              <Link
+                href="#schedule"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-[#CBAF5D] bg-transparent px-6 py-3 text-base font-semibold text-[#CBAF5D] hover:bg-[#CBAF5D]/20 transition-colors"
+              >
+                View schedule
+              </Link>
             </div>
+            <p className="text-sm text-blue-100/90">Get considered for NHSCA Duals, AAU, Deep South &amp; more</p>
 
             {/* Stats Grid - Aggregate Stats Across All Tournaments */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">
@@ -169,30 +183,42 @@ export default function NCUnitedNationalTeam() {
         </div>
       </section>
 
-      {/* National Team Schedule — one live link to hub, rest coming soon */}
-      <section className="py-12 md:py-16 bg-white">
+      {/* National Team Schedule — color tiles: gold (NHSCA), blue (comms/roster), red accent */}
+      <section id="schedule" className="py-12 md:py-16 bg-white scroll-mt-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">National Team Schedule</h2>
             <p className="text-gray-600 text-center mb-8">Roster, event info &amp; comms (registered families only)</p>
             <div className="grid sm:grid-cols-2 gap-4">
+              {/* NHSCA — gold tile + primary CTA */}
               <Link
                 href="/national-team/hub"
-                className="flex flex-col rounded-2xl border-2 border-[#003366] bg-[#003366]/10 p-6 hover:bg-[#003366]/15 hover:border-[#002147] transition-all group"
+                className="flex flex-col rounded-2xl border-2 border-[#CBAF5D] bg-[#CBAF5D]/15 p-6 hover:bg-[#CBAF5D]/25 hover:border-[#B8982E] transition-all group shadow-sm"
               >
                 <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">NHSCA Duals 2026</span>
-                <span className="text-sm text-gray-600 mt-1">May 23–25 · Virginia Beach · Roster, gear, &amp; team chat</span>
+                <span className="text-sm text-gray-700 mt-1">May 23–25 · Virginia Beach</span>
+                <span className="text-sm text-[#003366] font-medium mt-2">
+                  Roster, gear, &amp; team chat
+                  {nhscaLineupCount !== null && nhscaLineupCount > 0 && (
+                    <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
+                  )}
+                </span>
+                <span className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#003366] px-4 py-2.5 text-sm font-semibold text-white group-hover:bg-[#002147] transition-colors w-fit">
+                  Open Team Hub →
+                </span>
               </Link>
+              {/* AAU — blue tile (coming soon) */}
               <Link
                 href="/national-team/coming-soon?event=aau-2026"
-                className="flex flex-col rounded-2xl border-2 border-gray-200 bg-gray-50 p-6 opacity-90"
+                className="flex flex-col rounded-2xl border-2 border-[#003366]/30 bg-[#003366]/8 p-6 opacity-90 hover:opacity-100 transition-all"
               >
                 <span className="text-[#002147] font-bold text-lg">AAU Scholastic Duals 2026</span>
                 <span className="text-sm text-gray-500 mt-1">Coming soon</span>
               </Link>
+              {/* Deep South — red accent tile (coming soon) */}
               <Link
                 href="/national-team/coming-soon?event=deep-south-2026"
-                className="flex flex-col rounded-2xl border-2 border-gray-200 bg-gray-50 p-6 opacity-90"
+                className="flex flex-col rounded-2xl border-2 border-[#B31B1B]/30 bg-[#B31B1B]/8 p-6 opacity-90 hover:opacity-100 transition-all sm:col-span-2 max-w-md mx-auto w-full"
               >
                 <span className="text-[#002147] font-bold text-lg">Deep South 2026</span>
                 <span className="text-sm text-gray-500 mt-1">Coming soon</span>
@@ -211,24 +237,27 @@ export default function NCUnitedNationalTeam() {
             <div className="grid sm:grid-cols-3 gap-4">
               <Link
                 href="/national-team/ucd-2024-results"
-                className="rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-[#003366]/30 hover:shadow-md transition-all"
+                className="rounded-xl border-2 border-[#003366]/20 bg-white p-5 text-center hover:border-[#003366]/40 hover:shadow-md transition-all group"
               >
                 <span className="font-bold text-[#002147] block">UCD 2024</span>
-                <span className="text-sm text-gray-600">Ultimate Club Duals · Results</span>
+                <span className="text-sm text-gray-600 block mt-1">Ultimate Club Duals · Results</span>
+                <span className="mt-3 inline-block text-sm font-semibold text-[#003366] group-hover:underline">View results →</span>
               </Link>
               <Link
                 href="/national-team/ucd-2025-results"
-                className="rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-[#003366]/30 hover:shadow-md transition-all"
+                className="rounded-xl border-2 border-[#003366]/20 bg-white p-5 text-center hover:border-[#003366]/40 hover:shadow-md transition-all group"
               >
                 <span className="font-bold text-[#002147] block">UCD 2025</span>
-                <span className="text-sm text-gray-600">Ultimate Club Duals · Results</span>
+                <span className="text-sm text-gray-600 block mt-1">Ultimate Club Duals · Results</span>
+                <span className="mt-3 inline-block text-sm font-semibold text-[#003366] group-hover:underline">View results →</span>
               </Link>
               <Link
                 href="/national-team/nhsca-2025-results"
-                className="rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-[#003366]/30 hover:shadow-md transition-all"
+                className="rounded-xl border-2 border-[#003366]/20 bg-white p-5 text-center hover:border-[#003366]/40 hover:shadow-md transition-all group"
               >
                 <span className="font-bold text-[#002147] block">NHSCA 2025</span>
-                <span className="text-sm text-gray-600">National Duals · Results</span>
+                <span className="text-sm text-gray-600 block mt-1">National Duals · Results</span>
+                <span className="mt-3 inline-block text-sm font-semibold text-[#003366] group-hover:underline">View results →</span>
               </Link>
             </div>
           </div>
