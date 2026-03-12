@@ -107,31 +107,34 @@ export default function NationalTeamHubPage() {
               )}
             </div>
           </div>
-          <Button asChild variant="outline" size="sm" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
-            <a href="/national-team">Back to National Team</a>
-          </Button>
+          <a
+            href="/national-team"
+            className="inline-flex items-center justify-center rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors"
+          >
+            Back to National Team
+          </a>
         </header>
 
         {events.length > 0 && (
-          <div className="rounded-2xl border border-amber-200/80 bg-white shadow-sm px-5 py-4">
+          <div className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 shadow-sm px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
-              <Hotel className="h-4 w-4 text-amber-600 flex-shrink-0" />
+              <Hotel className="h-4 w-4 text-[#B31B1B] flex-shrink-0" />
               Hotel
             </p>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-700 mt-1">
               Hotel info coming soon; we&apos;ll post in the Hub and in the team chat.
             </p>
           </div>
         )}
 
         {eventsWithChat.length > 0 && (
-          <div className="rounded-2xl border border-[#003366]/20 bg-white shadow-sm px-5 py-4">
+          <div className="rounded-2xl border-2 border-[#003366]/40 bg-[#003366]/10 shadow-sm px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-[#003366] flex-shrink-0" />
-              Team chat
+              Team chat &amp; comms
             </p>
-            <p className="text-sm text-gray-600 mt-1">
-              We’ll be communicating via the Community. Open your event below to join.
+            <p className="text-sm text-gray-700 mt-1">
+              We’ll be communicating via the <strong>Community message board</strong>. Open your event below to join.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {eventsWithChat.map((e) => {
@@ -141,12 +144,12 @@ export default function NationalTeamHubPage() {
                   <HardLink
                     key={e.eventSlug}
                     href={forumHref}
-                    className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366]/25 bg-[#003366]/5 px-4 py-2.5 text-sm font-medium text-[#003366] hover:bg-[#003366]/10 hover:border-[#003366]/40 transition-colors touch-manipulation"
+                    className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2.5 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors touch-manipulation"
                   >
                     <MessageCircle className="h-4 w-4" />
                     {e.eventName}
                     {count > 0 && (
-                      <span className="rounded-full bg-[#003366]/20 px-2 py-0.5 text-xs font-semibold">
+                      <span className="rounded-full bg-[#B31B1B] text-white px-2 py-0.5 text-xs font-semibold">
                         {count} message{count !== 1 ? "s" : ""}
                       </span>
                     )}
@@ -173,7 +176,7 @@ export default function NationalTeamHubPage() {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="bg-[#003366] hover:bg-[#002147] rounded-lg">
-                    <a href="/national-team/nhsca-2026">NHSCA 2026 event page</a>
+                    <a href="/national-team/hub">Team Hub</a>
                   </Button>
                   <Button asChild variant="outline" className="rounded-lg border-[#003366]/30">
                     <a href={REG_PAGE_PATH}>Registration page</a>
@@ -276,13 +279,11 @@ export default function NationalTeamHubPage() {
 
         {/* Single “what’s coming” note instead of three placeholder cards */}
         {events.length > 0 && (
-          <Card className="rounded-2xl border-gray-200/80 bg-white/90 shadow-sm">
-            <CardContent className="py-4 px-5 sm:px-6">
-              <p className="text-sm text-gray-600">
-                <strong className="text-gray-800">Apparel, schedule, coaches:</strong> Photos, sizing, daily agenda, and coach bios will be added here before the event.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 px-5 py-4">
+            <p className="text-sm text-gray-700">
+              <strong className="text-[#002147]">Apparel, schedule, coaches:</strong> Photos, sizing, daily agenda, and coach bios will be added here before the event.
+            </p>
+          </div>
         )}
 
       </div>
@@ -669,10 +670,10 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-[#003366]/20 bg-white shadow-md">
-      <CardHeader className="bg-gradient-to-b from-[#003366]/[0.06] to-transparent border-b border-[#003366]/10 pb-4">
+    <Card className="overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg">
+      <CardHeader className="bg-gradient-to-b from-[#003366]/15 to-[#003366]/5 border-b-2 border-[#003366]/20 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{event.eventName}</CardTitle>
-        <CardDescription className="text-gray-600">Dashboard, roster, and updates</CardDescription>
+        <CardDescription className="text-gray-600">Dashboard, roster with gear sizes, and updates</CardDescription>
         <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
           <button
             type="button"
@@ -733,8 +734,8 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
           </div>
         )}
         {(event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && myRegs.length > 0 && (
-          <div className="rounded-md border border-[#003366]/15 bg-[#003366]/[0.03] p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Gear size</h3>
+          <div className="rounded-xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 p-4">
+            <h3 className="text-sm font-semibold text-[#002147] mb-2">Gear &amp; apparel sizes</h3>
             <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically. Please submit by <strong>Sunday, March 15</strong>.</p>
             <div className="space-y-0">
               {myRegs.map((r) => (
@@ -811,39 +812,39 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
             </p>
           )}
         </div>
-        <div>
-          <h3 className="text-sm font-semibold text-[#002147] mb-2">Detailed roster ({event.roster.length})</h3>
-          <div className="rounded-xl border border-gray-200 overflow-hidden overflow-x-auto bg-white">
+        <div className="rounded-xl border-2 border-[#003366]/25 overflow-hidden bg-[#003366]/5">
+          <h3 className="text-sm font-semibold text-[#002147] mb-2 px-4 pt-4">Roster &amp; gear ({event.roster.length})</h3>
+          <div className="rounded-b-xl overflow-x-auto bg-white border-t border-[#003366]/10">
             {event.roster.length === 0 ? (
               <div className="py-10 px-4 text-center">
                 <p className="text-sm text-gray-500">No athletes on the roster yet.</p>
                 <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here. If you just registered, refresh in a moment.</p>
               </div>
             ) : (
-              <table className="w-full text-sm min-w-[480px]">
-                <thead className="bg-[#003366]/5">
-                  <tr>
-                    <th className="text-left p-3 font-medium text-[#002147]">Name</th>
-                    <th className="text-left p-3 font-medium text-[#002147]">Weight</th>
-                    <th className="text-left p-3 font-medium text-[#002147]">School</th>
-                    <th className="text-left p-3 font-medium text-[#002147]">Grad</th>
-                    <th className="text-left p-3 font-medium text-[#002147]">Singlet</th>
-                    <th className="text-left p-3 font-medium text-[#002147]">Shorts</th>
-                    <th className="text-left p-3 font-medium text-[#002147]">Shirt</th>
+              <table className="w-full text-sm min-w-[520px]">
+                <thead>
+                  <tr className="bg-[#003366] text-white">
+                    <th className="text-left p-3 font-semibold">Name</th>
+                    <th className="text-left p-3 font-semibold">Weight</th>
+                    <th className="text-left p-3 font-semibold">School</th>
+                    <th className="text-left p-3 font-semibold">Grad</th>
+                    <th className="text-left p-3 font-semibold">Singlet</th>
+                    <th className="text-left p-3 font-semibold">Shorts</th>
+                    <th className="text-left p-3 font-semibold">Shirt</th>
                   </tr>
                 </thead>
                 <tbody>
                   {event.roster.map((r, i) => (
-                    <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
+                    <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-[#003366]/[0.03]")}>
                       <td className="p-3 font-medium text-gray-900">
                         {r.athlete_first_name} {r.athlete_last_name}
                       </td>
                       <td className="p-3 text-gray-700">{r.primary_weight}</td>
                       <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
                       <td className="p-3 text-gray-700">{r.graduation_year}</td>
-                      <td className="p-3 text-gray-600">{r.singlet_size || "—"}</td>
-                      <td className="p-3 text-gray-600">{r.shorts_size || "—"}</td>
-                      <td className="p-3 text-gray-600">{r.shirt_size || "—"}</td>
+                      <td className="p-3 text-gray-700">{r.singlet_size || "—"}</td>
+                      <td className="p-3 text-gray-700">{r.shorts_size || "—"}</td>
+                      <td className="p-3 text-gray-700">{r.shirt_size || "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -937,10 +938,10 @@ function GroupedEventHubSection({
   const isNHSCA = firstEvent.eventSlug === "nhsca-duals-2026" || firstEvent.eventName.toLowerCase().includes("nhsca")
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-[#003366]/20 bg-white shadow-md">
-      <CardHeader className="bg-gradient-to-b from-[#003366]/[0.06] to-transparent border-b border-[#003366]/10 pb-4">
+    <Card className="overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg">
+      <CardHeader className="bg-gradient-to-b from-[#003366]/15 to-[#003366]/5 border-b-2 border-[#003366]/20 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{groupName}</CardTitle>
-        <CardDescription className="text-gray-600">Dashboard, rosters, and updates — both teams</CardDescription>
+        <CardDescription className="text-gray-600">Both rosters with gear sizes, updates &amp; comms</CardDescription>
         <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
           <button
             type="button"
@@ -1001,8 +1002,8 @@ function GroupedEventHubSection({
               </div>
             )}
             {isNHSCA && myRegs.length > 0 && (
-              <div className="rounded-md border border-[#003366]/15 bg-[#003366]/[0.03] p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Gear size</h3>
+              <div className="rounded-xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 p-4">
+                <h3 className="text-sm font-semibold text-[#002147] mb-2">Gear &amp; apparel sizes</h3>
                 <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically. Please submit by <strong>Sunday, March 15</strong>.</p>
                 <div className="space-y-0">
                   {myRegs.map((r) => (
@@ -1079,50 +1080,56 @@ function GroupedEventHubSection({
                 </p>
               )}
             </div>
-            {eventsWithLabels.map(({ event: ev, label }) => (
-              <div key={ev.eventSlug}>
-                <h3 className="text-sm font-semibold text-[#002147] mb-2">
-                  {label} Roster ({ev.roster.length})
-                </h3>
-                <div className="rounded-xl border border-gray-200 overflow-hidden overflow-x-auto bg-white">
-                  {ev.roster.length === 0 ? (
-                    <div className="py-8 px-4 text-center">
-                      <p className="text-sm text-gray-500">No athletes on the {label} roster yet.</p>
-                      <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here.</p>
-                    </div>
-                  ) : (
-                    <table className="w-full text-sm min-w-[480px]">
-                      <thead className="bg-[#003366]/5">
-                        <tr>
-                          <th className="text-left p-3 font-medium text-[#002147]">Name</th>
-                          <th className="text-left p-3 font-medium text-[#002147]">Weight</th>
-                          <th className="text-left p-3 font-medium text-[#002147]">School</th>
-                          <th className="text-left p-3 font-medium text-[#002147]">Grad</th>
-                          <th className="text-left p-3 font-medium text-[#002147]">Singlet</th>
-                          <th className="text-left p-3 font-medium text-[#002147]">Shorts</th>
-                          <th className="text-left p-3 font-medium text-[#002147]">Shirt</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ev.roster.map((r, i) => (
-                          <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
-                            <td className="p-3 font-medium text-gray-900">
-                              {r.athlete_first_name} {r.athlete_last_name}
-                            </td>
-                            <td className="p-3 text-gray-700">{r.primary_weight}</td>
-                            <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
-                            <td className="p-3 text-gray-700">{r.graduation_year}</td>
-                            <td className="p-3 text-gray-600">{r.singlet_size || "—"}</td>
-                            <td className="p-3 text-gray-600">{r.shorts_size || "—"}</td>
-                            <td className="p-3 text-gray-600">{r.shirt_size || "—"}</td>
+            {eventsWithLabels.map(({ event: ev, label }) => {
+              const isNational = label.toLowerCase() === "national"
+              const tileBorder = isNational ? "border-[#003366]/30" : "border-[#CBAF5D]/50"
+              const tileBg = isNational ? "bg-[#003366]/5" : "bg-[#CBAF5D]/10"
+              const headerBg = isNational ? "bg-[#003366]" : "bg-[#CBAF5D]"
+              return (
+                <div key={ev.eventSlug} className={cn("rounded-xl border-2 overflow-hidden", tileBorder, tileBg)}>
+                  <h3 className="text-sm font-semibold text-[#002147] mb-2 px-4 pt-4">
+                    {label} Roster &amp; gear ({ev.roster.length})
+                  </h3>
+                  <div className="rounded-b-xl overflow-x-auto bg-white border-t border-gray-200">
+                    {ev.roster.length === 0 ? (
+                      <div className="py-8 px-4 text-center">
+                        <p className="text-sm text-gray-500">No athletes on the {label} roster yet.</p>
+                        <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here.</p>
+                      </div>
+                    ) : (
+                      <table className="w-full text-sm min-w-[520px]">
+                        <thead>
+                          <tr className={cn(headerBg, isNational ? "text-white" : "text-[#002147]")}>
+                            <th className="text-left p-3 font-semibold">Name</th>
+                            <th className="text-left p-3 font-semibold">Weight</th>
+                            <th className="text-left p-3 font-semibold">School</th>
+                            <th className="text-left p-3 font-semibold">Grad</th>
+                            <th className="text-left p-3 font-semibold">Singlet</th>
+                            <th className="text-left p-3 font-semibold">Shorts</th>
+                            <th className="text-left p-3 font-semibold">Shirt</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
+                        </thead>
+                        <tbody>
+                          {ev.roster.map((r, i) => (
+                            <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
+                              <td className="p-3 font-medium text-gray-900">
+                                {r.athlete_first_name} {r.athlete_last_name}
+                              </td>
+                              <td className="p-3 text-gray-700">{r.primary_weight}</td>
+                              <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
+                              <td className="p-3 text-gray-700">{r.graduation_year}</td>
+                              <td className="p-3 text-gray-700">{r.singlet_size || "—"}</td>
+                              <td className="p-3 text-gray-700">{r.shorts_size || "—"}</td>
+                              <td className="p-3 text-gray-700">{r.shirt_size || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
             <HubDocumentsList contextType="event" contextId={firstEvent.eventSlug} />
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Athlete cards (IG)</h3>

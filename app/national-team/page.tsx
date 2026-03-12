@@ -115,9 +115,20 @@ export default function NCUnitedNationalTeam() {
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-black mb-6 md:mb-8 leading-tight">
               NATIONAL TEAM
             </h1>
-            <p className="text-lg md:text-xl lg:text-2xl mb-12 md:mb-16 text-blue-100 font-light max-w-3xl mx-auto px-4">
+            <p className="text-lg md:text-xl lg:text-2xl mb-8 md:mb-10 text-blue-100 font-light max-w-3xl mx-auto px-4">
               Elite wrestlers representing North Carolina on the national stage
             </p>
+
+            {/* Interest CTA in banner */}
+            <div className="mb-10 md:mb-12">
+              <Link
+                href="/national-team/interest-form"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-[#B31B1B] px-6 py-3 text-base font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors border-2 border-white/20"
+              >
+                National Team Interest Form
+              </Link>
+              <p className="text-sm text-blue-100/90 mt-2">Express interest for Spring/Summer 2026</p>
+            </div>
 
             {/* Stats Grid - Aggregate Stats Across All Tournaments */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-12 md:mt-16 px-4">
@@ -158,26 +169,19 @@ export default function NCUnitedNationalTeam() {
         </div>
       </section>
 
-      {/* Current events + Interest CTA — primary actions */}
+      {/* National Team Schedule — one live link to hub, rest coming soon */}
       <section className="py-12 md:py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">Current</h2>
-            <p className="text-gray-600 text-center mb-8">Event pages, team hub, and registration</p>
-            <div className="grid sm:grid-cols-2 gap-4 mb-10">
-              <Link
-                href="/national-team/nhsca-2026"
-                className="flex flex-col rounded-2xl border-2 border-[#003366]/20 bg-[#003366]/5 p-6 hover:bg-[#003366]/10 hover:border-[#003366]/40 transition-all group"
-              >
-                <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">NHSCA Duals 2026</span>
-                <span className="text-sm text-gray-600 mt-1">May 23–25 · Virginia Beach · Event info &amp; details</span>
-              </Link>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">National Team Schedule</h2>
+            <p className="text-gray-600 text-center mb-8">Roster, event info &amp; comms (registered families only)</p>
+            <div className="grid sm:grid-cols-2 gap-4">
               <Link
                 href="/national-team/hub"
-                className="flex flex-col rounded-2xl border-2 border-[#003366]/20 bg-[#003366]/5 p-6 hover:bg-[#003366]/10 hover:border-[#003366]/40 transition-all group"
+                className="flex flex-col rounded-2xl border-2 border-[#003366] bg-[#003366]/10 p-6 hover:bg-[#003366]/15 hover:border-[#002147] transition-all group"
               >
-                <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">Team Hub</span>
-                <span className="text-sm text-gray-600 mt-1">Roster, updates &amp; chat (for registered families)</span>
+                <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">NHSCA Duals 2026</span>
+                <span className="text-sm text-gray-600 mt-1">May 23–25 · Virginia Beach · Roster, gear, &amp; team chat</span>
               </Link>
               <Link
                 href="/national-team/coming-soon?event=aau-2026"
@@ -193,17 +197,6 @@ export default function NCUnitedNationalTeam() {
                 <span className="text-[#002147] font-bold text-lg">Deep South 2026</span>
                 <span className="text-sm text-gray-500 mt-1">Coming soon</span>
               </Link>
-            </div>
-            <div className="text-center">
-              <Link
-                href="/national-team/interest-form"
-                className="inline-flex min-h-[52px] items-center justify-center rounded-xl bg-[#B31B1B] px-8 py-4 text-lg font-bold text-white shadow-lg hover:bg-[#9a1616] transition-colors"
-              >
-                National Team Interest Form
-              </Link>
-              <p className="text-sm text-gray-600 mt-3 max-w-md mx-auto">
-                Express interest for Spring/Summer 2026. Coaching staff will review and reach out with next steps.
-              </p>
             </div>
           </div>
         </div>
