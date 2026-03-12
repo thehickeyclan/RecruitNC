@@ -34,6 +34,46 @@ export default function NationalTeamHubPage() {
   const events = data?.events ?? []
   const eventSlugs = events.map((e) => e.eventSlug)
 
+  const refetchHub = useCallback(() => {
+    fetch("/api/national-team/hub", { credentials: "include" })
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch("/api/national-team/hub", { credentials: "include" })
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => setData({ allowed: false, reason: "no_access" }))
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
+  }, [])
+
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now()
+      const d = Math.max(0, WEIGH_IN_START - now)
+      if (d <= 0) {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
+        return
+      }
+      setCountdown({
+        days: Math.floor(d / 86400000),
+        hours: Math.floor((d % 86400000) / 3600000),
+        minutes: Math.floor((d % 3600000) / 60000),
+        seconds: Math.floor((d % 60000) / 1000),
+        ready: false,
+      })
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
   useEffect(() => {
     const query = addFamilySearchQuery.trim()
     if (query.length < 2 || eventSlugs.length === 0) {
@@ -75,46 +115,6 @@ export default function NationalTeamHubPage() {
     },
     [eventSlugs, refetchHub]
   )
-
-  useEffect(() => {
-    setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
-  }, [])
-
-  useEffect(() => {
-    const tick = () => {
-      const now = Date.now()
-      const d = Math.max(0, WEIGH_IN_START - now)
-      if (d <= 0) {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
-        return
-      }
-      setCountdown({
-        days: Math.floor(d / 86400000),
-        hours: Math.floor((d % 86400000) / 3600000),
-        minutes: Math.floor((d % 3600000) / 60000),
-        seconds: Math.floor((d % 60000) / 1000),
-        ready: false,
-      })
-    }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  const refetchHub = useCallback(() => {
-    fetch("/api/national-team/hub", { credentials: "include" })
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    fetch("/api/national-team/hub", { credentials: "include" })
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => setData({ allowed: false, reason: "no_access" }))
-      .finally(() => setLoading(false))
-  }, [])
 
   if (loading) {
     return (
