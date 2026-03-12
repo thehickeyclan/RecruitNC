@@ -84,14 +84,18 @@ export default function NationalTeamHubPage() {
   const eventsWithChat = events.filter((e) => e.forumGroupId && e.forumChannelId)
 
   return (
-    <div className="min-h-screen bg-gray-50/80 py-6 sm:py-8 px-4 sm:px-6">
-      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-gray-100/80 py-6 sm:py-10 px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Header */}
+        <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-[#002147] tracking-tight">National Team Hub</h1>
-            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#002147] tracking-tight">National Team Hub</h1>
+            <p className="text-sm text-gray-600 mt-1">Event rosters, updates, and team chat</p>
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
               {data.isAdmin && (
-                <p className="text-sm text-amber-700">Admin: you see the full list of event workspaces.</p>
+                <span className="inline-flex items-center rounded-md bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                  Admin: full list of event workspaces
+                </span>
               )}
               {user?.id && (
                 <HubPresenceBubbles
@@ -103,31 +107,31 @@ export default function NationalTeamHubPage() {
               )}
             </div>
           </div>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="outline" size="sm" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
             <a href="/national-team">Back to National Team</a>
           </Button>
-        </div>
+        </header>
 
         {events.length > 0 && (
-          <div className="rounded-xl border border-[#003366]/15 bg-amber-50/50 px-4 py-3 sm:px-5">
-            <p className="text-sm font-medium text-[#002147] flex items-center gap-2">
-              <Hotel className="h-4 w-4 text-[#003366] flex-shrink-0" />
+          <div className="rounded-2xl border border-amber-200/80 bg-white shadow-sm px-5 py-4">
+            <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
+              <Hotel className="h-4 w-4 text-amber-600 flex-shrink-0" />
               Hotel
             </p>
-            <p className="text-sm text-gray-700 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               Hotel info coming soon; we&apos;ll post in the Hub and in the team chat.
             </p>
           </div>
         )}
 
         {eventsWithChat.length > 0 && (
-          <div className="rounded-xl border border-[#003366]/20 bg-[#003366]/5 px-4 py-3 sm:px-5">
-            <p className="text-sm font-medium text-[#002147] flex items-center gap-2">
+          <div className="rounded-2xl border border-[#003366]/20 bg-white shadow-sm px-5 py-4">
+            <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-[#003366] flex-shrink-0" />
-              We’ll be communicating and engaging via the Community chat.
+              Team chat
             </p>
-            <p className="text-sm text-gray-700 mt-1">
-              Open your event’s chat below to join the conversation.
+            <p className="text-sm text-gray-600 mt-1">
+              We’ll be communicating via the Community. Open your event below to join.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {eventsWithChat.map((e) => {
@@ -137,12 +141,12 @@ export default function NationalTeamHubPage() {
                   <HardLink
                     key={e.eventSlug}
                     href={forumHref}
-                    className="inline-flex items-center gap-2 min-h-[44px] rounded-lg border border-[#003366]/30 bg-white px-4 py-3 text-sm font-medium text-[#003366] hover:bg-[#003366]/5 transition-colors touch-manipulation"
+                    className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366]/25 bg-[#003366]/5 px-4 py-2.5 text-sm font-medium text-[#003366] hover:bg-[#003366]/10 hover:border-[#003366]/40 transition-colors touch-manipulation"
                   >
                     <MessageCircle className="h-4 w-4" />
                     {e.eventName}
                     {count > 0 && (
-                      <span className="rounded-full bg-[#003366]/15 px-2 py-0.5 text-xs font-semibold">
+                      <span className="rounded-full bg-[#003366]/20 px-2 py-0.5 text-xs font-semibold">
                         {count} message{count !== 1 ? "s" : ""}
                       </span>
                     )}
@@ -156,25 +160,25 @@ export default function NationalTeamHubPage() {
 
         {events.length === 0 ? (
           <>
-            <Card className="border-[#003366]/20">
-              <CardHeader>
-                <CardTitle className="text-[#003366]">Your team hub</CardTitle>
-                <CardDescription>
-                  Once you register and pay for an event, this page will show your event roster, your registration details, and the team group chat — all in one place.
+            <Card className="rounded-2xl border-[#003366]/20 bg-white shadow-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-br from-[#003366]/5 to-transparent pb-6">
+                <CardTitle className="text-[#002147] text-xl">Your team hub</CardTitle>
+                <CardDescription className="text-gray-600 max-w-xl">
+                  Once you register and pay for an event, this page will show your event roster, registration details, and the team group chat in one place.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  If you have an invite to <strong>NHSCA Duals 2026</strong>, use your registration link to sign up. After payment, come back here to see the roster and team messaging.
+              <CardContent className="space-y-5">
+                <p className="text-sm text-gray-700">
+                  Have an invite to <strong>NHSCA Duals 2026</strong>? Use your registration link to sign up. After payment, return here to see the roster and team chat.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Button asChild className="bg-[#003366] hover:bg-[#003366]/90">
+                  <Button asChild className="bg-[#003366] hover:bg-[#002147] rounded-lg">
                     <a href="/national-team/nhsca-2026">NHSCA 2026 event page</a>
                   </Button>
-                  <Button asChild variant="outline">
+                  <Button asChild variant="outline" className="rounded-lg border-[#003366]/30">
                     <a href={REG_PAGE_PATH}>Registration page</a>
                   </Button>
-                  <Button asChild variant="outline">
+                  <Button asChild variant="outline" className="rounded-lg border-[#003366]/30">
                     <a href="/national-team">National Team overview</a>
                   </Button>
                 </div>
@@ -185,25 +189,25 @@ export default function NationalTeamHubPage() {
             </Card>
 
             {data.isAdmin && (
-              <Card className="border-amber-300 bg-amber-50/50">
+              <Card className="rounded-2xl border-amber-200 bg-amber-50/60 shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-amber-900 text-base">Send to families</CardTitle>
                   <CardDescription>
-                    As admin you can share the registration page and create invite codes. Recipients need an invite code to register.
+                    Share the registration page and create invite codes. Recipients need an invite code to register.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">Registration page (copy and send)</p>
-                    <p className="text-sm text-gray-600 font-mono bg-white border rounded px-2 py-1.5 break-all">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Registration URL</p>
+                    <p className="text-sm text-gray-600 font-mono bg-white border border-amber-200 rounded-lg px-3 py-2 break-all">
                       {regPageUrl || REG_PAGE_PATH}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button asChild size="sm" className="bg-[#003366] hover:bg-[#003366]/90">
+                    <Button asChild size="sm" className="bg-[#003366] hover:bg-[#002147] rounded-lg">
                       <a href={REG_PAGE_PATH}>Open registration page</a>
                     </Button>
-                    <Button asChild size="sm" variant="outline">
+                    <Button asChild size="sm" variant="outline" className="rounded-lg">
                       <a href="/admin/national-team/invite-codes">Create invite codes</a>
                     </Button>
                   </div>
@@ -271,13 +275,15 @@ export default function NationalTeamHubPage() {
         )}
 
         {/* Single “what’s coming” note instead of three placeholder cards */}
-        <Card className="rounded-2xl border-gray-200/80 bg-white/80 shadow-sm">
-          <CardContent className="py-4 px-4 sm:px-6">
-            <p className="text-sm text-gray-600">
-              <strong className="text-gray-700">Apparel, schedule, and coaches:</strong> The organizer will add photos, sizing, daily agenda, and coach bios here before the event.
-            </p>
-          </CardContent>
-        </Card>
+        {events.length > 0 && (
+          <Card className="rounded-2xl border-gray-200/80 bg-white/90 shadow-sm">
+            <CardContent className="py-4 px-5 sm:px-6">
+              <p className="text-sm text-gray-600">
+                <strong className="text-gray-800">Apparel, schedule, coaches:</strong> Photos, sizing, daily agenda, and coach bios will be added here before the event.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
       </div>
     </div>
@@ -663,10 +669,10 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-[#003366]/15 shadow-sm">
-      <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+    <Card className="overflow-hidden rounded-2xl border-[#003366]/20 bg-white shadow-md">
+      <CardHeader className="bg-gradient-to-b from-[#003366]/[0.06] to-transparent border-b border-[#003366]/10 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{event.eventName}</CardTitle>
-        <CardDescription className="text-gray-600">Dashboard and updates</CardDescription>
+        <CardDescription className="text-gray-600">Dashboard, roster, and updates</CardDescription>
         <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
           <button
             type="button"
@@ -806,36 +812,43 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
           )}
         </div>
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Detailed roster ({event.roster.length})</h3>
-          <div className="border rounded-md overflow-hidden overflow-x-auto">
-            <table className="w-full text-sm min-w-[480px]">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="text-left p-2">Name</th>
-                  <th className="text-left p-2">Weight</th>
-                  <th className="text-left p-2">School</th>
-                  <th className="text-left p-2">Grad</th>
-                  <th className="text-left p-2">Singlet</th>
-                  <th className="text-left p-2">Shorts</th>
-                  <th className="text-left p-2">Shirt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {event.roster.map((r) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="p-2">
-                      {r.athlete_first_name} {r.athlete_last_name}
-                    </td>
-                    <td className="p-2">{r.primary_weight}</td>
-                    <td className="p-2">{r.high_school || "—"}</td>
-                    <td className="p-2">{r.graduation_year}</td>
-                    <td className="p-2">{r.singlet_size || "—"}</td>
-                    <td className="p-2">{r.shorts_size || "—"}</td>
-                    <td className="p-2">{r.shirt_size || "—"}</td>
+          <h3 className="text-sm font-semibold text-[#002147] mb-2">Detailed roster ({event.roster.length})</h3>
+          <div className="rounded-xl border border-gray-200 overflow-hidden overflow-x-auto bg-white">
+            {event.roster.length === 0 ? (
+              <div className="py-10 px-4 text-center">
+                <p className="text-sm text-gray-500">No athletes on the roster yet.</p>
+                <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here. If you just registered, refresh in a moment.</p>
+              </div>
+            ) : (
+              <table className="w-full text-sm min-w-[480px]">
+                <thead className="bg-[#003366]/5">
+                  <tr>
+                    <th className="text-left p-3 font-medium text-[#002147]">Name</th>
+                    <th className="text-left p-3 font-medium text-[#002147]">Weight</th>
+                    <th className="text-left p-3 font-medium text-[#002147]">School</th>
+                    <th className="text-left p-3 font-medium text-[#002147]">Grad</th>
+                    <th className="text-left p-3 font-medium text-[#002147]">Singlet</th>
+                    <th className="text-left p-3 font-medium text-[#002147]">Shorts</th>
+                    <th className="text-left p-3 font-medium text-[#002147]">Shirt</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {event.roster.map((r, i) => (
+                    <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
+                      <td className="p-3 font-medium text-gray-900">
+                        {r.athlete_first_name} {r.athlete_last_name}
+                      </td>
+                      <td className="p-3 text-gray-700">{r.primary_weight}</td>
+                      <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
+                      <td className="p-3 text-gray-700">{r.graduation_year}</td>
+                      <td className="p-3 text-gray-600">{r.singlet_size || "—"}</td>
+                      <td className="p-3 text-gray-600">{r.shorts_size || "—"}</td>
+                      <td className="p-3 text-gray-600">{r.shirt_size || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
         <HubDocumentsList contextType="event" contextId={event.eventSlug} />
@@ -924,10 +937,10 @@ function GroupedEventHubSection({
   const isNHSCA = firstEvent.eventSlug === "nhsca-duals-2026" || firstEvent.eventName.toLowerCase().includes("nhsca")
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-[#003366]/15 shadow-sm">
-      <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+    <Card className="overflow-hidden rounded-2xl border-[#003366]/20 bg-white shadow-md">
+      <CardHeader className="bg-gradient-to-b from-[#003366]/[0.06] to-transparent border-b border-[#003366]/10 pb-4">
         <CardTitle className="text-[#002147] text-lg sm:text-xl tracking-tight">{groupName}</CardTitle>
-        <CardDescription className="text-gray-600">Dashboard and updates — both teams</CardDescription>
+        <CardDescription className="text-gray-600">Dashboard, rosters, and updates — both teams</CardDescription>
         <div className="flex gap-1 mt-3 border-b border-gray-200 -mb-1">
           <button
             type="button"
@@ -1068,38 +1081,45 @@ function GroupedEventHubSection({
             </div>
             {eventsWithLabels.map(({ event: ev, label }) => (
               <div key={ev.eventSlug}>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                <h3 className="text-sm font-semibold text-[#002147] mb-2">
                   {label} Roster ({ev.roster.length})
                 </h3>
-                <div className="border rounded-md overflow-hidden overflow-x-auto">
-                  <table className="w-full text-sm min-w-[480px]">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th className="text-left p-2">Name</th>
-                        <th className="text-left p-2">Weight</th>
-                        <th className="text-left p-2">School</th>
-                        <th className="text-left p-2">Grad</th>
-                        <th className="text-left p-2">Singlet</th>
-                        <th className="text-left p-2">Shorts</th>
-                        <th className="text-left p-2">Shirt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ev.roster.map((r) => (
-                        <tr key={r.id} className="border-t">
-                          <td className="p-2">
-                            {r.athlete_first_name} {r.athlete_last_name}
-                          </td>
-                          <td className="p-2">{r.primary_weight}</td>
-                          <td className="p-2">{r.high_school || "—"}</td>
-                          <td className="p-2">{r.graduation_year}</td>
-                          <td className="p-2">{r.singlet_size || "—"}</td>
-                          <td className="p-2">{r.shorts_size || "—"}</td>
-                          <td className="p-2">{r.shirt_size || "—"}</td>
+                <div className="rounded-xl border border-gray-200 overflow-hidden overflow-x-auto bg-white">
+                  {ev.roster.length === 0 ? (
+                    <div className="py-8 px-4 text-center">
+                      <p className="text-sm text-gray-500">No athletes on the {label} roster yet.</p>
+                      <p className="text-xs text-gray-400 mt-1">Paid registrations will appear here.</p>
+                    </div>
+                  ) : (
+                    <table className="w-full text-sm min-w-[480px]">
+                      <thead className="bg-[#003366]/5">
+                        <tr>
+                          <th className="text-left p-3 font-medium text-[#002147]">Name</th>
+                          <th className="text-left p-3 font-medium text-[#002147]">Weight</th>
+                          <th className="text-left p-3 font-medium text-[#002147]">School</th>
+                          <th className="text-left p-3 font-medium text-[#002147]">Grad</th>
+                          <th className="text-left p-3 font-medium text-[#002147]">Singlet</th>
+                          <th className="text-left p-3 font-medium text-[#002147]">Shorts</th>
+                          <th className="text-left p-3 font-medium text-[#002147]">Shirt</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {ev.roster.map((r, i) => (
+                          <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
+                            <td className="p-3 font-medium text-gray-900">
+                              {r.athlete_first_name} {r.athlete_last_name}
+                            </td>
+                            <td className="p-3 text-gray-700">{r.primary_weight}</td>
+                            <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
+                            <td className="p-3 text-gray-700">{r.graduation_year}</td>
+                            <td className="p-3 text-gray-600">{r.singlet_size || "—"}</td>
+                            <td className="p-3 text-gray-600">{r.shorts_size || "—"}</td>
+                            <td className="p-3 text-gray-600">{r.shirt_size || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
             ))}

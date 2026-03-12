@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getEventName, getEventSlugForApi } from "@/lib/national-team-events"
+import { getEventName, getEventSlugForApi, normalizeEventSlugForLookup } from "@/lib/national-team-events"
 
 export type HubRegistration = {
   id: string
@@ -94,7 +94,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   const paidRegs = (regError ? [] : (allRegs ?? [])) as (HubRegistration & { parent_user_id?: string | null })[]
 
   // Use canonical API slug so "nhsca-2026" and "nhsca-duals-2026" both map to nhsca-duals-2026 (thread context_id).
-  const toCanonical = (slug: string) => getEventSlugForApi(slug || "").trim() || slug
+  const toCanonical = (slug: string) => getEventSlugForApi(normalizeEventSlugForLookup(slug || "")) || slug
   let eventSlugsToShow: string[]
   if (isAdmin) {
     const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]

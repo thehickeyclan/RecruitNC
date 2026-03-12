@@ -34,11 +34,17 @@ export const NATIONAL_TEAM_EVENTS: Record<string, NationalTeamEventConfig> = {
   },
 }
 
+/** Normalize a stored slug (e.g. from DB) for lookup: trim, lowercase, underscores → hyphens. */
+export function normalizeEventSlugForLookup(slug: string): string {
+  return (slug ?? "").trim().toLowerCase().replace(/_/g, "-")
+}
+
 /** Resolve URL slug to the event_slug used in DB/API (invite codes, registrations). */
 export function getEventSlugForApi(urlSlug: string): string {
-  const config = NATIONAL_TEAM_EVENTS[urlSlug]
+  const normalized = normalizeEventSlugForLookup(urlSlug)
+  const config = NATIONAL_TEAM_EVENTS[normalized]
   if (config?.eventSlug) return config.eventSlug
-  return urlSlug
+  return normalized || urlSlug
 }
 
 /** Get display name for an event (URL slug or API slug). */
