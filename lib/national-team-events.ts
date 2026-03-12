@@ -98,6 +98,13 @@ export function getEventSlugFromGroupName(groupName: string): string | null {
   return null
 }
 
+/** Team Hubs menu for navbar: which hubs are live vs coming soon. */
+export const TEAM_HUB_MENU: { slug: string; label: string; href?: string }[] = [
+  { slug: "nhsca-duals-2026", label: "NHSCA Duals 2026", href: "/national-team/hub" },
+  { slug: "aau-2026", label: "AAU Scholastic Duals 2026" },
+  { slug: "deep-south-2026", label: "Deep South 2026" },
+]
+
 /** Hub display grouping: one hub section per key, with multiple event slugs and labels (e.g. Main / Select). */
 export const HUB_EVENT_GROUPS: Record<string, { eventSlug: string; label: string }[]> = {
   "nhsca-duals-2026": [

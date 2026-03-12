@@ -23,6 +23,7 @@ import {
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { TEAM_HUB_MENU } from "@/lib/national-team-events"
 
 type NavNotification = { id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
 
@@ -140,20 +141,25 @@ export function Navbar() {
   const profilesItem = { href: "/prospects/all", label: "Athlete Profiles" }
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
   const athletesItems = [...commitmentItems, profilesItem, rankingsItem]
-  const programsItems = [
-    { href: "/blue", label: "Blue Program", description: "NC United Blue membership", icon: Users },
-    { href: "/national-team", label: "National Team", description: "NC United National Team Portal", icon: Trophy },
-  ]
   const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
-  const nationalTeamItems = [
-    { href: "/national-team/hub", label: "Workspace", description: "Event roster & logistics (e.g. NHSCA) — for registered users", icon: Users },
-    { href: "/national-team", label: "About", description: "Learn about the NC United National Team", icon: Users },
-    { href: "/national-team/ucd-2024-results", label: "UCD 2024", description: "Ultimate Club Duals 2024 results and highlights", icon: Trophy },
-    { href: "/national-team/ucd-2025-results", label: "UCD 2025", description: "Ultimate Club Duals 2025 results and highlights", icon: Trophy },
-    { href: "/national-team/nhsca-2025-results", label: "NHSCA 2025", description: "NHSCA Duals 2025 results and highlights", icon: Medal },
-    { href: "/national-team/interest-form", label: "Interest Form", description: "Express interest in Spring/Summer 2026 National Team", icon: Users },
+  // National Team menu: grouped as About, Events, Results (with separators).
+  type NationalTeamItem = { href: string; label: string; comingSoon?: boolean }
+  const nationalTeamAbout: NationalTeamItem[] = [
+    { href: "/national-team", label: "About" },
+    { href: "/national-team/interest-form", label: "Interest Form" },
   ]
+  const nationalTeamEvents: NationalTeamItem[] = TEAM_HUB_MENU.map((item) => ({
+    href: item.href ?? `/national-team/coming-soon?event=${encodeURIComponent(item.slug)}`,
+    label: item.label,
+    comingSoon: !item.href,
+  }))
+  const nationalTeamResults: NationalTeamItem[] = [
+    { href: "/national-team/ucd-2024-results", label: "UCD 2024" },
+    { href: "/national-team/ucd-2025-results", label: "UCD 2025" },
+    { href: "/national-team/nhsca-2025-results", label: "NHSCA 2025" },
+  ]
+  const nationalTeamItems = [...nationalTeamAbout, ...nationalTeamEvents, ...nationalTeamResults]
 
   const nationalsItems = [
     { href: "/nhsca", label: "Tournament Overview", description: "About NHSCA Nationals & divisions", icon: Trophy },
@@ -280,27 +286,35 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Calendar</a>
+              <a href="/blue" className={navLinkClass("/blue")}>Blue</a>
               <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass([...programsItems, ...nationalTeamItems])}>
-                  Programs
+                <DropdownMenuTrigger className={navTriggerClass(nationalTeamItems)}>
+                  National Team
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel className="font-normal font-semibold">Programs</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-normal font-semibold">National Team</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="/blue" className="block w-full cursor-pointer">Blue Program</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="cursor-pointer">National Team</DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-56">
-                      {nationalTeamItems.map((sub) => (
-                        <DropdownMenuItem key={sub.href} asChild>
-                          <a href={sub.href} className="block w-full cursor-pointer">{sub.label}</a>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
+                  {nationalTeamAbout.map((sub) => (
+                    <DropdownMenuItem key={sub.href} asChild>
+                      <a href={sub.href} className="block w-full cursor-pointer">{sub.label}</a>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  {nationalTeamEvents.map((sub) => (
+                    <DropdownMenuItem key={`${sub.href}-${sub.label}`} asChild>
+                      <a href={sub.href} className="flex items-center justify-between w-full cursor-pointer">
+                        {sub.label}
+                        {sub.comingSoon && <span className="text-xs text-muted-foreground">Coming soon</span>}
+                      </a>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  {nationalTeamResults.map((sub) => (
+                    <DropdownMenuItem key={sub.href} asChild>
+                      <a href={sub.href} className="block w-full cursor-pointer">{sub.label}</a>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
@@ -415,11 +429,6 @@ export function Navbar() {
                   </div>
                 </PopoverContent>
               </Popover>
-            )}
-            {user && hubAccess && (
-              <a href="/national-team/hub" className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Workspace — event roster and logistics">
-                <Trophy className="h-5 w-5" />
-              </a>
             )}
             <a href="/cart" target="_top" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
               <ShoppingCart className="h-5 w-5" />
@@ -649,16 +658,24 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Calendar</a>
+                  <a href="/blue" className={mobileLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue</a>
                   <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive([...programsItems, ...nationalTeamItems]))}>Programs</div>
+                    <div className={mobileMenuParentClass(isDropdownActive(nationalTeamItems))}>National Team</div>
                     <div className="space-y-2">
-                      <a href="/blue" className={mobileSubLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue Program</a>
-                      <div className="pl-4 border-l-2 border-white/20 mt-2 space-y-1">
-                        <p className="text-xs font-bold text-white/90 mb-1">National Team</p>
-                        {nationalTeamItems.map((sub) => (
-                          <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
-                        ))}
-                      </div>
+                      {nationalTeamAbout.map((sub) => (
+                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
+                      ))}
+                      <div className="border-t border-white/20 my-2" aria-hidden />
+                      {nationalTeamEvents.map((sub) => (
+                        <a key={`${sub.href}-${sub.label}`} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>
+                          {sub.label}
+                          {sub.comingSoon && <span className="text-xs text-gray-500 ml-1">(Coming soon)</span>}
+                        </a>
+                      ))}
+                      <div className="border-t border-white/20 my-2" aria-hidden />
+                      {nationalTeamResults.map((sub) => (
+                        <a key={sub.href} href={sub.href} className={mobileSubLinkClass(sub.href)} onClick={() => setIsOpen(false)}>{sub.label}</a>
+                      ))}
                     </div>
                   </div>
                   <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>
@@ -724,18 +741,6 @@ export function Navbar() {
                             Profile
                           </a>
                         </Button>
-                        {hubAccess && (
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="w-full bg-transparent mobile-optimized min-h-[44px]"
-                          >
-                            <a href="/national-team/hub" onClick={() => setIsOpen(false)}>
-                              <Trophy className="h-4 w-4 mr-2" />
-                              Workspace
-                            </a>
-                          </Button>
-                        )}
                         {showMyRecruits && (
                           <Button
                             asChild

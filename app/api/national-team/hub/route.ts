@@ -77,11 +77,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at, shirt_size, singlet_size, shorts_size")
     .eq("status", "paid")
 
-  if (regError) {
-    if (isAdmin) {
-      console.warn("[national-team/hub] Admin access: registrations query failed", regError)
-      return NextResponse.json({ allowed: true, events: [], isAdmin: true })
-    }
+  if (regError && !isAdmin) {
     if ((regError as { code?: string })?.code === "42P01") {
       return NextResponse.json(
         { allowed: false, reason: "no_access" },
@@ -91,8 +87,11 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     console.error("[national-team/hub]", regError)
     return NextResponse.json({ allowed: false, reason: "no_access" }, { status: 200 })
   }
+  if (regError && isAdmin) {
+    console.warn("[national-team/hub] Admin access: registrations query failed", regError)
+  }
 
-  const paidRegs = (allRegs ?? []) as (HubRegistration & { parent_user_id?: string | null })[]
+  const paidRegs = (regError ? [] : (allRegs ?? [])) as (HubRegistration & { parent_user_id?: string | null })[]
 
   // Use canonical API slug so "nhsca-2026" and "nhsca-duals-2026" both map to nhsca-duals-2026 (thread context_id).
   const toCanonical = (slug: string) => getEventSlugForApi(slug || "").trim() || slug
