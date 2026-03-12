@@ -397,7 +397,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     try {
       const { data: interestRows } = await admin
         .from("national_team_interest_forms")
-        .select("id, first_name, last_name, high_school, graduation_year, primary_weight, nhsca_duals_team, nhsca_duals_starter")
+        .select("id, first_name, last_name, high_school, graduation_year, primary_weight, nhsca_duals_team, nhsca_duals_starter, singlet_size, shorts_size, shirt_size")
         .not("nhsca_duals_team", "is", null)
         .in("nhsca_duals_team", ["team_1", "team_2"])
       for (const row of interestRows ?? []) {
@@ -410,6 +410,9 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
           primary_weight: string
           nhsca_duals_team: string | null
           nhsca_duals_starter: boolean
+          singlet_size?: string | null
+          shorts_size?: string | null
+          shirt_size?: string | null
         }
         const eventSlugForLineup = r.nhsca_duals_team === "team_2" ? nhscaSelectSlug : nhscaNationalSlug
         const list = interestLineupByEvent.get(eventSlugForLineup) ?? []
@@ -425,9 +428,9 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
           primary_weight: r.primary_weight ?? "",
           status: "lineup",
           created_at: "",
-          shirt_size: null,
-          singlet_size: null,
-          shorts_size: null,
+          shirt_size: r.shirt_size ?? null,
+          singlet_size: r.singlet_size ?? null,
+          shorts_size: r.shorts_size ?? null,
           from_interest_form: true,
           nhsca_duals_team: r.nhsca_duals_team,
           nhsca_duals_starter: r.nhsca_duals_starter,

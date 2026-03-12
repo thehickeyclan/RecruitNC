@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, MessageCircle, LayoutDashboard, Hotel, Shirt } from "lucide-react"
+import { CheckCircle2, MessageCircle, Hotel, Shirt } from "lucide-react"
 import { getEventName, getRosterLabel } from "@/lib/national-team-events"
 import { HardLink } from "@/components/hard-link"
 
@@ -35,42 +35,25 @@ export default function NationalTeamRegisterSuccessPage() {
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
             <p className="text-sm text-gray-700">
-              Your payment was successful. You&apos;re on the <strong>{rosterLabel} roster</strong>. Here&apos;s what to do next:
+              Your payment was successful. You&apos;re on the <strong>{rosterLabel} roster</strong>.
             </p>
 
-            <div className="space-y-4">
-              <div className="flex gap-3 rounded-lg border border-[#003366]/15 bg-[#003366]/5 p-4">
-                <LayoutDashboard className="h-5 w-5 shrink-0 text-[#003366] mt-0.5" />
-                <div>
-                  <p className="font-medium text-[#002147]">Team Hub</p>
-                  <p className="text-sm text-gray-600 mt-0.5">
-                    Rosters, schedule, coaches, gear orders, and updates — all in one place.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3 rounded-lg border border-[#003366]/15 bg-[#003366]/5 p-4">
-                <MessageCircle className="h-5 w-5 shrink-0 text-[#003366] mt-0.5" />
-                <div>
-                  <p className="font-medium text-[#002147]">Chat</p>
-                  <p className="text-sm text-gray-600 mt-0.5">
-                    We&apos;ll communicate and engage via the Community chat. Open it from the Hub.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm font-semibold text-gray-900 mb-3">Your next steps</p>
-              <ul className="space-y-3 text-sm text-gray-700">
-                <li className="flex items-start gap-2">
-                  <Hotel className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Book a hotel.</strong> Hotel details coming soon; we&apos;ll share info in the Hub and via chat.</span>
-                </li>
+              <p className="text-sm font-semibold text-gray-900 mb-3">What to do now</p>
+              <ol className="space-y-3 text-sm text-gray-700 list-decimal list-inside">
                 <li className="flex items-start gap-2">
                   <Shirt className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Submit your gear sizes</strong> (Singlet, Shorts, Shirt) in the Team Hub — no later than {GEAR_DEADLINE}.</span>
+                  <span><strong>Update your gear sizes</strong> on the Hub page (Singlet, Shorts, Shirt) — no later than {GEAR_DEADLINE}.</span>
                 </li>
-              </ul>
+                <li className="flex items-start gap-2">
+                  <MessageCircle className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                  <span><strong>Say hello on the team channel</strong> — open Community from the Hub and join the event chat.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Hotel className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
+                  <span><strong>Book your travel</strong> — hotel details will be shared in the Hub and team chat.</span>
+                </li>
+              </ol>
             </div>
 
             <div className="flex flex-col gap-2 pt-2">

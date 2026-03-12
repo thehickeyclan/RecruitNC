@@ -716,7 +716,7 @@ type HubTab = "dashboard" | "updates" | "chat"
 
 type GearField = "singlet_size" | "shorts_size" | "shirt_size"
 
-/** Inline table cell: dropdown for gear size with live PATCH, or plain text when row is not editable (e.g. interest-form only). */
+/** Inline table cell: dropdown for gear size with live PATCH. Works for both paid registrations and lineup-only (interest-form) rows. */
 function RosterSizeCell({
   registrationId,
   field,
@@ -731,12 +731,16 @@ function RosterSizeCell({
   onSave?: () => void
 }) {
   const [saving, setSaving] = useState(false)
-  const editable = !!registrationId && !String(registrationId).startsWith("interest-")
+  const isInterestRow = !!registrationId && String(registrationId).startsWith("interest-")
+  const editable = !!registrationId
 
   const handleChange = (newVal: string) => {
     if (!registrationId || !editable) return
     setSaving(true)
-    fetch(`/api/national-team/registrations/${registrationId}/size`, {
+    const url = isInterestRow
+      ? `/api/national-team/interest-forms/${registrationId.replace(/^interest-/, "")}/size`
+      : `/api/national-team/registrations/${registrationId}/size`
+    fetch(url, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
