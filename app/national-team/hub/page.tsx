@@ -35,13 +35,13 @@ export default function NationalTeamHubPage() {
   const eventSlugs = events.map((e) => e.eventSlug)
 
   useEffect(() => {
-    if (addFamilySearchQuery.trim().length < 2 || eventSlugs.length === 0) {
+    const query = addFamilySearchQuery.trim()
+    if (query.length < 2 || eventSlugs.length === 0) {
       setAddFamilySearchResults([])
       return
     }
     setAddFamilySearching(true)
-    const q = addFamilySearchQuery.trim()
-    fetch(`/api/national-team/workspace/${encodeURIComponent(eventSlugs[0])}/users/search?q=${encodeURIComponent(q)}`, { credentials: "include" })
+    fetch(`/api/national-team/workspace/${encodeURIComponent(eventSlugs[0])}/users/search?q=${encodeURIComponent(query)}`, { credentials: "include" })
       .then((r) => r.json())
       .then((res) => setAddFamilySearchResults(res.users ?? []))
       .catch(() => setAddFamilySearchResults([]))
