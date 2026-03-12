@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getEventName, getEventSlugForApi } from "@/lib/national-team-events"
+import { getEventName, getEventSlugForApi, getHubGroupForEvent } from "@/lib/national-team-events"
 
 export const dynamic = "force-dynamic"
 
@@ -56,7 +56,15 @@ export async function GET() {
     // table may not exist
   }
 
-  const hubs: HubListItem[] = [...eventSlugs].sort().map((slug) => ({
+  // Collapse slugs that belong to the same hub group (e.g. nhsca-duals-2026 + nhsca-duals-2026-select → one hub "NHSCA Duals 2026")
+  const displaySlugSet = new Set<string>()
+  for (const slug of eventSlugs) {
+    const group = getHubGroupForEvent(slug)
+    if (group) displaySlugSet.add(group.groupKey)
+    else displaySlugSet.add(slug)
+  }
+
+  const hubs: HubListItem[] = [...displaySlugSet].sort().map((slug) => ({
     id: slug,
     slug,
     name: getEventName(slug),

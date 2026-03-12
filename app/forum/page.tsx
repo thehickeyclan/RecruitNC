@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { HardLink } from "@/components/hard-link"
 import { MessageCircle, Users, LayoutDashboard, Search, Loader2, Lock, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { getEventName, getHubGroupForEvent } from "@/lib/national-team-events"
 
 type LegacyDm = { id: string; name: string; unread_count?: number }
 type ForumGroup = { id: string; name: string; visibility?: string; channels: { id: string; name: string }[] }
@@ -56,8 +57,19 @@ export default function ForumPage() {
   const privateGroups = useMemo(() => groups.filter((g) => g.visibility !== "public"), [groups])
   const publicGroups = useMemo(() => groups.filter((g) => g.visibility === "public"), [groups])
   const hubs = useMemo(() => {
-    const list = (hubData?.events ?? []).filter((e) => e.forumGroupId && e.forumChannelId)
-    return q ? list.filter((e) => e.eventName.toLowerCase().includes(q)) : list
+    const events = (hubData?.events ?? []).filter((e) => e.forumGroupId && e.forumChannelId)
+    const byDisplayKey = new Map<string, HubEvent>()
+    for (const e of events) {
+      const group = getHubGroupForEvent(e.eventSlug)
+      const key = group ? group.groupKey : e.eventSlug
+      if (!byDisplayKey.has(key)) byDisplayKey.set(key, e)
+    }
+    const list = [...byDisplayKey.values()]
+    return q ? list.filter((e) => {
+      const group = getHubGroupForEvent(e.eventSlug)
+      const displayName = group ? getEventName(group.groupKey) : e.eventName
+      return displayName.toLowerCase().includes(q)
+    }) : list
   }, [hubData?.events, q])
 
   if (!user) {
@@ -239,6 +251,8 @@ export default function ForumPage() {
                   </li>
                 ) : (
                   hubs.map((event) => {
+                    const group = getHubGroupForEvent(event.eventSlug)
+                    const displayName = group ? getEventName(group.groupKey) : event.eventName
                     const href = "/national-team/hub"
                     return (
                       <li key={event.eventSlug}>
@@ -250,7 +264,7 @@ export default function ForumPage() {
                             <LayoutDashboard className="w-6 h-6 text-[#C8A94A]" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-white truncate">{event.eventName}</p>
+                            <p className="font-medium text-white truncate">{displayName}</p>
                             <p className="text-xs text-white/50 truncate">Event hub</p>
                           </div>
                         </HardLink>

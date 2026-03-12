@@ -70,23 +70,23 @@ export default function ForumLayout({
       })
       .catch(() => setCurrentUserProfile(null))
     Promise.all([
-      fetch("/api/forum/sidebar", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/forum/sidebar", { credentials: "include" }).then((r) => r.json()).catch(() => ({ groups: [] })),
+      fetch("/api/forum/groups", { credentials: "include" }).then((r) => r.json()).catch(() => ({ groups: [] })),
       fetch("/api/communities/hubs", { credentials: "include" }).then((r) => r.json()),
       fetch("/api/communities/for-you", { credentials: "include" }).then((r) => r.json()),
     ])
-      .then(([sidebar, hubsRes, forYouRes]) => {
-        const list = sidebar.groups ?? []
-        setGroups(list)
+      .then(([sidebar, groupsRes, hubsRes, forYouRes]) => {
+        const fromSidebar = sidebar.groups ?? []
+        const fromGroups = groupsRes.groups ?? []
+        const byId = new Map<string, ForumGroup>()
+        for (const g of fromSidebar) byId.set(g.id, g)
+        for (const g of fromGroups) if (!byId.has(g.id)) byId.set(g.id, g)
+        const merged = [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
+        setGroups(merged)
         setDmConversations(sidebar.dmConversations ?? [])
         setLegacyDms(sidebar.legacyDms ?? [])
         setHubs(hubsRes.hubs ?? [])
         setForYou(forYouRes)
-        if (list.length === 0) {
-          fetch("/api/forum/groups", { credentials: "include" })
-            .then((r) => r.json())
-            .then((data) => { if (data.groups?.length) setGroups(data.groups) })
-            .catch(() => {})
-        }
       })
       .catch(() => {})
       .finally(() => setSidebarLoading(false))
@@ -350,23 +350,46 @@ export default function ForumLayout({
                       setNewGroupError(null)
                       const channelId = data.channelId ?? data.group?.channelId
                       const groupId = data.group?.id
+                      const groupName = data.group?.name ?? newGroupName
+                      const visibility = data.group?.visibility ?? "private"
                       const href = channelId && groupId ? `/forum/groups/${groupId}/channels/${channelId}` : null
-                      const sidebarRes = await fetch("/api/forum/sidebar", { credentials: "include" })
-                      const sidebarData = await sidebarRes.json()
-                      const list = sidebarData.groups ?? []
-                      setGroups(list)
-                      if (list.length === 0) {
-                        const groupsRes = await fetch("/api/forum/groups", { credentials: "include" })
-                        const groupsData = await groupsRes.json()
-                        if (groupsData.groups?.length) setGroups(groupsData.groups)
+                      const newGroup: ForumGroup = {
+                        id: groupId,
+                        name: groupName,
+                        visibility,
+                        logo_url: null,
+                        channels: channelId ? [{ id: channelId, name: "general", type: "chat", coach_only: false }] : [],
                       }
+                      setGroups((prev) => {
+                        const next = prev.some((g) => g.id === groupId) ? prev : [...prev, newGroup]
+                        return next.sort((a, b) => a.name.localeCompare(b.name))
+                      })
                       if (href) router.push(href)
                       else if (groupId) {
-                        const fallback = (await fetch("/api/forum/groups", { credentials: "include" }).then((r) => r.json())).groups ?? []
-                        const created = fallback.find((g: ForumGroup) => g.id === groupId)
+                        const groupsRes = await fetch("/api/forum/groups", { credentials: "include" })
+                        const groupsData = await groupsRes.json()
+                        const list = groupsData.groups ?? []
+                        const created = list.find((g: ForumGroup) => g.id === groupId)
                         const firstCh = created?.channels?.[0]
-                        if (firstCh) router.push(`/forum/groups/${groupId}/channels/${firstCh.id}`)
+                        if (firstCh) {
+                          setGroups((p) => {
+                            const merged = p.some((g) => g.id === groupId) ? p : [...p, created].sort((a, b) => a.name.localeCompare(b.name))
+                            return merged
+                          })
+                          router.push(`/forum/groups/${groupId}/channels/${firstCh.id}`)
+                        }
                       }
+                      fetch("/api/forum/sidebar", { credentials: "include" })
+                        .then((r) => r.json())
+                        .then((s) => {
+                          const fromSidebar = s.groups ?? []
+                          setGroups((p) => {
+                            const byId = new Map(p.map((g) => [g.id, g]))
+                            for (const g of fromSidebar) byId.set(g.id, g)
+                            return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
+                          })
+                        })
+                        .catch(() => {})
                     } catch (err) {
                       console.error("[RecruitNC] Create forum group", err)
                       setNewGroupError("Something went wrong. Please try again.")
@@ -402,7 +425,11 @@ export default function ForumLayout({
           ) : (
             <>
               {filteredPrivateGroups.length > 0 && (
-                <ul className="space-y-0.5 mb-2">
+                <>
+                  <p className="px-3 pt-0 pb-1 text-xs font-semibold text-white/50 uppercase tracking-wider" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                    Private groups
+                  </p>
+                  <ul className="space-y-0.5 mb-2">
                   {filteredPrivateGroups.map((group) => {
                     const singleChannel = group.channels.find((c) => c.name === "general") ?? group.channels[0]
                     if (!singleChannel) return null
@@ -433,6 +460,7 @@ export default function ForumLayout({
                     )
                   })}
                 </ul>
+                </>
               )}
               {filteredPublicGroups.length > 0 && (
                 <>
