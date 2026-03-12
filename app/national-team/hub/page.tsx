@@ -25,6 +25,56 @@ export default function NationalTeamHubPage() {
   const [loading, setLoading] = useState(true)
   const [regPageUrl, setRegPageUrl] = useState("")
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
+  const [addFamilySearchQuery, setAddFamilySearchQuery] = useState("")
+  const [addFamilySearchResults, setAddFamilySearchResults] = useState<SearchUser[]>([])
+  const [addFamilySearching, setAddFamilySearching] = useState(false)
+  const [addFamilyAddingId, setAddFamilyAddingId] = useState<string | null>(null)
+  const [addFamilyMessage, setAddFamilyMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  const events = data?.events ?? []
+  const eventSlugs = events.map((e) => e.eventSlug)
+
+  useEffect(() => {
+    if (addFamilySearchQuery.trim().length < 2 || eventSlugs.length === 0) {
+      setAddFamilySearchResults([])
+      return
+    }
+    setAddFamilySearching(true)
+    const q = addFamilySearchQuery.trim()
+    fetch(`/api/national-team/workspace/${encodeURIComponent(eventSlugs[0])}/users/search?q=${encodeURIComponent(q)}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((res) => setAddFamilySearchResults(res.users ?? []))
+      .catch(() => setAddFamilySearchResults([]))
+      .finally(() => setAddFamilySearching(false))
+  }, [addFamilySearchQuery, eventSlugs.join(",")])
+
+  const handleAddFamilyMember = useCallback(
+    async (userId: string) => {
+      if (eventSlugs.length === 0) return
+      setAddFamilyMessage(null)
+      setAddFamilyAddingId(userId)
+      try {
+        for (const slug of eventSlugs) {
+          const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(slug)}/members`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ user_id: userId }),
+          })
+          const resData = await res.json().catch(() => ({}))
+          if (!res.ok) throw new Error(resData?.error ?? "Could not add member.")
+        }
+        setAddFamilyMessage({ type: "success", text: "Added. They can now see this hub and the group chat." })
+        setAddFamilySearchResults((prev) => prev.filter((u) => u.user_id !== userId))
+        refetchHub()
+      } catch (e) {
+        setAddFamilyMessage({ type: "error", text: e instanceof Error ? e.message : "Could not add member." })
+      } finally {
+        setAddFamilyAddingId(null)
+      }
+    },
+    [eventSlugs, refetchHub]
+  )
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
@@ -267,7 +317,7 @@ export default function NationalTeamHubPage() {
           </div>
         )}
 
-        {/* Add family members — different copy for primary (paid) vs family member (workspace-only) */}
+        {/* Add family members — registration link, invite code, and add-by-search (primary only) */}
         {events.length > 0 && (
           <section className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
@@ -277,7 +327,7 @@ export default function NationalTeamHubPage() {
             {data?.isPrimaryRegistrant ? (
               <>
                 <p className="text-sm text-gray-700 mt-1">
-                  Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register and pay. After they complete registration, they’ll see this hub. You can also add existing RecruitNC users in the Roster section below (search by name or email).
+                  Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register and pay. After they complete registration, they’ll see this hub. Or add existing RecruitNC users below (search by name or email).
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <span className="text-xs font-mono text-gray-600 bg-white/80 px-2 py-1.5 rounded border border-[#CBAF5D]/30 break-all">
@@ -289,10 +339,45 @@ export default function NationalTeamHubPage() {
                     </Button>
                   )}
                 </div>
+                <div className="mt-4 pt-3 border-t border-[#CBAF5D]/30">
+                  <p className="text-xs text-gray-600 mb-2">Add existing RecruitNC user — they’ll see this hub and the group chat. No account? <a href="/auth/signup" className="text-[#003366] hover:underline">Sign up free</a>.</p>
+                  <Input
+                    type="text"
+                    placeholder="Search by name or email…"
+                    value={addFamilySearchQuery}
+                    onChange={(e) => setAddFamilySearchQuery(e.target.value)}
+                    className="w-full max-w-sm mb-2 bg-white/80 border-[#CBAF5D]/40"
+                  />
+                  <div className="max-h-40 overflow-y-auto border border-[#CBAF5D]/30 rounded-lg p-2 space-y-1 bg-white/60">
+                    {addFamilySearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
+                    {!addFamilySearching && addFamilySearchQuery.trim().length >= 2 && addFamilySearchResults.length === 0 && (
+                      <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
+                    )}
+                    {!addFamilySearching &&
+                      addFamilySearchResults.map((u) => (
+                        <button
+                          key={u.user_id}
+                          type="button"
+                          onClick={() => handleAddFamilyMember(u.user_id)}
+                          disabled={!!addFamilyAddingId}
+                          className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
+                        >
+                          <span className="font-medium text-gray-900">{u.display_name}</span>
+                          {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
+                          {addFamilyAddingId === u.user_id && <span className="text-xs text-[#003366]">Adding…</span>}
+                        </button>
+                      ))}
+                  </div>
+                  {addFamilyMessage && (
+                    <p className={`text-sm mt-2 ${addFamilyMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>
+                      {addFamilyMessage.text}
+                    </p>
+                  )}
+                </div>
               </>
             ) : (
               <p className="text-sm text-gray-700 mt-1">
-                You’re viewing this hub as an <strong>added family member</strong>. To add another parent or guardian, ask the person who registered and paid (the primary registrant) to share the registration link and invite code with them, or to add existing RecruitNC users in the Roster section below (search by name or email).
+                You’re viewing this hub as an <strong>added family member</strong>. To add another parent or guardian, ask the person who registered and paid (the primary registrant) to share the registration link and invite code with them, or to add existing RecruitNC users in this section (search by name or email).
               </p>
             )}
           </section>
@@ -860,55 +945,7 @@ function EventHubSection({
   const myRegs = event.myRegistrations ?? []
   const hasThread = !!event.threadId && !!currentUserId
   const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
-  const [addSearchQuery, setAddSearchQuery] = useState("")
-  const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
-  const [addSearching, setAddSearching] = useState(false)
-  const [addingId, setAddingId] = useState<string | null>(null)
-  const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [sizeMessage, setSizeMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-
-  useEffect(() => {
-    if (addSearchQuery.trim().length < 2) {
-      setAddSearchResults([])
-      return
-    }
-    const t = setTimeout(() => {
-      setAddSearching(true)
-      fetch(
-        `/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/users/search?q=${encodeURIComponent(addSearchQuery.trim())}`,
-        { credentials: "include" }
-      )
-        .then((r) => r.json())
-        .then((data) => setAddSearchResults(data.users ?? []))
-        .catch(() => setAddSearchResults([]))
-        .finally(() => setAddSearching(false))
-    }, 300)
-    return () => clearTimeout(t)
-  }, [addSearchQuery, event.eventSlug])
-
-  const handleAddMember = async (userId: string) => {
-    setAddMessage(null)
-    setAddingId(userId)
-    try {
-      const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/members`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ user_id: userId }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        setAddMessage({ type: "success", text: "Added. They can now see this event and the group chat." })
-        setAddSearchResults((prev) => prev.filter((u) => u.user_id !== userId))
-      } else {
-        setAddMessage({ type: "error", text: data?.error ?? "Could not add member." })
-      }
-    } catch {
-      setAddMessage({ type: "error", text: "Request failed. Try again." })
-    } finally {
-      setAddingId(null)
-    }
-  }
 
   return (
     <Card id={sectionId} className={cn(sectionId && "scroll-mt-24", "overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg")}>
@@ -1012,47 +1049,6 @@ function EventHubSection({
             )}
           </div>
         )}
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Add RecruitNC user
-          </h3>
-          <p className="text-xs text-gray-500 mb-2">
-            Search by name or email. Only people with an <strong>active RecruitNC account</strong> can be added — they’ll then see this event workspace and the group chat. Don’t have an account? <a href="/auth/signup" className="text-[#003366] hover:underline">Sign up free</a>.
-          </p>
-          <Input
-            type="text"
-            placeholder="Search by name or email…"
-            value={addSearchQuery}
-            onChange={(e) => setAddSearchQuery(e.target.value)}
-            className="w-full max-w-sm mb-2"
-          />
-          <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1 bg-gray-50/50">
-            {addSearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
-            {!addSearching && addSearchQuery.trim().length >= 2 && addSearchResults.length === 0 && (
-              <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
-            )}
-            {!addSearching &&
-              addSearchResults.map((u) => (
-                <button
-                  key={u.user_id}
-                  type="button"
-                  onClick={() => handleAddMember(u.user_id)}
-                  disabled={!!addingId}
-                  className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
-                >
-                  <span className="font-medium text-gray-900">{u.display_name}</span>
-                  {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
-                  {addingId === u.user_id && <span className="text-xs text-[#003366]">Adding…</span>}
-                </button>
-              ))}
-          </div>
-          {addMessage && (
-            <p className={`text-sm mt-2 ${addMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>
-              {addMessage.text}
-            </p>
-          )}
-        </div>
         <div className="rounded-xl border-2 border-[#003366]/25 overflow-hidden bg-[#003366]/5">
           <h3 className="text-sm font-semibold text-[#002147] mb-1 px-4 pt-4">Roster &amp; gear ({event.roster.length})</h3>
           <p className="text-xs text-gray-600 px-4 pb-2">Enter gear sizes in the table below. Changes save automatically.</p>
@@ -1137,59 +1133,7 @@ function GroupedEventHubSection({
   const myRegs = events.flatMap((e) => e.myRegistrations ?? [])
   const hasThread = !!firstEvent?.threadId && !!currentUserId
   const [activeTab, setActiveTab] = useState<HubTab>("dashboard")
-  const [addSearchQuery, setAddSearchQuery] = useState("")
-  const [addSearchResults, setAddSearchResults] = useState<SearchUser[]>([])
-  const [addSearching, setAddSearching] = useState(false)
-  const [addingId, setAddingId] = useState<string | null>(null)
-  const [addMessage, setAddMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [sizeMessage, setSizeMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-
-  useEffect(() => {
-    if (addSearchQuery.trim().length < 2) {
-      setAddSearchResults([])
-      return
-    }
-    const t = setTimeout(() => {
-      setAddSearching(true)
-      fetch(
-        `/api/national-team/workspace/${encodeURIComponent(firstEvent.eventSlug)}/users/search?q=${encodeURIComponent(addSearchQuery.trim())}`,
-        { credentials: "include" }
-      )
-        .then((r) => r.json())
-        .then((data) => setAddSearchResults(data.users ?? []))
-        .catch(() => setAddSearchResults([]))
-        .finally(() => setAddSearching(false))
-    }, 300)
-    return () => clearTimeout(t)
-  }, [addSearchQuery, firstEvent.eventSlug])
-
-  const handleAddMember = async (userId: string) => {
-    setAddMessage(null)
-    setAddingId(userId)
-    try {
-      let lastError: string | null = null
-      for (const event of events) {
-        const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(event.eventSlug)}/members`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ user_id: userId }),
-        })
-        const data = await res.json().catch(() => ({}))
-        if (!res.ok) lastError = data?.error ?? "Could not add member."
-      }
-      if (!lastError) {
-        setAddMessage({ type: "success", text: "Added to all teams. They can now see this hub and the group chat." })
-        setAddSearchResults((prev) => prev.filter((u) => u.user_id !== userId))
-      } else {
-        setAddMessage({ type: "error", text: lastError })
-      }
-    } catch {
-      setAddMessage({ type: "error", text: "Request failed. Try again." })
-    } finally {
-      setAddingId(null)
-    }
-  }
 
   const isNHSCA = firstEvent.eventSlug === "nhsca-duals-2026" || firstEvent.eventName.toLowerCase().includes("nhsca")
 
@@ -1295,47 +1239,6 @@ function GroupedEventHubSection({
                 )}
               </div>
             )}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                Add RecruitNC user
-              </h3>
-              <p className="text-xs text-gray-500 mb-2">
-                Search by name or email. Added users will see this hub (both teams) and the group chat.
-              </p>
-              <Input
-                type="text"
-                placeholder="Search by name or email…"
-                value={addSearchQuery}
-                onChange={(e) => setAddSearchQuery(e.target.value)}
-                className="w-full max-w-sm mb-2"
-              />
-              <div className="max-h-48 overflow-y-auto border rounded-md p-2 space-y-1 bg-gray-50/50">
-                {addSearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
-                {!addSearching && addSearchQuery.trim().length >= 2 && addSearchResults.length === 0 && (
-                  <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
-                )}
-                {!addSearching &&
-                  addSearchResults.map((u) => (
-                    <button
-                      key={u.user_id}
-                      type="button"
-                      onClick={() => handleAddMember(u.user_id)}
-                      disabled={!!addingId}
-                      className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
-                    >
-                      <span className="font-medium text-gray-900">{u.display_name}</span>
-                      {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
-                      {addingId === u.user_id && <span className="text-xs text-[#003366]">Adding…</span>}
-                    </button>
-                  ))}
-              </div>
-              {addMessage && (
-                <p className={`text-sm mt-2 ${addMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>
-                  {addMessage.text}
-                </p>
-              )}
-            </div>
             {eventsWithLabels.map(({ event: ev, label }) => {
               const isNational = label.toLowerCase() === "national"
               const tileBorder = isNational ? "border-[#003366]/30" : "border-[#CBAF5D]/50"
