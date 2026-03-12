@@ -1101,9 +1101,9 @@ function EventHubSection({
                       <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
                       <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
                       <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
-                      <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="singlet_size" value={r.singlet_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
-                      <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shorts_size" value={r.shorts_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
-                      <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shirt_size" value={r.shirt_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                      <RosterSizeCell registrationId={r.id} field="singlet_size" value={r.singlet_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                      <RosterSizeCell registrationId={r.id} field="shorts_size" value={r.shorts_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                      <RosterSizeCell registrationId={r.id} field="shirt_size" value={r.shirt_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
                     </tr>
                   ))}
                 </tbody>
@@ -1307,9 +1307,9 @@ function GroupedEventHubSection({
                               <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
                               <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
                               <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
-                              <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="singlet_size" value={r.singlet_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
-                              <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shorts_size" value={r.shorts_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
-                              <RosterSizeCell registrationId={r.from_interest_form ? null : r.id} field="shirt_size" value={r.shirt_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                              <RosterSizeCell registrationId={r.id} field="singlet_size" value={r.singlet_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                              <RosterSizeCell registrationId={r.id} field="shorts_size" value={r.shorts_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
+                              <RosterSizeCell registrationId={r.id} field="shirt_size" value={r.shirt_size ?? ""} sizes={TSHIRT_SIZES} onSave={onRefetch} />
                             </tr>
                           ))}
                         </tbody>
