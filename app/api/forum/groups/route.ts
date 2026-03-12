@@ -26,6 +26,19 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
+  const { data: existing } = await admin
+    .from("forum_groups")
+    .select("id")
+    .ilike("name", name)
+    .limit(1)
+    .maybeSingle()
+  if (existing) {
+    return NextResponse.json(
+      { error: "A group with that name already exists. Try a different name." },
+      { status: 409 }
+    )
+  }
+
   const { data: group, error: groupErr } = await admin
     .from("forum_groups")
     .insert({
@@ -41,9 +54,12 @@ export async function POST(request: NextRequest) {
     const code = (groupErr as { code?: string })?.code
     const message = (groupErr as { message?: string })?.message ?? ""
     if (code === "23505" || message.includes("unique") || message.includes("duplicate")) {
-      return NextResponse.json({ error: "A group with that name may already exist. Try a different name." }, { status: 409 })
+      return NextResponse.json({ error: "A group with that name already exists. Try a different name." }, { status: 409 })
     }
-    return NextResponse.json({ error: "Failed to create group. Please try again." }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to create group. Please try again." },
+      { status: 500 }
+    )
   }
 
   const groupId = (group as { id: string }).id

@@ -373,7 +373,7 @@ export function Composer({
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           disabled={sending || disabled}
-          className="w-full min-w-0 min-h-[52px] max-h-28 resize-none rounded-xl border-[#003366]/20 bg-white px-4 py-3 text-base shadow-inner focus:ring-2 focus:ring-[#003366]/30"
+          className="w-full min-w-0 min-h-[52px] max-h-28 resize-none rounded-xl border-[#003366]/20 bg-white text-gray-900 placeholder:text-gray-500 px-4 py-3 text-base shadow-inner focus:ring-2 focus:ring-[#003366]/30"
           rows={2}
           maxLength={MAX_LENGTH + 100}
         />

@@ -36,7 +36,23 @@ export async function GET(
     .eq("user_id", user.id)
     .maybeSingle()
 
-  if (!member) return NextResponse.json({ error: "Not a member" }, { status: 403 })
+  if (!member) {
+    const { data: profile } = await admin
+      .from("user_profiles")
+      .select("is_admin, role")
+      .eq("user_id", user.id)
+      .maybeSingle()
+    const isSiteAdmin = !!(profile as { is_admin?: boolean; role?: string } | null)?.is_admin ||
+      (profile as { is_admin?: boolean; role?: string } | null)?.role === "admin"
+    if (isSiteAdmin) {
+      await admin.from("forum_members").upsert(
+        { group_id: groupId, user_id: user.id, role: "admin" },
+        { onConflict: "group_id,user_id", ignoreDuplicates: true }
+      )
+    } else {
+      return NextResponse.json({ error: "Not a member" }, { status: 403 })
+    }
+  }
 
   const { data: group } = await admin
     .from("forum_groups")
