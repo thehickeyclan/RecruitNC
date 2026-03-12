@@ -2,6 +2,9 @@
  * National team events: one place to add display names and URL → DB slug mapping.
  * Used by registration pages, success pages, and APIs (success/cancel URLs).
  * Add a new event: add an entry here and create invite codes in Admin → National team → Invite codes (select event).
+ *
+ * Roster decision: Which roster (e.g. National vs Select) is determined by the REG LINK (URL path),
+ * not by the invite code. You can use the same invite code for both; the link they open decides the roster.
  */
 
 export type NationalTeamEventConfig = {
@@ -47,6 +50,16 @@ export function getEventName(slug: string): string {
   )
   if (byApi) return byApi[1].name
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+/** Short roster label for success page (e.g. "National", "Select"). Based on URL slug they used to register. */
+export function getRosterLabel(urlSlug: string): string {
+  const apiSlug = getEventSlugForApi(urlSlug)
+  for (const members of Object.values(HUB_EVENT_GROUPS)) {
+    const found = members.find((m) => m.eventSlug === apiSlug)
+    if (found) return found.label
+  }
+  return getEventName(urlSlug)
 }
 
 /** All event slugs that have a config (for validation/404). */

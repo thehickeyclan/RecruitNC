@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone } from "lucide-react"
+import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel } from "lucide-react"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
 import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { HardLink } from "@/components/hard-link"
@@ -107,6 +107,18 @@ export default function NationalTeamHubPage() {
             <a href="/national-team">Back to National Team</a>
           </Button>
         </div>
+
+        {events.length > 0 && (
+          <div className="rounded-xl border border-[#003366]/15 bg-amber-50/50 px-4 py-3 sm:px-5">
+            <p className="text-sm font-medium text-[#002147] flex items-center gap-2">
+              <Hotel className="h-4 w-4 text-[#003366] flex-shrink-0" />
+              Hotel
+            </p>
+            <p className="text-sm text-gray-700 mt-1">
+              Hotel info coming soon; we&apos;ll post in the Hub and in the team chat.
+            </p>
+          </div>
+        )}
 
         {eventsWithChat.length > 0 && (
           <div className="rounded-xl border border-[#003366]/20 bg-[#003366]/5 px-4 py-3 sm:px-5">
@@ -717,7 +729,7 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
         {(event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && myRegs.length > 0 && (
           <div className="rounded-md border border-[#003366]/15 bg-[#003366]/[0.03] p-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Gear size</h3>
-            <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically.</p>
+            <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically. Please submit by <strong>Sunday, March 15</strong>.</p>
             <div className="space-y-0">
               {myRegs.map((r) => (
                 <HubGearSizeRow
@@ -794,15 +806,18 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
           )}
         </div>
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Roster ({event.roster.length})</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Detailed roster ({event.roster.length})</h3>
           <div className="border rounded-md overflow-hidden overflow-x-auto">
-            <table className="w-full text-sm min-w-[320px]">
+            <table className="w-full text-sm min-w-[480px]">
               <thead className="bg-gray-100">
                 <tr>
                   <th className="text-left p-2">Name</th>
                   <th className="text-left p-2">Weight</th>
                   <th className="text-left p-2">School</th>
                   <th className="text-left p-2">Grad</th>
+                  <th className="text-left p-2">Singlet</th>
+                  <th className="text-left p-2">Shorts</th>
+                  <th className="text-left p-2">Shirt</th>
                 </tr>
               </thead>
               <tbody>
@@ -814,6 +829,9 @@ function EventHubSection({ event, currentUserId, onRefetch }: { event: HubEvent;
                     <td className="p-2">{r.primary_weight}</td>
                     <td className="p-2">{r.high_school || "—"}</td>
                     <td className="p-2">{r.graduation_year}</td>
+                    <td className="p-2">{r.singlet_size || "—"}</td>
+                    <td className="p-2">{r.shorts_size || "—"}</td>
+                    <td className="p-2">{r.shirt_size || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -972,7 +990,7 @@ function GroupedEventHubSection({
             {isNHSCA && myRegs.length > 0 && (
               <div className="rounded-md border border-[#003366]/15 bg-[#003366]/[0.03] p-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-2">Gear size</h3>
-                <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically.</p>
+                <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically. Please submit by <strong>Sunday, March 15</strong>.</p>
                 <div className="space-y-0">
                   {myRegs.map((r) => (
                     <HubGearSizeRow
@@ -1054,13 +1072,16 @@ function GroupedEventHubSection({
                   {label} Roster ({ev.roster.length})
                 </h3>
                 <div className="border rounded-md overflow-hidden overflow-x-auto">
-                  <table className="w-full text-sm min-w-[320px]">
+                  <table className="w-full text-sm min-w-[480px]">
                     <thead className="bg-gray-100">
                       <tr>
                         <th className="text-left p-2">Name</th>
                         <th className="text-left p-2">Weight</th>
                         <th className="text-left p-2">School</th>
                         <th className="text-left p-2">Grad</th>
+                        <th className="text-left p-2">Singlet</th>
+                        <th className="text-left p-2">Shorts</th>
+                        <th className="text-left p-2">Shirt</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1072,6 +1093,9 @@ function GroupedEventHubSection({
                           <td className="p-2">{r.primary_weight}</td>
                           <td className="p-2">{r.high_school || "—"}</td>
                           <td className="p-2">{r.graduation_year}</td>
+                          <td className="p-2">{r.singlet_size || "—"}</td>
+                          <td className="p-2">{r.shorts_size || "—"}</td>
+                          <td className="p-2">{r.shirt_size || "—"}</td>
                         </tr>
                       ))}
                     </tbody>

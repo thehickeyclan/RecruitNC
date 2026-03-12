@@ -699,8 +699,6 @@ export function Navbar() {
                       <div className="space-y-2">
                         <a
                           href="/auth/signin"
-                          target="_top"
-                          rel="noopener"
                           onClick={() => setIsOpen(false)}
                           className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent px-4 py-2 text-sm font-medium"
                         >
@@ -708,8 +706,6 @@ export function Navbar() {
                         </a>
                         <a
                           href="/auth/signup"
-                          target="_top"
-                          rel="noopener"
                           onClick={() => setIsOpen(false)}
                           className="flex items-center justify-center w-full min-h-[44px] rounded-md bg-red-600 text-white hover:bg-red-700 px-4 py-2 text-sm font-medium"
                         >
@@ -723,10 +719,10 @@ export function Navbar() {
                           variant="outline"
                           className="w-full bg-transparent mobile-optimized min-h-[44px]"
                         >
-                          <Link href="/profile" onClick={() => setIsOpen(false)}>
+                          <a href="/profile" onClick={() => setIsOpen(false)}>
                             <User className="h-4 w-4 mr-2" />
                             Profile
-                          </Link>
+                          </a>
                         </Button>
                         {hubAccess && (
                           <Button
@@ -746,10 +742,10 @@ export function Navbar() {
                             variant="outline"
                             className="w-full bg-transparent mobile-optimized min-h-[44px]"
                           >
-                            <Link href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
+                            <a href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
                               <Star className="h-4 w-4 mr-2" />
                               My Recruits
-                            </Link>
+                            </a>
                           </Button>
                         )}
                         <Button

@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic"
 const DEFAULT_EVENT_SLUG = "nhsca-duals-2026"
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
-/** POST: validate code, create national_team_event_registrations row, create Stripe Checkout (one-time payment), return checkoutUrl */
+/** POST: validate code, create national_team_event_registrations row, create Stripe Checkout (one-time payment), return checkoutUrl.
+ * Roster (National vs Select) is determined by eventSlug from the REG LINK the user opened, not by the invite code. Same code can work for both links. */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))

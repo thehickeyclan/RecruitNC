@@ -405,11 +405,17 @@ export default function NHSCA2026EventPage() {
               This event is invite-only. Selected athletes receive registration details and a private link by email.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-amber-800 text-sm space-y-2">
+          <CardContent className="text-amber-800 text-sm space-y-3">
             <p>
               If you have been invited, use the registration link and invite code from your email to complete sign-up and payment. Costs are shown on that private registration flow.
             </p>
             <p>Not invited yet? Use the interest form to be considered for the team.</p>
+            <p className="pt-2 border-t border-amber-200">
+              <strong>Already registered?</strong> Rosters, gear sizes, hotel info, and team chat are all in one place: the members-only Team Hub.
+            </p>
+            <Button asChild className="bg-[#003366] hover:bg-[#003366]/90 text-white mt-2">
+              <a href="/national-team/hub">Go to Team Hub</a>
+            </Button>
           </CardContent>
         </Card>
 
