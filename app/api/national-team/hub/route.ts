@@ -24,6 +24,8 @@ export type HubRegistration = {
   /** For NHSCA: team_1 or team_2 from interest form. */
   nhsca_duals_team?: string | null
   nhsca_duals_starter?: boolean
+  /** Optional profile/headshot URL when linked to an athlete (future). */
+  photo_url?: string | null
 }
 
 export type HubEvent = {

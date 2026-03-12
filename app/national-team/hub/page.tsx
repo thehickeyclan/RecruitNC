@@ -17,14 +17,38 @@ import { getHubGroupForEvent, HUB_EVENT_GROUPS } from "@/lib/national-team-event
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
 
+const WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
+
 export default function NationalTeamHubPage() {
   const { user, profile } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [regPageUrl, setRegPageUrl] = useState("")
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
+  }, [])
+
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now()
+      const d = Math.max(0, WEIGH_IN_START - now)
+      if (d <= 0) {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
+        return
+      }
+      setCountdown({
+        days: Math.floor(d / 86400000),
+        hours: Math.floor((d % 86400000) / 3600000),
+        minutes: Math.floor((d % 3600000) / 60000),
+        seconds: Math.floor((d % 60000) / 1000),
+        ready: false,
+      })
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
   }, [])
 
   const refetchHub = useCallback(() => {
@@ -85,7 +109,6 @@ export default function NationalTeamHubPage() {
   const events = data.events ?? []
   const eventsWithChat = events.filter((e) => e.forumGroupId && e.forumChannelId)
 
-  // Use same layout as nhsca-2026 page: full-width banner then max-w-3xl content
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Same full-width banner as /national-team/nhsca-2026 */}
@@ -120,22 +143,66 @@ export default function NationalTeamHubPage() {
         <div className="w-full bg-[#002147] px-4 py-4 flex flex-wrap items-center justify-center gap-3">
           <Button asChild variant="outline" size="sm" className="rounded-xl border-[#D3B574]/60 text-[#D3B574] hover:bg-[#D3B574]/20 hover:text-white font-medium">
             <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
-              Official event & registration
+              NHSCA Official Page
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>
-          <a href="/national-team/nhsca-2026" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors">
-            Event page
-          </a>
           <a href="/national-team" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors">
             ← Back to National Team
           </a>
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        {/* Quick links — same as nhsca-2026 + roster */}
-        <nav className="flex flex-wrap items-center justify-center gap-3 text-sm">
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        {/* Countdown to weigh-ins — big and bold */}
+        <section className="rounded-2xl border-2 border-[#B31B1B]/40 bg-gradient-to-br from-[#002147] to-[#003366] px-6 py-8 text-white shadow-lg">
+          <p className="text-center text-[#D3B574] font-bold uppercase tracking-wider text-sm mb-2">Weigh-ins open</p>
+          <p className="text-center text-white/90 text-lg font-medium mb-6">Friday, May 22, 2026 · 2:00 PM · Virginia Beach Sports Center</p>
+          {countdown.ready ? (
+            <p className="text-center text-2xl md:text-3xl font-black text-[#D3B574]">We&apos;re here!</p>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+              <div className="text-center">
+                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.days}</div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Days</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.hours}</div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Hours</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.minutes}</div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Min</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-5xl font-black tabular-nums text-[#D3B574]">{countdown.seconds}</div>
+                <div className="text-xs md:text-sm font-semibold uppercase tracking-wider text-white/80">Sec</div>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Key links — clear labels, no confusion */}
+        <section className="rounded-2xl border-2 border-[#003366]/25 bg-white p-5 shadow-sm">
+          <h2 className="text-[#002147] font-bold text-lg mb-4 text-center">Key links</h2>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button asChild className="rounded-xl bg-[#003366] hover:bg-[#002147] text-white font-semibold">
+              <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
+                NHSCA Official Page
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl border-2 border-[#003366] text-[#003366] hover:bg-[#003366]/10 font-semibold">
+              <a href="/forum">Forum · Discussions &amp; updates</a>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl border-2 border-[#CBAF5D] text-[#002147] hover:bg-[#CBAF5D]/20 font-semibold">
+              <a href="/national-team#archives">Read about past teams</a>
+            </Button>
+          </div>
+        </section>
+
+        {/* In-page nav */}
+        <nav className="flex flex-wrap items-center justify-center gap-3 text-sm" aria-label="Jump to section">
           <a href="#coaches" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
             Coaches
           </a>
@@ -148,12 +215,8 @@ export default function NationalTeamHubPage() {
           <a href="#schedule" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
             Schedule
           </a>
-          <a href="/national-team/nhsca-2025-results" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
-            2025 results
-          </a>
-          <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20 inline-flex items-center gap-1">
-            Official site
-            <ExternalLink className="h-3.5 w-3.5" />
+          <a href="#qa" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+            Q&amp;A
           </a>
         </nav>
 
@@ -170,15 +233,15 @@ export default function NationalTeamHubPage() {
           </div>
         )}
 
-        {/* Team chat & comms — blue tile */}
+        {/* Team chat & comms — Forum for discussions and updates */}
         {eventsWithChat.length > 0 && (
           <div className="rounded-2xl border-2 border-[#003366]/40 bg-[#003366]/10 px-5 py-4">
             <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-[#003366] flex-shrink-0" />
-              Team chat &amp; comms
+              Forum · Discussions &amp; updates
             </p>
             <p className="text-sm text-gray-700 mt-1">
-              We’ll be communicating via the <strong>Community message board</strong>. Open your event below to join.
+              Team chat and announcements live in the <strong>Community forum</strong>. Open the link below to join.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {eventsWithChat.map((e) => {
@@ -202,6 +265,29 @@ export default function NationalTeamHubPage() {
               })}
             </div>
           </div>
+        )}
+
+        {/* Add family members — registration link + invite code */}
+        {events.length > 0 && (
+          <section className="rounded-2xl border-2 border-[#CBAF5D]/50 bg-[#CBAF5D]/10 px-5 py-4">
+            <p className="text-sm font-semibold text-[#002147] flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-[#003366] flex-shrink-0" />
+              Add family members
+            </p>
+            <p className="text-sm text-gray-700 mt-1">
+              Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register. After they sign up, they’ll see this hub. You can also add existing RecruitNC users in the Roster section below (search by name or email).
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <span className="text-xs font-mono text-gray-600 bg-white/80 px-2 py-1.5 rounded border border-[#CBAF5D]/30 break-all">
+                {regPageUrl || REG_PAGE_PATH}
+              </span>
+              {data?.isAdmin && (
+                <Button asChild size="sm" variant="outline" className="rounded-xl border-[#003366] text-[#003366] hover:bg-[#003366]/10 font-medium">
+                  <a href="/admin/national-team/invite-codes">Create invite codes</a>
+                </Button>
+              )}
+            </div>
+          </section>
         )}
 
         {/* Event content: coaches, details, venue, format, etc. — same as nhsca-2026 (use shared block) */}
@@ -333,6 +419,28 @@ export default function NationalTeamHubPage() {
         )}
 
         {/* Single “what’s coming” note instead of three placeholder cards */}
+        {events.length > 0 && (
+          <section className="rounded-2xl border-2 border-[#003366]/20 bg-white p-5 shadow-sm">
+            <h2 id="announcements" className="text-[#002147] font-bold text-lg mb-2 flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-[#003366]" />
+              Announcements by weight
+            </h2>
+            <p className="text-sm text-gray-600">
+              Posts and updates for each weight class will be added here. Check back before the event.
+            </p>
+          </section>
+        )}
+
+        <section id="qa" className="rounded-2xl border-2 border-[#003366]/20 bg-white p-5 shadow-sm scroll-mt-24">
+          <h2 className="text-[#002147] font-bold text-lg mb-2 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-[#003366]" />
+            Q&amp;A
+          </h2>
+          <p className="text-sm text-gray-600">
+            Common questions and answers will be added here. If you have a question now, post in the Forum or contact the staff.
+          </p>
+        </section>
+
         {events.length > 0 && (
           <div className="rounded-2xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 px-5 py-4">
             <p className="text-sm text-gray-700">
@@ -496,7 +604,7 @@ function NHSCA2026HubInfo() {
             rel="noopener noreferrer"
             className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
           >
-            Official event & registration <ExternalLink className="h-4 w-4" />
+            NHSCA Official Page <ExternalLink className="h-4 w-4" />
           </a>
           <a
             href="/national-team/nhsca-2025-results"
@@ -880,7 +988,8 @@ function EventHubSection({
           )}
         </div>
         <div className="rounded-xl border-2 border-[#003366]/25 overflow-hidden bg-[#003366]/5">
-          <h3 className="text-sm font-semibold text-[#002147] mb-2 px-4 pt-4">Roster &amp; gear ({event.roster.length})</h3>
+          <h3 className="text-sm font-semibold text-[#002147] mb-1 px-4 pt-4">Roster &amp; gear ({event.roster.length})</h3>
+          <p className="text-xs text-gray-600 px-4 pb-2">Enter gear sizes in the table below. Changes save automatically.</p>
           <div className="rounded-b-xl overflow-x-auto bg-white border-t border-[#003366]/10">
             {event.roster.length === 0 ? (
               <div className="py-10 px-4 text-center">
@@ -888,33 +997,40 @@ function EventHubSection({
                 <p className="text-xs text-gray-400 mt-1">Assign athletes in Admin → National team submissions (Team 1 / Team 2), or paid registrations will appear here.</p>
               </div>
             ) : (
-              <table className="w-full text-sm min-w-[520px]">
+              <table className="w-full text-sm min-w-[560px] border-collapse">
                 <thead>
                   <tr className="bg-[#003366] text-white">
-                    <th className="text-left p-3 font-semibold">Name</th>
-                    <th className="text-left p-3 font-semibold">Weight</th>
-                    <th className="text-left p-3 font-semibold">School</th>
-                    <th className="text-left p-3 font-semibold">Grad</th>
-                    <th className="text-left p-3 font-semibold">Singlet</th>
-                    <th className="text-left p-3 font-semibold">Shorts</th>
-                    <th className="text-left p-3 font-semibold">Shirt</th>
+                    <th className="text-left py-3 pl-3 pr-2 font-semibold w-[52px]">Photo</th>
+                    <th className="text-left py-3 px-2 font-semibold">Name</th>
+                    <th className="text-center py-3 px-2 font-semibold w-14">Class</th>
+                    <th className="text-center py-3 px-2 font-semibold w-14">Weight</th>
+                    <th className="text-left py-3 px-2 font-semibold">School</th>
+                    <th className="text-center py-3 px-2 font-semibold w-16">Singlet</th>
+                    <th className="text-center py-3 px-2 font-semibold w-16">Shorts</th>
+                    <th className="text-center py-3 px-2 font-semibold w-16">Shirt</th>
                   </tr>
                 </thead>
                 <tbody>
                   {event.roster.map((r, i) => (
                     <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-[#003366]/[0.03]")}>
-                      <td className="p-3 font-medium text-gray-900">
-                        <span>{r.athlete_first_name} {r.athlete_last_name}</span>
-                        {r.from_interest_form && (
-                          <span className="ml-2 inline-block rounded bg-[#CBAF5D]/30 px-1.5 py-0.5 text-xs font-medium text-[#002147]">Lineup</span>
+                      <td className="py-2 pl-3 pr-2 align-middle">
+                        {r.photo_url ? (
+                          <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                            <Image src={r.photo_url} alt="" fill className="object-cover" sizes="40px" />
+                          </div>
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-[#003366]/20 flex items-center justify-center shrink-0 text-[#002147] font-semibold text-sm">
+                            {(r.athlete_first_name?.[0] ?? "").toUpperCase()}{(r.athlete_last_name?.[0] ?? "").toUpperCase()}
+                          </div>
                         )}
                       </td>
-                      <td className="p-3 text-gray-700">{r.primary_weight}</td>
-                      <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
-                      <td className="p-3 text-gray-700">{r.graduation_year}</td>
-                      <td className="p-3 text-gray-700">{r.singlet_size || "—"}</td>
-                      <td className="p-3 text-gray-700">{r.shorts_size || "—"}</td>
-                      <td className="p-3 text-gray-700">{r.shirt_size || "—"}</td>
+                      <td className="py-2 px-2 font-medium text-gray-900">{r.athlete_first_name} {r.athlete_last_name}</td>
+                      <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
+                      <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
+                      <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
+                      <td className="py-2 px-2 text-center text-gray-700">{r.singlet_size || "—"}</td>
+                      <td className="py-2 px-2 text-center text-gray-700">{r.shorts_size || "—"}</td>
+                      <td className="py-2 px-2 text-center text-gray-700">{r.shirt_size || "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1161,9 +1277,10 @@ function GroupedEventHubSection({
               const headerBg = isNational ? "bg-[#003366]" : "bg-[#CBAF5D]"
               return (
                 <div key={ev.eventSlug} className={cn("rounded-xl border-2 overflow-hidden", tileBorder, tileBg)}>
-                  <h3 className="text-sm font-semibold text-[#002147] mb-2 px-4 pt-4">
+                  <h3 className="text-sm font-semibold text-[#002147] mb-1 px-4 pt-4">
                     {label} Roster &amp; gear ({ev.roster.length})
                   </h3>
+                  <p className="text-xs text-gray-600 px-4 pb-2">Enter gear sizes in the table below. Changes save automatically.</p>
                   <div className="rounded-b-xl overflow-x-auto bg-white border-t border-gray-200">
                     {ev.roster.length === 0 ? (
                       <div className="py-8 px-4 text-center">
@@ -1171,33 +1288,40 @@ function GroupedEventHubSection({
                         <p className="text-xs text-gray-400 mt-1">Assign in Admin → National team submissions (Team 1 = National, Team 2 = Select), or paid registrations will appear here.</p>
                       </div>
                     ) : (
-                      <table className="w-full text-sm min-w-[520px]">
+                      <table className="w-full text-sm min-w-[560px] border-collapse">
                         <thead>
                           <tr className={cn(headerBg, isNational ? "text-white" : "text-[#002147]")}>
-                            <th className="text-left p-3 font-semibold">Name</th>
-                            <th className="text-left p-3 font-semibold">Weight</th>
-                            <th className="text-left p-3 font-semibold">School</th>
-                            <th className="text-left p-3 font-semibold">Grad</th>
-                            <th className="text-left p-3 font-semibold">Singlet</th>
-                            <th className="text-left p-3 font-semibold">Shorts</th>
-                            <th className="text-left p-3 font-semibold">Shirt</th>
+                            <th className="text-left py-3 pl-3 pr-2 font-semibold w-[52px]">Photo</th>
+                            <th className="text-left py-3 px-2 font-semibold">Name</th>
+                            <th className="text-center py-3 px-2 font-semibold w-14">Class</th>
+                            <th className="text-center py-3 px-2 font-semibold w-14">Weight</th>
+                            <th className="text-left py-3 px-2 font-semibold">School</th>
+                            <th className="text-center py-3 px-2 font-semibold w-16">Singlet</th>
+                            <th className="text-center py-3 px-2 font-semibold w-16">Shorts</th>
+                            <th className="text-center py-3 px-2 font-semibold w-16">Shirt</th>
                           </tr>
                         </thead>
                         <tbody>
                           {ev.roster.map((r, i) => (
                             <tr key={r.id} className={cn("border-t border-gray-100", i % 2 === 1 && "bg-gray-50/50")}>
-                              <td className="p-3 font-medium text-gray-900">
-                                <span>{r.athlete_first_name} {r.athlete_last_name}</span>
-                                {r.from_interest_form && (
-                                  <span className="ml-2 inline-block rounded bg-[#CBAF5D]/30 px-1.5 py-0.5 text-xs font-medium text-[#002147]">Lineup</span>
+                              <td className="py-2 pl-3 pr-2 align-middle">
+                                {r.photo_url ? (
+                                  <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                                    <Image src={r.photo_url} alt="" fill className="object-cover" sizes="40px" />
+                                  </div>
+                                ) : (
+                                  <div className="h-10 w-10 rounded-full bg-[#003366]/20 flex items-center justify-center shrink-0 text-[#002147] font-semibold text-sm">
+                                    {(r.athlete_first_name?.[0] ?? "").toUpperCase()}{(r.athlete_last_name?.[0] ?? "").toUpperCase()}
+                                  </div>
                                 )}
                               </td>
-                              <td className="p-3 text-gray-700">{r.primary_weight}</td>
-                              <td className="p-3 text-gray-700">{r.high_school || "—"}</td>
-                              <td className="p-3 text-gray-700">{r.graduation_year}</td>
-                              <td className="p-3 text-gray-700">{r.singlet_size || "—"}</td>
-                              <td className="p-3 text-gray-700">{r.shorts_size || "—"}</td>
-                              <td className="p-3 text-gray-700">{r.shirt_size || "—"}</td>
+                              <td className="py-2 px-2 font-medium text-gray-900">{r.athlete_first_name} {r.athlete_last_name}</td>
+                              <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.graduation_year || "—"}</td>
+                              <td className="py-2 px-2 text-center text-gray-700 tabular-nums">{r.primary_weight}</td>
+                              <td className="py-2 px-2 text-gray-700">{r.high_school || "—"}</td>
+                              <td className="py-2 px-2 text-center text-gray-700">{r.singlet_size || "—"}</td>
+                              <td className="py-2 px-2 text-center text-gray-700">{r.shorts_size || "—"}</td>
+                              <td className="py-2 px-2 text-center text-gray-700">{r.shirt_size || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
