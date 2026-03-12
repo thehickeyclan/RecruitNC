@@ -9,10 +9,47 @@ export type ForumGroup = { id: string; name: string; visibility: string; logo_ur
 export type ForumDmConversation = { id: string; type: string; last_message_at: string | null }
 export type LegacyDm = { id: string; name: string; unread_count: number }
 
+const DEFAULT_FORUM_GROUP_NAMES = ["NHSCA Duals 2026", "NHSCA Duals 2026 - Select"]
+
+/** Ensure a forum group exists by name; create with general channel and add user as admin if missing. */
+async function ensureForumGroup(
+  admin: Awaited<ReturnType<typeof createAdminClient>>,
+  name: string,
+  userId: string
+): Promise<void> {
+  const { data: existing } = await admin
+    .from("forum_groups")
+    .select("id")
+    .ilike("name", name)
+    .limit(1)
+    .maybeSingle()
+  if (existing) return
+
+  const { data: group, error: groupErr } = await admin
+    .from("forum_groups")
+    .insert({ name, visibility: "public", created_by: userId })
+    .select("id")
+    .single()
+  if (groupErr || !group) return
+
+  const groupId = (group as { id: string }).id
+  await admin.from("forum_channels").insert({
+    group_id: groupId,
+    name: "general",
+    type: "chat",
+    position: 0,
+    coach_only: false,
+  })
+  await admin.from("forum_members").upsert(
+    { group_id: groupId, user_id: userId, role: "admin" },
+    { onConflict: "group_id,user_id", ignoreDuplicates: true }
+  )
+}
+
 /**
  * GET /api/forum/sidebar
  * Returns groups (with channels), forum DM conversations, and legacy messaging DMs for the current user.
- * All forum groups are shown so users can see e.g. NHSCA Duals 2026; opening a group adds site admins as members if needed.
+ * All forum groups are shown. If none exist, ensures default event groups (NHSCA Duals 2026, etc.) exist so they appear.
  */
 export async function GET() {
   const supabase = await createClient()
@@ -38,10 +75,14 @@ export async function GET() {
   const legacyThreadIds = (legacyDmRes.data ?? []).map((r) => (r as { thread_id: string }).thread_id)
 
   let groups: ForumGroup[] = []
-  const { data: allGroupRows } = await admin
-    .from("forum_groups")
-    .select("id, name, visibility, logo_url")
-  const allIds = (allGroupRows ?? []).map((r) => (r as { id: string }).id)
+  let allGroupRows = (await admin.from("forum_groups").select("id, name, visibility, logo_url")).data ?? []
+  if (allGroupRows.length === 0) {
+    for (const name of DEFAULT_FORUM_GROUP_NAMES) {
+      await ensureForumGroup(admin, name, user.id)
+    }
+    allGroupRows = (await admin.from("forum_groups").select("id, name, visibility, logo_url")).data ?? []
+  }
+  const allIds = allGroupRows.map((r) => (r as { id: string }).id)
   if (allIds.length > 0) {
     const groupsById = new Map<string, ForumGroup>()
     for (const g of allGroupRows ?? []) {

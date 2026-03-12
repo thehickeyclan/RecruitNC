@@ -75,11 +75,18 @@ export default function ForumLayout({
       fetch("/api/communities/for-you", { credentials: "include" }).then((r) => r.json()),
     ])
       .then(([sidebar, hubsRes, forYouRes]) => {
-        setGroups(sidebar.groups ?? [])
+        const list = sidebar.groups ?? []
+        setGroups(list)
         setDmConversations(sidebar.dmConversations ?? [])
         setLegacyDms(sidebar.legacyDms ?? [])
         setHubs(hubsRes.hubs ?? [])
         setForYou(forYouRes)
+        if (list.length === 0) {
+          fetch("/api/forum/groups", { credentials: "include" })
+            .then((r) => r.json())
+            .then((data) => { if (data.groups?.length) setGroups(data.groups) })
+            .catch(() => {})
+        }
       })
       .catch(() => {})
       .finally(() => setSidebarLoading(false))

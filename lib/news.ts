@@ -34,7 +34,7 @@ const ALL_NEWS: NewsItem[] = [
     summary: "Which ones made the list? Data from 86 NC commits (Classes of 2025–2026) on NHSCA Nationals, Super32, College Opens, NHSCA Duals, Journeymen, plus Fargo and Junior National Duals.",
     href: "/recruiting/tournaments",
     date: "2026-03-10",
-    image: "/images/5-impactful-tournaments-news.png",
+    image: "/images/recruiting-tournaments-hero.png",
     imagePosition: "center",
     imageFit: "cover",
     category: "RECRUITING",

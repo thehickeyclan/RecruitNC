@@ -4,6 +4,40 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
+/** GET /api/forum/groups — returns all forum groups with channels. Use when sidebar returns no groups so the list still shows. */
+export async function GET() {
+  const supabase = await createClient()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const admin = createAdminClient()
+  const { data: allGroupRows } = await admin.from("forum_groups").select("id, name, visibility, logo_url")
+  const rows = allGroupRows ?? []
+  const allIds = rows.map((r) => (r as { id: string }).id)
+  if (allIds.length === 0) return NextResponse.json({ groups: [] })
+
+  const { data: channelRows } = await admin
+    .from("forum_channels")
+    .select("id, group_id, name, type, coach_only")
+    .in("group_id", allIds)
+    .order("position", { ascending: true })
+
+  const groups = rows.map((g) => {
+    const row = g as { id: string; name: string; visibility: string; logo_url?: string | null }
+    const channels = (channelRows ?? [])
+      .filter((c) => (c as { group_id: string }).group_id === row.id)
+      .map((c) => ({
+        id: (c as { id: string }).id,
+        name: (c as { name: string }).name,
+        type: (c as { type: string }).type,
+        coach_only: (c as { coach_only: boolean }).coach_only ?? false,
+      }))
+    return { id: row.id, name: row.name, visibility: row.visibility, logo_url: row.logo_url ?? null, channels }
+  })
+  groups.sort((a, b) => a.name.localeCompare(b.name))
+  return NextResponse.json({ groups })
+}
+
 /**
  * POST /api/forum/groups
  * Body: { name: string, visibility?: 'public' | 'private' }
@@ -33,10 +67,23 @@ export async function POST(request: NextRequest) {
     .limit(1)
     .maybeSingle()
   if (existing) {
-    return NextResponse.json(
-      { error: "A group with that name already exists. Try a different name." },
-      { status: 409 }
+    const groupId = (existing as { id: string }).id
+    const { data: firstChannel } = await admin
+      .from("forum_channels")
+      .select("id")
+      .eq("group_id", groupId)
+      .order("position", { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    await admin.from("forum_members").upsert(
+      { group_id: groupId, user_id: user.id, role: "admin" },
+      { onConflict: "group_id,user_id", ignoreDuplicates: true }
     )
+    return NextResponse.json({
+      group: { id: groupId, name, visibility: "public" as const },
+      channelId: firstChannel ? (firstChannel as { id: string }).id : null,
+      existing: true,
+    })
   }
 
   const { data: group, error: groupErr } = await admin
