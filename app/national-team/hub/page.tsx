@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -58,7 +58,7 @@ function HubCollapsibleSection({
 }
 
 export default function NationalTeamHubPage() {
-  const { user, session, profile } = useAuth()
+  const { user, session, profile, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [regPageUrl, setRegPageUrl] = useState("")
@@ -71,6 +71,7 @@ export default function NationalTeamHubPage() {
   const [hubAccessCode, setHubAccessCode] = useState("")
   const [hubAccessSubmitting, setHubAccessSubmitting] = useState(false)
   const [hubAccessError, setHubAccessError] = useState<string | null>(null)
+  const refetchedWithToken = useRef(false)
 
   const events = data?.events ?? []
   const eventSlugs = events.map((e) => e.eventSlug)
@@ -98,13 +99,25 @@ export default function NationalTeamHubPage() {
       .catch(() => {})
   }, [getHubApiUrl, hubFetchOptions])
 
+  // Wait for auth to finish before first fetch so we always send Bearer when logged in. No fetch-before-session race.
   useEffect(() => {
+    if (authLoading) return
     fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
       .finally(() => setLoading(false))
-  }, [getHubApiUrl, hubFetchOptions])
+  }, [authLoading, getHubApiUrl, hubFetchOptions])
+
+  // If we had no session on first fetch and now we do (e.g. session loaded after auth), refetch once so API sees the user.
+  useEffect(() => {
+    if (authLoading || loading || data?.allowed || refetchedWithToken.current || !user || !session?.access_token) return
+    refetchedWithToken.current = true
+    fetch(getHubApiUrl(), hubFetchOptions())
+      .then((r) => r.json())
+      .then(setData)
+      .catch(() => {})
+  }, [authLoading, loading, data?.allowed, user, session?.access_token, getHubApiUrl, hubFetchOptions])
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
