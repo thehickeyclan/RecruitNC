@@ -295,9 +295,9 @@ export default function NationalTeamHubPage() {
 
   return (
     <div className="min-h-screen bg-[#0B2545]">
-      {/* Same full-width banner as /national-team/nhsca-2026 */}
+      {/* Banner + links + GroupMe — mobile: stack cleanly, extra right padding so floating widget doesn’t cover CTAs */}
       <section className="w-full bg-gradient-to-br from-[#002147] via-[#003366] to-[#002147] text-white">
-        <div className="relative w-full aspect-[21/9] min-h-[200px] md:min-h-[280px] max-h-[400px]">
+        <div className="relative w-full aspect-[21/9] min-h-[180px] sm:min-h-[220px] md:min-h-[280px] max-h-[400px]">
           <Image
             src="/images/nhsca-virginia-beach-arena.png"
             alt=""
@@ -307,50 +307,50 @@ export default function NationalTeamHubPage() {
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#002147] via-[#002147]/80 to-transparent" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-4 text-center">
             <Image
               src="/images/nhsca-national-duals-logo.png"
               alt="NHSCA National Duals"
               width={180}
               height={72}
-              className="mb-4 h-14 md:h-16 w-auto object-contain drop-shadow-lg"
+              className="mb-3 h-12 sm:h-14 md:h-16 w-auto object-contain drop-shadow-lg"
               priority
             />
-            <Badge className="mb-3 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0 font-semibold">
+            <Badge className="mb-2 sm:mb-3 bg-[#D3B574] text-[#003366] hover:bg-[#D3B574] border-0 font-semibold text-xs sm:text-sm">
               NC United National Team · Team Hub
             </Badge>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow">27th Annual National Duals</h1>
-            <p className="text-blue-100 text-lg md:text-xl font-medium">Memorial Day Weekend · May 23–25, 2026</p>
-            <p className="text-[#D3B574] mt-2 text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 drop-shadow leading-tight">27th Annual National Duals</h1>
+            <p className="text-blue-100 text-sm sm:text-lg md:text-xl font-medium">Memorial Day Weekend · May 23–25, 2026</p>
+            <p className="text-[#D3B574] mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
           </div>
         </div>
-        <div className="w-full bg-[#002147] px-4 py-4 flex flex-wrap items-center justify-center gap-3">
-          <Button asChild variant="outline" size="sm" className="rounded-xl border-[#D3B574]/60 text-[#D3B574] hover:bg-[#D3B574]/20 hover:text-white font-medium">
+        <div className="w-full bg-[#002147] px-4 py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+          <Button asChild variant="outline" size="sm" className="rounded-xl border-[#D3B574]/60 text-[#D3B574] hover:bg-[#D3B574]/20 hover:text-white font-medium shrink-0">
             <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
               NHSCA Official Page
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>
-          <a href="/national-team" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors">
+          <a href="/national-team" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors shrink-0">
             ← Back to National Team
           </a>
         </div>
-        {/* GroupMe — team chat */}
-        <div className="w-full bg-[#D3B574] px-4 py-3 flex flex-wrap items-center justify-center gap-2">
-          <span className="text-[#0B2545] font-semibold">Team chat:</span>
+        {/* GroupMe — team chat: stack on mobile, extra right padding so floating chat button doesn’t cover */}
+        <div className="w-full bg-[#D3B574] px-4 pr-24 sm:pr-4 py-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3 sm:gap-2">
+          <span className="text-[#0B2545] font-semibold text-sm sm:text-base">Team chat:</span>
           <a
             href="https://groupme.com/join_group/113432813/Vdugtepr"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#0B2545] px-4 py-2 text-sm font-semibold text-[#D3B574] hover:bg-[#0B2545]/90 hover:text-white transition-colors"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#0B2545] px-4 py-2.5 text-sm font-semibold text-[#D3B574] hover:bg-[#0B2545]/90 hover:text-white transition-colors w-full sm:w-auto"
           >
             Join NHSCA Duals 2026 on GroupMe
-            <ExternalLink className="ml-2 h-4 w-4" />
+            <ExternalLink className="ml-2 h-4 w-4 shrink-0" />
           </a>
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+      <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-10 sm:space-y-8">
         {data.accessByCode && (
           <p className="text-center text-sm text-white/80 bg-white/10 rounded-xl px-4 py-2">
             Viewing with access code. Sign in with the parent email from your registration to update gear sizes.
@@ -1189,7 +1189,11 @@ function EventHubSection({
         )}
         <div className="rounded-xl border-2 border-[#003366]/25 overflow-hidden bg-[#003366]/5">
           <h3 className="text-sm font-semibold text-[#002147] mb-1 px-4 pt-4">Roster &amp; gear ({event.roster.length})</h3>
-          <p className="text-xs text-gray-600 px-4 pb-2">Enter gear sizes in the table below. Changes save automatically.</p>
+          <p className="text-xs text-gray-600 px-4 pb-1">Enter gear sizes in the table below. Changes save automatically.</p>
+          <p className="md:hidden text-xs text-[#003366] font-medium px-4 pb-2 flex items-center gap-1" role="status">
+            <span>Scroll right →</span>
+            <span className="text-gray-600 font-normal">to see Singlet, Shorts, Shirt sizes.</span>
+          </p>
           <div className="rounded-b-xl overflow-x-auto bg-white border-t border-[#003366]/10">
             {event.roster.length === 0 ? (
               <div className="py-10 px-4 text-center">
@@ -1395,7 +1399,11 @@ function GroupedEventHubSection({
                   <h3 className="text-sm font-semibold text-[#002147] mb-1 px-4 pt-4">
                     {label} Roster &amp; gear ({ev.roster.length})
                   </h3>
-                  <p className="text-xs text-gray-600 px-4 pb-2">Enter gear sizes in the table below. Changes save automatically.</p>
+                  <p className="text-xs text-gray-600 px-4 pb-1">Enter gear sizes in the table below. Changes save automatically.</p>
+                  <p className="md:hidden text-xs text-[#003366] font-medium px-4 pb-2 flex items-center gap-1" role="status">
+                    <span>Scroll right →</span>
+                    <span className="text-gray-600 font-normal">to see Singlet, Shorts, Shirt sizes.</span>
+                  </p>
                   <div className="rounded-b-xl overflow-x-auto bg-white border-t border-gray-200">
                     {ev.roster.length === 0 ? (
                       <div className="py-8 px-4 text-center">
