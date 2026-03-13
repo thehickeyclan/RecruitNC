@@ -57,12 +57,11 @@ export type HubResponse = {
   allowed: boolean
   reason?: "signed_out" | "no_access"
   events?: HubEvent[]
-  /** True when current user is admin (so UI can show reg link / invite code info). */
   isAdmin?: boolean
-  /** True when current user has at least one paid registration (parent_email) for an event they see. False = family member (workspace access only). */
   isPrimaryRegistrant?: boolean
-  /** True when access was granted via access code (no sign-in). UI can prompt sign-in to edit gear. */
   accessByCode?: boolean
+  /** Only set when allowed: false — so you can see if the API saw the user (F12 → Network → hub response). */
+  _debug?: { hasUser: boolean; userEmail: string | null }
 }
 
 /**
@@ -138,10 +137,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     return true
   }
 
+  const debugInfo = (): HubResponse["_debug"] => ({ hasUser: !!user, userEmail: user?.email ?? null })
+
   if (authError || !user?.email) {
     if (!(await validateHubCookie())) {
       console.warn("[RecruitNC] hub GET: no user and no valid cookie", { authError: !!authError, hasUser: !!user, hasEmail: !!user?.email })
-      return NextResponse.json({ allowed: false, reason: "signed_out" })
+      return NextResponse.json({ allowed: false, reason: "signed_out", _debug: debugInfo() })
     }
     accessByCode = true
   }
@@ -175,12 +176,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
   if (regError && !isAdmin && !accessByCode) {
     if ((regError as { code?: string })?.code === "42P01") {
       return NextResponse.json(
-        { allowed: false, reason: "no_access" },
+        { allowed: false, reason: "no_access", _debug: debugInfo() },
         { status: 200 }
       )
     }
     console.error("[national-team/hub]", regError)
-    return NextResponse.json({ allowed: false, reason: "no_access" }, { status: 200 })
+    return NextResponse.json({ allowed: false, reason: "no_access", _debug: debugInfo() }, { status: 200 })
   }
   if (regError && (isAdmin || accessByCode)) {
     console.warn("[national-team/hub] Registrations query failed", regError)
@@ -296,7 +297,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
           paidRegCount: paidRegs.length,
           sampleParentEmails,
         })
-        return NextResponse.json({ allowed: false, reason: "no_access" })
+        return NextResponse.json({ allowed: false, reason: "no_access", _debug: debugInfo() })
       }
     } else {
       eventSlugsToShow = [...myEventSlugs]
@@ -307,7 +308,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
       accessByCode = true
       eventSlugsToShow = [...NHSCA_HUB_SLUGS]
     } else {
-      return NextResponse.json({ allowed: false, reason: "no_access" })
+      return NextResponse.json({ allowed: false, reason: "no_access", _debug: debugInfo() })
     }
   }
 
