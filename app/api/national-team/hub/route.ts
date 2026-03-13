@@ -76,12 +76,13 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
       return NextResponse.json({ allowed: false, reason: "signed_out" })
     }
     const adminCheck = createAdminClient()
-    const { data: codeRow, error: codeErr } = await adminCheck
+    const { data: codeRows, error: codeErr } = await adminCheck
       .from("national_team_invite_codes")
       .select("id, expires_at, max_uses, uses_count")
       .in("event_slug", NHSCA_HUB_SLUGS)
       .eq("code", hubCode)
-      .maybeSingle()
+      .limit(1)
+    const codeRow = Array.isArray(codeRows) ? codeRows[0] : null
     if (codeErr || !codeRow) {
       return NextResponse.json({ allowed: false, reason: "no_access" })
     }

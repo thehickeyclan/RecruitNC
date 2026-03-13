@@ -22,13 +22,14 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const { data: row, error } = await admin
+  const { data: rows, error } = await admin
     .from("national_team_invite_codes")
     .select("id, expires_at, max_uses, uses_count")
     .in("event_slug", NHSCA_SLUGS)
     .eq("code", code)
-    .maybeSingle()
+    .limit(1)
 
+  const row = Array.isArray(rows) ? rows[0] : null
   if (error || !row) {
     return NextResponse.json({ success: false, error: "Invalid access code." }, { status: 400 })
   }
