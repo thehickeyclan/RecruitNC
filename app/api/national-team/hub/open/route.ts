@@ -6,8 +6,6 @@ export const dynamic = "force-dynamic"
 
 /** Canonical event slugs for NHSCA hub (open link shows these only). */
 const NHSCA_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"]
-/** DB may store URL slug "nhsca-2026"; include it so those rows are returned and mapped to nhsca-duals-2026. */
-const NHSCA_QUERY_SLUGS = ["nhsca-2026", "nhsca-duals-2026", "nhsca-duals-2026-select"]
 
 /**
  * GET: Public hub data — no auth, no code.
@@ -19,26 +17,24 @@ export async function GET() {
     admin = createAdminClient()
   } catch (e) {
     console.error("[national-team/hub/open] createAdminClient failed — check SUPABASE_SERVICE_ROLE_KEY in Vercel:", e)
-    return NextResponse.json(
-      { error: "Server config", events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })) },
-      { status: 500 }
-    )
+    return NextResponse.json({
+      events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })),
+    })
   }
 
+  // Same as main hub: fetch all paid regs, then filter by canonical slug (so any slug variant is included).
   const { data: rows, error } = await admin
     .from("national_team_event_registrations")
     .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
     .eq("status", "paid")
-    .in("event_slug", NHSCA_QUERY_SLUGS)
     .order("event_slug")
     .order("athlete_last_name")
 
   if (error) {
     console.error("[national-team/hub/open] query error:", error)
-    return NextResponse.json(
-      { error: error.message, events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })) },
-      { status: 500 }
-    )
+    return NextResponse.json({
+      events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })),
+    })
   }
 
   try {
@@ -90,9 +86,8 @@ export async function GET() {
     return NextResponse.json({ events })
   } catch (e) {
     console.error("[national-team/hub/open]", e)
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Server error", events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })) },
-      { status: 500 }
-    )
+    return NextResponse.json({
+      events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })),
+    })
   }
 }
