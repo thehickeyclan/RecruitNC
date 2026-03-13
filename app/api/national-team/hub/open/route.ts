@@ -1,32 +1,47 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getEventName } from "@/lib/national-team-events"
+import { getEventName, getEventSlugForApi, normalizeEventSlugForLookup } from "@/lib/national-team-events"
 
 export const dynamic = "force-dynamic"
 
-/** Event slugs for NHSCA hub (open link shows these only). */
+/** Canonical event slugs for NHSCA hub (open link shows these only). */
 const NHSCA_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"]
+/** DB may store URL slug "nhsca-2026"; include it so those rows are returned and mapped to nhsca-duals-2026. */
+const NHSCA_QUERY_SLUGS = ["nhsca-2026", "nhsca-duals-2026", "nhsca-duals-2026-select"]
 
 /**
  * GET: Public hub data — no auth, no code.
  * Unpublished link: share with parents to view roster and update gear sizes. No security.
- * On any error we return 200 with empty events so the page always loads.
  */
 export async function GET() {
+  let admin
   try {
-    const admin = createAdminClient()
-    const { data: rows, error } = await admin
-      .from("national_team_event_registrations")
-      .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
-      .eq("status", "paid")
-      .in("event_slug", NHSCA_SLUGS)
-      .order("event_slug")
-      .order("athlete_last_name")
+    admin = createAdminClient()
+  } catch (e) {
+    console.error("[national-team/hub/open] createAdminClient failed — check SUPABASE_SERVICE_ROLE_KEY in Vercel:", e)
+    return NextResponse.json(
+      { error: "Server config", events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })) },
+      { status: 500 }
+    )
+  }
 
-    if (error) {
-      console.error("[national-team/hub/open]", error)
-      return NextResponse.json({ events: NHSCA_SLUGS.map((eventSlug) => ({ eventSlug, eventName: getEventName(eventSlug), roster: [] })) })
-    }
+  const { data: rows, error } = await admin
+    .from("national_team_event_registrations")
+    .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
+    .eq("status", "paid")
+    .in("event_slug", NHSCA_QUERY_SLUGS)
+    .order("event_slug")
+    .order("athlete_last_name")
+
+  if (error) {
+    console.error("[national-team/hub/open] query error:", error)
+    return NextResponse.json(
+      { error: error.message, events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })) },
+      { status: 500 }
+    )
+  }
+
+  try {
 
     const roster = (rows ?? []).map((r) => {
       const row = r as Record<string, unknown>
@@ -49,11 +64,13 @@ export async function GET() {
       }
     })
 
+    const toCanonical = (slug: string) => getEventSlugForApi(normalizeEventSlugForLookup(slug || "")) || slug
     const bySlug = new Map<string, typeof roster>()
     for (const r of roster) {
-      const slug = r.event_slug as string
-      if (!bySlug.has(slug)) bySlug.set(slug, [])
-      bySlug.get(slug)!.push(r)
+      const canonical = toCanonical(r.event_slug as string)
+      if (!NHSCA_SLUGS.includes(canonical)) continue
+      if (!bySlug.has(canonical)) bySlug.set(canonical, [])
+      bySlug.get(canonical)!.push({ ...r, event_slug: canonical })
     }
 
     const events = NHSCA_SLUGS.map((eventSlug) => {
@@ -73,8 +90,9 @@ export async function GET() {
     return NextResponse.json({ events })
   } catch (e) {
     console.error("[national-team/hub/open]", e)
-    return NextResponse.json({
-      events: NHSCA_SLUGS.map((eventSlug) => ({ eventSlug, eventName: getEventName(eventSlug), roster: [] })),
-    })
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Server error", events: NHSCA_SLUGS.map((s) => ({ eventSlug: s, eventName: getEventName(s), roster: [] })) },
+      { status: 500 }
+    )
   }
 }

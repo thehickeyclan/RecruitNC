@@ -292,7 +292,12 @@ export default function NationalTeamHubPage() {
       </section>
 
       <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8 space-y-10 sm:space-y-8">
-        {data.accessByCode && (
+        {openMode && (
+          <p className="text-center text-sm text-white/80 bg-white/10 rounded-xl px-4 py-2">
+            Update gear sizes in the tables below. If you just paid, give it a minute and refresh.
+          </p>
+        )}
+        {data.accessByCode && !openMode && (
           <p className="text-center text-sm text-white/80 bg-white/10 rounded-xl px-4 py-2">
             Viewing with access code. Sign in with the parent email from your registration to update gear sizes.
           </p>
