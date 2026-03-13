@@ -31,19 +31,19 @@ export async function GET() {
   try {
     const admin = createAdminClient()
 
-    const { data: rows, error } = await admin
+    const { data: paidRows, error: paidError } = await admin
       .from("national_team_event_registrations")
       .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
-      .eq("status", "paid")
+      .ilike("status", "paid")
       .order("event_slug")
       .order("athlete_last_name")
 
-    if (error) {
-      console.error("[national-team/hub/open] query error:", error)
-      return emptyEventsResponse()
+    if (paidError) {
+      console.error("[national-team/hub/open] paid regs query error:", paidError)
     }
 
-    const roster = (rows ?? []).map((r) => {
+    const rows = paidRows ?? []
+    const roster = rows.map((r) => {
       const row = r as Record<string, unknown>
       return {
         id: row.id,

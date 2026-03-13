@@ -253,21 +253,33 @@ export default function ForumPage() {
                   hubs.map((event) => {
                     const group = getHubGroupForEvent(event.eventSlug)
                     const displayName = group ? getEventName(group.groupKey) : event.eventName
-                    const href = "/national-team/hub"
+                    const href = event.href ?? null
                     return (
                       <li key={event.eventSlug}>
-                        <HardLink
-                          href={href}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors touch-manipulation"
-                        >
-                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#003366]/50 flex items-center justify-center">
-                            <LayoutDashboard className="w-6 h-6 text-[#C8A94A]" />
+                        {href ? (
+                          <HardLink
+                            href={href}
+                            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors touch-manipulation"
+                          >
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#003366]/50 flex items-center justify-center">
+                              <LayoutDashboard className="w-6 h-6 text-[#C8A94A]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-white truncate">{displayName}</p>
+                              <p className="text-xs text-white/50 truncate">Event hub</p>
+                            </div>
+                          </HardLink>
+                        ) : (
+                          <div className="flex items-center gap-3 px-4 py-3 rounded-xl opacity-75">
+                            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#003366]/50 flex items-center justify-center">
+                              <LayoutDashboard className="w-6 h-6 text-[#C8A94A]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-white truncate">{displayName}</p>
+                              <p className="text-xs text-white/50 truncate">Event hub — use link from your event email</p>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-white truncate">{displayName}</p>
-                            <p className="text-xs text-white/50 truncate">Event hub</p>
-                          </div>
-                        </HardLink>
+                        )}
                       </li>
                     )
                   })

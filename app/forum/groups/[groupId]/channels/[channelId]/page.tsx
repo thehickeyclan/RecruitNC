@@ -371,7 +371,7 @@ export default function ForumChannelPage() {
               <ImageIcon className="w-5 h-5 text-white/60" />
             )}
           </button>
-          <a href="/national-team/hub" className="text-white hover:text-[#C8A94A] truncate flex items-center gap-1.5 min-h-[44px] touch-manipulation flex-1 min-w-0">
+          <a href="/forum" className="text-white hover:text-[#C8A94A] truncate flex items-center gap-1.5 min-h-[44px] touch-manipulation flex-1 min-w-0">
             <span className="truncate">{groupName || (channelName && channelName !== "general" ? channelName : null) || "…"}</span>
             <ExternalLink className="w-4 h-4 flex-shrink-0 opacity-70" aria-hidden />
           </a>

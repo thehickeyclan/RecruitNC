@@ -104,9 +104,9 @@ export function getEventSlugFromGroupName(groupName: string): string | null {
   return null
 }
 
-/** Team Hubs menu for navbar: which hubs are live vs coming soon. */
+/** Team Hubs menu for navbar: which hubs are live vs coming soon. Hub not linked from app — access via shared link only. */
 export const TEAM_HUB_MENU: { slug: string; label: string; href?: string }[] = [
-  { slug: "nhsca-duals-2026", label: "NHSCA Duals 2026", href: "/national-team/hub" },
+  { slug: "nhsca-duals-2026", label: "NHSCA Duals 2026" },
   { slug: "aau-2026", label: "AAU Scholastic Duals 2026" },
   { slug: "deep-south-2026", label: "Deep South 2026" },
 ]

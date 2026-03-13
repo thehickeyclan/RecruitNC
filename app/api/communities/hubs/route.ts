@@ -9,7 +9,8 @@ export type HubListItem = {
   id: string
   slug: string
   name: string
-  href: string
+  /** null = hub not linked from app (access via shared link only). */
+  href: string | null
   type: "hub"
 }
 
@@ -76,7 +77,7 @@ export async function GET() {
     id: slug,
     slug,
     name: getEventName(slug),
-    href: "/national-team/hub",
+    href: null as string | null,
     type: "hub" as const,
   }))
 

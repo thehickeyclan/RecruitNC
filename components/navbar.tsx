@@ -417,9 +417,6 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <a href="/forum">Community</a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/national-team/hub">Workspace</a>
-                  </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />

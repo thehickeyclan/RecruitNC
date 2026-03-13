@@ -183,7 +183,7 @@ export default function NationalTeamHubPage() {
     )
   }
 
-  if (!data?.allowed) {
+  if (!data?.allowed && !openMode) {
     return (
       <div className="min-h-screen bg-[#0B2545] py-12 px-4 flex items-center justify-center">
         <Card className="max-w-md w-full border-white/20 bg-white/5 text-white">

@@ -224,9 +224,9 @@ export function ForumMembersPanel({ pathname, currentUserId, onClose }: { pathna
             <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
             Forum home — Groups, DMs, Hubs
           </HardLink>
-          <a href="/national-team/hub" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
+          <a href="/forum" className="flex items-center gap-2 w-full min-h-[44px] px-3 rounded-lg hover:bg-white/10 text-[#F0F4FF] touch-manipulation text-sm font-medium">
             <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
-            Back to hub
+            Forum home
           </a>
         </div>
       )}

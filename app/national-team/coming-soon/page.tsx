@@ -34,9 +34,6 @@ export default function NationalTeamComingSoonPage() {
               <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90">
                 <a href="/national-team">National Team overview</a>
               </Button>
-              <Button asChild variant="outline" className="w-full">
-                <a href="/national-team/hub">Open NHSCA Duals 2026 hub</a>
-              </Button>
             </div>
           </CardContent>
         </Card>
