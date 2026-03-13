@@ -9,9 +9,12 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 
+const NHSCA_WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
+
 export default function NCUnitedNationalTeam() {
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
   const [aggregateStats, setAggregateStats] = useState({
     totalAthletes: 0,
     totalTeamWins: 0,
@@ -28,6 +31,27 @@ export default function NCUnitedNationalTeam() {
       .then((r) => r.json())
       .then((d) => (d.ok && typeof d.total === "number" ? setNhscaLineupCount(d.total) : null))
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now()
+      const d = Math.max(0, NHSCA_WEIGH_IN_START - now)
+      if (d <= 0) {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: true })
+        return
+      }
+      setCountdown({
+        days: Math.floor(d / 86400000),
+        hours: Math.floor((d % 86400000) / 3600000),
+        minutes: Math.floor((d % 3600000) / 60000),
+        seconds: Math.floor((d % 60000) / 1000),
+        ready: false,
+      })
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
   }, [])
 
   useEffect(() => {
@@ -190,23 +214,50 @@ export default function NCUnitedNationalTeam() {
             <h2 className="text-2xl md:text-3xl font-bold text-[#002147] mb-2 text-center">National Team Schedule</h2>
             <p className="text-gray-600 text-center mb-8">Roster, event info &amp; comms (registered families only)</p>
             <div className="grid sm:grid-cols-2 gap-4">
-              {/* NHSCA — gold tile + primary CTA */}
-              <Link
-                href="/national-team/hub"
-                className="flex flex-col rounded-2xl border-2 border-[#CBAF5D] bg-[#CBAF5D]/15 p-6 hover:bg-[#CBAF5D]/25 hover:border-[#B8982E] transition-all group shadow-sm"
-              >
-                <span className="text-[#002147] font-bold text-lg group-hover:text-[#003366]">NHSCA Duals 2026</span>
-                <span className="text-sm text-gray-700 mt-1">May 23–25 · Virginia Beach</span>
-                <span className="text-sm text-[#003366] font-medium mt-2">
-                  Roster, gear, &amp; team chat
-                  {nhscaLineupCount !== null && nhscaLineupCount > 0 && (
-                    <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
-                  )}
-                </span>
-                <span className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#003366] px-4 py-2.5 text-sm font-semibold text-white group-hover:bg-[#002147] transition-colors w-fit">
-                  Open Team Hub →
-                </span>
-              </Link>
+              {/* NHSCA — static gold block + countdown to weigh-ins */}
+              <div className="sm:col-span-2 rounded-2xl border-2 border-[#B8982E] bg-gradient-to-br from-[#CBAF5D]/30 via-[#D4BC6A]/25 to-[#B8982E]/30 p-6 md:p-8 shadow-lg">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                  <div>
+                    <span className="text-[#002147] font-bold text-xl">NHSCA Duals 2026</span>
+                    <p className="text-sm text-[#002147]/80 mt-1">May 23–25 · Virginia Beach Sports Center</p>
+                    <p className="text-sm text-[#003366] font-medium mt-2">
+                      Roster, gear, &amp; team chat
+                      {nhscaLineupCount !== null && nhscaLineupCount > 0 && (
+                        <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
+                      )}
+                    </p>
+                    <span className="mt-3 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#002147]/80 px-4 py-2 text-sm font-semibold text-[#D3B574] cursor-default">
+                      Access by link only
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center md:items-end shrink-0">
+                    <p className="text-[#002147] font-bold uppercase tracking-wider text-xs mb-2">Weigh-ins open</p>
+                    <p className="text-[#002147]/80 text-sm mb-4">Fri, May 22, 2026 · 2:00 PM</p>
+                    {countdown.ready ? (
+                      <p className="text-2xl md:text-3xl font-black text-[#002147]">We&apos;re here!</p>
+                    ) : (
+                      <div className="flex gap-4 md:gap-6">
+                        <div className="text-center">
+                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.days}</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Days</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.hours}</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Hours</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.minutes}</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Min</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl md:text-4xl font-black tabular-nums text-[#002147]">{countdown.seconds}</div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-[#002147]/70">Sec</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
               {/* AAU — blue tile (coming soon) */}
               <Link
                 href="/national-team/coming-soon?event=aau-2026"

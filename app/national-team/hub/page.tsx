@@ -99,15 +99,16 @@ export default function NationalTeamHubPage() {
       .catch(() => {})
   }, [getHubApiUrl, hubFetchOptions])
 
-  // Wait for auth to finish before first fetch so we always send Bearer when logged in. No fetch-before-session race.
+  // Wait for auth to finish. If user exists, also wait for session so we always send Bearer (session can lag one render after isLoading).
   useEffect(() => {
     if (authLoading) return
+    if (user && !session?.access_token) return
     fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
       .finally(() => setLoading(false))
-  }, [authLoading, getHubApiUrl, hubFetchOptions])
+  }, [authLoading, user, session?.access_token, getHubApiUrl, hubFetchOptions])
 
   // If we had no session on first fetch and now we do (e.g. session loaded after auth), refetch once so API sees the user.
   useEffect(() => {
