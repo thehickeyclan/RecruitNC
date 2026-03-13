@@ -72,7 +72,18 @@ export type HubResponse = {
  */
 export async function GET(request: NextRequest): Promise<NextResponse<HubResponse>> {
   const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  let { data: { user }, error: authError } = await supabase.auth.getUser()
+  // Fallback: cookies sometimes don't reach the API (e.g. client fetch). Use Bearer token so logged-in parents get in without code.
+  if ((!user || authError) && request.headers.get("authorization")) {
+    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim()
+    if (token) {
+      const tokenResult = await supabase.auth.getUser(token)
+      if (tokenResult.data?.user) {
+        user = tokenResult.data.user
+        authError = tokenResult.error
+      }
+    }
+  }
 
   let accessByCode = false
 

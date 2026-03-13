@@ -58,7 +58,7 @@ function HubCollapsibleSection({
 }
 
 export default function NationalTeamHubPage() {
-  const { user, profile } = useAuth()
+  const { user, session, profile } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [regPageUrl, setRegPageUrl] = useState("")
@@ -81,20 +81,30 @@ export default function NationalTeamHubPage() {
     return code ? `/api/national-team/hub?code=${encodeURIComponent(code)}` : "/api/national-team/hub"
   }, [])
 
+  const hubFetchOptions = useCallback((): RequestInit => {
+    const opts: RequestInit = { credentials: "include" }
+    if (session?.access_token) {
+      (opts as RequestInit & { headers?: Record<string, string> }).headers = {
+        Authorization: `Bearer ${session.access_token}`,
+      }
+    }
+    return opts
+  }, [session?.access_token])
+
   const refetchHub = useCallback(() => {
-    fetch(getHubApiUrl(), { credentials: "include" })
+    fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-  }, [getHubApiUrl])
+  }, [getHubApiUrl, hubFetchOptions])
 
   useEffect(() => {
-    fetch(getHubApiUrl(), { credentials: "include" })
+    fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
       .finally(() => setLoading(false))
-  }, [getHubApiUrl])
+  }, [getHubApiUrl, hubFetchOptions])
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
