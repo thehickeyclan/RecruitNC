@@ -158,48 +158,6 @@ export default function NationalTeamHubPage() {
     return () => clearInterval(id)
   }, [])
 
-  useEffect(() => {
-    const query = addFamilySearchQuery.trim()
-    if (query.length < 2 || eventSlugs.length === 0) {
-      setAddFamilySearchResults([])
-      return
-    }
-    setAddFamilySearching(true)
-    fetch(`/api/national-team/workspace/${encodeURIComponent(eventSlugs[0])}/users/search?q=${encodeURIComponent(query)}`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((res) => setAddFamilySearchResults(res.users ?? []))
-      .catch(() => setAddFamilySearchResults([]))
-      .finally(() => setAddFamilySearching(false))
-  }, [addFamilySearchQuery, eventSlugs.join(",")])
-
-  const handleAddFamilyMember = useCallback(
-    async (userId: string) => {
-      if (eventSlugs.length === 0) return
-      setAddFamilyMessage(null)
-      setAddFamilyAddingId(userId)
-      try {
-        for (const slug of eventSlugs) {
-          const res = await fetch(`/api/national-team/workspace/${encodeURIComponent(slug)}/members`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ user_id: userId }),
-          })
-          const resData = await res.json().catch(() => ({}))
-          if (!res.ok) throw new Error(resData?.error ?? "Could not add member.")
-        }
-        setAddFamilyMessage({ type: "success", text: "Added. They can now see this hub and GroupMe." })
-        setAddFamilySearchResults((prev) => prev.filter((u) => u.user_id !== userId))
-        refetchHub()
-      } catch (e) {
-        setAddFamilyMessage({ type: "error", text: e instanceof Error ? e.message : "Could not add member." })
-      } finally {
-        setAddFamilyAddingId(null)
-      }
-    },
-    [eventSlugs, refetchHub]
-  )
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0B2545] flex items-center justify-center">
