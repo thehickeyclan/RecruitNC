@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { MessageCircle, Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel, ChevronDown, ChevronRight } from "lucide-react"
+import { Loader2, Lock, UserPlus, Phone, Calendar, Scale, Clock, History, ExternalLink, UsersRound, AlertCircle, MapPin, LayoutDashboard, Megaphone, Hotel, ChevronDown, ChevronRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { NHSCA2026EventBlock } from "@/components/national-team/nhsca-2026-event-block"
 import type { HubResponse, HubEvent } from "@/app/api/national-team/hub/route"
@@ -25,12 +25,14 @@ function HubCollapsibleSection({
   id,
   title,
   defaultOpen = false,
+  dark = false,
   children,
   className = "",
 }: {
   id?: string
   title: string
   defaultOpen?: boolean
+  dark?: boolean
   children: React.ReactNode
   className?: string
 }) {
@@ -38,13 +40,18 @@ function HubCollapsibleSection({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <section id={id} className={cn("rounded-2xl border-2 overflow-hidden", className)}>
-        <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-5 py-4 text-left font-semibold text-[#002147] hover:bg-black/[0.02] transition-colors">
+        <CollapsibleTrigger
+          className={cn(
+            "w-full flex items-center justify-between gap-2 px-5 py-4 text-left font-semibold transition-colors",
+            dark ? "text-white hover:bg-white/10" : "text-[#002147] hover:bg-black/[0.02]"
+          )}
+        >
           {title}
-          <span className="shrink-0 text-[#003366]" aria-hidden>
+          <span className={cn("shrink-0", dark ? "text-[#C8A94A]" : "text-[#003366]")} aria-hidden>
             {open ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
           </span>
         </CollapsibleTrigger>
-        <CollapsibleContent>{children}</CollapsibleContent>
+        <CollapsibleContent className={dark ? "text-white/90" : ""}>{children}</CollapsibleContent>
       </section>
     </Collapsible>
   )
@@ -135,7 +142,7 @@ export default function NationalTeamHubPage() {
           const resData = await res.json().catch(() => ({}))
           if (!res.ok) throw new Error(resData?.error ?? "Could not add member.")
         }
-        setAddFamilyMessage({ type: "success", text: "Added. They can now see this hub and the group chat." })
+        setAddFamilyMessage({ type: "success", text: "Added. They can now see this hub and GroupMe." })
         setAddFamilySearchResults((prev) => prev.filter((u) => u.user_id !== userId))
         refetchHub()
       } catch (e) {
@@ -149,22 +156,22 @@ export default function NationalTeamHubPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#003366]" />
+      <div className="min-h-screen bg-[#0B2545] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#C8A94A]" />
       </div>
     )
   }
 
   if (!data?.allowed) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 flex items-center justify-center">
-        <Card className="max-w-md w-full border-amber-200">
+      <div className="min-h-screen bg-[#0B2545] py-12 px-4 flex items-center justify-center">
+        <Card className="max-w-md w-full border-white/20 bg-white/5 text-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Lock className="h-5 w-5 text-[#C8A94A]" />
               Team hub
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-white/80">
               {data?.reason === "signed_out"
                 ? "Sign in with the same email you used to register to view the team hub."
                 : "You don’t have access to the team hub. If you’ve already registered and paid, sign in with the parent email from your registration."}
@@ -172,13 +179,13 @@ export default function NationalTeamHubPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {data?.reason === "signed_out" && (
-              <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90">
+              <Button asChild className="w-full bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] font-semibold">
                 <a href={`/auth/signin?returnTo=${encodeURIComponent("/national-team/hub")}`}>
                   Sign in
                 </a>
               </Button>
             )}
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild variant="outline" className="w-full border-white/30 text-white hover:bg-white/10">
               <a href="/national-team">Back to National Team</a>
             </Button>
           </CardContent>
@@ -187,10 +194,8 @@ export default function NationalTeamHubPage() {
     )
   }
 
-  const eventsWithChat = events.filter((e) => e.forumGroupId && e.forumChannelId)
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0B2545]">
       {/* Same full-width banner as /national-team/nhsca-2026 */}
       <section className="w-full bg-gradient-to-br from-[#002147] via-[#003366] to-[#002147] text-white">
         <div className="relative w-full aspect-[21/9] min-h-[200px] md:min-h-[280px] max-h-[400px]">
@@ -231,6 +236,19 @@ export default function NationalTeamHubPage() {
             ← Back to National Team
           </a>
         </div>
+        {/* GroupMe — team chat */}
+        <div className="w-full bg-[#C8A94A] px-4 py-3 flex flex-wrap items-center justify-center gap-2">
+          <span className="text-[#0B2545] font-semibold">Team chat:</span>
+          <a
+            href="https://groupme.com/join_group/113432813/Vdugtepr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#0B2545] px-4 py-2 text-sm font-semibold text-[#C8A94A] hover:bg-[#0B2545]/90 hover:text-white transition-colors"
+          >
+            Join NHSCA Duals 2026 on GroupMe
+            <ExternalLink className="ml-2 h-4 w-4" />
+          </a>
+        </div>
       </section>
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
@@ -262,19 +280,16 @@ export default function NationalTeamHubPage() {
           )}
         </section>
 
-        {/* Key links — clear labels, no confusion */}
-        <HubCollapsibleSection title="Key links" defaultOpen className="border-[#003366]/25 bg-white shadow-sm">
+        {/* Key links */}
+        <HubCollapsibleSection dark title="Key links" defaultOpen className="border-white/20 bg-white/5">
           <div className="px-5 pb-5 pt-0 flex flex-wrap justify-center gap-3">
-            <Button asChild className="rounded-xl bg-[#003366] hover:bg-[#002147] text-white font-semibold">
+            <Button asChild className="rounded-xl bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] font-semibold">
               <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
                 NHSCA Official Page
                 <ExternalLink className="ml-2 h-4 w-4" />
               </a>
             </Button>
-            <Button asChild variant="outline" className="rounded-xl border-2 border-[#003366] text-[#003366] hover:bg-[#003366]/10 font-semibold">
-              <a href="/forum">Forum · Discussions &amp; updates</a>
-            </Button>
-            <Button asChild variant="outline" className="rounded-xl border-2 border-[#CBAF5D] text-[#002147] hover:bg-[#CBAF5D]/20 font-semibold">
+            <Button asChild variant="outline" className="rounded-xl border-2 border-[#C8A94A] text-[#C8A94A] hover:bg-[#C8A94A]/20 font-semibold">
               <a href="/national-team#archives">Read about past teams</a>
             </Button>
           </div>
@@ -282,62 +297,30 @@ export default function NationalTeamHubPage() {
 
         {/* In-page nav */}
         <nav className="flex flex-wrap items-center justify-center gap-3 text-sm" aria-label="Jump to section">
-          <a href="#coaches" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+          <a href="#coaches" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
             Coaches
           </a>
-          <a href="#event-details" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+          <a href="#event-details" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
             Event details
           </a>
-          <a href="#roster" className="rounded-full bg-[#B31B1B]/20 px-4 py-2 text-[#B31B1B] font-medium hover:bg-[#B31B1B]/30">
+          <a href="#roster" className="rounded-full bg-[#C8A94A]/20 px-4 py-2 text-[#C8A94A] font-medium hover:bg-[#C8A94A]/30">
             Roster &amp; gear
           </a>
-          <a href="#schedule" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+          <a href="#schedule" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
             Schedule
           </a>
-          <a href="#qa" className="rounded-full bg-[#003366]/10 px-4 py-2 text-[#003366] font-medium hover:bg-[#003366]/20">
+          <a href="#qa" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
             Q&amp;A
           </a>
         </nav>
 
-        {/* Hotel — gold tile */}
+        {/* Hotel */}
         {events.length > 0 && (
-          <HubCollapsibleSection title="Hotel" className="border-[#CBAF5D]/50 bg-[#CBAF5D]/10">
+          <HubCollapsibleSection dark title="Hotel" className="border-white/20 bg-white/5">
             <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-gray-700">
-                Hotel info coming soon; we&apos;ll post in the Hub and in the team chat.
+              <p className="text-sm text-white/90">
+                Hotel info coming soon; we&apos;ll post in the Hub and in GroupMe.
               </p>
-            </div>
-          </HubCollapsibleSection>
-        )}
-
-        {/* Team chat & comms — Forum for discussions and updates */}
-        {eventsWithChat.length > 0 && (
-          <HubCollapsibleSection title="Forum · Discussions & updates" className="border-[#003366]/40 bg-[#003366]/10">
-            <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-gray-700 mb-3">
-                Team chat and announcements live in the <strong>Community forum</strong>. Open the link below to join.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {eventsWithChat.map((e) => {
-                  const count = e.forumMessageCount ?? 0
-                  return (
-                    <HardLink
-                      key={e.eventSlug}
-                      href="/forum"
-                      className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border-2 border-[#003366] bg-[#003366]/10 px-4 py-2.5 text-sm font-semibold text-[#003366] hover:bg-[#003366]/20 transition-colors touch-manipulation"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      {e.eventName}
-                      {count > 0 && (
-                        <span className="rounded-full bg-[#B31B1B] text-white px-2 py-0.5 text-xs font-semibold">
-                          {count} message{count !== 1 ? "s" : ""}
-                        </span>
-                      )}
-                      <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                    </HardLink>
-                  )
-                })}
-              </div>
             </div>
           </HubCollapsibleSection>
         )}
@@ -406,8 +389,8 @@ export default function NationalTeamHubPage() {
           </HubCollapsibleSection>
         )}
 
-        {/* Event content: coaches, details, venue, format, etc. — same as nhsca-2026 (use shared block) */}
-        <HubCollapsibleSection id="event-details" title="Event details (coaches, schedule, venue)" className="border-[#003366]/20 bg-white shadow-sm">
+        {/* Event details */}
+        <HubCollapsibleSection dark id="event-details" title="Event details (coaches, schedule, venue)" className="border-white/20 bg-white/5">
           <div className="p-4 pt-0">
             <NHSCA2026EventBlock />
           </div>
@@ -415,54 +398,54 @@ export default function NationalTeamHubPage() {
 
         {events.length === 0 ? (
           <>
-            <Card className="rounded-2xl border-[#003366]/20 bg-white shadow-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-br from-[#003366]/5 to-transparent pb-6">
-                <CardTitle className="text-[#002147] text-xl">Your team hub</CardTitle>
-                <CardDescription className="text-gray-600 max-w-xl">
-                  Once you register and pay for an event, this page will show your event roster, registration details, and the team group chat in one place.
+            <Card className="rounded-2xl border-white/20 bg-white/5 overflow-hidden text-white">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-xl text-white">Your team hub</CardTitle>
+                <CardDescription className="text-white/80 max-w-xl">
+                  Once you register and pay for an event, this page will show your event roster, registration details, and the GroupMe link in one place.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
-                <p className="text-sm text-gray-700">
-                  Have an invite to <strong>NHSCA Duals 2026</strong>? Use your registration link to sign up. After payment, return here to see the roster and team chat.
+                <p className="text-sm text-white/90">
+                  Have an invite to <strong>NHSCA Duals 2026</strong>? Use your registration link to sign up. After payment, return here to see the roster and join GroupMe.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Button asChild className="rounded-xl bg-[#003366] hover:bg-[#002147] text-white font-semibold shadow-sm">
+                  <Button asChild className="rounded-xl bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] font-semibold">
                     <a href="/national-team/hub">Team Hub</a>
                   </Button>
-                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#003366]/40 text-[#003366] hover:bg-[#003366]/10 font-medium">
+                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#C8A94A] text-[#C8A94A] hover:bg-[#C8A94A]/20 font-medium">
                     <a href={REG_PAGE_PATH}>Registration page</a>
                   </Button>
-                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#003366]/40 text-[#003366] hover:bg-[#003366]/10 font-medium">
+                  <Button asChild variant="outline" className="rounded-xl border-2 border-white/40 text-white hover:bg-white/10 font-medium">
                     <a href="/national-team">National Team overview</a>
                   </Button>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-white/60">
                   Already registered? Sign in with the parent email from your registration so your events appear here.
                 </p>
               </CardContent>
             </Card>
 
             {data.isAdmin && (
-              <Card className="rounded-2xl border-amber-200 bg-amber-50/60 shadow-sm">
+              <Card className="rounded-2xl border-[#C8A94A]/40 bg-[#C8A94A]/10 text-white">
                 <CardHeader>
-                  <CardTitle className="text-amber-900 text-base">Send to families</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base text-white">Send to families</CardTitle>
+                  <CardDescription className="text-white/80">
                     Share the registration page and create invite codes. Recipients need an invite code to register.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">Registration URL</p>
-                    <p className="text-sm text-gray-600 font-mono bg-white border border-amber-200 rounded-lg px-3 py-2 break-all">
+                    <p className="text-sm font-medium text-white/80 mb-1">Registration URL</p>
+                    <p className="text-sm text-white/70 font-mono bg-white/10 border border-white/20 rounded-lg px-3 py-2 break-all">
                       {regPageUrl || REG_PAGE_PATH}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button asChild size="sm" className="bg-[#003366] hover:bg-[#002147] rounded-lg">
+                    <Button asChild size="sm" className="bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] rounded-lg font-medium">
                       <a href={REG_PAGE_PATH}>Open registration page</a>
                     </Button>
-                    <Button asChild size="sm" variant="outline" className="rounded-lg">
+                    <Button asChild size="sm" variant="outline" className="rounded-lg border-[#C8A94A] text-[#C8A94A] hover:bg-[#C8A94A]/20">
                       <a href="/admin/national-team/invite-codes">Create invite codes</a>
                     </Button>
                   </div>
@@ -540,27 +523,27 @@ export default function NationalTeamHubPage() {
 
         {/* Single “what’s coming” note instead of three placeholder cards */}
         {events.length > 0 && (
-          <HubCollapsibleSection id="announcements" title="Announcements by weight" className="border-[#003366]/20 bg-white shadow-sm">
+          <HubCollapsibleSection dark id="announcements" title="Announcements by weight" className="border-white/20 bg-white/5">
             <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-white/90">
                 Posts and updates for each weight class will be added here. Check back before the event.
               </p>
             </div>
           </HubCollapsibleSection>
         )}
 
-        <HubCollapsibleSection id="qa" title="Q&A" className="border-[#003366]/20 bg-white shadow-sm scroll-mt-24">
+        <HubCollapsibleSection dark id="qa" title="Q&A" className="border-white/20 bg-white/5 scroll-mt-24">
           <div className="px-5 pb-5 pt-0">
-            <p className="text-sm text-gray-600">
-              Common questions and answers will be added here. If you have a question now, post in the Forum or contact the staff.
+            <p className="text-sm text-white/90">
+              Common questions and answers will be added here. If you have a question now, contact the staff or ask in GroupMe.
             </p>
           </div>
         </HubCollapsibleSection>
 
         {events.length > 0 && (
-          <HubCollapsibleSection title="Apparel, schedule & coaches" className="border-[#CBAF5D]/40 bg-[#CBAF5D]/10">
+          <HubCollapsibleSection dark title="Apparel, schedule & coaches" className="border-white/20 bg-white/5">
             <div className="px-5 pb-5 pt-0">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-white/90">
                 Photos, sizing, daily agenda, and coach bios will be added here before the event.
               </p>
             </div>
