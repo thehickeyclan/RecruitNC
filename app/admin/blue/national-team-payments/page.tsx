@@ -16,6 +16,8 @@ type Registration = {
   athlete_last_name: string
   athlete_email: string
   parent_email: string
+  /** RecruitNC account email when parent_user_id is set (so you can compare to registration email). */
+  linked_account_email?: string | null
   high_school: string
   graduation_year: string
   primary_weight: string
@@ -176,7 +178,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Registrations</CardTitle>
-                <CardDescription>NHSCA Duals 2026. Order link goes to store order for revenue by product.</CardDescription>
+                <CardDescription>National and Select teams. Parent email = address they registered with. &quot;✓ same account&quot; or &quot;Login: …&quot; shows RecruitNC login when different.</CardDescription>
               </CardHeader>
               <CardContent>
                 {filtered.length === 0 ? (
@@ -203,7 +205,22 @@ export default function AdminBlueNationalTeamPaymentsPage() {
                             <TableCell className="font-medium">
                               {r.athlete_first_name} {r.athlete_last_name}
                             </TableCell>
-                            <TableCell className="text-sm">{r.parent_email}</TableCell>
+                            <TableCell className="text-sm whitespace-nowrap">
+                              {r.event_slug === "nhsca-duals-2026-select" ? "Select" : "National"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <span title="Email used when they registered">{r.parent_email}</span>
+                              {r.linked_account_email != null && r.linked_account_email !== "" && (
+                                <>
+                                  <br />
+                                  <span className="text-muted-foreground text-xs" title="RecruitNC login (if different, they signed in with another account)">
+                                    {r.linked_account_email.toLowerCase() === (r.parent_email ?? "").toLowerCase()
+                                      ? "✓ same account"
+                                      : `Login: ${r.linked_account_email}`}
+                                  </span>
+                                </>
+                              )}
+                            </TableCell>
                             <TableCell className="text-sm">{r.high_school} ({r.graduation_year})</TableCell>
                             <TableCell>{r.primary_weight}</TableCell>
                             <TableCell>${formatCents(r.reg_fee_cents || 0)}</TableCell>

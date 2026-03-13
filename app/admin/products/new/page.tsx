@@ -104,8 +104,9 @@ export default function NewProductPage() {
         toast.error(result.error || "Failed to save product")
       }
     } catch (error) {
-      console.error("Save error:", error)
-      toast.error("An error occurred while saving")
+      console.error("[RecruitNC] Save product error:", error)
+      const message = error instanceof Error ? error.message : "An error occurred while saving"
+      toast.error(message, { duration: 6000 })
     } finally {
       setSaving(false)
     }

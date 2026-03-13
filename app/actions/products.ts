@@ -3,6 +3,16 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 
+function slugify(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "") || "product"
+}
+
 export async function createProduct(payload: {
   name: string
   description: string
@@ -39,6 +49,8 @@ export async function createProduct(payload: {
     const firstImageUrl =
       typeof firstUrl === "string" ? firstUrl : (firstUrl as { url: string })?.url ?? null
 
+    const slug = `${slugify(payload.name)}-${Date.now()}`
+
     const { data: inserted, error: insertError } = await supabase
       .from("products")
       .insert({
@@ -50,12 +62,15 @@ export async function createProduct(payload: {
         featured: payload.featured,
         image_url: firstImageUrl,
         show_in_public_store: showInPublicStore,
+        slug,
       })
       .select("id")
       .single()
 
     if (insertError || !inserted) {
-      return { success: false, error: insertError?.message ?? "Failed to create product." }
+      const msg = insertError?.message ?? "Failed to create product."
+      console.error("[RecruitNC] createProduct insert error:", insertError?.code, msg, insertError?.details)
+      return { success: false, error: msg }
     }
 
     const productId = String(inserted.id)

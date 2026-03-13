@@ -68,6 +68,9 @@ export default function NationalTeamHubPage() {
   const [addFamilySearching, setAddFamilySearching] = useState(false)
   const [addFamilyAddingId, setAddFamilyAddingId] = useState<string | null>(null)
   const [addFamilyMessage, setAddFamilyMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [hubAccessCode, setHubAccessCode] = useState("")
+  const [hubAccessSubmitting, setHubAccessSubmitting] = useState(false)
+  const [hubAccessError, setHubAccessError] = useState<string | null>(null)
 
   const events = data?.events ?? []
   const eventSlugs = events.map((e) => e.eventSlug)
@@ -172,19 +175,59 @@ export default function NationalTeamHubPage() {
               Team hub
             </CardTitle>
             <CardDescription className="text-white/80">
-              {data?.reason === "signed_out"
-                ? "Sign in with the same email you used to register to view the team hub."
-                : "You don’t have access to the team hub. If you’ve already registered and paid, sign in with the parent email from your registration."}
+              Enter the access code you received to view rosters, schedule, and updates.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {data?.reason === "signed_out" && (
-              <Button asChild className="w-full bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold">
-                <a href={`/auth/signin?returnTo=${encodeURIComponent("/national-team/hub")}`}>
-                  Sign in
-                </a>
+          <CardContent className="space-y-3">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const code = hubAccessCode.trim()
+                if (!code || hubAccessSubmitting) return
+                setHubAccessError(null)
+                setHubAccessSubmitting(true)
+                try {
+                  const res = await fetch("/api/national-team/hub/access", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ code }),
+                  })
+                  const json = await res.json().catch(() => ({}))
+                  if (res.ok && json.success) {
+                    refetchHub()
+                    window.location.reload()
+                    return
+                  }
+                  setHubAccessError(json.error || "Invalid code. Try again.")
+                } catch {
+                  setHubAccessError("Something went wrong. Try again.")
+                } finally {
+                  setHubAccessSubmitting(false)
+                }
+              }}
+              className="space-y-3"
+            >
+              <Input
+                type="text"
+                placeholder="Access code"
+                value={hubAccessCode}
+                onChange={(e) => { setHubAccessCode(e.target.value); setHubAccessError(null) }}
+                className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                autoComplete="off"
+                disabled={hubAccessSubmitting}
+              />
+              {hubAccessError && (
+                <p className="text-sm text-[#fca5a5]">{hubAccessError}</p>
+              )}
+              <Button
+                type="submit"
+                className="w-full bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold"
+                disabled={!hubAccessCode.trim() || hubAccessSubmitting}
+              >
+                {hubAccessSubmitting ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "View hub"}
               </Button>
-            )}
+            </form>
             <Button asChild variant="outline" className="w-full border-white/30 text-white hover:bg-white/10">
               <a href="/national-team">Back to National Team</a>
             </Button>
@@ -252,6 +295,11 @@ export default function NationalTeamHubPage() {
       </section>
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        {data.accessByCode && (
+          <p className="text-center text-sm text-white/80 bg-white/10 rounded-xl px-4 py-2">
+            Viewing with access code. Sign in with the parent email from your registration to update gear sizes.
+          </p>
+        )}
         {/* Countdown to weigh-ins — big and bold */}
         <section className="rounded-2xl border-2 border-[#B31B1B]/40 bg-gradient-to-br from-[#002147] to-[#003366] px-6 py-8 text-white shadow-lg">
           <p className="text-center text-[#D3B574] font-bold uppercase tracking-wider text-sm mb-2">Weigh-ins open</p>
@@ -327,36 +375,38 @@ export default function NationalTeamHubPage() {
 
         {/* Add family members — registration link, invite code, and add-by-search (primary only) */}
         {events.length > 0 && (
-          <HubCollapsibleSection title="Add family members" className="border-[#CBAF5D]/50 bg-[#CBAF5D]/10">
-            <div className="px-5 pb-5 pt-0">
+          <HubCollapsibleSection dark title="Add family members" className="border-white/20 bg-white/5">
+            <div className="px-5 pb-5 pt-0 space-y-5">
               {data?.isPrimaryRegistrant ? (
               <>
-                <p className="text-sm text-gray-700 mt-1">
-                  Share the <strong>registration link</strong> and your <strong>invite code</strong> so other parents can register and pay. After they complete registration, they’ll see this hub. Or add existing RecruitNC users below (search by name or email).
+                <div>
+                  <p className="text-sm font-medium text-[#D3B574] mb-1">Share link & invite code</p>
+                  <p className="text-sm text-white/80 mb-2">Send other parents the registration link and an invite code so they can register and pay. They'll then see this hub and GroupMe.
                 </p>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <span className="text-xs font-mono text-gray-600 bg-white/80 px-2 py-1.5 rounded border border-[#CBAF5D]/30 break-all">
-                    {regPageUrl || REG_PAGE_PATH}
-                  </span>
-                  {data?.isAdmin && (
-                    <Button asChild size="sm" variant="outline" className="rounded-xl border-[#003366] text-[#003366] hover:bg-[#003366]/10 font-medium">
-                      <a href="/admin/national-team/invite-codes">Create invite codes</a>
-                    </Button>
-                  )}
-                </div>
-                <div className="mt-4 pt-3 border-t border-[#CBAF5D]/30">
-                  <p className="text-xs text-gray-600 mb-2">Add existing RecruitNC user — they’ll see this hub and the group chat. No account? <a href="/auth/signup" className="text-[#003366] hover:underline">Sign up free</a>.</p>
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-mono text-white/90 bg-white/10 px-3 py-2 rounded-lg border border-white/20 break-all">
+                      {regPageUrl || REG_PAGE_PATH}
+                    </span>
+                    {data?.isAdmin && (
+                      <Button asChild size="sm" variant="outline" className="rounded-lg border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/20 font-medium shrink-0">
+                        <a href="/admin/national-team/invite-codes">Get invite codes</a>
+                      </Button>
+                    )}
+                  </div>
+                <div className="pt-4 border-t border-white/20">
+                  <p className="text-sm font-medium text-[#D3B574] mb-1">Add existing RecruitNC user</p>
+                  <p className="text-sm text-white/80 mb-2">Someone already on RecruitNC? Search and add them so they see this hub and GroupMe. <a href="/auth/signup" className="text-[#D3B574] hover:underline">No account — sign up free</a>.</p>
                   <Input
                     type="text"
                     placeholder="Search by name or email…"
                     value={addFamilySearchQuery}
                     onChange={(e) => setAddFamilySearchQuery(e.target.value)}
-                    className="w-full max-w-sm mb-2 bg-white/80 border-[#CBAF5D]/40"
+                    className="w-full max-w-sm mb-2 bg-white/10 border-white/20 text-white placeholder:text-white/50"
                   />
-                  <div className="max-h-40 overflow-y-auto border border-[#CBAF5D]/30 rounded-lg p-2 space-y-1 bg-white/60">
-                    {addFamilySearching && <p className="text-sm text-gray-500 py-2 text-center">Searching…</p>}
+                  <div className="max-h-40 overflow-y-auto border border-white/20 rounded-lg p-2 space-y-1 bg-white/5">
+                    {addFamilySearching && <p className="text-sm text-white/60 py-2 text-center">Searching…</p>}
                     {!addFamilySearching && addFamilySearchQuery.trim().length >= 2 && addFamilySearchResults.length === 0 && (
-                      <p className="text-sm text-gray-500 py-2 text-center">No users found. Try a different search.</p>
+                      <p className="text-sm text-white/60 py-2 text-center">No users found.</p>
                     )}
                     {!addFamilySearching &&
                       addFamilySearchResults.map((u) => (
@@ -365,24 +415,24 @@ export default function NationalTeamHubPage() {
                           type="button"
                           onClick={() => handleAddFamilyMember(u.user_id)}
                           disabled={!!addFamilyAddingId}
-                          className="w-full text-left px-3 py-2 rounded-md hover:bg-[#003366]/5 text-sm flex flex-col gap-0.5 border border-transparent hover:border-[#003366]/10"
+                          className="w-full text-left px-3 py-2 rounded-md hover:bg-white/10 text-sm flex flex-col gap-0.5 border border-transparent hover:border-white/10 text-white"
                         >
-                          <span className="font-medium text-gray-900">{u.display_name}</span>
-                          {u.email && <span className="text-xs text-gray-500">{u.email}</span>}
-                          {addFamilyAddingId === u.user_id && <span className="text-xs text-[#003366]">Adding…</span>}
+                          <span className="font-medium">{u.display_name}</span>
+                          {u.email && <span className="text-xs text-white/60">{u.email}</span>}
+                          {addFamilyAddingId === u.user_id && <span className="text-xs text-[#D3B574]">Adding…</span>}
                         </button>
                       ))}
                   </div>
                   {addFamilyMessage && (
-                    <p className={`text-sm mt-2 ${addFamilyMessage.type === "success" ? "text-green-700" : "text-red-600"}`}>
+                    <p className={`text-sm mt-2 ${addFamilyMessage.type === "success" ? "text-[#86efac]" : "text-[#fca5a5]"}`}>
                       {addFamilyMessage.text}
                     </p>
                   )}
                 </div>
               </>
             ) : (
-              <p className="text-sm text-gray-700 mt-1">
-                You’re viewing this hub as an <strong>added family member</strong>. To add another parent or guardian, ask the person who registered and paid (the primary registrant) to share the registration link and invite code with them, or to add existing RecruitNC users in this section (search by name or email).
+              <p className="text-sm text-white/90">
+                You&apos;re viewing this hub as an added family member. Only the person who registered and paid can share the registration link and invite code or add other parents. Ask them to send you the link and a code, or to add you here if you&apos;re on RecruitNC.
               </p>
             )}
             </div>

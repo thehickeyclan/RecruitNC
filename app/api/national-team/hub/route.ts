@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEventName, getEventSlugForApi, normalizeEventSlugForLookup } from "@/lib/national-team-events"
+
+const HUB_ACCESS_COOKIE = "nc_hub_access"
+const NHSCA_HUB_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"]
 
 export type HubRegistration = {
   id: string
@@ -56,31 +60,59 @@ export type HubResponse = {
   isAdmin?: boolean
   /** True when current user has at least one paid registration (parent_email) for an event they see. False = family member (workspace access only). */
   isPrimaryRegistrant?: boolean
+  /** True when access was granted via access code (no sign-in). UI can prompt sign-in to edit gear. */
+  accessByCode?: boolean
 }
 
 export async function GET(): Promise<NextResponse<HubResponse>> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+  let accessByCode = false
   if (authError || !user?.email) {
-    return NextResponse.json({ allowed: false, reason: "signed_out" })
+    const cookieStore = await cookies()
+    const hubCode = cookieStore.get(HUB_ACCESS_COOKIE)?.value?.trim()
+    if (!hubCode) {
+      return NextResponse.json({ allowed: false, reason: "signed_out" })
+    }
+    const adminCheck = createAdminClient()
+    const { data: codeRow, error: codeErr } = await adminCheck
+      .from("national_team_invite_codes")
+      .select("id, expires_at, max_uses, uses_count")
+      .in("event_slug", NHSCA_HUB_SLUGS)
+      .eq("code", hubCode)
+      .maybeSingle()
+    if (codeErr || !codeRow) {
+      return NextResponse.json({ allowed: false, reason: "no_access" })
+    }
+    if (codeRow.expires_at && new Date(codeRow.expires_at) < new Date()) {
+      return NextResponse.json({ allowed: false, reason: "no_access" })
+    }
+    const maxUses = codeRow.max_uses != null ? Number(codeRow.max_uses) : null
+    const usesCount = Number(codeRow.uses_count) ?? 0
+    if (maxUses != null && usesCount >= maxUses) {
+      return NextResponse.json({ allowed: false, reason: "no_access" })
+    }
+    accessByCode = true
   }
 
   const admin = createAdminClient()
 
   // Use admin client so RLS never hides the profile; reliable admin check.
-  let profile = (await admin
-    .from("user_profiles")
-    .select("is_admin, role")
-    .eq("user_id", user.id)
-    .maybeSingle()).data as { is_admin?: boolean; role?: string } | null
-
-  // Fallback: look up by email in case profile is keyed differently
-  if (!profile && user.email) {
+  let profile: { is_admin?: boolean; role?: string } | null = null
+  if (user?.id) {
     profile = (await admin
       .from("user_profiles")
       .select("is_admin, role")
-      .ilike("email", user.email)
+      .eq("user_id", user.id)
       .maybeSingle()).data as { is_admin?: boolean; role?: string } | null
+    if (!profile && user.email) {
+      profile = (await admin
+        .from("user_profiles")
+        .select("is_admin, role")
+        .ilike("email", user.email)
+        .maybeSingle()).data as { is_admin?: boolean; role?: string } | null
+    }
   }
 
   const isAdmin = !!profile?.is_admin || profile?.role === "admin"
@@ -90,7 +122,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, parent_user_id, high_school, graduation_year, primary_weight, status, created_at, updated_at, updated_by_user_id, shirt_size, singlet_size, shorts_size")
     .eq("status", "paid")
 
-  if (regError && !isAdmin) {
+  if (regError && !isAdmin && !accessByCode) {
     if ((regError as { code?: string })?.code === "42P01") {
       return NextResponse.json(
         { allowed: false, reason: "no_access" },
@@ -100,8 +132,8 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     console.error("[national-team/hub]", regError)
     return NextResponse.json({ allowed: false, reason: "no_access" }, { status: 200 })
   }
-  if (regError && isAdmin) {
-    console.warn("[national-team/hub] Admin access: registrations query failed", regError)
+  if (regError && (isAdmin || accessByCode)) {
+    console.warn("[national-team/hub] Registrations query failed", regError)
   }
 
   const paidRegs = (regError ? [] : (allRegs ?? [])) as (HubRegistration & { parent_user_id?: string | null; updated_at?: string | null; updated_by_user_id?: string | null })[]
@@ -129,11 +161,12 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   // Use canonical API slug so "nhsca-2026" and "nhsca-duals-2026" both map to nhsca-duals-2026 (thread context_id).
   const toCanonical = (slug: string) => getEventSlugForApi(normalizeEventSlugForLookup(slug || "")) || slug
   let eventSlugsToShow: string[]
-  if (isAdmin) {
+  if (accessByCode) {
+    eventSlugsToShow = [...NHSCA_HUB_SLUGS]
+  } else if (isAdmin) {
     const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]
-    // Default: show both National and Select so admin sees both rosters (including interest-form lineups).
     eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026", "nhsca-duals-2026-select"]
-  } else {
+  } else if (user?.email) {
     const emailLower = user.email.toLowerCase()
     const myEventSlugs = new Set(
       paidRegs
@@ -155,15 +188,17 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
       return NextResponse.json({ allowed: false, reason: "no_access" })
     }
     eventSlugsToShow = [...myEventSlugs]
+  } else {
+    return NextResponse.json({ allowed: false, reason: "no_access" })
   }
 
-  const emailLower = user.email!.toLowerCase()
+  const emailLower = user?.email?.toLowerCase() ?? ""
 
   // Backfill parent_user_id on registrations where current user's email matches parent_email (so workspace membership is stable).
   const myRegIds = paidRegs
     .filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
     .map((r) => r.id)
-  if (myRegIds.length > 0) {
+  if (myRegIds.length > 0 && user?.id) {
     await admin
       .from("national_team_event_registrations")
       .update({ parent_user_id: user.id, updated_at: new Date().toISOString() })
@@ -512,5 +547,6 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     events,
     isAdmin,
     isPrimaryRegistrant,
+    accessByCode: accessByCode || undefined,
   })
 }

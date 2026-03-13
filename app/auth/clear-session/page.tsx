@@ -6,9 +6,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, AlertCircle } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 export default function ClearSessionPage() {
   const [cleared, setCleared] = useState(false)
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get("returnTo")?.trim() || ""
 
   const clearAuthState = () => {
     if (typeof document === "undefined") return
@@ -49,9 +52,11 @@ export default function ClearSessionPage() {
 
     setCleared(true)
 
-    // Reload after 2 seconds
+    const signInUrl = returnTo
+      ? `/auth/signin?returnTo=${encodeURIComponent(returnTo)}`
+      : "/auth/signin"
     setTimeout(() => {
-      window.location.href = "/auth/signin"
+      window.location.href = signInUrl
     }, 2000)
   }
 
