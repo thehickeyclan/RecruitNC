@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -58,6 +59,8 @@ function HubCollapsibleSection({
 }
 
 export default function NationalTeamHubPage() {
+  const searchParams = useSearchParams()
+  const openMode = searchParams.get("open") === "1"
   const { user, session, profile, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -93,32 +96,49 @@ export default function NationalTeamHubPage() {
   }, [session?.access_token])
 
   const refetchHub = useCallback(() => {
+    if (openMode) {
+      fetch("/api/national-team/hub/open")
+        .then((r) => r.json())
+        .then((res) => setData({ allowed: true, events: res.events ?? [], accessByCode: true }))
+        .catch(() => {})
+      return
+    }
     fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-  }, [getHubApiUrl, hubFetchOptions])
+  }, [openMode, getHubApiUrl, hubFetchOptions])
+
+  // Open link (no auth): fetch public roster and show full hub.
+  useEffect(() => {
+    if (!openMode) return
+    fetch("/api/national-team/hub/open")
+      .then((r) => r.json())
+      .then((res) => setData({ allowed: true, events: res.events ?? [], accessByCode: true }))
+      .catch(() => setData({ allowed: false, reason: "no_access" }))
+      .finally(() => setLoading(false))
+  }, [openMode])
 
   // Wait for auth to finish. If user exists, also wait for session so we always send Bearer (session can lag one render after isLoading).
   useEffect(() => {
-    if (authLoading) return
+    if (openMode || authLoading) return
     if (user && !session?.access_token) return
     fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
       .finally(() => setLoading(false))
-  }, [authLoading, user, session?.access_token, getHubApiUrl, hubFetchOptions])
+  }, [openMode, authLoading, user, session?.access_token, getHubApiUrl, hubFetchOptions])
 
   // If we had no session on first fetch and now we do (e.g. session loaded after auth), refetch once so API sees the user.
   useEffect(() => {
-    if (authLoading || loading || data?.allowed || refetchedWithToken.current || !user || !session?.access_token) return
+    if (openMode || authLoading || loading || data?.allowed || refetchedWithToken.current || !user || !session?.access_token) return
     refetchedWithToken.current = true
     fetch(getHubApiUrl(), hubFetchOptions())
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-  }, [authLoading, loading, data?.allowed, user, session?.access_token, getHubApiUrl, hubFetchOptions])
+  }, [openMode, authLoading, loading, data?.allowed, user, session?.access_token, getHubApiUrl, hubFetchOptions])
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
@@ -830,15 +850,20 @@ function RosterSizeCell({
   const handleChange = (newVal: string) => {
     if (!registrationId || !editable) return
     setSaving(true)
-    const url = isInterestRow
-      ? `/api/national-team/interest-forms/${registrationId.replace(/^interest-/, "")}/size`
-      : `/api/national-team/registrations/${registrationId}/size`
-    fetch(url, {
+    const openMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("open") === "1"
+    const url =
+      openMode && !isInterestRow
+        ? `/api/national-team/registrations/${registrationId}/size/open`
+        : isInterestRow
+          ? `/api/national-team/interest-forms/${registrationId.replace(/^interest-/, "")}/size`
+          : `/api/national-team/registrations/${registrationId}/size`
+    const opts: RequestInit = {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
       body: JSON.stringify({ [field]: newVal || null }),
-    })
+    }
+    if (!openMode) opts.credentials = "include"
+    fetch(url, opts)
       .then((r) => (r.ok ? Promise.resolve() : Promise.reject(new Error("Update failed"))))
       .then(() => onSave?.())
       .catch(() => {})
