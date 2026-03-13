@@ -961,62 +961,6 @@ function EventHubSection({
         {activeTab === "dashboard" && (
           <>
         {!hideEventInfo && (event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && <NHSCA2026HubInfo />}
-        {myRegs.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Your registration</h3>
-            <div className="rounded-md border bg-gray-50/50 p-4 space-y-3">
-              {myRegs.map((r) => (
-                <div key={r.id} className="text-sm">
-                  <p className="font-medium text-[#003366]">
-                    {r.athlete_first_name} {r.athlete_last_name}
-                  </p>
-                  <p className="text-gray-600 mt-0.5">
-                    Weight: {r.primary_weight} · School: {r.high_school || "—"} · Grad: {r.graduation_year}
-                  </p>
-                  <p className="text-gray-500 mt-0.5">Status: {r.status}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {(event.eventSlug === "nhsca-duals-2026" || event.eventName.toLowerCase().includes("nhsca")) && myRegs.length > 0 && (
-          <div className="rounded-xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 p-4">
-            <h3 className="text-sm font-semibold text-[#002147] mb-2">Gear &amp; apparel sizes</h3>
-            <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically. Please submit by <strong>Sunday, March 15</strong>.</p>
-            <div className="space-y-0">
-              {myRegs.map((r) => (
-                <HubGearSizeRow
-                  key={r.id}
-                  registrationId={r.id}
-                  athleteName={`${r.athlete_first_name} ${r.athlete_last_name}`}
-                  singletSize={r.singlet_size ?? ""}
-                  shortsSize={r.shorts_size ?? ""}
-                  shirtSize={r.shirt_size ?? ""}
-                  sizes={TSHIRT_SIZES}
-                  onUpdate={async (field, value) => {
-                    setSizeMessage(null)
-                    const res = await fetch(`/api/national-team/registrations/${r.id}/size`, {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      credentials: "include",
-                      body: JSON.stringify({ [field]: value || "" }),
-                    })
-                    const data = await res.json().catch(() => ({}))
-                    if (res.ok) {
-                      onRefetch?.()
-                    } else {
-                      setSizeMessage({ type: "error", text: data?.error ?? "Could not save." })
-                      throw new Error(data?.error)
-                    }
-                  }}
-                />
-              ))}
-            </div>
-            {sizeMessage && (
-              <p className="text-sm mt-2 text-red-600">{sizeMessage.text}</p>
-            )}
-          </div>
-        )}
         <div className="rounded-xl border-2 border-[#003366]/25 overflow-hidden bg-[#003366]/5">
           <h3 className="text-sm font-semibold text-[#002147] mb-1 px-4 pt-4">Roster &amp; gear ({event.roster.length})</h3>
           <p className="text-xs text-gray-600 px-4 pb-1">Enter gear sizes in the table below. Changes save automatically.</p>
@@ -1163,62 +1107,6 @@ function GroupedEventHubSection({
         {activeTab === "dashboard" && (
           <>
             {!hideEventInfo && isNHSCA && <NHSCA2026HubInfo />}
-            {myRegs.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Your registration</h3>
-                <div className="rounded-md border bg-gray-50/50 p-4 space-y-3">
-                  {myRegs.map((r) => (
-                    <div key={r.id} className="text-sm">
-                      <p className="font-medium text-[#003366]">
-                        {r.athlete_first_name} {r.athlete_last_name}
-                      </p>
-                      <p className="text-gray-600 mt-0.5">
-                        Weight: {r.primary_weight} · School: {r.high_school || "—"} · Grad: {r.graduation_year}
-                      </p>
-                      <p className="text-gray-500 mt-0.5">Status: {r.status}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {isNHSCA && myRegs.length > 0 && (
-              <div className="rounded-xl border-2 border-[#CBAF5D]/40 bg-[#CBAF5D]/10 p-4">
-                <h3 className="text-sm font-semibold text-[#002147] mb-2">Gear &amp; apparel sizes</h3>
-                <p className="text-xs text-gray-600 mb-3">Select Singlet, Shorts, and Shirt sizes for each athlete. Changes save automatically. Please submit by <strong>Sunday, March 15</strong>.</p>
-                <div className="space-y-0">
-                  {myRegs.map((r) => (
-                    <HubGearSizeRow
-                      key={r.id}
-                      registrationId={r.id}
-                      athleteName={`${r.athlete_first_name} ${r.athlete_last_name}`}
-                      singletSize={r.singlet_size ?? ""}
-                      shortsSize={r.shorts_size ?? ""}
-                      shirtSize={r.shirt_size ?? ""}
-                      sizes={TSHIRT_SIZES}
-                      onUpdate={async (field, value) => {
-                        setSizeMessage(null)
-                        const res = await fetch(`/api/national-team/registrations/${r.id}/size`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          credentials: "include",
-                          body: JSON.stringify({ [field]: value || "" }),
-                        })
-                        const data = await res.json().catch(() => ({}))
-                        if (res.ok) {
-                          onRefetch?.()
-                        } else {
-                          setSizeMessage({ type: "error", text: data?.error ?? "Could not save." })
-                          throw new Error(data?.error)
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-                {sizeMessage && (
-                  <p className="text-sm mt-2 text-red-600">{sizeMessage.text}</p>
-                )}
-              </div>
-            )}
             {eventsWithLabels.map(({ event: ev, label }) => {
               const isNational = label.toLowerCase() === "national"
               const tileBorder = isNational ? "border-[#003366]/30" : "border-[#CBAF5D]/50"
