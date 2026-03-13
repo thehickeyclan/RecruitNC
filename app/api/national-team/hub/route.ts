@@ -230,15 +230,32 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026", "nhsca-duals-2026-select"]
   } else if (user?.email) {
     const emailLower = (user.email ?? "").trim().toLowerCase()
-    const myEventSlugs = new Set(
+    let myEventSlugs = new Set(
       paidRegs
         .filter(
           (r) =>
             (r.parent_email ?? "").trim().toLowerCase() === emailLower ||
-            (user?.id && r.parent_user_id === user.id)
+            (user?.id && String(r.parent_user_id ?? "") === String(user.id))
         )
         .map((r) => toCanonical(r.event_slug))
     )
+    // Fallback: if main query didn't return this user's regs (e.g. different DB/env), query by parent_user_id and parent_email
+    if (myEventSlugs.size === 0 && user?.id) {
+      try {
+        const [byUserId, byEmail] = await Promise.all([
+          admin.from("national_team_event_registrations").select("event_slug").eq("status", "paid").eq("parent_user_id", user.id),
+          user.email ? admin.from("national_team_event_registrations").select("event_slug").eq("status", "paid").ilike("parent_email", user.email) : { data: [] },
+        ])
+        for (const row of byUserId.data ?? []) {
+          myEventSlugs.add(toCanonical((row as { event_slug: string }).event_slug))
+        }
+        for (const row of byEmail.data ?? []) {
+          myEventSlugs.add(toCanonical((row as { event_slug: string }).event_slug))
+        }
+      } catch {
+        // ignore
+      }
+    }
     try {
       const { data: workspaceRows } = await admin
         .from("event_workspace_members")
