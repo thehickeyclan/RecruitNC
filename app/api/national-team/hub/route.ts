@@ -160,6 +160,25 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
 
   const admin = createAdminClient()
 
+  // SINGLE PATH FOR LOGGED-IN PARENT: one query, no shared state. If they have a paid reg, they're in.
+  let loggedInParentEventSlugs: string[] = []
+  if (user?.id && user?.email) {
+    const { data: myRegs } = await admin
+      .from("national_team_event_registrations")
+      .select("event_slug")
+      .eq("status", "paid")
+      .eq("parent_user_id", user.id)
+    const { data: myRegsByEmail } = await admin
+      .from("national_team_event_registrations")
+      .select("event_slug")
+      .eq("status", "paid")
+      .ilike("parent_email", user.email)
+    const slugs = new Set<string>()
+    for (const r of myRegs ?? []) slugs.add((r as { event_slug: string }).event_slug)
+    for (const r of myRegsByEmail ?? []) slugs.add((r as { event_slug: string }).event_slug)
+    loggedInParentEventSlugs = [...slugs]
+  }
+
   // Use admin client so RLS never hides the profile; reliable admin check.
   let profile: { is_admin?: boolean; role?: string } | null = null
   if (user?.id) {
@@ -223,7 +242,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
   // Use canonical API slug so "nhsca-2026" and "nhsca-duals-2026" both map to nhsca-duals-2026 (thread context_id).
   const toCanonical = (slug: string) => getEventSlugForApi(normalizeEventSlugForLookup(slug || "")) || slug
   let eventSlugsToShow: string[]
-  if (accessByCode) {
+  if (loggedInParentEventSlugs.length > 0) {
+    eventSlugsToShow = [...new Set(loggedInParentEventSlugs.map(toCanonical).filter(Boolean))]
+    if (eventSlugsToShow.length === 0) eventSlugsToShow = [...NHSCA_HUB_SLUGS]
+  } else if (accessByCode) {
     eventSlugsToShow = [...NHSCA_HUB_SLUGS]
   } else if (isAdmin) {
     const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]
