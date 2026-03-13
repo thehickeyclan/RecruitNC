@@ -14,10 +14,25 @@ import { HubPresenceBubbles } from "@/components/hub-presence-bubbles"
 import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import { getHubGroupForEvent, HUB_EVENT_GROUPS } from "@/lib/national-team-events"
+import { getHubGroupForEvent, getEventName, HUB_EVENT_GROUPS } from "@/lib/national-team-events"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 const REG_PAGE_PATH = "/national-team/register/nhsca-2026"
+
+/** Open hub: when API fails we still show the roster section (empty tables), never hide it. */
+const OPEN_HUB_EMPTY_EVENTS: HubEvent[] = [
+  "nhsca-duals-2026",
+  "nhsca-duals-2026-select",
+].map((eventSlug) => ({
+  eventSlug,
+  eventName: getEventName(eventSlug),
+  roster: [],
+  myRegistrations: [],
+  threadId: null,
+  forumGroupId: null,
+  forumChannelId: null,
+  forumMessageCount: 0,
+}))
 
 const WEIGH_IN_START = new Date("2026-05-22T14:00:00-04:00").getTime()
 
@@ -71,7 +86,9 @@ export default function NationalTeamHubPage() {
   const refetchedWithToken = useRef(false)
 
   const events = data?.events ?? []
-  const eventSlugs = events.map((e) => e.eventSlug)
+  /** In open mode always show the roster section (never "Your team hub" / sign-in). Use empty tables when no data yet. */
+  const displayEvents = openMode && events.length === 0 ? OPEN_HUB_EMPTY_EVENTS : events
+  const eventSlugs = displayEvents.map((e) => e.eventSlug)
 
   const getHubApiUrl = useCallback(() => {
     if (typeof window === "undefined") return "/api/national-team/hub"
@@ -92,9 +109,9 @@ export default function NationalTeamHubPage() {
   const refetchHub = useCallback(() => {
     if (openMode) {
       fetch("/api/national-team/hub/open")
-        .then((r) => r.json())
-        .then((res) => setData({ allowed: true, events: res.events ?? [], accessByCode: true }))
-        .catch(() => {})
+        .then((r) => (r.ok ? r.json() : { events: OPEN_HUB_EMPTY_EVENTS }))
+        .then((res) => setData({ allowed: true, events: res?.events?.length ? res.events : OPEN_HUB_EMPTY_EVENTS, accessByCode: true }))
+        .catch(() => setData({ allowed: true, events: OPEN_HUB_EMPTY_EVENTS, accessByCode: true }))
       return
     }
     fetch(getHubApiUrl(), hubFetchOptions())
@@ -103,16 +120,16 @@ export default function NationalTeamHubPage() {
       .catch(() => {})
   }, [openMode, getHubApiUrl, hubFetchOptions])
 
-  // Open link (no auth): fetch public roster and show full hub. Never show code form — on error show hub with empty roster.
+  // Open link (no auth): fetch public roster and show full hub. On fail still show roster section with empty tables (never hide the table).
   useEffect(() => {
     if (!openMode) return
     fetch("/api/national-team/hub/open")
       .then((r) => {
-        if (r.ok) return r.json().then((res) => ({ events: res?.events ?? [] }))
-        return { events: [] }
+        if (r.ok) return r.json().then((res) => ({ events: res?.events?.length ? res.events : OPEN_HUB_EMPTY_EVENTS }))
+        return { events: OPEN_HUB_EMPTY_EVENTS }
       })
       .then(({ events }) => setData({ allowed: true, events, accessByCode: true }))
-      .catch(() => setData({ allowed: true, events: [], accessByCode: true }))
+      .catch(() => setData({ allowed: true, events: OPEN_HUB_EMPTY_EVENTS, accessByCode: true }))
       .finally(() => setLoading(false))
   }, [openMode])
 
@@ -348,7 +365,7 @@ export default function NationalTeamHubPage() {
           </div>
         </HubCollapsibleSection>
 
-        {events.length === 0 ? (
+        {events.length === 0 && !openMode ? (
           <>
             <Card className="rounded-2xl border-white/20 bg-white/5 overflow-hidden text-white">
               <CardHeader className="pb-6">
@@ -405,29 +422,15 @@ export default function NationalTeamHubPage() {
               </Card>
             )}
           </>
-        ) : openMode && events.length === 0 ? (
-          <Card id="roster" className="scroll-mt-24 overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg">
-            <CardHeader className="bg-gradient-to-b from-[#003366]/15 to-[#003366]/5 border-b-2 border-[#003366]/20">
-              <CardTitle className="text-[#002147]">Roster &amp; gear</CardTitle>
-              <CardDescription className="text-gray-600">
-                Roster could not be loaded. Make sure you’re using the correct link (it should include <code className="rounded bg-gray-100 px-1">?open=1</code>). Then try refreshing the page.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <Button onClick={() => refetchHub()} variant="outline" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
-                Retry loading roster
-              </Button>
-            </CardContent>
-          </Card>
         ) : (
           (() => {
             type Section =
               | { type: "single"; event: HubEvent }
               | { type: "group"; groupKey: string; groupName: string; eventsWithLabels: { event: HubEvent; label: string }[] }
-            const eventBySlug = new Map(events.map((e) => [e.eventSlug, e]))
+            const eventBySlug = new Map(displayEvents.map((e) => [e.eventSlug, e]))
             const groupKeyToEvents = new Map<string, HubEvent[]>()
             const standalone: HubEvent[] = []
-            for (const event of events) {
+            for (const event of displayEvents) {
               const group = getHubGroupForEvent(event.eventSlug)
               if (!group) {
                 standalone.push(event)
