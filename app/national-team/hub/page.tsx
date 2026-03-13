@@ -393,6 +393,7 @@ export default function NationalTeamHubPage() {
                       </Button>
                     )}
                   </div>
+                </div>
                 <div className="pt-4 border-t border-white/20">
                   <p className="text-sm font-medium text-[#D3B574] mb-1">Add existing RecruitNC user</p>
                   <p className="text-sm text-white/80 mb-2">Someone already on RecruitNC? Search and add them so they see this hub and GroupMe. <a href="/auth/signup" className="text-[#D3B574] hover:underline">No account — sign up free</a>.</p>
