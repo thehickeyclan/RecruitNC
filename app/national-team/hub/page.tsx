@@ -47,7 +47,7 @@ function HubCollapsibleSection({
           )}
         >
           {title}
-          <span className={cn("shrink-0", dark ? "text-[#C8A94A]" : "text-[#003366]")} aria-hidden>
+          <span className={cn("shrink-0", dark ? "text-[#D3B574]" : "text-[#003366]")} aria-hidden>
             {open ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
           </span>
         </CollapsibleTrigger>
@@ -157,7 +157,7 @@ export default function NationalTeamHubPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0B2545] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#C8A94A]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#D3B574]" />
       </div>
     )
   }
@@ -168,7 +168,7 @@ export default function NationalTeamHubPage() {
         <Card className="max-w-md w-full border-white/20 bg-white/5 text-white">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-white">
-              <Lock className="h-5 w-5 text-[#C8A94A]" />
+              <Lock className="h-5 w-5 text-[#D3B574]" />
               Team hub
             </CardTitle>
             <CardDescription className="text-white/80">
@@ -179,7 +179,7 @@ export default function NationalTeamHubPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             {data?.reason === "signed_out" && (
-              <Button asChild className="w-full bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] font-semibold">
+              <Button asChild className="w-full bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold">
                 <a href={`/auth/signin?returnTo=${encodeURIComponent("/national-team/hub")}`}>
                   Sign in
                 </a>
@@ -237,13 +237,13 @@ export default function NationalTeamHubPage() {
           </a>
         </div>
         {/* GroupMe — team chat */}
-        <div className="w-full bg-[#C8A94A] px-4 py-3 flex flex-wrap items-center justify-center gap-2">
+        <div className="w-full bg-[#D3B574] px-4 py-3 flex flex-wrap items-center justify-center gap-2">
           <span className="text-[#0B2545] font-semibold">Team chat:</span>
           <a
             href="https://groupme.com/join_group/113432813/Vdugtepr"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#0B2545] px-4 py-2 text-sm font-semibold text-[#C8A94A] hover:bg-[#0B2545]/90 hover:text-white transition-colors"
+            className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#0B2545] px-4 py-2 text-sm font-semibold text-[#D3B574] hover:bg-[#0B2545]/90 hover:text-white transition-colors"
           >
             Join NHSCA Duals 2026 on GroupMe
             <ExternalLink className="ml-2 h-4 w-4" />
@@ -283,13 +283,13 @@ export default function NationalTeamHubPage() {
         {/* Key links */}
         <HubCollapsibleSection dark title="Key links" defaultOpen className="border-white/20 bg-white/5">
           <div className="px-5 pb-5 pt-0 flex flex-wrap justify-center gap-3">
-            <Button asChild className="rounded-xl bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] font-semibold">
+            <Button asChild className="rounded-xl bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold">
               <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
                 NHSCA Official Page
                 <ExternalLink className="ml-2 h-4 w-4" />
               </a>
             </Button>
-            <Button asChild variant="outline" className="rounded-xl border-2 border-[#C8A94A] text-[#C8A94A] hover:bg-[#C8A94A]/20 font-semibold">
+            <Button asChild variant="outline" className="rounded-xl border-2 border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/20 font-semibold">
               <a href="/national-team#archives">Read about past teams</a>
             </Button>
           </div>
@@ -303,7 +303,7 @@ export default function NationalTeamHubPage() {
           <a href="#event-details" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
             Event details
           </a>
-          <a href="#roster" className="rounded-full bg-[#C8A94A]/20 px-4 py-2 text-[#C8A94A] font-medium hover:bg-[#C8A94A]/30">
+          <a href="#roster" className="rounded-full bg-[#D3B574]/20 px-4 py-2 text-[#D3B574] font-medium hover:bg-[#D3B574]/30">
             Roster &amp; gear
           </a>
           <a href="#schedule" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
@@ -410,10 +410,10 @@ export default function NationalTeamHubPage() {
                   Have an invite to <strong>NHSCA Duals 2026</strong>? Use your registration link to sign up. After payment, return here to see the roster and join GroupMe.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <Button asChild className="rounded-xl bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] font-semibold">
+                  <Button asChild className="rounded-xl bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold">
                     <a href="/national-team/hub">Team Hub</a>
                   </Button>
-                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#C8A94A] text-[#C8A94A] hover:bg-[#C8A94A]/20 font-medium">
+                  <Button asChild variant="outline" className="rounded-xl border-2 border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/20 font-medium">
                     <a href={REG_PAGE_PATH}>Registration page</a>
                   </Button>
                   <Button asChild variant="outline" className="rounded-xl border-2 border-white/40 text-white hover:bg-white/10 font-medium">
@@ -427,7 +427,7 @@ export default function NationalTeamHubPage() {
             </Card>
 
             {data.isAdmin && (
-              <Card className="rounded-2xl border-[#C8A94A]/40 bg-[#C8A94A]/10 text-white">
+              <Card className="rounded-2xl border-[#D3B574]/40 bg-[#D3B574]/10 text-white">
                 <CardHeader>
                   <CardTitle className="text-base text-white">Send to families</CardTitle>
                   <CardDescription className="text-white/80">
@@ -442,10 +442,10 @@ export default function NationalTeamHubPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Button asChild size="sm" className="bg-[#C8A94A] hover:bg-[#E2C46A] text-[#0B2545] rounded-lg font-medium">
+                    <Button asChild size="sm" className="bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] rounded-lg font-medium">
                       <a href={REG_PAGE_PATH}>Open registration page</a>
                     </Button>
-                    <Button asChild size="sm" variant="outline" className="rounded-lg border-[#C8A94A] text-[#C8A94A] hover:bg-[#C8A94A]/20">
+                    <Button asChild size="sm" variant="outline" className="rounded-lg border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/20">
                       <a href="/admin/national-team/invite-codes">Create invite codes</a>
                     </Button>
                   </div>
