@@ -75,22 +75,26 @@ export default function NationalTeamHubPage() {
   const events = data?.events ?? []
   const eventSlugs = events.map((e) => e.eventSlug)
 
-  const HUB_API = "/api/national-team/hub"
+  const getHubApiUrl = useCallback(() => {
+    if (typeof window === "undefined") return "/api/national-team/hub"
+    const code = new URLSearchParams(window.location.search).get("code")?.trim()
+    return code ? `/api/national-team/hub?code=${encodeURIComponent(code)}` : "/api/national-team/hub"
+  }, [])
 
   const refetchHub = useCallback(() => {
-    fetch(HUB_API, { credentials: "include" })
+    fetch(getHubApiUrl(), { credentials: "include" })
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
-  }, [])
+  }, [getHubApiUrl])
 
   useEffect(() => {
-    fetch(HUB_API, { credentials: "include" })
+    fetch(getHubApiUrl(), { credentials: "include" })
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
       .finally(() => setLoading(false))
-  }, [])
+  }, [getHubApiUrl])
 
   useEffect(() => {
     setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
@@ -197,10 +201,11 @@ export default function NationalTeamHubPage() {
                   })
                   const json = await res.json().catch(() => ({}))
                   if (res.ok && json.success) {
-                    // Brief delay so the browser commits the Set-Cookie from the response, then full navigation
+                    // Pass code in URL for this one load so hub GET can grant and upsert DB (logged-in users often don't send cookie)
+                    const oneTimeQuery = `?code=${encodeURIComponent(code)}`
                     setTimeout(() => {
-                      window.location.href = "/national-team/hub"
-                    }, 200)
+                      window.location.href = `/national-team/hub${oneTimeQuery}`
+                    }, 100)
                     return
                   }
                   setHubAccessError(json.error || "Invalid code. Try again.")

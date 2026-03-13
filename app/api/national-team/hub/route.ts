@@ -77,6 +77,43 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
 
   let accessByCode = false
 
+  // One-time code param: after form submit we redirect to /hub?code=XXX so this request can grant and upsert (logged-in users often don't send cookie)
+  const codeParam = request.nextUrl.searchParams.get("code")?.trim()
+  if (codeParam && user?.id) {
+    const adminForCode = createAdminClient()
+    const { data: codeRows } = await adminForCode
+      .from("national_team_invite_codes")
+      .select("id, code, expires_at, max_uses, uses_count")
+      .in("event_slug", NHSCA_HUB_SLUGS)
+      .limit(50)
+    const codeRow = Array.isArray(codeRows)
+      ? codeRows.find((r) => (r as { code?: string }).code?.trim().toLowerCase() === codeParam.toLowerCase())
+      : null
+    if (codeRow) {
+      const cr = codeRow as { code?: string; expires_at?: string | null; max_uses?: number | null; uses_count?: number }
+      const notExpired = !cr.expires_at || new Date(cr.expires_at) >= new Date()
+      const maxUses = cr.max_uses != null ? Number(cr.max_uses) : null
+      const usesCount = Number(cr.uses_count) ?? 0
+      const underLimit = maxUses == null || usesCount < maxUses
+      if (notExpired && underLimit) {
+        accessByCode = true
+        const valueToStore = (cr.code ?? codeParam).trim()
+        try {
+          const expiresAt = new Date()
+          expiresAt.setDate(expiresAt.getDate() + 30)
+          await adminForCode
+            .from("national_team_hub_access_grants")
+            .upsert(
+              { user_id: user.id, code: valueToStore, expires_at: expiresAt.toISOString() },
+              { onConflict: "user_id" }
+            )
+        } catch {
+          // table may not exist
+        }
+      }
+    }
+  }
+
   async function validateHubCookie(): Promise<boolean> {
     const cookieStore = await cookies()
     const hubCode = cookieStore.get(HUB_ACCESS_COOKIE)?.value?.trim()
@@ -183,7 +220,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
     const emailLower = (user.email ?? "").trim().toLowerCase()
     const myEventSlugs = new Set(
       paidRegs
-        .filter((r) => (r.parent_email ?? "").trim().toLowerCase() === emailLower)
+        .filter(
+          (r) =>
+            (r.parent_email ?? "").trim().toLowerCase() === emailLower ||
+            (user?.id && r.parent_user_id === user.id)
+        )
         .map((r) => toCanonical(r.event_slug))
     )
     try {
@@ -274,7 +315,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
 
   // Backfill parent_user_id on registrations where current user's email matches parent_email (so workspace membership is stable).
   const myRegIds = paidRegs
-    .filter((r) => (r.parent_email ?? "").trim().toLowerCase() === emailLower)
+    .filter(
+      (r) =>
+        (r.parent_email ?? "").trim().toLowerCase() === emailLower ||
+        (user?.id && r.parent_user_id === user.id)
+    )
     .map((r) => r.id)
   if (myRegIds.length > 0 && user?.id) {
     await admin
@@ -576,7 +621,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<HubRespons
 
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
     const paidRoster = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
-    const myRegistrations = paidRoster.filter((r) => (r.parent_email ?? "").trim().toLowerCase() === emailLower)
+    const myRegistrations = paidRoster.filter(
+      (r) =>
+        (r.parent_email ?? "").trim().toLowerCase() === emailLower ||
+        (user?.id && r.parent_user_id === user.id)
+    )
     const interestLineup = interestLineupByEvent.get(eventSlug) ?? []
     // Merge interest-form lineup into roster (admin lineups show). Paid regs first; then add lineup entries not already matched by name+weight.
     let roster: HubRegistration[] = [...paidRoster]
