@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEventName, getEventSlugForApi, normalizeEventSlugForLookup } from "@/lib/national-team-events"
 
 const HUB_ACCESS_COOKIE = "nc_hub_access"
+/** Event slugs that accept hub access via code (cookie or national_team_hub_access_grants). Add when adding new tournaments. */
 const NHSCA_HUB_SLUGS = ["nhsca-duals-2026", "nhsca-duals-2026-select"]
 
 export type HubRegistration = {
@@ -64,7 +65,13 @@ export type HubResponse = {
   accessByCode?: boolean
 }
 
-export async function GET(): Promise<NextResponse<HubResponse>> {
+/**
+ * GET: Return hub data if the caller has access.
+ * Access is granted by: (1) paid reg or lineup with matching parent/contact email,
+ * (2) event_workspace_members, (3) admin, or (4) valid hub code via cookie or national_team_hub_access_grants.
+ * For new tournaments, add event slugs to NHSCA_HUB_SLUGS and to the access route's HUB_CODE_EVENT_SLUGS.
+ */
+export async function GET(request: NextRequest): Promise<NextResponse<HubResponse>> {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
@@ -206,13 +213,44 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
       // table or column may not exist
     }
     if (myEventSlugs.size === 0) {
-      const cookieValid = await validateHubCookie()
-      if (cookieValid) {
+      let granted = false
+      try {
+        const { data: grantRow } = await admin
+          .from("national_team_hub_access_grants")
+          .select("code")
+          .eq("user_id", user.id)
+          .gt("expires_at", new Date().toISOString())
+          .limit(1)
+          .maybeSingle()
+        if (grantRow && (grantRow as { code?: string }).code) {
+          const grantCode = ((grantRow as { code: string }).code ?? "").trim().toLowerCase()
+          const { data: codeRows } = await admin
+            .from("national_team_invite_codes")
+            .select("id, code, expires_at, max_uses, uses_count")
+            .in("event_slug", NHSCA_HUB_SLUGS)
+            .limit(50)
+          const codeRow = Array.isArray(codeRows)
+            ? codeRows.find((r) => (r as { code?: string }).code?.trim().toLowerCase() === grantCode)
+            : null
+          if (codeRow) {
+            const cr = codeRow as { expires_at?: string | null; max_uses?: number | null; uses_count?: number }
+            const notExpired = !cr.expires_at || new Date(cr.expires_at) >= new Date()
+            const maxUses = cr.max_uses != null ? Number(cr.max_uses) : null
+            const usesCount = Number(cr.uses_count) ?? 0
+            const underLimit = maxUses == null || usesCount < maxUses
+            if (notExpired && underLimit) granted = true
+          }
+        }
+      } catch {
+        // Table may not exist yet; fall back to cookie
+      }
+      if (!granted) granted = await validateHubCookie()
+      if (granted) {
         accessByCode = true
         eventSlugsToShow = [...NHSCA_HUB_SLUGS]
       } else {
         const sampleParentEmails = paidRegs.slice(0, 5).map((r) => (r.parent_email ?? "").trim())
-        console.warn("[RecruitNC] hub GET: logged-in user has no matching reg and no cookie", {
+        console.warn("[RecruitNC] hub GET: logged-in user has no matching reg and no grant/cookie", {
           userEmail: user?.email?.trim().toLowerCase(),
           paidRegCount: paidRegs.length,
           sampleParentEmails,

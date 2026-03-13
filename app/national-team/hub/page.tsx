@@ -75,15 +75,17 @@ export default function NationalTeamHubPage() {
   const events = data?.events ?? []
   const eventSlugs = events.map((e) => e.eventSlug)
 
+  const HUB_API = "/api/national-team/hub"
+
   const refetchHub = useCallback(() => {
-    fetch("/api/national-team/hub", { credentials: "include" })
+    fetch(HUB_API, { credentials: "include" })
       .then((r) => r.json())
       .then(setData)
       .catch(() => {})
   }, [])
 
   useEffect(() => {
-    fetch("/api/national-team/hub", { credentials: "include" })
+    fetch(HUB_API, { credentials: "include" })
       .then((r) => r.json())
       .then(setData)
       .catch(() => setData({ allowed: false, reason: "no_access" }))
@@ -195,7 +197,10 @@ export default function NationalTeamHubPage() {
                   })
                   const json = await res.json().catch(() => ({}))
                   if (res.ok && json.success) {
-                    window.location.href = "/national-team/hub"
+                    // Brief delay so the browser commits the Set-Cookie from the response, then full navigation
+                    setTimeout(() => {
+                      window.location.href = "/national-team/hub"
+                    }, 200)
                     return
                   }
                   setHubAccessError(json.error || "Invalid code. Try again.")
