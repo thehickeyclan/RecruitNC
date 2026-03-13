@@ -24,7 +24,7 @@ import {
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Pause, Ban, Upload, X } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Pause, Ban, Upload, X, LayoutDashboard } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 
@@ -75,6 +75,8 @@ export function ProfileClient() {
   const [athleteSearchLoading, setAthleteSearchLoading] = useState(false)
   const [linkAthleteLoading, setLinkAthleteLoading] = useState<string | null>(null)
   const [headshotUploading, setHeadshotUploading] = useState(false)
+  const [eventHubs, setEventHubs] = useState<{ id: string; slug: string; name: string; href: string }[]>([])
+  const [eventHubsLoading, setEventHubsLoading] = useState(true)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -83,12 +85,27 @@ export function ProfileClient() {
       fetchProfile()
       fetchBlueMemberships()
       fetchLinkedAthletes()
+      fetchEventHubs()
     } else if (!authLoading && !isAuthenticated) {
       setIsLoading(false)
       setBlueLoading(false)
       setLinkedLoading(false)
+      setEventHubsLoading(false)
     }
   }, [authLoading, isAuthenticated])
+
+  const fetchEventHubs = async () => {
+    setEventHubsLoading(true)
+    try {
+      const res = await fetch("/api/communities/hubs", { credentials: "include" })
+      const data = await res.json().catch(() => ({}))
+      setEventHubs(data.hubs ?? [])
+    } catch {
+      setEventHubs([])
+    } finally {
+      setEventHubsLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!profile || linkedLoading) return
@@ -690,6 +707,43 @@ export function ProfileClient() {
                 )}
                 {profile.cell_phone?.trim() && profile.bio?.trim() && (linkedAthletes.length === 0 || linkedAthletes.every((a) => a.profileVerified)) && (blueMemberships.length > 0 || linkedAthletes.length > 0) && (
                   <p className="text-gray-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Event hubs — National Team hubs this user belongs to (paid reg or workspace member) */}
+            <Card className="border-[#003366]/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-[#002147]">
+                  <LayoutDashboard className="h-5 w-5" />
+                  Event hubs
+                </CardTitle>
+                <CardDescription>Roster, gear sizes, and team chat for events you’re registered for</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {eventHubsLoading ? (
+                  <p className="text-sm text-gray-500 flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading…
+                  </p>
+                ) : eventHubs.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    When you register for a National Team event (e.g. NHSCA Duals), the hub will appear here and in the nav under Workspace.
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {eventHubs.map((hub) => (
+                      <li key={hub.id}>
+                        <a
+                          href={hub.href}
+                          className="inline-flex items-center gap-2 text-sm font-medium text-[#003366] hover:underline"
+                        >
+                          {hub.name}
+                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </CardContent>
             </Card>

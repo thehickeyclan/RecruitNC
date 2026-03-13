@@ -109,13 +109,16 @@ export default function NationalTeamHubPage() {
       .catch(() => {})
   }, [openMode, getHubApiUrl, hubFetchOptions])
 
-  // Open link (no auth): fetch public roster and show full hub.
+  // Open link (no auth): fetch public roster and show full hub. Never show code form — on error show hub with empty roster.
   useEffect(() => {
     if (!openMode) return
     fetch("/api/national-team/hub/open")
-      .then((r) => r.json())
-      .then((res) => setData({ allowed: true, events: res.events ?? [], accessByCode: true }))
-      .catch(() => setData({ allowed: false, reason: "no_access" }))
+      .then((r) => {
+        if (r.ok) return r.json().then((res) => ({ events: res?.events ?? [] }))
+        return { events: [] }
+      })
+      .then(({ events }) => setData({ allowed: true, events, accessByCode: true }))
+      .catch(() => setData({ allowed: true, events: [], accessByCode: true }))
       .finally(() => setLoading(false))
   }, [openMode])
 
@@ -557,6 +560,20 @@ export default function NationalTeamHubPage() {
               </Card>
             )}
           </>
+        ) : openMode && events.length === 0 ? (
+          <Card id="roster" className="scroll-mt-24 overflow-hidden rounded-2xl border-2 border-[#003366]/30 bg-white shadow-lg">
+            <CardHeader className="bg-gradient-to-b from-[#003366]/15 to-[#003366]/5 border-b-2 border-[#003366]/20">
+              <CardTitle className="text-[#002147]">Roster &amp; gear</CardTitle>
+              <CardDescription className="text-gray-600">
+                Roster could not be loaded. Make sure you’re using the correct link (it should include <code className="rounded bg-gray-100 px-1">?open=1</code>). Then try refreshing the page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <Button onClick={() => refetchHub()} variant="outline" className="border-[#003366]/30 text-[#003366] hover:bg-[#003366]/5">
+                Retry loading roster
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           (() => {
             type Section =

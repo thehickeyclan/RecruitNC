@@ -736,12 +736,26 @@ export async function POST(request: NextRequest) {
           })
         }
         if (totalCents > 0) {
+          const parentEmail = (reg.parent_email ?? "").trim().toLowerCase()
+          let parentUserId: string | null = null
+          if (parentEmail) {
+            const { data: profile } = await admin
+              .from("user_profiles")
+              .select("user_id")
+              .ilike("email", parentEmail)
+              .limit(1)
+              .maybeSingle()
+            if (profile && (profile as { user_id?: string }).user_id) {
+              parentUserId = (profile as { user_id: string }).user_id
+            }
+          }
           await admin
             .from("national_team_event_registrations")
             .update({
               status: "paid",
               order_id: orderIdToUse,
               stripe_session_id: session.id,
+              ...(parentUserId ? { parent_user_id: parentUserId } : {}),
               updated_at: new Date().toISOString(),
             })
             .eq("id", registrationId)

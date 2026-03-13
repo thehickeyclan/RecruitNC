@@ -33,13 +33,21 @@ export async function GET() {
   const toCanonical = (slug: string) => getEventSlugForApi(slug || "").trim() || slug
   const eventSlugs = new Set<string>()
 
-  // From paid registrations (parent_email match)
-  const { data: regs } = await admin
+  // From paid registrations (parent_email or parent_user_id match — same rules as hub-access)
+  const { data: regsByUserId } = await admin
+    .from("national_team_event_registrations")
+    .select("event_slug")
+    .eq("status", "paid")
+    .eq("parent_user_id", user.id)
+  for (const r of regsByUserId ?? []) {
+    eventSlugs.add(toCanonical((r as { event_slug: string }).event_slug))
+  }
+  const { data: regsByEmail } = await admin
     .from("national_team_event_registrations")
     .select("event_slug")
     .eq("status", "paid")
     .ilike("parent_email", emailLower)
-  for (const r of regs ?? []) {
+  for (const r of regsByEmail ?? []) {
     eventSlugs.add(toCanonical((r as { event_slug: string }).event_slug))
   }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findAndEnrichAthlete, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 
@@ -44,6 +45,14 @@ export async function POST(request: NextRequest) {
     }
 
     const admin = createAdminClient()
+    let parentUserId: string | null = null
+    try {
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.id) parentUserId = user.id
+    } catch {
+      // auth optional
+    }
 
     const { data: inviteRow, error: inviteError } = await admin
       .from("national_team_invite_codes")
@@ -74,26 +83,29 @@ export async function POST(request: NextRequest) {
     const regFeeCents = totalCents
     const apparelFeeCents = 0
 
+    const insertPayload: Record<string, unknown> = {
+      event_slug: eventSlug,
+      athlete_first_name: athleteFirstName,
+      athlete_last_name: athleteLastName,
+      athlete_email: athleteEmail,
+      athlete_phone: athletePhone,
+      parent_email: parentEmail,
+      parent_name: parentName,
+      high_school: highSchool,
+      club_team: clubTeam,
+      graduation_year: graduationYear,
+      primary_weight: primaryWeight,
+      secondary_weight: secondaryWeight,
+      reg_fee_cents: regFeeCents,
+      apparel_fee_cents: apparelFeeCents,
+      status: "pending",
+      updated_at: new Date().toISOString(),
+    }
+    if (parentUserId) insertPayload.parent_user_id = parentUserId
+
     const { data: reg, error: regError } = await admin
       .from("national_team_event_registrations")
-      .insert({
-        event_slug: eventSlug,
-        athlete_first_name: athleteFirstName,
-        athlete_last_name: athleteLastName,
-        athlete_email: athleteEmail,
-        athlete_phone: athletePhone,
-        parent_email: parentEmail,
-        parent_name: parentName,
-        high_school: highSchool,
-        club_team: clubTeam,
-        graduation_year: graduationYear,
-        primary_weight: primaryWeight,
-        secondary_weight: secondaryWeight,
-        reg_fee_cents: regFeeCents,
-        apparel_fee_cents: apparelFeeCents,
-        status: "pending",
-        updated_at: new Date().toISOString(),
-      })
+      .insert(insertPayload)
       .select("id")
       .single()
 

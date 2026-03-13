@@ -17,7 +17,7 @@ export async function GET() {
     const admin = createAdminClient()
     const { data: rows, error } = await admin
       .from("national_team_event_registrations")
-      .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, shirt_size, singlet_size, shorts_size, updated_at")
+      .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
       .eq("status", "paid")
       .in("event_slug", NHSCA_SLUGS)
       .order("event_slug")
