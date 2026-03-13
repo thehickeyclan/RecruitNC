@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, Star, Target, Loader2, Users, Calendar } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 import { useEffect, useState } from "react"
 import { getTournaments, type Tournament, getTournamentResults } from "@/lib/nc-united-api"
 
@@ -226,8 +227,13 @@ export default function NCUnitedNationalTeam() {
                         <span className="text-[#002147] font-semibold"> · {nhscaLineupCount} on lineup</span>
                       )}
                     </p>
-                    <span className="mt-3 inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#002147]/80 px-4 py-2 text-sm font-semibold text-[#D3B574] cursor-default">
-                      Access by link only
+                    <span className="mt-3 inline-block">
+                      <HardLink
+                        href="/national-team/nhsca-duals-2026/access"
+                        className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#002147] px-4 py-2 text-sm font-semibold text-[#D3B574] hover:bg-[#003366] transition-colors"
+                      >
+                        Team hub — enter access code
+                      </HardLink>
                     </span>
                   </div>
                   <div className="flex flex-col items-center md:items-end shrink-0">
