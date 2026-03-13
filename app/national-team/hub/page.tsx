@@ -195,8 +195,7 @@ export default function NationalTeamHubPage() {
                   })
                   const json = await res.json().catch(() => ({}))
                   if (res.ok && json.success) {
-                    refetchHub()
-                    window.location.reload()
+                    window.location.href = "/national-team/hub"
                     return
                   }
                   setHubAccessError(json.error || "Invalid code. Try again.")

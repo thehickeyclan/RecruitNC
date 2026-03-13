@@ -74,24 +74,29 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     const cookieStore = await cookies()
     const hubCode = cookieStore.get(HUB_ACCESS_COOKIE)?.value?.trim()
     if (!hubCode) return false
+    const hubCodeLower = hubCode.toLowerCase()
     const adminCheck = createAdminClient()
     const { data: codeRows, error: codeErr } = await adminCheck
       .from("national_team_invite_codes")
-      .select("id, expires_at, max_uses, uses_count")
+      .select("id, code, expires_at, max_uses, uses_count")
       .in("event_slug", NHSCA_HUB_SLUGS)
-      .eq("code", hubCode)
-      .limit(1)
-    const codeRow = Array.isArray(codeRows) ? codeRows[0] : null
-    if (codeErr || !codeRow) return false
-    if (codeRow.expires_at && new Date(codeRow.expires_at) < new Date()) return false
-    const maxUses = codeRow.max_uses != null ? Number(codeRow.max_uses) : null
-    const usesCount = Number(codeRow.uses_count) ?? 0
+      .limit(50)
+    const codeRow =
+      codeErr || !Array.isArray(codeRows)
+        ? null
+        : codeRows.find((r) => (r as { code?: string }).code?.trim().toLowerCase() === hubCodeLower)
+    if (!codeRow) return false
+    const row = codeRow as { expires_at?: string | null; max_uses?: number | null; uses_count?: number }
+    if (row.expires_at && new Date(row.expires_at) < new Date()) return false
+    const maxUses = row.max_uses != null ? Number(row.max_uses) : null
+    const usesCount = Number(row.uses_count) ?? 0
     if (maxUses != null && usesCount >= maxUses) return false
     return true
   }
 
   if (authError || !user?.email) {
     if (!(await validateHubCookie())) {
+      console.warn("[RecruitNC] hub GET: no user and no valid cookie", { authError: !!authError, hasUser: !!user, hasEmail: !!user?.email })
       return NextResponse.json({ allowed: false, reason: "signed_out" })
     }
     accessByCode = true
@@ -168,10 +173,10 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     const fromRegs = [...new Set(paidRegs.map((r) => toCanonical(r.event_slug)))]
     eventSlugsToShow = fromRegs.length > 0 ? fromRegs : ["nhsca-duals-2026", "nhsca-duals-2026-select"]
   } else if (user?.email) {
-    const emailLower = user.email.toLowerCase()
+    const emailLower = (user.email ?? "").trim().toLowerCase()
     const myEventSlugs = new Set(
       paidRegs
-        .filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+        .filter((r) => (r.parent_email ?? "").trim().toLowerCase() === emailLower)
         .map((r) => toCanonical(r.event_slug))
     )
     try {
@@ -185,12 +190,33 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     } catch {
       // event_workspace_members table may not exist
     }
+    // Lineup-only (interest form): grant hub access if their email matches contact email on any NHSCA lineup row
+    try {
+      const { data: lineupRows } = await admin
+        .from("national_team_interest_forms")
+        .select("id, email, nhsca_duals_team")
+        .in("nhsca_duals_team", ["team_1", "team_2"])
+      for (const row of lineupRows ?? []) {
+        const r = row as { email?: string | null; nhsca_duals_team?: string | null }
+        if ((r.email ?? "").trim().toLowerCase() === emailLower) {
+          myEventSlugs.add(r.nhsca_duals_team === "team_2" ? "nhsca-duals-2026-select" : "nhsca-duals-2026")
+        }
+      }
+    } catch {
+      // table or column may not exist
+    }
     if (myEventSlugs.size === 0) {
       const cookieValid = await validateHubCookie()
       if (cookieValid) {
         accessByCode = true
         eventSlugsToShow = [...NHSCA_HUB_SLUGS]
       } else {
+        const sampleParentEmails = paidRegs.slice(0, 5).map((r) => (r.parent_email ?? "").trim())
+        console.warn("[RecruitNC] hub GET: logged-in user has no matching reg and no cookie", {
+          userEmail: user?.email?.trim().toLowerCase(),
+          paidRegCount: paidRegs.length,
+          sampleParentEmails,
+        })
         return NextResponse.json({ allowed: false, reason: "no_access" })
       }
     } else {
@@ -206,11 +232,11 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
     }
   }
 
-  const emailLower = user?.email?.toLowerCase() ?? ""
+  const emailLower = (user?.email ?? "").trim().toLowerCase()
 
   // Backfill parent_user_id on registrations where current user's email matches parent_email (so workspace membership is stable).
   const myRegIds = paidRegs
-    .filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    .filter((r) => (r.parent_email ?? "").trim().toLowerCase() === emailLower)
     .map((r) => r.id)
   if (myRegIds.length > 0 && user?.id) {
     await admin
@@ -512,7 +538,7 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
 
   const events: HubEvent[] = eventSlugsToShow.map((eventSlug) => {
     const paidRoster = paidRegs.filter((r) => toCanonical(r.event_slug) === eventSlug)
-    const myRegistrations = paidRoster.filter((r) => (r.parent_email ?? "").toLowerCase() === emailLower)
+    const myRegistrations = paidRoster.filter((r) => (r.parent_email ?? "").trim().toLowerCase() === emailLower)
     const interestLineup = interestLineupByEvent.get(eventSlug) ?? []
     // Merge interest-form lineup into roster (admin lineups show). Paid regs first; then add lineup entries not already matched by name+weight.
     let roster: HubRegistration[] = [...paidRoster]

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { cookies } from "next/headers"
 
 export const dynamic = "force-dynamic"
 
@@ -21,16 +20,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Access code is required." }, { status: 400 })
   }
 
+  const codeLower = code.toLowerCase()
   const admin = createAdminClient()
   const { data: rows, error } = await admin
     .from("national_team_invite_codes")
-    .select("id, expires_at, max_uses, uses_count")
+    .select("id, code, expires_at, max_uses, uses_count")
     .in("event_slug", NHSCA_SLUGS)
-    .eq("code", code)
-    .limit(1)
+    .limit(50)
 
-  const row = Array.isArray(rows) ? rows[0] : null
-  if (error || !row) {
+  const row = error
+    ? null
+    : (Array.isArray(rows) ? rows : []).find(
+        (r) => (r as { code?: string }).code?.trim().toLowerCase() === codeLower
+      ) as { id: string; code?: string; expires_at?: string | null; max_uses?: number | null; uses_count?: number } | undefined
+  if (!row) {
     return NextResponse.json({ success: false, error: "Invalid access code." }, { status: 400 })
   }
   if (row.expires_at && new Date(row.expires_at) < new Date()) {
@@ -42,14 +45,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "This code has reached its limit." }, { status: 400 })
   }
 
-  const cookieStore = await cookies()
-  cookieStore.set(HUB_COOKIE_NAME, code, {
+  const valueToStore = (row.code ?? code).trim()
+  const response = NextResponse.json({ success: true })
+  response.cookies.set(HUB_COOKIE_NAME, valueToStore, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: HUB_COOKIE_MAX_AGE,
   })
-
-  return NextResponse.json({ success: true })
+  return response
 }
