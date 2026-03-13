@@ -272,29 +272,22 @@ export default function NationalTeamHubPage() {
             <p className="text-[#D3B574] mt-1 sm:mt-2 text-sm sm:text-base md:text-lg font-medium">Virginia Beach Sports Center</p>
           </div>
         </div>
-        <div className="w-full bg-[#002147] px-4 py-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
-          <Button asChild variant="outline" size="sm" className="rounded-xl border-[#D3B574]/60 text-[#D3B574] hover:bg-[#D3B574]/20 hover:text-white font-medium shrink-0">
-            <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
-              NHSCA Official Page
-              <ExternalLink className="ml-2 h-4 w-4" />
-            </a>
-          </Button>
-          <a href="/national-team" className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-white/40 px-4 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors shrink-0">
-            ← Back to National Team
+        <div className="w-full bg-[#002147] px-4 py-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+          <a href="/national-team" className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-white/40 px-3 py-2 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white transition-colors shrink-0">
+            ← Back
+          </a>
+          <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[36px] items-center justify-center rounded-lg border border-[#D3B574]/60 px-3 py-2 text-sm font-medium text-[#D3B574] hover:bg-[#D3B574]/20 transition-colors shrink-0">
+            NHSCA Official <ExternalLink className="ml-1 h-3.5 w-3.5" />
+          </a>
+          <a href="https://groupme.com/join_group/113432813/Vdugtepr" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-[#D3B574] px-3 py-2 text-sm font-semibold text-[#0B2545] hover:bg-[#E5C97A] transition-colors shrink-0">
+            Join GroupMe <ExternalLink className="ml-1 h-3.5 w-3.5" />
           </a>
         </div>
-        {/* GroupMe — team chat: stack on mobile, extra right padding so floating chat button doesn’t cover */}
-        <div className="w-full bg-[#D3B574] px-4 pr-24 sm:pr-4 py-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3 sm:gap-2">
-          <span className="text-[#0B2545] font-semibold text-sm sm:text-base">Team chat:</span>
-          <a
-            href="https://groupme.com/join_group/113432813/Vdugtepr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-[#0B2545] px-4 py-2.5 text-sm font-semibold text-[#D3B574] hover:bg-[#0B2545]/90 hover:text-white transition-colors w-full sm:w-auto"
-          >
-            Join NHSCA Duals 2026 on GroupMe
-            <ExternalLink className="ml-2 h-4 w-4 shrink-0" />
-          </a>
+        <div className="w-full bg-[#002147]/95 px-4 py-2.5 flex flex-wrap items-center justify-center gap-2 border-t border-white/10">
+          <a href="#roster" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">Roster &amp; gear</a>
+          <a href="#event-details" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">Event details</a>
+          <a href="#qa" className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20">Q&amp;A</a>
+          <a href="/national-team#archives" className="rounded-md bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 hover:bg-white/10">Past teams</a>
         </div>
       </section>
 
@@ -331,34 +324,6 @@ export default function NationalTeamHubPage() {
             </div>
           )}
         </section>
-
-        {/* Key links */}
-        <HubCollapsibleSection dark title="Key links" defaultOpen className="border-white/20 bg-white/5">
-          <div className="px-5 pb-5 pt-0 flex flex-wrap justify-center gap-3">
-            <Button asChild className="rounded-xl bg-[#D3B574] hover:bg-[#E5C97A] text-[#0B2545] font-semibold">
-              <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer">
-                NHSCA Official Page
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
-            <Button asChild variant="outline" className="rounded-xl border-2 border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/20 font-semibold">
-              <a href="/national-team#archives">Read about past teams</a>
-            </Button>
-          </div>
-        </HubCollapsibleSection>
-
-        {/* In-page nav — minimal, in reading order */}
-        <nav className="flex flex-wrap items-center justify-center gap-2 text-sm" aria-label="Jump to section">
-          <a href="#roster" className="rounded-lg bg-[#D3B574]/25 px-4 py-2.5 text-[#D3B574] font-semibold hover:bg-[#D3B574]/35">
-            Roster &amp; gear
-          </a>
-          <a href="#event-details" className="rounded-lg bg-white/10 px-4 py-2.5 text-white font-medium hover:bg-white/20">
-            Event details
-          </a>
-          <a href="#qa" className="rounded-lg bg-white/10 px-4 py-2.5 text-white font-medium hover:bg-white/20">
-            Q&amp;A
-          </a>
-        </nav>
 
         {/* Hotel */}
         {events.length > 0 && (
