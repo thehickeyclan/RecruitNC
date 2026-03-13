@@ -69,12 +69,11 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   let accessByCode = false
-  if (authError || !user?.email) {
+
+  async function validateHubCookie(): Promise<boolean> {
     const cookieStore = await cookies()
     const hubCode = cookieStore.get(HUB_ACCESS_COOKIE)?.value?.trim()
-    if (!hubCode) {
-      return NextResponse.json({ allowed: false, reason: "signed_out" })
-    }
+    if (!hubCode) return false
     const adminCheck = createAdminClient()
     const { data: codeRows, error: codeErr } = await adminCheck
       .from("national_team_invite_codes")
@@ -83,16 +82,17 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
       .eq("code", hubCode)
       .limit(1)
     const codeRow = Array.isArray(codeRows) ? codeRows[0] : null
-    if (codeErr || !codeRow) {
-      return NextResponse.json({ allowed: false, reason: "no_access" })
-    }
-    if (codeRow.expires_at && new Date(codeRow.expires_at) < new Date()) {
-      return NextResponse.json({ allowed: false, reason: "no_access" })
-    }
+    if (codeErr || !codeRow) return false
+    if (codeRow.expires_at && new Date(codeRow.expires_at) < new Date()) return false
     const maxUses = codeRow.max_uses != null ? Number(codeRow.max_uses) : null
     const usesCount = Number(codeRow.uses_count) ?? 0
-    if (maxUses != null && usesCount >= maxUses) {
-      return NextResponse.json({ allowed: false, reason: "no_access" })
+    if (maxUses != null && usesCount >= maxUses) return false
+    return true
+  }
+
+  if (authError || !user?.email) {
+    if (!(await validateHubCookie())) {
+      return NextResponse.json({ allowed: false, reason: "signed_out" })
     }
     accessByCode = true
   }
@@ -186,11 +186,24 @@ export async function GET(): Promise<NextResponse<HubResponse>> {
       // event_workspace_members table may not exist
     }
     if (myEventSlugs.size === 0) {
+      const cookieValid = await validateHubCookie()
+      if (cookieValid) {
+        accessByCode = true
+        eventSlugsToShow = [...NHSCA_HUB_SLUGS]
+      } else {
+        return NextResponse.json({ allowed: false, reason: "no_access" })
+      }
+    } else {
+      eventSlugsToShow = [...myEventSlugs]
+    }
+  } else {
+    const cookieValid = await validateHubCookie()
+    if (cookieValid) {
+      accessByCode = true
+      eventSlugsToShow = [...NHSCA_HUB_SLUGS]
+    } else {
       return NextResponse.json({ allowed: false, reason: "no_access" })
     }
-    eventSlugsToShow = [...myEventSlugs]
-  } else {
-    return NextResponse.json({ allowed: false, reason: "no_access" })
   }
 
   const emailLower = user?.email?.toLowerCase() ?? ""
