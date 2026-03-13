@@ -64,13 +64,7 @@ export default function NationalTeamHubPage() {
   const { user, session, profile, isLoading: authLoading } = useAuth()
   const [data, setData] = useState<HubResponse | null>(null)
   const [loading, setLoading] = useState(true)
-  const [regPageUrl, setRegPageUrl] = useState("")
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ready: false })
-  const [addFamilySearchQuery, setAddFamilySearchQuery] = useState("")
-  const [addFamilySearchResults, setAddFamilySearchResults] = useState<SearchUser[]>([])
-  const [addFamilySearching, setAddFamilySearching] = useState(false)
-  const [addFamilyAddingId, setAddFamilyAddingId] = useState<string | null>(null)
-  const [addFamilyMessage, setAddFamilyMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [hubAccessCode, setHubAccessCode] = useState("")
   const [hubAccessSubmitting, setHubAccessSubmitting] = useState(false)
   const [hubAccessError, setHubAccessError] = useState<string | null>(null)
@@ -142,10 +136,6 @@ export default function NationalTeamHubPage() {
       .then(setData)
       .catch(() => {})
   }, [openMode, authLoading, loading, data?.allowed, user, session?.access_token, getHubApiUrl, hubFetchOptions])
-
-  useEffect(() => {
-    setRegPageUrl(typeof window !== "undefined" ? `${window.location.origin}${REG_PAGE_PATH}` : "")
-  }, [])
 
   useEffect(() => {
     const tick = () => {
@@ -399,21 +389,15 @@ export default function NationalTeamHubPage() {
           </div>
         </HubCollapsibleSection>
 
-        {/* In-page nav */}
-        <nav className="flex flex-wrap items-center justify-center gap-3 text-sm" aria-label="Jump to section">
-          <a href="#coaches" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
-            Coaches
-          </a>
-          <a href="#event-details" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
-            Event details
-          </a>
-          <a href="#roster" className="rounded-full bg-[#D3B574]/20 px-4 py-2 text-[#D3B574] font-medium hover:bg-[#D3B574]/30">
+        {/* In-page nav — minimal, in reading order */}
+        <nav className="flex flex-wrap items-center justify-center gap-2 text-sm" aria-label="Jump to section">
+          <a href="#roster" className="rounded-lg bg-[#D3B574]/25 px-4 py-2.5 text-[#D3B574] font-semibold hover:bg-[#D3B574]/35">
             Roster &amp; gear
           </a>
-          <a href="#schedule" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
-            Schedule
+          <a href="#event-details" className="rounded-lg bg-white/10 px-4 py-2.5 text-white font-medium hover:bg-white/20">
+            Event details
           </a>
-          <a href="#qa" className="rounded-full bg-white/10 px-4 py-2 text-white font-medium hover:bg-white/20">
+          <a href="#qa" className="rounded-lg bg-white/10 px-4 py-2.5 text-white font-medium hover:bg-white/20">
             Q&amp;A
           </a>
         </nav>
@@ -425,73 +409,6 @@ export default function NationalTeamHubPage() {
               <p className="text-sm text-white/90">
                 Hotel info coming soon; we&apos;ll post in the Hub and in GroupMe.
               </p>
-            </div>
-          </HubCollapsibleSection>
-        )}
-
-        {/* Add family members — registration link, invite code, and add-by-search (primary only) */}
-        {events.length > 0 && (
-          <HubCollapsibleSection dark title="Add family members" className="border-white/20 bg-white/5">
-            <div className="px-5 pb-5 pt-0 space-y-5">
-              {data?.isPrimaryRegistrant ? (
-              <>
-                <div>
-                  <p className="text-sm font-medium text-[#D3B574] mb-1">Share link & invite code</p>
-                  <p className="text-sm text-white/80 mb-2">Send other parents the registration link and an invite code so they can register and pay. They'll then see this hub and GroupMe.
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-mono text-white/90 bg-white/10 px-3 py-2 rounded-lg border border-white/20 break-all">
-                      {regPageUrl || REG_PAGE_PATH}
-                    </span>
-                    {data?.isAdmin && (
-                      <Button asChild size="sm" variant="outline" className="rounded-lg border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/20 font-medium shrink-0">
-                        <a href="/admin/national-team/invite-codes">Get invite codes</a>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-white/20">
-                  <p className="text-sm font-medium text-[#D3B574] mb-1">Add existing RecruitNC user</p>
-                  <p className="text-sm text-white/80 mb-2">Someone already on RecruitNC? Search and add them so they see this hub and GroupMe. <a href="/auth/signup" className="text-[#D3B574] hover:underline">No account — sign up free</a>.</p>
-                  <Input
-                    type="text"
-                    placeholder="Search by name or email…"
-                    value={addFamilySearchQuery}
-                    onChange={(e) => setAddFamilySearchQuery(e.target.value)}
-                    className="w-full max-w-sm mb-2 bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                  />
-                  <div className="max-h-40 overflow-y-auto border border-white/20 rounded-lg p-2 space-y-1 bg-white/5">
-                    {addFamilySearching && <p className="text-sm text-white/60 py-2 text-center">Searching…</p>}
-                    {!addFamilySearching && addFamilySearchQuery.trim().length >= 2 && addFamilySearchResults.length === 0 && (
-                      <p className="text-sm text-white/60 py-2 text-center">No users found.</p>
-                    )}
-                    {!addFamilySearching &&
-                      addFamilySearchResults.map((u) => (
-                        <button
-                          key={u.user_id}
-                          type="button"
-                          onClick={() => handleAddFamilyMember(u.user_id)}
-                          disabled={!!addFamilyAddingId}
-                          className="w-full text-left px-3 py-2 rounded-md hover:bg-white/10 text-sm flex flex-col gap-0.5 border border-transparent hover:border-white/10 text-white"
-                        >
-                          <span className="font-medium">{u.display_name}</span>
-                          {u.email && <span className="text-xs text-white/60">{u.email}</span>}
-                          {addFamilyAddingId === u.user_id && <span className="text-xs text-[#D3B574]">Adding…</span>}
-                        </button>
-                      ))}
-                  </div>
-                  {addFamilyMessage && (
-                    <p className={`text-sm mt-2 ${addFamilyMessage.type === "success" ? "text-[#86efac]" : "text-[#fca5a5]"}`}>
-                      {addFamilyMessage.text}
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-white/90">
-                You&apos;re viewing this hub as an added family member. Only the person who registered and paid can share the registration link and invite code or add other parents. Ask them to send you the link and a code, or to add you here if you&apos;re on RecruitNC.
-              </p>
-            )}
             </div>
           </HubCollapsibleSection>
         )}
@@ -545,7 +462,7 @@ export default function NationalTeamHubPage() {
                   <div>
                     <p className="text-sm font-medium text-white/80 mb-1">Registration URL</p>
                     <p className="text-sm text-white/70 font-mono bg-white/10 border border-white/20 rounded-lg px-3 py-2 break-all">
-                      {regPageUrl || REG_PAGE_PATH}
+                      {REG_PAGE_PATH}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -680,10 +597,10 @@ export default function NationalTeamHubPage() {
 function NHSCA2026HubInfo() {
   return (
     <div className="overflow-hidden rounded-2xl border border-[#003366]/15 bg-white shadow-md">
-      {/* Hero: logo + event image */}
-      <div className="relative bg-gradient-to-br from-[#002147] to-[#003366]">
+      {/* Hero: logo on solid dark so it always reads well (asset is for dark bg); then event image */}
+      <div className="relative bg-[#0B2545]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 py-5 sm:px-6 sm:py-6">
-          <div className="flex items-center justify-center sm:justify-start">
+          <div className="flex items-center justify-center sm:justify-start min-h-[52px]">
             <Image
               src="/images/nhsca-national-duals-logo.png"
               alt="NHSCA National Duals"
@@ -694,6 +611,8 @@ function NHSCA2026HubInfo() {
           </div>
           <p className="text-center sm:text-right text-white/90 text-sm font-medium">27th Annual · May 23–25, 2026</p>
         </div>
+      </div>
+      <div className="relative bg-gradient-to-br from-[#002147] to-[#003366]">
         <div className="aspect-video w-full max-h-[200px] sm:max-h-[240px] relative bg-[#002147]">
           <Image
             src="/images/nhsca-virginia-beach-arena.png"
@@ -802,45 +721,25 @@ function NHSCA2026HubInfo() {
           </div>
         </div>
 
-        {/* Primary actions: Add to Calendar, Open in Maps, Official site */}
-        <div className="flex flex-wrap gap-3 pt-2">
-          <a
-            href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=NHSCA+National+Duals+2026&dates=20260523/20260526&details=Virginia+Beach+Sports+Center&location=Virginia+Beach+Sports+Center,+VA"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#003366] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#002147] focus:outline-none focus:ring-2 focus:ring-[#003366]/50 focus:ring-offset-2"
-          >
-            <Calendar className="h-4 w-4" /> Add to Calendar
+        {/* Links: one compact row */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm border-t border-gray-100 pt-4">
+          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=NHSCA+National+Duals+2026&dates=20260523/20260526&details=Virginia+Beach+Sports+Center&location=Virginia+Beach+Sports+Center,+VA" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
+            <Calendar className="h-3.5 w-3.5" /> Add to Calendar
           </a>
-          <a
-            href="https://www.google.com/maps/search/?api=1&query=Virginia+Beach+Sports+Center"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
-          >
-            <MapPin className="h-4 w-4" /> Open in Maps
+          <a href="https://www.google.com/maps/search/?api=1&query=Virginia+Beach+Sports+Center" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
+            <MapPin className="h-3.5 w-3.5" /> Maps
           </a>
-          <a
-            href="https://nhsca-events.com/national-duals/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
-          >
-            NHSCA Official Page <ExternalLink className="h-4 w-4" />
+          <a href="https://nhsca-events.com/national-duals/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
+            Official site <ExternalLink className="h-3 w-3" />
           </a>
-          <a
-            href="/national-team/nhsca-2025-results"
-            className="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[#003366]/30 bg-white px-5 py-2.5 text-sm font-medium text-[#003366] transition-colors hover:bg-[#003366]/5 focus:outline-none focus:ring-2 focus:ring-[#003366]/30 focus:ring-offset-2"
-          >
-            <History className="h-4 w-4" /> 2025 results
+          <a href="/national-team/nhsca-2025-results" className="inline-flex items-center gap-1.5 font-medium text-[#003366] hover:underline">
+            <History className="h-3.5 w-3.5" /> 2025 results
           </a>
         </div>
       </div>
     </div>
   )
 }
-
-type SearchUser = { user_id: string; email: string | null; display_name: string }
 
 type HubTab = "dashboard" | "updates" | "chat"
 

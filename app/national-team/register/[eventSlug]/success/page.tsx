@@ -53,48 +53,51 @@ export default function NationalTeamRegisterSuccessPage() {
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
             <p className="text-sm text-gray-700">
-              Payment successful. You&apos;re on the <strong>{rosterLabel} roster</strong>. Use the hub below to update gear sizes, join the team chat, and see key links.
+              Payment successful. You&apos;re on the <strong>{rosterLabel} roster</strong>. Go to the team hub (link below) to update your gear sizes and join GroupMe.
             </p>
 
-            <div className="rounded-lg bg-[#003366]/10 border border-[#003366]/20 p-4">
-              <p className="text-sm font-semibold text-[#002147] mb-2 flex items-center gap-2">
+            <div className="rounded-lg bg-[#003366]/10 border-2 border-[#003366]/25 p-4">
+              <p className="text-sm font-semibold text-[#002147] mb-1 flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
-                Your team hub
+                Team hub — do this next
               </p>
-              <p className="text-sm text-gray-700 mb-4">
-                The hub is your one place for roster, gear sizes, GroupMe, and updates. You can open it from the button below or anytime from <strong>My Profile → Event hubs</strong>.
+              <p className="text-sm text-gray-600 mb-3">
+                Use this link for roster, gear sizes, and GroupMe. Bookmark it or find it anytime under <strong>My Profile → Event hubs</strong>.
+              </p>
+              <p className="text-xs font-mono text-gray-500 mb-3 break-all bg-white/80 rounded px-2 py-1.5 border border-[#003366]/10">
+                /national-team/hub
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild className="w-full bg-[#003366] hover:bg-[#003366]/90" size="lg">
                   <HardLink href="/national-team/hub">
-                    {isNhsca2026 ? "Open NHSCA 2026 Team Hub" : "Open Team Hub"}
+                    Go to Team Hub — update sizes &amp; join GroupMe
                   </HardLink>
                 </Button>
                 <Button asChild variant="outline" className="w-full" size="sm">
                   <a href="/profile" className="inline-flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Go to My Profile (Event hubs)
+                    My Profile (Event hubs)
                   </a>
                 </Button>
               </div>
             </div>
 
             <div className="border-t border-gray-200 pt-4">
-              <p className="text-sm font-semibold text-gray-900 mb-3">What to do now</p>
-              <ol className="space-y-3 text-sm text-gray-700 list-decimal list-inside">
+              <p className="text-sm font-semibold text-gray-900 mb-3">On the hub you&apos;ll:</p>
+              <ul className="space-y-2 text-sm text-gray-700 list-none">
                 <li className="flex items-start gap-2">
                   <Shirt className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Update gear sizes</strong> on the hub (Singlet, Shorts, Shirt) — no later than {GEAR_DEADLINE}.</span>
+                  <span><strong>Update gear sizes</strong> (Singlet, Shorts, Shirt) — due by {GEAR_DEADLINE}.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <MessageCircle className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Join the team channel</strong> — open the hub and use the GroupMe link to say hello.</span>
+                  <span><strong>Join GroupMe</strong> — team chat link is on the hub.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Hotel className="h-4 w-4 shrink-0 text-[#003366] mt-0.5" />
-                  <span><strong>Book travel</strong> — hotel details will be shared in the hub and team chat.</span>
+                  <span><strong>See schedule &amp; travel</strong> — venue, weigh-ins, hotel info.</span>
                 </li>
-              </ol>
+              </ul>
             </div>
 
             <div className="flex flex-col gap-2 pt-2">
