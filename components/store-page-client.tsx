@@ -155,9 +155,9 @@ export function StorePageClient({ initialProducts }: StorePageClientProps) {
           )
         }}
       />
+      <GearUpCarouselBanner />
       <ShoeRaffleHero />
       <FeaturedProductsSection products={initialProducts} />
-      <GearUpCarouselBanner />
 
       <div id="products" className="container mx-auto px-4 py-8">
         <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

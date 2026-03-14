@@ -7,7 +7,7 @@ import { StoreNavLink } from "@/components/store-nav-link"
 export function GearUpCarouselBanner() {
   return (
     <section className="relative w-full overflow-hidden" aria-label="NHSCA wrestling — shop official gear">
-      <div className="relative w-full aspect-[21/9] min-h-[200px] sm:min-h-[240px] md:min-h-[280px] max-h-[420px]">
+      <div className="relative w-full aspect-[21/9] min-h-[280px] sm:min-h-[340px] md:min-h-[400px] lg:min-h-[480px] max-h-[520px] lg:max-h-[600px]">
         <Image
           src="/images/nhsca-store-banner.png"
           alt="NHSCA wrestlers in competition"
