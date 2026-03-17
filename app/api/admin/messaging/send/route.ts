@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const adminUserId = (auth as { user: { id: string } }).user.id
 
-  let body: { profile?: string; group?: string; subject?: string; body?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
+  let body: { profile?: string; group?: string; subject?: string; body?: string; testEmail?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
   try {
     body = await request.json()
   } catch {
@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
   const group = typeof body.group === "string" ? body.group.trim() || null : null
   const subject = typeof body.subject === "string" ? body.subject.trim() || "Update from RecruitNC" : "Update from RecruitNC"
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
+  const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const channels = body.channels && typeof body.channels === "object"
     ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
     : { inApp: false, email: false, sms: false }
@@ -104,9 +105,14 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const recipients = await getRecipients(admin, profile, group, 5000)
-  if (recipients.length === 0) {
-    return NextResponse.json({ error: "No recipients match the selected audience" }, { status: 400 })
+  let recipients: RecipientRow[]
+  if (testEmail && testEmail.includes("@")) {
+    recipients = [{ user_id: "test", email: testEmail, display_name: "Test", cell_phone: null }]
+  } else {
+    recipients = await getRecipients(admin, profile, group, 5000)
+    if (recipients.length === 0) {
+      return NextResponse.json({ error: "No recipients match the selected audience" }, { status: 400 })
+    }
   }
 
   const htmlBody = markdownToHtml(rawBody)
@@ -118,7 +124,7 @@ export async function POST(request: NextRequest) {
     sms: { sent: 0, failed: 0 },
   }
 
-  if (channels.inApp && group) {
+  if (channels.inApp && group && !testEmail) {
     let threadId: string | null = null
     if (group === "blue") {
       const { data: t } = await admin.from("messaging_threads").select("id").eq("context_type", "program").in("context_id", ["blue", "blue-2026"]).limit(1).maybeSingle()
@@ -155,7 +161,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  if (channels.sms) {
+  if (channels.sms && !testEmail) {
     for (const r of recipients) {
       const e164 = toE164(r.cell_phone)
       if (!e164) continue

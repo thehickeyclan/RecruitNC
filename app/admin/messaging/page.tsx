@@ -34,6 +34,7 @@ export default function AdminMessagingPage() {
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [channels, setChannels] = useState({ inApp: true, email: true, sms: false })
+  const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{ recipientCount: number; result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } } | null>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -467,12 +468,24 @@ export default function AdminMessagingPage() {
                     {loadingRecipients ? <Loader2 className="h-4 w-4 animate-spin" /> : "Refresh count"}
                   </Button>
                 </div>
+
+                <div className="pt-4 border-t border-gray-200 mt-4">
+                  <Label className="text-[#003366]">Test email (optional)</Label>
+                  <Input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    placeholder="e.g. you@example.com — send only to this address"
+                    className="mt-1 max-w-md"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">When set, the blast is sent only to this address (no audience). Use to test before sending to everyone.</p>
+                </div>
               </>
             )}
           </CardContent>
         </Card>
 
-        {count !== null && count > 0 && (
+        {((count !== null && count > 0) || testEmail.trim() !== "") && (
           <Card className="max-w-3xl mt-6 border-[#003366]/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-[#003366]">
@@ -561,6 +574,7 @@ export default function AdminMessagingPage() {
                         group: group === "all" ? undefined : group,
                         subject: subject || "Update from RecruitNC",
                         body: body.trim(),
+                        testEmail: testEmail.trim() || undefined,
                         channels,
                       }),
                     })
