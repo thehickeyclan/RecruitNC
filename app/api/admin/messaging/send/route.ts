@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const adminUserId = (auth as { user: { id: string } }).user.id
 
-  let body: { profile?: string; group?: string; subject?: string; body?: string; testEmail?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
+  let body: { profile?: string; group?: string; subject?: string; body?: string; testEmail?: string; logoVariant?: string; channels?: { inApp?: boolean; email?: boolean; sms?: boolean } } = {}
   try {
     body = await request.json()
   } catch {
@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
   const subject = typeof body.subject === "string" ? body.subject.trim() || "Update from RecruitNC" : "Update from RecruitNC"
   const rawBody = typeof body.body === "string" ? body.body.trim() : ""
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
+  const logoVariant = body.logoVariant === "nc-united" ? "nc-united" : "recruitnc"
   const channels = body.channels && typeof body.channels === "object"
     ? { inApp: !!body.channels.inApp, email: !!body.channels.email, sms: !!body.channels.sms }
     : { inApp: false, email: false, sms: false }
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
   if (channels.email) {
     for (const r of recipients) {
       if (!r.email?.trim()) continue
-      const ok = await sendAdminBlastEmail(r.email.trim(), subject, htmlBody)
+      const ok = await sendAdminBlastEmail(r.email.trim(), subject, htmlBody, logoVariant)
       if (ok.success) result.email.sent++
       else result.email.failed++
     }

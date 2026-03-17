@@ -15,7 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send, Inbox, FolderOpen, Trash2 } from "lucide-react"
+import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send, Inbox, FolderOpen, Trash2, Eye } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
 import type { RecipientRow } from "@/app/api/admin/messaging/recipients/route"
@@ -34,6 +34,7 @@ export default function AdminMessagingPage() {
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [channels, setChannels] = useState({ inApp: true, email: true, sms: false })
+  const [logoVariant, setLogoVariant] = useState<"recruitnc" | "nc-united">("recruitnc")
   const [testEmail, setTestEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState<{ recipientCount: number; result: { inApp?: { sent: boolean; threadId?: string; error?: string }; email: { sent: number; failed: number }; sms: { sent: number; failed: number } } } | null>(null)
@@ -498,6 +499,19 @@ export default function AdminMessagingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
+                <Label className="text-[#003366]">Email header logo</Label>
+                <Select value={logoVariant} onValueChange={(v) => setLogoVariant(v as "recruitnc" | "nc-united")}>
+                  <SelectTrigger className="mt-1 max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recruitnc">RecruitNC (shield)</SelectItem>
+                    <SelectItem value="nc-united">NC United (stacked)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">Choose which logo appears in the email header. Preview to compare.</p>
+              </div>
+              <div>
                 <Label className="text-[#003366]">Subject (for email)</Label>
                 <Input
                   value={subject}
@@ -559,8 +573,24 @@ export default function AdminMessagingPage() {
                   <p>SMS: {sendResult.result.sms.sent} sent{sendResult.result.sms.failed > 0 ? `, ${sendResult.result.sms.failed} failed` : ""}</p>
                 </div>
               )}
-              <Button
-                disabled={!body.trim() || sending || (!channels.inApp && !channels.email && !channels.sms)}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-[#003366]/40 text-[#003366] hover:bg-[#003366]/10"
+                  onClick={() => {
+                    const params = new URLSearchParams()
+                    if (subject.trim()) params.set("subject", subject.trim())
+                    if (body.trim()) params.set("b64", btoa(unescape(encodeURIComponent(body.trim()))))
+                    params.set("logo", logoVariant)
+                    window.open(`/admin/messaging/preview?${params.toString()}`, "_blank", "noopener,noreferrer")
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview email
+                </Button>
+                <Button
+                  disabled={!body.trim() || sending || (!channels.inApp && !channels.email && !channels.sms)}
                 onClick={async () => {
                   setSendResult(null)
                   setSending(true)
@@ -575,6 +605,7 @@ export default function AdminMessagingPage() {
                         subject: subject || "Update from RecruitNC",
                         body: body.trim(),
                         testEmail: testEmail.trim() || undefined,
+                        logoVariant,
                         channels,
                       }),
                     })
@@ -592,9 +623,10 @@ export default function AdminMessagingPage() {
                 }}
                 className="bg-[#003366] hover:bg-[#003366]/90"
               >
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                {sending ? " Sending…" : " Send blast"}
-              </Button>
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {sending ? " Sending…" : " Send blast"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
