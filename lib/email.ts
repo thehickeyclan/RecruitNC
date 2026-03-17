@@ -410,7 +410,7 @@ export async function sendAddedToGroupEmail(
   }
 }
 
-/** Admin blast: subject + HTML body (e.g. from markdownToHtml). */
+/** Admin blast: subject + HTML body (e.g. from markdownToHtml). Uses branded template with logo. */
 export async function sendAdminBlastEmail(
   to: string,
   subject: string,
@@ -422,18 +422,22 @@ export async function sendAdminBlastEmail(
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
+    const baseUrl = (SITE_URL || "").replace(/\/$/, "")
+    const logoUrl = baseUrl ? `${baseUrl}/images/recruitnc-logo.png` : ""
     const html = `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: #003366; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
-    <h1 style="color: white; margin: 0; font-size: 22px;">RecruitNC</h1>
-  </div>
-  <div style="background: #fff; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-    ${htmlBody}
-    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-    <p style="color: #6b7280; font-size: 14px;">From NC Wrestling United / RecruitNC</p>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHtml(subject.slice(0, 100))}</title></head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f3f4f6;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: #003366; padding: 28px 24px; text-align: center; border-radius: 8px 8px 0 0;">
+      ${logoUrl ? `<img src="${logoUrl}" alt="RecruitNC — North Carolina Wrestling" width="180" height="180" style="display: inline-block; max-width: 200px; height: auto; object-fit: contain;" />` : "<h1 style=\"color: white; margin: 0; font-size: 22px;\">RecruitNC</h1>"}
+    </div>
+    <div style="background: #fff; padding: 28px 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+      <div style="color: #374151; font-size: 16px;">${htmlBody}</div>
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+      <p style="color: #6b7280; font-size: 13px; margin: 0;">From NC Wrestling United / RecruitNC</p>
+    </div>
   </div>
 </body>
 </html>
