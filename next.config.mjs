@@ -24,6 +24,11 @@ const nextConfig = {
   experimental: {
     lightningCss: false,
   },
+  async redirects() {
+    return [
+      { source: "/admin/messanger", destination: "/admin/messaging", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

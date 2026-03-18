@@ -494,7 +494,7 @@ export default function AdminMessagingPage() {
                 Compose & send
               </CardTitle>
               <CardDescription>
-                Use Markdown: **bold**, *italic*, [link text](url), - or 1. for lists. Same message goes to In-app (announcement), Email (HTML), and SMS (plain text).
+                Supports **bold**, *italic*, [link](url), bare URLs (auto-linked), bullets (- * • or 1.), ## headings. Paste from Docs/Word is normalized. Same message → In-app, Email (HTML), SMS (plain).
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

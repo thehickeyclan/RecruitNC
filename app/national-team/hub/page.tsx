@@ -691,12 +691,15 @@ function RosterSizeCell({
   onSave?: () => void
 }) {
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
+  const { session } = useAuth()
   const isInterestRow = !!registrationId && String(registrationId).startsWith("interest-")
   const editable = !!registrationId
 
   const handleChange = (newVal: string) => {
     if (!registrationId || !editable) return
     setSaving(true)
+    setSaveError(false)
     const openMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("open") === "1"
     const url =
       openMode && !isInterestRow
@@ -704,16 +707,28 @@ function RosterSizeCell({
         : isInterestRow
           ? `/api/national-team/interest-forms/${registrationId.replace(/^interest-/, "")}/size`
           : `/api/national-team/registrations/${registrationId}/size`
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    if (!openMode && session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
     const opts: RequestInit = {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ [field]: newVal || null }),
     }
     if (!openMode) opts.credentials = "include"
     fetch(url, opts)
-      .then((r) => (r.ok ? Promise.resolve() : Promise.reject(new Error("Update failed"))))
+      .then((r) => {
+        if (!r.ok) {
+          const msg = `PATCH ${url} ${r.status}`
+          if (typeof console !== "undefined" && console.error) console.error("[RecruitNC]", msg)
+          return Promise.reject(new Error(msg))
+        }
+        return Promise.resolve()
+      })
       .then(() => onSave?.())
-      .catch(() => {})
+      .catch((err) => {
+        setSaveError(true)
+        if (typeof console !== "undefined" && console.error) console.error("[RecruitNC] Gear size save failed", err)
+      })
       .finally(() => setSaving(false))
   }
 
@@ -726,19 +741,28 @@ function RosterSizeCell({
   }
   return (
     <td className="py-2 px-2 text-center align-middle">
-      <select
-        value={value}
-        onChange={(e) => handleChange(e.target.value)}
-        disabled={saving}
-        className="rounded border border-gray-300 bg-white px-1.5 py-1 text-sm text-gray-800 focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366] min-w-[52px] w-full max-w-[72px]"
-        aria-label={field.replace("_", " ")}
-      >
-        <option value="">—</option>
-        {sizes.map((s) => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-      {saving && <Loader2 className="h-3 w-3 animate-spin inline-block ml-0.5 text-[#003366]" aria-hidden />}
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="flex items-center justify-center gap-0.5">
+          <select
+            value={value}
+            onChange={(e) => handleChange(e.target.value)}
+            onBlur={() => setSaveError(false)}
+            disabled={saving}
+            className="rounded border border-gray-300 bg-white px-1.5 py-1 text-sm text-gray-800 focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366] min-w-[52px] w-full max-w-[72px] touch-manipulation"
+            aria-label={field.replace("_", " ")}
+            aria-invalid={saveError}
+          >
+            <option value="">—</option>
+            {sizes.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          {saving && <Loader2 className="h-3 w-3 animate-spin shrink-0 text-[#003366]" aria-hidden />}
+        </div>
+        {saveError && (
+          <span className="text-[10px] text-red-600 font-medium" role="alert">Save failed. Try again.</span>
+        )}
+      </div>
     </td>
   )
 }
@@ -968,7 +992,10 @@ function EventHubSection({
             <span>Scroll right →</span>
             <span className="text-gray-600 font-normal">to see Singlet, Shorts, Shirt sizes.</span>
           </p>
-          <div className="rounded-b-xl overflow-x-auto bg-white border-t border-[#003366]/10">
+          <div
+            className="rounded-b-xl overflow-x-auto bg-white border-t border-[#003366]/10 touch-pan-x"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             {event.roster.length === 0 ? (
               <div className="py-10 px-4 text-center">
                 <p className="text-sm text-gray-500">No athletes on the roster yet.</p>
@@ -1122,7 +1149,10 @@ function GroupedEventHubSection({
                     <span>Scroll right →</span>
                     <span className="text-gray-600 font-normal">to see Singlet, Shorts, Shirt sizes.</span>
                   </p>
-                  <div className="rounded-b-xl overflow-x-auto bg-white border-t border-gray-200">
+                  <div
+                    className="rounded-b-xl overflow-x-auto bg-white border-t border-gray-200 touch-pan-x"
+                    style={{ WebkitOverflowScrolling: "touch" }}
+                  >
                     {ev.roster.length === 0 ? (
                       <div className="py-8 px-4 text-center">
                         <p className="text-sm text-gray-500">No athletes on the {label} roster yet.</p>
