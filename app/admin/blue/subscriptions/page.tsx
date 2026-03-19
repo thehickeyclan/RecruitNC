@@ -321,14 +321,14 @@ export default function AdminBlueSubscriptionsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Athlete</TableHead>
+                        <TableHead className="sticky left-0 z-10 min-w-[120px] bg-white shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">Athlete</TableHead>
                         <TableHead>Grad year</TableHead>
                         <TableHead>High school</TableHead>
                         <TableHead>Club</TableHead>
                         <TableHead>Weight</TableHead>
                         <TableHead>T-shirt</TableHead>
+                        <TableHead>Athlete cell</TableHead>
                         <TableHead>Parent email</TableHead>
-                        <TableHead>Parent phone</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Signed up</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -337,7 +337,7 @@ export default function AdminBlueSubscriptionsPage() {
                     <TableBody>
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
-                          <TableCell className="text-sm font-medium">
+                          <TableCell className="sticky left-0 z-10 bg-white text-sm font-medium shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
                             {[s.athlete_first_name, s.athlete_last_name].filter(Boolean).join(" ") || "—"}
                           </TableCell>
                           <TableCell className="text-sm">{s.athlete_graduation_year ?? "—"}</TableCell>
@@ -345,8 +345,8 @@ export default function AdminBlueSubscriptionsPage() {
                           <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_weight_class || "—"}</TableCell>
                           <TableCell className="text-sm">{s.tshirt_size || "—"}</TableCell>
+                          <TableCell className="text-sm">{s.athlete_cell_phone || "—"}</TableCell>
                           <TableCell className="text-sm">{s.parent_email || "—"}</TableCell>
-                          <TableCell className="text-sm">{s.parent_phone || "—"}</TableCell>
                           <TableCell>
                             <span className={s.status === "paid" ? "text-green-600" : "text-amber-600"}>{s.status === "paid" ? "Paid" : "Pending"}</span>
                           </TableCell>

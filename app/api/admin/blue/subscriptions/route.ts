@@ -37,6 +37,7 @@ export type BlueSignupRow = {
   athlete_high_school: string
   athlete_wrestling_club: string | null
   athlete_weight_class: string | null
+  athlete_cell_phone: string | null
   tshirt_size: string
   parent_email: string
   parent_first_name: string
@@ -73,7 +74,7 @@ export async function GET() {
     let signupsError: string | null = null
     const { data: signupRows, error: signupError } = await admin
       .from("blue_signups")
-      .select("id, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, tshirt_size, parent_email, parent_first_name, parent_last_name, parent_phone, status, created_at, stripe_customer_id")
+      .select("id, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, athlete_cell_phone, tshirt_size, parent_email, parent_first_name, parent_last_name, parent_phone, status, created_at, stripe_customer_id")
       .order("created_at", { ascending: false })
     if (!signupError && signupRows?.length) {
       signups = signupRows.map((r) => ({
@@ -85,6 +86,7 @@ export async function GET() {
         athlete_high_school: r.athlete_high_school ?? "",
         athlete_wrestling_club: r.athlete_wrestling_club ?? null,
         athlete_weight_class: r.athlete_weight_class ?? null,
+        athlete_cell_phone: (r as { athlete_cell_phone?: string | null }).athlete_cell_phone ?? null,
         tshirt_size: r.tshirt_size ?? "",
         parent_email: r.parent_email ?? "",
         parent_first_name: r.parent_first_name ?? "",
@@ -193,7 +195,7 @@ export async function GET() {
   let signupsError: string | null = null
   const { data: signupRows, error: signupError } = await admin
     .from("blue_signups")
-    .select("id, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, tshirt_size, parent_email, parent_first_name, parent_last_name, parent_phone, status, created_at, stripe_customer_id")
+    .select("id, athlete_first_name, athlete_last_name, athlete_graduation_year, athlete_high_school, athlete_wrestling_club, athlete_weight_class, athlete_cell_phone, tshirt_size, parent_email, parent_first_name, parent_last_name, parent_phone, status, created_at, stripe_customer_id")
     .order("created_at", { ascending: false })
   if (signupError) {
     console.error("[admin/blue/subscriptions] blue_signups select:", signupError.code, signupError.message)
@@ -214,6 +216,7 @@ export async function GET() {
       athlete_high_school: r.athlete_high_school ?? "",
       athlete_wrestling_club: r.athlete_wrestling_club ?? null,
       athlete_weight_class: r.athlete_weight_class ?? null,
+      athlete_cell_phone: (r as { athlete_cell_phone?: string | null }).athlete_cell_phone ?? null,
       tshirt_size: r.tshirt_size ?? "",
       parent_email: r.parent_email ?? "",
       parent_first_name: r.parent_first_name ?? "",
