@@ -321,15 +321,12 @@ export default function AdminBlueSubscriptionsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Athlete first</TableHead>
-                        <TableHead>Athlete last</TableHead>
+                        <TableHead>Athlete</TableHead>
                         <TableHead>Grad year</TableHead>
                         <TableHead>High school</TableHead>
                         <TableHead>Club</TableHead>
                         <TableHead>Weight</TableHead>
                         <TableHead>T-shirt</TableHead>
-                        <TableHead>Parent first</TableHead>
-                        <TableHead>Parent last</TableHead>
                         <TableHead>Parent email</TableHead>
                         <TableHead>Parent phone</TableHead>
                         <TableHead>Status</TableHead>
@@ -340,15 +337,14 @@ export default function AdminBlueSubscriptionsPage() {
                     <TableBody>
                       {filteredSignups.map((s) => (
                         <TableRow key={s.id}>
-                          <TableCell className="text-sm">{s.athlete_first_name || "—"}</TableCell>
-                          <TableCell className="text-sm">{s.athlete_last_name || "—"}</TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {[s.athlete_first_name, s.athlete_last_name].filter(Boolean).join(" ") || "—"}
+                          </TableCell>
                           <TableCell className="text-sm">{s.athlete_graduation_year ?? "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_high_school || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_wrestling_club || "—"}</TableCell>
                           <TableCell className="text-sm">{s.athlete_weight_class || "—"}</TableCell>
                           <TableCell className="text-sm">{s.tshirt_size || "—"}</TableCell>
-                          <TableCell className="text-sm">{s.parent_first_name || "—"}</TableCell>
-                          <TableCell className="text-sm">{s.parent_last_name || "—"}</TableCell>
                           <TableCell className="text-sm">{s.parent_email || "—"}</TableCell>
                           <TableCell className="text-sm">{s.parent_phone || "—"}</TableCell>
                           <TableCell>
