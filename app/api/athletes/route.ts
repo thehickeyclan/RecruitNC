@@ -222,6 +222,23 @@ export async function GET(request: Request) {
       }
     })
 
+    // Fallback: if athlete has no prospect_ranking, try public_rankings (published rankings)
+    const idsWithoutRank = (mappedAthletes as { id: string; prospect_ranking?: number | null }[]).filter((a) => a.prospect_ranking == null).map((a) => a.id)
+    if (idsWithoutRank.length > 0) {
+      try {
+        const { data: pub } = await supabase.from("public_rankings").select("prospect_id, prospect_ranking").in("prospect_id", idsWithoutRank)
+        const rankByProspectId = new Map((pub || []).map((p: { prospect_id: string; prospect_ranking: number | null }) => [p.prospect_id, p.prospect_ranking]))
+        for (const a of mappedAthletes as { id: string; prospect_ranking?: number | null }[]) {
+          if (a.prospect_ranking == null) {
+            const fromPub = rankByProspectId.get(a.id)
+            if (fromPub != null) a.prospect_ranking = fromPub
+          }
+        }
+      } catch {
+        // table may not exist
+      }
+    }
+
     let resultAthletes = mappedAthletes
     if (divisionFilter && divisionFilter !== "all") {
       resultAthletes = mappedAthletes.filter((a) => matchesDivisionFilter(a.division, divisionFilter))

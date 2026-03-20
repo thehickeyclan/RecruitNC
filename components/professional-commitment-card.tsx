@@ -511,30 +511,22 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               </button>
             </div>
 
-            {/* Ranking — always show so it's visible; "—" when no rank set */}
+            {/* Ranking — blends with card back (gold on dark blue), no box */}
             {(() => {
               const gradYear = athlete?.graduationyear ?? athlete?.graduationYear ?? null
-              const rawRank =
-                athlete?.prospect_ranking != null && athlete.prospect_ranking !== ""
+              const raw =
+                athlete?.prospect_ranking != null && String(athlete.prospect_ranking).trim() !== ""
                   ? Number(athlete.prospect_ranking)
                   : athlete?.rankings?.nc_rank != null
                     ? Number(athlete.rankings.nc_rank)
                     : null
-              const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028 || gradYear === 2029
-              const maxRankForClass = gradYear === 2028 || gradYear === 2029 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
-              const hasOfficialRank = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
-              const displayRank = isRankedClass && hasOfficialRank ? rawRank : null
+              const num = raw != null && Number.isFinite(raw) && raw >= 1 ? raw : null
+              const displayRank = num != null && num <= 30 ? num : null
 
               return (
-                <div className="mb-3 flex justify-center">
-                  <div
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-white shadow-md"
-                    style={{ backgroundColor: "#003366" }}
-                  >
-                    <span className="text-sm">Class of {gradYear ?? "—"} Rank:</span>
-                    <span className="text-lg">{displayRank != null ? `#${displayRank}` : "—"}</span>
-                  </div>
-                </div>
+                <p className="text-center text-sm mb-3" style={{ color: "#D3B574" }}>
+                  Class of {gradYear ?? "—"} {displayRank != null ? `· #${displayRank}` : ""}
+                </p>
               )
             })()}
 
