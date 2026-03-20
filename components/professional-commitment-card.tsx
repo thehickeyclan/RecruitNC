@@ -393,12 +393,12 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
         }`}
       >
         <Card
-          className={`absolute h-full w-full overflow-hidden rounded-xl border-0 shadow-lg backface-hidden cursor-pointer ${
+          className={`absolute inset-0 h-full w-full overflow-hidden rounded-xl border-0 shadow-lg backface-hidden cursor-pointer p-0 gap-0 flex flex-col ${
             !isFlipped ? "z-20" : "z-10"
           }`}
           onClick={handleFlip}
         >
-          <div className="relative h-full w-full">
+          <div className="relative flex-1 min-h-0 w-full">
             <Image
               src={athletePhoto || "/placeholder.svg"}
               alt={athlete.name || "Athlete"}
@@ -510,6 +510,34 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                 <RotateCw className="h-3.5 w-3.5" />
               </button>
             </div>
+
+            {/* Ranking Display */}
+            {(() => {
+              const gradYear = athlete.graduationyear || athlete.graduationYear
+              const rawRank = athlete.prospect_ranking
+                ? Number(athlete.prospect_ranking)
+                : athlete.rankings?.nc_rank
+                  ? Number(athlete.rankings.nc_rank)
+                  : null
+              const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028 || gradYear === 2029
+              const maxRankForClass = gradYear === 2028 || gradYear === 2029 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
+              const hasOfficialRank = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
+              const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null
+
+              if (!prospectRanking) return null
+
+              return (
+                <div className="mb-3 flex justify-center">
+                  <div
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-white shadow-md"
+                    style={{ backgroundColor: "#003366" }}
+                  >
+                    <span className="text-sm">Class of {gradYear} Rank:</span>
+                    <span className="text-lg">#{prospectRanking}</span>
+                  </div>
+                </div>
+              )
+            })()}
 
             <div className="bg-white rounded-lg p-3 mb-3 shadow-sm border relative overflow-hidden">
               <h4 className="font-bold text-gray-900 mb-2 text-center text-xs relative z-10">COLLEGE COMMITMENT</h4>
