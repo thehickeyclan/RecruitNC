@@ -21,6 +21,7 @@ export const COLLEGE_DIVISION_OPTIONS = [
   "NAIA",
   "NJCAA",
   "NCAA Division I (FCS Football)",
+  "Club",
   "Other",
 ] as const
 
