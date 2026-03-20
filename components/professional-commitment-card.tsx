@@ -511,20 +511,19 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               </button>
             </div>
 
-            {/* Ranking Display */}
+            {/* Ranking — always show so it's visible; "—" when no rank set */}
             {(() => {
-              const gradYear = athlete.graduationyear || athlete.graduationYear
-              const rawRank = athlete.prospect_ranking
-                ? Number(athlete.prospect_ranking)
-                : athlete.rankings?.nc_rank
-                  ? Number(athlete.rankings.nc_rank)
-                  : null
+              const gradYear = athlete?.graduationyear ?? athlete?.graduationYear ?? null
+              const rawRank =
+                athlete?.prospect_ranking != null && athlete.prospect_ranking !== ""
+                  ? Number(athlete.prospect_ranking)
+                  : athlete?.rankings?.nc_rank != null
+                    ? Number(athlete.rankings.nc_rank)
+                    : null
               const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028 || gradYear === 2029
               const maxRankForClass = gradYear === 2028 || gradYear === 2029 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
               const hasOfficialRank = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
-              const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null
-
-              if (!prospectRanking) return null
+              const displayRank = isRankedClass && hasOfficialRank ? rawRank : null
 
               return (
                 <div className="mb-3 flex justify-center">
@@ -532,8 +531,8 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-white shadow-md"
                     style={{ backgroundColor: "#003366" }}
                   >
-                    <span className="text-sm">Class of {gradYear} Rank:</span>
-                    <span className="text-lg">#{prospectRanking}</span>
+                    <span className="text-sm">Class of {gradYear ?? "—"} Rank:</span>
+                    <span className="text-lg">{displayRank != null ? `#${displayRank}` : "—"}</span>
                   </div>
                 </div>
               )

@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+const SIGNIN_TIMEOUT_MS = 12_000 // Fail fast so user sees an error instead of hanging
+
 /**
  * Server-side sign-in for all users. Uses service role so Supabase anon-key
  * rate limits don't block production logins. Sets session cookies via SSR.
@@ -19,10 +21,26 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient()
-    const { data: authData, error: authError } = await adminClient.auth.signInWithPassword({
+    const signInPromise = adminClient.auth.signInWithPassword({
       email: String(email).trim(),
       password: String(password),
     })
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Sign-in timed out")), SIGNIN_TIMEOUT_MS)
+    )
+    let result: Awaited<ReturnType<typeof adminClient.auth.signInWithPassword>>
+    try {
+      result = await Promise.race([signInPromise, timeoutPromise])
+    } catch (err) {
+      const msg = err instanceof Error && err.message === "Sign-in timed out"
+        ? "Sign-in is taking too long. Please try again."
+        : err instanceof Error ? err.message : "Login failed"
+      const res = NextResponse.json({ error: msg }, { status: msg.includes("too long") ? 504 : 401 })
+      res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private, max-age=0")
+      return res
+    }
+    const authData = result.data
+    const authError = result.error
 
     if (authError || !authData?.user || !authData?.session) {
       const res = NextResponse.json(
