@@ -92,16 +92,22 @@ export default function SignInPage() {
         credentials: "include",
         body: JSON.stringify({ email, password }),
       })
-      const err = await res.json().catch(() => ({}))
+      let err: { error?: string } = {}
+      try {
+        err = await res.json()
+      } catch {
+        err = {}
+      }
       if (res.ok) {
         setRedirectingAfterSignIn(true)
         const next = returnTo && returnTo !== "/auth/signin" ? encodeURIComponent(returnTo) : ""
         setTimeout(() => { window.location.replace(next ? `/auth/callback-admin?next=${next}` : "/auth/callback-admin") }, 1200)
         return
       }
-      if (res.status === 401) setError(err.error || "Invalid email or password.")
-      else if (res.status === 403) setError(err.error || "Admin access required.")
-      else setError(err.error || "Login failed")
+      const errorMsg = typeof err === "object" && err !== null && "error" in err && typeof err.error === "string" ? err.error : null
+      if (res.status === 401) setError(errorMsg || "Invalid email or password.")
+      else if (res.status === 403) setError(errorMsg || "Admin access required.")
+      else setError(errorMsg || "Login failed")
       setLoading(false)
       return
     }
@@ -112,7 +118,12 @@ export default function SignInPage() {
       credentials: "include",
       body: JSON.stringify({ email, password }),
     })
-    const data = await res.json().catch(() => ({}))
+    let data: { error?: string } = {}
+    try {
+      data = await res.json()
+    } catch {
+      data = {}
+    }
     if (res.ok) {
       setRedirectingAfterSignIn(true)
       const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
@@ -137,7 +148,8 @@ export default function SignInPage() {
       setTimeout(confirmThenGo, 800)
       return
     }
-    setError(data.error || "Invalid email or password.")
+    const errorMsg = typeof data === "object" && data !== null && "error" in data && typeof data.error === "string" ? data.error : null
+    setError(errorMsg || "Invalid email or password.")
     setLoading(false)
   }
 
