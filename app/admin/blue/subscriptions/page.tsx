@@ -100,7 +100,8 @@ export default function AdminBlueSubscriptionsPage() {
       const res = await fetch("/api/admin/blue/subscriptions", { credentials: "include" })
       if (res.ok) {
         const d = await res.json()
-        if (d?.subscriptions) setSubscriptions(d.subscriptions ?? [])
+        if (d?.subscriptions !== undefined) setSubscriptions(d.subscriptions ?? [])
+        if (d?.signups !== undefined) setSignups(d.signups ?? [])
         if (d?.stats) setStats(d.stats ?? { active: 0, paused: 0, cancelled: 0, pending_payment: 0 })
       }
     } finally {

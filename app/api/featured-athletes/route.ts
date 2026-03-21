@@ -113,6 +113,7 @@ export async function GET(request: Request) {
           team: athlete.team || "",
           gender: athlete.gender || "Male",
           commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
+          prospect_ranking: athlete.prospect_ranking ?? undefined,
         }))
         await attachDivision(supabase, athletes, mappedAthletes)
 
@@ -270,6 +271,7 @@ export async function GET(request: Request) {
         team: athlete.team || "",
         gender: athlete.gender || "Male",
         commitment_date: athlete.commitment_date || athlete.commitmentdate || athlete.updated_at || null,
+        prospect_ranking: athlete.prospect_ranking ?? undefined,
       }))
       await attachDivision(supabase, sortedCommitments, recentCommitmentAthletes)
 
@@ -355,6 +357,7 @@ export async function GET(request: Request) {
       team: athlete.team || "",
       gender: athlete.gender || "Male",
       commitment_date: athlete.commitment_date || athlete.commitmentdate || null,
+      prospect_ranking: athlete.prospect_ranking ?? undefined,
     }))
     await attachDivision(supabase, validAthletes, mappedAthletes)
 

@@ -72,6 +72,7 @@ export default function SignInPage() {
         if (cancelled) return
         if (r.ok) window.location.href = target
         // 401 = server doesn't see session (e.g. Chrome dropped cookie); don't redirect so user can sign in again
+        // Silently ignore 401 - it's expected when not logged in
       })
       .catch(() => { if (!cancelled) { /* stay on page */ } })
     return () => { cancelled = true }
@@ -127,25 +128,8 @@ export default function SignInPage() {
     if (res.ok) {
       setRedirectingAfterSignIn(true)
       const target = returnTo && returnTo !== "/auth/signin" ? returnTo : "/"
-      // Confirm cookie is readable (Chrome can drop it); then full-page redirect so session sticks.
-      const confirmThenGo = () => {
-        fetch("/api/profile", { credentials: "include" })
-          .then((r) => {
-            if (r.ok) {
-              window.location.replace(target)
-            } else {
-              setRedirectingAfterSignIn(false)
-              setLoading(false)
-              setError("Sign-in succeeded but the session didn’t stick in this browser. Try opening this page in a new tab (File → New Tab, then go to Sign In), or try another browser.")
-            }
-          })
-          .catch(() => {
-            setRedirectingAfterSignIn(false)
-            setLoading(false)
-            setError("Sign-in succeeded but we couldn’t verify the session. Try opening the app in a new tab and sign in again.")
-          })
-      }
-      setTimeout(confirmThenGo, 800)
+      // Redirect immediately so login isn't blocked by a flaky profile check
+      window.location.replace(target)
       return
     }
     const errorMsg = typeof data === "object" && data !== null && "error" in data && typeof data.error === "string" ? data.error : null

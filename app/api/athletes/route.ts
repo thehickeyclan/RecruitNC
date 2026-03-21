@@ -222,15 +222,24 @@ export async function GET(request: Request) {
       }
     })
 
-    // Fallback: if athlete has no prospect_ranking, try public_rankings (published rankings)
-    const idsWithoutRank = (mappedAthletes as { id: string; prospect_ranking?: number | null }[]).filter((a) => a.prospect_ranking == null).map((a) => a.id)
-    if (idsWithoutRank.length > 0) {
+    // Fallback: if athlete has no prospect_ranking, try public_rankings (published rankings) for same class year
+    const withoutRank = (mappedAthletes as { id: string; graduationyear?: number; prospect_ranking?: number | null }[]).filter((a) => a.prospect_ranking == null)
+    if (withoutRank.length > 0) {
       try {
-        const { data: pub } = await supabase.from("public_rankings").select("prospect_id, prospect_ranking").in("prospect_id", idsWithoutRank)
-        const rankByProspectId = new Map((pub || []).map((p: { prospect_id: string; prospect_ranking: number | null }) => [p.prospect_id, p.prospect_ranking]))
-        for (const a of mappedAthletes as { id: string; prospect_ranking?: number | null }[]) {
-          if (a.prospect_ranking == null) {
-            const fromPub = rankByProspectId.get(a.id)
+        const { data: pub } = await supabase
+          .from("public_rankings")
+          .select("prospect_id, graduation_year, prospect_ranking")
+          .in("prospect_id", withoutRank.map((a) => a.id))
+        const key = (id: string, year: number) => `${id}:${year}`
+        const rankByKey = new Map(
+          (pub || []).map((p: { prospect_id: string; graduation_year: number; prospect_ranking: number | null }) => [
+            key(p.prospect_id, p.graduation_year),
+            p.prospect_ranking,
+          ]),
+        )
+        for (const a of mappedAthletes as { id: string; graduationyear?: number; prospect_ranking?: number | null }[]) {
+          if (a.prospect_ranking == null && a.graduationyear != null) {
+            const fromPub = rankByKey.get(key(a.id, a.graduationyear))
             if (fromPub != null) a.prospect_ranking = fromPub
           }
         }

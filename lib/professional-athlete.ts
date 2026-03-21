@@ -20,6 +20,9 @@ export type ProfessionalAthlete = {
   instagram?: string
   nhsca_2025_record?: string
   nhsca_2025_placement?: string
+  /** Our class ranking (1–30). Used on commitment card back. */
+  prospect_ranking?: number | string | null
+  rankings?: { nc_rank?: string }
 }
 
 /**
@@ -103,6 +106,13 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
       ? String(input.nhsca_2025_placement).trim()
       : undefined
 
+  const prospect_ranking: number | string | null | undefined =
+    input?.prospect_ranking != null ? input.prospect_ranking : undefined
+  const rankings: { nc_rank?: string } | undefined =
+    input?.rankings != null && typeof input.rankings === "object"
+      ? { nc_rank: input.rankings?.nc_rank }
+      : undefined
+
   return {
     id,
     name,
@@ -122,6 +132,8 @@ export function normalizeAthlete(input: any): ProfessionalAthlete {
     instagram,
     nhsca_2025_record,
     nhsca_2025_placement,
+    prospect_ranking,
+    rankings,
   }
 }
 

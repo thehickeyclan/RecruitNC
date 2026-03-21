@@ -613,7 +613,8 @@ export async function POST(request: NextRequest) {
       const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? ""
       const customerName = ((session.customer_details as { name?: string })?.name ?? "").trim() || "Blue member"
       const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_session_id", session.id).maybeSingle()
-      if (!existingOrder && (amountTotal > 0 || piForOrder)) {
+      // Match sync-from-stripe: create order for any completed Blue subscription checkout — not only when amount > 0 or PI resolved ($0 promo / trial, or invoice PI not expanded yet).
+      if (!existingOrder && (amountTotal > 0 || piForOrder || subscriptionId)) {
         const orderNumber = generateOrderNumber()
         const orderId = crypto.randomUUID()
         const { error: orderErr } = await admin.from("orders").insert({
