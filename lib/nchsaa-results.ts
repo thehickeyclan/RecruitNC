@@ -42,7 +42,7 @@ function getIlikePatternsForVariation(v: string): string[] {
  */
 /**
  * Add spellings here when NCHSAA/source data uses a different name than the athlete profile
- * (e.g. Quickny vs Quincy, or Furmann vs Furman). Use /api/debug/nchsaa-lookup?name=First+Last&year=2026
+ * (e.g. Quickny vs Quincy, or Furmann vs Furman). Use /api/nchsaa-lookup?name=First+Last&year=2026
  * to see raw wrestler_name values for a given last name and add any missing spellings.
  */
 const SAME_PERSON_NAME_ALIASES: string[][] = [

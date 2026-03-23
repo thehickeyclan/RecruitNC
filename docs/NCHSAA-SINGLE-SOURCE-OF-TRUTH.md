@@ -26,7 +26,7 @@ If you add a new page or API that displays state results, call `getNCHSAAResults
   - `total_athletes` / `athletes_with_nchsaa`
   - `per_athlete` — for each athlete: names queried, counts by name vs wrestling_name, merged count, years returned
 - **APIs:** Add `?debug=1` to the request URL. Response includes `_debug` (and each prospect/athlete may include `_debug` with the same per-row info).
-- **Name / missing results:** Use **`GET /api/debug/nchsaa-lookup?name=First+Last`** (optional `&year=2026`). Returns profile-style result for that name plus raw NCHSAA rows containing the last name. If profile-style is empty but raw rows exist, the DB likely has a different spelling (e.g. "Maxwell Davis"); set the athlete’s **wrestling_name** to that exact spelling so the profile and rankings can match.
+- **Name / missing results:** Use **`GET /api/nchsaa-lookup?name=First+Last`** (optional `&year=2026`). Same as legacy `/api/debug/nchsaa-lookup`. Returns profile-style result for that name plus raw NCHSAA rows containing the last name. If profile-style is empty but raw rows exist, the DB likely has a different spelling (e.g. "Maxwell Davis"); set the athlete’s **wrestling_name** to that exact spelling so the profile and rankings can match.
 
 Use this to verify that the names we query and the years/counts returned match what you expect (e.g. compare to the unified profile for the same athlete).
 

@@ -47,6 +47,7 @@ export async function middleware(request: NextRequest) {
     '/api/auth/reset-password',
     '/api/auth/clear-cooldown',
     '/api/debug',
+    '/api/nchsaa-lookup',
     '/api/manifest',
   ]
   

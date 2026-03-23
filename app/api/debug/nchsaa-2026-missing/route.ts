@@ -7,7 +7,7 @@ import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-res
  *
  * Returns 2026 class prospects and whether each has any NCHSAA result for state year 2026.
  * Use this to verify who is missing 2026 state placement (likely name spelling in wrestling_nchsaa_results).
- * For each name in missing_2026, call /api/debug/nchsaa-lookup?name=First+Last&year=2026&gradYear=2026
+ * For each name in missing_2026, call /api/nchsaa-lookup?name=First+Last&year=2026&gradYear=2026
  * to see raw wrestler_name values and add them to SAME_PERSON_NAME_ALIASES in lib/nchsaa-results.ts.
  */
 export async function GET(request: Request) {
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       per_athlete: withNchsaa,
       hint:
         missing2026.length > 0
-          ? "For each name in missing_2026_state, call /api/debug/nchsaa-lookup?name=First+Last&year=2026&gradYear=" +
+          ? "For each name in missing_2026_state, call /api/nchsaa-lookup?name=First+Last&year=2026&gradYear=" +
             gradYearNum +
             " to see raw wrestler_name in DB; add spellings to SAME_PERSON_NAME_ALIASES in lib/nchsaa-results.ts"
           : null,
