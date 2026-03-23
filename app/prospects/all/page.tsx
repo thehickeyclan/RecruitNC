@@ -97,26 +97,51 @@ export default function AllProspectsPage() {
       setError(null)
 
       try {
-        // Single source: all athletes (NC) from public API – no admin APIs
-        const prospectsResponse = await fetch('/api/prospects?limit=5000', {
-          method: 'GET',
-          headers: { Accept: 'application/json' },
-          cache: 'no-store',
-        })
+        // Page in chunks — large payloads + count query timed out Supabase / Envoy ("upstream... before headers").
+        const PAGE = 500
+        const rawProspects: Prospect[] = []
+        let offset = 0
 
-        if (!prospectsResponse.ok) {
-          const text = await prospectsResponse.text().catch(() => '')
-          throw new Error(
-            `Athlete profiles API ${prospectsResponse.status} ${prospectsResponse.statusText}${text ? ` - ${text}` : ''}`,
-          )
+        const fetchChunk = async (chunkOffset: number) => {
+          const url = `/api/prospects?limit=${PAGE}&offset=${chunkOffset}`
+          const maxAttempts = 4
+          let lastText = ""
+          for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            const prospectsResponse = await fetch(url, {
+              method: "GET",
+              headers: { Accept: "application/json" },
+              cache: "no-store",
+            })
+            if (prospectsResponse.ok) {
+              return prospectsResponse
+            }
+            lastText = await prospectsResponse.text().catch(() => "")
+            const retryable = prospectsResponse.status >= 500 || prospectsResponse.status === 429
+            if (!retryable || attempt === maxAttempts) {
+              throw new Error(
+                `Athlete profiles API ${prospectsResponse.status} ${prospectsResponse.statusText}${lastText ? ` - ${lastText}` : ""}`,
+              )
+            }
+            await new Promise((r) => setTimeout(r, 400 * attempt))
+          }
+          throw new Error(lastText || "Athlete profiles API failed after retries")
         }
 
-        const prospectsPayload = await prospectsResponse.json()
-        const rawProspects = Array.isArray(prospectsPayload?.prospects)
-          ? prospectsPayload.prospects
-          : Array.isArray(prospectsPayload)
-            ? prospectsPayload
-            : []
+        for (;;) {
+          const prospectsResponse = await fetchChunk(offset)
+
+          const prospectsPayload = await prospectsResponse.json()
+          const batch = Array.isArray(prospectsPayload?.prospects)
+            ? prospectsPayload.prospects
+            : Array.isArray(prospectsPayload)
+              ? prospectsPayload
+              : []
+
+          rawProspects.push(...batch)
+          if (batch.length < PAGE) break
+          offset += PAGE
+          if (offset > 20000) break
+        }
 
         // All NC athletes, all years (filter client-side by year/gender)
         const filtered = rawProspects.filter(isNorthCarolinaProspect)
