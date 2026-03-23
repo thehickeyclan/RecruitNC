@@ -12,8 +12,10 @@ All of these send events to **one** endpoint: `POST /api/webhooks/stripe`.
 |------|-------------------------------|------------------------|
 | **Store (apparel)** | `payment_intent.succeeded` or `checkout.session.completed` with store metadata (items, customer_email, etc.) | `orders`, `order_items` |
 | **Drop-ins** | `checkout.session.completed` with amount ~$20–30 and shipping method (practice/pickup/suite) or no store metadata | `orders`, `order_items` |
-| **Blue subscriptions** | `checkout.session.completed` with `metadata.signup_id`; `customer.subscription.updated/deleted`; `payment_intent.succeeded` (subscription) | `blue_signups`, `blue_memberships`, `orders` (for revenue) |
+| **Blue subscriptions** | `checkout.session.completed` with `metadata.signup_id`; **`invoice.payment_succeeded`** (fallback when Checkout event is missed—subscription has `metadata.signup_id`); `customer.subscription.updated/deleted`; `payment_intent.succeeded` (subscription, no-op) | `blue_signups`, `blue_memberships`, `orders` (for revenue) |
 | **NHSCA Duals 2026 / national team** | `checkout.session.completed` with `metadata.source === "national_team"` and `registration_id` | `national_team_event_registrations`, `orders`, `order_items` |
+
+**Stripe Dashboard:** For the webhook that hits `/api/webhooks/stripe`, enable **`invoice.payment_succeeded`** (and `checkout.session.completed`) so paid Blue registrations still flip to **Paid** when the Checkout webhook fails or is delayed.
 
 The **same** webhook handler branches on event type and metadata. It does **not** use different env vars per flow (no `STRIPE_STORE_SECRET` vs `STRIPE_BLUE_SECRET`). The only per-destination config is the **signing secret** Stripe sends in the request; the app must know every secret for every destination that points at this URL.
 

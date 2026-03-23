@@ -116,7 +116,7 @@ export default function ViewProfilePage() {
         if (!cancelled) setNchsaaResults([])
       })
     return () => { cancelled = true }
-  }, [athlete?.name, athlete?.graduationyear, athlete?.wrestling_name])
+  }, [athlete?.id, athlete?.name, athlete?.graduationyear, athlete?.wrestling_name])
 
   if (loading) {
     return (

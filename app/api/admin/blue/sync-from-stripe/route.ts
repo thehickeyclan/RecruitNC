@@ -61,7 +61,8 @@ export async function POST() {
       })
       const chunk = list.data ?? []
       sessions = sessions.concat(chunk)
-      hasMore = chunk.length === 100 && sessions.length < 500
+      // High-volume stores can exceed 500 sessions in 90 days; keep paging so Blue checkouts aren’t missed.
+      hasMore = chunk.length === 100 && sessions.length < 5000
       if (chunk.length) startingAfter = chunk[chunk.length - 1].id
       else hasMore = false
     }
