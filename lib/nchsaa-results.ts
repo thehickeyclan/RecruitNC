@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { fetchNchsaaResultsForAthleteProfile } from "@/lib/nchsaa-profile-fetch"
 
 /**
  * Normalize name for matching: same person "Aaron Ellison" and "Ellison, Aaron" => same string.
@@ -127,8 +128,9 @@ export type NchsaaRowForProfile = {
 export function plausibleNchsaaYearsForGradYear(graduationYear: number): { min: number; max: number } {
   const y = Number(graduationYear)
   if (!y || isNaN(y)) return { min: 0, max: 9999 }
-  // Include gradYear+1 so we don't drop current-year state (e.g. 2026) when grad year is off by one
-  const maxYear = Math.min(2030, y + 1)
+  // Include gradYear+2 so late-season / data-entry timing and slight wrong grad year on file
+  // don't drop the current state year (e.g. 2026 for class of 2028 — see RECRUITNC-PROFILE-NAME-MATCHING-DETTORE.md).
+  const maxYear = Math.min(2032, y + 2)
   return { min: Math.max(1990, y - 4), max: maxYear }
 }
 
@@ -164,6 +166,15 @@ export async function getNCHSAAResultsForProfile(
         wrestler_name: (row.wrestler_name ?? "").toString(),
       })
     }
+  }
+
+  // First: dual-token ILIKE (first AND last) — matches "Thompson, Ryan" when display name is "Ryan Thompson"
+  // (a single full-string ILIKE does not). No year filter on this query; see lib/nchsaa-profile-fetch.ts
+  try {
+    const dualTokenRows = await fetchNchsaaResultsForAthleteProfile(supabase, athleteName)
+    pushRows(dualTokenRows as any[])
+  } catch {
+    // non-fatal — fall back to variants below
   }
 
   // Exact match first: "First Last" then "Last, First" (DB often has "D'Ettore, Jackson")
