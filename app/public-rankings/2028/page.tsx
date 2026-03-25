@@ -138,7 +138,7 @@ export default function Class2028RankingsPage() {
     }
   }
 
-  // Filter by search term and limit to top 20
+  // Filter by search term and limit to top 25
   const filteredRankings = rankings
     .filter((ranking) => {
       if (!searchTerm) return true
@@ -150,7 +150,7 @@ export default function Class2028RankingsPage() {
         (ranking.weight_display?.toLowerCase() || "").includes(term)
       )
     })
-    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 20)
+    .filter((ranking) => ranking.prospect_ranking && ranking.prospect_ranking <= 25)
 
   const hasActiveFilters = searchTerm !== ""
 
@@ -384,7 +384,7 @@ export default function Class2028RankingsPage() {
                 <h3 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-6">The NC United Pipeline</h3>
                 <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
                   The success of the Class of 2028 reflects North Carolina's growing wrestling infrastructure. 13 out of
-                  20 ranked wrestlers train with NC United Blue, giving them weekly exposure to elite competition and
+                  25 ranked wrestlers train with NC United Blue, giving them weekly exposure to elite competition and
                   college-level coaching. This investment in high-level training is paying dividends, as evidenced by the
                   class's national tournament success.
                 </p>
@@ -479,7 +479,7 @@ export default function Class2028RankingsPage() {
               <>
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold text-gray-900">Top 20 Wrestling Prospects</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Top 25 Wrestling Prospects</h2>
                     <div className="text-sm text-gray-600">Showing {filteredRankings.length} ranked prospects</div>
                   </div>
                   {lastUpdated && (

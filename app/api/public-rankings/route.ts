@@ -44,11 +44,16 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2026"
     const gender = searchParams.get("gender") || "Male"
 
+    const yearNum = parseInt(String(year), 10)
+    // Public /public-rankings pages: cap how many ranked athletes we return (reduces payload + enrichment work).
+    const maxPublicRank =
+      yearNum === 2026 || yearNum === 2027 ? 30 : yearNum === 2028 ? 25 : null
+
     const supabase = createAdminClient()
 
-    console.log("[v0] Fetching public rankings for:", { year, gender })
+    console.log("[v0] Fetching public rankings for:", { year, gender, maxPublicRank })
 
-    const { data: athletes, error } = await supabase
+    let rankingsQuery = supabase
       .from("athletes")
       .select(`
         id,
@@ -81,7 +86,12 @@ export async function GET(request: Request) {
       .eq("graduationyear", year)
       .eq("gender", gender)
       .not("prospect_ranking", "is", null)
-      .order("prospect_ranking", { ascending: true })
+
+    if (maxPublicRank != null) {
+      rankingsQuery = rankingsQuery.lte("prospect_ranking", maxPublicRank)
+    }
+
+    const { data: athletes, error } = await rankingsQuery.order("prospect_ranking", { ascending: true })
 
     if (error) {
       console.error("[v0] Error fetching athletes:", error)
@@ -90,12 +100,12 @@ export async function GET(request: Request) {
 
     console.log("[v0] Found athletes:", athletes?.length || 0)
 
-    const yearNum = parseInt(year, 10) || year
+    const gradYearForLinkQuery = Number.isFinite(yearNum) ? yearNum : year
 
     const { data: allForYear } = await supabase
       .from("athletes")
       .select("id, name, firstname, lastname, wrestling_name, highschool")
-      .eq("graduationyear", yearNum)
+      .eq("graduationyear", gradYearForLinkQuery)
 
     const linkResolution = (allForYear || []).map((a: Record<string, unknown>) => {
       const raw =
@@ -122,7 +132,7 @@ export async function GET(request: Request) {
     const schoolNames = [...new Set((athletes as { highschool?: string }[]).map((a) => a.highschool).filter(Boolean))] as string[]
     const divisionMap = await buildSchoolClassificationMap(supabase, schoolNames)
 
-    const gradYearNum = yearNum
+    const gradYearNum = Number.isFinite(yearNum) ? yearNum : parseInt(String(year), 10) || 0
     const rankings = await Promise.all(
       athletes.map(async (athlete) => {
         const athleteName = `${athlete.firstName} ${athlete.lastName}`

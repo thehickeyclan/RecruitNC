@@ -111,26 +111,27 @@ export default function Super32ToolsPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-3">
-            See how the DB differs from the CSV for a year (only in CSV, only in DB, field differences):
+            See how the DB differs from the CSV for a year (only in CSV, only in DB, field differences).
+            Requires admin login; open in <strong>this tab</strong> so your session cookie is sent (same-origin).
           </p>
           <ul className="text-sm list-disc list-inside space-y-1">
             <li>
-              <a href="/api/debug/compare-super32-2022" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a href="/api/debug/compare-super32-2022" className="text-blue-600 hover:underline">
                 Compare 2022
               </a>
             </li>
             <li>
-              <a href="/api/debug/compare-super32-2023" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a href="/api/debug/compare-super32-2023" className="text-blue-600 hover:underline">
                 Compare 2023
               </a>
             </li>
             <li>
-              <a href="/api/debug/compare-super32-2024" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a href="/api/debug/compare-super32-2024" className="text-blue-600 hover:underline">
                 Compare 2024
               </a>
             </li>
             <li>
-              <a href="/api/debug/compare-super32-2025" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+              <a href="/api/debug/compare-super32-2025" className="text-blue-600 hover:underline">
                 Compare 2025
               </a>
             </li>

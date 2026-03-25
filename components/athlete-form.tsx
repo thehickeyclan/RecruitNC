@@ -384,6 +384,23 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
       }
     }
 
+    if (formData.birthdate?.trim()) {
+      const gy = parseInt(String(formData.graduationYear), 10)
+      const m = /^(\d{4})-\d{2}-\d{2}$/.exec(formData.birthdate.trim())
+      const by = m ? parseInt(m[1], 10) : NaN
+      const bd = new Date(`${formData.birthdate.trim()}T12:00:00`)
+      if (!isNaN(bd.getTime()) && bd > new Date()) {
+        errors.birthdate = "Birthdate cannot be in the future."
+      } else if (!isNaN(gy) && !isNaN(by)) {
+        if (by >= gy) {
+          errors.birthdate = "Birth year must be before graduation year."
+        } else if (by > gy - 12) {
+          errors.birthdate =
+            "Birth year doesn’t match this graduation year — check for a typo (e.g. 2006 instead of 2026)."
+        }
+      }
+    }
+
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -625,7 +642,11 @@ const AthleteForm: React.FC<AthleteFormProps> = ({ onSubmit, initialData }) => {
                   type="date"
                   value={formData.birthdate}
                   onChange={handleChange}
+                  className={validationErrors.birthdate ? "border-red-500" : ""}
                 />
+                {validationErrors.birthdate && (
+                  <p className="text-sm text-red-500 mt-1">{validationErrors.birthdate}</p>
+                )}
               </div>
 
               <div className="space-y-2">

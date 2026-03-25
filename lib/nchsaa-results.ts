@@ -122,6 +122,50 @@ export type NchsaaRowForProfile = {
 }
 
 /**
+ * Map `athletes.nchsaa_results` JSON/JSONB (array of state rows) into the same shape as table rows.
+ * Used when `wrestling_nchsaa_results` is empty, missing in this Supabase project, or as a supplement.
+ */
+export function nchsaaJsonToProfileRows(raw: unknown, fallbackWrestlerName: string): NchsaaRowForProfile[] {
+  if (raw == null) return []
+  let arr: unknown[] = []
+  if (Array.isArray(raw)) {
+    arr = raw
+  } else if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw)
+      arr = Array.isArray(p) ? p : []
+    } catch {
+      return []
+    }
+  } else {
+    return []
+  }
+
+  const name = (fallbackWrestlerName ?? "").trim() || "Unknown"
+  const out: NchsaaRowForProfile[] = []
+  for (const item of arr) {
+    if (!item || typeof item !== "object") continue
+    const o = item as Record<string, unknown>
+    const year = Number(o.year)
+    if (!year || Number.isNaN(year)) continue
+    const placeRaw = o.place
+    const place =
+      placeRaw == null || placeRaw === ""
+        ? null
+        : Number(placeRaw)
+    out.push({
+      year,
+      classification: String(o.classification ?? (o as any).class ?? ""),
+      weight_class: String(o.weight_class ?? (o as any).weightClass ?? ""),
+      place: place != null && !Number.isNaN(place) ? place : null,
+      school: String(o.school ?? ""),
+      wrestler_name: String(o.wrestler_name ?? (o as any).wrestlerName ?? name),
+    })
+  }
+  return out.sort((a, b) => b.year - a.year)
+}
+
+/**
  * Plausible NCHSAA tournament years for a graduation year (high school: gradYear-4 through gradYear).
  * Used to avoid merging a different person with the same name (e.g. two Jacob Perrys).
  */
@@ -171,39 +215,51 @@ export async function getNCHSAAResultsForProfile(
   // First: dual-token ILIKE (first AND last) — matches "Thompson, Ryan" when display name is "Ryan Thompson"
   // (a single full-string ILIKE does not). No year filter on this query; see lib/nchsaa-profile-fetch.ts
   try {
-    const dualTokenRows = await fetchNchsaaResultsForAthleteProfile(supabase, athleteName)
+    const dualTokenRows = await fetchNchsaaResultsForAthleteProfile(supabase, athleteName, {
+      graduationYear: graduationYear,
+    })
     pushRows(dualTokenRows as any[])
   } catch {
     // non-fatal — fall back to variants below
   }
 
   // Exact match first: "First Last" then "Last, First" (DB often has "D'Ettore, Jackson")
-  const { data: exactData, error: exactErr } = await supabase
+  let exactQuery = supabase
     .from("wrestling_nchsaa_results")
     .select("year, classification, weight_class, place, school, wrestler_name")
     .eq("wrestler_name", exactName)
-    .order("year", { ascending: false })
+  if (yearRange != null) {
+    exactQuery = exactQuery.gte("year", yearRange.min).lte("year", yearRange.max)
+  }
+  const { data: exactData, error: exactErr } = await exactQuery.order("year", { ascending: false })
   if (!exactErr && exactData?.length) pushRows(exactData)
 
   const variations = getNameVariations(athleteName)
   const lastFirst = variations.find((n) => n.includes(","))
   if (lastFirst) {
-    const { data: lfData, error: lfErr } = await supabase
+    let lfQuery = supabase
       .from("wrestling_nchsaa_results")
       .select("year, classification, weight_class, place, school, wrestler_name")
       .eq("wrestler_name", lastFirst)
-      .order("year", { ascending: false })
+    if (yearRange != null) {
+      lfQuery = lfQuery.gte("year", yearRange.min).lte("year", yearRange.max)
+    }
+    const { data: lfData, error: lfErr } = await lfQuery.order("year", { ascending: false })
     if (!lfErr && lfData?.length) pushRows(lfData)
   }
 
   for (const v of variations) {
     const patterns = getIlikePatternsForVariation(v)
     for (const pattern of patterns) {
-      const { data, error } = await supabase
+      let q = supabase
         .from("wrestling_nchsaa_results")
         .select("year, classification, weight_class, place, school, wrestler_name")
         .ilike("wrestler_name", pattern)
-        .order("year", { ascending: false })
+      // Avoid PostgREST default row cap cutting off years; keep same window as plausible grad years
+      if (yearRange != null) {
+        q = q.gte("year", yearRange.min).lte("year", yearRange.max)
+      }
+      const { data, error } = await q.order("year", { ascending: false })
       if (error) throw error
       if (data?.length) pushRows(data)
     }
@@ -217,12 +273,14 @@ export async function getNCHSAAResultsForProfile(
     if (firstName && lastName) {
       const lastPatterns = getIlikePatternsForVariation(lastName)
       for (const lastPattern of lastPatterns) {
-        const { data: byLast, error: errLast } = await supabase
+        let byLastQuery = supabase
           .from("wrestling_nchsaa_results")
           .select("year, classification, weight_class, place, school, wrestler_name")
           .ilike("wrestler_name", lastPattern)
-          .order("year", { ascending: false })
-          .limit(100)
+        if (yearRange != null) {
+          byLastQuery = byLastQuery.gte("year", yearRange.min).lte("year", yearRange.max)
+        }
+        const { data: byLast, error: errLast } = await byLastQuery.order("year", { ascending: false }).limit(100)
         if (!errLast && byLast?.length) {
           const firstLower = firstName.toLowerCase()
           for (const row of byLast) {

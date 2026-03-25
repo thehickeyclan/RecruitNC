@@ -26,8 +26,9 @@ function normalizeApostrophes(s: string): string {
 /**
  * Parse "First Last" or "Last, First" into first + last tokens for AND ILIKE matching.
  * - "Ryan Thompson" → first=Ryan, last=Thompson
- * - "Thompson, Ryan" → last=Thompson, first=Ryan
- * - "Mary Jane Smith" (no comma) → first=Mary, last="Jane Smith" (rest)
+ * - "Ryan M. Thompson" → first=Ryan, last=Thompson (NOT "M. Thompson" — that broke DB rows like "Thompson, Ryan")
+ * - "Thompson, Ryan" / "Thompson, Ryan M." → last=Thompson, first=Ryan (first token after comma only)
+ * - "Mary Jane Smith" → first=Mary, last=Smith (first + last token when 3+ parts)
  */
 export function parseFirstLastForNchsaa(athleteName: string): { first: string; last: string } | null {
   const raw = normalizeApostrophes((athleteName ?? "").trim())
@@ -36,28 +37,34 @@ export function parseFirstLastForNchsaa(athleteName: string): { first: string; l
   if (raw.includes(",")) {
     const [a, b] = raw.split(",").map((s) => s.trim())
     if (a && b) {
-      return { last: a, first: b }
+      const afterParts = b.split(/\s+/).filter(Boolean)
+      const firstAfter = afterParts[0] ?? b
+      return { last: a.trim(), first: firstAfter.trim() }
     }
     return null
   }
 
   const parts = raw.split(/\s+/).filter(Boolean)
   if (parts.length < 2) return null
-  return { first: parts[0]!, last: parts.slice(1).join(" ") }
+  if (parts.length === 2) return { first: parts[0]!, last: parts[1]! }
+  // 3+ tokens: first word + last word (handles middle names / initials)
+  return { first: parts[0]!, last: parts[parts.length - 1]! }
 }
 
 /**
  * Fetch NCHSAA state results for profile using **two** ILIKEs (first + last token), so both
  * `Ryan Thompson` and `Thompson, Ryan` match — a single `%Ryan Thompson%` does **not** match `Thompson, Ryan`.
  *
- * **No year filter** on this query: all years are returned; `getNCHSAAResultsForProfile` may still
- * apply a plausible grad-year window when merging with other strategies.
+ * When `graduationYear` is set, the query adds a **year window** (grad−5 … grad+2) so we stay under
+ * PostgREST default row limits when many athletes share tokens like "Ryan" + "Thompson".
  *
+ * @see docs/2026-STATE-QUALIFIERS-FOR-RECRUITNC.md — canonical table `wrestling_nchsaa_results`
  * @see docs/RECRUITNC-PROFILE-NAME-MATCHING-DETTORE.md — "2026 missing (e.g. Ryan Thompson)"
  */
 export async function fetchNchsaaResultsForAthleteProfile(
   supabase: SupabaseClient,
-  athleteName: string
+  athleteName: string,
+  options?: { graduationYear?: number }
 ): Promise<NchsaaProfileFetchRow[]> {
   const parsed = parseFirstLastForNchsaa(athleteName)
   if (!parsed) return []
@@ -65,12 +72,19 @@ export async function fetchNchsaaResultsForAthleteProfile(
   const pFirst = `%${escapeForIlike(parsed.first)}%`
   const pLast = `%${escapeForIlike(parsed.last)}%`
 
-  const { data, error } = await supabase
+  let q = supabase
     .from("wrestling_nchsaa_results")
     .select("year, classification, weight_class, place, school, wrestler_name")
     .ilike("wrestler_name", pFirst)
     .ilike("wrestler_name", pLast)
-    .order("year", { ascending: false })
+
+  const gy = options?.graduationYear
+  if (gy != null && !Number.isNaN(Number(gy))) {
+    const y = Number(gy)
+    q = q.gte("year", y - 5).lte("year", y + 2)
+  }
+
+  const { data, error } = await q.order("year", { ascending: false })
 
   if (error) throw error
 

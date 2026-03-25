@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getCachedAdminCheck } from "@/lib/cached-auth-check"
 import { readFileSync } from "fs"
 import { join } from "path"
 
@@ -64,6 +65,11 @@ function parseCsv(path: string): CsvRow[] {
 
 export async function GET() {
   try {
+    const admin = await getCachedAdminCheck()
+    if (!admin.isAdmin) {
+      return admin.response ?? NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const csvRows = parseCsv(CSV_PATH)
     const supabase = createAdminClient()
     const { data: dbRows, error } = await supabase

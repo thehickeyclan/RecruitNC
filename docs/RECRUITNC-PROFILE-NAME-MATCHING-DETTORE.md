@@ -1,6 +1,8 @@
 # RecruitNC profile name matching (align with Data Dawg)
 
-Same DB and tables as LegacyNC (Data Dawg): `wrestling_nchsaa_results`, `wrestling_nhsca_results`, `nhsca_placements`, `super32_results`. Data Dawg finds Jackson D'Ettore (and similar names) because it queries with **multiple name variants**. RecruitNC profile must do the same.
+**NCHSAA state (placers & SQ):** Single source of truth is **`wrestling_nchsaa_results`** in the shared LegacyNC / RecruitNC Supabase project — see [`docs/2026-STATE-QUALIFIERS-FOR-RECRUITNC.md`](./2026-STATE-QUALIFIERS-FOR-RECRUITNC.md) and [`docs/2026-state-qualifier-data.md`](./2026-state-qualifier-data.md). `GET /api/wrestling-achievements` may **merge** optional `athletes.nchsaa_results` JSON only as a fallback / gap-fill; canonical rows always come from the table.
+
+**Other tournaments:** Same DB as LegacyNC (Data Dawg): `wrestling_nhsca_results`, `nhsca_placements`, `super32_results`. Data Dawg finds Jackson D'Ettore (and similar names) because it queries with **multiple name variants**. RecruitNC profile must do the same.
 
 ## Cause
 
@@ -41,10 +43,12 @@ Two issues showed up on live profiles while **Legacy-only** fixes did not apply 
 
 2. **Name shape** — NCHSAA often stores **`Thompson, Ryan`**, not `Ryan Thompson`. A single `ILIKE '%Ryan Thompson%'` **does not** match `Thompson, Ryan` (no contiguous substring). Patterns that rely on one comma-separated `.or()` can also fail (same idea as Data Dawg: “patterns with commas break `.or()`”).
 
+3. **Middle names** — If the athlete row is **`Ryan M. Thompson`**, the dual-token query must use **first + last token** (`Ryan` + `Thompson`), not `Ryan` + `M. Thompson`, or it will not match **`Thompson, Ryan`** in the DB.
+
 **Fix in this repo**
 
-- `lib/nchsaa-profile-fetch.ts` — `fetchNchsaaResultsForAthleteProfile(supabase, athleteName)` runs **two** `ILIKE`s on `wrestler_name` (first token **and** last token), with **no year filter** on that query. That matches both **First Last** and **Last, First** spellings.
-- `lib/nchsaa-results.ts` — `getNCHSAAResultsForProfile` **merges** those rows first (then exact match, variants, fallback), and applies the widened year window above.
+- `lib/nchsaa-profile-fetch.ts` — `fetchNchsaaResultsForAthleteProfile` runs **two** `ILIKE`s on `wrestler_name` (first token **and** last token) so **First Last** and **Last, First** both match. When `graduationYear` is passed, the query also bounds **`year`** (grad−5 … grad+2) to avoid huge result sets.
+- `lib/nchsaa-results.ts` — `getNCHSAAResultsForProfile` **merges** those rows first (then exact match, variants, fallback), and applies the plausible grad-year window for all table queries.
 
 Unified profile and `GET /api/wrestling-achievements` both use `getNCHSAAResultsForProfile` — no separate Legacy path.
 

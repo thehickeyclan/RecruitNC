@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
-import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import {
+  getNCHSAAResultsForProfile,
+  mergeNchsaaResults,
+  nchsaaJsonToProfileRows,
+} from "@/lib/nchsaa-results"
 import { getNameVariants, getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
@@ -13,12 +17,16 @@ export async function GET(request: Request) {
 
     const supabase = createAdminClient()
 
+    /** Optional JSON on `athletes` — fallback / gap-fill only. Canonical NCHSAA rows: `wrestling_nchsaa_results` (see docs/2026-STATE-QUALIFIERS-FOR-RECRUITNC.md). */
+    let athleteNchsaaJson: unknown = undefined
+
     if (athleteId) {
-      const { data: athlete } = await supabase.from("athletes").select("name, wrestling_name, graduationyear").eq("id", athleteId).single()
+      const { data: athlete } = await supabase.from("athletes").select("*").eq("id", athleteId).single()
       if (athlete) {
         athleteName = (athlete.name ?? "").toString().trim() || athleteName
         wrestlingName = (athlete.wrestling_name ?? "").toString().trim() || wrestlingName
         if (athlete.graduationyear != null) graduationYearParam = String(athlete.graduationyear)
+        athleteNchsaaJson = (athlete as Record<string, unknown>).nchsaa_results
       }
     }
 
@@ -31,12 +39,30 @@ export async function GET(request: Request) {
       )
     }
 
-    const byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear)
-    const byWrestling =
-      wrestlingName && wrestlingName !== athleteName
-        ? await getNCHSAAResultsForProfile(supabase, wrestlingName, graduationYear)
-        : []
-    const nchsaaResults = mergeNchsaaResults(byName, byWrestling)
+    let byName: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
+    try {
+      byName = await getNCHSAAResultsForProfile(supabase, athleteName, graduationYear)
+    } catch (e) {
+      console.warn(
+        "[RecruitNC] wrestling-achievements: NCHSAA table query failed (by name); using athlete row JSON if present",
+        e,
+      )
+    }
+
+    let byWrestling: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
+    if (wrestlingName && wrestlingName !== athleteName) {
+      try {
+        byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, graduationYear)
+      } catch (e) {
+        console.warn(
+          "[RecruitNC] wrestling-achievements: NCHSAA table query failed (wrestling name); using athlete row JSON if present",
+          e,
+        )
+      }
+    }
+
+    const fromAthleteRow = nchsaaJsonToProfileRows(athleteNchsaaJson, athleteName)
+    const nchsaaResults = mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
 
     const namesToTry = [...new Set([...getNameVariants(athleteName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
 

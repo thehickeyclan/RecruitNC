@@ -166,6 +166,20 @@ export async function getCachedAdminCheck(): Promise<{
 }
 
 /**
+ * Session + profile for routes that check `profile?.is_admin` manually.
+ */
+export async function getAdminAuth(): Promise<{
+  user: any | null
+  profile: any | null
+}> {
+  const authResult = await getCachedAuth()
+  if (authResult.error || !authResult.user) {
+    return { user: null, profile: null }
+  }
+  return { user: authResult.user, profile: authResult.profile }
+}
+
+/**
  * Clear auth cache for a specific user (useful after logout or profile updates)
  */
 export function clearAuthCache(userId: string) {

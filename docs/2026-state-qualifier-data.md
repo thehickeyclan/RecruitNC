@@ -1,5 +1,7 @@
 # 2026 State Qualifier Data — For RecruitNC
 
+**Stable alias for this doc:** [`2026-STATE-QUALIFIERS-FOR-RECRUITNC.md`](./2026-STATE-QUALIFIERS-FOR-RECRUITNC.md) (same facts; shorter entry point).
+
 ## Summary (for RecruitNC)
 
 - **Where:** All 2026 NCHSAA state qualifiers (and placers) are stored in the **Supabase table `wrestling_nchsaa_results`** — same DB as LegacyNC. This is the only source for state/SQ on unified profiles.
@@ -14,7 +16,7 @@
 
 **Supabase table:** `wrestling_nchsaa_results`
 
-This is the single source of truth for NCHSAA state results (placers and state qualifiers). LegacyNC and RecruitNC unified athlete profiles both use this table only for state/SQ info.
+This is the single source of truth for NCHSAA state results (placers and state qualifiers). LegacyNC and RecruitNC unified athlete profiles read state/SQ from this table. **There is no separate 2026-only table** — filter with `year = 2026` on the same table used for other seasons.
 
 ---
 

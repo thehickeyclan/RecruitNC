@@ -375,8 +375,8 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
-            {/* Super32 Tools */}
-            <Link href="/admin/super32-tools">
+            {/* Super32 Tools — HardLink for reliable admin nav */}
+            <HardLink href="/admin/super32-tools" className="block h-full">
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <RefreshCw className="h-10 w-10 text-[#1a5f4a] mb-3" />
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
                   <p className="text-xs text-gray-600">Reconcile DB to verified CSV</p>
                 </CardContent>
               </Card>
-            </Link>
+            </HardLink>
 
             {/* NCHSAA — brackets, state results utilities */}
             <Link href="/admin/nchsaa">

@@ -25,3 +25,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local bulk SQL output (can be large; regenerate with scripts/import-nchsaa-2026-placers-from-json.js)
+scripts/generated-nchsaa-2026-placers-insert.sql

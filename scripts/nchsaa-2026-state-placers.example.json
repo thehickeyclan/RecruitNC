@@ -1,0 +1,20 @@
+{
+  "tournament": "2026 NCHSAA State Championships (example)",
+  "year": 2026,
+  "classifications": [
+    {
+      "classification": "7A",
+      "weight_classes": [
+        {
+          "weight": 165,
+          "places": [
+            { "place": 1, "name": "Example Wrestler", "school": "Example High School" },
+            { "place": 2, "name": "Ryan Thompson", "school": "Cardinal Gibbons" },
+            { "place": 3, "name": "Third Placer", "school": "Another School" },
+            { "place": 4, "name": "Fourth Placer", "school": "Fourth School" }
+          ]
+        }
+      ]
+    }
+  ]
+}

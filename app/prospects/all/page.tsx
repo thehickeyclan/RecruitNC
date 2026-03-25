@@ -337,7 +337,13 @@ export default function AllProspectsPage() {
         const gradYear = prospect.graduationyear
         const rawRank = getRawRank(prospect)
         const maxRank =
-          gradYear === 2028 || gradYear === 2029 ? 20 : gradYear === 2026 || gradYear === 2027 ? 30 : 0
+          gradYear === 2028
+            ? 25
+            : gradYear === 2029
+              ? 20
+              : gradYear === 2026 || gradYear === 2027
+                ? 30
+                : 0
         const hasOfficialRank =
           Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRank
         if (rankFilter === "ranked" && !hasOfficialRank) return false
@@ -413,12 +419,18 @@ export default function AllProspectsPage() {
             ? "Verbal"
             : "Uncommitted"
 
-      // Only show rank for athletes on our official rankings: top 30 in 2026/2027, top 20 in 2028/2029; show "G" for graduated (2025 and earlier)
+      // Only show rank for athletes on our official rankings: top 30 in 2026/2027, top 25 in 2028, top 20 in 2029; show "G" for graduated (2025 and earlier)
       const gradYear = prospect.graduationyear
       const isRankedClass = gradYear === 2026 || gradYear === 2027 || gradYear === 2028 || gradYear === 2029
       const rawRank = getRawRank(prospect)
       const maxRankForClass =
-        gradYear === 2028 || gradYear === 2029 ? 20 : (gradYear === 2026 || gradYear === 2027 ? 30 : 0)
+        gradYear === 2028
+          ? 25
+          : gradYear === 2029
+            ? 20
+            : gradYear === 2026 || gradYear === 2027
+              ? 30
+              : 0
       const hasOfficialRank =
         Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
       const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null

@@ -504,7 +504,7 @@ export default function Class2027RankingsPage() {
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center justify-center h-full">
                   <Trophy className="h-12 w-12 sm:h-16 sm:w-16 mb-4 text-[#D3B574]" />
                   <h3 className="text-xl sm:text-2xl font-bold mb-2">Class of 2028 Rankings</h3>
-                  <p className="text-red-100 mb-4">View the Top 20 ranked prospects for 2028</p>
+                  <p className="text-red-100 mb-4">View the Top 25 ranked prospects for 2028</p>
                   <Button
                     variant="secondary"
                     size="lg"
