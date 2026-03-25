@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
 import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
@@ -40,6 +41,15 @@ async function getNCHSAAResults(supabase: any, athleteName: string, graduationYe
 
 export async function GET(request: Request) {
   try {
+    const authSupabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await authSupabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2026"
     const gender = searchParams.get("gender") || "Male"

@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
 
 function normalize(s: string): string {
@@ -23,6 +24,15 @@ function getFullName(row: Record<string, unknown>): string {
  */
 export async function GET(request: NextRequest) {
   try {
+    const authSupabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await authSupabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2028"
     const namesParam = searchParams.get("names") || ""
