@@ -40,7 +40,7 @@ export default async function NCHSAAArticlePage({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-8 max-w-3xl md:max-w-4xl">
         <div className="mb-6">
-          <BackToYearLink year={year} />
+          <BackToYearLink year={year} backHref={article.articleBackHref} backLabel={article.articleBackLabel} />
         </div>
         <header className="mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-[#003366]">{article.title}</h1>
@@ -97,7 +97,7 @@ export default async function NCHSAAArticlePage({
           <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-600">
             <p>This article is coming soon.</p>
             <div className="mt-4">
-              <BackToYearLink year={year} />
+              <BackToYearLink year={year} backHref={article.articleBackHref} backLabel={article.articleBackLabel} />
             </div>
           </div>
         )}

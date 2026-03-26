@@ -11,8 +11,19 @@ import { ArrowLeft } from "lucide-react"
  * back link goes to /news (lighter page) so Link works there. Here we force a full page load
  * so the back action always completes.
  */
-export function BackToYearLink({ year }: { year: string }) {
-  const href = `/nchsaa/${year}`
+export function BackToYearLink({
+  year,
+  backHref,
+  backLabel,
+}: {
+  year: string
+  /** Override target (e.g. /news for stories surfaced from the news index). */
+  backHref?: string
+  /** Override button text; default Back to {year} Results */
+  backLabel?: string
+}) {
+  const href = backHref ?? `/nchsaa/${year}`
+  const label = backLabel ?? `Back to ${year} Results`
 
   const go = () => {
     window.location.href = href
@@ -29,10 +40,10 @@ export function BackToYearLink({ year }: { year: string }) {
         }
       }}
       className="inline-flex items-center gap-2 rounded-md border-2 border-[#C20017] bg-transparent px-4 py-2 text-sm font-medium text-[#C20017] hover:bg-[#C20017] hover:text-white transition-colors cursor-pointer"
-      aria-label={`Back to ${year} results`}
+      aria-label={label}
     >
       <ArrowLeft className="w-4 h-4 shrink-0" aria-hidden />
-      Back to {year} Results
+      {label}
     </button>
   )
 }

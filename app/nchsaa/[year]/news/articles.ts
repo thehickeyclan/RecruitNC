@@ -29,6 +29,9 @@ export interface NCHSAAArticle {
   imageBannerZoom?: boolean
   /** If false, omitted from the 3-story carousel on /nchsaa/2026; shown in "More coverage" instead */
   includeInNchsaaCarousel?: boolean
+  /** Article page top back button; default is /nchsaa/{year} */
+  articleBackHref?: string
+  articleBackLabel?: string
 }
 
 export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
@@ -96,6 +99,8 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     /** Full graphic visible (no top/bottom crop); tight PNG + taller shell = large banner */
     imageFit: "contain",
     includeInNchsaaCarousel: false,
+    articleBackHref: "/news",
+    articleBackLabel: "Back to News",
   },
 ]
 
