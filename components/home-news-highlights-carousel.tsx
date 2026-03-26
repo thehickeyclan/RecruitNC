@@ -62,19 +62,31 @@ export function HomeNewsHighlightsCarousel() {
           >
             {mainStory.image ? (
               <div
-                className={`relative w-full h-52 sm:h-64 md:h-80 lg:h-[22rem] border-b border-slate-100 ${
-                  mainStory.imageFit === "contain" ? "bg-white" : "bg-slate-100"
+                className={`relative w-full h-52 sm:h-64 md:h-80 lg:h-[22rem] overflow-hidden border-b border-slate-100 ${
+                  mainStory.imageFit === "contain" || mainStory.imageBannerZoom ? "bg-white" : "bg-slate-100"
                 }`}
               >
                 <Image
                   src={mainStory.image}
                   alt=""
                   fill
-                  className={`transition-transform group-hover:scale-[1.01] ${
+                  className={[
+                    "transition-transform",
                     mainStory.imageFit === "contain"
-                      ? "object-contain object-center p-3 sm:p-5 md:p-8"
-                      : `object-cover ${mainStory.imagePosition === "top" ? "object-top" : "object-center"}`
-                  }`}
+                      ? "object-contain object-center p-2 sm:p-3"
+                      : [
+                          "object-cover",
+                          mainStory.imagePosition === "top" ? "object-top" : "object-center",
+                          mainStory.imageBannerZoom
+                            ? "origin-center scale-110 sm:scale-125 md:scale-[1.38] lg:scale-[1.48]"
+                            : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" "),
+                    !mainStory.imageBannerZoom ? "group-hover:scale-[1.01]" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1200px"
                   priority
                 />

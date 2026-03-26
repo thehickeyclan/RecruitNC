@@ -51,7 +51,7 @@ export default async function NCHSAAArticlePage({
         {article.image && (
           <div
             className={`relative mb-8 w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm h-56 sm:h-72 md:h-96 lg:h-[28rem] ${
-              article.imageFit === "contain" ? "bg-white" : "bg-slate-100"
+              article.imageFit === "contain" || article.imageBannerZoom ? "bg-white" : "bg-slate-100"
             }`}
           >
             <Image
@@ -60,8 +60,16 @@ export default async function NCHSAAArticlePage({
               fill
               className={
                 article.imageFit === "contain"
-                  ? "object-contain object-center p-4 sm:p-6 md:p-10"
-                  : `object-cover ${article.imagePosition === "top" ? "object-top" : "object-center"}`
+                  ? "object-contain object-center"
+                  : [
+                      "object-cover",
+                      article.imagePosition === "top" ? "object-top" : "object-center",
+                      article.imageBannerZoom
+                        ? "origin-center scale-110 sm:scale-125 md:scale-[1.42] lg:scale-[1.55]"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")
               }
               sizes="(max-width: 768px) 100vw, 56rem"
               priority

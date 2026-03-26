@@ -37,19 +37,27 @@ export default function NewsPage() {
                 {item.newsListBanner && item.image ? (
                   <>
                     <div
-                      className={`relative h-48 w-full border-b border-slate-100 sm:h-56 md:h-72 ${
-                        item.imageFit === "contain" ? "bg-white" : "bg-slate-100"
+                      className={`relative h-48 w-full overflow-hidden border-b border-slate-100 sm:h-56 md:h-72 ${
+                        item.imageFit === "contain" || item.imageBannerZoom ? "bg-white" : "bg-slate-100"
                       }`}
                     >
                       <Image
                         src={item.image}
                         alt=""
                         fill
-                        className={`${
+                        className={
                           item.imageFit === "contain"
-                            ? "object-contain object-center p-3 sm:p-6"
-                            : `object-cover ${item.imagePosition === "top" ? "object-top" : "object-center"}`
-                        }`}
+                            ? "object-contain object-center p-2 sm:p-3"
+                            : [
+                                "object-cover",
+                                item.imagePosition === "top" ? "object-top" : "object-center",
+                                item.imageBannerZoom
+                                  ? "origin-center scale-110 sm:scale-125 md:scale-[1.38]"
+                                  : "",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")
+                        }
                         sizes="(max-width: 768px) 100vw, 56rem"
                       />
                     </div>

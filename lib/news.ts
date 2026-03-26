@@ -21,6 +21,8 @@ export interface NewsItem {
   imagePosition?: "top" | "center"
   /** Use "contain" to show full image (e.g. product shots); default "cover" fills the card. */
   imageFit?: "cover" | "contain"
+  /** With cover: scale up slightly so logo-style PNGs fill the banner. */
+  imageBannerZoom?: boolean
   /** On /news index: full-width image banner above text (hero-style). */
   newsListBanner?: boolean
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
@@ -39,8 +41,8 @@ const ALL_NEWS: NewsItem[] = [
     date: "2026-03-26",
     image: "/images/nchsaa-2026-nhsca-nationals-preview.png",
     imagePosition: "center",
-    /** Logo-style art: full-bleed cover clips the NHSCA wordmark */
-    imageFit: "contain",
+    imageFit: "cover",
+    imageBannerZoom: true,
     newsListBanner: true,
     category: "NATIONALS",
     categoryBadgeClass: "bg-[#003366]",

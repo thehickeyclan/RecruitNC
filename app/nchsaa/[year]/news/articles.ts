@@ -23,8 +23,10 @@ export interface NCHSAAArticle {
   image?: string
   /** Use "top" so people/faces stay visible when image is cropped */
   imagePosition?: "top" | "center"
-  /** Article hero: use "contain" for logo-style graphics so nothing is clipped */
+  /** Hero / cards: cover fills the frame; contain letterboxes (can look tiny for logo PNGs). */
   imageFit?: "cover" | "contain"
+  /** Cover + slight zoom so banner art with extra whitespace still reads as a full banner */
+  imageBannerZoom?: boolean
   /** If false, omitted from the 3-story carousel on /nchsaa/2026; shown in "More coverage" instead */
   includeInNchsaaCarousel?: boolean
 }
@@ -91,7 +93,8 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     published: true,
     image: "/images/nchsaa-2026-nhsca-nationals-preview.png",
     imagePosition: "center",
-    imageFit: "contain",
+    imageFit: "cover",
+    imageBannerZoom: true,
     includeInNchsaaCarousel: false,
   },
 ]
