@@ -4,6 +4,7 @@ import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brac
 import { UnderstandingBracketDepth2026Content } from "../content/understanding-bracket-depth-2026"
 import { getArticle2ProfileIdMap } from "../content/article-2-profile-ids"
 import { ThreeJoinTheImmortals2026Content } from "../content/three-join-the-immortals-2026"
+import { NhscaNationalsPreview2026Content } from "../content/nhsca-nationals-preview-2026"
 import { BackToYearLink } from "../back-to-year-link"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
@@ -13,6 +14,7 @@ export async function generateStaticParams() {
     { year: "2026", slug: "seven-divisions-98-brackets-784-qualifiers" },
     { year: "2026", slug: "article-2" },
     { year: "2026", slug: "three-join-the-immortals-2026" },
+    { year: "2026", slug: "nhsca-nationals-preview-2026" },
   ]
 }
 
@@ -31,6 +33,7 @@ export default async function NCHSAAArticlePage({
   if (slug === "seven-divisions-98-brackets-784-qualifiers") content = <SevenDivisionsArticleContent />
   else if (slug === "article-2") content = <UnderstandingBracketDepth2026Content profileIdMap={profileIdMap} />
   else if (slug === "three-join-the-immortals-2026") content = <ThreeJoinTheImmortals2026Content />
+  else if (slug === "nhsca-nationals-preview-2026") content = <NhscaNationalsPreview2026Content />
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">

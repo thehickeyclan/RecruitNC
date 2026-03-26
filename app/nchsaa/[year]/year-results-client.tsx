@@ -7,8 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import { Crown, Calendar, Trophy, ArrowLeft, Download, Search, Eye, User, FileText, Clock, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
-import { NCHSAA_2026_ARTICLES, type NCHSAAArticle } from "./news/articles"
+import {
+  NCHSAA_2026_CAROUSEL_ARTICLES,
+  NCHSAA_2026_MORE_COVERAGE,
+  type NCHSAAArticle,
+} from "./news/articles"
 import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { TournamentBracketModal } from "@/components/tournament-bracket-modal"
@@ -391,8 +396,29 @@ export function NCHSAAYearResultsClient({
         </Link>
       </div>
 
-      {displayYear === 2026 && NCHSAA_2026_ARTICLES.length > 0 && (
-        <NCHSAA2026ArticleCarousel articles={NCHSAA_2026_ARTICLES} displayYear={displayYear} />
+      {displayYear === 2026 && NCHSAA_2026_CAROUSEL_ARTICLES.length > 0 && (
+        <NCHSAA2026ArticleCarousel articles={NCHSAA_2026_CAROUSEL_ARTICLES} displayYear={displayYear} />
+      )}
+
+      {displayYear === 2026 && NCHSAA_2026_MORE_COVERAGE.length > 0 && (
+        <section className="mb-10 sm:mb-12" aria-labelledby="more-coverage-heading">
+          <h2 id="more-coverage-heading" className="text-lg font-bold text-[#003366] mb-3">
+            More coverage
+          </h2>
+          <ul className="space-y-2 border border-slate-200 rounded-lg bg-white p-4 sm:p-5">
+            {NCHSAA_2026_MORE_COVERAGE.map((article) => (
+              <li key={article.slug}>
+                <HardLink
+                  href={`/nchsaa/${displayYear}/news/${article.slug}`}
+                  className="text-[#003366] font-medium hover:underline"
+                >
+                  {article.title}
+                </HardLink>
+                {article.summary && <span className="text-slate-600 text-sm"> — {article.summary}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section className="mb-8 sm:mb-12 rounded-lg overflow-hidden border-2 border-[#C20017]" aria-labelledby="tournament-summary">

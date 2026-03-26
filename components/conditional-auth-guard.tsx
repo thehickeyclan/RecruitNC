@@ -14,8 +14,9 @@ export function ConditionalAuthGuard({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  // Never treat "unknown path" as public — `!pathname` skipped AuthGuard for all routes.
-  const path = pathname ?? "/"
+  // Never treat "unknown path" as public — the old `!pathname` check skipped AuthGuard for *all* routes when pathname was null/undefined (bad).
+  // Use `??` for null/undefined, but also treat "" as "/" — `"" ?? "/"` is still "" (?? does not replace empty string), which made `/` look non-public and wrapped the homepage in AuthGuard.
+  const path = pathname && pathname.length > 0 ? pathname : "/"
   const isHomepage = path === "/"
   const isAuthRoute = path.startsWith("/auth/")
   const isBluePage = path === "/blue" || path.startsWith("/blue/")
