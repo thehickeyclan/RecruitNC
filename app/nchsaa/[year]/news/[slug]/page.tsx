@@ -38,7 +38,7 @@ export default async function NCHSAAArticlePage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="container mx-auto px-4 py-8 max-w-3xl md:max-w-4xl">
         <div className="mb-6">
           <BackToYearLink year={year} />
         </div>
@@ -50,7 +50,7 @@ export default async function NCHSAAArticlePage({
         </header>
         {article.image && (
           <div
-            className={`relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm sm:aspect-[2/1] ${
+            className={`relative mb-8 w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm h-56 sm:h-72 md:h-96 lg:h-[28rem] ${
               article.imageFit === "contain" ? "bg-white" : "bg-slate-100"
             }`}
           >
@@ -60,10 +60,10 @@ export default async function NCHSAAArticlePage({
               fill
               className={
                 article.imageFit === "contain"
-                  ? "object-contain object-center"
+                  ? "object-contain object-center p-4 sm:p-6 md:p-10"
                   : `object-cover ${article.imagePosition === "top" ? "object-top" : "object-center"}`
               }
-              sizes="(max-width: 768px) 100vw, 48rem"
+              sizes="(max-width: 768px) 100vw, 56rem"
               priority
             />
           </div>

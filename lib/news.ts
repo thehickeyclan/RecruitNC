@@ -21,6 +21,8 @@ export interface NewsItem {
   imagePosition?: "top" | "center"
   /** Use "contain" to show full image (e.g. product shots); default "cover" fills the card. */
   imageFit?: "cover" | "contain"
+  /** On /news index: full-width image banner above text (hero-style). */
+  newsListBanner?: boolean
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
   isAnnouncement?: boolean
 }
@@ -39,6 +41,7 @@ const ALL_NEWS: NewsItem[] = [
     imagePosition: "center",
     /** Logo-style art: full-bleed cover clips the NHSCA wordmark */
     imageFit: "contain",
+    newsListBanner: true,
     category: "NATIONALS",
     categoryBadgeClass: "bg-[#003366]",
     readTime: "18 min read",

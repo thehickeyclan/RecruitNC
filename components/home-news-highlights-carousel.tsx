@@ -60,42 +60,45 @@ export function HomeNewsHighlightsCarousel() {
             href={mainStory.href}
             className="group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
-            <div className="grid min-h-[200px] grid-cols-1 md:grid-cols-5">
+            {mainStory.image ? (
               <div
-                className={`relative h-52 md:h-auto md:min-h-[240px] md:col-span-2 ${
-                  mainStory.imageFit === "contain" ? "bg-white" : ""
+                className={`relative w-full h-52 sm:h-64 md:h-80 lg:h-[22rem] border-b border-slate-100 ${
+                  mainStory.imageFit === "contain" ? "bg-white" : "bg-slate-100"
                 }`}
               >
-                {mainStory.image ? (
-                  <Image
-                    src={mainStory.image}
-                    alt=""
-                    fill
-                    className={`transition-transform group-hover:scale-[1.02] ${mainStory.imageFit === "contain" ? "object-contain object-center p-2" : "object-cover"} ${mainStory.imageFit !== "contain" && mainStory.imagePosition === "top" ? "object-top" : ""}`}
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-slate-100" aria-hidden>
-                    <FileText className="h-12 w-12 text-slate-300" />
-                  </div>
-                )}
+                <Image
+                  src={mainStory.image}
+                  alt=""
+                  fill
+                  className={`transition-transform group-hover:scale-[1.01] ${
+                    mainStory.imageFit === "contain"
+                      ? "object-contain object-center p-3 sm:p-5 md:p-8"
+                      : `object-cover ${mainStory.imagePosition === "top" ? "object-top" : "object-center"}`
+                  }`}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1200px"
+                  priority
+                />
               </div>
-              <div className="flex flex-col justify-center p-6 md:col-span-3">
-                {mainStory.category && (
-                  <span
-                    className={`mb-2 inline-block self-start rounded px-2 py-0.5 text-xs font-medium text-white ${mainStory.categoryBadgeClass ?? "bg-[#003366]"}`}
-                  >
-                    {mainStory.category}
-                  </span>
-                )}
-                <h3 className="mb-2 text-xl font-bold text-[#003366] group-hover:underline md:text-2xl">
-                  {mainStory.title}
-                </h3>
-                <p className="mb-3 line-clamp-2 text-sm text-slate-600">{mainStory.summary}</p>
-                <span className="inline-flex items-center text-sm font-medium text-[#003366]">
-                  Read article →
+            ) : (
+              <div className="flex h-44 items-center justify-center border-b border-slate-100 bg-slate-100" aria-hidden>
+                <FileText className="h-14 w-14 text-slate-300" />
+              </div>
+            )}
+            <div className="flex flex-col justify-center p-6 md:p-8">
+              {mainStory.category && (
+                <span
+                  className={`mb-2 inline-block self-start rounded px-2 py-0.5 text-xs font-medium text-white ${mainStory.categoryBadgeClass ?? "bg-[#003366]"}`}
+                >
+                  {mainStory.category}
                 </span>
-              </div>
+              )}
+              <h3 className="mb-2 text-xl font-bold text-[#003366] group-hover:underline md:text-2xl">
+                {mainStory.title}
+              </h3>
+              <p className="mb-3 line-clamp-3 text-sm text-slate-600 md:text-base">{mainStory.summary}</p>
+              <span className="inline-flex items-center text-sm font-medium text-[#003366]">
+                Read article →
+              </span>
             </div>
           </a>
         )}
