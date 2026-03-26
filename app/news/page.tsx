@@ -37,8 +37,10 @@ export default function NewsPage() {
                 {item.newsListBanner && item.image ? (
                   <>
                     <div
-                      className={`relative h-48 w-full overflow-hidden border-b border-slate-100 sm:h-56 md:h-72 ${
-                        item.imageFit === "contain" || item.imageBannerZoom ? "bg-white" : "bg-slate-100"
+                      className={`relative w-full overflow-hidden border-b border-slate-100 ${
+                        item.imageFit === "contain"
+                          ? "h-52 bg-white sm:h-64 md:h-80"
+                          : "h-48 bg-slate-100 sm:h-56 md:h-72"
                       }`}
                     >
                       <Image
@@ -47,7 +49,7 @@ export default function NewsPage() {
                         fill
                         className={
                           item.imageFit === "contain"
-                            ? "object-contain object-center p-2 sm:p-3"
+                            ? "object-contain object-center p-0"
                             : [
                                 "object-cover",
                                 item.imagePosition === "top" ? "object-top" : "object-center",

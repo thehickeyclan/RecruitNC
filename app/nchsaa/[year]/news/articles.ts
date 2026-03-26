@@ -93,8 +93,8 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     published: true,
     image: "/images/nchsaa-2026-nhsca-nationals-preview.png",
     imagePosition: "center",
-    imageFit: "cover",
-    imageBannerZoom: true,
+    /** Full graphic visible (no top/bottom crop); tight PNG + taller shell = large banner */
+    imageFit: "contain",
     includeInNchsaaCarousel: false,
   },
 ]

@@ -62,8 +62,10 @@ export function HomeNewsHighlightsCarousel() {
           >
             {mainStory.image ? (
               <div
-                className={`relative w-full h-52 sm:h-64 md:h-80 lg:h-[22rem] overflow-hidden border-b border-slate-100 ${
-                  mainStory.imageFit === "contain" || mainStory.imageBannerZoom ? "bg-white" : "bg-slate-100"
+                className={`relative w-full overflow-hidden border-b border-slate-100 ${
+                  mainStory.imageFit === "contain"
+                    ? "h-56 sm:h-72 md:h-[22rem] lg:h-[26rem] bg-white"
+                    : "h-52 sm:h-64 md:h-80 lg:h-[22rem] bg-slate-100"
                 }`}
               >
                 <Image
@@ -73,7 +75,7 @@ export function HomeNewsHighlightsCarousel() {
                   className={[
                     "transition-transform",
                     mainStory.imageFit === "contain"
-                      ? "object-contain object-center p-2 sm:p-3"
+                      ? "object-contain object-center p-0"
                       : [
                           "object-cover",
                           mainStory.imagePosition === "top" ? "object-top" : "object-center",

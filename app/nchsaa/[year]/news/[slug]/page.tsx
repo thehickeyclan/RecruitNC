@@ -50,8 +50,10 @@ export default async function NCHSAAArticlePage({
         </header>
         {article.image && (
           <div
-            className={`relative mb-8 w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm h-56 sm:h-72 md:h-96 lg:h-[28rem] ${
-              article.imageFit === "contain" || article.imageBannerZoom ? "bg-white" : "bg-slate-100"
+            className={`relative mb-8 w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm ${
+              article.imageFit === "contain"
+                ? "h-64 sm:h-80 md:h-[26rem] lg:h-[30rem] bg-white"
+                : "h-56 sm:h-72 md:h-96 lg:h-[28rem] bg-slate-100"
             }`}
           >
             <Image
@@ -60,7 +62,7 @@ export default async function NCHSAAArticlePage({
               fill
               className={
                 article.imageFit === "contain"
-                  ? "object-contain object-center"
+                  ? "object-contain object-center p-0"
                   : [
                       "object-cover",
                       article.imagePosition === "top" ? "object-top" : "object-center",
