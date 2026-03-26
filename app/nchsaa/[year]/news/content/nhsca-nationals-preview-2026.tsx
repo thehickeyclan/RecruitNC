@@ -22,16 +22,15 @@ export function NhscaNationalsPreview2026Content() {
         The three-day event represents North Carolina&apos;s most important recruiting weekend of the year. Last year,
         North Carolina finished <strong className={strong}>#5 nationally</strong> with{" "}
         <strong className={strong}>25 All-Americans</strong> — the most in state history and a 60% increase from 2024. Ten
-        of those All-Americans return to Virginia Beach this week with higher seeds and championship aspirations.
+        of those All-Americans return with seeds this week.
       </p>
 
       <p>
-        <strong className={strong}>Missing from seeds:</strong> Several returning All-Americans from 2025 are not listed
-        in this week&apos;s seeds, including <strong className={strong}>Jack Harty</strong> (NC State commit, 7th place
-        &apos;25), <strong className={strong}>Lorenzo Alston</strong> (NC State commit, 2nd place &apos;25),{" "}
-        <strong className={strong}>Coy Greer</strong> (8th place &apos;25), <strong className={strong}>Aidan Plemons</strong>{" "}
-        (8th place &apos;25), and <strong className={strong}>Antonio Escobar</strong> (8th place &apos;25). Returning
-        All-Americans are typically seeded, making these absences notable.
+        <strong className={strong}>Notable absences:</strong> Several returning All-Americans from 2025 are not listed in
+        this week&apos;s seeds and are likely not competing, including <strong className={strong}>Jack Harty</strong> (NC
+        State commit, 7th place &apos;25, moved to CT), <strong className={strong}>Lorenzo Alston</strong> (NC State
+        commit, 2nd place &apos;25), Coy Greer (8th place &apos;25), Aidan Plemons (8th place &apos;25), and Antonio
+        Escobar (8th place &apos;25).
       </p>
 
       <p>
@@ -75,8 +74,9 @@ export function NhscaNationalsPreview2026Content() {
 
       <p className={p}>
         <strong className={strong}>#6 Gabe Rogers (Seaforth, 138 lbs)</strong> — 5A 144 State Champion (28-1), Binghamton
-        commit — Won state title via tech fall (19-3 in 3:43). Competed at NHSCA as underclassman, now seeded 6th in
-        senior division.
+        commit
+        <br />
+        Won state title via tech fall (19-3 in 3:43). Competed at NHSCA as underclassman, now seeded 6th in senior division.
       </p>
       <p className={p}>
         <strong className={strong}>#7 Dominic Blue (Union Pines, 160 lbs)</strong> — 6A 175 State Champion (43-2) —
@@ -120,8 +120,10 @@ export function NhscaNationalsPreview2026Content() {
 
       <p className={p}>
         <strong className={strong}>#5 Keyshon Morrison (Lake Norman, 220 lbs)</strong> — 7A 215 State Champion (45-4),{" "}
-        <strong className={strong}>2x NHSCA All-American</strong> (7th &apos;25) — Won narrow 9-7 state finals decision.
-        Returns as top-5 seed after earning AA honors as sophomore. Ranked #10 in Class of 2027.
+        <strong className={strong}>2x NHSCA All-American</strong> (7th &apos;25)
+        <br />
+        Won narrow 9-7 state finals decision. Returns as top-5 seed after earning AA honors as sophomore. Ranked #10 in
+        Class of 2027.
       </p>
       <p className={p}>
         <strong className={strong}>#6 Gavin Lopez (Green Hope, 220 lbs)</strong> — 8A 215 State Champion (45-0,
@@ -151,7 +153,7 @@ export function NhscaNationalsPreview2026Content() {
       </p>
 
       <p>
-        Also seeded: <strong className={strong}>#10 Judah Harris (Hunt, 220 lbs)</strong>,{" "}
+        Also seeded: <strong className={strong}>#10 Judah Harris (220 lbs)</strong>,{" "}
         <strong className={strong}>#15 Michael Santoro (Hough, 113 lbs)</strong> — 8A 106 State Champion (4-0 decision).
       </p>
 
@@ -163,9 +165,9 @@ export function NhscaNationalsPreview2026Content() {
       <h3 className={h3}>Sophomores (7 seeds) — Class of 2028</h3>
 
       <p>
-        The Class of 2028 made history as freshmen by producing <strong className={strong}>6 NHSCA All-Americans</strong>{" "}
-        — the most from a single North Carolina class in recent memory. All six return to Virginia Beach this week,
-        joined by one additional seeded wrestler.
+        The Class of 2028 made history as freshmen by producing{" "}
+        <strong className={strong}>7 NHSCA All-Americans — tied for the most in North Carolina history</strong>. Six return
+        to Virginia Beach this week with seeds.
       </p>
 
       <h4 className={h4}>Returning NHSCA All-Americans</h4>
@@ -210,13 +212,13 @@ export function NhscaNationalsPreview2026Content() {
 
       <blockquote className="my-6 border-l-4 border-[#003366] pl-4 italic text-slate-700">
         &quot;The Class of 2028 is special because they&apos;re not waiting to compete nationally — they&apos;re already
-        doing it,&quot; said Mike Macchiavello, NC United co-founder. &quot;Seeing six NHSCA All-Americans in one class
+        doing it,&quot; said Mike Macchiavello, NC United co-founder. &quot;Seeing seven NHSCA All-Americans in one class
         tells you these athletes are serious about wrestling at the next level.&quot;
       </blockquote>
 
       <p>
-        <strong className={strong}>6 of 7 seeded sophomores are returning All-Americans</strong> — an unprecedented
-        concentration of returning talent in a single class.
+        <strong className={strong}>Six of the seven returning All-Americans from Class of 2028 are seeded</strong> — an
+        unprecedented concentration of returning talent in a single class.
       </p>
 
       <h3 className={h3}>Freshmen (4 seeds) — Class of 2029</h3>
@@ -267,7 +269,7 @@ export function NhscaNationalsPreview2026Content() {
       </p>
 
       <p className="font-semibold text-[#003366]">
-        Competition begins Friday and runs through Sunday at the Virginia Beach Convention Center.
+        Competition begins Thursday and runs through Saturday at the Virginia Beach Convention Center.
       </p>
     </article>
   )
