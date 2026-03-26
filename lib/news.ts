@@ -28,6 +28,21 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "nhsca-nationals-preview-2026",
+    slug: "nhsca-nationals-preview-2026",
+    title: "NHSCA Nationals Preview: Over 300 North Carolina Wrestlers Head to Virginia Beach",
+    summary:
+      "North Carolina will send over 300 wrestlers to NHSCA High School Nationals with 29 earning seeds. Ten returning All-Americans have seeds — and several notable 2025 All-Americans are absent from the list and likely not competing.",
+    href: `/nchsaa/${NCHSAA_YEAR}/news/nhsca-nationals-preview-2026`,
+    date: "2026-03-26",
+    image: "/images/nchsaa-2026-nhsca-nationals-preview.png",
+    imagePosition: "center",
+    category: "NATIONALS",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "18 min read",
+    isAnnouncement: false,
+  },
+  {
     id: "5-impactful-tournaments",
     slug: "5-impactful-tournaments",
     title: "The 5 Most Impactful Tournaments for NC College Recruiting",
