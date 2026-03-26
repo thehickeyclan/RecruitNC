@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import Image from "next/image"
 import { getArticle } from "../articles"
 import { SevenDivisionsArticleContent } from "../content/seven-divisions-98-brackets-784-qualifiers"
 import { UnderstandingBracketDepth2026Content } from "../content/understanding-bracket-depth-2026"
@@ -47,6 +48,26 @@ export default async function NCHSAAArticlePage({
             <p className="text-slate-500 text-sm mt-2">{new Date(article.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
           )}
         </header>
+        {article.image && (
+          <div
+            className={`relative mb-6 aspect-[16/9] w-full overflow-hidden rounded-xl border border-slate-200 shadow-sm sm:aspect-[2/1] ${
+              article.imageFit === "contain" ? "bg-white" : "bg-slate-100"
+            }`}
+          >
+            <Image
+              src={article.image}
+              alt=""
+              fill
+              className={
+                article.imageFit === "contain"
+                  ? "object-contain object-center"
+                  : `object-cover ${article.imagePosition === "top" ? "object-top" : "object-center"}`
+              }
+              sizes="(max-width: 768px) 100vw, 48rem"
+              priority
+            />
+          </div>
+        )}
         {article.published && content ? (
           <>
             <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">

@@ -30,13 +30,15 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "nhsca-nationals-preview-2026",
     slug: "nhsca-nationals-preview-2026",
-    title: "NHSCA Nationals Preview: Over 300 North Carolina Wrestlers Head to Virginia Beach",
+    title: "The Biggest Weekend in NC Wrestling Starts Thursday",
     summary:
-      "North Carolina will send over 300 wrestlers to NHSCA High School Nationals with 29 earning seeds. Ten returning All-Americans have seeds — and several notable 2025 All-Americans are absent from the list and likely not competing.",
+      "Over 300 NC wrestlers head to NHSCA Nationals in Virginia Beach; MatScout’s Wednesday, March 25 seeding lists 29 with seeds. Ten returning All-Americans are seeded — the weekend is the state’s top recruiting showcase.",
     href: `/nchsaa/${NCHSAA_YEAR}/news/nhsca-nationals-preview-2026`,
     date: "2026-03-26",
     image: "/images/nchsaa-2026-nhsca-nationals-preview.png",
     imagePosition: "center",
+    /** Logo-style art: full-bleed cover clips the NHSCA wordmark */
+    imageFit: "contain",
     category: "NATIONALS",
     categoryBadgeClass: "bg-[#003366]",
     readTime: "18 min read",

@@ -23,6 +23,8 @@ export interface NCHSAAArticle {
   image?: string
   /** Use "top" so people/faces stay visible when image is cropped */
   imagePosition?: "top" | "center"
+  /** Article hero: use "contain" for logo-style graphics so nothing is clipped */
+  imageFit?: "cover" | "contain"
   /** If false, omitted from the 3-story carousel on /nchsaa/2026; shown in "More coverage" instead */
   includeInNchsaaCarousel?: boolean
 }
@@ -76,11 +78,12 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
   },
   {
     slug: "nhsca-nationals-preview-2026",
-    title: "NHSCA Nationals Preview: Over 300 North Carolina Wrestlers Head to Virginia Beach",
-    summary: "29 NC wrestlers earn seeds, including 10 returning All-Americans",
-    subtitle: "Virginia Beach hosts the state’s biggest recruiting weekend — seeds, returners, and notable absences from MatScout’s list",
+    title: "The Biggest Weekend in NC Wrestling Starts Thursday",
+    summary: "29 NC wrestlers earn seeds (MatScout, Mar. 25), including 10 returning All-Americans",
+    subtitle:
+      "Seeds sourced from MatScout’s Wednesday, March 25 NHSCA release — Virginia Beach, returners, and why the weekend matters",
     preview:
-      "North Carolina will send over 300 wrestlers to NHSCA High School Nationals with 29 earning seeds. Ten returning All-Americans have seeds — and several notable 2025 All-Americans are absent from the list and likely not competing.",
+      "North Carolina will send over 300 wrestlers to NHSCA Nationals in Virginia Beach; MatScout’s March 25 seeding lists 29 North Carolinians with seeds. Ten returning All-Americans are back — and the tournament remains the state’s top recruiting stage.",
     category: "NATIONALS",
     categoryBadgeClass: "bg-[#003366]",
     readTime: "18 min read",
@@ -88,6 +91,7 @@ export const NCHSAA_2026_ARTICLES: NCHSAAArticle[] = [
     published: true,
     image: "/images/nchsaa-2026-nhsca-nationals-preview.png",
     imagePosition: "center",
+    imageFit: "contain",
     includeInNchsaaCarousel: false,
   },
 ]

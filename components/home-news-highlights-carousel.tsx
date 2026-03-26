@@ -61,13 +61,17 @@ export function HomeNewsHighlightsCarousel() {
             className="group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
           >
             <div className="grid min-h-[200px] grid-cols-1 md:grid-cols-5">
-              <div className={`relative h-48 md:h-auto md:min-h-[220px] md:col-span-2 ${mainStory.imageFit === "contain" ? "bg-slate-100" : ""}`}>
+              <div
+                className={`relative h-52 md:h-auto md:min-h-[240px] md:col-span-2 ${
+                  mainStory.imageFit === "contain" ? "bg-white" : ""
+                }`}
+              >
                 {mainStory.image ? (
                   <Image
                     src={mainStory.image}
                     alt=""
                     fill
-                    className={`transition-transform group-hover:scale-[1.02] ${mainStory.imageFit === "contain" ? "object-contain" : "object-cover"} ${mainStory.imagePosition === "top" ? "object-top" : ""}`}
+                    className={`transition-transform group-hover:scale-[1.02] ${mainStory.imageFit === "contain" ? "object-contain object-center p-2" : "object-cover"} ${mainStory.imageFit !== "contain" && mainStory.imagePosition === "top" ? "object-top" : ""}`}
                     sizes="(max-width: 768px) 100vw, 40vw"
                   />
                 ) : (
@@ -142,13 +146,15 @@ function StoryCard({ item }: { item: NewsItem }) {
       className="group flex min-w-[280px] max-w-[320px] flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="flex flex-col">
-        <div className="relative aspect-[16/10] w-full shrink-0">
+        <div
+          className={`relative aspect-[16/10] w-full shrink-0 ${item.imageFit === "contain" ? "bg-white" : "bg-slate-100"}`}
+        >
           {item.image ? (
             <Image
               src={item.image}
               alt=""
               fill
-              className={`object-cover transition-transform group-hover:scale-[1.02] ${item.imagePosition === "top" ? "object-top" : ""}`}
+              className={`transition-transform group-hover:scale-[1.02] ${item.imageFit === "contain" ? "object-contain object-center p-1.5" : "object-cover"} ${item.imageFit !== "contain" && item.imagePosition === "top" ? "object-top" : ""}`}
               sizes="320px"
             />
           ) : (

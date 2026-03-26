@@ -112,7 +112,7 @@ export default function RootLayout({
           <AuthProvider>
             <BulletproofInternalLinks />
             <LayoutOptionalClients />
-            <div id="app-content" className="relative flex flex-col min-h-screen pt-4">
+            <div id="app-content" className="relative flex flex-col min-h-screen">
               <Navbar />
               <main className="flex-1">
               <ConditionalAuthGuard>{children}</ConditionalAuthGuard>

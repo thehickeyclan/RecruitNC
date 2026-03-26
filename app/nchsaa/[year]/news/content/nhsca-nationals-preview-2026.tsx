@@ -8,13 +8,14 @@ export function NhscaNationalsPreview2026Content() {
   return (
     <article className="max-w-none text-slate-700 [&_p]:my-3 [&_hr]:my-8 [&_hr]:border-slate-200">
       <p className="text-slate-600 font-medium italic">
-        <strong className="not-italic">29 NC wrestlers earn seeds, including 10 returning All-Americans</strong>
+        <strong className="not-italic">29 NC wrestlers earn seeds</strong> (MatScout, Wednesday, March 25),{" "}
+        <strong className="not-italic">including 10 returning All-Americans</strong>
       </p>
 
       <p>
         <strong className={strong}>Virginia Beach, VA</strong> — North Carolina will send over 300 wrestlers to NHSCA High
         School Nationals this week in Virginia Beach, with 29 earning seeds in their respective divisions according to
-        MatScout&apos;s latest seeding released Tuesday. Last year, North Carolina sent 301 participants across all four
+        MatScout&apos;s NHSCA seeding released Wednesday, March 25. Last year, North Carolina sent 301 participants across all four
         divisions, and participation is expected to grow in 2026.
       </p>
 
@@ -23,14 +24,6 @@ export function NhscaNationalsPreview2026Content() {
         North Carolina finished <strong className={strong}>#5 nationally</strong> with{" "}
         <strong className={strong}>25 All-Americans</strong> — the most in state history and a 60% increase from 2024. Ten
         of those All-Americans return with seeds this week.
-      </p>
-
-      <p>
-        <strong className={strong}>Notable absences:</strong> Several returning All-Americans from 2025 are not listed in
-        this week&apos;s seeds and are likely not competing, including <strong className={strong}>Jack Harty</strong> (NC
-        State commit, 7th place &apos;25, moved to CT), <strong className={strong}>Lorenzo Alston</strong> (NC State
-        commit, 2nd place &apos;25), Coy Greer (8th place &apos;25), Aidan Plemons (8th place &apos;25), and Antonio
-        Escobar (8th place &apos;25).
       </p>
 
       <p>
@@ -45,13 +38,14 @@ export function NhscaNationalsPreview2026Content() {
       <h2 className={h2}>NC&apos;s 29 Seeded Wrestlers: 10 Returning All-Americans</h2>
 
       <p>
-        North Carolina&apos;s seeded wrestlers include 10 returning NHSCA All-Americans, multiple multi-time
-        All-Americans, and six undefeated state champions fresh off the NCHSAA State Championships in Greensboro.
+        The breakdown below reflects MatScout&apos;s Wednesday, March 25 update. North Carolina&apos;s seeded wrestlers
+        include 10 returning NHSCA All-Americans, multiple multi-time All-Americans, and six undefeated state champions
+        fresh off the NCHSAA State Championships in Greensboro.
       </p>
 
       <h3 className={h3}>Seniors (10 seeds) — Class of 2026</h3>
 
-      <h4 className={h4}>Multi-time NHSCA All-Americans</h4>
+      <h4 className={h4}>Multi-Time NHSCA All-Americans</h4>
 
       <p className={p}>
         <strong className={strong}>#2 Bentley Sly (Cramer, 152 lbs)</strong> — 4A 150 State Champion (51-2),{" "}
@@ -70,7 +64,7 @@ export function NhscaNationalsPreview2026Content() {
         pin.
       </p>
 
-      <h4 className={h4}>Other state champions</h4>
+      <h4 className={h4}>Other State Champions</h4>
 
       <p className={p}>
         <strong className={strong}>#6 Gabe Rogers (Seaforth, 138 lbs)</strong> — 5A 144 State Champion (28-1), Binghamton
@@ -127,17 +121,20 @@ export function NhscaNationalsPreview2026Content() {
       </p>
       <p className={p}>
         <strong className={strong}>#6 Gavin Lopez (Green Hope, 220 lbs)</strong> — 8A 215 State Champion (45-0,
-        undefeated), <strong className={strong}>NHSCA All-American</strong> (7th &apos;25) — Undefeated state champion
-        with 3:28 pin in finals. Returns after 7th place finish last year. Ranked #11 in Class of 2027.
+        undefeated), <strong className={strong}>NHSCA All-American</strong> (7th &apos;25)
+        <br />
+        Undefeated state champion with 3:28 pin in finals. Returns after 7th place finish last year. Ranked #11 in Class
+        of 2027.
       </p>
       <p className={p}>
         <strong className={strong}>#7 Tobin McNair (Wakefield, 160 lbs)</strong> — 8A 165 State Champion (44-0,
-        undefeated), <strong className={strong}>NHSCA All-American</strong> (6th &apos;25) — Undefeated state champion who
-        dominated finals 11-2. Returns after 6th place as sophomore. Ranked #3 in Class of 2027 and already drawing
-        interest from UNC, NC State, Appalachian State, Binghamton, and Duke.
+        undefeated), <strong className={strong}>NHSCA All-American</strong> (6th &apos;25)
+        <br />
+        Undefeated state champion who dominated finals 11-2. Returns after 6th place as sophomore. Ranked #3 in Class of
+        2027 and already drawing interest from UNC, NC State, Appalachian State, Binghamton, and Duke.
       </p>
 
-      <h4 className={h4}>Additional state champions</h4>
+      <h4 className={h4}>Additional State Champions</h4>
 
       <p className={p}>
         <strong className={strong}>#12 Ayden Sumners (Wheatmore, 126 lbs)</strong> — 3A 126 State Champion (48-0,
@@ -153,8 +150,8 @@ export function NhscaNationalsPreview2026Content() {
       </p>
 
       <p>
-        Also seeded: <strong className={strong}>#10 Judah Harris (220 lbs)</strong>,{" "}
-        <strong className={strong}>#15 Michael Santoro (Hough, 113 lbs)</strong> — 8A 106 State Champion (4-0 decision).
+        Also seeded: #10 Judah Harris (220 lbs), #15 Michael Santoro (Hough, 113 lbs) — 8A 106 State Champion (4-0
+        decision).
       </p>
 
       <p>
@@ -165,45 +162,52 @@ export function NhscaNationalsPreview2026Content() {
       <h3 className={h3}>Sophomores (7 seeds) — Class of 2028</h3>
 
       <p>
-        The Class of 2028 made history as freshmen by producing{" "}
-        <strong className={strong}>7 NHSCA All-Americans — tied for the most in North Carolina history</strong>. Six return
-        to Virginia Beach this week with seeds.
+        The Class of 2028 made history as freshmen by producing 7 NHSCA All-Americans — tied for the most in North Carolina
+        history. Six return to Virginia Beach this week with seeds.
       </p>
 
       <h4 className={h4}>Returning NHSCA All-Americans</h4>
 
       <p className={p}>
         <strong className={strong}>#2 Aaron Ellison (Lumberton, 145 lbs)</strong> — 7A 150 2nd place (51-1),{" "}
-        <strong className={strong}>NHSCA All-American</strong> (4th &apos;25) — State&apos;s #1-ranked sophomore lost
-        heartbreaking sudden victory finals (20-17) but enters NHSCA as #2 seed. Placed 4th as freshman with 5-2 record.
+        <strong className={strong}>NHSCA All-American</strong> (4th &apos;25)
+        <br />
+        State&apos;s #1-ranked sophomore lost heartbreaking sudden victory finals (20-17) but enters NHSCA as #2 seed.
+        Placed 4th as freshman with 5-2 record.
       </p>
       <p className={p}>
-        <strong className={strong}>#10 Connor Reece (Northwest Guilford, 138 lbs)</strong> — 8A 138 State Champion
-        (42-3), <strong className={strong}>NHSCA All-American</strong> (7th &apos;25) — Dominated state finals via tech fall
-        (17-2). Returns after 7th place as freshman. State&apos;s #2-ranked sophomore.
+        <strong className={strong}>#10 Connor Reece (Northwest Guilford, 138 lbs)</strong> — 8A 138 State Champion (42-3),{" "}
+        <strong className={strong}>NHSCA All-American</strong> (7th &apos;25)
+        <br />
+        Dominated state finals via tech fall (17-2). Returns after 7th place as freshman. State&apos;s #2-ranked
+        sophomore.
       </p>
       <p className={p}>
         <strong className={strong}>#6 Ryan Thompson (Cardinal Gibbons, 170 lbs)</strong> — 7A 165 2nd place (52-4),{" "}
-        <strong className={strong}>NHSCA All-American</strong> (6th &apos;25) — Placed 6th as freshman. State&apos;s
-        #3-ranked sophomore.
+        <strong className={strong}>NHSCA All-American</strong> (6th &apos;25)
+        <br />
+        Placed 6th as freshman. State&apos;s #3-ranked sophomore.
       </p>
       <p className={p}>
         <strong className={strong}>#8 Mitchell Rowland (Pinecrest, 132 lbs)</strong> — 8A 138 3rd place (34-5),{" "}
-        <strong className={strong}>NHSCA All-American</strong> (8th &apos;25) — Returns after 8th place as freshman.
-        State&apos;s #7-ranked sophomore.
+        <strong className={strong}>NHSCA All-American</strong> (8th &apos;25)
+        <br />
+        Returns after 8th place as freshman. State&apos;s #7-ranked sophomore.
       </p>
       <p className={p}>
         <strong className={strong}>#10 Jacob Perry (New Bern, 152 lbs)</strong> — 7A 150 4th place (59-7),{" "}
-        <strong className={strong}>NHSCA All-American</strong> (8th &apos;25) — Placed 8th as freshman. State&apos;s
-        #6-ranked sophomore.
+        <strong className={strong}>NHSCA All-American</strong> (8th &apos;25)
+        <br />
+        Placed 8th as freshman. State&apos;s #6-ranked sophomore.
       </p>
       <p className={p}>
         <strong className={strong}>#7 Aaron Ruiz-Angel (Mount Airy, 220 lbs)</strong> — 3A 215 2nd place (45-5),{" "}
-        <strong className={strong}>NHSCA All-American</strong> (5th &apos;25) — Placed 5th as freshman. State&apos;s
-        #11-ranked sophomore.
+        <strong className={strong}>NHSCA All-American</strong> (5th &apos;25)
+        <br />
+        Placed 5th as freshman. State&apos;s #11-ranked sophomore.
       </p>
 
-      <h4 className={h4}>Additional seed</h4>
+      <h4 className={h4}>Additional Seed</h4>
 
       <p className={p}>
         <strong className={strong}>#12 Drew Teeter (Mooresville, 182 lbs)</strong> — 7A 175 State Champion (41-4) — Won
@@ -246,7 +250,8 @@ export function NhscaNationalsPreview2026Content() {
       <h2 className={h2}>Why NHSCA Matters for North Carolina</h2>
 
       <p>
-        With over 300 NC wrestlers competing and 29 earning seeds, NHSCA Nationals represents the single largest gathering
+        With over 300 NC wrestlers competing and 29 earning seeds on MatScout&apos;s March 25 NHSCA list, NHSCA Nationals
+        represents the single largest gathering
         of North Carolina wrestling talent at a national event all year. In 2025, North Carolina sent 301 participants
         (44 freshmen, 92 sophomores, 92 juniors, 73 seniors) and participation is expected to grow in 2026.
       </p>
