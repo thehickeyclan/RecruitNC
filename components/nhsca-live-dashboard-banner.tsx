@@ -6,9 +6,8 @@ import { useEffect, useState } from "react"
 
 const STORAGE_KEY = "recruitnc_hide_nhsca_live_dashboard_banner"
 
-/** Override with NEXT_PUBLIC_NHSCA_LIVE_DASHBOARD_URL in env when the live URL changes. */
-export const NHSCA_LIVE_DASHBOARD_URL =
-  process.env.NEXT_PUBLIC_NHSCA_LIVE_DASHBOARD_URL ?? "https://v0-real-time-dashboard-one.vercel.app/nhsca"
+/** `/nhsca` is the NHSCA hub page; redirect lives at `/nhsca-live` (app/nhsca-live/route.ts). */
+const NHSCA_LIVE_PATH = "/nhsca-live"
 
 const NAVY = "#0D1A4D"
 const RED = "#B31B1B"
@@ -84,9 +83,7 @@ export function NhscaLiveDashboardBanner() {
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
           <a
-            href={NHSCA_LIVE_DASHBOARD_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={NHSCA_LIVE_PATH}
             className="inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold text-[#0D1A4D] shadow-md transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             style={{ backgroundColor: GOLD }}
           >

@@ -31,7 +31,16 @@ export default function NHSCAOverview() {
           <p className="text-white/80 text-sm sm:text-base md:text-lg mb-4 md:mb-6">
             The Premier High School Wrestling Tournament
           </p>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 md:gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 md:gap-4 flex-wrap">
+            <a href="/nhsca-live" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto bg-[#B31B1B] hover:bg-[#B31B1B]/90 text-white font-bold text-base md:text-lg px-4 md:px-8 py-3 md:py-6 border-2 border-[#D3B574] shadow-lg">
+                <span className="relative mr-2 inline-flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+                </span>
+                View Live Dashboard
+              </Button>
+            </a>
             <Link href="/nhsca/2025" className="w-full sm:w-auto">
               <Button className="bg-white hover:bg-white/90 text-[#002147] font-bold text-base md:text-lg px-4 md:px-8 py-3 md:py-6 w-full sm:w-auto">
                 <Trophy className="w-4 h-4 md:w-5 md:h-5 mr-2" />
