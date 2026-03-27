@@ -3,11 +3,10 @@
 import Image from "next/image"
 import { X } from "lucide-react"
 import { useEffect, useState } from "react"
+import { HardLink } from "@/components/hard-link"
+import { nhscaLiveEntryHref } from "@/lib/nhsca-live-dashboard"
 
 const STORAGE_KEY = "recruitnc_hide_nhsca_live_dashboard_banner"
-
-/** `/nhsca` is the NHSCA hub page; redirect lives at `/nhsca-live` (app/nhsca-live/route.ts). */
-const NHSCA_LIVE_PATH = "/nhsca-live"
 
 const NAVY = "#0D1A4D"
 const RED = "#B31B1B"
@@ -82,8 +81,8 @@ export function NhscaLiveDashboardBanner() {
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
-          <a
-            href={NHSCA_LIVE_PATH}
+          <HardLink
+            href={nhscaLiveEntryHref()}
             className="inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold text-[#0D1A4D] shadow-md transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             style={{ backgroundColor: GOLD }}
           >
@@ -91,7 +90,7 @@ export function NhscaLiveDashboardBanner() {
             <span className="ml-1.5" aria-hidden>
               →
             </span>
-          </a>
+          </HardLink>
           <button
             type="button"
             onClick={dismiss}

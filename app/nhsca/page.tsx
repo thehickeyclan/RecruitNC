@@ -9,6 +9,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { NHSCACountdown } from "@/components/nhsca-countdown"
 import { NHSCADivisionStats } from "@/components/nhsca-division-stats"
+import { HardLink } from "@/components/hard-link"
+import { nhscaLiveEntryHref } from "@/lib/nhsca-live-dashboard"
 
 export default function NHSCAOverview() {
   return (
@@ -32,15 +34,16 @@ export default function NHSCAOverview() {
             The Premier High School Wrestling Tournament
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 md:gap-4 flex-wrap">
-            <a href="/nhsca-live" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto bg-[#B31B1B] hover:bg-[#B31B1B]/90 text-white font-bold text-base md:text-lg px-4 md:px-8 py-3 md:py-6 border-2 border-[#D3B574] shadow-lg">
-                <span className="relative mr-2 inline-flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
-                </span>
-                View Live Dashboard
-              </Button>
-            </a>
+            <HardLink
+              href={nhscaLiveEntryHref()}
+              className="inline-flex w-full items-center justify-center rounded-md border-2 border-[#D3B574] bg-[#B31B1B] px-4 py-3 text-base font-bold text-white shadow-lg hover:bg-[#B31B1B]/90 sm:w-auto md:px-8 md:py-6 md:text-lg"
+            >
+              <span className="relative mr-2 inline-flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/70" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+              </span>
+              View Live Dashboard
+            </HardLink>
             <Link href="/nhsca/2025" className="w-full sm:w-auto">
               <Button className="bg-white hover:bg-white/90 text-[#002147] font-bold text-base md:text-lg px-4 md:px-8 py-3 md:py-6 w-full sm:w-auto">
                 <Trophy className="w-4 h-4 md:w-5 md:h-5 mr-2" />

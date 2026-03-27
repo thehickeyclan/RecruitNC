@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { CSSProperties, ReactNode } from "react"
 
 /**
  * Internal link as a real <a href>. No JavaScript required — browser does a full
@@ -10,11 +10,13 @@ import type { ReactNode } from "react"
 export function HardLink({
   href,
   className,
+  style,
   children,
   onNavigate,
 }: {
   href: string
   className?: string
+  style?: CSSProperties
   children: ReactNode
   onNavigate?: () => void
 }) {
@@ -22,6 +24,7 @@ export function HardLink({
     <a
       href={href}
       className={className}
+      style={style}
       onClick={(e) => {
         e.preventDefault()
         onNavigate?.()
