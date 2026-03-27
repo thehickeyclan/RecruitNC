@@ -13,6 +13,7 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
+import { NhscaLiveDashboardBanner } from "@/components/nhsca-live-dashboard-banner"
 
 type YearFilter = "All" | "2025" | "2026"
 
@@ -256,7 +257,9 @@ export default function HomePage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 bg-white">
+    <main className="bg-white">
+      <NhscaLiveDashboardBanner />
+      <div className="container mx-auto px-4 py-8">
 
       {/* Hero Section - Modern Two-Column Layout */}
       <section className="relative mb-16 overflow-hidden rounded-xl shadow-2xl">
@@ -737,6 +740,7 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+      </div>
       </div>
     </main>
   )

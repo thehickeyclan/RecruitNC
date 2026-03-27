@@ -40,6 +40,29 @@
   body.iframe-banner-visible #app-content {
     padding-top: 3.5rem;
   }
+
+  @keyframes nhsca-live-banner-shimmer {
+    0% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(320%);
+    }
+  }
+
+  .nhsca-live-banner-shimmer {
+    width: 45%;
+    max-width: 24rem;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(211, 181, 116, 0.18) 45%,
+      rgba(211, 181, 116, 0.28) 50%,
+      rgba(211, 181, 116, 0.18) 55%,
+      transparent 100%
+    );
+    animation: nhsca-live-banner-shimmer 5s ease-in-out infinite;
+  }
 }
 
 @layer components {
