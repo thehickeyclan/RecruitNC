@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
+import { getNhsca2026LegacySearchRows, normalizeNhscaWeightForDisplay } from "@/lib/nhsca-2026-archive"
 
 const NC_NAVY = "#002147"
 const DEBOUNCE_MS = 300
@@ -188,7 +189,19 @@ export function AthletesLegacySearchContent() {
 
       const profiles = (profilesRes.data || []) as { id: string; name: string; highschool?: string; graduationyear?: number; weightclass?: string; college?: string }[]
       const commits = (commitsRes.data || []) as { id: string; name: string; college?: string; graduationyear?: number; weightclass?: string }[]
-      const nhscaRows = (nhscaRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string; division?: string; high_school?: string }[]
+      let nhscaRows = (nhscaRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string; division?: string; high_school?: string }[]
+      const qLower = searchTerm.toLowerCase()
+      const nhsca2026Extra = getNhsca2026LegacySearchRows().filter((r) => r.athlete_name.toLowerCase().includes(qLower))
+      for (const r of nhsca2026Extra) {
+        const dup = nhscaRows.some(
+          (x) =>
+            x.year === 2026 &&
+            (x.athlete_name ?? "").trim().toLowerCase() === r.athlete_name.trim().toLowerCase() &&
+            x.division === r.division &&
+            normalizeNhscaWeightForDisplay(x.weight_class ?? "") === r.weight_class,
+        )
+        if (!dup) nhscaRows = [...nhscaRows, r]
+      }
       const nhscaPlacementsRows = (nhscaPlacementsRes.data || []) as { athlete_name?: string; year?: number; placement?: number; weight_class?: string; division?: string }[]
       const nchsaaRows = (nchsaaRes.data || []) as { wrestler_name?: string; year?: number; place?: number; school?: string; weight_class?: string; classification?: string }[]
       const super32Rows = (super32Res.data || []) as { athlete_name?: string; year?: number; weight_class?: string; record?: string; high_school?: string }[]

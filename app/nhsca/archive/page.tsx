@@ -21,6 +21,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import Image from "next/image"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { mergeNhsca2026WrestlersIntoRows } from "@/lib/nhsca-2026-archive"
 
 const NC_NAVY = "#003366"
 const NC_RED = "#B31B1B"
@@ -128,14 +129,15 @@ export default function NHSCAArchive() {
         if (mowResponse.error) throw mowResponse.error
 
         const rows = (nhscaResponse.data || []) as Wrestler[]
+        const mergedRows = mergeNhsca2026WrestlersIntoRows(rows)
         const mowData = (mowResponse.data || []) as MostOutstandingWrestler[]
 
-        setWrestlers(rows)
-        setFilteredWrestlers(rows)
+        setWrestlers(mergedRows)
+        setFilteredWrestlers(mergedRows)
         setMostOutstandingWrestlers(mowData)
 
         // Aggregate by year for Total and each division (All-Americans only: placement <= 8)
-        const byYear = rows.reduce((acc: Record<number, ChartRow & { champions: number; divisions: string[] }>, w) => {
+        const byYear = mergedRows.reduce((acc: Record<number, ChartRow & { champions: number; divisions: string[] }>, w) => {
           const y = w.year
           if (!acc[y]) {
             acc[y] = {
@@ -287,9 +289,14 @@ export default function NHSCAArchive() {
             <p className="text-white/80 max-w-2xl">
               Explore historical NHSCA National Championship results for North Carolina wrestlers
             </p>
-            <div className="flex gap-4 mt-4">
-              <Link href="/nhsca/2025">
+            <div className="flex flex-wrap gap-4 mt-4 justify-center">
+              <Link href="/nhsca/2026">
                 <Button className="bg-[#CBAF5D] hover:bg-[#CBAF5D]/90 text-[#003366] font-semibold">
+                  2026 Results
+                </Button>
+              </Link>
+              <Link href="/nhsca/2025">
+                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-[#003366] bg-transparent font-semibold">
                   2025 Results
                 </Button>
               </Link>
@@ -346,10 +353,10 @@ export default function NHSCAArchive() {
         <Card className="mb-8">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl" style={{ color: NC_NAVY }}>
-              North Carolina Wrestling Historical Analysis (1990-2025)
+              North Carolina Wrestling Historical Analysis (1990-2026)
             </CardTitle>
             <CardDescription className="mt-1">
-              Boys divisions only (Freshman, Sophomore, Junior, Senior). Totals align with 24 All-Americans in 2025.
+              Boys divisions only (Freshman, Sophomore, Junior, Senior). 2026 totals match the replica JSON; other years from the database.
             </CardDescription>
           </CardHeader>
           <CardContent>

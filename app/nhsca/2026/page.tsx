@@ -13,6 +13,14 @@ import Image from "next/image"
 import { NHSCAChampionsTabs } from "@/components/nhsca-champions-tabs"
 import { supabase } from "@/lib/supabase"
 import nhsca2026 from "@/lib/data/nhsca-2026-replica-page.json"
+import {
+  mergeNhsca2026WrestlersIntoRows,
+  getNhsca2026CanonicalWrestlers,
+  computeMultiTimeAAsFor2026Roster,
+  getNhsca2026CanonicalAthleteNames,
+  mergeMultiTimeAALists,
+  type MultiTimeAAEntry,
+} from "@/lib/nhsca-2026-archive"
 
 // NC United Brand Colors
 const NC_NAVY = "#003366"
@@ -31,17 +39,15 @@ interface Wrestler {
   club: string
 }
 
-type StateRow = {
-  state: string
-  Freshman: number
-  Sophomore: number
-  Junior: number
-  Senior: number
-  total: number
-  isNC: boolean
-}
-
 const DIVISION_ORDER = ["Senior", "Sophomore", "Junior", "Freshman"] as const
+
+/** Overall state stack (all divisions) — same source as National Comparison below. */
+const OVERALL_STATE_DATA_2026 = nhsca2026.section14_overall_aa_state_ranking.map((r) => ({
+  rank: r.rank,
+  state: r.state,
+  total: r.total,
+  isNC: r.state === "NC",
+}))
 
 const DIVISION_STANDINGS = DIVISION_ORDER.map((division) => {
   const d = nhsca2026.section4_division_standings[division]
@@ -60,10 +66,6 @@ const DIVISION_STANDINGS = DIVISION_ORDER.map((division) => {
     highlights: d.highlights,
   }
 })
-
-const STATE_DATA_2026: StateRow[] = [nhsca2026.section3_state_data.nc_row as StateRow]
-
-const MULTI_TIME_AAS = nhsca2026.section5_multi_time_aas as Array<{ name: string; times: number; years: string }>
 
 const PLACE_KEY_ORDER = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"] as const
 
@@ -99,6 +101,10 @@ interface CollegeCommit {
   recruiting_status: string
 }
 
+function normMultiName(s: string) {
+  return (s || "").toLowerCase().trim().replace(/\s+/g, " ")
+}
+
 export default function NHSCA2026Page() {
   const [wrestlers, setWrestlers] = useState<Wrestler[]>([])
   const [filteredWrestlers, setFilteredWrestlers] = useState<Wrestler[]>([])
@@ -109,6 +115,7 @@ export default function NHSCA2026Page() {
   const [weightFilter, setWeightFilter] = useState("all")
   const [showAllStates, setShowAllStates] = useState(false)
   const [chartViewMode, setChartViewMode] = useState<"chart" | "table" | "summary">("chart")
+  const [multiTimeAAs, setMultiTimeAAs] = useState<MultiTimeAAEntry[]>([])
 
   // Load data via RecruitNC Supabase client (male divisions only: Freshman, Sophomore, Junior, Senior)
   const MALE_DIVISIONS = ["Freshman", "Sophomore", "Junior", "Senior"]
@@ -116,7 +123,10 @@ export default function NHSCA2026Page() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [resultsResponse, commitsResponse] = await Promise.all([
+        const canonicalNames = getNhsca2026CanonicalAthleteNames()
+        const manualMulti = nhsca2026.section5_multi_time_aas as MultiTimeAAEntry[]
+
+        const [resultsResponse, commitsResponse, wrHistRes, plHistRes] = await Promise.all([
           supabase
             .from("wrestling_nhsca_results")
             .select("*")
@@ -132,14 +142,49 @@ export default function NHSCA2026Page() {
             .select("id, name, firstName, lastName, college, collegeLogoUrl, recruiting_status")
             .in("recruiting_status", ["Committed", "College Athlete", "committed", "college athlete"])
             .not("college", "is", null),
+          canonicalNames.length > 0
+            ? supabase
+                .from("wrestling_nhsca_results")
+                .select("athlete_name, year")
+                .in("athlete_name", canonicalNames)
+                .in("division", MALE_DIVISIONS)
+                .gte("placement", 1)
+                .lte("placement", 8)
+            : Promise.resolve({ data: [] as { athlete_name: string; year: number }[], error: null }),
+          canonicalNames.length > 0
+            ? supabase
+                .from("nhsca_placements")
+                .select("athlete_name, year")
+                .in("athlete_name", canonicalNames)
+                .in("division", MALE_DIVISIONS)
+                .gte("placement", 1)
+                .lte("placement", 8)
+            : Promise.resolve({ data: [] as { athlete_name: string; year: number }[], error: null }),
         ])
 
         if (resultsResponse.error) throw resultsResponse.error
         if (commitsResponse.error) throw commitsResponse.error
+        if (wrHistRes.error) console.error("[RecruitNC] NHSCA multi-AA wrestling_nhsca_results:", wrHistRes.error)
+        if (plHistRes.error) console.error("[RecruitNC] NHSCA multi-AA nhsca_placements:", plHistRes.error)
 
-        setWrestlers((resultsResponse.data as Wrestler[]) || [])
-        setFilteredWrestlers((resultsResponse.data as Wrestler[]) || [])
+        const raw = (resultsResponse.data as Wrestler[]) || []
+        let merged: Wrestler[]
+        try {
+          merged = mergeNhsca2026WrestlersIntoRows(raw) as Wrestler[]
+        } catch (mergeErr) {
+          console.error("[RecruitNC] NHSCA 2026 roster merge failed; using canonical JSON roster.", mergeErr)
+          merged = getNhsca2026CanonicalWrestlers() as Wrestler[]
+        }
+        setWrestlers(merged)
+        setFilteredWrestlers(merged)
         setCollegeCommitments((commitsResponse.data as CollegeCommit[]) || [])
+
+        const histRows = [
+          ...((wrHistRes.data || []) as { athlete_name: string; year: number }[]),
+          ...((plHistRes.data || []) as { athlete_name: string; year: number }[]),
+        ]
+        const computedMulti = computeMultiTimeAAsFor2026Roster(histRows, canonicalNames)
+        setMultiTimeAAs(mergeMultiTimeAALists(computedMulti, manualMulti))
       } catch (error) {
         console.error("Error loading 2026 results:", error)
       } finally {
@@ -233,6 +278,24 @@ export default function NHSCA2026Page() {
     const v = n % 100
     return n + (s[(v - 20) % 10] || s[v] || s[0])
   }
+
+  const topSchoolsMaxCount = useMemo(
+    () => (topSchools.length ? Math.max(...topSchools.map((d) => d.count), 1) : 1),
+    [topSchools],
+  )
+  const topClubsMaxCount = useMemo(
+    () => (topClubs.length ? Math.max(...topClubs.map((d) => d.count), 1) : 1),
+    [topClubs],
+  )
+
+  const multiTimeByNormName = useMemo(() => {
+    const m = new Map<string, MultiTimeAAEntry>()
+    for (const aa of multiTimeAAs) {
+      const k = normMultiName(aa.name)
+      if (k) m.set(k, aa)
+    }
+    return m
+  }, [multiTimeAAs])
 
   const groupedCollegeCommits = useMemo(() => {
     const allAmericanNames = new Set(wrestlers.map((w) => w.athlete_name.toLowerCase()))
@@ -365,6 +428,158 @@ export default function NHSCA2026Page() {
           </CardContent>
         </Card>
 
+        {/* Freshman division — state stack (All-Americans by state) */}
+        <Card className="mb-8 overflow-hidden">
+          <CardHeader className="bg-[#003366] text-white">
+            <CardTitle>Freshman division — All-Americans by state</CardTitle>
+            <p className="text-white/70 text-sm font-normal mt-1">
+              2026 NHSCA Nationals · state stack ranking (Freshman boys only)
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">Rank</th>
+                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">State</th>
+                    <th className="text-right py-3 px-4 font-semibold text-[#003366]">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nhsca2026.section10_freshman_aa_state_ranking.map((row, idx) => (
+                    <tr
+                      key={`${row.state}-${row.rank}`}
+                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
+                    >
+                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
+                      <td className="py-2.5 px-4">
+                        {row.state}
+                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
+                      </td>
+                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sophomore division — state stack */}
+        <Card className="mb-8 overflow-hidden">
+          <CardHeader className="bg-[#B31B1B] text-white">
+            <CardTitle>Sophomore division — All-Americans by state</CardTitle>
+            <p className="text-white/80 text-sm font-normal mt-1">
+              2026 NHSCA Nationals · state stack ranking (Sophomore boys only)
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-3 px-4 font-semibold text-[#B31B1B]">Rank</th>
+                    <th className="text-left py-3 px-4 font-semibold text-[#B31B1B]">State</th>
+                    <th className="text-right py-3 px-4 font-semibold text-[#B31B1B]">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nhsca2026.section11_sophomore_aa_state_ranking.map((row, idx) => (
+                    <tr
+                      key={`${row.state}-${row.rank}`}
+                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
+                    >
+                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
+                      <td className="py-2.5 px-4">
+                        {row.state}
+                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
+                      </td>
+                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Junior division — state stack */}
+        <Card className="mb-8 overflow-hidden">
+          <CardHeader className="bg-[#CBAF5D] text-[#003366]">
+            <CardTitle>Junior division — All-Americans by state</CardTitle>
+            <p className="text-[#003366]/80 text-sm font-normal mt-1">
+              2026 NHSCA Nationals · state stack ranking (Junior boys only)
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">Rank</th>
+                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">State</th>
+                    <th className="text-right py-3 px-4 font-semibold text-[#003366]">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nhsca2026.section12_junior_aa_state_ranking.map((row, idx) => (
+                    <tr
+                      key={`${row.state}-${row.rank}`}
+                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
+                    >
+                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
+                      <td className="py-2.5 px-4">
+                        {row.state}
+                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
+                      </td>
+                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Senior division — state stack */}
+        <Card className="mb-8 overflow-hidden">
+          <CardHeader className="bg-[#2563eb] text-white">
+            <CardTitle>Senior division — All-Americans by state</CardTitle>
+            <p className="text-white/80 text-sm font-normal mt-1">
+              2026 NHSCA Nationals · state stack ranking (Senior boys only)
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-3 px-4 font-semibold text-[#2563eb]">Rank</th>
+                    <th className="text-left py-3 px-4 font-semibold text-[#2563eb]">State</th>
+                    <th className="text-right py-3 px-4 font-semibold text-[#2563eb]">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nhsca2026.section13_senior_aa_state_ranking.map((row, idx) => (
+                    <tr
+                      key={`${row.state}-${row.rank}`}
+                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
+                    >
+                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
+                      <td className="py-2.5 px-4">
+                        {row.state}
+                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
+                      </td>
+                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Historic Achievement Banner */}
         <Card className="mb-8">
           <CardHeader>
@@ -404,14 +619,70 @@ export default function NHSCA2026Page() {
         <div className="mb-8">
           <Card>
             <CardHeader className="bg-[#002147] text-white">
-              <CardTitle>Top clubs & high schools</CardTitle>
+              <CardTitle>Top high schools & clubs</CardTitle>
               <p className="text-sm text-white/80 font-normal">{nhsca2026.section9_top_clubs_schools.note}</p>
             </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-gray-600 text-sm">
-                Rankings will appear here once high school and club fields are filled in RecruitNC (or you can wire
-                this block to aggregate from the All-Americans table).
-              </p>
+            <CardContent className="p-6 space-y-10">
+              {topSchools.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#003366] mb-4">High schools (2026 NC All-Americans)</h3>
+                  <div className="space-y-3">
+                    {topSchools.map((item) => {
+                      const barWidthPercent = (item.count / topSchoolsMaxCount) * 100
+                      return (
+                        <div key={item.name} className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0 text-sm font-medium text-[#003366] truncate" title={item.name}>
+                            {item.name}
+                          </div>
+                          <div className="flex-1 min-w-0 max-w-md">
+                            <div
+                              className="h-8 rounded overflow-hidden"
+                              style={{ width: `${barWidthPercent}%`, backgroundColor: NC_GOLD }}
+                              title={`${item.count} All-American${item.count === 1 ? "" : "s"}`}
+                            />
+                          </div>
+                          <div className="w-8 text-right text-sm font-medium text-[#003366] tabular-nums shrink-0">
+                            {item.count}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="text-center text-xs text-gray-500 pt-4 border-t mt-4">
+                    Counts from the roster below; Supabase can override school names when rows are enriched.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-600 text-sm">No high school on file yet for 2026 All-Americans.</p>
+              )}
+
+              {topClubs.length > 0 ? (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#003366] mb-4">Clubs</h3>
+                  <div className="space-y-3">
+                    {topClubs.map((item) => {
+                      const barWidthPercent = (item.count / topClubsMaxCount) * 100
+                      return (
+                        <div key={item.name} className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0 text-sm font-medium text-[#003366] truncate" title={item.name}>
+                            {item.name}
+                          </div>
+                          <div className="flex-1 min-w-0 max-w-md">
+                            <div
+                              className="h-8 rounded overflow-hidden"
+                              style={{ width: `${barWidthPercent}%`, backgroundColor: NC_RED }}
+                              title={`${item.count} All-American${item.count === 1 ? "" : "s"}`}
+                            />
+                          </div>
+                          <div className="w-8 text-right text-sm font-medium text-[#003366] tabular-nums shrink-0">
+                            {item.count}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>
@@ -476,108 +747,57 @@ export default function NHSCA2026Page() {
 
                 {chartViewMode === "chart" && (
                   <div className="space-y-3">
-                    {(showAllStates ? STATE_DATA_2026 : STATE_DATA_2026.slice(0, 15)).map((item) => {
-                      const maxTotal = Math.max(...STATE_DATA_2026.map((d) => d.total))
+                    {(showAllStates ? OVERALL_STATE_DATA_2026 : OVERALL_STATE_DATA_2026.slice(0, 15)).map((item) => {
+                      const maxTotal = Math.max(...OVERALL_STATE_DATA_2026.map((d) => d.total))
                       const barWidthPercent = (item.total / maxTotal) * 100
 
                       return (
                         <div key={item.state} className="flex items-center gap-3">
-                          <div className="w-16 text-right text-sm font-medium text-[#003366]">
+                          <div className="w-8 shrink-0 text-right text-xs text-gray-500 tabular-nums">{item.rank}</div>
+                          <div className="w-14 text-right text-sm font-medium text-[#003366] shrink-0">
                             {item.state}
                             {item.isNC && <span className="ml-1 text-[#CBAF5D]">★</span>}
                           </div>
-                          <div className="flex-1">
-                            <div className="h-8 flex rounded overflow-hidden" style={{ width: `${barWidthPercent}%` }}>
-                              {item.Freshman > 0 && (
-                                <div
-                                  className="h-full"
-                                  style={{
-                                    width: `${(item.Freshman / item.total) * 100}%`,
-                                    backgroundColor: "#003366",
-                                  }}
-                                />
-                              )}
-                              {item.Sophomore > 0 && (
-                                <div
-                                  className="h-full"
-                                  style={{
-                                    width: `${(item.Sophomore / item.total) * 100}%`,
-                                    backgroundColor: "#B31B1B",
-                                  }}
-                                />
-                              )}
-                              {item.Junior > 0 && (
-                                <div
-                                  className="h-full"
-                                  style={{
-                                    width: `${(item.Junior / item.total) * 100}%`,
-                                    backgroundColor: "#CBAF5D",
-                                  }}
-                                />
-                              )}
-                              {item.Senior > 0 && (
-                                <div
-                                  className="h-full"
-                                  style={{
-                                    width: `${(item.Senior / item.total) * 100}%`,
-                                    backgroundColor: "#3b82f6",
-                                  }}
-                                />
-                              )}
-                            </div>
+                          <div className="flex-1 min-w-0">
+                            <div
+                              className="h-8 rounded overflow-hidden"
+                              style={{ width: `${barWidthPercent}%`, backgroundColor: NC_NAVY }}
+                              title={`${item.total} All-Americans`}
+                            />
+                          </div>
+                          <div className="w-10 text-right text-sm font-medium text-[#003366] tabular-nums shrink-0">
+                            {item.total}
                           </div>
                         </div>
                       )
                     })}
-                    {/* Legend */}
-                    <div className="flex justify-center gap-6 mt-6 pt-4 border-t">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#003366" }} />
-                        <span className="text-sm text-gray-600">Freshman</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#B31B1B" }} />
-                        <span className="text-sm text-gray-600">Sophomore</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#CBAF5D" }} />
-                        <span className="text-sm text-gray-600">Junior</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded" style={{ backgroundColor: "#3b82f6" }} />
-                        <span className="text-sm text-gray-600">Senior</span>
-                      </div>
-                    </div>
+                    <p className="text-center text-sm text-gray-500 pt-4 border-t">
+                      Bar length = total All-Americans (all boy divisions). Division splits: see tables above.
+                    </p>
                   </div>
                 )}
 
                 {chartViewMode === "table" && (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-[min(70vh,560px)] overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead>
+                      <thead className="sticky top-0 z-10 bg-gray-50 shadow-sm">
                         <tr className="border-b">
+                          <th className="text-left py-2 px-3 font-medium text-[#003366]">Rank</th>
                           <th className="text-left py-2 px-3 font-medium text-[#003366]">State</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Freshman</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Sophomore</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Junior</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Senior</th>
-                          <th className="text-center py-2 px-3 font-medium text-[#003366]">Total</th>
+                          <th className="text-right py-2 px-3 font-medium text-[#003366]">Total</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(showAllStates ? STATE_DATA_2026 : STATE_DATA_2026.slice(0, 15)).map((item, idx) => (
+                        {(showAllStates ? OVERALL_STATE_DATA_2026 : OVERALL_STATE_DATA_2026.slice(0, 15)).map((item, idx) => (
                           <tr
                             key={item.state}
                             className={`border-b ${item.isNC ? "bg-[#CBAF5D]/10" : idx % 2 === 0 ? "bg-gray-50" : ""}`}
                           >
+                            <td className="py-2 px-3 font-medium text-[#003366] tabular-nums">{item.rank}</td>
                             <td className="py-2 px-3 font-medium text-[#003366]">
                               {item.state} {item.isNC && <span className="text-[#CBAF5D]">★</span>}
                             </td>
-                            <td className="text-center py-2 px-3">{item.Freshman}</td>
-                            <td className="text-center py-2 px-3">{item.Sophomore}</td>
-                            <td className="text-center py-2 px-3">{item.Junior}</td>
-                            <td className="text-center py-2 px-3">{item.Senior}</td>
-                            <td className="text-center py-2 px-3 font-bold">{item.total}</td>
+                            <td className="text-right py-2 px-3 font-bold tabular-nums">{item.total}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -589,8 +809,12 @@ export default function NHSCA2026Page() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-gray-50 rounded-lg p-4 text-center">
-                        <div className="text-lg font-bold text-[#003366]">National leaderboard</div>
-                        <div className="text-sm text-gray-600 mt-1">{nhsca2026.section3_state_data.note}</div>
+                        <div className="text-3xl font-bold text-[#003366]">
+                          {OVERALL_STATE_DATA_2026[0]?.state ?? "—"}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          Leads with {OVERALL_STATE_DATA_2026[0]?.total ?? "—"} All-Americans (all divisions)
+                        </div>
                       </div>
                       <div className="bg-[#CBAF5D]/20 rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-[#003366]">NC ★</div>
@@ -656,11 +880,14 @@ export default function NHSCA2026Page() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg text-[#003366]">Multi-Time All-Americans</CardTitle>
+                  <p className="text-sm text-gray-500 font-normal pt-1">
+                    From NHSCA history (database + 2026 roster). Same wrestlers show a badge in the table below.
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  {MULTI_TIME_AAS.length > 0 ? (
+                  {multiTimeAAs.length > 0 ? (
                     <ul className="space-y-2">
-                      {MULTI_TIME_AAS.map((aa) => (
+                      {multiTimeAAs.map((aa) => (
                         <li key={aa.name} className="flex items-center gap-2">
                           <span>•</span>
                           <span className="font-medium">{aa.name}</span>
@@ -671,7 +898,10 @@ export default function NHSCA2026Page() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-gray-500 text-sm">No multi-year list published yet.</p>
+                    <p className="text-gray-500 text-sm">
+                      No multi-time All-Americans found from history (or still loading). Add names to
+                      section5_multi_time_aas in the replica JSON as a fallback.
+                    </p>
                   )}
                 </CardContent>
               </Card>
@@ -868,12 +1098,26 @@ export default function NHSCA2026Page() {
                   <tbody>
                     {filteredWrestlers.map((wrestler, idx) => {
                       const badge = getPlacementBadge(wrestler.placement)
+                      const mt = multiTimeByNormName.get(normMultiName(wrestler.athlete_name))
                       return (
                         <tr key={wrestler.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                           <td className="px-4 py-3">
                             <Badge className={`${badge.bg} text-white`}>{badge.text}</Badge>
                           </td>
-                          <td className="px-4 py-3 font-medium text-[#003366]">{wrestler.athlete_name}</td>
+                          <td className="px-4 py-3 font-medium text-[#003366]">
+                            <span className="inline-flex items-center gap-2 flex-wrap">
+                              {wrestler.athlete_name}
+                              {mt ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-[#CBAF5D] bg-[#CBAF5D]/10 text-[#003366] text-xs font-semibold"
+                                  title={`NHSCA All-American years: ${mt.years}`}
+                                >
+                                  {mt.times}× AA
+                                </Badge>
+                              ) : null}
+                            </span>
+                          </td>
                           <td className="px-4 py-3 text-gray-600">{wrestler.high_school || "-"}</td>
                           <td className="px-4 py-3 text-gray-600">{wrestler.club || "-"}</td>
                           <td className="px-4 py-3">{wrestler.weight}</td>
