@@ -4,6 +4,9 @@
  * All kids and graduates get the same public profile - one code path.
  */
 
+import type { TournamentResultRow } from "@/lib/tournament-tables"
+import { getNhscaResults, getSuper32Results, type TournamentResult } from "@/lib/tournament-utils"
+
 export interface TournamentResultForDisplay {
   year: number
   placement: string
@@ -17,68 +20,123 @@ export interface PublicProfileTournamentData {
   super32Results: TournamentResultForDisplay[]
 }
 
+function formatNhscaPlacementForPublicDisplay(raw: string): string {
+  const s = (raw ?? "").trim()
+  if (!s) return ""
+  const lower = s.toLowerCase()
+  if (lower === "champion" || lower === "1st") return "Champion"
+  if (lower === "finalist") return "2nd All-American"
+  const ord = s.match(/^(\d+)(st|nd|rd|th)$/i)
+  if (ord) {
+    const n = parseInt(ord[1], 10)
+    if (n === 1) return "Champion"
+    if (n === 2) return "2nd All-American"
+    if (n === 3) return "3rd All-American"
+    if (n >= 4 && n <= 8) return `${n}th All-American`
+    return `${n}th Place`
+  }
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10)
+    if (n === 1) return "Champion"
+    if (n === 2) return "2nd All-American"
+    if (n === 3) return "3rd All-American"
+    if (n >= 4 && n <= 8) return `${n}th All-American`
+    return `${n}th Place`
+  }
+  return s
+}
+
+function formatSuper32PlacementForPublicDisplay(raw: string): string {
+  const s = (raw ?? "").trim()
+  if (!s) return ""
+  const lower = s.toLowerCase()
+  if (lower === "champion" || lower === "1st") return "Champion"
+  const ord = s.match(/^(\d+)(st|nd|rd|th)$/i)
+  if (ord) {
+    const n = parseInt(ord[1], 10)
+    if (n === 1) return "Champion"
+    if (n === 2) return "2nd Place"
+    if (n === 3) return "3rd Place"
+    if (n > 3) return `${n}th Place`
+  }
+  if (/^\d+$/.test(s)) {
+    const n = parseInt(s, 10)
+    if (n === 1) return "Champion"
+    if (n === 2) return "2nd Place"
+    if (n === 3) return "3rd Place"
+    return `${n}th Place`
+  }
+  return s
+}
+
+function tournamentRowToNhscaDisplay(r: TournamentResult): TournamentResultForDisplay | null {
+  const record = (r.record ?? "").trim()
+  const placement = formatNhscaPlacementForPublicDisplay(r.placement)
+  if (!placement && !record) return null
+  return {
+    year: r.year,
+    placement,
+    record,
+    weight: r.weight,
+    division: r.division,
+  }
+}
+
+function tournamentRowToSuper32Display(r: TournamentResult): TournamentResultForDisplay | null {
+  const record = (r.record ?? "").trim()
+  const placement = formatSuper32PlacementForPublicDisplay(r.placement)
+  if (!placement && !record) return null
+  return {
+    year: r.year,
+    placement,
+    record,
+    weight: r.weight,
+    division: r.division,
+  }
+}
+
+function isDisplayRowEmpty(r: TournamentResultForDisplay): boolean {
+  return !(r.placement?.trim() || r.record?.trim())
+}
+
+/**
+ * Merge NHSCA from placement tables (name lookup) with athlete row (nhsca_results JSON + legacy columns).
+ * Prefer table row when both have the same year and the table row has data.
+ */
+export function mergeNhscaForPublicRankings(
+  fromTables: TournamentResultRow[],
+  fromProfile: TournamentResultForDisplay[],
+): TournamentResultForDisplay[] {
+  const map = new Map<number, TournamentResultForDisplay>()
+  for (const r of fromTables) {
+    const row: TournamentResultForDisplay = {
+      year: r.year,
+      placement: (r.placement ?? "").trim(),
+      record: (r.record ?? "").trim(),
+      weight: r.weight,
+      division: r.division,
+    }
+    if (!isDisplayRowEmpty(row)) map.set(r.year, row)
+  }
+  for (const r of fromProfile) {
+    const existing = map.get(r.year)
+    if (!existing || isDisplayRowEmpty(existing)) map.set(r.year, r)
+  }
+  return [...map.values()].sort((a, b) => b.year - a.year)
+}
+
 /**
  * Build NHSCA and Super32 results from athlete row - same logic as public-rankings API.
- * This is the single source for how 2026/2027 pages and public profiles display this data.
+ * Uses nhsca_results / super32_results JSON first, then legacy year columns (incl. 2026).
  */
 export function buildPublicProfileTournamentData(athlete: any): PublicProfileTournamentData {
-  const nhscaResults: TournamentResultForDisplay[] = []
-  const nhscaFields = [
-    { year: 2025, record: athlete?.nhsca_2025_record ?? athlete?.nhsca2025Record, placement: athlete?.nhsca_2025_placement ?? athlete?.nhsca2025Placement },
-    { year: 2024, record: athlete?.nhsca_2024_record ?? athlete?.nhsca2024Record, placement: athlete?.nhsca_2024_placement ?? athlete?.nhsca2024Placement },
-  ]
+  const nhscaResults = getNhscaResults(athlete)
+    .map(tournamentRowToNhscaDisplay)
+    .filter(Boolean) as TournamentResultForDisplay[]
 
-  for (const field of nhscaFields) {
-    if (field.placement || field.record) {
-      let placementStr = ""
-      if (field.placement != null && String(field.placement).trim() !== "") {
-        const place = Number.parseInt(String(field.placement))
-        if (!isNaN(place)) {
-          if (place === 1) placementStr = "Champion"
-          else if (place <= 8) {
-            const ordinal = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-            placementStr = `${ordinal} All-American`
-          } else placementStr = `${place}th Place`
-        } else placementStr = String(field.placement)
-      }
-      nhscaResults.push({
-        year: field.year,
-        placement: placementStr,
-        record: (field.record ?? "").toString().trim(),
-      })
-    }
-  }
-
-  const super32Results: TournamentResultForDisplay[] = []
-  const super32Fields = [
-    { year: 2025, record: athlete?.super_32_2025_record ?? athlete?.super32_2025_record, placement: athlete?.super_32_2025_placement ?? athlete?.super32_2025_placement, weight: athlete?.super_32_2025_weight ?? athlete?.super32_2025_weight },
-    { year: 2024, record: athlete?.super_32_2024_record ?? athlete?.super32_2024_record, placement: athlete?.super_32_2024_placement ?? athlete?.super32_2024_placement, weight: athlete?.super_32_2024_weight ?? athlete?.super32_2024_weight },
-    { year: 2023, record: athlete?.super_32_2023_record ?? athlete?.super32_2023_record, placement: athlete?.super_32_2023_placement ?? athlete?.super32_2023_placement, weight: athlete?.super_32_2023_weight ?? athlete?.super32_2023_weight },
-  ]
-  const weightclass = (athlete?.weightclass ?? athlete?.weightClass ?? "").toString().trim()
-
-  for (const field of super32Fields) {
-    if (field.placement || field.record) {
-      let placementStr = ""
-      if (field.placement != null && String(field.placement).trim() !== "") {
-        const place = Number.parseInt(String(field.placement))
-        if (!isNaN(place)) {
-          if (place === 1) placementStr = "Champion"
-          else if (place <= 8) {
-            const ordinal = place === 2 ? "2nd" : place === 3 ? "3rd" : `${place}th`
-            placementStr = `${ordinal} Place`
-          } else placementStr = `${place}th Place`
-        } else placementStr = String(field.placement)
-      }
-      const weightStr = (field.weight ?? weightclass) ? String(field.weight ?? weightclass).trim() : ""
-      super32Results.push({
-        year: field.year,
-        placement: placementStr,
-        record: (field.record ?? "").toString().trim(),
-        weight: weightStr,
-      })
-    }
-  }
+  const super32Results = getSuper32Results(athlete)
+    .map(tournamentRowToSuper32Display)
+    .filter(Boolean) as TournamentResultForDisplay[]
 
   return { nhscaResults, super32Results }
 }

@@ -54,7 +54,7 @@ export default function NHSCAPlacementsPage() {
   const [yearFilter, setYearFilter] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [jsonInput, setJsonInput] = useState("")
-  const [importYear, setImportYear] = useState(2025)
+  const [importYear, setImportYear] = useState(2026)
   const [importMessage, setImportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {

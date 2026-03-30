@@ -1,0 +1,845 @@
+{
+  "year": 2026,
+  "placements": [
+    {
+      "athlete_name": "T. Hall",
+      "weight_class": "113",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Goucher",
+      "weight_class": "113",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Hayden",
+      "weight_class": "113",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S. Tran",
+      "weight_class": "113",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Rodriguez",
+      "weight_class": "120",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Miller",
+      "weight_class": "120",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Mull",
+      "weight_class": "120",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M. White",
+      "weight_class": "120",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "N. Jones",
+      "weight_class": "120",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Watts",
+      "weight_class": "126",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "O. Rushing",
+      "weight_class": "126",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Vasquez",
+      "weight_class": "126",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T. Tala",
+      "weight_class": "126",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Tennessee",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Gue",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Massey",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T. Lawrence",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Smith",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D. Smith",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L. Angstadt",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R. Alexander",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R. Dougherty",
+      "weight_class": "132",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S. Gantt",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": 8,
+      "record": "5-3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T. Salinas",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M. Fischer",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M. Monteith",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Bui",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "G. Rogers",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K. Rhodes",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R. Casper",
+      "weight_class": "138",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Kancler",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "6-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Oakley",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Brezac",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K. Sibugan",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M. Scaldaferri",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Reese",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Campos",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K. Deaton",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S. Moore",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Oxendine",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Warren",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Robertson",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B. Sly",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": 2,
+      "record": "6-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Horton",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "5-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Davis",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Campos",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Guzman",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "I. Mewborn",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Delgado",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. McCartney",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Alvarez",
+      "weight_class": "152",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D. Blue",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": 3,
+      "record": "5-1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Pelote",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Vicente",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K. Michael",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "N. Howard",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "G. Robinson",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M. King",
+      "weight_class": "160",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Meadows",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": 7,
+      "record": "5-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Perryman",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "F. Alkurdasi",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "H. Feagan",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Sanders",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Z. Blankenship",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Ranson",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Hillis",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S. Downing",
+      "weight_class": "170",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Reigel",
+      "weight_class": "182",
+      "division": "Senior",
+      "placement": 8,
+      "record": "4-3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D. El-Amin",
+      "weight_class": "182",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "G. Gholami",
+      "weight_class": "182",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C. Dunn",
+      "weight_class": "195",
+      "division": "Senior",
+      "placement": 7,
+      "record": "6-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "I. Paxton",
+      "weight_class": "195",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B. Dyer",
+      "weight_class": "195",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Hudgins",
+      "weight_class": "195",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E. Corbett",
+      "weight_class": "195",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Hamilton",
+      "weight_class": "220",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Rhymer",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": 8,
+      "record": "5-3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Trahan",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S. Shade",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Roach",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Garay Martinez",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J. Legette",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M. Urquilla-Moscoso",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A. Frank",
+      "weight_class": "285",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    }
+  ]
+}

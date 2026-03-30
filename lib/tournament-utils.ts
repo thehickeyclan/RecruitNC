@@ -49,7 +49,7 @@ export function getNhscaResults(athlete: any): TournamentResult[] {
   const results: TournamentResult[] = []
   const weight = athlete?.weightclass ?? athlete?.weightClass ?? ''
 
-  const years = [2025, 2024, 2023]
+  const years = [2026, 2025, 2024, 2023]
   for (const year of years) {
     const placementSnake = athlete?.[`nhsca_${year}_placement`]
     const recordSnake = athlete?.[`nhsca_${year}_record`]

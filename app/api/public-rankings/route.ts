@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
-import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
+import { buildPublicProfileTournamentData, mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
@@ -78,6 +78,7 @@ export async function GET(request: Request) {
         wrestling_name,
         photourl,
         headshot_url,
+        nhsca_results,
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
@@ -88,6 +89,7 @@ export async function GET(request: Request) {
         super_32_2024_placement,
         super_32_2025_record,
         super_32_2025_placement,
+        super_32_results,
         nationally_ranked_wins,
         recruiting_status,
         college,
@@ -153,13 +155,10 @@ export async function GET(request: Request) {
           getSuper32FromTable(supabase, athleteName, gradYearNum),
         ])
 
-        let nhscaFinal = nhscaToUse
+        const fromAthlete = buildPublicProfileTournamentData(athlete)
+        const nhscaFinal = mergeNhscaForPublicRankings(nhscaToUse, fromAthlete.nhscaResults)
         let super32Final = super32ToUse
-        if (nhscaFinal.length === 0 || super32Final.length === 0) {
-          const fromAthlete = buildPublicProfileTournamentData(athlete)
-          if (nhscaFinal.length === 0) nhscaFinal = fromAthlete.nhscaResults
-          if (super32Final.length === 0) super32Final = fromAthlete.super32Results
-        }
+        if (super32Final.length === 0) super32Final = fromAthlete.super32Results
 
         let stateResults = nchsaaResults.map((result: { year: number; place: number; classification?: string }) => {
           const { year: y, place, classification } = result
