@@ -85,6 +85,21 @@ try {
   process.exit(1)
 }
 
+const hostLower = supabaseHost.toLowerCase()
+if (
+  hostLower.includes("your-project") ||
+  hostLower === "example.supabase.co" ||
+  hostLower.startsWith("xxxxxxxx")
+) {
+  console.error(
+    "NEXT_PUBLIC_SUPABASE_URL is still a documentation placeholder, not your real project URL.",
+  )
+  console.error(
+    "Fix: Supabase dashboard → Project Settings → API → copy “Project URL” (https://<random-letters>.supabase.co) into .env.local",
+  )
+  process.exit(1)
+}
+
 if (!fs.existsSync(jsonPath)) {
   console.error("File not found:", jsonPath)
   process.exit(1)
