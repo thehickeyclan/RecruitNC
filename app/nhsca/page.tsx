@@ -44,8 +44,14 @@ export default function NHSCAOverview() {
               </span>
               View Live Dashboard
             </HardLink>
-            <Link href="/nhsca/2025" className="w-full sm:w-auto">
+            <Link href="/nhsca/2026" className="w-full sm:w-auto">
               <Button className="bg-white hover:bg-white/90 text-[#002147] font-bold text-base md:text-lg px-4 md:px-8 py-3 md:py-6 w-full sm:w-auto">
+                <Trophy className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                2026 Results
+              </Button>
+            </Link>
+            <Link href="/nhsca/2025" className="w-full sm:w-auto">
+              <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white/10 font-bold text-base md:text-lg px-4 md:px-8 py-3 md:py-6 w-full sm:w-auto">
                 <Trophy className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 2025 Results
               </Button>
