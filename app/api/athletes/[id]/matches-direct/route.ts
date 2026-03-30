@@ -18,8 +18,8 @@ function parseMatchesField(value: unknown): any[] {
   }
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
-  const athleteId = params.id
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: athleteId } = await params
 
   if (!athleteId) {
     return NextResponse.json({ success: false, error: "Missing athlete id" }, { status: 400 })
@@ -67,14 +67,15 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     if (!results || results.length === 0) {
       const { data: athlete, error: athleteError } = await supabase
         .from("athletes")
-        .select("id, name, firstName, lastName")
+        .select("id, name, firstName, lastName, firstname, lastname")
         .eq("id", athleteId)
         .single()
 
       if (!athleteError && athlete) {
+        const a = athlete as Record<string, unknown>
         const fullName = (athlete.name || "").trim()
-        let first = (athlete.firstName || "").trim()
-        let last = (athlete.lastName || "").trim()
+        let first = String(a.firstName ?? a.firstname ?? "").trim()
+        let last = String(a.lastName ?? a.lastname ?? "").trim()
 
         if ((!first || !last) && fullName) {
           const parts = fullName.split(/\s+/)

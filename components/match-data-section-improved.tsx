@@ -269,11 +269,19 @@ export function MatchDataSectionImproved({ athleteId, athleteName, graduationYea
       })
 
       let seasons: SeasonData[] = []
-      if (directData && directData.success && Array.isArray(directData.matches) && directData.matches.length > 0) {
+      const directOk =
+        directData && directData.success === true && Array.isArray(directData.matches)
+      if (directOk && directData.matches.length > 0) {
         console.log("[v0] Using direct endpoint data, found", directData.matches.length, "seasons")
         seasons = directData.matches.map(mapRecord)
       } else {
-        console.log("[v0] Direct endpoint failed or no data, trying fallback")
+        if (directOk && directData.matches.length === 0) {
+          console.log(
+            "[v0] Direct endpoint OK but no seasons in DB (matches table empty / unlinked for this athlete); trying legacy",
+          )
+        } else {
+          console.log("[v0] Direct endpoint error or unexpected JSON shape; trying legacy")
+        }
         // Fallback: legacy endpoint
         const legacyUrl = `/api/athletes/${athleteId}/matches`
         console.log("[v0] Trying legacy endpoint:", legacyUrl)
@@ -293,7 +301,7 @@ export function MatchDataSectionImproved({ athleteId, athleteName, graduationYea
           console.log("[v0] Using legacy endpoint data, found", raw.length, "seasons")
           seasons = raw.map(mapRecord)
         } else {
-          console.log("[v0] No data from either endpoint")
+          console.log("[v0] No season rows from direct or legacy (no match records for this athlete)")
         }
       }
 
