@@ -192,6 +192,46 @@ export function computeMultiTimeAAsFor2026Roster(
 }
 
 /** Prefer computed counts when higher; keep manual rows for names DB missed (e.g. spelling). */
+/** Stacked state comparison for National Comparison (matches 2025 page shape). */
+export type Nhsca2026StateStackRow = {
+  rank: number
+  state: string
+  Freshman: number
+  Sophomore: number
+  Junior: number
+  Senior: number
+  total: number
+  isNC: boolean
+}
+
+function divisionTotalsByState(section: { state: string; total: number }[]): Map<string, number> {
+  const m = new Map<string, number>()
+  for (const r of section) {
+    m.set(r.state, r.total)
+  }
+  return m
+}
+
+/** Join section10–13 with section14 overall order for stacked bar + table. */
+export function getNhsca2026StateStackedComparison(): Nhsca2026StateStackRow[] {
+  const overall = nhsca2026.section14_overall_aa_state_ranking as { rank: number; state: string; total: number }[]
+  const fr = divisionTotalsByState(nhsca2026.section10_freshman_aa_state_ranking as { state: string; total: number }[])
+  const so = divisionTotalsByState(nhsca2026.section11_sophomore_aa_state_ranking as { state: string; total: number }[])
+  const jr = divisionTotalsByState(nhsca2026.section12_junior_aa_state_ranking as { state: string; total: number }[])
+  const sr = divisionTotalsByState(nhsca2026.section13_senior_aa_state_ranking as { state: string; total: number }[])
+
+  return overall.map((row) => ({
+    rank: row.rank,
+    state: row.state,
+    Freshman: fr.get(row.state) ?? 0,
+    Sophomore: so.get(row.state) ?? 0,
+    Junior: jr.get(row.state) ?? 0,
+    Senior: sr.get(row.state) ?? 0,
+    total: row.total,
+    isNC: row.state === "NC",
+  }))
+}
+
 export function mergeMultiTimeAALists(computed: MultiTimeAAEntry[], manual: MultiTimeAAEntry[]): MultiTimeAAEntry[] {
   const norm = (s: string) => (s || "").toLowerCase().trim().replace(/\s+/g, " ")
   const map = new Map<string, MultiTimeAAEntry>()
