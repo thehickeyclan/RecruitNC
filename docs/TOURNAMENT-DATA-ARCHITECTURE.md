@@ -34,6 +34,7 @@ Unified profile: NHSCA falls back to athlete row when tables return no rows. **S
 ## Matching Rules
 
 - **NHSCA:** Match by `athlete_name` (ilike) + year range (graduation year ± 4).
+- **NHSCA + NCHSAA:** For NC bulk imports, use **Expand names from NCHSAA** (admin API) so bracket initials become state spellings when uniquely resolvable — see `docs/NHSCA-NCHSAA-UNIFIED-ARCHITECTURE.md`.
 - **Super32:** Match by `athlete_name` (ilike) + year range. If multiple athletes share a name (e.g. Connor Reece vs Connor Reese), filter by `high_school` against `athlete.highschool`. School comparison is bidirectional (either string contains the other).
 
 ## Adding New Athletes

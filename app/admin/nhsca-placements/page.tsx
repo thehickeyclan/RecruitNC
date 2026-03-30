@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Upload, Search, RefreshCw, Link2, CheckCircle, AlertCircle, Download, FileText } from "lucide-react"
+import { Upload, Search, RefreshCw, Link2, CheckCircle, AlertCircle, FileText, ListOrdered, School } from "lucide-react"
 
 interface NHSCAPlacement {
   id: string
@@ -74,6 +74,7 @@ export default function NHSCAPlacementsPage() {
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)
   const [matching, setMatching] = useState(false)
+  const [resolvingNchsaa, setResolvingNchsaa] = useState(false)
   const [merging, setMerging] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [stats, setStats] = useState<ImportStats>({
@@ -307,6 +308,35 @@ export default function NHSCAPlacementsPage() {
     void handleJsonFileChosen(e.dataTransfer.files)
   }
 
+  const handleResolveNamesFromNchsaa = async () => {
+    try {
+      setResolvingNchsaa(true)
+      setImportMessage(null)
+      const response = await fetch("/api/admin/nhsca-placements/resolve-names-from-nchsaa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ year: matchMergeYear }),
+      })
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || "Could not expand names")
+      }
+      setImportMessage({
+        type: "success",
+        text: result.message || `Updated ${result.updated ?? 0} name(s) from NCHSAA state data`,
+      })
+      fetchPlacements()
+    } catch (error: unknown) {
+      setImportMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Expand names failed",
+      })
+    } finally {
+      setResolvingNchsaa(false)
+    }
+  }
+
   const handleMatch = async () => {
     try {
       setMatching(true)
@@ -438,6 +468,36 @@ export default function NHSCAPlacementsPage() {
           <p className="text-gray-600">Import, match, and merge NHSCA tournament data (placers and non-placers)</p>
         </div>
 
+        <Card className="mb-6 border-[#13294B]/25 bg-[#f4f7fb]">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg text-[#13294B]">
+              <ListOrdered className="h-5 w-5 shrink-0" />
+              Do this in order
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-3 text-sm text-gray-800">
+            <ol className="list-decimal pl-5 space-y-3">
+              <li>
+                <strong>Load the file</strong> — Choose <code className="bg-white/80 px-1 rounded text-xs">seniors-2026-nhsca-import.json</code> or paste JSON, then click{" "}
+                <strong>Import Data</strong>.
+              </li>
+              <li>
+                <strong>Match bracket names to state spellings (NC)</strong> — Click{" "}
+                <strong>Expand names from NCHSAA</strong> so initials like &quot;T. Hall&quot; become full names from your state results (same year + weight; unique matches only). Then run <strong>Auto-Match</strong>.
+              </li>
+              <li>
+                <strong>Connect any stragglers</strong> — If the table still shows <strong>Unmatched</strong>, use <strong>Find profile</strong> on that row.
+              </li>
+              <li>
+                <strong>Show it on RecruitNC</strong> — Click <strong>Merge into Profiles</strong>. Until you do this, NHSCA won’t appear on athlete pages.
+              </li>
+            </ol>
+            <p className="text-xs text-gray-600 border-t border-[#13294B]/10 pt-3">
+              <strong>Year for Match / Merge / Expand:</strong> {matchMergeYear} — set the <strong>Year</strong> filter above the table if you need a different year. Re-importing the same year replaces that year’s data (re-run from step 2).
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
           <Card>
@@ -483,7 +543,7 @@ export default function NHSCAPlacementsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Import JSON Data
+              Step 1 — Import JSON
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -576,11 +636,31 @@ export default function NHSCAPlacementsPage() {
         </Card>
 
         {/* Actions */}
-        <p className="text-sm text-gray-600 mb-2">
-          Auto-Match and Merge use <strong>year filter</strong> if set, otherwise <strong>import year</strong> ({importYear}). Current:{" "}
-          <strong>{matchMergeYear}</strong>
-        </p>
-        <div className="flex gap-4 mb-6">
+        <div className="mb-2">
+          <h2 className="text-base font-semibold text-[#13294B] mb-1">Steps 2–4 — Names, match, publish</h2>
+          <p className="text-sm text-gray-600">
+            For NC: <strong>Expand names from NCHSAA</strong> → <strong>Auto-Match</strong> → <strong>Merge into Profiles</strong>. Year: <strong>{matchMergeYear}</strong>.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-4 mb-6">
+          <Button
+            onClick={handleResolveNamesFromNchsaa}
+            disabled={resolvingNchsaa}
+            variant="outline"
+            className="border-emerald-700 text-emerald-900 hover:bg-emerald-50"
+          >
+            {resolvingNchsaa ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Expanding…
+              </>
+            ) : (
+              <>
+                <School className="h-4 w-4 mr-2" />
+                Expand names from NCHSAA
+              </>
+            )}
+          </Button>
           <Button onClick={handleDeleteYear} disabled={deleting || !yearFilter} variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
             {deleting ? (
               <>
@@ -629,6 +709,7 @@ export default function NHSCAPlacementsPage() {
         {/* Filters */}
         <Card className="mb-6">
           <CardContent className="p-4">
+            <p className="text-sm text-gray-600 mb-3">Find a wrestler in the table — filter by year or status (e.g. Unmatched).</p>
             <div className="flex gap-4 flex-wrap">
               <div className="flex-1 min-w-[200px]">
                 <Input
@@ -669,8 +750,11 @@ export default function NHSCAPlacementsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Participants ({filteredPlacements.length} of {placements.length})
+              All participants ({filteredPlacements.length} of {placements.length})
             </CardTitle>
+            <p className="text-sm font-normal text-gray-600 mt-1">
+              Use <strong>Find profile</strong> when a row is still unmatched after Auto-Match.
+            </p>
           </CardHeader>
           <CardContent>
             {loading ? (
