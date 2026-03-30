@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getAdminAuth } from "@/lib/cached-auth-check"
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 const MIN_LEN = 2
 const MAX_RESULTS = 25
@@ -33,18 +31,35 @@ export async function GET(request: NextRequest) {
     }
 
     const pattern = `%${safe}%`
+    const supabase = createAdminClient()
 
-    let query = supabase
-      .from("athletes")
-      .select("id, name, firstName, lastName, graduationyear, highschool")
-      .or(`name.ilike.${pattern},firstName.ilike.${pattern},lastName.ilike.${pattern}`)
-      .limit(MAX_RESULTS)
-
-    if (gradYear != null && !Number.isNaN(gradYear)) {
-      query = query.eq("graduationyear", gradYear)
+    const base = () => {
+      let q = supabase
+        .from("athletes")
+        .select("id, name, firstName, lastName, graduationyear, highschool")
+        .or(`name.ilike.${pattern},firstName.ilike.${pattern},lastName.ilike.${pattern}`)
+      if (gradYear != null && !Number.isNaN(gradYear)) {
+        q = q.eq("graduationyear", gradYear)
+      }
+      return q.order("name", { ascending: true }).limit(MAX_RESULTS)
     }
 
-    const { data, error } = await query.order("name", { ascending: true })
+    let { data, error } = await base()
+
+    // Some DBs only expose lowercase name parts; PostgREST errors if a column is missing.
+    if (error) {
+      console.warn("[nhsca search-athletes] multi-column OR failed, falling back to name only:", error.message)
+      let q2 = supabase
+        .from("athletes")
+        .select("id, name, firstName, lastName, graduationyear, highschool")
+        .ilike("name", pattern)
+      if (gradYear != null && !Number.isNaN(gradYear)) {
+        q2 = q2.eq("graduationyear", gradYear)
+      }
+      const r2 = await q2.order("name", { ascending: true }).limit(MAX_RESULTS)
+      data = r2.data
+      error = r2.error
+    }
 
     if (error) {
       console.error("[nhsca search-athletes]", error)

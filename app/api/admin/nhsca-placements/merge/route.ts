@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getAdminAuth } from "@/lib/cached-auth-check"
 import { mergeNHSCAResults } from "@/lib/nhsca-auto-fetch"
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 /**
  * Merge matched NHSCA placements into athlete profiles
@@ -18,6 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { year = 2025 } = await request.json()
+    const supabase = createAdminClient()
 
     // Get all matched placements for this year that haven't been merged
     const { data: placements, error: placementsError } = await supabase
@@ -54,6 +53,7 @@ export async function POST(request: NextRequest) {
 
     let mergedCount = 0
     const errors: string[] = []
+    const mergedPlacementIds: string[] = []
 
     // Update each athlete's nhsca_results
     for (const [athleteId, athletePlacements] of placementsByAthlete.entries()) {
@@ -121,22 +121,24 @@ export async function POST(request: NextRequest) {
         }
 
         mergedCount++
+        for (const p of athletePlacements) {
+          mergedPlacementIds.push(p.id)
+        }
       } catch (error: any) {
         errors.push(`Error processing athlete ${athleteId}: ${error.message}`)
       }
     }
 
-    // Mark placements as merged
-    const { error: markError } = await supabase
-      .from("nhsca_placements")
-      .update({ merged_at: new Date().toISOString() })
-      .eq("year", year)
-      .in("match_status", ["auto_matched", "manually_matched"])
-      .is("merged_at", null)
-      .not("athlete_id", "is", null)
+    // Mark only placements that succeeded (so failed rows stay mergeable)
+    if (mergedPlacementIds.length > 0) {
+      const { error: markError } = await supabase
+        .from("nhsca_placements")
+        .update({ merged_at: new Date().toISOString() })
+        .in("id", mergedPlacementIds)
 
-    if (markError) {
-      console.error("Error marking placements as merged:", markError)
+      if (markError) {
+        console.error("Error marking placements as merged:", markError)
+      }
     }
 
     return NextResponse.json({

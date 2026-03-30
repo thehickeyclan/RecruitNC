@@ -79,7 +79,8 @@ export default function NHSCAPlacementsPage() {
   const [linkSearching, setLinkSearching] = useState(false)
   const [linkingId, setLinkingId] = useState<string | null>(null)
   /** When true, search only athletes with graduationyear === placement year (NHSCA row year). */
-  const [linkLimitGradYear, setLinkLimitGradYear] = useState(true)
+  const [linkLimitGradYear, setLinkLimitGradYear] = useState(false)
+  const [linkSearchError, setLinkSearchError] = useState<string | null>(null)
 
   /** Match/Merge year: explicit filter, else same as import year (avoid defaulting to wrong year when filter empty). */
   const matchMergeYear = yearFilter ?? importYear
@@ -97,6 +98,7 @@ export default function NHSCAPlacementsPage() {
     }
     const id = setTimeout(async () => {
       setLinkSearching(true)
+      setLinkSearchError(null)
       try {
         const params = new URLSearchParams({ q })
         if (linkLimitGradYear && linkPlacement.year) {
@@ -108,9 +110,14 @@ export default function NHSCAPlacementsPage() {
         const data = await res.json()
         if (res.ok) {
           setLinkResults(data.athletes ?? [])
+          setLinkSearchError(null)
         } else {
           setLinkResults([])
+          setLinkSearchError(data.error || `Search failed (${res.status})`)
         }
+      } catch {
+        setLinkResults([])
+        setLinkSearchError("Network error while searching")
       } finally {
         setLinkSearching(false)
       }
@@ -120,7 +127,8 @@ export default function NHSCAPlacementsPage() {
 
   const openLinkDialog = (p: NHSCAPlacement) => {
     setLinkPlacement(p)
-    setLinkLimitGradYear(true)
+    setLinkLimitGradYear(false)
+    setLinkSearchError(null)
     const parts = p.athlete_name.trim().split(/\s+/)
     const guess =
       parts.length >= 2
@@ -663,11 +671,18 @@ export default function NHSCAPlacementsPage() {
                 Limit to class of {linkPlacement?.year ?? "—"}
               </label>
               {linkSearching && <p className="text-sm text-muted-foreground">Searching…</p>}
+              {linkSearchError && (
+                <p className="text-sm text-red-600" role="alert">
+                  {linkSearchError}
+                </p>
+              )}
               {!linkSearching &&
+                !linkSearchError &&
                 linkSearch.trim().length >= 2 &&
                 linkResults.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No athletes found. Try another spelling or turn off the class-year filter.
+                    No athletes found. Try another spelling, or enable &quot;Limit to class of…&quot; if you need to narrow
+                    results.
                   </p>
                 )}
               <ul className="border rounded-md divide-y max-h-[45vh] overflow-y-auto">
