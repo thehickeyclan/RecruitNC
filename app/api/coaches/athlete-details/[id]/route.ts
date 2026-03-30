@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+import { getNhscaResults } from "@/lib/tournament-utils"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -80,12 +82,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
       const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
       const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear)
+      const nhscaMerged = mergeNhscaForPublicRankings(nhsca, getNhscaResults(athlete))
       let athleteToReturn = {
         ...athlete,
         is_starred: false,
         pipeline_stage: "Prospect",
         communication_log: [],
-        nhsca_results: nhsca.length ? nhsca : athlete.nhsca_results ?? [],
+        nhsca_results: nhscaMerged,
         super32_results: super32.length ? super32 : athlete.super32_results ?? [],
       }
     return NextResponse.json({
@@ -157,9 +160,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
     const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
     const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear)
+    const nhscaMerged = mergeNhscaForPublicRankings(nhsca, getNhscaResults(athlete))
     const athleteToReturn = {
       ...athleteWithTracking,
-      nhsca_results: nhsca.length ? nhsca : athleteWithTracking.nhsca_results ?? athlete.nhsca_results ?? [],
+      nhsca_results: nhscaMerged,
       super32_results: super32.length ? super32 : athleteWithTracking.super32_results ?? athlete.super32_results ?? [],
     }
     return NextResponse.json({

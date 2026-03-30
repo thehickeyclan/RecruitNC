@@ -2,7 +2,8 @@ import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getNameVariants, getNHSCAFromTables, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
-import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
+import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
+import { getNhscaResults, getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
 
@@ -146,9 +147,10 @@ export async function GET(
       }
     }
 
+    const nhscaMerged = mergeNhscaForPublicRankings(nhscaFromTables, getNhscaResults(athlete))
     const athleteWithTournaments = {
       ...athlete,
-      nhsca_results: nhscaFromTables.length ? nhscaFromTables : (athlete.nhsca_results ?? []),
+      nhsca_results: nhscaMerged,
       super32_results: super32FromTable.length ? super32FromTable : (athlete.super32_results ?? []),
       national_team_results,
     }
