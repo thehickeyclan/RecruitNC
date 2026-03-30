@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, type DragEvent } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,6 +51,24 @@ interface AthleteSearchHit {
   highschool: string | null
 }
 
+/** Accepts either a raw array or `{ year, placements }` (e.g. scripts/data/seniors-2026-nhsca-import.json). */
+function parseNhscaImportPayload(parsed: unknown): { placements: unknown[]; yearFromFile?: number } {
+  if (Array.isArray(parsed)) {
+    return { placements: parsed }
+  }
+  if (parsed !== null && typeof parsed === "object" && "placements" in parsed) {
+    const rec = parsed as { placements?: unknown; year?: unknown }
+    if (Array.isArray(rec.placements)) {
+      const y = rec.year
+      const yearFromFile = typeof y === "number" && Number.isFinite(y) ? y : undefined
+      return { placements: rec.placements, yearFromFile }
+    }
+  }
+  throw new Error(
+    'Invalid JSON: use a participant array, or { "year": 2026, "placements": [ ... ] }',
+  )
+}
+
 export default function NHSCAPlacementsPage() {
   const [placements, setPlacements] = useState<NHSCAPlacement[]>([])
   const [loading, setLoading] = useState(true)
@@ -72,6 +90,8 @@ export default function NHSCAPlacementsPage() {
   const [jsonInput, setJsonInput] = useState("")
   const [importYear, setImportYear] = useState(2026)
   const [importMessage, setImportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [importDragActive, setImportDragActive] = useState(false)
+  const jsonFileInputRef = useRef<HTMLInputElement>(null)
 
   const [linkPlacement, setLinkPlacement] = useState<NHSCAPlacement | null>(null)
   const [linkSearch, setLinkSearch] = useState("")
@@ -184,9 +204,23 @@ export default function NHSCAPlacementsPage() {
     }
   }
 
+  const postBulkImport = async (placements: unknown[], year: number) => {
+    const response = await fetch("/api/admin/nhsca-placements/bulk-import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ year, placements }),
+    })
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result.error || result.details || "Import failed")
+    }
+    return result
+  }
+
   const handleImport = async () => {
     if (!jsonInput.trim()) {
-      setImportMessage({ type: "error", text: "Please paste JSON data" })
+      setImportMessage({ type: "error", text: "Paste JSON or load a .json file" })
       return
     }
 
@@ -194,45 +228,83 @@ export default function NHSCAPlacementsPage() {
       setImporting(true)
       setImportMessage(null)
 
-      let placementsData
+      let parsed: unknown
       try {
-        placementsData = JSON.parse(jsonInput)
-      } catch (e) {
+        parsed = JSON.parse(jsonInput)
+      } catch {
         setImportMessage({ type: "error", text: "Invalid JSON format" })
         return
       }
 
-      if (!Array.isArray(placementsData)) {
-        setImportMessage({ type: "error", text: "JSON must be an array of participants (placers and non-placers)" })
+      let placements: unknown[]
+      let yearFromFile: number | undefined
+      try {
+        const r = parseNhscaImportPayload(parsed)
+        placements = r.placements
+        yearFromFile = r.yearFromFile
+      } catch (e) {
+        setImportMessage({
+          type: "error",
+          text: e instanceof Error ? e.message : "Invalid JSON shape",
+        })
         return
       }
 
-      const response = await fetch("/api/admin/nhsca-placements/bulk-import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          year: importYear,
-          placements: placementsData,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        // Use the detailed message from API if available, otherwise create one
-        const message = result.message || `Successfully imported ${result.imported} participants${result.placers ? ` (${result.placers} placers, ${result.nonPlacers || result.imported - result.placers} non-placers)` : ''}`
-        setImportMessage({ type: "success", text: message })
-        setJsonInput("")
-        fetchPlacements()
-      } else {
-        setImportMessage({ type: "error", text: result.error || "Import failed" })
+      const year = yearFromFile ?? importYear
+      const result = await postBulkImport(placements, year)
+      if (yearFromFile != null) {
+        setImportYear(yearFromFile)
       }
-    } catch (error: any) {
-      setImportMessage({ type: "error", text: error.message || "Import failed" })
+      const message =
+        result.message ||
+        `Successfully imported ${result.imported} participants${result.placers != null ? ` (${result.placers} placers, ${result.nonPlacers ?? result.imported - result.placers} non-placers)` : ""}`
+      setImportMessage({ type: "success", text: message })
+      setJsonInput("")
+      fetchPlacements()
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Import failed"
+      setImportMessage({ type: "error", text: msg })
     } finally {
       setImporting(false)
     }
+  }
+
+  const handleJsonFileChosen = async (files: FileList | null) => {
+    const file = files?.[0]
+    if (!file) return
+    const lower = file.name.toLowerCase()
+    if (!lower.endsWith(".json") && file.type !== "application/json") {
+      setImportMessage({ type: "error", text: "Choose a .json file" })
+      return
+    }
+    try {
+      const text = await file.text()
+      setJsonInput(text)
+      const parsed = JSON.parse(text)
+      const { placements, yearFromFile } = parseNhscaImportPayload(parsed)
+      if (yearFromFile != null) {
+        setImportYear(yearFromFile)
+      }
+      setImportMessage({
+        type: "success",
+        text: `Loaded ${placements.length} participant(s) from ${file.name}. Review below, then click Import Data.`,
+      })
+    } catch (e) {
+      setImportMessage({
+        type: "error",
+        text: e instanceof Error ? e.message : "Could not read that file",
+      })
+    }
+    if (jsonFileInputRef.current) {
+      jsonFileInputRef.current.value = ""
+    }
+  }
+
+  const handleImportFileDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setImportDragActive(false)
+    void handleJsonFileChosen(e.dataTransfer.files)
   }
 
   const handleMatch = async () => {
@@ -425,14 +497,57 @@ export default function NHSCAPlacementsPage() {
                   className="max-w-xs"
                 />
               </div>
+              <input
+                ref={jsonFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => void handleJsonFileChosen(e.target.files)}
+              />
               <div>
-                <label className="block text-sm font-medium mb-2">JSON Data (Array of participants - placers and non-placers)</label>
-                <textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder='[{"athlete_name": "John Doe", "placement": null, "record": "2-2", "weight_class": "157", "division": "Senior", ...}, ...]'
-                  className="w-full h-32 p-3 border rounded font-mono text-sm"
-                />
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <label className="block text-sm font-medium">JSON (paste, or load the export file)</label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => jsonFileInputRef.current?.click()}
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    Choose .json file
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-600 mb-2">
+                  Supports a raw array, or <code className="bg-gray-100 px-1 rounded">{"{ year, placements }"}</code>{" "}
+                  (year in the file sets the import year when present).
+                </p>
+                <div
+                  onDragEnter={(e) => {
+                    e.preventDefault()
+                    setImportDragActive(true)
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault()
+                    if (e.currentTarget === e.target) setImportDragActive(false)
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                  }}
+                  onDrop={handleImportFileDrop}
+                  className={`rounded-md border-2 border-dashed transition-colors ${
+                    importDragActive ? "border-[#13294B] bg-blue-50/50" : "border-gray-200"
+                  }`}
+                >
+                  <textarea
+                    value={jsonInput}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                    placeholder='[{"athlete_name": "John Doe", "placement": null, "record": "2-2", "weight_class": "157", "division": "Senior", ...}, ...]'
+                    className="w-full h-40 p-3 border-0 rounded-md font-mono text-sm bg-transparent focus:outline-none focus:ring-0"
+                  />
+                </div>
+                {importDragActive && (
+                  <p className="text-xs text-[#13294B] mt-1">Drop .json file here</p>
+                )}
               </div>
               {importMessage && (
                 <div

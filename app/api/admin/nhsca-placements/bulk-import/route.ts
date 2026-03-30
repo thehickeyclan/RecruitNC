@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+import { createAdminClient } from "@/lib/supabase/admin"
+import { getAdminAuth } from "@/lib/cached-auth-check"
 
 interface NHSCAPlacementRow {
   athlete_name: string
@@ -16,6 +15,12 @@ interface NHSCAPlacementRow {
 
 export async function POST(request: NextRequest) {
   try {
+    const { user, profile } = await getAdminAuth()
+    if (!user || !profile?.is_admin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const supabase = createAdminClient()
     const { placements, year = 2025 } = await request.json()
 
     if (!Array.isArray(placements) || placements.length === 0) {
