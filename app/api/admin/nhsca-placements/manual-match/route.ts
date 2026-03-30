@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { getAdminAuth } from "@/lib/cached-auth-check"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 /**
- * Manually link a placement to an athlete profile
+ * Manually link a placement to an athlete profile (admin only)
  */
 export async function POST(request: NextRequest) {
   try {
+    const { user, profile } = await getAdminAuth()
+    if (!user || !profile?.is_admin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { placementId, athleteId } = await request.json()
 
     if (!placementId || !athleteId) {

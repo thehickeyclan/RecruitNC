@@ -5,6 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AdminHeader } from "@/components/admin-header"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Upload, Search, RefreshCw, Link2, CheckCircle, AlertCircle, Download, FileText } from "lucide-react"
 
 interface NHSCAPlacement {
@@ -35,6 +42,15 @@ interface ImportStats {
   merged: number
 }
 
+interface AthleteSearchHit {
+  id: string
+  name: string | null
+  firstName: string | null
+  lastName: string | null
+  graduationyear: number | null
+  highschool: string | null
+}
+
 export default function NHSCAPlacementsPage() {
   const [placements, setPlacements] = useState<NHSCAPlacement[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,12 +73,90 @@ export default function NHSCAPlacementsPage() {
   const [importYear, setImportYear] = useState(2026)
   const [importMessage, setImportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
+  const [linkPlacement, setLinkPlacement] = useState<NHSCAPlacement | null>(null)
+  const [linkSearch, setLinkSearch] = useState("")
+  const [linkResults, setLinkResults] = useState<AthleteSearchHit[]>([])
+  const [linkSearching, setLinkSearching] = useState(false)
+  const [linkingId, setLinkingId] = useState<string | null>(null)
+  /** When true, search only athletes with graduationyear === placement year (NHSCA row year). */
+  const [linkLimitGradYear, setLinkLimitGradYear] = useState(true)
+
   /** Match/Merge year: explicit filter, else same as import year (avoid defaulting to wrong year when filter empty). */
   const matchMergeYear = yearFilter ?? importYear
 
   useEffect(() => {
     fetchPlacements()
   }, [])
+
+  useEffect(() => {
+    if (!linkPlacement) return
+    const q = linkSearch.trim()
+    if (q.length < 2) {
+      setLinkResults([])
+      return
+    }
+    const id = setTimeout(async () => {
+      setLinkSearching(true)
+      try {
+        const params = new URLSearchParams({ q })
+        if (linkLimitGradYear && linkPlacement.year) {
+          params.set("grad_year", String(linkPlacement.year))
+        }
+        const res = await fetch(`/api/admin/nhsca-placements/search-athletes?${params}`, {
+          credentials: "include",
+        })
+        const data = await res.json()
+        if (res.ok) {
+          setLinkResults(data.athletes ?? [])
+        } else {
+          setLinkResults([])
+        }
+      } finally {
+        setLinkSearching(false)
+      }
+    }, 350)
+    return () => clearTimeout(id)
+  }, [linkSearch, linkPlacement, linkLimitGradYear])
+
+  const openLinkDialog = (p: NHSCAPlacement) => {
+    setLinkPlacement(p)
+    setLinkLimitGradYear(true)
+    const parts = p.athlete_name.trim().split(/\s+/)
+    const guess =
+      parts.length >= 2
+        ? parts[parts.length - 1].replace(/[^A-Za-z0-9'.-]/g, "").trim()
+        : p.athlete_name.trim()
+    setLinkSearch(guess || p.athlete_name.trim())
+    setLinkResults([])
+  }
+
+  const handleManualLink = async (athleteId: string) => {
+    if (!linkPlacement) return
+    setLinkingId(athleteId)
+    try {
+      const res = await fetch("/api/admin/nhsca-placements/manual-match", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ placementId: linkPlacement.id, athleteId }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || data.details || "Link failed")
+      }
+      setImportMessage({
+        type: "success",
+        text: data.message || "Placement linked to profile",
+      })
+      setLinkPlacement(null)
+      fetchPlacements()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Link failed"
+      setImportMessage({ type: "error", text: msg })
+    } finally {
+      setLinkingId(null)
+    }
+  }
 
   const fetchPlacements = async () => {
     try {
@@ -467,6 +561,7 @@ export default function NHSCAPlacementsPage() {
                     <tr className="border-b">
                       <th className="text-left p-2">Year</th>
                       <th className="text-left p-2">Athlete</th>
+                      <th className="text-left p-2">RecruitNC profile</th>
                       <th className="text-left p-2">School</th>
                       <th className="text-left p-2">Division</th>
                       <th className="text-left p-2">Weight</th>
@@ -480,6 +575,40 @@ export default function NHSCAPlacementsPage() {
                       <tr key={p.id} className="border-b hover:bg-gray-50">
                         <td className="p-2">{p.year}</td>
                         <td className="p-2 font-medium">{p.athlete_name}</td>
+                        <td className="p-2 align-top">
+                          <div className="flex flex-col gap-1 min-w-[130px]">
+                            {p.athlete_id ? (
+                              <>
+                                <a
+                                  href={`/view-profile?id=${p.athlete_id}`}
+                                  className="text-xs text-blue-600 hover:underline"
+                                >
+                                  View profile
+                                </a>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs justify-start px-2"
+                                  onClick={() => openLinkDialog(p)}
+                                >
+                                  Re-link…
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() => openLinkDialog(p)}
+                              >
+                                <Search className="h-3 w-3 mr-1" />
+                                Find profile
+                              </Button>
+                            )}
+                          </div>
+                        </td>
                         <td className="p-2 text-gray-600">{p.high_school || "-"}</td>
                         <td className="p-2">{p.division}</td>
                         <td className="p-2">{p.weight_class}</td>
@@ -502,6 +631,84 @@ export default function NHSCAPlacementsPage() {
             )}
           </CardContent>
         </Card>
+
+        <Dialog
+          open={!!linkPlacement}
+          onOpenChange={(open) => {
+            if (!open) setLinkPlacement(null)
+          }}
+        >
+          <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Link NHSCA row to RecruitNC profile</DialogTitle>
+              <DialogDescription>
+                Search athletes and choose the profile that matches{" "}
+                <span className="font-medium text-foreground">{linkPlacement?.athlete_name}</span>
+                {linkPlacement?.high_school ? ` (${linkPlacement.high_school})` : ""}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input
+                placeholder="Search by name…"
+                value={linkSearch}
+                onChange={(e) => setLinkSearch(e.target.value)}
+                autoFocus
+              />
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={linkLimitGradYear}
+                  onChange={(e) => setLinkLimitGradYear(e.target.checked)}
+                />
+                Limit to class of {linkPlacement?.year ?? "—"}
+              </label>
+              {linkSearching && <p className="text-sm text-muted-foreground">Searching…</p>}
+              {!linkSearching &&
+                linkSearch.trim().length >= 2 &&
+                linkResults.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No athletes found. Try another spelling or turn off the class-year filter.
+                  </p>
+                )}
+              <ul className="border rounded-md divide-y max-h-[45vh] overflow-y-auto">
+                {linkResults.map((a) => {
+                  const display =
+                    a.name?.trim() ||
+                    [a.firstName, a.lastName].filter(Boolean).join(" ").trim() ||
+                    "Unknown"
+                  return (
+                    <li
+                      key={a.id}
+                      className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                    >
+                      <div>
+                        <div className="font-medium">{display}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {a.highschool || "—"}
+                          {a.graduationyear != null ? ` · Class of ${a.graduationyear}` : ""}
+                        </div>
+                        <a
+                          href={`/view-profile?id=${a.id}`}
+                          className="text-xs text-blue-600 hover:underline mt-1 inline-block"
+                        >
+                          Open profile
+                        </a>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={linkingId !== null}
+                        onClick={() => handleManualLink(a.id)}
+                      >
+                        {linkingId === a.id ? "Linking…" : "Link this profile"}
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
