@@ -1,0 +1,1225 @@
+{
+  "year": 2026,
+  "placements": [
+    {
+      "athlete_name": "Carson Raper",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Delgado",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L Dreshman",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Lirgg",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Cooper",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Marino",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S Winship",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Moralez",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Plunk",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T Cole",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 10",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Gomez",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 11",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Yi-Berg",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 12",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Keessecker",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 13",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Collae",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 14",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Isom",
+      "weight_class": "106",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 16",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Mills",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "N Deshon",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "G Oberheim",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Grossman",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Orozco",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Catapano",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Maughon",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Alvarez",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Brandon Lefler",
+      "weight_class": "113",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "V Manello",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R Alcantar",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Rodriguez",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Drake",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Bowler",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Sandy",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Ryan",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Z Hill",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Klinkhammer",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Avila Ramos",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 10",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Cloward",
+      "weight_class": "120",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 11",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Marchetti",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L barrios",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Reilly",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Naghib",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A glasgow",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Hensley",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L Alvarado",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M paria",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "H young",
+      "weight_class": "126",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Olson",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Neisen",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Full",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Peterson",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Brown",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Knight",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Lauf",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "N Lynch",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Shaffer",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Costa",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 10",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Mozzani",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 11",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Glover",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 12",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Ulrich",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 13",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C jimenez",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 14",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M DeMayo",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 15",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "G Bringus",
+      "weight_class": "132",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 16",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Causey",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Lewis",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Brooks",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Postell",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Driscoll",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L Lill",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Barney",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T Mason",
+      "weight_class": "138",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Woodall",
+      "weight_class": "145",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Whitford",
+      "weight_class": "145",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Arfaras",
+      "weight_class": "145",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Engelman",
+      "weight_class": "145",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "W McNeal",
+      "weight_class": "145",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Gilmore",
+      "weight_class": "145",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "W Woodard",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Isaac Young",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "H Hill",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L Drake",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "W Harding",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Stephens",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K McCary",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L Kelley",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Wright",
+      "weight_class": "152",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Symalla",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Kaiser",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "L Tompkins",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Dotson",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Gayheart",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Motta",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Thompson",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Bush",
+      "weight_class": "160",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R Gober",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Davies",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "W Rhoten",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Braylen Yates",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Pantaleo",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "E Gutley",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Solis",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 7",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R Joyce",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 8",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T Glover",
+      "weight_class": "170",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 9",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S Josey",
+      "weight_class": "182",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "K Macdonald",
+      "weight_class": "182",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Pulley",
+      "weight_class": "182",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M baxter",
+      "weight_class": "182",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Barrios",
+      "weight_class": "182",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "B Conway",
+      "weight_class": "182",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Rupe",
+      "weight_class": "195",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Sepulveda",
+      "weight_class": "195",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Gorbatuk",
+      "weight_class": "195",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "J Smith",
+      "weight_class": "195",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "W Been",
+      "weight_class": "195",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Darch",
+      "weight_class": "220",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "A Ruiz",
+      "weight_class": "220",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R Henderson",
+      "weight_class": "220",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "M Williams",
+      "weight_class": "220",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "R Sabin",
+      "weight_class": "220",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Mccullough",
+      "weight_class": "285",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 1",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Godso",
+      "weight_class": "285",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "C Reis",
+      "weight_class": "285",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "T Roegiers",
+      "weight_class": "285",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 4",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "S Lanosga",
+      "weight_class": "285",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 5",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "D Altomer",
+      "weight_class": "285",
+      "division": "Freshman",
+      "placement": null,
+      "record": "Seed 6",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    }
+  ]
+}

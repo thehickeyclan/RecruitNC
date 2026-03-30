@@ -1,0 +1,197 @@
+{
+  "classification": "Freshman",
+  "weightClasses": [
+    {
+      "weightClass": "106",
+      "seeds": [
+        { "seed": 1, "name": "Carson Raper" },
+        { "seed": 2, "name": "A Delgado" },
+        { "seed": 3, "name": "L Dreshman" },
+        { "seed": 4, "name": "C Lirgg" },
+        { "seed": 5, "name": "C Cooper" },
+        { "seed": 6, "name": "B Marino" },
+        { "seed": 7, "name": "S Winship" },
+        { "seed": 8, "name": "J Moralez" },
+        { "seed": 9, "name": "B Plunk" },
+        { "seed": 10, "name": "T Cole" },
+        { "seed": 11, "name": "E Gomez" },
+        { "seed": 12, "name": "J Yi-Berg" },
+        { "seed": 13, "name": "M Keessecker" },
+        { "seed": 14, "name": "K Collae" },
+        { "seed": 16, "name": "A Isom" }
+      ]
+    },
+    {
+      "weightClass": "113",
+      "seeds": [
+        { "seed": 1, "name": "A Mills" },
+        { "seed": 2, "name": "N Deshon" },
+        { "seed": 3, "name": "G Oberheim" },
+        { "seed": 4, "name": "J Grossman" },
+        { "seed": 5, "name": "J Orozco" },
+        { "seed": 6, "name": "C Catapano" },
+        { "seed": 7, "name": "B Maughon" },
+        { "seed": 8, "name": "E Alvarez" },
+        { "seed": 9, "name": "Brandon Lefler" }
+      ]
+    },
+    {
+      "weightClass": "120",
+      "seeds": [
+        { "seed": 1, "name": "V Manello" },
+        { "seed": 2, "name": "R Alcantar" },
+        { "seed": 3, "name": "D Rodriguez" },
+        { "seed": 4, "name": "K Drake" },
+        { "seed": 5, "name": "J Bowler" },
+        { "seed": 6, "name": "D Sandy" },
+        { "seed": 7, "name": "B Ryan" },
+        { "seed": 8, "name": "Z Hill" },
+        { "seed": 9, "name": "B Klinkhammer" },
+        { "seed": 10, "name": "B Avila Ramos" },
+        { "seed": 11, "name": "D Cloward" }
+      ]
+    },
+    {
+      "weightClass": "126",
+      "seeds": [
+        { "seed": 1, "name": "A Marchetti" },
+        { "seed": 2, "name": "L barrios" },
+        { "seed": 3, "name": "E Reilly" },
+        { "seed": 4, "name": "J Naghib" },
+        { "seed": 5, "name": "A glasgow" },
+        { "seed": 6, "name": "J Hensley" },
+        { "seed": 7, "name": "L Alvarado" },
+        { "seed": 8, "name": "M paria" },
+        { "seed": 9, "name": "H young" }
+      ]
+    },
+    {
+      "weightClass": "132",
+      "seeds": [
+        { "seed": 1, "name": "C Olson" },
+        { "seed": 2, "name": "C Neisen" },
+        { "seed": 3, "name": "B Full" },
+        { "seed": 4, "name": "M Peterson" },
+        { "seed": 5, "name": "C Brown" },
+        { "seed": 6, "name": "D Knight" },
+        { "seed": 7, "name": "J Lauf" },
+        { "seed": 8, "name": "N Lynch" },
+        { "seed": 9, "name": "B Shaffer" },
+        { "seed": 10, "name": "M Costa" },
+        { "seed": 11, "name": "J Mozzani" },
+        { "seed": 12, "name": "E Glover" },
+        { "seed": 13, "name": "E Ulrich" },
+        { "seed": 14, "name": "C jimenez" },
+        { "seed": 15, "name": "M DeMayo" },
+        { "seed": 16, "name": "G Bringus" }
+      ]
+    },
+    {
+      "weightClass": "138",
+      "seeds": [
+        { "seed": 1, "name": "J Causey" },
+        { "seed": 2, "name": "K Lewis" },
+        { "seed": 3, "name": "J Brooks" },
+        { "seed": 4, "name": "B Postell" },
+        { "seed": 5, "name": "C Driscoll" },
+        { "seed": 6, "name": "L Lill" },
+        { "seed": 7, "name": "K Barney" },
+        { "seed": 8, "name": "T Mason" }
+      ]
+    },
+    {
+      "weightClass": "145",
+      "seeds": [
+        { "seed": 1, "name": "C Woodall" },
+        { "seed": 2, "name": "J Whitford" },
+        { "seed": 3, "name": "J Arfaras" },
+        { "seed": 4, "name": "M Engelman" },
+        { "seed": 5, "name": "W McNeal" },
+        { "seed": 6, "name": "C Gilmore" }
+      ]
+    },
+    {
+      "weightClass": "152",
+      "seeds": [
+        { "seed": 1, "name": "W Woodard" },
+        { "seed": 2, "name": "Isaac Young" },
+        { "seed": 3, "name": "H Hill" },
+        { "seed": 4, "name": "L Drake" },
+        { "seed": 5, "name": "W Harding" },
+        { "seed": 6, "name": "B Stephens" },
+        { "seed": 7, "name": "K McCary" },
+        { "seed": 8, "name": "L Kelley" },
+        { "seed": 9, "name": "D Wright" }
+      ]
+    },
+    {
+      "weightClass": "160",
+      "seeds": [
+        { "seed": 1, "name": "D Symalla" },
+        { "seed": 2, "name": "M Kaiser" },
+        { "seed": 3, "name": "L Tompkins" },
+        { "seed": 4, "name": "K Dotson" },
+        { "seed": 5, "name": "B Gayheart" },
+        { "seed": 6, "name": "E Motta" },
+        { "seed": 7, "name": "K Thompson" },
+        { "seed": 8, "name": "D Bush" }
+      ]
+    },
+    {
+      "weightClass": "170",
+      "seeds": [
+        { "seed": 1, "name": "R Gober" },
+        { "seed": 2, "name": "B Davies" },
+        { "seed": 3, "name": "W Rhoten" },
+        { "seed": 4, "name": "Braylen Yates" },
+        { "seed": 5, "name": "B Pantaleo" },
+        { "seed": 6, "name": "E Gutley" },
+        { "seed": 7, "name": "M Solis" },
+        { "seed": 8, "name": "R Joyce" },
+        { "seed": 9, "name": "T Glover" }
+      ]
+    },
+    {
+      "weightClass": "182",
+      "seeds": [
+        { "seed": 1, "name": "S Josey" },
+        { "seed": 2, "name": "K Macdonald" },
+        { "seed": 3, "name": "B Pulley" },
+        { "seed": 4, "name": "M baxter" },
+        { "seed": 5, "name": "J Barrios" },
+        { "seed": 6, "name": "B Conway" }
+      ]
+    },
+    {
+      "weightClass": "195",
+      "seeds": [
+        { "seed": 1, "name": "A Rupe" },
+        { "seed": 2, "name": "A Sepulveda" },
+        { "seed": 3, "name": "M Gorbatuk" },
+        { "seed": 4, "name": "J Smith" },
+        { "seed": 5, "name": "W Been" }
+      ]
+    },
+    {
+      "weightClass": "220",
+      "seeds": [
+        { "seed": 1, "name": "D Darch" },
+        { "seed": 2, "name": "A Ruiz" },
+        { "seed": 3, "name": "R Henderson" },
+        { "seed": 4, "name": "M Williams" },
+        { "seed": 5, "name": "R Sabin" }
+      ]
+    },
+    {
+      "weightClass": "285",
+      "seeds": [
+        { "seed": 1, "name": "D Mccullough" },
+        { "seed": 2, "name": "C Godso" },
+        { "seed": 3, "name": "C Reis" },
+        { "seed": 4, "name": "T Roegiers" },
+        { "seed": 5, "name": "S Lanosga" },
+        { "seed": 6, "name": "D Altomer" }
+      ]
+    }
+  ]
+}
