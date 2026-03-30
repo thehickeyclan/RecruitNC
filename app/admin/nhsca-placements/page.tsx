@@ -57,6 +57,9 @@ export default function NHSCAPlacementsPage() {
   const [importYear, setImportYear] = useState(2026)
   const [importMessage, setImportMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
+  /** Match/Merge year: explicit filter, else same as import year (avoid defaulting to wrong year when filter empty). */
+  const matchMergeYear = yearFilter ?? importYear
+
   useEffect(() => {
     fetchPlacements()
   }, [])
@@ -138,14 +141,18 @@ export default function NHSCAPlacementsPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          year: yearFilter || 2025,
+          year: matchMergeYear,
           method: "all",
         }),
       })
 
       if (response.ok) {
         const result = await response.json()
-        setImportMessage({ type: "success", text: `Matched ${result.matched} placements` })
+        const n = result.totalMatched ?? result.matched ?? 0
+        setImportMessage({
+          type: "success",
+          text: result.message || `Matched ${n} placement(s)`,
+        })
         fetchPlacements()
       } else {
         const result = await response.json()
@@ -198,13 +205,17 @@ export default function NHSCAPlacementsPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          year: yearFilter || 2025,
+          year: matchMergeYear,
         }),
       })
 
       if (response.ok) {
         const result = await response.json()
-        setImportMessage({ type: "success", text: `Merged ${result.merged} placements into profiles` })
+        const m = result.merged ?? 0
+        setImportMessage({
+          type: "success",
+          text: result.message || `Merged ${m} athlete profile(s) from NHSCA rows`,
+        })
         fetchPlacements()
       } else {
         const result = await response.json()
@@ -348,6 +359,10 @@ export default function NHSCAPlacementsPage() {
         </Card>
 
         {/* Actions */}
+        <p className="text-sm text-gray-600 mb-2">
+          Auto-Match and Merge use <strong>year filter</strong> if set, otherwise <strong>import year</strong> ({importYear}). Current:{" "}
+          <strong>{matchMergeYear}</strong>
+        </p>
         <div className="flex gap-4 mb-6">
           <Button onClick={handleDeleteYear} disabled={deleting || !yearFilter} variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
             {deleting ? (
@@ -409,7 +424,8 @@ export default function NHSCAPlacementsPage() {
               <div>
                 <Input
                   type="number"
-                  placeholder="Year filter"
+                  placeholder={`Year (${importYear})`}
+                  title="Filter table; also sets year for Match/Merge when filled"
                   value={yearFilter || ""}
                   onChange={(e) => setYearFilter(e.target.value ? parseInt(e.target.value) : null)}
                   className="w-32"
