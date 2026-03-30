@@ -36,8 +36,7 @@ export async function GET(request: NextRequest) {
         recruiting_status, nationally_ranked_wins,
         nhsca_results,
         nhsca_2023_placement, nhsca_2023_record,
-        nhsca_2024_placement, nhsca_2025_placement, nhsca_2024_record, nhsca_2025_record,
-        nhsca_2026_placement, nhsca_2026_record,
+        nhsca_2024_placement, nhsca_2025_placement,         nhsca_2024_record, nhsca_2025_record,
         super_32_2024_placement, super_32_2025_placement, super_32_2024_record, super_32_2025_record,
         additional_achievements
       `)

@@ -36,8 +36,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         photourl,
         careerRecord,
         nhsca_results,
-        nhsca_2026_placement,
-        nhsca_2026_record,
         nhsca_2025_placement,
         nhsca_2024_placement,
         nhsca_2023_placement,

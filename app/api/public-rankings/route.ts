@@ -12,6 +12,9 @@ async function getNCHSAAResults(supabase: any, athleteName: string, graduationYe
   if (!graduationYear || isNaN(graduationYear)) {
     return []
   }
+  if (!athleteName?.trim()) {
+    return []
+  }
 
   const currentYear = new Date().getFullYear()
   const yearsRemaining = graduationYear - currentYear
@@ -83,8 +86,6 @@ export async function GET(request: Request) {
         photourl,
         headshot_url,
         nhsca_results,
-        nhsca_2026_record,
-        nhsca_2026_placement,
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
@@ -153,7 +154,12 @@ export async function GET(request: Request) {
     const gradYearNum = Number.isFinite(yearNum) ? yearNum : parseInt(String(year), 10) || 0
     const rankings = await Promise.all(
       athletes.map(async (athlete) => {
-        const athleteName = `${athlete.firstName} ${athlete.lastName}`
+        const fromFirstLast = `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim()
+        const athleteName =
+          fromFirstLast ||
+          (athlete.name as string | undefined)?.trim() ||
+          ((athlete.wrestling_name as string) || "").trim() ||
+          ""
         const athleteRow = athlete as Record<string, unknown>
 
         const [nchsaaResults, nhscaFinal, super32ToUse] = await Promise.all([

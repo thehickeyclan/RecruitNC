@@ -33,8 +33,6 @@ const PROSPECT_LIST_COLUMNS = `
         academic_gpa,
         nationally_ranked_wins,
         nhsca_results,
-        nhsca_2026_record,
-        nhsca_2026_placement,
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
