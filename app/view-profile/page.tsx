@@ -10,18 +10,14 @@ type AthleteRecord = Record<string, unknown>
 
 type NchsaaResult = { year: number; place: number | null; classification: string; weight_class: string }
 
-type NhscaAchievementRow = { year: number; placement: string; record?: string; weight?: string; division?: string }
-
 /**
  * Profile by ?id= — no dynamic segment, so the document request can complete.
- * Use this until GET /unified-profile/[id] stops hanging on Vercel.
+ * Tournament data: single GET /api/athlete/[id] (NHSCA + NCHSAA merge + Super32 + national team on the server).
  */
 export default function ViewProfilePage() {
   const { user } = useAuth()
   const [id, setId] = useState("")
   const [athlete, setAthlete] = useState<AthleteRecord | null>(null)
-  const [nchsaaResults, setNchsaaResults] = useState<NchsaaResult[]>([])
-  const [nhscaAchievementResults, setNhscaAchievementResults] = useState<NhscaAchievementRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -87,66 +83,6 @@ export default function ViewProfilePage() {
     }
   }, [id])
 
-  useEffect(() => {
-    if (!athlete?.id) {
-      setNchsaaResults([])
-      setNhscaAchievementResults([])
-      return
-    }
-    let cancelled = false
-    const params = new URLSearchParams({ athlete_id: String(athlete.id) })
-    const name = (athlete.name as string)?.trim()
-    const wrestlingName = (athlete.wrestling_name as string)?.trim()
-    if (name) params.set("name", name)
-    if (wrestlingName && wrestlingName !== name) params.set("wrestling_name", wrestlingName)
-    const gradYear = athlete.graduationyear != null ? Number(athlete.graduationyear) : undefined
-    if (gradYear && !isNaN(gradYear)) params.set("graduation_year", String(gradYear))
-    fetch(`/api/wrestling-achievements?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data: { success?: boolean; achievements?: { all_results?: { nchsaa?: any[]; nhsca?: any[] } } }) => {
-        if (cancelled) return
-        if (!data?.success) {
-          setNchsaaResults([])
-          setNhscaAchievementResults([])
-          return
-        }
-        const all = data.achievements?.all_results
-        const nchsaaRaw = all?.nchsaa
-        if (Array.isArray(nchsaaRaw) && nchsaaRaw.length) {
-          const mapped: NchsaaResult[] = nchsaaRaw.map((r: any) => ({
-            year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || 0,
-            place: r.place != null ? Number(r.place) : null,
-            classification: (r.division ?? r.classification ?? "").toString(),
-            weight_class: (r.weight_class ?? r.weight ?? "").toString(),
-          }))
-          setNchsaaResults(mapped)
-        } else {
-          setNchsaaResults([])
-        }
-        const nhscaRaw = all?.nhsca
-        if (Array.isArray(nhscaRaw) && nhscaRaw.length) {
-          setNhscaAchievementResults(
-            nhscaRaw.map((r: any) => ({
-              year: typeof r.year === "number" ? r.year : parseInt(String(r.year), 10) || 0,
-              placement: (r.placement ?? "").toString(),
-              record: (r.record ?? "").toString(),
-              weight: r.weight != null && String(r.weight).trim() !== "" ? String(r.weight) : undefined,
-              division: r.division != null && String(r.division).trim() !== "" ? String(r.division) : undefined,
-            })),
-          )
-        } else {
-          setNhscaAchievementResults([])
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setNchsaaResults([])
-          setNhscaAchievementResults([])
-        }
-      })
-    return () => { cancelled = true }
-  }, [athlete?.id, athlete?.name, athlete?.graduationyear, athlete?.wrestling_name])
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -170,9 +106,10 @@ export default function ViewProfilePage() {
     )
   }
 
-  const nhscaFromAthlete = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
-  const nhscaResults =
-    nhscaAchievementResults.length > 0 ? nhscaAchievementResults : (nhscaFromAthlete as NhscaAchievementRow[])
+  const nchsaaResults = Array.isArray(athlete.nchsaa_profile)
+    ? (athlete.nchsaa_profile as NchsaaResult[])
+    : []
+  const nhscaResults = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
   const super32Results = Array.isArray(athlete.super32_results) ? athlete.super32_results : []
   const nationalTeamResults = Array.isArray(athlete.national_team_results) ? athlete.national_team_results : []
 

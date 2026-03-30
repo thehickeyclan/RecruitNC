@@ -3,6 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getNameVariants, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 import { getNHSCAForAthlete, resolveGraduationYear } from "@/lib/athlete-nhsca"
+import {
+  getNCHSAAResultsForProfile,
+  mergeNchsaaResults,
+  nchsaaJsonToProfileRows,
+} from "@/lib/nchsaa-results"
 import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
@@ -93,8 +98,9 @@ export async function GET(
     const name = (athlete.name ?? "").toString().trim()
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
     const namesToTry = [...new Set([...getNameVariants(name), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
-    const [nhscaMerged, super32FromTable, nationalTeamFromTables] = await Promise.all([
-      getNHSCAForAthlete(supabase, athlete as Record<string, unknown>),
+    const athleteRow = athlete as Record<string, unknown>
+    const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows] = await Promise.all([
+      getNHSCAForAthlete(supabase, athleteRow),
       (async () => {
         for (const n of namesToTry) {
           if (!n) continue
@@ -111,7 +117,31 @@ export async function GET(
         }
         return []
       })(),
+      (async () => {
+        try {
+          let byName = await getNCHSAAResultsForProfile(supabase, name, gradYear)
+          let byWrestling: Awaited<ReturnType<typeof getNCHSAAResultsForProfile>> = []
+          if (wrestlingName && wrestlingName !== name) {
+            byWrestling = await getNCHSAAResultsForProfile(supabase, wrestlingName, gradYear)
+          }
+          const fromAthleteRow = nchsaaJsonToProfileRows(athleteRow.nchsaa_results, name)
+          return mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
+        } catch (e) {
+          console.warn("[RecruitNC] GET /api/athlete/[id]: NCHSAA merge failed", e)
+          try {
+            return nchsaaJsonToProfileRows(athleteRow.nchsaa_results, name)
+          } catch {
+            return []
+          }
+        }
+      })(),
     ])
+    const nchsaa_profile = nchsaaMergedRows.map((r) => ({
+      year: r.year,
+      place: r.place,
+      classification: r.classification,
+      weight_class: r.weight_class,
+    }))
     const nationalTeamFromRow = getNationalTeamResults(athlete)
     let national_team_results = mergeNationalTeamResults(nationalTeamFromTables, nationalTeamFromRow)
 
@@ -135,6 +165,8 @@ export async function GET(
     const athleteWithTournaments = {
       ...athlete,
       nhsca_results: nhscaMerged,
+      /** Same merge as /api/wrestling-achievements `all_results.nchsaa` — one request for profiles. */
+      nchsaa_profile,
       super32_results: super32FromTable.length ? super32FromTable : (athlete.super32_results ?? []),
       national_team_results,
     }

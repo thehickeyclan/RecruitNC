@@ -105,6 +105,25 @@ function isDisplayRowEmpty(r: TournamentResultForDisplay): boolean {
   return !(r.placement?.trim() || r.record?.trim())
 }
 
+/** Drop only exact duplicate rows (same name variant hit twice). Must NOT collapse same-year Senior+Junior — that needs dedupeNhscaByYearForGradYear. */
+function uniqNhscaTableRows(rows: TournamentResultRow[]): TournamentResultRow[] {
+  const seen = new Set<string>()
+  const out: TournamentResultRow[] = []
+  for (const r of rows) {
+    const key = JSON.stringify([
+      r.year,
+      (r.placement ?? "").trim(),
+      (r.record ?? "").trim(),
+      (r.weight ?? "").trim(),
+      (r.division ?? "").trim(),
+    ])
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(r)
+  }
+  return out
+}
+
 /** Used by GET /api/athlete/[id] and merge — DB may expose graduationyear, graduationYear, or graduation_year. */
 export function resolveGraduationYear(athlete: Record<string, unknown>): number {
   const raw =
@@ -125,10 +144,7 @@ export function mergeNhscaForPublicRankings(
   gradYearForBracket?: number,
 ): TournamentResultForDisplay[] {
   const tableRows =
-    gradYearForBracket != null &&
-    Number.isFinite(gradYearForBracket) &&
-    gradYearForBracket >= 2000 &&
-    gradYearForBracket <= 2100
+    gradYearForBracket != null && Number.isFinite(gradYearForBracket)
       ? dedupeNhscaByYearForGradYear(fromTables, gradYearForBracket)
       : fromTables
   const map = new Map<number, TournamentResultForDisplay>()
@@ -171,21 +187,15 @@ export async function getNHSCAForAthlete(
     ...new Set([...getNameVariants(primaryName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])]),
   ]
   const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
-  const seen = new Set<string>()
   for (const n of namesToTry) {
     if (!n) continue
     const rows = await getNHSCAFromTables(supabase, n, gradYear)
-    for (const r of rows) {
-      const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
-      if (!seen.has(key)) {
-        seen.add(key)
-        merged.push(r)
-      }
-    }
+    merged.push(...rows)
   }
-  merged.sort((a, b) => (b.year as number) - (a.year as number))
+  const uniq = uniqNhscaTableRows(merged)
+  uniq.sort((a, b) => (b.year as number) - (a.year as number))
   const fromRow = buildPublicProfileTournamentData(athlete)
-  return mergeNhscaForPublicRankings(merged, fromRow.nhscaResults, gradYear)
+  return mergeNhscaForPublicRankings(uniq, fromRow.nhscaResults, gradYear)
 }
 
 /** @deprecated Use `getNHSCAForAthlete` — alias for search/replace compatibility. */

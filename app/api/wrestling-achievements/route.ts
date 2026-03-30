@@ -124,10 +124,13 @@ export async function GET(request: Request) {
     const super32Results = Array.from(super32ByYear.values()).sort((a, b) => b.year - a.year)
 
     // Process and format achievements
+    const nhscaWithPlacement =
+      nhscaResults?.filter((r) => String(r.placement ?? "").trim() !== "") || []
     const achievements = {
       state_championships: nchsaaResults?.filter((r) => r.place === 1) || [],
       state_placers: nchsaaResults?.filter((r) => r.place && r.place <= 8) || [],
-      national_placers: nhscaResults?.filter((r) => r.placement) || [],
+      /** Rows with a placement string (medal / place); record-only NHSCA rows are excluded here. */
+      national_placers: nhscaWithPlacement,
       all_results: {
         nchsaa: nchsaaResults || [],
         nhsca: nhscaResults || [],
@@ -141,6 +144,7 @@ export async function GET(request: Request) {
       national_placers: achievements.national_placers.length,
       total_nchsaa: achievements.all_results.nchsaa.length,
       total_nhsca: achievements.all_results.nhsca.length,
+      nhsca_with_placement: nhscaWithPlacement.length,
       total_super32: achievements.all_results.super32.length,
     })
 

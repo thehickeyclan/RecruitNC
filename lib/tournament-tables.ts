@@ -246,11 +246,12 @@ export function dedupeNhscaByYearForGradYear(rows: TournamentResultRow[], gradYe
       continue
     }
     const matches = list.filter((r) => scoreNhscaDivisionMatch(r.division, want) > 0)
-    out.push(matches.length ? matches[0] : list[0])
+    out.push(matches.length ? matches[0] : pickNhscaRowWhenUnscored(list, want))
   }
   return out
 }
 
+/** NHSCA bracket vs profile `graduationyear`: same tournament year (e.g. 2026), Senior cohort = grad 2026, Junior cohort = grad 2027 → d=0 vs d=1. */
 function preferredNhscaBracketKeyword(gradYear: number, tournamentYear: number): string | null {
   const d = gradYear - tournamentYear
   if (d === 0) return "senior"
@@ -258,6 +259,18 @@ function preferredNhscaBracketKeyword(gradYear: number, tournamentYear: number):
   if (d === 2) return "sophomore"
   if (d === 3) return "freshman"
   return null
+}
+
+function divisionExplicitlyJunior(division: string | undefined): boolean {
+  const d = (division ?? "").trim().toLowerCase()
+  if (!d) return false
+  return d.includes("junior") || d === "jr" || /\bjr\.?\b/.test(d)
+}
+
+function divisionExplicitlySenior(division: string | undefined): boolean {
+  const d = (division ?? "").trim().toLowerCase()
+  if (!d) return false
+  return d.includes("senior") || d.includes("varsity") || d === "sr" || /\bsr\.?\b/.test(d)
 }
 
 function scoreNhscaDivisionMatch(division: string | undefined, want: string): number {
@@ -269,6 +282,34 @@ function scoreNhscaDivisionMatch(division: string | undefined, want: string): nu
   if (want === "freshman" && (d.includes("freshman") || d.includes("frosh") || d === "fr" || /\bfr\b/.test(d))) return 2
   if (d.includes(want)) return 2
   return 0
+}
+
+/**
+ * When scoreNhscaDivisionMatch finds nothing (empty division, "HS", vendor-specific labels),
+ * same calendar year can still have Senior + Junior rows for different athletes with the same name.
+ * Prefer the row that is NOT the opposite bracket before falling back to arbitrary list[0].
+ */
+function pickNhscaRowWhenUnscored(list: TournamentResultRow[], want: string): TournamentResultRow {
+  if (list.length === 1) return list[0]
+  if (want === "senior") {
+    const notJunior = list.filter((r) => !divisionExplicitlyJunior(r.division))
+    if (notJunior.length === 1) return notJunior[0]
+    if (notJunior.length > 0) {
+      const withSenior = notJunior.filter((r) => divisionExplicitlySenior(r.division))
+      if (withSenior.length === 1) return withSenior[0]
+      return notJunior[0]
+    }
+  }
+  if (want === "junior") {
+    const notSenior = list.filter((r) => !divisionExplicitlySenior(r.division))
+    if (notSenior.length === 1) return notSenior[0]
+    if (notSenior.length > 0) {
+      const withJunior = notSenior.filter((r) => divisionExplicitlyJunior(r.division))
+      if (withJunior.length === 1) return withJunior[0]
+      return notSenior[0]
+    }
+  }
+  return list[0]
 }
 
 const ALL_TIME_YEAR_MIN = 2000

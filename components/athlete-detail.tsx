@@ -620,6 +620,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
   useEffect(() => {
     async function fetchNchsaaData() {
       if (!athleteName) return
+      if (nchsaaResults.length > 0) return
 
       try {
         const params = new URLSearchParams({ name: athleteName })
@@ -647,7 +648,7 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
     }
 
     fetchNchsaaData()
-  }, [athleteName, graduationYear, (athlete as { wrestling_name?: string })?.wrestling_name])
+  }, [athleteName, graduationYear, (athlete as { wrestling_name?: string })?.wrestling_name, nchsaaResults.length])
 
   useEffect(() => {
     async function fetchUserEmail() {
