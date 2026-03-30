@@ -8,6 +8,7 @@ import {
   mergeNchsaaResults,
   nchsaaJsonToProfileRows,
 } from "@/lib/nchsaa-results"
+import { recruitNcDebugLogProfile } from "@/lib/recruitnc-debug"
 import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
@@ -171,10 +172,22 @@ export async function GET(
       national_team_results,
     }
 
+    recruitNcDebugLogProfile("GET /api/athlete/[id] bundle", {
+      elapsedMs: Date.now() - start,
+      athleteIdPrefix: id.trim().slice(0, 8),
+      gradYear,
+      nameVariantCount: namesToTry.length,
+      nhscaResultRows: nhscaMerged.length,
+      nchsaaProfileRows: nchsaa_profile.length,
+      super32FromTable: super32FromTable.length,
+      nationalTeamMerged: national_team_results.length,
+      nhscaDuals2026Member: nhsca2026.member,
+    })
+
     return NextResponse.json({ ok: true, athlete: athleteWithTournaments })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error("[profile-debug] GET /api/athlete/[id] exception", { message, elapsed: Date.now() - start })
+    console.error("[RecruitNC] GET /api/athlete/[id] exception", { message, elapsed: Date.now() - start })
     return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }

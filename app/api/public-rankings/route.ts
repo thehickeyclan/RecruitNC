@@ -94,7 +94,7 @@ export async function GET(request: Request) {
         super_32_2024_placement,
         super_32_2025_record,
         super_32_2025_placement,
-        super_32_results,
+        super32_results,
         nationally_ranked_wins,
         recruiting_status,
         college,

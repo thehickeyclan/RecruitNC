@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
+import { recruitNcClientLog } from "@/lib/recruitnc-debug-client"
 
 type AthleteRecord = Record<string, unknown>
 
@@ -83,6 +84,18 @@ export default function UnifiedProfilePage() {
     }
   }, [id])
 
+  useEffect(() => {
+    if (!athlete?.id) return
+    recruitNcClientLog("unified-profile /api/athlete bundle (client)", {
+      athleteIdPrefix: String(athlete.id).slice(0, 8),
+      graduationyear: athlete.graduationyear,
+      nhscaRows: Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results.length : 0,
+      nchsaaRows: Array.isArray(athlete.nchsaa_profile) ? athlete.nchsaa_profile.length : 0,
+      super32Rows: Array.isArray(athlete.super32_results) ? athlete.super32_results.length : 0,
+      nationalTeamRows: Array.isArray(athlete.national_team_results) ? athlete.national_team_results.length : 0,
+    })
+  }, [athlete])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -100,7 +113,7 @@ export default function UnifiedProfilePage() {
           <p className="text-sm text-red-600 font-mono mb-4">{error ?? "No data"}</p>
           {debug && debugResponse && (
             <div className="mb-4 p-3 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-48">
-              <div className="font-bold text-gray-700">[profile-debug] API response (status={debugResponse.status})</div>
+              <div className="font-bold text-gray-700">[RecruitNC] API response (status={debugResponse.status})</div>
               <pre className="whitespace-pre-wrap break-all mt-1">{debugResponse.body}</pre>
             </div>
           )}

@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
 
 export interface TournamentResultRow {
   year: number
@@ -242,11 +243,28 @@ export function dedupeNhscaByYearForGradYear(rows: TournamentResultRow[], gradYe
     }
     const want = preferredNhscaBracketKeyword(gradYear, y)
     if (!want) {
+      recruitNcDebugLogNhsca("nhscaBracketDedupe:gradMinusTOutOfRange", {
+        tournamentYear: y,
+        gradYear,
+        gradMinusT: gradYear - y,
+        fallback: "list[0]",
+      })
       out.push(list[0])
       continue
     }
     const matches = list.filter((r) => scoreNhscaDivisionMatch(r.division, want) > 0)
-    out.push(matches.length ? matches[0] : pickNhscaRowWhenUnscored(list, want))
+    const picked = matches.length ? matches[0] : pickNhscaRowWhenUnscored(list, want)
+    recruitNcDebugLogNhsca("nhscaBracketDedupe:multiRowSameYear", {
+      tournamentYear: y,
+      gradYear,
+      wantBracket: want,
+      candidateCount: list.length,
+      scoredMatchCount: matches.length,
+      usedScoredMatch: matches.length > 0,
+      division: (picked.division ?? "").trim(),
+      record: (picked.record ?? "").toString().trim().slice(0, 32),
+    })
+    out.push(picked)
   }
   return out
 }

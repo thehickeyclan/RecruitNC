@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
 import {
   dedupeNhscaByYearForGradYear,
   getNameVariants,
@@ -147,6 +148,12 @@ export function mergeNhscaForPublicRankings(
     gradYearForBracket != null && Number.isFinite(gradYearForBracket)
       ? dedupeNhscaByYearForGradYear(fromTables, gradYearForBracket)
       : fromTables
+  recruitNcDebugLogNhsca("mergeNhscaForPublicRankings", {
+    fromTables: fromTables.length,
+    afterBracketDedupe: tableRows.length,
+    gradYearForBracket: gradYearForBracket ?? null,
+    fromProfileRows: fromProfile.length,
+  })
   const map = new Map<number, TournamentResultForDisplay>()
   for (const r of tableRows) {
     const row: TournamentResultForDisplay = {
@@ -162,7 +169,12 @@ export function mergeNhscaForPublicRankings(
     const existing = map.get(r.year)
     if (!existing || isDisplayRowEmpty(existing)) map.set(r.year, r)
   }
-  return [...map.values()].sort((a, b) => b.year - a.year)
+  const merged = [...map.values()].sort((a, b) => b.year - a.year)
+  recruitNcDebugLogNhsca("mergeNhscaForPublicRankings:result", {
+    years: merged.map((r) => r.year),
+    rowCount: merged.length,
+  })
+  return merged
 }
 
 /**
@@ -195,7 +207,18 @@ export async function getNHSCAForAthlete(
   const uniq = uniqNhscaTableRows(merged)
   uniq.sort((a, b) => (b.year as number) - (a.year as number))
   const fromRow = buildPublicProfileTournamentData(athlete)
-  return mergeNhscaForPublicRankings(uniq, fromRow.nhscaResults, gradYear)
+  const out = mergeNhscaForPublicRankings(uniq, fromRow.nhscaResults, gradYear)
+  const aid = athlete.id != null ? String(athlete.id).slice(0, 8) : "n/a"
+  recruitNcDebugLogNhsca("getNHSCAForAthlete:done", {
+    athleteIdPrefix: aid,
+    gradYear,
+    nameVariantCount: namesToTry.length,
+    rawTableRowsPushed: merged.length,
+    afterUniq: uniq.length,
+    fromProfileNhscaJsonRows: fromRow.nhscaResults.length,
+    finalNhscaRows: out.length,
+  })
+  return out
 }
 
 /** @deprecated Use `getNHSCAForAthlete` — alias for search/replace compatibility. */
