@@ -7,6 +7,10 @@
  * NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
  *
  *   node scripts/import-nhsca-placements.mjs scripts/data/seniors-2026-nhsca-import.json
+ *   node scripts/import-nhsca-placements.mjs scripts/data/juniors-2026-nhsca-import.json
+ *
+ * Re-import deletes only rows matching this file’s division(s) for that year/state (same as admin bulk-import),
+ * so you can run Senior and Junior imports separately without one wiping the other.
  *
  * Dry run (no DB writes):
  *
@@ -137,8 +141,10 @@ if (bad.length) {
 
 const year = formatted[0].year
 const state = formatted[0].state
+/** Same as admin bulk-import: only remove rows for division(s) present in this file so Senior + Junior (etc.) can be loaded in separate runs. */
+const divisionsToReplace = [...new Set(formatted.map((r) => r.division).filter(Boolean))]
 
-console.log(`Rows: ${formatted.length}  year=${year}  state=${state}  dryRun=${dryRun}`)
+console.log(`Rows: ${formatted.length}  year=${year}  state=${state}  divisions=${divisionsToReplace.join(", ")}  dryRun=${dryRun}`)
 console.log(`Supabase: ${supabaseHost}`)
 
 if (dryRun) {
@@ -189,11 +195,17 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
   },
 })
 
-const { error: delErr } = await supabase.from("nhsca_placements").delete().eq("year", year).eq("state", state)
-
-if (delErr) {
-  console.error("Delete existing rows:", delErr.message, delErr.details || "")
-  process.exit(1)
+for (const div of divisionsToReplace) {
+  const { error: delErr } = await supabase
+    .from("nhsca_placements")
+    .delete()
+    .eq("year", year)
+    .eq("state", state)
+    .eq("division", div)
+  if (delErr) {
+    console.error(`Delete existing rows (${year} ${state} ${div}):`, delErr.message, delErr.details || "")
+    process.exit(1)
+  }
 }
 
 const { data, error: insErr } = await supabase.from("nhsca_placements").insert(formatted).select("id")
