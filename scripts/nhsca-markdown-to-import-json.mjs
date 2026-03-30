@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Converts NC NHSCA results markdown (### weight sections + pipe tables) to JSON
- * for POST /api/admin/nhsca-placements/bulk-import
+ * Converts NC NHSCA results markdown to JSON for POST /api/admin/nhsca-placements/bulk-import
+ *
+ * Weight sections supported:
+ *   ### 113          (legacy)
+ *   ## 113 lbs       (common — pipe tables with Name | Seed | Record | Placement | ...)
  *
  * Usage:
  *   node scripts/nhsca-markdown-to-import-json.mjs path/to/results.md [year]
  *   node scripts/nhsca-markdown-to-import-json.mjs path/to/results.md 2026 > import.json
- *
- * Paste import.json body into /admin/nhsca-placements (or curl the API).
  */
 
 import fs from "fs"
@@ -49,14 +50,21 @@ const placements = []
 let currentWeight = null
 
 for (const line of text.split(/\n/)) {
-  // Stop ingesting tables under the last weight (e.g. "## Placers Summary" mini-table)
-  if (/^##\s/.test(line.trim())) {
+  const trimmed = line.trim()
+  // ## 113 lbs — weight class section (read tables until next non-weight ## heading)
+  const h2Weight = trimmed.match(/^##\s+(\d+)\s*(lbs)?\s*$/i)
+  if (h2Weight) {
+    currentWeight = h2Weight[1]
+    continue
+  }
+  // Other ## headings (Summary, All-Americans, etc.) end the current weight block
+  if (/^##\s/.test(trimmed)) {
     currentWeight = null
     continue
   }
-  const h = line.match(/^###\s+(\d+)\s*$/)
-  if (h) {
-    currentWeight = h[1]
+  const h3 = trimmed.match(/^###\s+(\d+)\s*$/)
+  if (h3) {
+    currentWeight = h3[1]
     continue
   }
   if (!currentWeight) continue

@@ -57,20 +57,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // OVERWRITE: Delete ALL existing records for this year before importing new ones
-    // This ensures that re-importing the same year completely overwrites instead of creating duplicates
-    // Delete all records for this year and state, regardless of match status
-    const { error: deleteError } = await supabase
-      .from("nhsca_placements")
-      .delete()
-      .eq("year", year)
-      .eq("state", "NC")
+    // OVERWRITE: Remove existing rows for this year/state **per division** in the payload only.
+    // So Senior and Junior 2026 NC can coexist; re-importing Junior does not delete Senior.
+    const uniqDivisions = [
+      ...new Set(
+        formattedPlacements.map((p) => p.division).filter((d): d is string => Boolean(d?.trim())),
+      ),
+    ]
+    for (const div of uniqDivisions) {
+      const { error: deleteError } = await supabase
+        .from("nhsca_placements")
+        .delete()
+        .eq("year", year)
+        .eq("state", "NC")
+        .eq("division", div)
 
-    if (deleteError) {
-      console.error("Error deleting existing placements:", deleteError)
-      // Continue anyway - might be first import
-    } else {
-      console.log(`Deleted all existing placements for year ${year} before re-import`)
+      if (deleteError) {
+        console.error(`Error deleting placements for ${year} NC ${div}:`, deleteError)
+      } else {
+        console.log(`Deleted existing placements for year ${year} NC division ${div} before re-import`)
+      }
     }
 
     // Insert into database

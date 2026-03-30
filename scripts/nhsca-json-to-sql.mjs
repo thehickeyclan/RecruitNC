@@ -1,9 +1,17 @@
 #!/usr/bin/env node
 /**
- * nhsca import JSON → SQL for Supabase (same rows as bulk-import API).
+ * NHSCA import JSON → SQL for Supabase (same rows as bulk-import API).
+ *
+ * With **full names** that match `athletes.name` (or name variants), profiles pick up NHSCA via
+ * `getNHSCAFromTables` — no Auto-Match / athlete_id required for display.
  *
  * Usage:
- *   node scripts/nhsca-json-to-sql.mjs scripts/data/seniors-2026-nhsca-import.json > out.sql
+ *   node scripts/nhsca-json-to-sql.mjs scripts/data/seniors-2026-nhsca-import.json > scripts/data/seniors-2026-nhsca-placements.sql
+ *   node scripts/nhsca-json-to-sql.mjs scripts/data/juniors-2026-nhsca-import.json > scripts/data/juniors-2026-nhsca-placements.sql
+ *
+ * DELETE is scoped to year + state + **division** in the file (Senior vs Junior), so you do not wipe the other division.
+ *
+ * Paste the SQL into Supabase SQL Editor and run.
  */
 
 import fs from "fs"
@@ -28,6 +36,11 @@ function sqlVal(s) {
   return `'${esc(s)}'`
 }
 
+const uniqDivisions = [...new Set(placements.map((p) => p.division).filter(Boolean))]
+const deleteSql = uniqDivisions
+  .map((d) => `DELETE FROM nhsca_placements WHERE year = ${year} AND state = '${state}' AND division = '${esc(d)}';`)
+  .join("\n")
+
 const rows = placements.map((p) => {
   const pl = p.placement === null || p.placement === undefined ? "NULL" : Number(p.placement)
   const placementSql = pl === null || Number.isNaN(pl) ? "NULL" : pl
@@ -35,9 +48,9 @@ const rows = placements.map((p) => {
 })
 
 const sql = `-- Generated from ${jsonPath}
--- Same effect as POST /api/admin/nhsca-placements/bulk-import (delete 2026 NC then insert)
+-- Deletes only ${uniqDivisions.join(", ")} for ${year} NC, then inserts (same as bulk-import API).
 
-DELETE FROM nhsca_placements WHERE year = ${year} AND state = '${state}';
+${deleteSql}
 
 INSERT INTO nhsca_placements (year, athlete_name, high_school, placement, weight_class, division, record, state, match_status, source)
 VALUES
@@ -45,4 +58,4 @@ ${rows.join(",\n")};
 `
 
 process.stdout.write(sql)
-process.stderr.write(`${placements.length} rows, year=${year}\n`)
+process.stderr.write(`${placements.length} rows, year=${year}, division(s): ${uniqDivisions.join(", ")}\n`)

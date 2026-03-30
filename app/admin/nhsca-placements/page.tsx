@@ -12,7 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Upload, Search, RefreshCw, Link2, CheckCircle, AlertCircle, FileText, ListOrdered, School } from "lucide-react"
+import {
+  Upload,
+  Search,
+  RefreshCw,
+  Link2,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  ListOrdered,
+  School,
+  PlayCircle,
+} from "lucide-react"
 
 interface NHSCAPlacement {
   id: string
@@ -75,6 +86,7 @@ export default function NHSCAPlacementsPage() {
   const [importing, setImporting] = useState(false)
   const [matching, setMatching] = useState(false)
   const [resolvingNchsaa, setResolvingNchsaa] = useState(false)
+  const [pipelineRunning, setPipelineRunning] = useState(false)
   const [merging, setMerging] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [stats, setStats] = useState<ImportStats>({
@@ -432,6 +444,67 @@ export default function NHSCAPlacementsPage() {
     }
   }
 
+  /** One click: expand names from NCHSAA → auto-match → merge into profiles (same year as Match/Merge). */
+  const handleRunFullPipeline = async () => {
+    const year = matchMergeYear
+    setPipelineRunning(true)
+    setImportMessage(null)
+    const summary: string[] = []
+    try {
+      const res1 = await fetch("/api/admin/nhsca-placements/resolve-names-from-nchsaa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ year }),
+      })
+      const j1 = await res1.json()
+      if (!res1.ok && res1.status === 401) {
+        throw new Error(j1.error || "Unauthorized — sign in as admin")
+      }
+      if (res1.ok) {
+        summary.push(j1.message || `Names expanded: ${j1.updated ?? 0}`)
+      } else {
+        summary.push(`Name expand skipped: ${j1.error ?? res1.status}`)
+      }
+
+      const res2 = await fetch("/api/admin/nhsca-placements/match", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ year, method: "all" }),
+      })
+      const j2 = await res2.json()
+      if (!res2.ok) {
+        throw new Error(j2.error || "Auto-Match failed")
+      }
+      const n = j2.totalMatched ?? j2.matched ?? 0
+      summary.push(j2.message || `Matched ${n} row(s)`)
+
+      const res3 = await fetch("/api/admin/nhsca-placements/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ year }),
+      })
+      const j3 = await res3.json()
+      if (!res3.ok) {
+        throw new Error(j3.error || "Merge into profiles failed")
+      }
+      summary.push(j3.message || `Merged ${j3.merged ?? 0} profile(s)`)
+
+      setImportMessage({ type: "success", text: summary.join(" → ") })
+      fetchPlacements()
+    } catch (error: unknown) {
+      setImportMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Pipeline failed",
+      })
+      fetchPlacements()
+    } finally {
+      setPipelineRunning(false)
+    }
+  }
+
   const filteredPlacements = placements.filter((p) => {
     if (searchTerm && !p.athlete_name.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false
@@ -444,6 +517,8 @@ export default function NHSCAPlacementsPage() {
     }
     return true
   })
+
+  const actionBusy = importing || pipelineRunning
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -472,28 +547,38 @@ export default function NHSCAPlacementsPage() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg text-[#13294B]">
               <ListOrdered className="h-5 w-5 shrink-0" />
-              Do this in order
+              Simple path
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0 space-y-3 text-sm text-gray-800">
-            <ol className="list-decimal pl-5 space-y-3">
-              <li>
-                <strong>Load the file</strong> — Choose <code className="bg-white/80 px-1 rounded text-xs">seniors-2026-nhsca-import.json</code> or paste JSON, then click{" "}
-                <strong>Import Data</strong>.
-              </li>
-              <li>
-                <strong>Match bracket names to state spellings (NC)</strong> — Click{" "}
-                <strong>Expand names from NCHSAA</strong> so initials like &quot;T. Hall&quot; become full names from your state results (same year + weight; unique matches only). Then run <strong>Auto-Match</strong>.
-              </li>
-              <li>
-                <strong>Connect any stragglers</strong> — If the table still shows <strong>Unmatched</strong>, use <strong>Find profile</strong> on that row.
-              </li>
-              <li>
-                <strong>Show it on RecruitNC</strong> — Click <strong>Merge into Profiles</strong>. Until you do this, NHSCA won’t appear on athlete pages.
-              </li>
-            </ol>
+          <CardContent className="pt-0 space-y-4 text-sm text-gray-800">
+            <p>
+              <strong>1.</strong> Import your JSON below, then <strong>2.</strong> click the big button — it runs{" "}
+              <em>expand names from state (NC)</em>, <em>auto-match</em>, and <em>merge into profiles</em> for year{" "}
+              <strong>{matchMergeYear}</strong> in one go.
+            </p>
+            <Button
+              type="button"
+              onClick={handleRunFullPipeline}
+              disabled={actionBusy || matching || merging || resolvingNchsaa || deleting}
+              className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white h-12 px-6 text-base"
+            >
+              {pipelineRunning ? (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                  Running pipeline…
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="h-5 w-5 mr-2" />
+                  Run full pipeline ({matchMergeYear})
+                </>
+              )}
+            </Button>
+            <p className="text-xs text-gray-600">
+              After that, only fix rows you care about: filter <strong>Unmatched</strong> and use <strong>Find profile</strong>. Full first names in the file help Auto-Match a lot — you can still use the separate buttons under &quot;Or step by step&quot; if needed.
+            </p>
             <p className="text-xs text-gray-600 border-t border-[#13294B]/10 pt-3">
-              <strong>Year for Match / Merge / Expand:</strong> {matchMergeYear} — set the <strong>Year</strong> filter above the table if you need a different year. Re-importing the same year replaces that year’s data (re-run from step 2).
+              Set the <strong>Year</strong> filter above the table to change the year used here. Re-importing the same year replaces that year&apos;s data.
             </p>
           </CardContent>
         </Card>
@@ -618,7 +703,7 @@ export default function NHSCAPlacementsPage() {
                   {importMessage.text}
                 </div>
               )}
-              <Button onClick={handleImport} disabled={importing} className="bg-[#13294B] hover:bg-[#1a3a5c]">
+              <Button onClick={handleImport} disabled={importing || pipelineRunning} className="bg-[#13294B] hover:bg-[#1a3a5c]">
                 {importing ? (
                   <>
                     <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -637,15 +722,15 @@ export default function NHSCAPlacementsPage() {
 
         {/* Actions */}
         <div className="mb-2">
-          <h2 className="text-base font-semibold text-[#13294B] mb-1">Steps 2–4 — Names, match, publish</h2>
+          <h2 className="text-base font-semibold text-[#13294B] mb-1">Or step by step</h2>
           <p className="text-sm text-gray-600">
-            For NC: <strong>Expand names from NCHSAA</strong> → <strong>Auto-Match</strong> → <strong>Merge into Profiles</strong>. Year: <strong>{matchMergeYear}</strong>.
+            Same actions as the pipeline, one at a time. Year: <strong>{matchMergeYear}</strong>.
           </p>
         </div>
         <div className="flex flex-wrap gap-4 mb-6">
           <Button
             onClick={handleResolveNamesFromNchsaa}
-            disabled={resolvingNchsaa}
+            disabled={resolvingNchsaa || pipelineRunning}
             variant="outline"
             className="border-emerald-700 text-emerald-900 hover:bg-emerald-50"
           >
@@ -661,7 +746,7 @@ export default function NHSCAPlacementsPage() {
               </>
             )}
           </Button>
-          <Button onClick={handleDeleteYear} disabled={deleting || !yearFilter} variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
+          <Button onClick={handleDeleteYear} disabled={deleting || !yearFilter || pipelineRunning} variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
             {deleting ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -674,7 +759,7 @@ export default function NHSCAPlacementsPage() {
               </>
             )}
           </Button>
-          <Button onClick={handleMatch} disabled={matching} variant="outline">
+          <Button onClick={handleMatch} disabled={matching || pipelineRunning} variant="outline">
             {matching ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -687,7 +772,7 @@ export default function NHSCAPlacementsPage() {
               </>
             )}
           </Button>
-          <Button onClick={handleMerge} disabled={merging} variant="outline">
+          <Button onClick={handleMerge} disabled={merging || pipelineRunning} variant="outline">
             {merging ? (
               <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -700,7 +785,7 @@ export default function NHSCAPlacementsPage() {
               </>
             )}
           </Button>
-          <Button onClick={fetchPlacements} variant="outline">
+          <Button onClick={fetchPlacements} variant="outline" disabled={pipelineRunning}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>

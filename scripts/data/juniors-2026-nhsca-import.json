@@ -1,0 +1,1055 @@
+{
+  "year": 2026,
+  "placements": [
+    {
+      "athlete_name": "Liam Myles",
+      "weight_class": "106",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Alexander Moody",
+      "weight_class": "106",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Landon Little",
+      "weight_class": "106",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Rylin Walker",
+      "weight_class": "106",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Christopher Thomas",
+      "weight_class": "106",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jaxon Thomas",
+      "weight_class": "113",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Dylan Sneed",
+      "weight_class": "113",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jacobie Morrison",
+      "weight_class": "113",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Naje Ross",
+      "weight_class": "113",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Aiden Burkholder",
+      "weight_class": "113",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Angel Olalde",
+      "weight_class": "113",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Cooper Mathon",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "5-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Matthew Carter",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Joshua Whitley",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Colton Farmer",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Lucas Belk",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Zareion Enron-berger",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Tyler Kendrick",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jekai Sedgwick",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jimmy Araujo",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Holton Quincy",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Hayden Mccarty",
+      "weight_class": "120",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Ayden Sumners",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jaycob Perez",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Landon Logan",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Gabriel Jones",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Lucas Angell",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Alex Thompson",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Averi Toro",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Naylor Higgins",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Alan Tebalan",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Wayne Claiborne",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jnoua Dechavez",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Mattex Adams",
+      "weight_class": "126",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Aiden White",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": 4,
+      "record": "9-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Aidan Szewczyk",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Colt Cambruzzi",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Tyler Mundell",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Mason Stutler",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Erick Gutierrez",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Carter Furman",
+      "weight_class": "132",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Mac Johnson",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "6-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Tyton Kostoff",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Maxwell Muse",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Miller Menteer",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Michael Hardie",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Daniel Russo",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jason Deleon",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Kaden Rosenbrock",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Yan Santana",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Omega Edge",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Kenneth Mills",
+      "weight_class": "138",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Micah Howard",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "5-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Aiden Campbell",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Tye Johnson",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Tyquez Wells",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-3",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Lukas Allman",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Gavin Smith",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Roger Manus",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Royce Espinoza",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Cade Gehris",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Shane Shuster",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Aidyn Forman",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "James Mcgovern",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Alexander Garcia",
+      "weight_class": "145",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Aidan Gore",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "7-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Joshua Stonebraker",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "5-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Abdul-jamil Zaggout",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jacob Mccord",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Josh Connick",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "3-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Noah Cerino",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Isaac Young",
+      "weight_class": "152",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Carson Worrick",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": 4,
+      "record": "7-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Campbell Tufts-piercy",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "7-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Tobin Mcnair",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": 5,
+      "record": "5-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Mason Hollar",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Michael Mauro",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Luke Ertl",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jeshurun Mills",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Julian Combs",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Oscar Real",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jserie Womble",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Blake Collins",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Stryker Murray",
+      "weight_class": "160",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Quanta Mcrea",
+      "weight_class": "170",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Levi Rowell",
+      "weight_class": "170",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Azuriah Crump",
+      "weight_class": "170",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "John Bane",
+      "weight_class": "170",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Gabriel Cameron",
+      "weight_class": "170",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Brieon Mayfield",
+      "weight_class": "182",
+      "division": "Junior",
+      "placement": null,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Luke Padgett",
+      "weight_class": "182",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Max Buckley",
+      "weight_class": "182",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Kade Hennessy",
+      "weight_class": "182",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Logan Mumy",
+      "weight_class": "182",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Jimmy Henson",
+      "weight_class": "195",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Connor Coode",
+      "weight_class": "195",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Gavin Lopez",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": 4,
+      "record": "4-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Conrad Sherburne",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Keyshon Morrison",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Judah Harris",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Gabriel Webster",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Wyatt Cantrell",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Roman Capozzi",
+      "weight_class": "220",
+      "division": "Junior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Mason Hocker",
+      "weight_class": "285",
+      "division": "Junior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Zack Knott",
+      "weight_class": "285",
+      "division": "Junior",
+      "placement": null,
+      "record": "1-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    }
+  ]
+}

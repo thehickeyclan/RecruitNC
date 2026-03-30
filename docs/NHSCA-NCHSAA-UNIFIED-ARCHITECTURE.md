@@ -29,6 +29,20 @@ After expansion, **Auto-Match** behaves more like state data because names align
 4. Manual **Find profile** for anything still unmatched  
 5. Merge into profiles (if you still use JSON merge for that year)
 
+## SQL import (full names — skip matching for profiles)
+
+`getNHSCAFromTables` matches **`athlete_name` on the row** to the profile name (exact / variants / ilike). It does **not** require `athlete_id` or `match_status = matched`.
+
+So if your import uses **full names** that match RecruitNC profiles, you can skip Auto-Match / Find profile entirely for **profile display**.
+
+```bash
+node scripts/nhsca-json-to-sql.mjs scripts/data/seniors-2026-nhsca-import.json > scripts/data/seniors-2026-nhsca-placements.sql
+```
+
+Run the generated SQL in the Supabase SQL editor (same effect as bulk-import API: delete that year’s NC rows, then insert). Rows are inserted with `match_status = 'unmatched'`; that is fine for table-backed NHSCA on unified profiles.
+
+**Merge into Profiles** is only needed if you rely on **`athletes.nhsca_results` JSON** somewhere without the table merge — most unified paths already merge table + JSON in `lib/public-profile-data.ts`.
+
 ## Future
 
-Long-term, prefer **inserting canonical names at import time** (or importing from the same pipeline that feeds `wrestling_nhsca_results` spelling). The resolver above closes the gap without another manual spreadsheet.
+Long-term, prefer **inserting canonical names at import time** (or importing from the same pipeline that feeds `wrestling_nchsaa_results` spelling). The resolver above closes the gap without another manual spreadsheet.

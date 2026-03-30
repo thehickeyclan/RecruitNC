@@ -7,12 +7,12 @@
       "division": "Senior",
       "placement": null,
       "record": "3-2",
-      "high_school": "Lumberton",
+      "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "C. Goucher",
+      "athlete_name": "Cameron Hayden",
       "weight_class": "113",
       "division": "Senior",
       "placement": null,
@@ -22,7 +22,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Hayden",
+      "athlete_name": "Christopher Goucher",
       "weight_class": "113",
       "division": "Senior",
       "placement": null,
@@ -32,7 +32,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "S. Tran",
+      "athlete_name": "Sander Tran",
       "weight_class": "113",
       "division": "Senior",
       "placement": null,
@@ -42,7 +42,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Rodriguez",
+      "athlete_name": "Abdiel Rodriguez",
       "weight_class": "120",
       "division": "Senior",
       "placement": null,
@@ -52,7 +52,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Miller",
+      "athlete_name": "Jordan Miller",
       "weight_class": "120",
       "division": "Senior",
       "placement": null,
@@ -62,7 +62,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Mull",
+      "athlete_name": "Aydan Mull",
       "weight_class": "120",
       "division": "Senior",
       "placement": null,
@@ -72,7 +72,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "M. White",
+      "athlete_name": "Mason White",
       "weight_class": "120",
       "division": "Senior",
       "placement": null,
@@ -82,7 +82,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "N. Jones",
+      "athlete_name": "Nathan Jones",
       "weight_class": "120",
       "division": "Senior",
       "placement": null,
@@ -92,7 +92,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Watts",
+      "athlete_name": "Elijah Watts",
       "weight_class": "126",
       "division": "Senior",
       "placement": null,
@@ -102,7 +102,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "O. Rushing",
+      "athlete_name": "Omar Rushing",
       "weight_class": "126",
       "division": "Senior",
       "placement": null,
@@ -112,7 +112,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Vasquez",
+      "athlete_name": "Edgar Vasquez",
       "weight_class": "126",
       "division": "Senior",
       "placement": null,
@@ -122,7 +122,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "T. Tala",
+      "athlete_name": "Takota Tala",
       "weight_class": "126",
       "division": "Senior",
       "placement": null,
@@ -132,97 +132,97 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Tennessee",
+      "athlete_name": "Ashton Tennessee",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "3-1",
+      "record": "3-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "C. Gue",
+      "athlete_name": "Cameron Gue",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "2-1",
+      "record": "3-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "C. Massey",
+      "athlete_name": "Lucas Angstadt",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "1-1",
+      "record": "3-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "T. Lawrence",
+      "athlete_name": "Cameron Massey",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "1-1",
+      "record": "2-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "C. Smith",
+      "athlete_name": "Robert Alexander",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "0-1",
+      "record": "1-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "D. Smith",
+      "athlete_name": "Ryan Dougherty",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "0-1",
+      "record": "1-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "L. Angstadt",
+      "athlete_name": "Tristen Lawrence",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "0-1",
+      "record": "1-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "R. Alexander",
+      "athlete_name": "Charlie Smith",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "0-1",
+      "record": "0-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "R. Dougherty",
+      "athlete_name": "Dontae Smith",
       "weight_class": "132",
       "division": "Senior",
       "placement": null,
-      "record": "0-1",
+      "record": "0-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "S. Gantt",
+      "athlete_name": "Samuel Gantt",
       "weight_class": "138",
       "division": "Senior",
       "placement": 8,
@@ -232,7 +232,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "T. Salinas",
+      "athlete_name": "Thomas Salinas",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -242,7 +242,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "M. Fischer",
+      "athlete_name": "Michael Fischer",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -252,7 +252,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "M. Monteith",
+      "athlete_name": "Maveric Monteith",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -262,7 +262,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Bui",
+      "athlete_name": "Cody Bui",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -272,7 +272,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "G. Rogers",
+      "athlete_name": "Gabe Rogers",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -282,7 +282,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "K. Rhodes",
+      "athlete_name": "Khalif Rhodes",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -292,7 +292,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "R. Casper",
+      "athlete_name": "Rylan Casper",
       "weight_class": "138",
       "division": "Senior",
       "placement": null,
@@ -302,7 +302,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Kancler",
+      "athlete_name": "Jack Kancler",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -312,27 +312,17 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Oakley",
+      "athlete_name": "Eli Oakley",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
-      "record": "3-2",
+      "record": "5-2",
       "high_school": null,
       "state": "NC",
       "year": 2026
     },
     {
-      "athlete_name": "J. Brezac",
-      "weight_class": "145",
-      "division": "Senior",
-      "placement": null,
-      "record": "2-2",
-      "high_school": null,
-      "state": "NC",
-      "year": 2026
-    },
-    {
-      "athlete_name": "K. Sibugan",
+      "athlete_name": "James Campos",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -342,7 +332,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "M. Scaldaferri",
+      "athlete_name": "Josh Brezac",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -352,7 +342,27 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Reese",
+      "athlete_name": "Khalel Sibugan",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Marcello Scaldaferri",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "2-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Chauncy Reese",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -362,27 +372,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Campos",
-      "weight_class": "145",
-      "division": "Senior",
-      "placement": null,
-      "record": "1-1",
-      "high_school": null,
-      "state": "NC",
-      "year": 2026
-    },
-    {
-      "athlete_name": "K. Deaton",
-      "weight_class": "145",
-      "division": "Senior",
-      "placement": null,
-      "record": "1-1",
-      "high_school": null,
-      "state": "NC",
-      "year": 2026
-    },
-    {
-      "athlete_name": "S. Moore",
+      "athlete_name": "Spencer Moore",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -392,7 +382,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Oxendine",
+      "athlete_name": "Chayton Oxendine",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -402,7 +392,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Warren",
+      "athlete_name": "Eli Warren",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -412,7 +402,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Robertson",
+      "athlete_name": "Jhi Robertson",
       "weight_class": "145",
       "division": "Senior",
       "placement": null,
@@ -422,7 +412,17 @@
       "year": 2026
     },
     {
-      "athlete_name": "B. Sly",
+      "athlete_name": "Kaiden Deaton",
+      "weight_class": "145",
+      "division": "Senior",
+      "placement": null,
+      "record": "0-2",
+      "high_school": null,
+      "state": "NC",
+      "year": 2026
+    },
+    {
+      "athlete_name": "Bentley Sly",
       "weight_class": "152",
       "division": "Senior",
       "placement": 2,
@@ -432,7 +432,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Horton",
+      "athlete_name": "Eli Horton",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -442,7 +442,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Davis",
+      "athlete_name": "Andrew Davis",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -452,7 +452,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Campos",
+      "athlete_name": "Jacob Campos",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -462,7 +462,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Guzman",
+      "athlete_name": "Elijah Guzman",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -472,7 +472,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "I. Mewborn",
+      "athlete_name": "Isaiah Mewborn",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -482,7 +482,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Delgado",
+      "athlete_name": "Anthony Delgado",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -492,7 +492,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. McCartney",
+      "athlete_name": "Corbin Mccartney",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -502,7 +502,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Alvarez",
+      "athlete_name": "Jacob Alvarez",
       "weight_class": "152",
       "division": "Senior",
       "placement": null,
@@ -512,7 +512,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "D. Blue",
+      "athlete_name": "Dominic Blue",
       "weight_class": "160",
       "division": "Senior",
       "placement": 3,
@@ -522,7 +522,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Pelote",
+      "athlete_name": "Jamarius Pelote",
       "weight_class": "160",
       "division": "Senior",
       "placement": null,
@@ -532,7 +532,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Vicente",
+      "athlete_name": "Jimmy Vicente",
       "weight_class": "160",
       "division": "Senior",
       "placement": null,
@@ -542,7 +542,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "K. Michael",
+      "athlete_name": "Keegan Michael",
       "weight_class": "160",
       "division": "Senior",
       "placement": null,
@@ -552,7 +552,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "N. Howard",
+      "athlete_name": "Nathan Howard",
       "weight_class": "160",
       "division": "Senior",
       "placement": null,
@@ -562,7 +562,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "G. Robinson",
+      "athlete_name": "Gabe Robinson",
       "weight_class": "160",
       "division": "Senior",
       "placement": null,
@@ -572,7 +572,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "M. King",
+      "athlete_name": "Michael King",
       "weight_class": "160",
       "division": "Senior",
       "placement": null,
@@ -582,7 +582,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Meadows",
+      "athlete_name": "Andrew Meadows",
       "weight_class": "170",
       "division": "Senior",
       "placement": 7,
@@ -592,7 +592,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Perryman",
+      "athlete_name": "Cameron Perryman",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -602,7 +602,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "F. Alkurdasi",
+      "athlete_name": "Fares Alkurdasi",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -612,7 +612,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "H. Feagan",
+      "athlete_name": "Hunter Feagan",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -622,7 +622,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Sanders",
+      "athlete_name": "James Sanders",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -632,7 +632,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "Z. Blankenship",
+      "athlete_name": "Zachary Blankenship",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -642,7 +642,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Ranson",
+      "athlete_name": "Cooper Ranson",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -652,7 +652,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Hillis",
+      "athlete_name": "Jacob Hillis",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -662,7 +662,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "S. Downing",
+      "athlete_name": "Seth Downing",
       "weight_class": "170",
       "division": "Senior",
       "placement": null,
@@ -672,7 +672,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Reigel",
+      "athlete_name": "Jacob Reigel",
       "weight_class": "182",
       "division": "Senior",
       "placement": 8,
@@ -682,7 +682,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "D. El-Amin",
+      "athlete_name": "Deyari El-amin",
       "weight_class": "182",
       "division": "Senior",
       "placement": null,
@@ -692,7 +692,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "G. Gholami",
+      "athlete_name": "Gavin Gholami",
       "weight_class": "182",
       "division": "Senior",
       "placement": null,
@@ -702,7 +702,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "C. Dunn",
+      "athlete_name": "Cael Dunn",
       "weight_class": "195",
       "division": "Senior",
       "placement": 7,
@@ -712,7 +712,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "I. Paxton",
+      "athlete_name": "I. Honor Paxton",
       "weight_class": "195",
       "division": "Senior",
       "placement": null,
@@ -722,7 +722,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "B. Dyer",
+      "athlete_name": "Benjamin Dyer",
       "weight_class": "195",
       "division": "Senior",
       "placement": null,
@@ -732,7 +732,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Hudgins",
+      "athlete_name": "Jacob Hudgins",
       "weight_class": "195",
       "division": "Senior",
       "placement": null,
@@ -742,7 +742,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "E. Corbett",
+      "athlete_name": "Ezra Corbett",
       "weight_class": "195",
       "division": "Senior",
       "placement": null,
@@ -752,7 +752,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Hamilton",
+      "athlete_name": "Jordan Hamilton",
       "weight_class": "220",
       "division": "Senior",
       "placement": null,
@@ -762,7 +762,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Rhymer",
+      "athlete_name": "Avery Rhymer",
       "weight_class": "285",
       "division": "Senior",
       "placement": 8,
@@ -772,7 +772,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Trahan",
+      "athlete_name": "Joseph Trahan",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
@@ -782,7 +782,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "S. Shade",
+      "athlete_name": "Spencer Shade",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
@@ -792,7 +792,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Roach",
+      "athlete_name": "Alex Roach",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
@@ -802,7 +802,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Garay Martinez",
+      "athlete_name": "Jayden Legette",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
@@ -812,7 +812,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "J. Legette",
+      "athlete_name": "John Garay Martinez",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
@@ -822,7 +822,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "M. Urquilla-Moscoso",
+      "athlete_name": "Marcos Urquilla-Moscoso",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
@@ -832,7 +832,7 @@
       "year": 2026
     },
     {
-      "athlete_name": "A. Frank",
+      "athlete_name": "Aiden Frank",
       "weight_class": "285",
       "division": "Senior",
       "placement": null,
