@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     nhscaResults.sort((a, b) => (b.year as number) - (a.year as number))
 
     if (resolvedAthlete) {
-      const merged = mergeNhscaForPublicRankings(nhscaResults, getNhscaResults(resolvedAthlete))
+      const merged = mergeNhscaForPublicRankings(nhscaResults, getNhscaResults(resolvedAthlete), gradYearNum)
       nhscaResults.length = 0
       nhscaResults.push(
         ...merged.map((r) => ({

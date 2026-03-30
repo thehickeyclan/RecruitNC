@@ -167,7 +167,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }
     }
     nhscaMergedRows.sort((a, b) => (b.year as number) - (a.year as number))
-    const nhscaForProfile = mergeNhscaForPublicRankings(nhscaMergedRows, getNhscaResults(athlete))
+    const nhscaForProfile = mergeNhscaForPublicRankings(nhscaMergedRows, getNhscaResults(athlete), gradYear)
 
     const isCoachCreatedProspect = athlete.added_by_coach_id === user.id
     const leadSourceLocked = !isCoachCreatedProspect

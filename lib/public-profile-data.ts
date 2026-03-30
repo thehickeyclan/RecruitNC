@@ -5,7 +5,12 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { getNameVariants, getNHSCAFromTables, type TournamentResultRow } from "@/lib/tournament-tables"
+import {
+  dedupeNhscaByYearForGradYear,
+  getNameVariants,
+  getNHSCAFromTables,
+  type TournamentResultRow,
+} from "@/lib/tournament-tables"
 import { getNhscaResults, getSuper32Results, type TournamentResult } from "@/lib/tournament-utils"
 
 export interface TournamentResultForDisplay {
@@ -100,16 +105,33 @@ function isDisplayRowEmpty(r: TournamentResultForDisplay): boolean {
   return !(r.placement?.trim() || r.record?.trim())
 }
 
+function resolveGraduationYear(athlete: Record<string, unknown>): number {
+  const raw =
+    athlete.graduationyear ?? athlete.graduationYear ?? (athlete as { graduation_year?: unknown }).graduation_year
+  const n = Number(raw)
+  if (Number.isFinite(n) && n >= 2000 && n <= 2100) return n
+  return new Date().getFullYear()
+}
+
 /**
  * Merge NHSCA from placement tables (name lookup) with athlete row (nhsca_results JSON + legacy columns).
  * Prefer table row when both have the same year and the table row has data.
+ * `gradYearForBracket`: when set, disambiguates Senior vs Junior rows that share the same tournament year.
  */
 export function mergeNhscaForPublicRankings(
   fromTables: TournamentResultRow[],
   fromProfile: TournamentResultForDisplay[],
+  gradYearForBracket?: number,
 ): TournamentResultForDisplay[] {
+  const tableRows =
+    gradYearForBracket != null &&
+    Number.isFinite(gradYearForBracket) &&
+    gradYearForBracket >= 2000 &&
+    gradYearForBracket <= 2100
+      ? dedupeNhscaByYearForGradYear(fromTables, gradYearForBracket)
+      : fromTables
   const map = new Map<number, TournamentResultForDisplay>()
-  for (const r of fromTables) {
+  for (const r of tableRows) {
     const row: TournamentResultForDisplay = {
       year: r.year,
       placement: (r.placement ?? "").trim(),
@@ -134,7 +156,7 @@ export async function mergeNhscaForAthleteRecord(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
 ): Promise<TournamentResultForDisplay[]> {
-  const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+  const gradYear = resolveGraduationYear(athlete)
   const name = (athlete.name ?? "").toString().trim()
   const fromParts = [athlete.firstName, athlete.firstname, athlete.lastName, athlete.lastname]
     .filter(Boolean)
@@ -160,7 +182,7 @@ export async function mergeNhscaForAthleteRecord(
   }
   merged.sort((a, b) => (b.year as number) - (a.year as number))
   const fromRow = buildPublicProfileTournamentData(athlete)
-  return mergeNhscaForPublicRankings(merged, fromRow.nhscaResults)
+  return mergeNhscaForPublicRankings(merged, fromRow.nhscaResults, gradYear)
 }
 
 /**

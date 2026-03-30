@@ -210,6 +210,56 @@ export async function getNHSCAFromTables(
   return []
 }
 
+/**
+ * NHSCA imports use the same tournament `year` (e.g. 2026) for both Senior and Junior brackets.
+ * Merging by year-only Map dropped one bracket — e.g. Class of 2027 (Junior) lost rows when Senior won.
+ * Pick the row whose `division` matches the athlete's expected bracket for (gradYear, tournamentYear).
+ */
+export function dedupeNhscaByYearForGradYear(rows: TournamentResultRow[], gradYear: number): TournamentResultRow[] {
+  if (!rows.length || !Number.isFinite(gradYear)) return rows
+  const byYear = new Map<number, TournamentResultRow[]>()
+  for (const r of rows) {
+    const y = typeof r.year === "number" ? r.year : parseInt(String(r.year), 10)
+    if (!Number.isFinite(y)) continue
+    if (!byYear.has(y)) byYear.set(y, [])
+    byYear.get(y)!.push(r)
+  }
+  const out: TournamentResultRow[] = []
+  for (const y of [...byYear.keys()].sort((a, b) => b - a)) {
+    const list = byYear.get(y)!
+    if (list.length === 1) {
+      out.push(list[0])
+      continue
+    }
+    const want = preferredNhscaBracketKeyword(gradYear, y)
+    if (!want) {
+      out.push(list[0])
+      continue
+    }
+    const matches = list.filter((r) => scoreNhscaDivisionMatch(r.division, want) > 0)
+    out.push(matches.length ? matches[0] : list[0])
+  }
+  return out
+}
+
+function preferredNhscaBracketKeyword(gradYear: number, tournamentYear: number): string | null {
+  const d = gradYear - tournamentYear
+  if (d === 0) return "senior"
+  if (d === 1) return "junior"
+  if (d === 2) return "sophomore"
+  if (d === 3) return "freshman"
+  return null
+}
+
+function scoreNhscaDivisionMatch(division: string | undefined, want: string): number {
+  const d = (division ?? "").trim().toLowerCase()
+  if (!d) return 0
+  if (want === "senior" && (d.includes("senior") || d.includes("varsity"))) return 2
+  if (want === "sophomore" && (d.includes("sophomore") || d.includes("soph"))) return 2
+  if (d.includes(want)) return 2
+  return 0
+}
+
 const ALL_TIME_YEAR_MIN = 2000
 const ALL_TIME_YEAR_MAX = 2035
 

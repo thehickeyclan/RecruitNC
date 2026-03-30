@@ -82,7 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
       const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
       const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear)
-      const nhscaMerged = mergeNhscaForPublicRankings(nhsca, getNhscaResults(athlete))
+      const nhscaMerged = mergeNhscaForPublicRankings(nhsca, getNhscaResults(athlete), gradYear)
       let athleteToReturn = {
         ...athlete,
         is_starred: false,
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const highSchool = athlete.highschool ?? athlete.highSchool ?? ""
     const nhsca = await getNHSCAFromTables(supabase, athlete.name, gradYear)
     const super32 = await getSuper32FromTable(supabase, athlete.name, gradYear)
-    const nhscaMerged = mergeNhscaForPublicRankings(nhsca, getNhscaResults(athlete))
+    const nhscaMerged = mergeNhscaForPublicRankings(nhsca, getNhscaResults(athlete), gradYear)
     const athleteToReturn = {
       ...athleteWithTracking,
       nhsca_results: nhscaMerged,
