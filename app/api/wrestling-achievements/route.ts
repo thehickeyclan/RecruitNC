@@ -5,7 +5,9 @@ import {
   mergeNchsaaResults,
   nchsaaJsonToProfileRows,
 } from "@/lib/nchsaa-results"
+import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
 import { getNameVariants, getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+import { getNhscaResults } from "@/lib/tournament-utils"
 
 export async function GET(request: Request) {
   try {
@@ -19,10 +21,13 @@ export async function GET(request: Request) {
 
     /** Optional JSON on `athletes` — fallback / gap-fill only. Canonical NCHSAA rows: `wrestling_nchsaa_results` (see docs/2026-STATE-QUALIFIERS-FOR-RECRUITNC.md). */
     let athleteNchsaaJson: unknown = undefined
+    /** When set, NHSCA merges `nhsca_results` JSON (e.g. merged placements) with table lookup — Data Dawg / profiles need both. */
+    let resolvedAthlete: Record<string, unknown> | null = null
 
     if (athleteId) {
       const { data: athlete } = await supabase.from("athletes").select("*").eq("id", athleteId).single()
       if (athlete) {
+        resolvedAthlete = athlete as Record<string, unknown>
         athleteName = (athlete.name ?? "").toString().trim() || athleteName
         wrestlingName = (athlete.wrestling_name ?? "").toString().trim() || wrestlingName
         if (athlete.graduationyear != null) graduationYearParam = String(athlete.graduationyear)
@@ -31,6 +36,30 @@ export async function GET(request: Request) {
     }
 
     const graduationYear = graduationYearParam ? parseInt(graduationYearParam, 10) : undefined
+
+    if (!resolvedAthlete && graduationYear != null && !Number.isNaN(graduationYear) && athleteName) {
+      const { data: byName } = await supabase
+        .from("athletes")
+        .select("*")
+        .eq("graduationyear", graduationYear)
+        .ilike("name", athleteName.trim())
+        .limit(2)
+      if (byName?.length === 1) {
+        resolvedAthlete = byName[0] as Record<string, unknown>
+      } else if (
+        (!byName || byName.length === 0) &&
+        wrestlingName &&
+        wrestlingName.trim() !== athleteName.trim()
+      ) {
+        const { data: byWrestling } = await supabase
+          .from("athletes")
+          .select("*")
+          .eq("graduationyear", graduationYear)
+          .ilike("name", wrestlingName.trim())
+          .limit(2)
+        if (byWrestling?.length === 1) resolvedAthlete = byWrestling[0] as Record<string, unknown>
+      }
+    }
 
     if (!athleteName) {
       return NextResponse.json(
@@ -81,6 +110,21 @@ export async function GET(request: Request) {
       }
     }
     nhscaResults.sort((a, b) => (b.year as number) - (a.year as number))
+
+    if (resolvedAthlete) {
+      const merged = mergeNhscaForPublicRankings(nhscaResults, getNhscaResults(resolvedAthlete))
+      nhscaResults.length = 0
+      nhscaResults.push(
+        ...merged.map((r) => ({
+          year: r.year,
+          placement: r.placement,
+          record: r.record,
+          weight: r.weight ?? "",
+          division: r.division ?? "",
+        })),
+      )
+      nhscaResults.sort((a, b) => (b.year as number) - (a.year as number))
+    }
 
     const super32ByYear = new Map<number, { year: number; placement: string; record: string; weight?: string; division?: string }>()
     for (const searchName of namesToTry) {
