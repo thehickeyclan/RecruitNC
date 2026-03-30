@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
+import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
 
 function getOrdinalSuffix(num: number): string {
   const j = num % 10
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           weight_class: r.weight_class,
           school: r.school,
         }))
-        const nhsca_results = (await mergeNhscaForAthleteRecord(supabase, athlete as Record<string, unknown>)).map(
+        const nhsca_results = (await getNHSCAForAthlete(supabase, athlete as Record<string, unknown>)).map(
           (r) => ({
             year: r.year,
             placement: r.placement,

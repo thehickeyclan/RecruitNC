@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
+import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
 
 /** One huge query (e.g. limit=5000) times out Supabase / edge — cap per request; client pages in chunks. */
 const MAX_LIMIT = 500
@@ -145,9 +145,9 @@ export async function GET(request: NextRequest) {
     const normalized = await Promise.all(
       (prospects || []).map(async (p: Record<string, unknown>) => {
         const displayName = (p.name as string) || [p.firstName, p.lastName].filter(Boolean).join(" ").trim() || "Unknown"
-        let nhscaMerged: Awaited<ReturnType<typeof mergeNhscaForAthleteRecord>> = []
+        let nhscaMerged: Awaited<ReturnType<typeof getNHSCAForAthlete>> = []
         try {
-          nhscaMerged = await mergeNhscaForAthleteRecord(supabase, { ...p, name: displayName })
+          nhscaMerged = await getNHSCAForAthlete(supabase, { ...p, name: displayName })
         } catch {
           nhscaMerged = []
         }

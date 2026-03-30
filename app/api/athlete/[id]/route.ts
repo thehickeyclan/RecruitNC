@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getNameVariants, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
-import { mergeNhscaForAthleteRecord, resolveGraduationYear } from "@/lib/public-profile-data"
+import { getNHSCAForAthlete, resolveGraduationYear } from "@/lib/athlete-nhsca"
 import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
@@ -94,7 +94,7 @@ export async function GET(
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
     const namesToTry = [...new Set([...getNameVariants(name), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
     const [nhscaMerged, super32FromTable, nationalTeamFromTables] = await Promise.all([
-      mergeNhscaForAthleteRecord(supabase, athlete as Record<string, unknown>),
+      getNHSCAForAthlete(supabase, athlete as Record<string, unknown>),
       (async () => {
         for (const n of namesToTry) {
           if (!n) continue

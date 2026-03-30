@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
+import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
 import { getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
@@ -77,7 +77,7 @@ export async function GET(request: Request) {
           : undefined
 
         const [nhscaMerged, super32FromTable] = await Promise.all([
-          mergeNhscaForAthleteRecord(db, athlete as Record<string, unknown>),
+          getNHSCAForAthlete(db, athlete as Record<string, unknown>),
           getSuper32FromTable(db, wrestlingName || athleteName, gradYear),
         ])
 

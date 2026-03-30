@@ -5,9 +5,8 @@ import {
   mergeNchsaaResults,
   nchsaaJsonToProfileRows,
 } from "@/lib/nchsaa-results"
-import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
-import { getNameVariants, getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
-import { getNhscaResults } from "@/lib/tournament-utils"
+import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
+import { getNameVariants, getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
   try {
@@ -93,38 +92,25 @@ export async function GET(request: Request) {
     const fromAthleteRow = nchsaaJsonToProfileRows(athleteNchsaaJson, athleteName)
     const nchsaaResults = mergeNchsaaResults(mergeNchsaaResults(byName, byWrestling), fromAthleteRow)
 
-    const namesToTry = [...new Set([...getNameVariants(athleteName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
-
-    let nhscaResults: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
     const gradYearNum = graduationYear && !isNaN(graduationYear) ? graduationYear : new Date().getFullYear()
-    const seenNhsca = new Set<string>()
-    for (const searchName of namesToTry) {
-      if (!searchName) continue
-      const rows = await getNHSCAFromTables(supabase, searchName, gradYearNum)
-      for (const r of rows) {
-        const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
-        if (!seenNhsca.has(key)) {
-          seenNhsca.add(key)
-          nhscaResults.push(r)
-        }
-      }
-    }
-    nhscaResults.sort((a, b) => (b.year as number) - (a.year as number))
+    const athleteForNhsca: Record<string, unknown> =
+      resolvedAthlete ??
+      ({
+        name: athleteName,
+        ...(wrestlingName ? { wrestling_name: wrestlingName } : {}),
+        graduationyear: gradYearNum,
+      } as Record<string, unknown>)
 
-    if (resolvedAthlete) {
-      const merged = mergeNhscaForPublicRankings(nhscaResults, getNhscaResults(resolvedAthlete), gradYearNum)
-      nhscaResults.length = 0
-      nhscaResults.push(
-        ...merged.map((r) => ({
-          year: r.year,
-          placement: r.placement,
-          record: r.record,
-          weight: r.weight ?? "",
-          division: r.division ?? "",
-        })),
-      )
-      nhscaResults.sort((a, b) => (b.year as number) - (a.year as number))
-    }
+    const nhscaMerged = await getNHSCAForAthlete(supabase, athleteForNhsca)
+    const nhscaResults = nhscaMerged.map((r) => ({
+      year: r.year,
+      placement: r.placement,
+      record: r.record,
+      weight: r.weight ?? "",
+      division: r.division ?? "",
+    }))
+
+    const namesToTry = [...new Set([...getNameVariants(athleteName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
 
     const super32ByYear = new Map<number, { year: number; placement: string; record: string; weight?: string; division?: string }>()
     for (const searchName of namesToTry) {
@@ -169,7 +155,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
     )

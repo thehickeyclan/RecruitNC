@@ -2,10 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
-import {
-  buildPublicProfileTournamentData,
-  mergeNhscaForAthleteRecord,
-} from "@/lib/public-profile-data"
+import { buildPublicProfileTournamentData } from "@/lib/public-profile-data"
+import { getNHSCAForAthlete } from "@/lib/athlete-nhsca"
 import { getSuper32FromTable } from "@/lib/tournament-tables"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
@@ -164,7 +162,7 @@ export async function GET(request: Request) {
 
         const [nchsaaResults, nhscaFinal, super32ToUse] = await Promise.all([
           getNCHSAAResults(supabase, athleteName, Number.parseInt(String(athlete.graduationyear), 10)),
-          mergeNhscaForAthleteRecord(supabase, athleteRow),
+          getNHSCAForAthlete(supabase, athleteRow),
           getSuper32FromTable(
             supabase,
             ((athlete.wrestling_name as string) || "").trim() || athleteName,

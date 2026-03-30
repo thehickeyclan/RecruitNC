@@ -150,10 +150,12 @@ export function mergeNhscaForPublicRankings(
 }
 
 /**
- * Same NHSCA merge as GET /api/athlete/[id]: all name variants × `nhsca_placements`, merged with
- * `nhsca_results` JSON + legacy columns (incl. 2026). Use for rankings, prospects directory, admin tools.
+ * **The only NHSCA merge for an athlete:** `nhsca_placements` / fallback table × name variants,
+ * merged with `nhsca_results` JSON + legacy columns (any year). Do not reimplement table walks elsewhere.
+ *
+ * Pass a full `athletes` row when possible; for name-only lookups use `{ name, wrestling_name?, graduationyear }`.
  */
-export async function mergeNhscaForAthleteRecord(
+export async function getNHSCAForAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
 ): Promise<TournamentResultForDisplay[]> {
@@ -185,6 +187,9 @@ export async function mergeNhscaForAthleteRecord(
   const fromRow = buildPublicProfileTournamentData(athlete)
   return mergeNhscaForPublicRankings(merged, fromRow.nhscaResults, gradYear)
 }
+
+/** @deprecated Use `getNHSCAForAthlete` — alias for search/replace compatibility. */
+export const mergeNhscaForAthleteRecord = getNHSCAForAthlete
 
 /**
  * Build NHSCA and Super32 results from athlete row - same logic as public-rankings API.
