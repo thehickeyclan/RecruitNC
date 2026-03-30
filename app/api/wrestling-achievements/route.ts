@@ -125,7 +125,12 @@ export async function GET(request: Request) {
 
     // Process and format achievements
     const nhscaWithPlacement =
-      nhscaResults?.filter((r) => String(r.placement ?? "").trim() !== "") || []
+      nhscaResults?.filter((r) => {
+        const pl = String(r.placement ?? "").trim()
+        if (!pl) return false
+        if (/^seed\s+\d+$/i.test(pl)) return false
+        return true
+      }) || []
     const achievements = {
       state_championships: nchsaaResults?.filter((r) => r.place === 1) || [],
       state_placers: nchsaaResults?.filter((r) => r.place && r.place <= 8) || [],

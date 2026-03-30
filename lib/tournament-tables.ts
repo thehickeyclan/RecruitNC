@@ -291,6 +291,18 @@ function divisionExplicitlySenior(division: string | undefined): boolean {
   return d.includes("senior") || d.includes("varsity") || d === "sr" || /\bsr\.?\b/.test(d)
 }
 
+function divisionExplicitlySophomore(division: string | undefined): boolean {
+  const d = (division ?? "").trim().toLowerCase()
+  if (!d) return false
+  return d.includes("sophomore") || /\bsoph\b/.test(d)
+}
+
+function divisionExplicitlyFreshman(division: string | undefined): boolean {
+  const d = (division ?? "").trim().toLowerCase()
+  if (!d) return false
+  return d.includes("freshman") || d.includes("frosh") || d === "fr" || /\bfr\b/.test(d)
+}
+
 function scoreNhscaDivisionMatch(division: string | undefined, want: string): number {
   const d = (division ?? "").trim().toLowerCase()
   if (!d) return 0
@@ -326,6 +338,29 @@ function pickNhscaRowWhenUnscored(list: TournamentResultRow[], want: string): To
       if (withJunior.length === 1) return withJunior[0]
       return notSenior[0]
     }
+  }
+  if (want === "sophomore") {
+    const withSo = list.filter((r) => divisionExplicitlySophomore(r.division))
+    if (withSo.length === 1) return withSo[0]
+    if (withSo.length > 0) return withSo[0]
+    const notSrJr = list.filter(
+      (r) => !divisionExplicitlySenior(r.division) && !divisionExplicitlyJunior(r.division),
+    )
+    if (notSrJr.length === 1) return notSrJr[0]
+    if (notSrJr.length > 0) return notSrJr[0]
+  }
+  if (want === "freshman") {
+    const withFr = list.filter((r) => divisionExplicitlyFreshman(r.division))
+    if (withFr.length === 1) return withFr[0]
+    if (withFr.length > 0) return withFr[0]
+    const notOlder = list.filter(
+      (r) =>
+        !divisionExplicitlySenior(r.division) &&
+        !divisionExplicitlyJunior(r.division) &&
+        !divisionExplicitlySophomore(r.division),
+    )
+    if (notOlder.length === 1) return notOlder[0]
+    if (notOlder.length > 0) return notOlder[0]
   }
   return list[0]
 }

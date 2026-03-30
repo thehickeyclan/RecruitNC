@@ -12,7 +12,12 @@ import {
   getNHSCAFromTables,
   type TournamentResultRow,
 } from "@/lib/tournament-tables"
-import { getNhscaResults, getSuper32Results, type TournamentResult } from "@/lib/tournament-utils"
+import {
+  getNhscaResults,
+  getSuper32Results,
+  nhscaDisplayPlacement,
+  type TournamentResult,
+} from "@/lib/tournament-utils"
 
 export interface TournamentResultForDisplay {
   year: number
@@ -169,7 +174,13 @@ export function mergeNhscaForPublicRankings(
     const existing = map.get(r.year)
     if (!existing || isDisplayRowEmpty(existing)) map.set(r.year, r)
   }
-  const merged = [...map.values()].sort((a, b) => b.year - a.year)
+  const merged = [...map.values()]
+    .sort((a, b) => b.year - a.year)
+    .map((r) => {
+      const surf = nhscaDisplayPlacement(r.placement, r.record)
+      if (!surf) return r
+      return { ...r, placement: surf }
+    })
   recruitNcDebugLogNhsca("mergeNhscaForPublicRankings:result", {
     years: merged.map((r) => r.year),
     rowCount: merged.length,

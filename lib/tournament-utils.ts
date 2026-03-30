@@ -118,6 +118,18 @@ export function getSuper32Results(athlete: any): TournamentResult[] {
 }
 
 /**
+ * DB seed-only rows keep `placement` empty so "1" is never shown as Champion. For UI/cards that key off `placement`,
+ * surface the seed as a label (still not a numeric place for parseNhscaPlacementRank).
+ */
+export function nhscaDisplayPlacement(placement: string | undefined, record: string | undefined): string {
+  const p = (placement ?? "").trim()
+  if (p) return p
+  const rec = (record ?? "").trim()
+  const m = rec.match(/^Seed\s+(\d+)\s*$/i)
+  return m ? `Seed ${m[1]}` : ""
+}
+
+/**
  * Parse placement from API/table strings ("4th All-American", "Champion") or numbers for UI badges (1–8 = All-American).
  */
 export function parseNhscaPlacementRank(raw: unknown): number | null {
@@ -150,12 +162,12 @@ export function parseNhscaPlacementRank(raw: unknown): number | null {
 export function getLatestNhscaResult(athlete: any): { placement: string; record: string } | null {
   const results = getNhscaResults(athlete)
   if (results.length === 0) return null
-  
+
   const latest = results.sort((a, b) => b.year - a.year)[0]
-  return {
-    placement: latest.placement,
-    record: latest.record || '',
-  }
+  const record = latest.record || ""
+  let placement = String(latest.placement ?? "").trim()
+  if (!placement) placement = nhscaDisplayPlacement("", record)
+  return { placement, record }
 }
 
 /**
