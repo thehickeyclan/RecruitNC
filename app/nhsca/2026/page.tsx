@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Search, Users, ArrowLeft } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Trophy, Search, Users, ArrowLeft, Target } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { NHSCAChampionsTabs } from "@/components/nhsca-champions-tabs"
@@ -22,6 +22,7 @@ import {
   getNhsca2026CanonicalAthleteNames,
   mergeMultiTimeAALists,
   getNhsca2026StateStackedComparison,
+  normalizeNhscaWeightForDisplay,
   type MultiTimeAAEntry,
 } from "@/lib/nhsca-2026-archive"
 
@@ -89,6 +90,39 @@ function placementRowsForDivision(div: "Freshman" | "Sophomore" | "Junior" | "Se
   }))
 }
 
+const DIVISION_STATE_TABS = ["Freshman", "Sophomore", "Junior", "Senior"] as const
+type DivisionStateTab = (typeof DIVISION_STATE_TABS)[number]
+
+type DivisionStateRow = { rank: number; state: string; total: number | null }
+
+function divisionStateRankingRows(tab: DivisionStateTab): DivisionStateRow[] {
+  switch (tab) {
+    case "Freshman":
+      return nhsca2026.section10_freshman_aa_state_ranking as DivisionStateRow[]
+    case "Sophomore":
+      return nhsca2026.section11_sophomore_aa_state_ranking as DivisionStateRow[]
+    case "Junior":
+      return nhsca2026.section12_junior_aa_state_ranking as DivisionStateRow[]
+    case "Senior":
+      return nhsca2026.section13_senior_aa_state_ranking as DivisionStateRow[]
+    default:
+      return []
+  }
+}
+
+function divisionStatePanelStyle(tab: DivisionStateTab) {
+  switch (tab) {
+    case "Freshman":
+      return { headerClass: "bg-[#003366] text-white", thClass: "text-[#003366]" }
+    case "Sophomore":
+      return { headerClass: "bg-[#B31B1B] text-white", thClass: "text-[#B31B1B]" }
+    case "Junior":
+      return { headerClass: "bg-[#CBAF5D] text-[#003366]", thClass: "text-[#003366]" }
+    case "Senior":
+      return { headerClass: "bg-[#2563eb] text-white", thClass: "text-[#2563eb]" }
+  }
+}
+
 interface CollegeCommit {
   id: string
   name: string
@@ -103,6 +137,21 @@ function normMultiName(s: string) {
   return (s || "").toLowerCase().trim().replace(/\s+/g, " ")
 }
 
+type Nhsca2026SeededWinRow = {
+  rank: number
+  athlete_name: string
+  weight: string
+  division: string
+  finish: string | null
+  wins_vs_seeded: number
+  /** Optional override when the wrestler is not on the AA roster / Supabase merge. */
+  high_school?: string | null
+}
+
+const NHSCA_2026_SEEDED_WINS = (
+  nhsca2026 as { section15_seeded_wins?: { note?: string; rows: Nhsca2026SeededWinRow[] } }
+).section15_seeded_wins
+
 export default function NHSCA2026Page() {
   const [wrestlers, setWrestlers] = useState<Wrestler[]>([])
   const [filteredWrestlers, setFilteredWrestlers] = useState<Wrestler[]>([])
@@ -113,6 +162,7 @@ export default function NHSCA2026Page() {
   const [weightFilter, setWeightFilter] = useState("all")
   const [showAllStates, setShowAllStates] = useState(false)
   const [chartViewMode, setChartViewMode] = useState<"chart" | "table" | "summary">("chart")
+  const [divisionStateTab, setDivisionStateTab] = useState<DivisionStateTab>("Freshman")
   const [multiTimeAAs, setMultiTimeAAs] = useState<MultiTimeAAEntry[]>([])
 
   // Load data via RecruitNC Supabase client (male divisions only: Freshman, Sophomore, Junior, Senior)
@@ -286,6 +336,36 @@ export default function NHSCA2026Page() {
     return m
   }, [multiTimeAAs])
 
+  const seededWinSchoolByKey = useMemo(() => {
+    const m = new Map<string, string>()
+    const put = (w: { athlete_name: string; division: string; weight: string; high_school?: string | null }) => {
+      const hs = (w.high_school || "").trim()
+      if (!hs) return
+      const k = `${normMultiName(w.athlete_name)}|${w.division}|${normalizeNhscaWeightForDisplay(w.weight)}`
+      if (!m.has(k)) m.set(k, hs)
+    }
+    for (const w of getNhsca2026CanonicalWrestlers()) put(w)
+    for (const w of wrestlers) put(w)
+    return m
+  }, [wrestlers])
+
+  const replicaAaSchoolByKey = useMemo(() => {
+    const m = new Map<string, string>()
+    const rows = nhsca2026.section1_all_americans as {
+      athlete_name: string
+      division: string
+      weight: string
+      high_school: string | null
+    }[]
+    for (const r of rows) {
+      const hs = (r.high_school || "").trim()
+      if (!hs) continue
+      const k = `${normMultiName(r.athlete_name)}|${r.division}|${normalizeNhscaWeightForDisplay(r.weight)}`
+      m.set(k, hs)
+    }
+    return m
+  }, [])
+
   const groupedCollegeCommits = useMemo(() => {
     const allAmericanNames = new Set(wrestlers.map((w) => w.athlete_name.toLowerCase()))
 
@@ -380,9 +460,8 @@ export default function NHSCA2026Page() {
                 </div>
               </div>
               <div className="bg-gray-100 rounded-xl p-6 text-center">
-                <div className="text-5xl font-bold text-[#003366]">—</div>
-                <div className="text-gray-600 mt-1">Growth from 2025</div>
-                <div className="text-sm text-gray-500">{nhsca2026.section2_national_story.yoy_growth_note}</div>
+                <div className="text-5xl font-bold text-[#003366]">{getOrdinal(4)}</div>
+                <div className="text-gray-600 mt-1">Best year in NC history</div>
               </div>
             </div>
           </CardContent>
@@ -417,158 +496,6 @@ export default function NHSCA2026Page() {
           </CardContent>
         </Card>
 
-        {/* Freshman division — state stack (All-Americans by state) */}
-        <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-[#003366] text-white">
-            <CardTitle>Freshman division — All-Americans by state</CardTitle>
-            <p className="text-white/70 text-sm font-normal mt-1">
-              2026 NHSCA Nationals · state stack ranking (Freshman boys only)
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">Rank</th>
-                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">State</th>
-                    <th className="text-right py-3 px-4 font-semibold text-[#003366]">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {nhsca2026.section10_freshman_aa_state_ranking.map((row, idx) => (
-                    <tr
-                      key={`${row.state}-${row.rank}`}
-                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
-                    >
-                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
-                      <td className="py-2.5 px-4">
-                        {row.state}
-                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sophomore division — state stack */}
-        <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-[#B31B1B] text-white">
-            <CardTitle>Sophomore division — All-Americans by state</CardTitle>
-            <p className="text-white/80 text-sm font-normal mt-1">
-              2026 NHSCA Nationals · state stack ranking (Sophomore boys only)
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left py-3 px-4 font-semibold text-[#B31B1B]">Rank</th>
-                    <th className="text-left py-3 px-4 font-semibold text-[#B31B1B]">State</th>
-                    <th className="text-right py-3 px-4 font-semibold text-[#B31B1B]">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {nhsca2026.section11_sophomore_aa_state_ranking.map((row, idx) => (
-                    <tr
-                      key={`${row.state}-${row.rank}`}
-                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
-                    >
-                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
-                      <td className="py-2.5 px-4">
-                        {row.state}
-                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Junior division — state stack */}
-        <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-[#CBAF5D] text-[#003366]">
-            <CardTitle>Junior division — All-Americans by state</CardTitle>
-            <p className="text-[#003366]/80 text-sm font-normal mt-1">
-              2026 NHSCA Nationals · state stack ranking (Junior boys only)
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">Rank</th>
-                    <th className="text-left py-3 px-4 font-semibold text-[#003366]">State</th>
-                    <th className="text-right py-3 px-4 font-semibold text-[#003366]">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {nhsca2026.section12_junior_aa_state_ranking.map((row, idx) => (
-                    <tr
-                      key={`${row.state}-${row.rank}`}
-                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
-                    >
-                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
-                      <td className="py-2.5 px-4">
-                        {row.state}
-                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Senior division — state stack */}
-        <Card className="mb-8 overflow-hidden">
-          <CardHeader className="bg-[#2563eb] text-white">
-            <CardTitle>Senior division — All-Americans by state</CardTitle>
-            <p className="text-white/80 text-sm font-normal mt-1">
-              2026 NHSCA Nationals · state stack ranking (Senior boys only)
-            </p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-gray-50">
-                    <th className="text-left py-3 px-4 font-semibold text-[#2563eb]">Rank</th>
-                    <th className="text-left py-3 px-4 font-semibold text-[#2563eb]">State</th>
-                    <th className="text-right py-3 px-4 font-semibold text-[#2563eb]">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {nhsca2026.section13_senior_aa_state_ranking.map((row, idx) => (
-                    <tr
-                      key={`${row.state}-${row.rank}`}
-                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
-                    >
-                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
-                      <td className="py-2.5 px-4">
-                        {row.state}
-                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
-                      </td>
-                      <td className="py-2.5 px-4 text-right font-medium">{row.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Historic Achievement Banner */}
         <Card className="mb-8">
           <CardHeader>
@@ -579,9 +506,11 @@ export default function NHSCA2026Page() {
               <div>
                 <div className="text-4xl font-bold text-[#003366]">{stats.totalAA} Total All-Americans</div>
                 <div className="text-gray-600">
-                  {nhsca2026.section2_national_story.historic_headline ?? "North Carolina boys NHSCA All-Americans"}
+                  {nhsca2026.section2_national_story.historic_headline ?? "4th best year in NC history"}
                 </div>
-                <div className="text-gray-500 text-sm">{nhsca2026.section2_national_story.yoy_growth_note}</div>
+                <div className="text-gray-500 text-sm">
+                  North Carolina boys — Freshman, Sophomore, Junior, Senior divisions
+                </div>
               </div>
               <div className="flex gap-6">
                 <div className="text-center">
@@ -811,6 +740,70 @@ export default function NHSCA2026Page() {
                     </div>
                   </div>
                 )}
+
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <Tabs value={divisionStateTab} onValueChange={(v) => setDivisionStateTab(v as DivisionStateTab)}>
+                    <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-b-none border border-b-0 border-gray-200 bg-gray-100 p-1">
+                      {DIVISION_STATE_TABS.map((d) => (
+                        <TabsTrigger
+                          key={d}
+                          value={d}
+                          className="data-[state=active]:bg-white data-[state=active]:text-[#003366] data-[state=active]:shadow-sm"
+                        >
+                          {d}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    {DIVISION_STATE_TABS.map((d) => {
+                      const { headerClass, thClass } = divisionStatePanelStyle(d)
+                      const rows = divisionStateRankingRows(d)
+                      return (
+                        <TabsContent key={d} value={d} className="mt-0 focus-visible:outline-none">
+                          <div className="overflow-hidden rounded-b-lg border border-gray-200 border-t-0">
+                            <div className={`px-4 py-3 ${headerClass}`}>
+                              <div className="text-base font-semibold">{d} division — All-Americans by state</div>
+                              <p
+                                className={`mt-1 text-sm font-normal ${
+                                  d === "Junior" ? "text-[#003366]/80" : "text-white/90"
+                                }`}
+                              >
+                                2026 NHSCA Nationals · state stack ranking ({d} boys only)
+                              </p>
+                            </div>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b bg-gray-50">
+                                    <th className={`text-left py-3 px-4 font-semibold ${thClass}`}>Rank</th>
+                                    <th className={`text-left py-3 px-4 font-semibold ${thClass}`}>State</th>
+                                    <th className={`text-right py-3 px-4 font-semibold ${thClass}`}>Total</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {rows.map((row, idx) => (
+                                    <tr
+                                      key={`${row.state}-${row.rank}-${idx}`}
+                                      className={`border-b ${row.state === "NC" ? "bg-[#CBAF5D]/15" : idx % 2 === 0 ? "bg-white" : "bg-gray-50/80"}`}
+                                    >
+                                      <td className="py-2.5 px-4 font-medium text-[#003366]">{row.rank}</td>
+                                      <td className="py-2.5 px-4">
+                                        {row.state}
+                                        {row.state === "NC" && <span className="ml-1 text-[#CBAF5D]">★</span>}
+                                      </td>
+                                      <td className="py-2.5 px-4 text-right font-medium tabular-nums">
+                                        {row.total != null ? row.total : "—"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </TabsContent>
+                      )
+                    })}
+                  </Tabs>
+                </div>
               </CardContent>
             </Card>
           </CardContent>
@@ -827,7 +820,7 @@ export default function NHSCA2026Page() {
               <div className="bg-gray-100 rounded-xl p-6 text-center">
                 <div className="text-4xl font-bold text-[#003366]">{stats.totalAA} AA</div>
                 <div className="text-gray-600">Total All-Americans</div>
-                <div className="text-sm text-gray-500">{nhsca2026.section2_national_story.yoy_growth_note}</div>
+                <div className="text-sm text-gray-500">4th best year in NC history</div>
               </div>
               <div className="bg-gray-100 rounded-xl p-6 text-center">
                 <div className="text-4xl font-bold text-[#003366]">{nhsca2026.section6_summary_strip.national_finalist.count}</div>
@@ -856,9 +849,6 @@ export default function NHSCA2026Page() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg text-[#003366]">Multi-Time All-Americans</CardTitle>
-                  <p className="text-sm text-gray-500 font-normal pt-1">
-                    From NHSCA history (database + 2026 roster). Same wrestlers show a badge in the table below.
-                  </p>
                 </CardHeader>
                 <CardContent>
                   {multiTimeAAs.length > 0 ? (
@@ -974,6 +964,64 @@ export default function NHSCA2026Page() {
             </div>
           </CardContent>
         </Card>
+
+        {NHSCA_2026_SEEDED_WINS?.rows?.length ? (
+          <Card className="mb-8 overflow-hidden">
+            <CardHeader className="bg-[#003366] text-white">
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Target className="w-5 h-5 shrink-0" aria-hidden />
+                NC wrestlers — wins vs seeded opponents
+              </CardTitle>
+              <p className="text-sm text-white/85 font-normal mt-1 max-w-3xl">
+                {NHSCA_2026_SEEDED_WINS.note ??
+                  "Wins against seeded opponents at 2026 NHSCA Nationals. Bracket finish shown when applicable; losses not listed."}
+              </p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left py-3 px-4 font-semibold text-[#003366]">#</th>
+                      <th className="text-left py-3 px-4 font-semibold text-[#003366]">Wrestler</th>
+                      <th className="text-left py-3 px-4 font-semibold text-[#003366]">High school</th>
+                      <th className="text-left py-3 px-4 font-semibold text-[#003366]">Wt</th>
+                      <th className="text-left py-3 px-4 font-semibold text-[#003366]">Division</th>
+                      <th className="text-left py-3 px-4 font-semibold text-[#003366]">Finish</th>
+                      <th className="text-right py-3 px-4 font-semibold text-[#003366]">W vs seed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {NHSCA_2026_SEEDED_WINS.rows.map((row, idx) => {
+                      const lk = `${normMultiName(row.athlete_name)}|${row.division}|${normalizeNhscaWeightForDisplay(row.weight)}`
+                      const school =
+                        (row.high_school || "").trim() ||
+                        seededWinSchoolByKey.get(lk) ||
+                        replicaAaSchoolByKey.get(lk) ||
+                        "—"
+                      return (
+                        <tr
+                          key={`${row.rank}-${row.athlete_name}-${row.division}-${row.weight}`}
+                          className={idx % 2 === 0 ? "bg-white border-b" : "bg-gray-50/80 border-b"}
+                        >
+                          <td className="py-2.5 px-4 font-medium text-[#003366] tabular-nums">{row.rank}</td>
+                          <td className="py-2.5 px-4 font-medium text-[#003366]">{row.athlete_name}</td>
+                          <td className="py-2.5 px-4 text-gray-600">{school}</td>
+                          <td className="py-2.5 px-4 tabular-nums">{normalizeNhscaWeightForDisplay(row.weight)}</td>
+                          <td className="py-2.5 px-4">{row.division}</td>
+                          <td className="py-2.5 px-4 text-gray-700">{row.finish ?? "—"}</td>
+                          <td className="py-2.5 px-4 text-right font-semibold tabular-nums text-[#003366]">
+                            {row.wins_vs_seeded}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* All-Americans Table Section */}
         <Card className="mb-8">

@@ -1,5 +1,6 @@
 "use client"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import Image from "next/image"
 
 // NC United brand colors
 const NC_NAVY = "#002147"
@@ -56,6 +57,55 @@ type Props = {
 function axisMaxForRows(rows: { value: number }[]) {
   const m = rows.length ? Math.max(...rows.map((r) => r.value), 1) : 8
   return Math.max(8, m)
+}
+
+/** Resolves logo via Enhanced Logo Manager (`logo_mappings` highschool). */
+function HighSchoolChartLogo({ schoolName }: { schoolName: string }) {
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const name = (schoolName || "").trim()
+    if (!name) {
+      setReady(true)
+      return
+    }
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/logo-mappings/by-entity/highschool/${encodeURIComponent(name)}`)
+        if (res.ok) {
+          const data = (await res.json()) as { success?: boolean; logo_url?: string }
+          if (!cancelled && data?.success && data.logo_url) setLogoUrl(data.logo_url)
+        }
+      } catch {
+        /* use fallback image */
+      } finally {
+        if (!cancelled) setReady(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [schoolName])
+
+  if (!ready) {
+    return <div className="h-8 w-8 shrink-0 rounded bg-gray-200 animate-pulse" aria-hidden />
+  }
+
+  return (
+    <Image
+      src={logoUrl || "/high-school-logo.png"}
+      alt={`${schoolName} logo`}
+      width={32}
+      height={32}
+      className="h-8 w-8 shrink-0 rounded object-contain bg-white/80 border border-[#002147]/10"
+      onError={(e) => {
+        const el = e.target as HTMLImageElement
+        el.src = "/high-school-logo.png"
+      }}
+    />
+  )
 }
 
 export default function NHSCAPerformanceCharts({ clubRows: clubRowsProp, schoolRows: schoolRowsProp }: Props) {
@@ -185,9 +235,14 @@ export default function NHSCAPerformanceCharts({ clubRows: clubRowsProp, schoolR
               <>
                 <div className="space-y-4">
                   {schoolData.map((school, index) => (
-                    <div key={`${school.name}-${index}`} className="flex items-center">
-                      <div className="w-[45%] text-right pr-4 text-sm text-[#002147]">{school.name}</div>
-                      <div className="w-[55%]">
+                    <div key={`${school.name}-${index}`} className="flex items-center gap-0">
+                      <div className="w-[45%] flex items-center justify-end gap-2 pr-3 min-w-0">
+                        <HighSchoolChartLogo schoolName={school.name} />
+                        <span className="text-sm text-[#002147] truncate text-right min-w-0" title={school.name}>
+                          {school.name}
+                        </span>
+                      </div>
+                      <div className="w-[55%] min-w-0">
                         <div
                           className="h-6 rounded-r"
                           style={{
@@ -199,7 +254,10 @@ export default function NHSCAPerformanceCharts({ clubRows: clubRowsProp, schoolR
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between mt-4 pl-[45%] pr-0 text-xs text-[#002147]/60">
+                <p className="text-xs text-[#002147]/55 mt-3 pr-1 text-right">
+                  Logos from Logo Manager. Missing one? Add the high school in Enhanced Logo Manager.
+                </p>
+                <div className="flex justify-between mt-2 pl-[45%] pr-0 text-xs text-[#002147]/60">
                   {axisTicks(schoolAxisMax).map((t) => (
                     <div key={t}>{t}</div>
                   ))}
@@ -222,7 +280,12 @@ export default function NHSCAPerformanceCharts({ clubRows: clubRowsProp, schoolR
                 <tbody>
                   {schoolData.map((school, index) => (
                     <tr key={`${school.name}-${index}`} className="border-b border-[#002147]/10">
-                      <td className="py-2 text-[#002147]">{school.name}</td>
+                      <td className="py-2 text-[#002147]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <HighSchoolChartLogo schoolName={school.name} />
+                          <span className="truncate">{school.name}</span>
+                        </div>
+                      </td>
                       <td className="text-right py-2 text-[#002147] font-medium">{school.value}</td>
                     </tr>
                   ))}

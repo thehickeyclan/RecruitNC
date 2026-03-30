@@ -319,5 +319,47 @@
     { "rank": 42, "state": "HI", "total": 1 },
     { "rank": 43, "state": "NE", "total": 1 },
     { "rank": 44, "state": "AR", "total": 1 }
-  ]
+  ],
+
+  "section15_seeded_wins": {
+    "note": "North Carolina wrestlers with at least one win over a seeded opponent at 2026 NHSCA Nationals, ranked by those wins. Bracket finish when applicable; losses not shown.",
+    "rows": [
+      { "rank": 1, "athlete_name": "Carson Worrick", "weight": "160", "division": "Junior", "finish": "4th place", "wins_vs_seeded": 4 },
+      { "rank": 2, "athlete_name": "Avery Rhymer", "weight": "285", "division": "Senior", "finish": "8th place", "wins_vs_seeded": 3 },
+      { "rank": 3, "athlete_name": "Dominic Blue", "weight": "160", "division": "Senior", "finish": "3rd place", "wins_vs_seeded": 3 },
+      { "rank": 4, "athlete_name": "Aiden White", "weight": "132", "division": "Junior", "finish": "4th place", "wins_vs_seeded": 2 },
+      { "rank": 5, "athlete_name": "Cael Dunn", "weight": "195", "division": "Senior", "finish": "7th place", "wins_vs_seeded": 2 },
+      { "rank": 6, "athlete_name": "Cooper Mathon", "weight": "120", "division": "Junior", "finish": null, "wins_vs_seeded": 2 },
+      { "rank": 7, "athlete_name": "Eli Horton", "weight": "152", "division": "Senior", "finish": null, "wins_vs_seeded": 2 },
+      { "rank": 8, "athlete_name": "Garrett Young", "weight": "220", "division": "Sophomore", "finish": "3rd place", "wins_vs_seeded": 2 },
+      { "rank": 9, "athlete_name": "Joseph Shook", "weight": "138", "division": "Sophomore", "finish": null, "wins_vs_seeded": 2 },
+      { "rank": 10, "athlete_name": "Thomas Salinas", "weight": "138", "division": "Senior", "finish": null, "wins_vs_seeded": 2 },
+      { "rank": 11, "athlete_name": "Xavier Bernthal", "weight": "106", "division": "Freshman", "finish": null, "wins_vs_seeded": 2 },
+      { "rank": 12, "athlete_name": "Aaron Ellison", "weight": "145", "division": "Sophomore", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 13, "athlete_name": "Adam Walker", "weight": "120", "division": "Freshman", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 14, "athlete_name": "Aidan Gore", "weight": "152", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 15, "athlete_name": "Amanuel Kahsai", "weight": "182", "division": "Sophomore", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 16, "athlete_name": "Bentley Sly", "weight": "152", "division": "Senior", "finish": "2nd place", "wins_vs_seeded": 1 },
+      { "rank": 17, "athlete_name": "Braylen Yates", "weight": "170", "division": "Freshman", "finish": "1st place", "wins_vs_seeded": 1 },
+      { "rank": 18, "athlete_name": "Brieon Mayfield", "weight": "182", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 19, "athlete_name": "Carson Raper", "weight": "106", "division": "Freshman", "finish": "4th place", "wins_vs_seeded": 1 },
+      { "rank": 20, "athlete_name": "Cayden Laws", "weight": "138", "division": "Sophomore", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 21, "athlete_name": "Drew Teeter", "weight": "182", "division": "Sophomore", "finish": "4th place", "wins_vs_seeded": 1 },
+      { "rank": 22, "athlete_name": "Gabriel Jones", "weight": "126", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 23, "athlete_name": "Jack Kancler", "weight": "145", "division": "Senior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 24, "athlete_name": "Jacob Reigel", "weight": "182", "division": "Senior", "finish": "8th place", "wins_vs_seeded": 1 },
+      { "rank": 25, "athlete_name": "Jaycob Perez", "weight": "126", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 26, "athlete_name": "John Garay Martinez", "weight": "285", "division": "Senior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 27, "athlete_name": "Jovanni Lamparelli", "weight": "113", "division": "Sophomore", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 28, "athlete_name": "Judah Harris", "weight": "220", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 29, "athlete_name": "Matthew Carter", "weight": "120", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 30, "athlete_name": "Micah Howard", "weight": "145", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 31, "athlete_name": "Miller Menteer", "weight": "138", "division": "Junior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 32, "athlete_name": "Ryan Thompson", "weight": "170", "division": "Sophomore", "finish": "7th place", "wins_vs_seeded": 1 },
+      { "rank": 33, "athlete_name": "Samuel Gantt", "weight": "138", "division": "Senior", "finish": "8th place", "wins_vs_seeded": 1 },
+      { "rank": 34, "athlete_name": "Spencer Shade", "weight": "285", "division": "Senior", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 35, "athlete_name": "Stephen Cross", "weight": "120", "division": "Sophomore", "finish": null, "wins_vs_seeded": 1 },
+      { "rank": 36, "athlete_name": "Tyton Kostoff", "weight": "138", "division": "Junior", "finish": null, "wins_vs_seeded": 1 }
+    ]
+  }
 }
