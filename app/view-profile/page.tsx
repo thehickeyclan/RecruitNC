@@ -36,7 +36,7 @@ export default function ViewProfilePage() {
       return
     }
     const apiUrl = `/api/athlete/${encodeURIComponent(id)}`
-    const FETCH_TIMEOUT_MS = 12000
+    const FETCH_TIMEOUT_MS = 30000
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
     let cancelled = false

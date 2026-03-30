@@ -8,10 +8,10 @@ const supabase = createClient(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const athleteId = params.id
+    const { id: athleteId } = await params
     const body = await request.json()
 
     console.log("[Tournament Results] Updating for athlete:", athleteId)
