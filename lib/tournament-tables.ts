@@ -144,7 +144,9 @@ export async function getNHSCAFromTables(
     division: (r.division ?? "").toString().trim(),
   })
 
-  // 1. Case-insensitive full-name match first (DB import may differ in casing from profile)
+  // 1. nhsca_placements only (bulk import target). Must finish ALL strategies before legacy table —
+  //    otherwise wrestling_nhsca_results exact match returns early and we never pattern-match
+  //    placements (common when profile name ≠ import spelling; Junior rows only hit via % patterns).
   const { data: exactPlacements } = await supabase
     .from("nhsca_placements")
     .select("*")
@@ -153,15 +155,6 @@ export async function getNHSCAFromTables(
     .lte("year", yearMax)
     .order("year", { ascending: false })
   if (exactPlacements?.length) return exactPlacements.map(mapPlacement)
-
-  const { data: exactNhsca } = await supabase
-    .from("wrestling_nhsca_results")
-    .select("*")
-    .ilike("athlete_name", exactName)
-    .gte("year", startYear)
-    .lte("year", yearMax)
-    .order("year", { ascending: false })
-  if (exactNhsca?.length) return exactNhsca.map(mapResult)
 
   const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
   if (lastFirst) {
@@ -173,17 +166,8 @@ export async function getNHSCAFromTables(
       .lte("year", yearMax)
       .order("year", { ascending: false })
     if (lfPlacements?.length) return lfPlacements.map(mapPlacement)
-    const { data: lfNhsca } = await supabase
-      .from("wrestling_nhsca_results")
-      .select("*")
-      .ilike("athlete_name", lastFirst)
-      .gte("year", startYear)
-      .lte("year", yearMax)
-      .order("year", { ascending: false })
-    if (lfNhsca?.length) return lfNhsca.map(mapResult)
   }
 
-  // 2. Name variants + ILIKE patterns (incl. backtick so "D`Ettore, Jackson" in DB matches)
   const namesToTry = getNameVariants(athleteName)
   for (const searchName of namesToTry) {
     for (const pattern of getIlikePatternsForVariation(searchName)) {
@@ -195,7 +179,32 @@ export async function getNHSCAFromTables(
         .lte("year", yearMax)
         .order("year", { ascending: false })
       if (placements?.length) return placements.map(mapPlacement)
+    }
+  }
 
+  // 2. wrestling_nhsca_results — legacy fallback only when placements had no match
+  const { data: exactNhsca } = await supabase
+    .from("wrestling_nhsca_results")
+    .select("*")
+    .ilike("athlete_name", exactName)
+    .gte("year", startYear)
+    .lte("year", yearMax)
+    .order("year", { ascending: false })
+  if (exactNhsca?.length) return exactNhsca.map(mapResult)
+
+  if (lastFirst) {
+    const { data: lfNhsca } = await supabase
+      .from("wrestling_nhsca_results")
+      .select("*")
+      .ilike("athlete_name", lastFirst)
+      .gte("year", startYear)
+      .lte("year", yearMax)
+      .order("year", { ascending: false })
+    if (lfNhsca?.length) return lfNhsca.map(mapResult)
+  }
+
+  for (const searchName of namesToTry) {
+    for (const pattern of getIlikePatternsForVariation(searchName)) {
       const { data: results } = await supabase
         .from("wrestling_nhsca_results")
         .select("*")
@@ -254,8 +263,10 @@ function preferredNhscaBracketKeyword(gradYear: number, tournamentYear: number):
 function scoreNhscaDivisionMatch(division: string | undefined, want: string): number {
   const d = (division ?? "").trim().toLowerCase()
   if (!d) return 0
-  if (want === "senior" && (d.includes("senior") || d.includes("varsity"))) return 2
+  if (want === "senior" && (d.includes("senior") || d.includes("varsity") || d === "sr" || /\bsr\b/.test(d))) return 2
+  if (want === "junior" && (d.includes("junior") || d === "jr" || /\bjr\b/.test(d))) return 2
   if (want === "sophomore" && (d.includes("sophomore") || d.includes("soph"))) return 2
+  if (want === "freshman" && (d.includes("freshman") || d.includes("frosh") || d === "fr" || /\bfr\b/.test(d))) return 2
   if (d.includes(want)) return 2
   return 0
 }
