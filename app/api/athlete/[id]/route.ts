@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getNameVariants, getNHSCAFromTables, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
-import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
-import { getNhscaResults, getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
+import { getNameVariants, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
+import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
+import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
 
@@ -93,23 +93,8 @@ export async function GET(
     const name = (athlete.name ?? "").toString().trim()
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
     const namesToTry = [...new Set([...getNameVariants(name), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
-    const [nhscaFromTables, super32FromTable, nationalTeamFromTables] = await Promise.all([
-      (async () => {
-        const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
-        const seen = new Set<string>()
-        for (const n of namesToTry) {
-          if (!n) continue
-          const rows = await getNHSCAFromTables(supabase, n, gradYear)
-          for (const r of rows) {
-            const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
-            if (!seen.has(key)) {
-              seen.add(key)
-              merged.push(r)
-            }
-          }
-        }
-        return merged.sort((a, b) => (b.year as number) - (a.year as number))
-      })(),
+    const [nhscaMerged, super32FromTable, nationalTeamFromTables] = await Promise.all([
+      mergeNhscaForAthleteRecord(supabase, athlete as Record<string, unknown>),
       (async () => {
         for (const n of namesToTry) {
           if (!n) continue
@@ -147,7 +132,6 @@ export async function GET(
       }
     }
 
-    const nhscaMerged = mergeNhscaForPublicRankings(nhscaFromTables, getNhscaResults(athlete))
     const athleteWithTournaments = {
       ...athlete,
       nhsca_results: nhscaMerged,

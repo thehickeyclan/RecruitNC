@@ -18,6 +18,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year")
+    const division = searchParams.get("division")?.trim()
 
     if (!year) {
       return NextResponse.json({ error: "Year parameter is required" }, { status: 400 })
@@ -28,13 +29,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Invalid year" }, { status: 400 })
     }
 
-    // Delete all records for this year and state
-    const { data, error } = await supabase
-      .from("nhsca_placements")
-      .delete()
-      .eq("year", yearNum)
-      .eq("state", "NC")
-      .select()
+    // Delete NC rows for this year; optional `division` = Senior | Junior (same as bulk-import) so one division can be cleared without wiping the other.
+    let q = supabase.from("nhsca_placements").delete().eq("year", yearNum).eq("state", "NC")
+    if (division) {
+      q = q.eq("division", division)
+    }
+    const { data, error } = await q.select()
 
     if (error) {
       console.error("Error deleting placements:", error)
@@ -46,7 +46,10 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       success: true,
       deleted: deletedCount,
-      message: `Successfully deleted ${deletedCount} placements for year ${yearNum}`,
+      message: division
+        ? `Successfully deleted ${deletedCount} ${division} placements for year ${yearNum} (NC)`
+        : `Successfully deleted ${deletedCount} placements for year ${yearNum} (NC, all divisions)`,
+      division: division || null,
     })
   } catch (error: any) {
     console.error("Delete year error:", error)

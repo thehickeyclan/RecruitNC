@@ -81,6 +81,8 @@ interface AthleteDetailProps {
     academic_summary?: string | null
     academic_interest?: string | null
     recruiting_status?: string
+    nhsca_2026_record?: string
+    nhsca_2026_placement?: string
     nhsca_2024_record?: string
     nhsca_2025_record?: string
     nhsca_2023_record?: string
@@ -438,23 +440,54 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
 
   const getALLAmericanStatus = () => {
     try {
-      const placements = [
+      const fromJson = Array.isArray(athlete?.nhsca_results)
+        ? (athlete.nhsca_results as { year?: number; placement?: string | number }[])
+        : []
+      const fromLegacy = [
+        { year: "2026", placement: athlete?.nhsca_2026_placement },
         { year: "2025", placement: athlete?.nhsca_2025_placement },
         { year: "2024", placement: athlete?.nhsca_2024_placement },
         { year: "2023", placement: athlete?.nhsca_2023_placement },
-      ].filter((p) => p.placement && p.placement !== "")
+      ]
 
-      const allAmericanYears = placements
-        .filter((p) => {
-          const placement = p.placement?.toString().trim()
-          if (!placement) return false
+      const placeToNum = (raw: string | number | undefined | null): number | null => {
+        if (raw == null || raw === "") return null
+        if (typeof raw === "number" && !isNaN(raw)) return raw
+        const s = String(raw).trim()
+        const low = s.toLowerCase()
+        if (low.includes("champion") || low === "1st" || /^1(\s|$)/.test(low)) return 1
+        const n = Number.parseInt(s, 10)
+        if (!isNaN(n) && n >= 1 && n <= 99) return n
+        const m = s.match(/^(\d+)(st|nd|rd|th)/i)
+        if (m) {
+          const v = Number.parseInt(m[1], 10)
+          return isNaN(v) ? null : v
+        }
+        const lead = s.match(/(\d+)(?:st|nd|rd|th)?\s+all-american/i)
+        if (lead) {
+          const v = Number.parseInt(lead[1], 10)
+          return isNaN(v) ? null : v
+        }
+        return null
+      }
 
-          const place = Number.parseInt(placement, 10)
-          return !isNaN(place) && place <= 8 && place >= 1
-        })
-        .map((p) => p.year)
+      const yearsAa: string[] = []
+      for (const r of fromJson) {
+        const place = placeToNum(r.placement as string | number | undefined)
+        if (place != null && place >= 1 && place <= 8) {
+          yearsAa.push(String(r.year ?? ""))
+        }
+      }
+      for (const p of fromLegacy) {
+        if (!p.placement || p.placement === "") continue
+        const place = placeToNum(p.placement as string | number | undefined)
+        if (place != null && place >= 1 && place <= 8) {
+          yearsAa.push(p.year)
+        }
+      }
 
-      return allAmericanYears.length > 0 ? `All American (${allAmericanYears.join(", ")})` : null
+      const unique = [...new Set(yearsAa.filter(Boolean))]
+      return unique.length > 0 ? `All American (${unique.join(", ")})` : null
     } catch (error) {
       console.error("[v0] Error in getALLAmericanStatus:", error)
       return null
@@ -544,8 +577,9 @@ export function AthleteDetail({ athlete, nchsaaResults = [], currentUserId = nul
         })
       })
     } else {
-      // Fallback to old columns
+      // Fallback to old columns (include 2026 — nhsca_results JSON may be empty while legacy cols are set)
       const nhscaYears = [
+        { year: 2026, record: athlete?.nhsca_2026_record, placement: athlete?.nhsca_2026_placement },
         { year: 2025, record: athlete?.nhsca_2025_record, placement: athlete?.nhsca_2025_placement },
         { year: 2024, record: athlete?.nhsca_2024_record, placement: athlete?.nhsca_2024_placement },
         { year: 2023, record: athlete?.nhsca_2023_record, placement: athlete?.nhsca_2023_placement },

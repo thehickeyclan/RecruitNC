@@ -1,5 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { getNameVariants, getNHSCAFromTables } from "@/lib/tournament-tables"
+import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
+import { getNhscaResults } from "@/lib/tournament-utils"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -26,11 +30,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       .select(`
         id,
         name,
-        graduation_year: graduationyear,
+        graduationyear,
         weightclass,
         highschool,
         photourl,
         careerRecord,
+        nhsca_results,
+        nhsca_2026_placement,
+        nhsca_2026_record,
         nhsca_2025_placement,
         nhsca_2024_placement,
         nhsca_2023_placement,
@@ -138,6 +145,32 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     allResults.sort((a, b) => b.year - a.year)
 
+    const gradYear = Number((athlete as { graduationyear?: number }).graduationyear) || new Date().getFullYear()
+    const displayNameForNhsca =
+      (athlete as { wrestling_name?: string }).wrestling_name?.trim() ||
+      (athlete as { name?: string }).name?.trim() ||
+      ""
+    const wrestlingName = (athlete as { wrestling_name?: string }).wrestling_name?.trim() || ""
+    const namesToTry = [
+      ...new Set([...getNameVariants(displayNameForNhsca), ...(wrestlingName ? getNameVariants(wrestlingName) : [])]),
+    ]
+    const admin = createAdminClient()
+    const nhscaMergedRows: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
+    const seenNhsca = new Set<string>()
+    for (const n of namesToTry) {
+      if (!n) continue
+      const rows = await getNHSCAFromTables(admin, n, gradYear)
+      for (const r of rows) {
+        const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
+        if (!seenNhsca.has(key)) {
+          seenNhsca.add(key)
+          nhscaMergedRows.push(r)
+        }
+      }
+    }
+    nhscaMergedRows.sort((a, b) => (b.year as number) - (a.year as number))
+    const nhscaForProfile = mergeNhscaForPublicRankings(nhscaMergedRows, getNhscaResults(athlete))
+
     const isCoachCreatedProspect = athlete.added_by_coach_id === user.id
     const leadSourceLocked = !isCoachCreatedProspect
     const leadSourceValue =
@@ -146,6 +179,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     return NextResponse.json({
       ...athlete,
+      graduation_year: (athlete as { graduationyear?: number }).graduationyear ?? null,
+      nhsca_results: nhscaForProfile,
       pipeline_stage: crmData?.pipeline_stage || "Prospect",
       last_contacted: crmData?.last_contacted || null,
       parent_name: crmData?.parent_name || null,

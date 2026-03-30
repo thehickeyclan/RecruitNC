@@ -46,10 +46,14 @@ interface Prospect {
   state_championship_summary?: string | null
   nhsca_results?: TournamentResult[]
   nhsca_record_display?: string | null
+  nhsca_2026_placement?: string | null
+  nhsca_2026_record?: string | null
   nhsca_2024_placement?: string | null
   nhsca_2025_placement?: string | null
+  nhsca_2023_placement?: string | null
   nhsca_2024_record?: string | null
   nhsca_2025_record?: string | null
+  nhsca_2023_record?: string | null
   super_32_results?: TournamentResult[]
   super32_results?: TournamentResult[]
   super_32_record_display?: string | null
@@ -1217,6 +1221,14 @@ function buildLegacyTournamentEntry(
 function buildLegacyNHSCAResults(prospect: Prospect): TournamentResult[] {
   const results: TournamentResult[] = []
 
+  const entry2026 = buildLegacyTournamentEntry(
+    "NHSCA Nationals 2026",
+    prospect.nhsca_2026_placement,
+    prospect.nhsca_2026_record,
+    2026,
+  )
+  if (entry2026) results.push(entry2026)
+
   const entry2025 = buildLegacyTournamentEntry(
     "NHSCA Nationals 2025",
     prospect.nhsca_2025_placement,
@@ -1232,6 +1244,14 @@ function buildLegacyNHSCAResults(prospect: Prospect): TournamentResult[] {
     2024,
   )
   if (entry2024) results.push(entry2024)
+
+  const entry2023 = buildLegacyTournamentEntry(
+    "NHSCA Nationals 2023",
+    prospect.nhsca_2023_placement,
+    prospect.nhsca_2023_record,
+    2023,
+  )
+  if (entry2023) results.push(entry2023)
 
   return results
 }

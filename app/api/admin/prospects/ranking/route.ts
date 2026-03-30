@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
 
 function getOrdinalSuffix(num: number): string {
   const j = num % 10
@@ -29,11 +30,14 @@ export async function GET(request: NextRequest) {
     const { data: athletes, error } = await supabase
       .from("athletes")
       .select(`
-        id, name, graduationyear, prospect_ranking, highschool, weightclass, 
+        id, name, firstname, lastname, firstName, lastName, graduationyear, prospect_ranking, highschool, weightclass, 
         division, gender, academic_gpa, is_prospect, college, 
         achievements, commitmentdate, highSchoolLogoUrl, collegeLogoUrl, wrestling_name,
         recruiting_status, nationally_ranked_wins,
+        nhsca_results,
+        nhsca_2023_placement, nhsca_2023_record,
         nhsca_2024_placement, nhsca_2025_placement, nhsca_2024_record, nhsca_2025_record,
+        nhsca_2026_placement, nhsca_2026_record,
         super_32_2024_placement, super_32_2025_placement, super_32_2024_record, super_32_2025_record,
         additional_achievements
       `)
@@ -64,6 +68,15 @@ export async function GET(request: NextRequest) {
           weight_class: r.weight_class,
           school: r.school,
         }))
+        const nhsca_results = (await mergeNhscaForAthleteRecord(supabase, athlete as Record<string, unknown>)).map(
+          (r) => ({
+            year: r.year,
+            placement: r.placement,
+            record: r.record,
+            weight: r.weight,
+            division: r.division,
+          }),
+        )
         const debugInfo = debug
           ? {
               name: athlete.name || "",
@@ -75,7 +88,7 @@ export async function GET(request: NextRequest) {
               nchsaa_years: [...new Set(nchsaa_results.map((r) => r.year))].sort((a, b) => b - a),
             }
           : undefined
-        return { ...athlete, nchsaa_results, ...(debug && debugInfo ? { _debug: debugInfo } : {}) }
+        return { ...athlete, nchsaa_results, nhsca_results, ...(debug && debugInfo ? { _debug: debugInfo } : {}) }
       }),
     )
 

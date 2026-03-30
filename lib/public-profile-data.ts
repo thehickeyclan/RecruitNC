@@ -1,10 +1,11 @@
 /**
  * Single source of truth for public profile data (NHSCA, Super32, etc.)
- * Used by: public-rankings API (2026/2027/2028 pages), unified-profile page
+ * Used by: public-rankings API (2026/2027/2028 pages), unified-profile page, prospects list, admin simple ranking
  * All kids and graduates get the same public profile - one code path.
  */
 
-import type { TournamentResultRow } from "@/lib/tournament-tables"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { getNameVariants, getNHSCAFromTables, type TournamentResultRow } from "@/lib/tournament-tables"
 import { getNhscaResults, getSuper32Results, type TournamentResult } from "@/lib/tournament-utils"
 
 export interface TournamentResultForDisplay {
@@ -123,6 +124,43 @@ export function mergeNhscaForPublicRankings(
     if (!existing || isDisplayRowEmpty(existing)) map.set(r.year, r)
   }
   return [...map.values()].sort((a, b) => b.year - a.year)
+}
+
+/**
+ * Same NHSCA merge as GET /api/athlete/[id]: all name variants × `nhsca_placements`, merged with
+ * `nhsca_results` JSON + legacy columns (incl. 2026). Use for rankings, prospects directory, admin tools.
+ */
+export async function mergeNhscaForAthleteRecord(
+  supabase: SupabaseClient,
+  athlete: Record<string, unknown>,
+): Promise<TournamentResultForDisplay[]> {
+  const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+  const name = (athlete.name ?? "").toString().trim()
+  const fromParts = [athlete.firstName, athlete.firstname, athlete.lastName, athlete.lastname]
+    .filter(Boolean)
+    .join(" ")
+    .trim()
+  const primaryName = name || fromParts
+  const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
+  const namesToTry = [
+    ...new Set([...getNameVariants(primaryName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])]),
+  ]
+  const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
+  const seen = new Set<string>()
+  for (const n of namesToTry) {
+    if (!n) continue
+    const rows = await getNHSCAFromTables(supabase, n, gradYear)
+    for (const r of rows) {
+      const key = `${r.year}-${r.placement}-${r.weight ?? ""}-${r.division ?? ""}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(r)
+      }
+    }
+  }
+  merged.sort((a, b) => (b.year as number) - (a.year as number))
+  const fromRow = buildPublicProfileTournamentData(athlete)
+  return mergeNhscaForPublicRankings(merged, fromRow.nhscaResults)
 }
 
 /**

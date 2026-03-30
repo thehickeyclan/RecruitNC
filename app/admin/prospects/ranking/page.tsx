@@ -28,14 +28,16 @@ interface Prospect {
   recruiting_status?: string
   nhsca_2024_placement?: string
   nhsca_2025_placement?: string
+  nhsca_2026_placement?: string
   nhsca_2024_record?: string
   nhsca_2025_record?: string
+  nhsca_2026_record?: string
   super_32_2024_placement?: string
   super_32_2025_placement?: string
   super_32_2024_record?: string
   super_32_2025_record?: string
   nationally_ranked_wins?: number
-  nhsca_results?: Array<{ year: number; placement: string }>
+  nhsca_results?: Array<{ year: number; placement: string; record?: string }>
   nchsaa_results?: Array<{ year: number; place: number }>
   aiRank?: string
   recruitnc_score?: number
@@ -470,7 +472,7 @@ export default function ProspectRankingPage() {
     }
 
     // NHSCA Record flag
-    if (prospect.nhsca_2024_record || prospect.nhsca_2025_record) {
+    if (prospect.nhsca_2024_record || prospect.nhsca_2025_record || prospect.nhsca_2026_record) {
       flags.push(
         <Badge
           key="nhsca-record"
@@ -764,14 +766,21 @@ export default function ProspectRankingPage() {
                                     {getTournamentPills(prospect)}
 
                                     {/* NHSCA Pills from manual fields */}
-                                    {(prospect.nhsca_2024_placement || prospect.nhsca_2025_placement) && (
+                                    {(prospect.nhsca_2024_placement ||
+                                      prospect.nhsca_2025_placement ||
+                                      prospect.nhsca_2026_placement) && (
                                       <Badge className="text-xs px-2 py-1 bg-blue-100 text-blue-800 border-blue-300">
                                         🇺🇸 NHSCA Placer
                                       </Badge>
                                     )}
-                                    {(prospect.nhsca_2024_record || prospect.nhsca_2025_record) && (
+                                    {(prospect.nhsca_2024_record ||
+                                      prospect.nhsca_2025_record ||
+                                      prospect.nhsca_2026_record) && (
                                       <Badge className="text-xs px-2 py-1 bg-blue-50 text-blue-700 border-blue-200">
-                                        📊 NHSCA: {prospect.nhsca_2024_record || prospect.nhsca_2025_record}
+                                        📊 NHSCA:{" "}
+                                        {prospect.nhsca_2026_record ||
+                                          prospect.nhsca_2025_record ||
+                                          prospect.nhsca_2024_record}
                                       </Badge>
                                     )}
 

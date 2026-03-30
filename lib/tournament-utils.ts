@@ -118,6 +118,33 @@ export function getSuper32Results(athlete: any): TournamentResult[] {
 }
 
 /**
+ * Parse placement from API/table strings ("4th All-American", "Champion") or numbers for UI badges (1–8 = All-American).
+ */
+export function parseNhscaPlacementRank(raw: unknown): number | null {
+  if (raw == null || raw === "") return null
+  if (typeof raw === "number" && !isNaN(raw)) {
+    const n = Math.floor(raw)
+    return n >= 1 && n <= 99 ? n : null
+  }
+  const s = String(raw).trim()
+  if (!s) return null
+  const low = s.toLowerCase()
+  if (low.includes("champion") || low === "1st" || /^1(\s|-|$)/.test(low)) return 1
+  const m = s.match(/^(\d+)(st|nd|rd|th)/i)
+  if (m) {
+    const v = Number.parseInt(m[1], 10)
+    return isNaN(v) ? null : v
+  }
+  const aa = s.match(/(\d+)(?:st|nd|rd|th)?\s*all-american/i)
+  if (aa) {
+    const v = Number.parseInt(aa[1], 10)
+    return isNaN(v) ? null : v
+  }
+  const n = Number.parseInt(s, 10)
+  return !isNaN(n) && n >= 1 && n <= 99 ? n : null
+}
+
+/**
  * Get most recent NHSCA result (for cards/previews)
  */
 export function getLatestNhscaResult(athlete: any): { placement: string; record: string } | null {

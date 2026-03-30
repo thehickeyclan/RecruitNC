@@ -110,6 +110,11 @@ function formatPlacement(p: number | string | null | undefined): string {
   return `${n}th Place`
 }
 
+/** NHSCA row `year` is tournament year (e.g. 2026). Allow +1 vs profile grad year for off-by-one entries and spring nationals vs class year. */
+function nhscaYearUpperBound(graduationYear: number): number {
+  return graduationYear + 1
+}
+
 /**
  * Fetch NHSCA from nhsca_placements (primary) or wrestling_nhsca_results (fallback).
  * Tries exact match first so "Jackson D'Ettore" in DB matches without ILIKE/pattern issues.
@@ -121,6 +126,7 @@ export async function getNHSCAFromTables(
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim() || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
+  const yearMax = nhscaYearUpperBound(graduationYear)
   const exactName = normalizeApostrophes(athleteName.trim())
 
   const mapPlacement = (p: any) => ({
@@ -138,22 +144,22 @@ export async function getNHSCAFromTables(
     division: (r.division ?? "").toString().trim(),
   })
 
-  // 1. Exact match first: "First Last" then "Last, First" (DB often has NCHSAA as "D'Ettore, Jackson")
+  // 1. Case-insensitive full-name match first (DB import may differ in casing from profile)
   const { data: exactPlacements } = await supabase
     .from("nhsca_placements")
     .select("*")
-    .eq("athlete_name", exactName)
+    .ilike("athlete_name", exactName)
     .gte("year", startYear)
-    .lte("year", graduationYear)
+    .lte("year", yearMax)
     .order("year", { ascending: false })
   if (exactPlacements?.length) return exactPlacements.map(mapPlacement)
 
   const { data: exactNhsca } = await supabase
     .from("wrestling_nhsca_results")
     .select("*")
-    .eq("athlete_name", exactName)
+    .ilike("athlete_name", exactName)
     .gte("year", startYear)
-    .lte("year", graduationYear)
+    .lte("year", yearMax)
     .order("year", { ascending: false })
   if (exactNhsca?.length) return exactNhsca.map(mapResult)
 
@@ -162,17 +168,17 @@ export async function getNHSCAFromTables(
     const { data: lfPlacements } = await supabase
       .from("nhsca_placements")
       .select("*")
-      .eq("athlete_name", lastFirst)
+      .ilike("athlete_name", lastFirst)
       .gte("year", startYear)
-      .lte("year", graduationYear)
+      .lte("year", yearMax)
       .order("year", { ascending: false })
     if (lfPlacements?.length) return lfPlacements.map(mapPlacement)
     const { data: lfNhsca } = await supabase
       .from("wrestling_nhsca_results")
       .select("*")
-      .eq("athlete_name", lastFirst)
+      .ilike("athlete_name", lastFirst)
       .gte("year", startYear)
-      .lte("year", graduationYear)
+      .lte("year", yearMax)
       .order("year", { ascending: false })
     if (lfNhsca?.length) return lfNhsca.map(mapResult)
   }
@@ -186,7 +192,7 @@ export async function getNHSCAFromTables(
         .select("*")
         .ilike("athlete_name", pattern)
         .gte("year", startYear)
-        .lte("year", graduationYear)
+        .lte("year", yearMax)
         .order("year", { ascending: false })
       if (placements?.length) return placements.map(mapPlacement)
 
@@ -195,7 +201,7 @@ export async function getNHSCAFromTables(
         .select("*")
         .ilike("athlete_name", pattern)
         .gte("year", startYear)
-        .lte("year", graduationYear)
+        .lte("year", yearMax)
         .order("year", { ascending: false })
       if (results?.length) return results.map(mapResult)
     }

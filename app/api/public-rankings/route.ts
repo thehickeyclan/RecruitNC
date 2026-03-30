@@ -2,8 +2,11 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { buildSchoolClassificationMap } from "@/lib/classification-data"
-import { buildPublicProfileTournamentData, mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
-import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+import {
+  buildPublicProfileTournamentData,
+  mergeNhscaForAthleteRecord,
+} from "@/lib/public-profile-data"
+import { getSuper32FromTable } from "@/lib/tournament-tables"
 
 async function getNCHSAAResults(supabase: any, athleteName: string, graduationYear: number) {
   if (!graduationYear || isNaN(graduationYear)) {
@@ -67,6 +70,7 @@ export async function GET(request: Request) {
       .from("athletes")
       .select(`
         id,
+        name,
         firstName,
         lastName,
         graduationyear,
@@ -79,6 +83,8 @@ export async function GET(request: Request) {
         photourl,
         headshot_url,
         nhsca_results,
+        nhsca_2026_record,
+        nhsca_2026_placement,
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
@@ -148,15 +154,18 @@ export async function GET(request: Request) {
     const rankings = await Promise.all(
       athletes.map(async (athlete) => {
         const athleteName = `${athlete.firstName} ${athlete.lastName}`
+        const athleteRow = athlete as Record<string, unknown>
 
-        const [nchsaaResults, nhscaToUse, super32ToUse] = await Promise.all([
-          getNCHSAAResults(supabase, athleteName, Number.parseInt(athlete.graduationyear, 10)),
-          getNHSCAFromTables(supabase, athleteName, gradYearNum),
-          getSuper32FromTable(supabase, athleteName, gradYearNum),
+        const [nchsaaResults, nhscaFinal, super32ToUse] = await Promise.all([
+          getNCHSAAResults(supabase, athleteName, Number.parseInt(String(athlete.graduationyear), 10)),
+          mergeNhscaForAthleteRecord(supabase, athleteRow),
+          getSuper32FromTable(
+            supabase,
+            ((athlete.wrestling_name as string) || "").trim() || athleteName,
+            gradYearNum,
+          ),
         ])
-
         const fromAthlete = buildPublicProfileTournamentData(athlete)
-        const nhscaFinal = mergeNhscaForPublicRankings(nhscaToUse, fromAthlete.nhscaResults)
         let super32Final = super32ToUse
         if (super32Final.length === 0) super32Final = fromAthlete.super32Results
 

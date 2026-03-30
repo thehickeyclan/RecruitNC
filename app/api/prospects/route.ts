@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
 
 /** One huge query (e.g. limit=5000) times out Supabase / edge — cap per request; client pages in chunks. */
 const MAX_LIMIT = 500
@@ -20,6 +21,7 @@ const PROSPECT_LIST_COLUMNS = `
         highschool,
         state,
         wrestlingClub,
+        wrestling_name,
         college,
         college_id,
         photourl,
@@ -30,10 +32,15 @@ const PROSPECT_LIST_COLUMNS = `
         recruiting_status,
         academic_gpa,
         nationally_ranked_wins,
+        nhsca_results,
+        nhsca_2026_record,
+        nhsca_2026_placement,
         nhsca_2024_record,
         nhsca_2024_placement,
         nhsca_2025_record,
         nhsca_2025_placement,
+        nhsca_2023_record,
+        nhsca_2023_placement,
         super_32_2024_record,
         super_32_2024_placement,
         super_32_2025_record,
@@ -137,10 +144,40 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Prospects API - Total count:", count ?? "(skipped)")
     console.log("[v0] Prospects API - Returning prospects:", prospects?.length || 0)
 
-    const normalized = (prospects || []).map((p: any) => ({
-      ...p,
-      name: p.name || [p.firstName, p.lastName].filter(Boolean).join(" ").trim() || "Unknown",
-    }))
+    const normalized = await Promise.all(
+      (prospects || []).map(async (p: Record<string, unknown>) => {
+        const displayName = (p.name as string) || [p.firstName, p.lastName].filter(Boolean).join(" ").trim() || "Unknown"
+        let nhscaMerged: Awaited<ReturnType<typeof mergeNhscaForAthleteRecord>> = []
+        try {
+          nhscaMerged = await mergeNhscaForAthleteRecord(supabase, { ...p, name: displayName })
+        } catch {
+          nhscaMerged = []
+        }
+        const nhsca_results = nhscaMerged.map((r) => ({
+          year: r.year,
+          placement: r.placement,
+          record: r.record,
+          weight: r.weight,
+          division: r.division,
+          text: `${r.year} ${[r.placement, r.record].filter(Boolean).join(" ").trim()}`.trim(),
+        }))
+        const nhsca_record_display =
+          nhsca_results.length > 0
+            ? nhsca_results
+                .map(
+                  (r) =>
+                    `${r.year}: ${r.placement || "—"}${r.record ? ` (${r.record})` : ""}${r.division ? ` • ${r.division}` : ""}`,
+                )
+                .join("; ")
+            : null
+        return {
+          ...p,
+          name: displayName,
+          nhsca_results,
+          nhsca_record_display,
+        }
+      }),
+    )
 
     return NextResponse.json(
       {

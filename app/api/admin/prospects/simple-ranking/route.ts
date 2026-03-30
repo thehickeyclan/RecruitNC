@@ -2,9 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
-import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
-import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
-import { getNhscaResults } from "@/lib/tournament-utils"
+import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
+import { getSuper32FromTable } from "@/lib/tournament-tables"
 
 export async function GET(request: Request) {
   try {
@@ -77,12 +76,10 @@ export async function GET(request: Request) {
             }
           : undefined
 
-        const [nhscaFromTables, super32FromTable] = await Promise.all([
-          getNHSCAFromTables(db, wrestlingName || athleteName, gradYear),
+        const [nhscaMerged, super32FromTable] = await Promise.all([
+          mergeNhscaForAthleteRecord(db, athlete as Record<string, unknown>),
           getSuper32FromTable(db, wrestlingName || athleteName, gradYear),
         ])
-
-        const nhscaMerged = mergeNhscaForPublicRankings(nhscaFromTables, getNhscaResults(athlete))
 
         const s3223 = super32FromTable.find((r) => r.year === 2023)
         const s3224 = super32FromTable.find((r) => r.year === 2024)
@@ -102,6 +99,8 @@ export async function GET(request: Request) {
             year: r.year,
             placement: r.placement,
             record: r.record,
+            weight: r.weight,
+            division: r.division,
           })),
         }
       }),

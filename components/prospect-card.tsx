@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RotateCw, ExternalLink, Instagram, Trophy, GraduationCap, Weight } from "lucide-react"
+import { getLatestNhscaResult } from "@/lib/tournament-utils"
 
 interface ProspectAthlete {
   id: string
@@ -29,10 +30,13 @@ interface ProspectAthlete {
   gpa?: number
   academic_gpa?: number
   careerRecord?: string
-  nhsca_2024_placement?: string
+  nhsca_results?: Array<{ year?: number; placement?: string; record?: string }>
+  nhsca_2026_placement?: string
   nhsca_2025_placement?: string
-  nhsca_2024_record?: string
+  nhsca_2024_placement?: string
+  nhsca_2026_record?: string
   nhsca_2025_record?: string
+  nhsca_2024_record?: string
   super_32_2024_placement?: string
   super_32_2025_placement?: string
   super_32_2024_record?: string
@@ -171,22 +175,8 @@ export function ProspectCard({ athlete }: ProspectCardProps) {
     return stateAchievement || null
   }
 
-  // Get NHSCA placement - uses new utility for backwards compatibility
-  const getNHSCAInfo = () => {
-    // Try new JSON format first
-    if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
-      const latest = athlete.nhsca_results.sort((a: any, b: any) => b.year - a.year)[0]
-      return { placement: latest.placement, record: latest.record || '' }
-    }
-    
-    // Fallback to old columns
-    const placement = athlete.nhsca_2025_placement || athlete.nhsca_2024_placement
-    const record = athlete.nhsca_2025_record || athlete.nhsca_2024_record
-    if (placement || record) {
-      return { placement, record }
-    }
-    return null
-  }
+  // NHSCA: JSON + legacy columns including 2026 (same as getNhscaResults / profile merge)
+  const getNHSCAInfo = () => getLatestNhscaResult(athlete)
 
   // Get Super 32 info - uses new utility for backwards compatibility
   const getSuper32Info = () => {

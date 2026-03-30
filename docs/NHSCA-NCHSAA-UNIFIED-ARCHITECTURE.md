@@ -37,9 +37,12 @@ So if your import uses **full names** that match RecruitNC profiles, you can ski
 
 ```bash
 node scripts/nhsca-json-to-sql.mjs scripts/data/seniors-2026-nhsca-import.json > scripts/data/seniors-2026-nhsca-placements.sql
+node scripts/nhsca-json-to-sql.mjs scripts/data/juniors-2026-nhsca-import.json > scripts/data/juniors-2026-nhsca-placements.sql
 ```
 
-Run the generated SQL in the Supabase SQL editor (same effect as bulk-import API: delete that year’s NC rows, then insert). Rows are inserted with `match_status = 'unmatched'`; that is fine for table-backed NHSCA on unified profiles.
+Run the generated SQL in the Supabase SQL editor. The script emits `DELETE` **scoped by division** (`Senior` vs `Junior`) for that year and NC, then `INSERT` — so you can load juniors after seniors (or vice versa) without wiping the other division. Same behavior as **POST** `/api/admin/nhsca-placements/bulk-import`. Rows are inserted with `match_status = 'unmatched'`; that is fine for table-backed NHSCA on unified profiles.
+
+**Admin “Delete year”** also supports optional **Senior only** / **Junior only** via the delete-scope control (query param `division`), matching bulk-import semantics.
 
 **Merge into Profiles** is only needed if you rely on **`athletes.nhsca_results` JSON** somewhere without the table merge — most unified paths already merge table + JSON in `lib/public-profile-data.ts`.
 

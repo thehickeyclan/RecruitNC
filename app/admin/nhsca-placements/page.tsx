@@ -114,6 +114,8 @@ export default function NHSCAPlacementsPage() {
   /** When true, search only athletes with graduationyear === placement year (NHSCA row year). */
   const [linkLimitGradYear, setLinkLimitGradYear] = useState(false)
   const [linkSearchError, setLinkSearchError] = useState<string | null>(null)
+  /** Delete-by-year: optional Senior/Junior so one division can be cleared without removing the other (same idea as bulk-import). */
+  const [deleteDivisionScope, setDeleteDivisionScope] = useState<"all" | "Senior" | "Junior">("all")
 
   /** Match/Merge year: explicit filter, else same as import year (avoid defaulting to wrong year when filter empty). */
   const matchMergeYear = yearFilter ?? importYear
@@ -387,13 +389,17 @@ export default function NHSCAPlacementsPage() {
       return
     }
 
-    if (!confirm(`Are you sure you want to delete ALL ${yearFilter} NHSCA data? This cannot be undone.`)) {
+    const scopeLabel =
+      deleteDivisionScope === "all" ? "all NC divisions (Senior + Junior)" : `${deleteDivisionScope} division only`
+    if (!confirm(`Delete ${yearFilter} NHSCA for ${scopeLabel}? This cannot be undone.`)) {
       return
     }
 
     try {
       setDeleting(true)
-      const response = await fetch(`/api/admin/nhsca-placements/delete-year?year=${yearFilter}`, {
+      const qs = new URLSearchParams({ year: String(yearFilter) })
+      if (deleteDivisionScope !== "all") qs.set("division", deleteDivisionScope)
+      const response = await fetch(`/api/admin/nhsca-placements/delete-year?${qs.toString()}`, {
         method: "DELETE",
         credentials: "include",
       })
@@ -664,7 +670,9 @@ export default function NHSCAPlacementsPage() {
                 </div>
                 <p className="text-xs text-gray-600 mb-2">
                   Supports a raw array, or <code className="bg-gray-100 px-1 rounded">{"{ year, placements }"}</code>{" "}
-                  (year in the file sets the import year when present).
+                  (year in the file sets the import year when present). Each row needs{" "}
+                  <code className="bg-gray-100 px-1 rounded">division</code>: <strong>Senior</strong> or{" "}
+                  <strong>Junior</strong> — bulk import replaces that division only for NC (same year).
                 </p>
                 <div
                   onDragEnter={(e) => {
@@ -686,7 +694,7 @@ export default function NHSCAPlacementsPage() {
                   <textarea
                     value={jsonInput}
                     onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder='[{"athlete_name": "John Doe", "placement": null, "record": "2-2", "weight_class": "157", "division": "Senior", ...}, ...]'
+                    placeholder='[{"athlete_name": "John Doe", "placement": null, "record": "2-2", "weight_class": "157", "division": "Senior" | "Junior", "state": "NC", "year": 2026}, ...]'
                     className="w-full h-40 p-3 border-0 rounded-md font-mono text-sm bg-transparent focus:outline-none focus:ring-0"
                   />
                 </div>
@@ -727,7 +735,19 @@ export default function NHSCAPlacementsPage() {
             Same actions as the pipeline, one at a time. Year: <strong>{matchMergeYear}</strong>.
           </p>
         </div>
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          <div className="flex flex-col gap-1 min-w-[200px]">
+            <label className="text-xs font-medium text-gray-600">Delete scope (red button)</label>
+            <select
+              value={deleteDivisionScope}
+              onChange={(e) => setDeleteDivisionScope(e.target.value as "all" | "Senior" | "Junior")}
+              className="border border-gray-300 rounded-md px-2 py-2 text-sm bg-white"
+            >
+              <option value="all">All divisions (Senior + Junior)</option>
+              <option value="Senior">Senior only</option>
+              <option value="Junior">Junior only</option>
+            </select>
+          </div>
           <Button
             onClick={handleResolveNamesFromNchsaa}
             disabled={resolvingNchsaa || pipelineRunning}

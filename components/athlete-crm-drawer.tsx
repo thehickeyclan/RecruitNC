@@ -42,7 +42,9 @@ interface AthleteCRMData {
   parent_phone: string | null
   parent_email: string | null
 
-  // Achievement data
+  // Achievement data (nhsca_results merged from nhsca_placements + row JSON in CRM API)
+  nhsca_results?: Array<{ year: number; placement?: string; record?: string; division?: string; weight?: string }>
+  nhsca_2026_placement?: string | null
   nhsca_2025_placement: string | null
   nhsca_2024_placement: string | null
   nhsca_2023_placement: string | null
@@ -551,23 +553,46 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsC
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {athlete.nhsca_2025_placement && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">NHSCA 2025</span>
-                        <Badge variant="outline">{athlete.nhsca_2025_placement}</Badge>
-                      </div>
-                    )}
-                    {athlete.nhsca_2024_placement && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">NHSCA 2024</span>
-                        <Badge variant="outline">{athlete.nhsca_2024_placement}</Badge>
-                      </div>
-                    )}
-                    {athlete.nhsca_2023_placement && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">NHSCA 2023</span>
-                        <Badge variant="outline">{athlete.nhsca_2023_placement}</Badge>
-                      </div>
+                    {athlete.nhsca_results && athlete.nhsca_results.length > 0 ? (
+                      [...athlete.nhsca_results]
+                        .sort((a, b) => b.year - a.year)
+                        .map((r) => (
+                          <div key={`${r.year}-${r.division ?? ""}-${r.weight ?? ""}`} className="flex items-center justify-between gap-2">
+                            <span className="text-sm">
+                              NHSCA {r.year}
+                              {r.division ? ` • ${r.division}` : ""}
+                              {r.weight ? ` • ${r.weight}` : ""}
+                            </span>
+                            <Badge variant="outline">{r.placement?.trim() || "—"}</Badge>
+                          </div>
+                        ))
+                    ) : (
+                      <>
+                        {athlete.nhsca_2026_placement && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">NHSCA 2026</span>
+                            <Badge variant="outline">{athlete.nhsca_2026_placement}</Badge>
+                          </div>
+                        )}
+                        {athlete.nhsca_2025_placement && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">NHSCA 2025</span>
+                            <Badge variant="outline">{athlete.nhsca_2025_placement}</Badge>
+                          </div>
+                        )}
+                        {athlete.nhsca_2024_placement && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">NHSCA 2024</span>
+                            <Badge variant="outline">{athlete.nhsca_2024_placement}</Badge>
+                          </div>
+                        )}
+                        {athlete.nhsca_2023_placement && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm">NHSCA 2023</span>
+                            <Badge variant="outline">{athlete.nhsca_2023_placement}</Badge>
+                          </div>
+                        )}
+                      </>
                     )}
                     {athlete.college_opens_experience && (
                       <div>
@@ -581,7 +606,9 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsC
                         <p className="text-sm text-muted-foreground">{athlete.nationally_ranked_wins}</p>
                       </div>
                     )}
-                    {!athlete.nhsca_2025_placement &&
+                    {(!athlete.nhsca_results || athlete.nhsca_results.length === 0) &&
+                      !athlete.nhsca_2026_placement &&
+                      !athlete.nhsca_2025_placement &&
                       !athlete.nhsca_2024_placement &&
                       !athlete.nhsca_2023_placement &&
                       !athlete.college_opens_experience &&

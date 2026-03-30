@@ -31,6 +31,8 @@ interface Athlete {
   nhsca_2024_placement: string | null
   nhsca_2025_record: string | null
   nhsca_2025_placement: string | null
+  nhsca_2026_record: string | null
+  nhsca_2026_placement: string | null
   super_32_2024_record: string | null
   super_32_2024_placement: string | null
   super_32_2025_record: string | null
@@ -56,6 +58,8 @@ interface Athlete {
     year: number
     placement: string
     record?: string
+    weight?: string
+    division?: string
   }>
 }
 
@@ -219,14 +223,28 @@ export default function SimpleRankingPage() {
         body: JSON.stringify({
           year: selectedYear,
           gender: selectedGender.toLowerCase(),
-          rankings: athletes.map((athlete, index) => ({
+          rankings: athletes.map((athlete, index) => {
+            const latestMerged =
+              athlete.nhsca_results && athlete.nhsca_results.length > 0
+                ? [...athlete.nhsca_results].sort((a, b) => b.year - a.year)[0]
+                : null
+            const nhsca_record =
+              latestMerged &&
+              [latestMerged.placement, latestMerged.record].some((x) => x != null && String(x).trim() !== "")
+                ? [latestMerged.placement, latestMerged.record].filter((x) => x != null && String(x).trim() !== "").join(" • ")
+                : athlete.nhsca_2026_record ||
+                  athlete.nhsca_2025_record ||
+                  athlete.nhsca_2024_record ||
+                  athlete.nhsca_2023_record ||
+                  "N/A"
+            return {
             id: athlete.id,
             ranking: index + 1,
             name: athlete.name,
             high_school: athlete.highschool,
             weight_class: athlete.weight ? `${athlete.weight} lbs` : "TBD",
             academic_gpa: athlete.academic_gpa,
-            nhsca_record: athlete.nhsca_2025_record || athlete.nhsca_2024_record || athlete.nhsca_2023_record || "N/A",
+            nhsca_record,
             super32_record: athlete.super_32_2025_record || athlete.super_32_2024_record || "N/A",
             ranked_win: athlete.nationally_ranked_wins ? "Yes" : "No",
             state_result: athlete.nchsaa_results?.[0]
@@ -237,7 +255,8 @@ export default function SimpleRankingPage() {
                   return `${result.classification} ${placement} '${result.year.toString().slice(-2)}`
                 })()
               : "N/A",
-          })),
+          }
+          }),
         }),
       })
 
@@ -539,18 +558,37 @@ export default function SimpleRankingPage() {
                                 {em && `${em} `}
                                 {placeShow}
                                 {r.record ? ` • Record: ${r.record}` : ""}
+                                {r.weight || r.division
+                                  ? ` • ${[r.weight, r.division].filter(Boolean).join(" ")}`
+                                  : ""}
                                 {` '${String(r.year).slice(-2)}`}
                               </div>
                             )
                           })}
                       </div>
-                    ) : athlete.nhsca_2025_placement ||
+                    ) : athlete.nhsca_2026_placement ||
+                      athlete.nhsca_2026_record ||
+                      athlete.nhsca_2025_placement ||
                       athlete.nhsca_2025_record ||
                       athlete.nhsca_2024_placement ||
                       athlete.nhsca_2024_record ||
                       athlete.nhsca_2023_placement ||
                       athlete.nhsca_2023_record ? (
                       <div className="space-y-1">
+                        {(athlete.nhsca_2026_placement || athlete.nhsca_2026_record) && (
+                          <div className="text-xs text-gray-700">
+                            {athlete.nhsca_2026_placement && (
+                              <>
+                                {Number(athlete.nhsca_2026_placement) <= 8 ? "🥇" : "🏅"}{" "}
+                                {formatLegacyPlacementSuffix(athlete.nhsca_2026_placement)}
+                              </>
+                            )}
+                            {athlete.nhsca_2026_record && (
+                              <> {athlete.nhsca_2026_placement ? "• " : ""}Record: {athlete.nhsca_2026_record}</>
+                            )}
+                            {" '26"}
+                          </div>
+                        )}
                         {(athlete.nhsca_2025_placement || athlete.nhsca_2025_record) && (
                           <div className="text-xs text-gray-700">
                             {athlete.nhsca_2025_placement && (

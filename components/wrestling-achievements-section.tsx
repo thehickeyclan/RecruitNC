@@ -4,9 +4,13 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Award } from "lucide-react"
+import { parseNhscaPlacementRank } from "@/lib/tournament-utils"
 
 interface WrestlingAchievementsSectionProps {
   athlete: {
+    nhsca_2026_record?: string
+    nhsca_2026_placement?: string
+    nhsca_results?: unknown[]
     nhsca_2024_record?: string
     nhsca_2025_record?: string
     nhsca_2023_record?: string
@@ -128,55 +132,56 @@ export function WrestlingAchievementsSection({
     return null
   }
 
-  const isClassOf2025 = graduationYear === 2025
-
-  let nhscaData: Array<{
+  type NhscaRow = {
     year: number
-    placement: number | null
+    placementRank: number | null
     record?: string
     weight?: string
     division?: string
-  }> = []
+  }
 
-  if (isClassOf2025 && achievements?.all_results?.nhsca) {
+  let nhscaData: NhscaRow[] = []
+
+  const mapApiNhsca = (result: any): NhscaRow => ({
+    year: typeof result.year === "number" ? result.year : Number.parseInt(String(result.year), 10) || 0,
+    placementRank: parseNhscaPlacementRank(result.placement ?? result.place),
+    record: (result.record ?? "").toString().trim() || undefined,
+    weight: (result.weight ?? result.weight_class ?? "").toString().trim() || undefined,
+    division: (result.division ?? "").toString().trim() || undefined,
+  })
+
+  // Prefer table-backed NHSCA from the API for every class year (Senior + Junior + participants with record only).
+  if (achievements?.all_results?.nhsca?.length) {
     nhscaData = achievements.all_results.nhsca
-      .map((result) => ({
-        year: result.year || 0,
-        placement: result.placement || result.place || null,
-        weight: result.weight_class,
-        division: result.division,
-      }))
-      .filter((item) => item.placement)
+      .map(mapApiNhsca)
+      .filter((row) => row.placementRank != null || row.record || row.weight || row.division)
+  } else if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
+    nhscaData = athlete.nhsca_results.map((result: any) => mapApiNhsca(result)).filter(
+      (row) => row.placementRank != null || row.record || row.weight || row.division,
+    )
   } else {
-    // Try new JSON format first
-    if (athlete.nhsca_results && Array.isArray(athlete.nhsca_results) && athlete.nhsca_results.length > 0) {
-      nhscaData = athlete.nhsca_results.map((result: any) => ({
-        year: result.year,
-        placement: typeof result.placement === 'string' ? parseInt(result.placement) || null : result.placement,
-        record: result.record,
-        weight: result.weight,
-        division: result.division,
-      })).filter((item: any) => item.placement || item.record)
-    } else {
-      // Fallback to old columns
-      nhscaData = [
-        {
-          year: 2025,
-          placement: athlete.nhsca_2025_placement ? Number.parseInt(athlete.nhsca_2025_placement) : null,
-          record: athlete.nhsca_2025_record,
-        },
-        {
-          year: 2024,
-          placement: athlete.nhsca_2024_placement ? Number.parseInt(athlete.nhsca_2024_placement) : null,
-          record: athlete.nhsca_2024_record,
-        },
-        {
-          year: 2023,
-          placement: athlete.nhsca_2023_placement ? Number.parseInt(athlete.nhsca_2023_placement) : null,
-          record: athlete.nhsca_2023_record,
-        },
-      ].filter((item) => item.placement || item.record)
-    }
+    nhscaData = [
+      {
+        year: 2026,
+        placementRank: parseNhscaPlacementRank(athlete.nhsca_2026_placement),
+        record: athlete.nhsca_2026_record || undefined,
+      },
+      {
+        year: 2025,
+        placementRank: parseNhscaPlacementRank(athlete.nhsca_2025_placement),
+        record: athlete.nhsca_2025_record || undefined,
+      },
+      {
+        year: 2024,
+        placementRank: parseNhscaPlacementRank(athlete.nhsca_2024_placement),
+        record: athlete.nhsca_2024_record || undefined,
+      },
+      {
+        year: 2023,
+        placementRank: parseNhscaPlacementRank(athlete.nhsca_2023_placement),
+        record: athlete.nhsca_2023_record || undefined,
+      },
+    ].filter((item) => item.placementRank != null || item.record)
   }
 
   // Try new JSON format first for Super 32
@@ -319,32 +324,32 @@ export function WrestlingAchievementsSection({
                   className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    {result.placement && result.placement <= 8 && (
+                    {result.placementRank != null && result.placementRank <= 8 && (
                       <Badge className="bg-red-700 text-white font-bold">ALL AMERICAN</Badge>
                     )}
-                    {result.placement && (
-                      <Badge className={getPlaceBadgeColor(result.placement)}>
-                        {getPlaceDisplay(result.placement)}
+                    {result.placementRank != null && (
+                      <Badge className={getPlaceBadgeColor(result.placementRank)}>
+                        {getPlaceDisplay(result.placementRank)}
                       </Badge>
                     )}
                     <div>
                       <p className="font-medium">{result.year} NHSCA Tournament</p>
-                      {isClassOf2025 && (result.weight || result.division) && (
+                      {(result.weight || result.division) && (
                         <p className="text-sm text-gray-600">
                           {result.weight && `${result.weight}`}
                           {result.weight && result.division && " • "}
                           {result.division && result.division}
-                          {result.placement && result.placement <= 8 && " • "}
-                          {result.placement && result.placement <= 8 && (
+                          {result.placementRank != null && result.placementRank <= 8 && " • "}
+                          {result.placementRank != null && result.placementRank <= 8 && (
                             <span className="text-red-600 font-medium">All American</span>
                           )}
                         </p>
                       )}
-                      {!isClassOf2025 && result.record && (
+                      {result.record && (
                         <p className="text-sm text-gray-600">
                           Tournament Record: {result.record}
-                          {result.placement && result.placement <= 8 && " • "}
-                          {result.placement && result.placement <= 8 && (
+                          {result.placementRank != null && result.placementRank <= 8 && " • "}
+                          {result.placementRank != null && result.placementRank <= 8 && (
                             <span className="text-red-600 font-medium">All American</span>
                           )}
                         </p>
@@ -433,7 +438,7 @@ export function WrestlingAchievementsSection({
             </div>
             <div className="p-3 sm:p-0">
               <p className="text-3xl sm:text-2xl font-bold text-blue-600">
-                {nhscaData.filter((r) => r.placement && r.placement <= 8).length}
+                {nhscaData.filter((r) => r.placementRank != null && r.placementRank <= 8).length}
               </p>
               <p className="text-sm text-gray-600 mt-1">All Americans</p>
             </div>
