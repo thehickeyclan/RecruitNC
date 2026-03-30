@@ -20,6 +20,13 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Step 2:** For **any new internal link** (nav, footer, in-page): use **HardLink** (or StoreNavLink for `/store`) so navigation is a full page load. Import from `@/components/hard-link` or `@/components/store-nav-link`. Example: `<HardLink href="/your-path" className={...}>Label</HardLink>`. For navbar mobile with sheet: `<HardLink href="/your-path" className={...} onNavigate={() => setIsOpen(false)}>Label</HardLink>`.
 - **Navbar:** Add the link using HardLink (or the existing `<a href="..." onClick={e => { e.preventDefault(); window.location.href = "..." }}>` pattern). Do **not** use `<Link>` or `router.push()` for new (or critical) internal links — they can fail for new routes.
 
+# NHSCA (national placements — primary tournament focus)
+- **Scope:** When the user says NHSCA / nationals / placements / `nhsca_placements`, work **NHSCA only**. Do not pivot to **Super32** or NCHSAA unless they ask or the error is explicitly in that API/column.
+- **Single merge:** `getNHSCAForAthlete` in `lib/public-profile-data.ts` (re-export `@/lib/athlete-nhsca`). Do not add a second NHSCA merge path.
+- **Same tournament year, multiple divisions:** NHSCA can have multiple rows per calendar year (e.g. Senior vs Junior brackets). Bracket pick is `dedupeNhscaByYearForGradYear` in `lib/tournament-tables.ts` using **grad year − tournament year** + division text. Multi-year history (2024 vs 2025) is not the same bug as same-year dedupe.
+- **Postgres column names:** `athletes.super32_results` exists; **`athletes.super_32_results` does not** — a wrong `SELECT` breaks `/api/public-rankings` with `42703`. Verify column names against Supabase before assuming snake_case.
+- **Server debug:** `RECRUITNC_DEBUG=1` or `RECRUITNC_DEBUG_NHSCA=1` — see `lib/recruitnc-debug.ts`. Client: `?debug=1` on profile URLs — see `lib/recruitnc-debug-client.ts`.
+
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.
 
