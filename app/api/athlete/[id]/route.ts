@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getNameVariants, getSuper32FromTable, getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
-import { mergeNhscaForAthleteRecord } from "@/lib/public-profile-data"
+import { mergeNhscaForAthleteRecord, resolveGraduationYear } from "@/lib/public-profile-data"
 import { getNationalTeamResults, mergeNationalTeamResults } from "@/lib/tournament-utils"
 
 const NHSCA_DUALS_2026_SLUG = "nhsca-duals-2026"
@@ -88,7 +88,7 @@ export async function GET(
       return NextResponse.json({ ok: false, error: "no row" }, { status: 200 })
     }
 
-    const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+    const gradYear = resolveGraduationYear(athlete as Record<string, unknown>)
     const highSchool = (athlete.highschool ?? athlete.highSchool ?? "").toString().trim()
     const name = (athlete.name ?? "").toString().trim()
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()

@@ -105,7 +105,8 @@ function isDisplayRowEmpty(r: TournamentResultForDisplay): boolean {
   return !(r.placement?.trim() || r.record?.trim())
 }
 
-function resolveGraduationYear(athlete: Record<string, unknown>): number {
+/** Used by GET /api/athlete/[id] and merge — DB may expose graduationyear, graduationYear, or graduation_year. */
+export function resolveGraduationYear(athlete: Record<string, unknown>): number {
   const raw =
     athlete.graduationyear ?? athlete.graduationYear ?? (athlete as { graduation_year?: unknown }).graduation_year
   const n = Number(raw)
