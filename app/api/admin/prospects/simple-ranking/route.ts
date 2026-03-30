@@ -2,7 +2,9 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getNCHSAAResultsForProfile, mergeNchsaaResults } from "@/lib/nchsaa-results"
+import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
+import { getNhscaResults } from "@/lib/tournament-utils"
 
 export async function GET(request: Request) {
   try {
@@ -80,6 +82,8 @@ export async function GET(request: Request) {
           getSuper32FromTable(db, wrestlingName || athleteName, gradYear),
         ])
 
+        const nhscaMerged = mergeNhscaForPublicRankings(nhscaFromTables, getNhscaResults(athlete))
+
         const s3223 = super32FromTable.find((r) => r.year === 2023)
         const s3224 = super32FromTable.find((r) => r.year === 2024)
         const s3225 = super32FromTable.find((r) => r.year === 2025)
@@ -94,7 +98,7 @@ export async function GET(request: Request) {
           super_32_2025_record: s3225?.record || athlete.super_32_2025_record,
           super_32_2025_placement: s3225?.placement || athlete.super_32_2025_placement,
           nchsaa_results: athleteNchsaa,
-          nhsca_results: nhscaFromTables.map((r) => ({
+          nhsca_results: nhscaMerged.map((r) => ({
             year: r.year,
             placement: r.placement,
             record: r.record,
