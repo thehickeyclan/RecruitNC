@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import { MessageCircle } from "lucide-react"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
+import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
+import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
@@ -58,7 +61,26 @@ export default async function NewsAnnouncementPage({
           </p>
         </header>
         <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">
+          <div className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <NchsaaArticleReactions articleSlug={slug} />
+            <a
+              href="#article-feedback"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-[#003366] transition-colors hover:bg-slate-50"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Leave feedback
+            </a>
+          </div>
           <Content />
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <NchsaaArticleReactions articleSlug={slug} />
+          </div>
+        </div>
+        <div
+          id="article-feedback"
+          className="mt-6 bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm"
+        >
+          <NchsaaArticleComments articleSlug={slug} />
         </div>
       </div>
     </div>
