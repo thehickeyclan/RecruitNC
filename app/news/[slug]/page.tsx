@@ -2,10 +2,12 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
+import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
+  "nhsca-most-outstanding-wrestler-award-2026": () => <NhscaMostOutstandingWrestlerAward2026Content />,
   "nhsca-nationals-recap-2026": () => <NhscaNationalsRecap2026Content />,
 }
 

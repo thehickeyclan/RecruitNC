@@ -4,7 +4,6 @@ import Image from "next/image"
 import { X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { HardLink } from "@/components/hard-link"
-import { nhscaLiveEntryHref } from "@/lib/nhsca-live-dashboard"
 
 const STORAGE_KEY = "recruitnc_hide_nhsca_live_dashboard_banner"
 
@@ -41,7 +40,7 @@ export function NhscaLiveDashboardBanner() {
       className="relative z-40 overflow-hidden border-b-2 shadow-lg"
       style={{ borderColor: GOLD, backgroundColor: NAVY }}
       role="region"
-      aria-label="NHSCA Nationals live coverage"
+      aria-label="NHSCA Nationals 2026 coverage"
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-30 nhsca-live-banner-shimmer"
@@ -71,10 +70,10 @@ export function NhscaLiveDashboardBanner() {
             </span>
             <div className="min-w-0">
               <h2 className="text-lg font-bold leading-tight text-white md:text-xl">
-                NHSCA Nationals - <span style={{ color: GOLD }}>LIVE</span>
+                NHSCA Nationals 2026
               </h2>
               <p className="mt-1 text-sm leading-snug text-white/90 md:text-base">
-                Track NC wrestlers in real-time at Virginia Beach
+                Results, wrestler profiles, bracket outcomes, historical comparisons, and state rankings
               </p>
             </div>
           </div>
@@ -82,11 +81,11 @@ export function NhscaLiveDashboardBanner() {
 
         <div className="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
           <HardLink
-            href={nhscaLiveEntryHref()}
+            href="/nhsca/2026"
             className="inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold text-[#0D1A4D] shadow-md transition hover:brightness-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             style={{ backgroundColor: GOLD }}
           >
-            View Live Dashboard
+            Open 2026 NHSCA page
             <span className="ml-1.5" aria-hidden>
               →
             </span>

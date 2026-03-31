@@ -32,6 +32,19 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "nhsca-mow-award-2026",
+    slug: "nhsca-most-outstanding-wrestler-award-2026",
+    title: "NC United Launches the NHSCA Most Outstanding Wrestler Award",
+    summary:
+      "A new annual award honoring North Carolina's top performer in each NHSCA division at the tournament that matters most for recruiting futures.",
+    href: "/news/nhsca-most-outstanding-wrestler-award-2026",
+    date: "2026-03-31",
+    category: "OFFICIAL ANNOUNCEMENT",
+    categoryBadgeClass: "bg-[#C20017]",
+    readTime: "9 min read",
+    isAnnouncement: true,
+  },
+  {
     id: "nhsca-nationals-recap-2026",
     slug: "nhsca-nationals-recap-2026",
     title: "North Carolina Puts 18 on the Podium at 2026 NHSCA Nationals",
@@ -39,6 +52,10 @@ const ALL_NEWS: NewsItem[] = [
       "North Carolina finished with 18 All-Americans across four divisions at the 2026 NHSCA Nationals, ranking eighth nationally and fourth in state history.",
     href: "/news/nhsca-nationals-recap-2026",
     date: "2026-03-31",
+    image: "/images/nhsca-nationals-recap-2026-team-photo.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
     category: "NATIONALS RECAP",
     categoryBadgeClass: "bg-[#003366]",
     readTime: "11 min read",

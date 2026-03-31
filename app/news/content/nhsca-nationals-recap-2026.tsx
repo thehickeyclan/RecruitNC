@@ -4,6 +4,7 @@ const NHSCA_RECAP_IMAGE = "/images/nhsca-nationals-recap-2026-team-photo.png"
 const NHSCA_RECAP_JUNIORS_IMAGE = "/images/nhsca-nationals-recap-2026-juniors-photo.png"
 const NHSCA_RECAP_SIGN_IMAGE = "/images/nhsca-nationals-recap-2026-sign.png"
 const NHSCA_RECAP_VENUE_IMAGE = "/images/nhsca-nationals-recap-2026-venue.png"
+const NHSCA_RECAP_DOMINIC_BLUE_IMAGE = "/images/nhsca-nationals-recap-2026-dominic-blue.png"
 
 export function NhscaNationalsRecap2026Content() {
   return (
@@ -25,12 +26,13 @@ export function NhscaNationalsRecap2026Content() {
           className="w-full h-auto rounded-lg object-cover"
         />
         <p className="mt-2 text-center text-sm italic text-slate-500">
-          North Carolina athletes at the 2026 NHSCA Nationals in Virginia Beach.
+          North Carolina NHSCA All Americans (partial group). North Carolina athletes at the 2026
+          NHSCA Nationals in Virginia Beach.
         </p>
       </div>
 
       <p>
-        North Carolina&apos;s wrestling program left the 2026 NHSCA High School Nationals with
+        North Carolina left the 2026 NHSCA High School Nationals with
         <strong> 18 All-Americans across four divisions</strong> — a performance that ranks
         <strong> eighth nationally</strong> and <strong>fourth in state history</strong>.
       </p>
@@ -142,6 +144,20 @@ export function NhscaNationalsRecap2026Content() {
         opponents</strong>. A 2x All-American (2023, 2026), Blue turned one of the best weekends
         of his career into a result that will command attention from college programs.
       </p>
+
+      <div className="my-6">
+        <Image
+          src={NHSCA_RECAP_DOMINIC_BLUE_IMAGE}
+          alt="Dominic Blue celebrates after a win at the 2026 NHSCA Nationals"
+          width={768}
+          height={1024}
+          className="mx-auto h-auto w-full max-w-md rounded-lg object-cover"
+        />
+        <p className="mt-2 text-center text-sm italic text-slate-500">
+          Dominic Blue celebrates his run to a 3rd-place finish at 160 pounds.
+        </p>
+      </div>
+
       <p>
         <strong>Cael Dunn</strong> of South Davidson placed <strong>7th at 195</strong> with a
         6-2 record and wins over the No. 4 and No. 8 seeds. Heading to Campbell, Dunn exits as a
@@ -195,7 +211,9 @@ export function NhscaNationalsRecap2026Content() {
           className="mx-auto h-auto w-full max-w-xl rounded-lg object-cover"
         />
         <p className="mt-2 text-center text-sm italic text-slate-500">
-          North Carolina juniors during the 2026 NHSCA Nationals weekend in Virginia Beach.
+          North Carolina&apos;s first NC United NHSCA MOWs; pictured from left to right: Carson
+          Worrick, Aiden White, and Drew Teeter. Missing: senior Bentley Sly and freshman Braylen
+          Yates.
         </p>
       </div>
 
@@ -254,14 +272,7 @@ export function NhscaNationalsRecap2026Content() {
         </p>
         <p className="mb-0 mt-2">
           Full 2026 results, historical data, wrestler profiles, bracket results, and state
-          rankings are live at{" "}
-          <a
-            href="/nhsca/2026"
-            className="font-semibold text-[#003366] underline underline-offset-2"
-          >
-            app.ncwrestlingunited.com/nhsca/2026
-          </a>
-          .
+          rankings are live at <span className="font-semibold text-[#003366]">app.ncwrestlingunited.com/nhsca/2026</span>.
         </p>
       </div>
 
@@ -274,25 +285,19 @@ export function NhscaNationalsRecap2026Content() {
         <strong> Most Outstanding Wrestler Award</strong> for the top performer in each division at
         NHSCA Nationals.
       </p>
-      <ul>
-        <li>
-          <strong>Freshman:</strong> Braylen Yates (East Rowan, 170) — national champion, seeded
-          No. 4
-        </li>
-        <li>
-          <strong>Sophomore:</strong> Drew Teeter (Mooresville, 182) — 4th place, seeded No. 12,
-          beat the No. 2 seed
-        </li>
-        <li>
-          <strong>Junior co-winners:</strong> Aiden White (Weddington, 132) and Carson Worrick
-          (Davie, 160) — both unseeded, both 4th place, both among the most disruptive runs of the
-          tournament
-        </li>
-        <li>
-          <strong>Senior:</strong> Bentley Sly (Stuart Cramer, 152) — national runner-up, 3x
-          All-American
-        </li>
-      </ul>
+      <p>
+        We&apos;ll break down the inaugural winners, why they were selected, and what made each run
+        stand out in a separate feature focused entirely on the NC United NHSCA MOW honors.
+      </p>
+      <p>
+        Full MOW article:{" "}
+        <a
+          href="/news/nhsca-most-outstanding-wrestler-award-2026"
+          className="font-semibold text-[#003366] underline underline-offset-2"
+        >
+          NC United Launches the NHSCA Most Outstanding Wrestler Award
+        </a>
+      </p>
     </article>
   )
 }
