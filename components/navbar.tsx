@@ -5,7 +5,23 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, User, LogOut, Star, ChevronDown, Users, Users2, Trophy, Medal, ShoppingCart, ShoppingBag, Bell } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+  Menu,
+  User,
+  LogOut,
+  Star,
+  ChevronDown,
+  Users,
+  Users2,
+  Trophy,
+  Medal,
+  ShoppingCart,
+  ShoppingBag,
+  Bell,
+  Crown,
+  Archive,
+} from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
@@ -144,19 +160,93 @@ export function Navbar() {
 
   const nationalTeamItems = [{ href: "/national-team", label: "National Team" }]
 
-  const nationalsItems = [
-    { href: "/nhsca", label: "Tournament Overview", description: "About NHSCA Nationals & divisions", icon: Trophy },
-    { href: "/nhsca/2025", label: "2025 Results", description: "Current year results & All-Americans", icon: Medal },
-    { href: "/nhsca/archive", label: "Digital Archive", description: "Complete history 1990–2025", icon: Trophy },
-    { href: "/super32", label: "Super32 Champions", description: "All-time Super32 Champions from NC", icon: Medal },
+  type EventsMegaLink = {
+    href: string
+    label: string
+    description: string
+    icon: LucideIcon
+    badge?: "current" | "muted"
+    badgeLabel?: string
+  }
+
+  /** States column — NCHSAA (matches Events mega-menu layout). */
+  const eventsStatesColumn: EventsMegaLink[] = [
+    {
+      href: "/nchsaa",
+      label: "Tournament Overview",
+      description: "NCHSAA State Championships & 8-class system",
+      icon: Crown,
+    },
+    {
+      href: "/nchsaa/2026",
+      label: "2026 Results",
+      description: "2026 State Championship results",
+      icon: Trophy,
+      badge: "current",
+      badgeLabel: "Current",
+    },
+    {
+      href: "/nchsaa/2025",
+      label: "2025 Results",
+      description: "2025 State Championship results",
+      icon: Trophy,
+    },
+    {
+      href: "/nchsaa/archive",
+      label: "Digital Archive",
+      description: "Search historical state results",
+      icon: Archive,
+      badge: "muted",
+      badgeLabel: "Historic",
+    },
   ]
 
-  const statesItems = [
-    { href: "/nchsaa", label: "Tournament Overview", description: "NCHSAA State Championships & 8-class system", icon: Trophy },
-    { href: "/nchsaa/2026", label: "2026 Results", description: "2026 State Championship results", icon: Medal },
-    { href: "/nchsaa/2025", label: "2025 Results", description: "2025 State Championship results", icon: Medal },
-    { href: "/nchsaa/archive", label: "Digital Archive", description: "Search historical state results", icon: Trophy },
+  /** Nationals column — NHSCA only (Super32 is its own column). */
+  const eventsNationalsColumn: EventsMegaLink[] = [
+    {
+      href: "/nhsca",
+      label: "Tournament Overview",
+      description: "About NHSCA Nationals & divisions",
+      icon: Trophy,
+    },
+    {
+      href: "/nhsca/2026",
+      label: "2026 Results",
+      description: "2026 NHSCA Nationals results & All-Americans",
+      icon: Trophy,
+      badge: "current",
+      badgeLabel: "Current",
+    },
+    {
+      href: "/nhsca/2025",
+      label: "2025 Results",
+      description: "2025 NHSCA Nationals results & All-Americans",
+      icon: Trophy,
+    },
+    {
+      href: "/nhsca/archive",
+      label: "Digital Archive",
+      description: "Complete history 1990–2025",
+      icon: Archive,
+      badge: "muted",
+      badgeLabel: "35+ Years",
+    },
   ]
+
+  const eventsSuper32Column: EventsMegaLink[] = [
+    {
+      href: "/super32",
+      label: "Super32 Champions",
+      description: "All-time Super32 Champions from NC",
+      icon: Medal,
+    },
+  ]
+
+  const eventsNavItemsForActive = [
+    ...eventsStatesColumn,
+    ...eventsNationalsColumn,
+    ...eventsSuper32Column,
+  ].map((i) => ({ href: i.href }))
 
   const legacyNcItems = [
     { href: "/athletes?tab=legacy", label: "Wrestlers", description: "Search by name: NHSCA, NCHSAA, awards & more", icon: Users },
@@ -218,54 +308,120 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
-                <DropdownMenuTrigger className={navTriggerClass([...statesItems, ...nationalsItems])}>
+                <DropdownMenuTrigger className={navTriggerClass(eventsNavItemsForActive)}>
+                  <Trophy className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                   Events
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Trophy className="h-4 w-4" />
-                      States
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={8}
+                  className="w-[min(56rem,calc(100vw-1.5rem))] max-h-[min(90vh,720px)] overflow-y-auto p-0"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x bg-popover text-popover-foreground rounded-md">
+                    {/* Column: States */}
+                    <div className="p-4 min-w-0">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <Crown className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                        States
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">NCHSAA State Championships</p>
+                      <div className="flex flex-col gap-0.5">
+                        {eventsStatesColumn.map((sub) => {
+                          const Icon = sub.icon
+                          return (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                                  {sub.badge === "current" && sub.badgeLabel && (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                                      {sub.badgeLabel}
+                                    </span>
+                                  )}
+                                  {sub.badge === "muted" && sub.badgeLabel && (
+                                    <span className="inline-flex items-center rounded-full border border-border bg-muted/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      {sub.badgeLabel}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.description}</p>
+                              </div>
+                            </a>
+                          )
+                        })}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">NCHSAA State Championships</p>
-                  </DropdownMenuLabel>
-                  {statesItems.map((sub) => {
-                    const Icon = sub.icon
-                    return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
-                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{sub.label}</span>
-                            <span className="text-xs text-muted-foreground">{sub.description}</span>
-                          </div>
-                        </a>
-                      </DropdownMenuItem>
-                    )
-                  })}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Trophy className="h-4 w-4" />
-                      Nationals
+                    {/* Column: Nationals (NHSCA) */}
+                    <div className="p-4 min-w-0">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <Trophy className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                        Nationals
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">NHSCA Nationals &amp; Super32</p>
+                      <div className="flex flex-col gap-0.5">
+                        {eventsNationalsColumn.map((sub) => {
+                          const Icon = sub.icon
+                          return (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                                  {sub.badge === "current" && sub.badgeLabel && (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                                      {sub.badgeLabel}
+                                    </span>
+                                  )}
+                                  {sub.badge === "muted" && sub.badgeLabel && (
+                                    <span className="inline-flex items-center rounded-full border border-border bg-muted/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      {sub.badgeLabel}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.description}</p>
+                              </div>
+                            </a>
+                          )
+                        })}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">NHSCA Nationals &amp; Super32</p>
-                  </DropdownMenuLabel>
-                  {nationalsItems.map((sub) => {
-                    const Icon = sub.icon
-                    return (
-                      <DropdownMenuItem key={sub.href} asChild>
-                        <a href={sub.href} className="flex flex-1 cursor-pointer items-start gap-3 py-2">
-                          <Icon className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-medium">{sub.label}</span>
-                            <span className="text-xs text-muted-foreground">{sub.description}</span>
-                          </div>
-                        </a>
-                      </DropdownMenuItem>
-                    )
-                  })}
+                    {/* Column: Super32 */}
+                    <div className="p-4 min-w-0">
+                      <div className="flex items-center gap-2 font-semibold text-foreground">
+                        <Medal className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                        Super32
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">All-time Super32 Champions from NC</p>
+                      <div className="flex flex-col gap-0.5">
+                        {eventsSuper32Column.map((sub) => {
+                          const Icon = sub.icon
+                          return (
+                            <a
+                              key={sub.href}
+                              href={sub.href}
+                              className="flex gap-3 rounded-md px-2 py-2.5 hover:bg-muted/80 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            >
+                              <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
+                              <div className="min-w-0 flex-1">
+                                <span className="font-semibold text-sm text-foreground">{sub.label}</span>
+                                <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.description}</p>
+                              </div>
+                            </a>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Calendar</a>
@@ -583,27 +739,47 @@ export function Navbar() {
                     </div>
                   </div>
                   <div className="px-3">
-                    <div className={mobileMenuParentClass(isDropdownActive([...statesItems, ...nationalsItems]))}>Events</div>
-                    <div className="space-y-3">
+                    <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Events</div>
+                    <div className="space-y-4">
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">States</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">States · NCHSAA</p>
                         <div className="space-y-1">
-                          <a href="/nchsaa" className={mobileSubLinkClass("/nchsaa")} onClick={() => setIsOpen(false)}>Overview</a>
-                          <a href="/nchsaa/2026" className={mobileSubLinkClass("/nchsaa/2026")} onClick={() => setIsOpen(false)}>2026 Results</a>
-                          <a href="/nchsaa/2025" className={mobileSubLinkClass("/nchsaa/2025")} onClick={() => setIsOpen(false)}>2025 Results</a>
-                          <a href="/nchsaa/archive" className={mobileSubLinkClass("/nchsaa/archive")} onClick={() => setIsOpen(false)}>Archive</a>
+                          <a href="/nchsaa" className={mobileSubLinkClass("/nchsaa")} onClick={() => setIsOpen(false)}>
+                            Tournament Overview
+                          </a>
+                          <a href="/nchsaa/2026" className={mobileSubLinkClass("/nchsaa/2026")} onClick={() => setIsOpen(false)}>
+                            2026 Results
+                          </a>
+                          <a href="/nchsaa/2025" className={mobileSubLinkClass("/nchsaa/2025")} onClick={() => setIsOpen(false)}>
+                            2025 Results
+                          </a>
+                          <a href="/nchsaa/archive" className={mobileSubLinkClass("/nchsaa/archive")} onClick={() => setIsOpen(false)}>
+                            Digital Archive
+                          </a>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">HS Nationals</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">Nationals · NHSCA</p>
                         <div className="space-y-1">
-                          <a href="/nhsca" className={mobileSubLinkClass("/nhsca")} onClick={() => setIsOpen(false)}>Overview</a>
-                          <a href="/nhsca/2025" className={mobileSubLinkClass("/nhsca/2025")} onClick={() => setIsOpen(false)}>2025 Results</a>
-                          <a href="/nhsca/archive" className={mobileSubLinkClass("/nhsca/archive")} onClick={() => setIsOpen(false)}>Archive</a>
+                          <a href="/nhsca" className={mobileSubLinkClass("/nhsca")} onClick={() => setIsOpen(false)}>
+                            Tournament Overview
+                          </a>
+                          <a href="/nhsca/2026" className={mobileSubLinkClass("/nhsca/2026")} onClick={() => setIsOpen(false)}>
+                            2026 Results
+                          </a>
+                          <a href="/nhsca/2025" className={mobileSubLinkClass("/nhsca/2025")} onClick={() => setIsOpen(false)}>
+                            2025 Results
+                          </a>
+                          <a href="/nhsca/archive" className={mobileSubLinkClass("/nhsca/archive")} onClick={() => setIsOpen(false)}>
+                            Digital Archive
+                          </a>
                         </div>
                       </div>
                       <div>
-                        <a href="/super32" className={mobileSubLinkClass("/super32")} onClick={() => setIsOpen(false)}>Super32 Champions</a>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">Super32</p>
+                        <a href="/super32" className={mobileSubLinkClass("/super32")} onClick={() => setIsOpen(false)}>
+                          Super32 Champions
+                        </a>
                       </div>
                     </div>
                   </div>
