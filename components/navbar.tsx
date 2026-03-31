@@ -163,7 +163,6 @@ export function Navbar() {
   type EventsMegaLink = {
     href: string
     label: string
-    description: string
     icon: LucideIcon
     badge?: "current" | "muted"
     badgeLabel?: string
@@ -173,14 +172,12 @@ export function Navbar() {
   const eventsStatesColumn: EventsMegaLink[] = [
     {
       href: "/nchsaa",
-      label: "Tournament Overview",
-      description: "NCHSAA State Championships & 8-class system",
+      label: "About",
       icon: Crown,
     },
     {
       href: "/nchsaa/2026",
       label: "2026 Results",
-      description: "2026 State Championship results",
       icon: Trophy,
       badge: "current",
       badgeLabel: "Current",
@@ -188,13 +185,11 @@ export function Navbar() {
     {
       href: "/nchsaa/2025",
       label: "2025 Results",
-      description: "2025 State Championship results",
       icon: Trophy,
     },
     {
       href: "/nchsaa/archive",
-      label: "Digital Archive",
-      description: "Search historical state results",
+      label: "Archive",
       icon: Archive,
       badge: "muted",
       badgeLabel: "Historic",
@@ -205,14 +200,12 @@ export function Navbar() {
   const eventsNationalsColumn: EventsMegaLink[] = [
     {
       href: "/nhsca",
-      label: "Tournament Overview",
-      description: "About NHSCA Nationals & divisions",
+      label: "About",
       icon: Trophy,
     },
     {
       href: "/nhsca/2026",
       label: "2026 Results",
-      description: "2026 NHSCA Nationals results & All-Americans",
       icon: Trophy,
       badge: "current",
       badgeLabel: "Current",
@@ -220,13 +213,11 @@ export function Navbar() {
     {
       href: "/nhsca/2025",
       label: "2025 Results",
-      description: "2025 NHSCA Nationals results & All-Americans",
       icon: Trophy,
     },
     {
       href: "/nhsca/archive",
-      label: "Digital Archive",
-      description: "Complete history 1990–2025",
+      label: "Archive",
       icon: Archive,
       badge: "muted",
       badgeLabel: "35+ Years",
@@ -236,8 +227,7 @@ export function Navbar() {
   const eventsSuper32Column: EventsMegaLink[] = [
     {
       href: "/super32",
-      label: "Super32 Champions",
-      description: "All-time Super32 Champions from NC",
+      label: "Champions",
       icon: Medal,
     },
   ]
@@ -323,9 +313,9 @@ export function Navbar() {
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
                         <Crown className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
-                        States
+                        NCHSAA "States"
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 mb-3">NCHSAA State Championships</p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">About, annual results, and archive</p>
                       <div className="flex flex-col gap-0.5">
                         {eventsStatesColumn.map((sub) => {
                           const Icon = sub.icon
@@ -350,7 +340,6 @@ export function Navbar() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.description}</p>
                               </div>
                             </a>
                           )
@@ -361,9 +350,9 @@ export function Navbar() {
                     <div className="p-4 min-w-0">
                       <div className="flex items-center gap-2 font-semibold text-foreground">
                         <Trophy className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
-                        Nationals
+                        NHSCA "Nationals"
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 mb-3">NHSCA Nationals &amp; Super32</p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">About, annual results, and archive</p>
                       <div className="flex flex-col gap-0.5">
                         {eventsNationalsColumn.map((sub) => {
                           const Icon = sub.icon
@@ -388,7 +377,6 @@ export function Navbar() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.description}</p>
                               </div>
                             </a>
                           )
@@ -401,7 +389,7 @@ export function Navbar() {
                         <Medal className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
                         Super32
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 mb-3">All-time Super32 Champions from NC</p>
+                      <p className="text-xs text-muted-foreground mt-1 mb-3">Tournament-specific pages</p>
                       <div className="flex flex-col gap-0.5">
                         {eventsSuper32Column.map((sub) => {
                           const Icon = sub.icon
@@ -414,7 +402,6 @@ export function Navbar() {
                               <Icon className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden />
                               <div className="min-w-0 flex-1">
                                 <span className="font-semibold text-sm text-foreground">{sub.label}</span>
-                                <p className="text-xs text-muted-foreground mt-1 leading-snug">{sub.description}</p>
                               </div>
                             </a>
                           )
@@ -742,10 +729,10 @@ export function Navbar() {
                     <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Events</div>
                     <div className="space-y-4">
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">States · NCHSAA</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">NCHSAA "States"</p>
                         <div className="space-y-1">
                           <a href="/nchsaa" className={mobileSubLinkClass("/nchsaa")} onClick={() => setIsOpen(false)}>
-                            Tournament Overview
+                            About
                           </a>
                           <a href="/nchsaa/2026" className={mobileSubLinkClass("/nchsaa/2026")} onClick={() => setIsOpen(false)}>
                             2026 Results
@@ -754,15 +741,15 @@ export function Navbar() {
                             2025 Results
                           </a>
                           <a href="/nchsaa/archive" className={mobileSubLinkClass("/nchsaa/archive")} onClick={() => setIsOpen(false)}>
-                            Digital Archive
+                            Archive
                           </a>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">Nationals · NHSCA</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">NHSCA "Nationals"</p>
                         <div className="space-y-1">
                           <a href="/nhsca" className={mobileSubLinkClass("/nhsca")} onClick={() => setIsOpen(false)}>
-                            Tournament Overview
+                            About
                           </a>
                           <a href="/nhsca/2026" className={mobileSubLinkClass("/nhsca/2026")} onClick={() => setIsOpen(false)}>
                             2026 Results
@@ -771,14 +758,14 @@ export function Navbar() {
                             2025 Results
                           </a>
                           <a href="/nhsca/archive" className={mobileSubLinkClass("/nhsca/archive")} onClick={() => setIsOpen(false)}>
-                            Digital Archive
+                            Archive
                           </a>
                         </div>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 pl-1">Super32</p>
                         <a href="/super32" className={mobileSubLinkClass("/super32")} onClick={() => setIsOpen(false)}>
-                          Super32 Champions
+                          Champions
                         </a>
                       </div>
                     </div>
