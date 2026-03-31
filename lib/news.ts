@@ -40,7 +40,7 @@ const ALL_NEWS: NewsItem[] = [
     href: "/news/nhsca-most-outstanding-wrestler-award-2026",
     date: "2026-03-31",
     image: "/images/nhsca-mow-award-2026-news-card.png",
-    imagePosition: "center",
+    imagePosition: "top",
     imageFit: "cover",
     newsListBanner: true,
     category: "OFFICIAL ANNOUNCEMENT",
