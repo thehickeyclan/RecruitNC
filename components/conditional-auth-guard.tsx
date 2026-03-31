@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /nchsaa (listings), /news (list only), /store, /cart, /checkout, /national-team*.
+ * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /nchsaa*, /nhsca*, /super32, /news (list only), /store, /cart, /checkout, /national-team*.
  * Rankings hub only: /public-rankings (class picker) is public. /public-rankings/2026|2027|2028 require sign-in; /api/public-rankings stays session-protected.
  * /national-team and /national-team/* are public so parents can open the hub and enter an access code without signing in.
  */
@@ -31,6 +31,8 @@ export function ConditionalAuthGuard({
   const isNchsaaArticle = /^\/nchsaa\/[^/]+\/news\/[^/]+$/.test(path)
   const isNchsaaListing = path === "/nchsaa" || path.startsWith("/nchsaa/")
   const isNchsaaPublic = isNchsaaListing && !isNchsaaArticle
+  const isNhsca = path === "/nhsca" || path.startsWith("/nhsca/")
+  const isSuper32 = path === "/super32" || path.startsWith("/super32/")
   const isNewsList = path === "/news"
   const isNationalTeam = path === "/national-team" || path.startsWith("/national-team/")
   const isPublic =
@@ -47,6 +49,8 @@ export function ConditionalAuthGuard({
     isCart ||
     isCheckout ||
     isNchsaaPublic ||
+    isNhsca ||
+    isSuper32 ||
     isNationalTeam
 
   if (isPublic) {

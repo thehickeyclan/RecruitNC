@@ -32,6 +32,19 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "nhsca-nationals-recap-2026",
+    slug: "nhsca-nationals-recap-2026",
+    title: "North Carolina Puts 18 on the Podium at 2026 NHSCA Nationals",
+    summary:
+      "North Carolina finished with 18 All-Americans across four divisions at the 2026 NHSCA Nationals, ranking eighth nationally and fourth in state history.",
+    href: "/news/nhsca-nationals-recap-2026",
+    date: "2026-03-31",
+    category: "NATIONALS RECAP",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "11 min read",
+    isAnnouncement: true,
+  },
+  {
     id: "nhsca-nationals-preview-2026",
     slug: "nhsca-nationals-preview-2026",
     title: "The Biggest Weekend in NC Wrestling Starts Thursday",
