@@ -41,7 +41,7 @@ const ALL_NEWS: NewsItem[] = [
     date: "2026-03-31",
     image: "/images/nhsca-mow-award-2026-news-card.png",
     imagePosition: "top",
-    imageFit: "cover",
+    imageFit: "contain",
     newsListBanner: true,
     category: "OFFICIAL ANNOUNCEMENT",
     categoryBadgeClass: "bg-[#C20017]",
