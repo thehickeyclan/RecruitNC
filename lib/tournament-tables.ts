@@ -1,6 +1,6 @@
 /**
  * Fetch NHSCA and Super32 from the actual database tables.
- * Source of truth: nhsca_placements, wrestling_nhsca_results, then nhsca_roster (live dashboard NC roster).
+ * NHSCA profile merge order: **nhsca_roster** (live dashboard — wins/losses, real placement vs seed) → nhsca_placements → wrestling_nhsca_results.
  * No more copying data into athlete rows – read from where it lives.
  */
 
@@ -187,19 +187,33 @@ function nhscaYearUpperBound(graduationYear: number): number {
   return graduationYear + 1
 }
 
-/** Tournament calendar year for `nhsca_roster` rows when the table has no `year` column (live dashboard). */
-const NHSCA_ROSTER_TOURNAMENT_YEAR = 2026
+/**
+ * Default tournament year for `nhsca_roster` rows with no `year` / `tournament_year` column (legacy live import).
+ * Prefer adding `tournament_year int` (or `year`) on the table so multiple NHSCA seasons scale without code changes.
+ */
+const NHSCA_ROSTER_DEFAULT_TOURNAMENT_YEAR = 2026
 
-function mapNhscaRosterRowToResult(r: Record<string, unknown>, tournamentYear: number): TournamentResultRow {
+/** Resolve calendar year for this roster row — supports multi-year `nhsca_roster` once the column exists. */
+function nhscaRosterRowTournamentYear(r: Record<string, unknown>): number {
+  const y = r.tournament_year ?? r.nhsca_year ?? r.year
+  if (y != null && y !== "") {
+    const n = typeof y === "number" ? y : parseInt(String(y), 10)
+    if (Number.isFinite(n) && n >= 1990 && n <= 2100) return n
+  }
+  return NHSCA_ROSTER_DEFAULT_TOURNAMENT_YEAR
+}
+
+function mapNhscaRosterRowToResult(r: Record<string, unknown>): TournamentResultRow {
   const wins = r.wins != null ? Number(r.wins) : null
   const losses = r.losses != null ? Number(r.losses) : null
   const record =
     wins != null && !Number.isNaN(wins) && losses != null && !Number.isNaN(losses)
       ? `${wins}-${losses}`
       : ""
+  /** Championship finish only — never map `seed` into placement (seed ≠ AA place). */
   const placementRaw = r.placement
   return {
-    year: tournamentYear,
+    year: nhscaRosterRowTournamentYear(r),
     placement: formatPlacement(placementRaw as number | string | null | undefined),
     record,
     weight: (r.weight_class ?? r.weight ?? "").toString().trim(),
@@ -216,21 +230,31 @@ async function getNHSCAFromNhscaRosterTable(
   athleteName: string,
   graduationYear: number,
 ): Promise<TournamentResultRow[]> {
-  const tournamentYear = NHSCA_ROSTER_TOURNAMENT_YEAR
-  const want = preferredNhscaBracketKeyword(graduationYear, tournamentYear)
-  if (!want) return []
+  const startYear = graduationYear - 4
+  const yearMax = nhscaYearUpperBound(graduationYear)
 
   const mapRows = (raw: Record<string, unknown>[]): TournamentResultRow[] => {
     if (!raw.length) return []
-    const asResults = raw.map((r) => mapNhscaRosterRowToResult(r, tournamentYear))
-    const scored = asResults.map((row, i) => ({
-      row,
-      score: scoreNhscaDivisionMatch(raw[i].classification as string | undefined, want),
-    }))
+    const inGradWindow = raw.filter((r) => {
+      const y = nhscaRosterRowTournamentYear(r)
+      return y >= startYear && y <= yearMax
+    })
+    const rowsToUse = inGradWindow.length ? inGradWindow : raw
+    const asResults = rowsToUse.map((r) => mapNhscaRosterRowToResult(r))
+    const scored = asResults.map((row, i) => {
+      const ty = nhscaRosterRowTournamentYear(rowsToUse[i] as Record<string, unknown>)
+      const want = preferredNhscaBracketKeyword(graduationYear, ty)
+      return {
+        row,
+        score: want ? scoreNhscaDivisionMatch(rowsToUse[i].classification as string | undefined, want) : 0,
+      }
+    })
     const matched = scored.filter((s) => s.score > 0)
     const list = matched.length ? matched.map((s) => s.row) : asResults
     if (list.length === 1) return list
-    const picked = pickNhscaRowWhenUnscored(list, want)
+    const ty0 = nhscaRosterRowTournamentYear(rowsToUse[0] as Record<string, unknown>)
+    const wantPick = preferredNhscaBracketKeyword(graduationYear, ty0) ?? "junior"
+    const picked = pickNhscaRowWhenUnscored(list, wantPick)
     return picked ? [picked] : []
   }
 
@@ -262,7 +286,7 @@ async function getNHSCAFromNhscaRosterTable(
 }
 
 /**
- * Fetch NHSCA from nhsca_placements (primary) or wrestling_nhsca_results (fallback).
+ * Fetch NHSCA: **nhsca_roster first** (authoritative live records you maintain), then placements import, then legacy.
  * Tries exact match first so "Jackson D'Ettore" in DB matches without ILIKE/pattern issues.
  */
 export async function getNHSCAFromTables(
@@ -274,6 +298,10 @@ export async function getNHSCAFromTables(
   const startYear = graduationYear - 4
   const yearMax = nhscaYearUpperBound(graduationYear)
   const exactName = normalizeApostrophes(athleteName.trim())
+
+  // 1. nhsca_roster — same rows as the live dashboard (wins/losses, placement when set, seed is separate).
+  const fromRosterFirst = await getNHSCAFromNhscaRosterTable(supabase, athleteName, graduationYear)
+  if (fromRosterFirst.length) return fromRosterFirst
 
   const mapPlacement = (p: any) => ({
     year: typeof p.year === "number" ? p.year : parseInt(String(p.year), 10) || new Date().getFullYear(),
@@ -290,7 +318,7 @@ export async function getNHSCAFromTables(
     division: (r.division ?? "").toString().trim(),
   })
 
-  // 1. nhsca_placements only (bulk import target). Must finish ALL strategies before legacy table —
+  // 2. nhsca_placements (bulk import). Must finish ALL strategies before legacy table —
   //    otherwise wrestling_nhsca_results exact match returns early and we never pattern-match
   //    placements (common when profile name ≠ import spelling; Junior rows only hit via % patterns).
   const { data: exactPlacements } = await supabase
@@ -328,7 +356,7 @@ export async function getNHSCAFromTables(
     }
   }
 
-  // 2. wrestling_nhsca_results — legacy fallback only when placements had no match
+  // 3. wrestling_nhsca_results — legacy fallback only when placements had no match
   const { data: exactNhsca } = await supabase
     .from("wrestling_nhsca_results")
     .select("*")
@@ -361,10 +389,6 @@ export async function getNHSCAFromTables(
       if (results?.length) return results.map(mapResult)
     }
   }
-
-  // 3. nhsca_roster — live dashboard NC roster (name + classification vs grad year). Table may be absent in some DBs.
-  const fromRoster = await getNHSCAFromNhscaRosterTable(supabase, athleteName, graduationYear)
-  if (fromRoster.length) return fromRoster
 
   return []
 }
@@ -726,14 +750,40 @@ export async function getUltimateClubDualsFromTables(
 ): Promise<NationalTeamResultRow[]> {
   if (!athleteName?.trim()) return []
   const nameTrim = athleteName.trim().toLowerCase()
+  const parts = athleteName.trim().split(/\s+/).filter(Boolean)
+  if (parts.length < 2) return []
+
+  const last = parts.slice(1).join(" ")
+  const first = parts[0] ?? ""
 
   try {
-    // Relation names in Supabase are usually the referenced table name; some schemas use FK name (wrestler, tournament).
+    /** Resolve wrestlers by last name first, then match full name in memory — avoids loading 2000 arbitrary tournament rows per profile. */
+    const { data: wrestlers, error: wErr } = await supabase
+      .from("nc_united_wrestlers")
+      .select("id, first_name, last_name, high_school")
+      .ilike("last_name", `%${escapeForIlike(last)}%`)
+      .limit(200)
+
+    if (wErr?.code === "42P01" || wErr?.message?.includes("does not exist")) return []
+
+    const matchedIds = (wrestlers ?? [])
+      .filter((w: any) => {
+        const f = (w.first_name ?? "").toString().trim().toLowerCase()
+        const l = (w.last_name ?? "").toString().trim().toLowerCase()
+        const full = `${f} ${l}`.trim()
+        if (!full) return false
+        if (full.includes(nameTrim) || nameTrim.includes(full)) return true
+        return f === first.toLowerCase() && l === last.toLowerCase()
+      })
+      .map((w: any) => w.id)
+
+    if (!matchedIds.length) return []
+
     let data: any[] | null = null
     const q1 = await supabase
       .from("nc_united_tournament_results")
       .select("record, wins, losses, nc_united_wrestlers(first_name, last_name, high_school), nc_united_tournaments(name, year)")
-      .limit(2000)
+      .in("wrestler_id", matchedIds)
     if (!q1.error && q1.data?.length !== undefined) {
       data = q1.data as any[]
     }
@@ -741,7 +791,7 @@ export async function getUltimateClubDualsFromTables(
       const q2 = await supabase
         .from("nc_united_tournament_results")
         .select("record, wins, losses, wrestler(first_name, last_name, high_school), tournament(name, year)")
-        .limit(2000)
+        .in("wrestler_id", matchedIds)
       if (!q2.error && q2.data) data = q2.data as any[]
     }
     if (!data?.length) return []

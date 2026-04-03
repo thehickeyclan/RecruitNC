@@ -46,6 +46,7 @@ async function getNhscaDuals2026RosterStatus(
     .select("athlete_first_name, athlete_last_name, high_school, graduation_year, record")
     .eq("event_slug", NHSCA_DUALS_2026_SLUG)
     .eq("status", "paid")
+    .eq("graduation_year", gradStr)
 
   if (!rows?.length) return { member: false, record: "0-0" }
   for (const r of rows as { athlete_first_name?: string; athlete_last_name?: string; high_school?: string; graduation_year?: string; record?: string }[]) {
@@ -98,12 +99,15 @@ export async function GET(
     const highSchool = (athlete.highschool ?? athlete.highSchool ?? "").toString().trim()
     const name = (athlete.name ?? "").toString().trim()
     const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
-    const namesToTry = [...new Set([...getNameVariants(name), ...(wrestlingName ? getNameVariants(wrestlingName) : [])])]
+    /** getSuper32FromTable / getUltimateClubDualsFromTables already apply getNameVariants internally; only pass primary + distinct wrestling name. */
+    const nameBases: string[] = []
+    if (name) nameBases.push(name)
+    if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
     const athleteRow = athlete as Record<string, unknown>
     const [nhscaMerged, super32FromTable, nationalTeamFromTables, nchsaaMergedRows] = await Promise.all([
       getNHSCAForAthlete(supabase, athleteRow),
       (async () => {
-        for (const n of namesToTry) {
+        for (const n of nameBases) {
           if (!n) continue
           const rows = await getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
           if (rows.length) return rows
@@ -111,7 +115,7 @@ export async function GET(
         return []
       })(),
       (async () => {
-        for (const n of namesToTry) {
+        for (const n of nameBases) {
           if (!n) continue
           const rows = await getUltimateClubDualsFromTables(supabase, n, highSchool || undefined)
           if (rows.length) return rows
@@ -176,7 +180,7 @@ export async function GET(
       elapsedMs: Date.now() - start,
       athleteIdPrefix: id.trim().slice(0, 8),
       gradYear,
-      nameVariantCount: namesToTry.length,
+      nameBaseCount: nameBases.length,
       nhscaResultRows: nhscaMerged.length,
       nchsaaProfileRows: nchsaa_profile.length,
       super32FromTable: super32FromTable.length,

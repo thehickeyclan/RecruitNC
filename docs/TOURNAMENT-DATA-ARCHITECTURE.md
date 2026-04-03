@@ -2,11 +2,15 @@
 
 **Source of truth: database tables. Do NOT copy data into athlete rows.**
 
+## Target model (scalable)
+
+One **year-keyed NHSCA fact table** is the right long-term shape: `(tournament_year, athlete_name or athlete_id, division, weight, record, placement, seed, state, …)` with one row per athlete per year per event. Today that role is split across **`nhsca_roster`** (live NC dashboard — prefer `tournament_year` when you add the column), **`nhsca_placements`** (bulk imports — already has `year`), and **`wrestling_nhsca_results`** (legacy). Code merges them in `getNHSCAFromTables()` until a single table + backfill exists.
+
 ## Data Flow
 
 | Data      | Primary Table           | Fallback Table             | Fallback 2     |
 |-----------|-------------------------|----------------------------|----------------|
-| NHSCA     | `nhsca_placements`      | `wrestling_nhsca_results`  | athlete row    |
+| NHSCA     | `nhsca_roster`          | `nhsca_placements`         | `wrestling_nhsca_results` |
 | Super32   | `super32_results`       | —                          | none (table only) |
 | Ultimate Club Duals | `nc_united_tournament_results` (via nc_united_wrestlers, nc_united_tournaments) | athlete row (ultimate_club_duals_2024_record, ultimate_club_duals_2025_record) | — |
 

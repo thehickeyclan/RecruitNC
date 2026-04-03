@@ -8,7 +8,6 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
 import {
   dedupeNhscaByYearForGradYear,
-  getNameVariants,
   getNHSCAFromTables,
   type TournamentResultRow,
 } from "@/lib/tournament-tables"
@@ -189,7 +188,7 @@ export function mergeNhscaForPublicRankings(
 }
 
 /**
- * **The only NHSCA merge for an athlete:** `nhsca_placements` / `wrestling_nhsca_results` / `nhsca_roster` × name variants,
+ * **The only NHSCA merge for an athlete:** `nhsca_roster` (live truth first) → `nhsca_placements` → `wrestling_nhsca_results` × name variants,
  * merged with `nhsca_results` JSON + legacy columns (any year). Do not reimplement table walks elsewhere.
  *
  * Pass a full `athletes` row when possible; for name-only lookups use `{ name, wrestling_name?, graduationyear }`.
@@ -206,12 +205,12 @@ export async function getNHSCAForAthlete(
     .trim()
   const primaryName = name || fromParts
   const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
-  const namesToTry = [
-    ...new Set([...getNameVariants(primaryName), ...(wrestlingName ? getNameVariants(wrestlingName) : [])]),
-  ]
+  /** One call per canonical name — getNHSCAFromTables already expands getNameVariants internally. Looping every variant caused dozens of sequential DB round-trips per profile (30s+). */
+  const bases = new Set<string>()
+  if (primaryName) bases.add(primaryName)
+  if (wrestlingName && wrestlingName.toLowerCase() !== primaryName.toLowerCase()) bases.add(wrestlingName)
   const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
-  for (const n of namesToTry) {
-    if (!n) continue
+  for (const n of bases) {
     const rows = await getNHSCAFromTables(supabase, n, gradYear)
     merged.push(...rows)
   }
@@ -223,7 +222,7 @@ export async function getNHSCAForAthlete(
   recruitNcDebugLogNhsca("getNHSCAForAthlete:done", {
     athleteIdPrefix: aid,
     gradYear,
-    nameVariantCount: namesToTry.length,
+    nameBaseCount: bases.size,
     rawTableRowsPushed: merged.length,
     afterUniq: uniq.length,
     fromProfileNhscaJsonRows: fromRow.nhscaResults.length,

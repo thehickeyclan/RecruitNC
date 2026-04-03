@@ -5,7 +5,8 @@ import { getAdminAuth } from "@/lib/cached-auth-check"
 interface NHSCAPlacementRow {
   athlete_name: string
   high_school?: string
-  placement: number
+  /** Official NHSCA finish (e.g. 1–8 All-American). Do not use seed order or bracket ladder position. */
+  placement: number | null
   weight_class: string
   division: string
   record?: string
@@ -57,6 +58,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const total = formattedPlacements.length
+    const placementNoRecord = formattedPlacements.filter((p) => p.placement != null && !p.record?.trim()).length
+    const warnings: string[] = []
+    if (total >= 15 && placementNoRecord / total > 0.25) {
+      warnings.push(
+        "Many rows have placement set but no record. Confirm these are official NHSCA championship placements, not seed order or preliminary bracket position.",
+      )
+    }
+
     // OVERWRITE: Remove existing rows for this year/state **per division** in the payload only.
     // So Senior and Junior 2026 NC can coexist; re-importing Junior does not delete Senior.
     const uniqDivisions = [
@@ -96,6 +106,7 @@ export async function POST(request: NextRequest) {
       imported: participantsCount,
       placers: placersCount,
       nonPlacers: participantsCount - placersCount,
+      warnings: warnings.length ? warnings : undefined,
       message: `Successfully imported ${participantsCount} NHSCA participants (${placersCount} placers, ${participantsCount - placersCount} non-placers)`,
     })
   } catch (error: any) {
