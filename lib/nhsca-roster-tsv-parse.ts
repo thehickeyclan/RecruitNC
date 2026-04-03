@@ -1,5 +1,6 @@
 /**
- * Parses NHSCA roster TSV exports (header row, tab-separated) into nhsca_placements rows.
+ * Parses NHSCA roster exports (TSV or CSV, header row) into nhsca_placements rows.
+ * Delimiter: auto-detect, or force tab vs comma. CSV supports quoted fields ("...").
  * Mirrors scripts/tsv-roster-to-nhsca-placements-sql.mjs column mapping.
  *
  * `id` column → nhsca_roster_id (UUID), not athlete identity.
@@ -66,6 +67,79 @@ function idx(header: string[], name: string): number {
   return header.indexOf(name)
 }
 
+/** RFC 4180–style: commas split fields; double quotes wrap fields; "" inside quotes = one ". */
+export function parseCsvLine(line: string): string[] {
+  const out: string[] = []
+  let cur = ""
+  let i = 0
+  let inQuotes = false
+  while (i < line.length) {
+    const c = line[i]
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"'
+          i += 2
+          continue
+        }
+        inQuotes = false
+        i++
+        continue
+      }
+      cur += c
+      i++
+    } else {
+      if (c === '"') {
+        inQuotes = true
+        i++
+        continue
+      }
+      if (c === ",") {
+        out.push(cur)
+        cur = ""
+        i++
+        continue
+      }
+      cur += c
+      i++
+    }
+  }
+  out.push(cur)
+  return out
+}
+
+function splitRosterLine(line: string, delimiter: "tab" | "comma"): string[] {
+  if (delimiter === "tab") return line.split("\t")
+  return parseCsvLine(line)
+}
+
+/** Auto: prefer TSV when the header line has tabs and splits into at least as many fields as CSV. */
+export function resolveRosterDelimiter(firstLine: string, mode: NhscaRosterDelimiterMode): "tab" | "comma" {
+  if (mode === "tab") return "tab"
+  if (mode === "comma") return "comma"
+  const tabParts = firstLine.split("\t").length
+  const csvParts = parseCsvLine(firstLine).length
+  if (firstLine.includes("\t") && tabParts >= csvParts) return "tab"
+  if (csvParts > 1) return "comma"
+  if (tabParts > 1) return "tab"
+  return "comma"
+}
+
+/** Lowercase, trim; tolerate UTF-8 BOM on first cell (Excel / some exports). */
+function normalizeHeaderCells(cells: string[]): string[] {
+  return cells.map((h, idx) => {
+    let t = h.trim()
+    if (idx === 0) t = t.replace(/^\uFEFF/, "")
+    return t.toLowerCase()
+  })
+}
+
+function resolveClassificationIndex(header: string[]): number {
+  const a = idx(header, "classification")
+  if (a >= 0) return a
+  return idx(header, "division")
+}
+
 function trimCell(s: string): string {
   return String(s ?? "").trim()
 }
@@ -94,34 +168,43 @@ function isUuid(s: string): boolean {
 }
 
 /**
- * @param raw - Full TSV text including header
+ * @param raw - Full text including header (tab- or comma-separated)
  * @param year - Tournament year (e.g. 2026)
  * @param state - Usually NC
  * @param source - Stored on each row (e.g. admin_roster_tsv_2026)
+ * @param options.delimiter - default auto (detect from first line)
  */
 export function parseNhscaRosterTsv(
   raw: string,
   year: number,
   state: string,
   source: string,
+  options?: { delimiter?: NhscaRosterDelimiterMode },
 ): ParseNhscaRosterTsvResult {
-  const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0)
+  const mode = options?.delimiter ?? "auto"
+  const bomStripped = raw.replace(/^\uFEFF/, "")
+  const lines = bomStripped.split(/\r?\n/).filter((l) => l.trim().length > 0)
   if (lines.length < 2) {
+    const delimiterFallback =
+      lines.length === 1 ? resolveRosterDelimiter(lines[0], mode) : ("tab" as const)
     return {
       rows: [],
       skippedEmptyName: 0,
       warnings: ["Need a header row and at least one data row"],
       divisions: [],
+      delimiter: delimiterFallback,
     }
   }
 
-  const header = lines[0].split("\t").map((h) => h.trim())
+  const delimiter = resolveRosterDelimiter(lines[0], mode)
+  const header = normalizeHeaderCells(splitRosterLine(lines[0], delimiter))
+  const classIdx = resolveClassificationIndex(header)
   const I: Record<(typeof HEADER_NAMES)[number], number> = {
     id: idx(header, "id"),
     name: idx(header, "name"),
     weight_class: idx(header, "weight_class"),
     gender: idx(header, "gender"),
-    classification: idx(header, "classification"),
+    classification: classIdx,
     school: idx(header, "school"),
     wins: idx(header, "wins"),
     losses: idx(header, "losses"),
@@ -142,9 +225,10 @@ export function parseNhscaRosterTsv(
       rows: [],
       skippedEmptyName: 0,
       warnings: [
-        'Missing required columns: need header row with "name", "weight_class", and "classification"',
+        'Missing required columns: need header row with "name", "weight_class", and "classification" (or "division")',
       ],
       divisions: [],
+      delimiter,
     }
   }
 
@@ -154,7 +238,7 @@ export function parseNhscaRosterTsv(
   const divisionSet = new Set<string>()
 
   for (let i = 1; i < lines.length; i++) {
-    const parts = lines[i].split("\t")
+    const parts = splitRosterLine(lines[i], delimiter)
     const get = (j: number) => (j >= 0 && j < parts.length ? parts[j] : "")
 
     const name = trimCell(get(I.name))
@@ -242,7 +326,7 @@ export function parseNhscaRosterTsv(
 
   const divisions = [...divisionSet].sort()
 
-  return { rows, skippedEmptyName, warnings, divisions }
+  return { rows, skippedEmptyName, warnings, divisions, delimiter }
 }
 
 const BASE_KEYS: (keyof ParsedNhscaRosterRow)[] = [

@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { parseNhscaRosterTsv, type NhscaRosterTsvDeleteMode } from "@/lib/nhsca-roster-tsv-parse"
+import {
+  parseNhscaRosterTsv,
+  type NhscaRosterTsvDeleteMode,
+  type NhscaRosterDelimiterMode,
+} from "@/lib/nhsca-roster-tsv-parse"
 import { FileText, RefreshCw, Upload, ArrowLeft, Table } from "lucide-react"
 
 export default function NhscaRosterUploadPage() {
@@ -15,6 +19,7 @@ export default function NhscaRosterUploadPage() {
   const [state, setState] = useState("NC")
   const [source, setSource] = useState("")
   const [deleteMode, setDeleteMode] = useState<NhscaRosterTsvDeleteMode>("division")
+  const [delimiterMode, setDelimiterMode] = useState<NhscaRosterDelimiterMode>("auto")
   const [importing, setImporting] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [dragActive, setDragActive] = useState(false)
@@ -23,16 +28,19 @@ export default function NhscaRosterUploadPage() {
   const effectiveSource = source.trim() || `admin_roster_tsv_${year}`
 
   const preview = useMemo(
-    () => parseNhscaRosterTsv(tsv, year, state, effectiveSource),
-    [tsv, year, state, effectiveSource],
+    () => parseNhscaRosterTsv(tsv, year, state, effectiveSource, { delimiter: delimiterMode }),
+    [tsv, year, state, effectiveSource, delimiterMode],
   )
 
   const handleFile = async (files: FileList | null) => {
     const file = files?.[0]
     if (!file) return
     const lower = file.name.toLowerCase()
-    if (!lower.endsWith(".tsv") && !lower.endsWith(".txt")) {
-      setMessage({ type: "error", text: "Choose a .tsv or .txt file (tab-separated roster export)" })
+    if (!lower.endsWith(".tsv") && !lower.endsWith(".txt") && !lower.endsWith(".csv")) {
+      setMessage({
+        type: "error",
+        text: "Choose a .csv, .tsv, or .txt file (comma- or tab-separated, header row)",
+      })
       return
     }
     try {
@@ -60,7 +68,7 @@ export default function NhscaRosterUploadPage() {
 
   const handleImport = async () => {
     if (!tsv.trim()) {
-      setMessage({ type: "error", text: "Paste TSV or load a file first" })
+      setMessage({ type: "error", text: "Paste CSV/TSV or load a file first" })
       return
     }
     if (preview.rows.length === 0) {
@@ -84,6 +92,7 @@ export default function NhscaRosterUploadPage() {
           state,
           source: source.trim() || undefined,
           deleteMode,
+          delimiter: delimiterMode,
         }),
       })
       const data = await res.json()
@@ -120,9 +129,9 @@ export default function NhscaRosterUploadPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to NHSCA participants
           </HardLink>
-          <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA roster TSV import</h1>
+          <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA roster CSV / TSV import</h1>
           <p className="text-gray-600">
-            Paste or upload your tab-separated roster export (header row). Rows merge into{" "}
+            Paste or upload a comma- or tab-separated export (header row). Rows merge into{" "}
             <code className="bg-gray-100 px-1 rounded text-sm">nhsca_placements</code> — other tournament years are
             untouched. Replacing data is scoped by <strong>division</strong> (default) or by{" "}
             <strong>source tag</strong>.
@@ -164,6 +173,21 @@ export default function NhscaRosterUploadPage() {
               </p>
             </div>
             <div className="sm:col-span-2">
+              <label className="block text-sm font-medium mb-1">Column separator</label>
+              <select
+                value={delimiterMode}
+                onChange={(e) => setDelimiterMode(e.target.value as NhscaRosterDelimiterMode)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm bg-white max-w-xl w-full"
+              >
+                <option value="auto">Auto (detect from first line — CSV vs TSV)</option>
+                <option value="comma">Comma (CSV)</option>
+                <option value="tab">Tab (TSV)</option>
+              </select>
+              <p className="text-xs text-gray-600 mt-1">
+                Use <strong>Comma</strong> for Excel &quot;Save as CSV&quot;. Use <strong>Auto</strong> if unsure.
+              </p>
+            </div>
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium mb-1">Replace existing rows</label>
               <select
                 value={deleteMode}
@@ -185,31 +209,41 @@ export default function NhscaRosterUploadPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5" />
-              Roster TSV
+              Roster file or paste
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <input
               ref={fileRef}
               type="file"
-              accept=".tsv,.txt,text/tab-separated-values"
+              accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values"
               className="hidden"
               onChange={(e) => void handleFile(e.target.files)}
             />
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
                 <FileText className="h-4 w-4 mr-1" />
-                Choose .tsv file
+                Choose .csv or .tsv
               </Button>
             </div>
             <p className="text-xs text-gray-600">
               Required header columns: <code className="bg-gray-100 px-1 rounded">name</code>,{" "}
               <code className="bg-gray-100 px-1 rounded">weight_class</code>,{" "}
-              <code className="bg-gray-100 px-1 rounded">classification</code> (division). Optional:{" "}
+              <code className="bg-gray-100 px-1 rounded">classification</code> (or{" "}
+              <code className="bg-gray-100 px-1 rounded">division</code>) — Senior, Junior, Sophomore, Freshman, etc.
+              Extra columns such as <code className="bg-gray-100 px-1 rounded">created_at</code> /{" "}
+              <code className="bg-gray-100 px-1 rounded">updated_at</code> from a DB export are ignored. Optional:{" "}
               <code className="bg-gray-100 px-1 rounded">id</code> (UUID → nhsca_roster_id), wins/losses, seed, bracket
-              fields. Placement must be official finish <strong>1–8</strong> or empty.
+              fields. Official <code className="bg-gray-100 px-1 rounded">placement</code> must be <strong>1–8</strong> or
+              empty (seed/bracket position is not stored as placement).
             </p>
-            <p className="text-xs text-gray-500 font-mono break-all">{sampleHeader}</p>
+            <p className="text-xs text-gray-500 font-mono break-all">
+              TSV example: {sampleHeader}
+              <br />
+              <span className="text-gray-400">
+                CSV is the same columns with commas; fields may be quoted if they contain commas.
+              </span>
+            </p>
             <div
               onDragEnter={(e) => {
                 e.preventDefault()
@@ -228,11 +262,11 @@ export default function NhscaRosterUploadPage() {
               <textarea
                 value={tsv}
                 onChange={(e) => setTsv(e.target.value)}
-                placeholder="Paste tab-separated roster (include header row)…"
+                placeholder="Paste CSV or TSV (include header row)…"
                 className="w-full min-h-[200px] p-3 border-0 rounded-md font-mono text-xs bg-transparent focus:outline-none focus:ring-0"
               />
             </div>
-            {dragActive && <p className="text-xs text-[#13294B]">Drop .tsv file here</p>}
+            {dragActive && <p className="text-xs text-[#13294B]">Drop .csv or .tsv here</p>}
 
             {message && (
               <div
@@ -263,7 +297,8 @@ export default function NhscaRosterUploadPage() {
                 )}
               </Button>
               <span className="text-sm text-gray-600">
-                Preview: <strong>{preview.rows.length}</strong> row(s), divisions:{" "}
+                Preview: <strong>{preview.rows.length}</strong> row(s), delimiter:{" "}
+                <strong>{preview.delimiter === "comma" ? "comma (CSV)" : "tab (TSV)"}</strong>, divisions:{" "}
                 {preview.divisions.length ? preview.divisions.join(", ") : "—"}
                 {preview.skippedEmptyName > 0 ? ` · skipped ${preview.skippedEmptyName} empty name(s)` : ""}
               </span>

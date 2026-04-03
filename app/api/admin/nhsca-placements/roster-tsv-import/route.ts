@@ -7,6 +7,7 @@ import {
   nhscaRosterRowToMinimalInsert,
   nhscaRosterRowHasExtended,
   type NhscaRosterTsvDeleteMode,
+  type NhscaRosterDelimiterMode,
   type ParsedNhscaRosterRow,
 } from "@/lib/nhsca-roster-tsv-parse"
 
@@ -30,11 +31,15 @@ export async function POST(request: NextRequest) {
     const deleteMode: NhscaRosterTsvDeleteMode =
       body.deleteMode === "source" ? "source" : "division"
 
+    const delimRaw = body.delimiter
+    const delimiter: NhscaRosterDelimiterMode =
+      delimRaw === "tab" || delimRaw === "comma" || delimRaw === "auto" ? delimRaw : "auto"
+
     if (!tsv.trim()) {
       return NextResponse.json({ error: "tsv (string) is required" }, { status: 400 })
     }
 
-    const parsed = parseNhscaRosterTsv(tsv, year, state, source)
+    const parsed = parseNhscaRosterTsv(tsv, year, state, source, { delimiter })
     if (parsed.rows.length === 0) {
       return NextResponse.json(
         {
@@ -82,26 +87,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const insertRows = async (rows: Record<string, unknown>[]) => {
-      return supabase.from("nhsca_placements").insert(rows).select()
+    const insertRows = async (records: Record<string, unknown>[]) => {
+      return supabase.from("nhsca_placements").insert(records)
     }
 
-    const tryInsert = async (rows: ParsedNhscaRosterRow[]) => {
+    const tryInsertAll = async (rows: ParsedNhscaRosterRow[]) => {
       const anyExt = rows.some(nhscaRosterRowHasExtended)
       if (!anyExt) {
-        const r = await insertRows(rows.map(nhscaRosterRowToMinimalInsert))
-        return { ...r, usedMinimalOnly: false as const }
+        const { error } = await insertRows(rows.map(nhscaRosterRowToMinimalInsert))
+        return { error, usedMinimalOnly: false as const }
       }
       const full = rows.map(nhscaRosterRowToFullInsert)
       let result = await insertRows(full)
       if (result.error && looksLikeMissingColumnError(result.error.message)) {
         result = await insertRows(rows.map(nhscaRosterRowToMinimalInsert))
-        return { ...result, usedMinimalOnly: true as const }
+        if (!result.error) return { error: null, usedMinimalOnly: true as const }
       }
-      return { ...result, usedMinimalOnly: false as const }
+      return { error: result.error, usedMinimalOnly: false as const }
     }
 
-    const { data, error, usedMinimalOnly } = await tryInsert(parsed.rows)
+    const { error, usedMinimalOnly } = await tryInsertAll(parsed.rows)
 
     if (error) {
       console.error("NHSCA roster TSV insert:", error)
@@ -111,9 +116,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const participantsCount = data?.length ?? parsed.rows.length
-    const placersCount =
-      data?.filter((p: { placement?: number | null }) => p.placement != null).length ?? 0
+    const participantsCount = parsed.rows.length
+    const placersCount = parsed.rows.filter((r) => r.placement != null).length
 
     return NextResponse.json({
       success: true,
@@ -124,6 +128,7 @@ export async function POST(request: NextRequest) {
       state,
       source,
       deleteMode,
+      delimiter: parsed.delimiter,
       divisions: parsed.divisions,
       skippedEmptyName: parsed.skippedEmptyName,
       warnings: [...parsed.warnings, ...(usedMinimalOnly ? ["Extended columns omitted (DB missing roster migration)."] : [])],

@@ -550,10 +550,10 @@ export default function NHSCAPlacementsPage() {
           <p className="text-gray-600">Import, match, and merge NHSCA tournament data (placers and non-placers)</p>
           <p className="text-gray-600 mt-2 text-sm">
             <HardLink href="/admin/nhsca-placements/roster-upload" className="text-[#13294B] underline font-medium">
-              Roster TSV upload
+              Roster CSV/TSV upload
             </HardLink>{" "}
-            — paste or load your tab-separated roster export; other years stay in place. Uses the same table as JSON
-            import, with division- or source-scoped replace.
+            — paste or load your roster export (comma- or tab-separated); other years stay in place. Same table as bulk
+            JSON import, with division- or source-scoped replace.
           </p>
         </div>
 
