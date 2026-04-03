@@ -2,9 +2,19 @@
 
 **Source of truth: database tables. Do NOT copy data into athlete rows.**
 
-## Target model (scalable)
+## Target model (scalable) — one table, all years, same tournament
 
-One **year-keyed NHSCA fact table** is the right long-term shape: `(tournament_year, athlete_name or athlete_id, division, weight, record, placement, seed, state, …)` with one row per athlete per year per event. Today that role is split across **`nhsca_roster`** (live NC dashboard — prefer `tournament_year` when you add the column), **`nhsca_placements`** (bulk imports — already has `year`), and **`wrestling_nhsca_results`** (legacy). Code merges them in `getNHSCAFromTables()` until a single table + backfill exists.
+The agreed end state is **one NHSCA fact table** with **`tournament_year` (or `year`) for every season**, one row per athlete per bracket year: placement, record, division, weight, state, optional seed, etc. No splitting “live vs import vs legacy” across different mental models once migration is done.
+
+**Current reality (until migration finishes):** `getNHSCAFromTables()` still **merges** three sources — **`nhsca_roster`** (live dashboard only; table may not exist in your project), **`nhsca_placements`** (bulk imports; **already holds multiple years** via `year`), **`wrestling_nhsca_results`** (legacy). That merge exists so profiles work while data lives in different places. It is **not** the same as “everything already lives in one table in Supabase.”
+
+## What to use in production *today* for “all NHSCA results, all years, one place”
+
+1. **Create `nhsca_placements` if missing** (`scripts/create-nhsca-placements-minimal.sql`).
+2. **Load every year’s NC data through that table** (admin bulk import or `npm run nhsca:import` per JSON). The `year` column is the tournament year (e.g. 2024, 2025, 2026).
+3. Treat **`nhsca_roster` as optional** — only for the live Flo-style dashboard during an event. If the table does not exist (`42P01`), profiles still work from **`nhsca_placements` + legacy**; do not assume roster exists.
+
+When we add a dedicated unified table (e.g. `nhsca_tournament_results`) and backfill, `getNHSCAFromTables()` will read it first and the merge path can shrink.
 
 ## Data Flow
 

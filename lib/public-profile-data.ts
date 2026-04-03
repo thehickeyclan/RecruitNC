@@ -171,7 +171,23 @@ export function mergeNhscaForPublicRankings(
   }
   for (const r of fromProfile) {
     const existing = map.get(r.year)
-    if (!existing || isDisplayRowEmpty(existing)) map.set(r.year, r)
+    if (!existing || isDisplayRowEmpty(existing)) {
+      map.set(r.year, r)
+      continue
+    }
+    /** Bulk `nhsca_placements` sometimes has placement with no record (bad import). Prefer profile row when it has a real record and no/fewer bogus placement. */
+    const tablePlacementOnly = Boolean(existing.placement?.trim()) && !existing.record?.trim()
+    const profileHasRecord = Boolean(r.record?.trim())
+    if (tablePlacementOnly && profileHasRecord) {
+      const usePlacement = r.placement?.trim() ? r.placement : ""
+      map.set(r.year, {
+        ...existing,
+        record: r.record,
+        placement: usePlacement,
+        weight: r.weight || existing.weight,
+        division: r.division || existing.division,
+      })
+    }
   }
   const merged = [...map.values()]
     .sort((a, b) => b.year - a.year)
