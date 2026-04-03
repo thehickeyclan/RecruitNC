@@ -53,6 +53,9 @@ export async function GET(request: NextRequest) {
     const yearNum = parseInt(year, 10)
     if (isNaN(yearNum)) return NextResponse.json({ ok: false, error: "Invalid year" }, { status: 400 })
 
+    const maxProspectRankForGuide =
+      yearNum === 2029 ? 20 : yearNum === 2028 ? 25 : 30
+
     const admin = createAdminClient()
     const supabase = await createClient()
     const db = admin // use admin for tournament tables too (bypasses RLS, ensures we see all Super32/NHSCA data)
@@ -62,7 +65,7 @@ export async function GET(request: NextRequest) {
       .select("*")
       .eq("graduationyear", yearNum)
       .not("prospect_ranking", "is", null)
-      .lte("prospect_ranking", 30)
+      .lte("prospect_ranking", maxProspectRankForGuide)
       .order("prospect_ranking", { ascending: true })
       .order("name", { ascending: true })
 

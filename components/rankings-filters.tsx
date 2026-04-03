@@ -47,6 +47,7 @@ export function RankingsFilters({ onFiltersChange }: RankingsFiltersProps) {
                 <SelectItem value="2026">Class of 2026</SelectItem>
                 <SelectItem value="2027">Class of 2027</SelectItem>
                 <SelectItem value="2028">Class of 2028</SelectItem>
+                <SelectItem value="2029">Class of 2029</SelectItem>
               </SelectContent>
             </Select>
           </div>

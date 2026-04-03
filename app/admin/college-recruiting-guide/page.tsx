@@ -136,6 +136,7 @@ export default function CollegeRecruitingGuidePage() {
               <option value={2026}>Class of 2026</option>
               <option value={2027}>Class of 2027</option>
               <option value={2028}>Class of 2028</option>
+              <option value={2029}>Class of 2029</option>
             </select>
             <Button onClick={copyTableForSlides} disabled={loading || athletes.length === 0} variant="outline" size="sm">
               <Copy className="h-4 w-4 mr-1" />

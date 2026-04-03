@@ -59,8 +59,16 @@ export default function ProspectRankingPage() {
   const [aiSuggestions, setAiSuggestions] = useState<Record<string, number>>({})
   const [calculatingScores, setCalculatingScores] = useState(false)
 
-  const availableYears = ["2025", "2026", "2027", "2028"]
+  const availableYears = ["2025", "2026", "2027", "2028", "2029"]
   const genderOptions = ["Male", "Female"]
+
+  /** When not showing all athletes, limit list to the same caps as public-facing ranked lists (see prospects/all). */
+  const publicRankCap = (year: string): number | null => {
+    if (year === "2029") return 20
+    if (year === "2028") return 25
+    if (year === "2026" || year === "2027") return 25
+    return null
+  }
 
   useEffect(() => {
     const loadProspects = async () => {
@@ -73,8 +81,9 @@ export default function ProspectRankingPage() {
         if (response.ok) {
           const data = await response.json()
           let prospects = data.prospects || []
-          if (!showAllAthletes && ["2026", "2027", "2028"].includes(selectedYear)) {
-            prospects = prospects.slice(0, 25)
+          const cap = publicRankCap(selectedYear)
+          if (!showAllAthletes && cap != null) {
+            prospects = prospects.slice(0, cap)
           }
           setProspects(prospects)
         } else {
@@ -522,6 +531,8 @@ export default function ProspectRankingPage() {
     )
   }
 
+  const selectedPublicCap = publicRankCap(selectedYear)
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -532,14 +543,14 @@ export default function ProspectRankingPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {["2026", "2027", "2028"].includes(selectedYear) && (
+          {selectedPublicCap != null && (
             <Button
               variant={showAllAthletes ? "default" : "outline"}
               size="sm"
               onClick={() => setShowAllAthletes(!showAllAthletes)}
             >
               {showAllAthletes ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
-              {showAllAthletes ? "All Athletes" : "Top 25 Only"}
+              {showAllAthletes ? "All Athletes" : `Top ${selectedPublicCap} Only`}
             </Button>
           )}
 
@@ -597,8 +608,8 @@ export default function ProspectRankingPage() {
           </Select>
 
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Year" />
+            <SelectTrigger className="min-w-[11rem] w-[11rem]">
+              <SelectValue placeholder="Class year" />
             </SelectTrigger>
             <SelectContent>
               {availableYears.map((year) => (
@@ -618,19 +629,20 @@ export default function ProspectRankingPage() {
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             {prospects.length} uncommitted athletes •
-            {["2026", "2027", "2028"].includes(selectedYear)
+            {selectedPublicCap != null
               ? showAllAthletes
                 ? " All athletes (Admin View)"
-                : " Top 25 rankings only (Public View)"
+                : ` Top ${selectedPublicCap} rankings only (Public View)`
               : " All athletes"}{" "}
             • Drag to reorder rankings
           </p>
         </CardHeader>
         <CardContent>
-          {showAllAthletes && ["2026", "2027", "2028"].includes(selectedYear) && (
+          {showAllAthletes && selectedPublicCap != null && (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                <strong>Admin View:</strong> You're viewing all athletes. Only the top 25 will be publicly ranked.
+                <strong>Admin View:</strong> You&apos;re viewing all athletes. Only the top{" "}
+                {selectedPublicCap} will be publicly ranked for this class.
               </p>
             </div>
           )}
