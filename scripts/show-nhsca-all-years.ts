@@ -48,7 +48,15 @@ function trimEnv(s: string | undefined) {
 const ROSTER_DEFAULT_YEAR = 2026
 
 function explainFetchErr(err: unknown): string {
-  const msg = err instanceof Error ? err.message : String(err)
+  const msg =
+    err instanceof Error
+      ? err.message
+      : typeof err === "object" &&
+          err !== null &&
+          "message" in err &&
+          typeof (err as { message: unknown }).message === "string"
+        ? (err as { message: string }).message
+        : String(err)
   if (msg.includes("fetch failed") || msg.includes("FetchError") || msg.includes("ECONNREFUSED")) {
     return `${msg}\n  → Check VPN/network, that NEXT_PUBLIC_SUPABASE_URL is https://….supabase.co, and SUPABASE_SERVICE_ROLE_KEY is set (no extra quotes).`
   }

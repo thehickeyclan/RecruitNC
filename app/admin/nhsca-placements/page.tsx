@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { HardLink } from "@/components/hard-link"
 import {
   Upload,
   Search,
@@ -547,6 +548,13 @@ export default function NHSCAPlacementsPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA Participants Management</h1>
           <p className="text-gray-600">Import, match, and merge NHSCA tournament data (placers and non-placers)</p>
+          <p className="text-gray-600 mt-2 text-sm">
+            <HardLink href="/admin/nhsca-placements/roster-upload" className="text-[#13294B] underline font-medium">
+              Roster TSV upload
+            </HardLink>{" "}
+            — paste or load your tab-separated roster export; other years stay in place. Uses the same table as JSON
+            import, with division- or source-scoped replace.
+          </p>
         </div>
 
         <Card className="mb-6 border-[#13294B]/25 bg-[#f4f7fb]">
