@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     if (mergedPlacementIds.length > 0) {
       const { error: markError } = await supabase
         .from("nhsca_placements")
-        .update({ merged_at: new Date().toISOString() })
+        .update({ merged_at: new Date().toISOString(), match_status: "merged" })
         .in("id", mergedPlacementIds)
 
       if (markError) {

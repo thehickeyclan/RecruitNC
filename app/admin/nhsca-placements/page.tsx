@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { HardLink } from "@/components/hard-link"
 import {
   Upload,
@@ -23,6 +24,7 @@ import {
   FileText,
   School,
   PlayCircle,
+  ChevronDown,
 } from "lucide-react"
 
 interface NHSCAPlacement {
@@ -116,6 +118,7 @@ export default function NHSCAPlacementsPage() {
   const [linkSearchError, setLinkSearchError] = useState<string | null>(null)
   /** Delete-by-year: optional Senior/Junior so one division can be cleared without removing the other (same idea as bulk-import). */
   const [deleteDivisionScope, setDeleteDivisionScope] = useState<"all" | "Senior" | "Junior">("all")
+  const [jsonImportOpen, setJsonImportOpen] = useState(false)
 
   /** Match/Merge year: explicit filter, else same as import year (avoid defaulting to wrong year when filter empty). */
   const matchMergeYear = yearFilter ?? importYear
@@ -511,6 +514,8 @@ export default function NHSCAPlacementsPage() {
     }
   }
 
+  const rowStatus = (p: NHSCAPlacement) => (p.merged_at ? "merged" : p.match_status)
+
   const filteredPlacements = placements.filter((p) => {
     if (searchTerm && !p.athlete_name.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false
@@ -518,7 +523,7 @@ export default function NHSCAPlacementsPage() {
     if (yearFilter && p.year !== yearFilter) {
       return false
     }
-    if (statusFilter !== "all" && p.match_status !== statusFilter) {
+    if (statusFilter !== "all" && rowStatus(p) !== statusFilter) {
       return false
     }
     return true
@@ -544,67 +549,20 @@ export default function NHSCAPlacementsPage() {
     <div className="min-h-screen bg-gray-50">
       <AdminHeader />
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA Participants Management</h1>
-          <p className="text-gray-600">Import, match, and merge NHSCA tournament data (placers and non-placers)</p>
-          <p className="text-gray-600 mt-2 text-sm">
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold text-[#13294B]">NHSCA participants</h1>
+          <p className="text-sm text-gray-600 mt-1 max-w-3xl">
+            New file?{" "}
             <HardLink href="/admin/nhsca-placements/roster-upload" className="text-[#13294B] underline font-medium">
-              Roster CSV/TSV upload
-            </HardLink>{" "}
-            — paste or load your roster export (comma- or tab-separated); other years stay in place. Same table as bulk
-            JSON import, with division- or source-scoped replace.
+              Roster CSV/TSV
+            </HardLink>
+            . Already loaded? Set <strong>Year</strong> below → <strong>Run full pipeline</strong> → filter{" "}
+            <strong>Unmatched</strong> and use <strong>Find profile</strong> as needed.
           </p>
         </div>
 
-        <Card id="nhsca-match-merge" className="mb-6 border-2 border-emerald-600/40 bg-emerald-50/60 scroll-mt-24">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg text-[#13294B]">
-              <PlayCircle className="h-5 w-5 shrink-0 text-emerald-800" />
-              Match &amp; merge — buttons are here
-            </CardTitle>
-            <p className="text-sm text-gray-700 font-normal mt-1">
-              Use this after <HardLink href="/admin/nhsca-placements/roster-upload" className="underline font-medium text-[#13294B]">roster CSV/TSV import</HardLink>{" "}
-              or the JSON import further down. Rows must already be in the table below.
-            </p>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-4 text-sm text-gray-800">
-            <p>
-              The green button runs <em>expand names from NCHSAA (NC)</em>, then <em>auto-match</em>, then{" "}
-              <em>merge into athlete profiles</em> for year <strong>{matchMergeYear}</strong> in one step. Set the{" "}
-              <strong>Year</strong> filter (under &quot;Find a wrestler&quot;) if you need a different year than{" "}
-              {matchMergeYear}.
-            </p>
-            <Button
-              type="button"
-              onClick={handleRunFullPipeline}
-              disabled={actionBusy || matching || merging || resolvingNchsaa || deleting}
-              className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white h-12 px-6 text-base"
-            >
-              {pipelineRunning ? (
-                <>
-                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                  Running pipeline…
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="h-5 w-5 mr-2" />
-                  Run full pipeline ({matchMergeYear})
-                </>
-              )}
-            </Button>
-            <p className="text-xs text-gray-600">
-              After that, only fix rows you care about: filter <strong>Unmatched</strong> and use <strong>Find profile</strong>. Full first names in the file help Auto-Match a lot — you can still use the separate buttons under &quot;Or step by step&quot; if needed.
-            </p>
-            <p className="text-xs text-gray-600 border-t border-emerald-200 pt-3">
-              <strong>Individual steps:</strong> scroll to <strong>Or step by step</strong> (below the JSON import box) for{" "}
-              <em>Expand names from NCHSAA</em>, <em>Auto-Match to Athletes</em>, and <em>Merge into Profiles</em>{" "}
-              separately.
-            </p>
-          </CardContent>
-        </Card>
-
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
           <Card>
             <CardContent className="p-4">
               <div className="text-sm text-gray-600">Total</div>
@@ -642,112 +600,185 @@ export default function NHSCAPlacementsPage() {
             </CardContent>
           </Card>
         </div>
+        <p className="text-xs text-gray-500 mb-4">
+          Numbers refresh after <strong>Refresh</strong> or any action. &quot;Merged&quot; = row copied into athlete{" "}
+          <code className="bg-gray-100 px-1 rounded">nhsca_results</code>.
+        </p>
 
-        {/* Import Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Step 1 — Import JSON
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Year</label>
+        {/* Filters — above pipeline so year is set first */}
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-[#13294B] mb-2">Year &amp; table filters</p>
+            <p className="text-xs text-gray-600 mb-3">
+              Pipeline uses the <strong>Year</strong> number here (or import year if this box is empty).
+            </p>
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex-1 min-w-[200px]">
                 <Input
-                  type="number"
-                  value={importYear}
-                  onChange={(e) => setImportYear(parseInt(e.target.value) || 2025)}
-                  className="max-w-xs"
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
                 />
               </div>
-              <input
-                ref={jsonFileInputRef}
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={(e) => void handleJsonFileChosen(e.target.files)}
-              />
               <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <label className="block text-sm font-medium">JSON (paste, or load the export file)</label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => jsonFileInputRef.current?.click()}
-                  >
-                    <FileText className="h-4 w-4 mr-1" />
-                    Choose .json file
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-600 mb-2">
-                  Supports a raw array, or <code className="bg-gray-100 px-1 rounded">{"{ year, placements }"}</code>{" "}
-                  (year in the file sets the import year when present). Each row needs{" "}
-                  <code className="bg-gray-100 px-1 rounded">division</code>: <strong>Senior</strong> or{" "}
-                  <strong>Junior</strong> — bulk import replaces that division only for NC (same year).
-                </p>
-                <div
-                  onDragEnter={(e) => {
-                    e.preventDefault()
-                    setImportDragActive(true)
-                  }}
-                  onDragLeave={(e) => {
-                    e.preventDefault()
-                    if (e.currentTarget === e.target) setImportDragActive(false)
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault()
-                  }}
-                  onDrop={handleImportFileDrop}
-                  className={`rounded-md border-2 border-dashed transition-colors ${
-                    importDragActive ? "border-[#13294B] bg-blue-50/50" : "border-gray-200"
-                  }`}
-                >
-                  <textarea
-                    value={jsonInput}
-                    onChange={(e) => setJsonInput(e.target.value)}
-                    placeholder='[{"athlete_name": "John Doe", "placement": null, "record": "2-2", "weight_class": "157", "division": "Senior" | "Junior", "state": "NC", "year": 2026}, ...]'
-                    className="w-full h-40 p-3 border-0 rounded-md font-mono text-sm bg-transparent focus:outline-none focus:ring-0"
-                  />
-                </div>
-                {importDragActive && (
-                  <p className="text-xs text-[#13294B] mt-1">Drop .json file here</p>
-                )}
+                <Input
+                  type="number"
+                  placeholder={`Year (${importYear})`}
+                  title="Filter table; also sets year for pipeline when filled"
+                  value={yearFilter || ""}
+                  onChange={(e) => setYearFilter(e.target.value ? parseInt(e.target.value) : null)}
+                  className="w-32"
+                />
               </div>
-              {importMessage && (
-                <div
-                  className={`p-3 rounded ${
-                    importMessage.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}
+              <div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border rounded h-10"
                 >
-                  {importMessage.text}
-                </div>
-              )}
-              <Button onClick={handleImport} disabled={importing || pipelineRunning} className="bg-[#13294B] hover:bg-[#1a3a5c]">
-                {importing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import Data
-                  </>
-                )}
-              </Button>
+                  <option value="all">All Status</option>
+                  <option value="unmatched">Unmatched</option>
+                  <option value="auto_matched">Auto Matched</option>
+                  <option value="manually_matched">Manually Matched</option>
+                  <option value="merged">Merged</option>
+                </select>
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        <Card id="nhsca-match-merge" className="mb-4 border border-emerald-600/50 bg-emerald-50/50 scroll-mt-24">
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="font-semibold text-[#13294B]">Run full pipeline</p>
+              <p className="text-sm text-gray-600">
+                NCHSAA name cleanup → auto-match → merge into profiles for <strong>{matchMergeYear}</strong>.
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={handleRunFullPipeline}
+              disabled={actionBusy || matching || merging || resolvingNchsaa || deleting}
+              className="shrink-0 bg-emerald-700 hover:bg-emerald-800 text-white h-11 px-5"
+            >
+              {pipelineRunning ? (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                  Running…
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="h-5 w-5 mr-2" />
+                  Run full pipeline ({matchMergeYear})
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {importMessage && (
+          <div
+            className={`mb-4 p-3 rounded-md text-sm ${
+              importMessage.type === "success" ? "bg-green-100 text-green-900" : "bg-red-100 text-red-900"
+            }`}
+          >
+            {importMessage.text}
+          </div>
+        )}
+
+        <Collapsible open={jsonImportOpen} onOpenChange={setJsonImportOpen} className="mb-4">
+          <Card>
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-2 p-4 text-left hover:bg-gray-50 rounded-t-lg border-b border-gray-100"
+              >
+                <span className="font-medium text-[#13294B]">Optional: JSON bulk import</span>
+                <ChevronDown
+                  className={`h-5 w-5 shrink-0 text-gray-500 transition-transform ${jsonImportOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0 pb-4 space-y-4">
+                <p className="text-xs text-gray-600">
+                  Skip this if you used <HardLink href="/admin/nhsca-placements/roster-upload">roster CSV/TSV</HardLink>.
+                  JSON rows use <code className="bg-gray-100 px-1 rounded">division</code> (e.g. Senior/Junior and
+                  roster divisions per your file).
+                </p>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Import year (JSON)</label>
+                  <Input
+                    type="number"
+                    value={importYear}
+                    onChange={(e) => setImportYear(parseInt(e.target.value) || 2025)}
+                    className="max-w-xs"
+                  />
+                </div>
+                <input
+                  ref={jsonFileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={(e) => void handleJsonFileChosen(e.target.files)}
+                />
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium">JSON</label>
+                    <Button type="button" variant="outline" size="sm" onClick={() => jsonFileInputRef.current?.click()}>
+                      <FileText className="h-4 w-4 mr-1" />
+                      Choose file
+                    </Button>
+                  </div>
+                  <div
+                    onDragEnter={(e) => {
+                      e.preventDefault()
+                      setImportDragActive(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      if (e.currentTarget === e.target) setImportDragActive(false)
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                    }}
+                    onDrop={handleImportFileDrop}
+                    className={`rounded-md border-2 border-dashed transition-colors ${
+                      importDragActive ? "border-[#13294B] bg-blue-50/50" : "border-gray-200"
+                    }`}
+                  >
+                    <textarea
+                      value={jsonInput}
+                      onChange={(e) => setJsonInput(e.target.value)}
+                      placeholder='[{"athlete_name": "...", "division": "Senior", "year": 2026, ...}, ...]'
+                      className="w-full h-32 p-3 border-0 rounded-md font-mono text-sm bg-transparent focus:outline-none focus:ring-0"
+                    />
+                  </div>
+                  {importDragActive && <p className="text-xs text-[#13294B] mt-1">Drop .json here</p>}
+                </div>
+                <Button onClick={handleImport} disabled={importing || pipelineRunning} className="bg-[#13294B] hover:bg-[#1a3a5c]">
+                  {importing ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import JSON
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
         {/* Actions */}
         <div id="nhsca-step-by-step" className="mb-2 scroll-mt-24">
-          <h2 className="text-base font-semibold text-[#13294B] mb-1">Or step by step (same as pipeline, one button at a time)</h2>
-          <p className="text-sm text-gray-600">
-            Same actions as the pipeline, one at a time. Year: <strong>{matchMergeYear}</strong>.
-          </p>
+          <h2 className="text-sm font-semibold text-[#13294B]">Step-by-step (same as pipeline)</h2>
+          <p className="text-xs text-gray-600">Year: {matchMergeYear}</p>
         </div>
         <div className="flex flex-wrap items-end gap-4 mb-6">
           <div className="flex flex-col gap-1 min-w-[200px]">
@@ -825,46 +856,6 @@ export default function NHSCAPlacementsPage() {
           </Button>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-600 mb-3">Find a wrestler in the table — filter by year or status (e.g. Unmatched).</p>
-            <div className="flex gap-4 flex-wrap">
-              <div className="flex-1 min-w-[200px]">
-                <Input
-                  placeholder="Search by name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <Input
-                  type="number"
-                  placeholder={`Year (${importYear})`}
-                  title="Filter table; also sets year for Match/Merge when filled"
-                  value={yearFilter || ""}
-                  onChange={(e) => setYearFilter(e.target.value ? parseInt(e.target.value) : null)}
-                  className="w-32"
-                />
-              </div>
-              <div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border rounded"
-                >
-                  <option value="all">All Status</option>
-                  <option value="unmatched">Unmatched</option>
-                  <option value="auto_matched">Auto Matched</option>
-                  <option value="manually_matched">Manually Matched</option>
-                  <option value="merged">Merged</option>
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Placements Table */}
         <Card>
           <CardHeader>
@@ -872,7 +863,7 @@ export default function NHSCAPlacementsPage() {
               All participants ({filteredPlacements.length} of {placements.length})
             </CardTitle>
             <p className="text-sm font-normal text-gray-600 mt-1">
-              Use <strong>Find profile</strong> when a row is still unmatched after Auto-Match.
+              <strong>Unmatched</strong> → <strong>Find profile</strong>.
             </p>
           </CardHeader>
           <CardContent>
@@ -948,7 +939,7 @@ export default function NHSCAPlacementsPage() {
                           )}
                         </td>
                         <td className="p-2">{p.record || "-"}</td>
-                        <td className="p-2">{getStatusBadge(p.match_status)}</td>
+                        <td className="p-2">{getStatusBadge(rowStatus(p))}</td>
                       </tr>
                     ))}
                   </tbody>

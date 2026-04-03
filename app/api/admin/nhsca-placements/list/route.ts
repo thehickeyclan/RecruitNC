@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     const nonPlacers = total - placers
     const matched = placements?.filter((p) => p.match_status !== "unmatched").length || 0
     const unmatched = total - matched
-    const merged = placements?.filter((p) => p.match_status === "merged").length || 0
+    const merged =
+      placements?.filter(
+        (p) => p.match_status === "merged" || (p.merged_at != null && String(p.merged_at).length > 0),
+      ).length || 0
 
     return NextResponse.json({
       placements: placements || [],
