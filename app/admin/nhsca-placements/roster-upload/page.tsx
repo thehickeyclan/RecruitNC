@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useRef, useState, type DragEvent } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { AdminHeader } from "@/components/admin-header"
@@ -11,7 +11,7 @@ import {
   type NhscaRosterTsvDeleteMode,
   type NhscaRosterDelimiterMode,
 } from "@/lib/nhsca-roster-tsv-parse"
-import { FileText, RefreshCw, Upload, ArrowLeft, Table } from "lucide-react"
+import { FileText, RefreshCw, Upload, ArrowLeft, Table, PlayCircle } from "lucide-react"
 
 export default function NhscaRosterUploadPage() {
   const [tsv, setTsv] = useState("")
@@ -123,11 +123,11 @@ export default function NhscaRosterUploadPage() {
       <div className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-6">
           <HardLink
-            href="/admin/nhsca-placements"
+            href="/admin/nhsca-placements#nhsca-match-merge"
             className="inline-flex items-center gap-1 text-sm text-[#13294B] font-medium mb-3 hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to NHSCA participants
+            Back to NHSCA participants (match/merge)
           </HardLink>
           <h1 className="text-3xl font-bold text-[#13294B] mb-2">NHSCA roster CSV / TSV import</h1>
           <p className="text-gray-600">
@@ -137,6 +137,40 @@ export default function NhscaRosterUploadPage() {
             <strong>source tag</strong>.
           </p>
         </div>
+
+        <Card className="mb-6 border-[#13294B]/25 bg-[#f4f7fb]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-[#13294B] flex items-center gap-2">
+              <PlayCircle className="h-5 w-5 shrink-0 text-emerald-700" />
+              Match &amp; merge (different page)
+            </CardTitle>
+            <CardDescription className="text-gray-700 text-sm leading-relaxed">
+              This screen only <strong>imports</strong> rows into{" "}
+              <code className="bg-white/80 px-1 rounded text-xs">nhsca_placements</code>. To link them to athlete
+              profiles, open{" "}
+              <HardLink href="/admin/nhsca-placements#nhsca-match-merge" className="font-semibold text-[#13294B] underline">
+                NHSCA Participants
+              </HardLink>
+              , set the table <strong>Year</strong> filter to the same year you imported (e.g. {year}), then click{" "}
+              <strong>Run full pipeline</strong> (expand names → auto-match → merge). Or use the three buttons under
+              &quot;Or step by step&quot; in that order.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <HardLink
+              href="/admin/nhsca-placements#nhsca-match-merge"
+              className="inline-flex items-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+            >
+              Open NHSCA Participants — run pipeline
+            </HardLink>
+            <p className="text-xs text-gray-600 mt-2">
+              Full URL:{" "}
+              <span className="font-mono break-all">
+                https://app.ncwrestlingunited.com/admin/nhsca-placements#nhsca-match-merge
+              </span>
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="mb-6 border-[#13294B]/20">
           <CardHeader>

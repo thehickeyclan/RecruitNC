@@ -21,7 +21,6 @@ import {
   CheckCircle,
   AlertCircle,
   FileText,
-  ListOrdered,
   School,
   PlayCircle,
 } from "lucide-react"
@@ -557,18 +556,23 @@ export default function NHSCAPlacementsPage() {
           </p>
         </div>
 
-        <Card className="mb-6 border-[#13294B]/25 bg-[#f4f7fb]">
+        <Card id="nhsca-match-merge" className="mb-6 border-2 border-emerald-600/40 bg-emerald-50/60 scroll-mt-24">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg text-[#13294B]">
-              <ListOrdered className="h-5 w-5 shrink-0" />
-              Simple path
+              <PlayCircle className="h-5 w-5 shrink-0 text-emerald-800" />
+              Match &amp; merge — buttons are here
             </CardTitle>
+            <p className="text-sm text-gray-700 font-normal mt-1">
+              Use this after <HardLink href="/admin/nhsca-placements/roster-upload" className="underline font-medium text-[#13294B]">roster CSV/TSV import</HardLink>{" "}
+              or the JSON import further down. Rows must already be in the table below.
+            </p>
           </CardHeader>
           <CardContent className="pt-0 space-y-4 text-sm text-gray-800">
             <p>
-              <strong>1.</strong> Import your JSON below, then <strong>2.</strong> click the big button — it runs{" "}
-              <em>expand names from state (NC)</em>, <em>auto-match</em>, and <em>merge into profiles</em> for year{" "}
-              <strong>{matchMergeYear}</strong> in one go.
+              The green button runs <em>expand names from NCHSAA (NC)</em>, then <em>auto-match</em>, then{" "}
+              <em>merge into athlete profiles</em> for year <strong>{matchMergeYear}</strong> in one step. Set the{" "}
+              <strong>Year</strong> filter (under &quot;Find a wrestler&quot;) if you need a different year than{" "}
+              {matchMergeYear}.
             </p>
             <Button
               type="button"
@@ -591,8 +595,10 @@ export default function NHSCAPlacementsPage() {
             <p className="text-xs text-gray-600">
               After that, only fix rows you care about: filter <strong>Unmatched</strong> and use <strong>Find profile</strong>. Full first names in the file help Auto-Match a lot — you can still use the separate buttons under &quot;Or step by step&quot; if needed.
             </p>
-            <p className="text-xs text-gray-600 border-t border-[#13294B]/10 pt-3">
-              Set the <strong>Year</strong> filter above the table to change the year used here. Re-importing the same year replaces that year&apos;s data.
+            <p className="text-xs text-gray-600 border-t border-emerald-200 pt-3">
+              <strong>Individual steps:</strong> scroll to <strong>Or step by step</strong> (below the JSON import box) for{" "}
+              <em>Expand names from NCHSAA</em>, <em>Auto-Match to Athletes</em>, and <em>Merge into Profiles</em>{" "}
+              separately.
             </p>
           </CardContent>
         </Card>
@@ -737,8 +743,8 @@ export default function NHSCAPlacementsPage() {
         </Card>
 
         {/* Actions */}
-        <div className="mb-2">
-          <h2 className="text-base font-semibold text-[#13294B] mb-1">Or step by step</h2>
+        <div id="nhsca-step-by-step" className="mb-2 scroll-mt-24">
+          <h2 className="text-base font-semibold text-[#13294B] mb-1">Or step by step (same as pipeline, one button at a time)</h2>
           <p className="text-sm text-gray-600">
             Same actions as the pipeline, one at a time. Year: <strong>{matchMergeYear}</strong>.
           </p>

@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Upload, FileImage, Loader2, CheckCircle2, AlertCircle, Trophy } from "lucide-react"
 import Link from "next/link"
 import { AdminHeader } from "@/components/admin-header"
+import { HardLink } from "@/components/hard-link"
 
 const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "144", "150", "157", "165", "175", "190", "215", "285"]
 const CLASSIFICATIONS = ["1A/2A", "1A", "2A", "3A", "4A", "5A", "6A", "7A", "8A"]
@@ -42,7 +43,12 @@ function BracketUploadTab() {
   const handleSingleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file || !year || !classification || !weightClass) {
-      toast({ title: "Missing fields", description: "Select year, division, weight, and a file.", variant: "destructive" })
+      toast({
+        title: "NCHSAA bracket image",
+        description:
+          "Need year, division, weight, and one PNG/JPG bracket screenshot. Roster CSV (nhsca_roster_rows) goes under NHSCA Participants → Roster CSV/TSV upload.",
+        variant: "destructive",
+      })
       return
     }
     setSingleLoading(true)
@@ -70,8 +76,15 @@ function BracketUploadTab() {
 
   const handleBulkUpload = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!bulkFiles.length || !bulkYear) {
-      toast({ title: "Missing data", description: "Select year and at least one file.", variant: "destructive" })
+    if (!bulkFiles.length || !String(bulkYear).trim()) {
+      const need: string[] = []
+      if (!String(bulkYear).trim()) need.push("year")
+      if (!bulkFiles.length) need.push("at least one PNG/JPG image")
+      toast({
+        title: "NCHSAA bracket images only",
+        description: `${need.join(" and ")} required. This bulk tool does not accept CSV — files must be named like 3A-113.png. For nhsca_roster_rows.csv use Roster CSV/TSV upload (NHSCA Participants).`,
+        variant: "destructive",
+      })
       return
     }
     setBulkLoading(true)
@@ -105,6 +118,25 @@ function BracketUploadTab() {
 
   return (
     <div className="space-y-6">
+      <Card className="border-emerald-700/40 bg-emerald-50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-emerald-950">NHSCA roster CSV / spreadsheet?</CardTitle>
+          <CardDescription className="text-emerald-900/90 text-sm leading-relaxed">
+            This page is only for <strong>NCHSAA state bracket pictures</strong> (screenshots, PNG/JPG). If your file is{" "}
+            <span className="font-mono text-xs bg-white/80 px-1 rounded">nhsca_roster_rows.csv</span> or similar, use the
+            roster importer instead — same admin area, different tool.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <HardLink
+            href="/admin/nhsca-placements/roster-upload"
+            className="inline-flex items-center rounded-md bg-[#13294B] px-4 py-2 text-sm font-medium text-white hover:bg-[#1a3a5c]"
+          >
+            Open NHSCA roster CSV/TSV upload
+          </HardLink>
+        </CardContent>
+      </Card>
+
       <Card className="border-amber-200 bg-amber-50/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
@@ -183,7 +215,10 @@ function BracketUploadTab() {
             Bulk upload
           </CardTitle>
           <CardDescription>
-            Upload multiple bracket images. Same year for all. Name files with division and weight, e.g. <span className="font-mono text-xs">1A2A-106.png</span>, <span className="font-mono text-xs">3A-113.png</span>.
+            Upload multiple <strong>bracket images</strong> only (PNG/JPG). Same year for all. Name files with division and
+            weight, e.g. <span className="font-mono text-xs">1A2A-106.png</span>,{" "}
+            <span className="font-mono text-xs">3A-113.png</span>.{" "}
+            <span className="text-amber-900 font-medium">Not for roster CSV</span> — use the green box above.
           </CardDescription>
         </CardHeader>
         <CardContent>
