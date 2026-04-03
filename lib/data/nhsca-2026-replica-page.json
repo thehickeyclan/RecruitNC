@@ -21,7 +21,7 @@
     { "athlete_name": "Bentley Sly",     "year": 2026, "division": "Senior",    "weight": "152", "placement": 2, "wins": 6, "losses": 1, "high_school": "Stuart Cramer", "club": null, "state": "NC" },
     { "athlete_name": "Dominic Blue",    "year": 2026, "division": "Senior",    "weight": "160", "placement": 3, "wins": 5, "losses": 1, "high_school": "Union Pines", "club": null, "state": "NC" },
     { "athlete_name": "Andrew Meadows",  "year": 2026, "division": "Senior",    "weight": "170", "placement": 7, "wins": 5, "losses": 2, "high_school": "Mount Airy", "club": null, "state": "NC" },
-    { "athlete_name": "Jacob Reigel",    "year": 2026, "division": "Senior",    "weight": "182", "placement": 8, "wins": 4, "losses": 3, "high_school": "Uwharrie Charter", "club": null, "state": "NC" },
+    { "athlete_name": "Jacob Reigel",    "year": 2026, "division": "Senior",    "weight": "182", "placement": 8, "wins": 4, "losses": 3, "high_school": "Mount Pleasant", "club": null, "state": "NC" },
     { "athlete_name": "Cael Dunn",       "year": 2026, "division": "Senior",    "weight": "195", "placement": 7, "wins": 6, "losses": 2, "high_school": "South Davidson", "club": null, "state": "NC" },
     { "athlete_name": "Avery Rhymer",    "year": 2026, "division": "Senior",    "weight": "285", "placement": 8, "wins": 5, "losses": 3, "high_school": "St. Stephens", "club": null, "state": "NC" }
   ],

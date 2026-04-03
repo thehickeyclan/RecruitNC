@@ -1,6 +1,6 @@
 "use client"
 
-import { createBrowserClient } from "@supabase/ssr"
+import { createBrowserClient as createSupabaseSsrClient } from "@supabase/ssr"
 
 /**
  * ⚠️ LOCKED CONFIGURATION - DO NOT MODIFY ⚠️
@@ -31,7 +31,7 @@ export function createClient() {
     throw new Error("Invalid auth configuration - autoRefreshToken must be false")
   }
   
-  return createBrowserClient(
+  return createSupabaseSsrClient(
     url,
     key,
     {
@@ -79,3 +79,7 @@ export function createClient() {
     },
   )
 }
+
+/** Aliases for NHSCA live dashboard (v0 import); same client as `createClient`. */
+export const getSupabaseBrowserClient = createClient
+export const createBrowserClient = createClient

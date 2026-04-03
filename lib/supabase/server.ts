@@ -64,3 +64,6 @@ export async function createClient() {
     },
   })
 }
+
+/** Alias for NHSCA live dashboard server actions; same as `createClient`. */
+export const getSupabaseServerClient = createClient

@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "year": 2026,
+    "state": "NC",
+    "note": "NC-only All-Americans. high_school/club to be enriched by RecruitNC."
+  },
+
+  "section1_all_americans": [
+    { "athlete_name": "Carson Raper",    "year": 2026, "division": "Freshman",  "weight": "106", "placement": 4, "wins": 8, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Isaac Young",     "year": 2026, "division": "Freshman",  "weight": "152", "placement": 6, "wins": 4, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Braylen Yates",   "year": 2026, "division": "Freshman",  "weight": "170", "placement": 1, "wins": 5, "losses": 0, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Landon Gallagher","year": 2026, "division": "Freshman",  "weight": "195", "placement": 7, "wins": 3, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Ryan Thompson",   "year": 2026, "division": "Sophomore", "weight": "170", "placement": 7, "wins": 5, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Drew Teeter",     "year": 2026, "division": "Sophomore", "weight": "182", "placement": 4, "wins": 5, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Garrett Young",   "year": 2026, "division": "Sophomore", "weight": "220", "placement": 3, "wins": 5, "losses": 1, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Aiden White",     "year": 2026, "division": "Junior",    "weight": "132", "placement": 4, "wins": 9, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Carson Worrick",  "year": 2026, "division": "Junior",    "weight": "160", "placement": 4, "wins": 7, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Tobin McNair",    "year": 2026, "division": "Junior",    "weight": "160", "placement": 5, "wins": 5, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Gavin Lopez",     "year": 2026, "division": "Junior",    "weight": "220", "placement": 4, "wins": 4, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Samuel Gantt",    "year": 2026, "division": "Senior",    "weight": "138", "placement": 8, "wins": 5, "losses": 3, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Bentley Sly",     "year": 2026, "division": "Senior",    "weight": "152", "placement": 2, "wins": 6, "losses": 1, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Dominic Blue",    "year": 2026, "division": "Senior",    "weight": "160", "placement": 3, "wins": 5, "losses": 1, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Andrew Meadows",  "year": 2026, "division": "Senior",    "weight": "170", "placement": 7, "wins": 5, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Jacob Reigel",    "year": 2026, "division": "Senior",    "weight": "182", "placement": 8, "wins": 4, "losses": 3, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Cael Dunn",       "year": 2026, "division": "Senior",    "weight": "195", "placement": 7, "wins": 6, "losses": 2, "high_school": null, "club": null, "state": "NC" },
+    { "athlete_name": "Avery Rhymer",    "year": 2026, "division": "Senior",    "weight": "285", "placement": 8, "wins": 5, "losses": 3, "high_school": null, "club": null, "state": "NC" }
+  ],
+
+  "section3_division_counts": {
+    "Freshman":  4,
+    "Sophomore": 3,
+    "Junior":    4,
+    "Senior":    7,
+    "total":     18
+  },
+
+  "section4_division_standings": {
+    "Freshman": {
+      "nc_count": 4,
+      "nc_national_rank": null,
+      "highlights": [
+        "1 national champion (Braylen Yates, 170)",
+        "4th place finish (Carson Raper, 106)",
+        "6th place finish (Isaac Young, 152)",
+        "7th place finish (Landon Gallagher, 195)"
+      ]
+    },
+    "Sophomore": {
+      "nc_count": 3,
+      "nc_national_rank": null,
+      "highlights": [
+        "3rd place finish (Garrett Young, 220)",
+        "4th place finish (Drew Teeter, 182)",
+        "7th place finish (Ryan Thompson, 170)"
+      ]
+    },
+    "Junior": {
+      "nc_count": 4,
+      "nc_national_rank": null,
+      "highlights": [
+        "3 fourth-place finishers (White 132, Worrick 160, Lopez 220)",
+        "5th place finish (Tobin McNair, 160)",
+        "2 All-Americans at 160 lbs"
+      ]
+    },
+    "Senior": {
+      "nc_count": 7,
+      "nc_national_rank": null,
+      "highlights": [
+        "2nd place finish (Bentley Sly, 152)",
+        "3rd place finish (Dominic Blue, 160)",
+        "3 eighth-place finishers",
+        "2 seventh-place finishers"
+      ]
+    }
+  },
+
+  "section8_placement_breakdown": {
+    "Freshman":  { "1st": 1, "4th": 1, "6th": 1, "7th": 1 },
+    "Sophomore": { "3rd": 1, "4th": 1, "7th": 1 },
+    "Junior":    { "4th": 3, "5th": 1 },
+    "Senior":    { "2nd": 1, "3rd": 1, "7th": 2, "8th": 3 }
+  },
+
+  "section2_national_story": {
+    "nc_rank_among_states": null,
+    "total_states_ranked": null,
+    "yoy_growth_note": "Needs 2025 NC total to compute",
+    "historic_headline": null
+  },
+
+  "section3_state_data": {
+    "note": "STATE_DATA_2026 — populate with full national state breakdown once available",
+    "nc_row": { "state": "NC", "Freshman": 4, "Sophomore": 3, "Junior": 4, "Senior": 7, "total": 18, "isNC": true }
+  },
+
+  "section5_multi_time_aas": [],
+
+  "section6_summary_strip": {
+    "national_finalist": { "count": 1, "name": "Braylen Yates", "division": "Freshman", "placement": 1 },
+    "bonus_point_win_pct": null
+  },
+
+  "section7_summary_mini_cards": {
+    "nc_rank": null,
+    "nc_total": 18,
+    "highlight_number": null,
+    "highlight_note": "1 national champion"
+  },
+
+  "section9_top_clubs_schools": {
+    "note": "To be enriched by RecruitNC once high_school/club fields are populated",
+    "top_high_schools": [],
+    "top_clubs": []
+  }
+}

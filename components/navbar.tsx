@@ -21,6 +21,7 @@ import {
   Bell,
   Crown,
   Archive,
+  Activity,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
@@ -209,6 +210,11 @@ export function Navbar() {
       icon: Trophy,
       badge: "current",
       badgeLabel: "Current",
+    },
+    {
+      href: "/nhsca/live",
+      label: "Live dashboard",
+      icon: Activity,
     },
     {
       href: "/nhsca/2025",
@@ -753,6 +759,9 @@ export function Navbar() {
                           </a>
                           <a href="/nhsca/2026" className={mobileSubLinkClass("/nhsca/2026")} onClick={() => setIsOpen(false)}>
                             2026 Results
+                          </a>
+                          <a href="/nhsca/live" className={mobileSubLinkClass("/nhsca/live")} onClick={() => setIsOpen(false)}>
+                            Live dashboard
                           </a>
                           <a href="/nhsca/2025" className={mobileSubLinkClass("/nhsca/2025")} onClick={() => setIsOpen(false)}>
                             2025 Results

@@ -189,7 +189,7 @@ export function mergeNhscaForPublicRankings(
 }
 
 /**
- * **The only NHSCA merge for an athlete:** `nhsca_placements` / fallback table × name variants,
+ * **The only NHSCA merge for an athlete:** `nhsca_placements` / `wrestling_nhsca_results` / `nhsca_roster` × name variants,
  * merged with `nhsca_results` JSON + legacy columns (any year). Do not reimplement table walks elsewhere.
  *
  * Pass a full `athletes` row when possible; for name-only lookups use `{ name, wrestling_name?, graduationyear }`.

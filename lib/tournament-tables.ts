@@ -1,6 +1,6 @@
 /**
  * Fetch NHSCA and Super32 from the actual database tables.
- * Source of truth: nhsca_placements, super32_results (and wrestling_nhsca_results).
+ * Source of truth: nhsca_placements, wrestling_nhsca_results, then nhsca_roster (live dashboard NC roster).
  * No more copying data into athlete rows – read from where it lives.
  */
 
@@ -39,6 +39,70 @@ const SAME_PERSON_ALIASES: string[][] = [
   ["Jackson D'Ettore", "Jackson Dettore", "Jackson D\u2019Ettore"],
   ["Samuel Gantt", "Sammy Gantt"],
 ]
+
+/**
+ * First-name equivalents (Matt/Matthew, Mike/Michael) so roster/import spelling can differ from profile `name`.
+ * Same last name + school/weight still disambiguate in admin; here we only expand **first-token** variants for ILIKE search.
+ */
+const FIRST_NAME_EQUIVALENT_GROUPS: string[][] = [
+  ["Matthew", "Matt"],
+  ["Michael", "Mike", "Mick"],
+  ["William", "Will", "Bill", "Billy"],
+  ["Robert", "Bob", "Rob", "Bobby"],
+  ["Richard", "Rick", "Dick"],
+  ["James", "Jim", "Jimmy", "Jamie"],
+  ["Joseph", "Joe", "Joey"],
+  ["Anthony", "Tony"],
+  ["Nicholas", "Nick", "Nicky"],
+  ["Christopher", "Chris"],
+  ["Benjamin", "Ben"],
+  ["Samuel", "Sam"],
+  ["Daniel", "Dan", "Danny"],
+  ["Joshua", "Josh"],
+  ["Thomas", "Tom", "Tommy"],
+  ["Andrew", "Andy"],
+  ["Patrick", "Pat"],
+  ["Charles", "Chuck", "Charlie"],
+  ["Edward", "Ed", "Eddie"],
+  ["Kenneth", "Ken", "Kenny"],
+  ["Donald", "Don"],
+  ["Timothy", "Tim"],
+  ["Stephen", "Steve"],
+  ["Zachary", "Zach", "Zack"],
+  ["Cameron", "Cam"],
+  ["Nathan", "Nate"],
+  ["Alexander", "Alex"],
+  ["Jonathan", "Jon"],
+  ["Gregory", "Greg"],
+  ["Jeffrey", "Jeff"],
+  ["Vincent", "Vince"],
+  ["Bradford", "Brad"],
+  ["Douglas", "Doug"],
+  ["Lawrence", "Larry"],
+  ["Raymond", "Ray"],
+  ["Francis", "Frank"],
+]
+
+/** Add "Matt Hickey" when name is "Matthew Hickey" (and reverse), per FIRST_NAME_EQUIVALENT_GROUPS. */
+function expandFirstNameEquivalents(fullName: string): string[] {
+  const t = normalizeApostrophes((fullName ?? "").trim())
+  if (!t) return []
+  const parts = t.split(/\s+/).filter(Boolean)
+  if (parts.length < 2) return []
+  const firstRaw = parts[0]
+  const firstLower = firstRaw.toLowerCase()
+  const rest = parts.slice(1).join(" ")
+  const out: string[] = []
+  for (const group of FIRST_NAME_EQUIVALENT_GROUPS) {
+    const lowerGroup = group.map((g) => g.toLowerCase())
+    if (!lowerGroup.includes(firstLower)) continue
+    for (const alt of group) {
+      if (alt.toLowerCase() === firstLower) continue
+      out.push(`${alt} ${rest}`)
+    }
+  }
+  return out
+}
 
 /** Normalize for alias match: treat backtick as apostrophe, curly as straight, so all Jackson spellings match. */
 function normalizeForAlias(s: string): string {
@@ -97,6 +161,13 @@ export function getNameVariants(name: string): string[] {
     const parts = v.split(/\s+/).filter(Boolean)
     if (parts.length >= 2) expanded.add(`${parts.slice(1).join(" ")}, ${parts[0]}`)
   }
+  for (const v of [...expanded]) {
+    for (const alt of expandFirstNameEquivalents(v)) {
+      expanded.add(alt)
+      const ap = alt.split(/\s+/).filter(Boolean)
+      if (ap.length >= 2) expanded.add(`${ap.slice(1).join(" ")}, ${ap[0]}`)
+    }
+  }
   return [...expanded]
 }
 
@@ -114,6 +185,80 @@ function formatPlacement(p: number | string | null | undefined): string {
 /** NHSCA row `year` is tournament year (e.g. 2026). Allow +1 vs profile grad year for off-by-one entries and spring nationals vs class year. */
 function nhscaYearUpperBound(graduationYear: number): number {
   return graduationYear + 1
+}
+
+/** Tournament calendar year for `nhsca_roster` rows when the table has no `year` column (live dashboard). */
+const NHSCA_ROSTER_TOURNAMENT_YEAR = 2026
+
+function mapNhscaRosterRowToResult(r: Record<string, unknown>, tournamentYear: number): TournamentResultRow {
+  const wins = r.wins != null ? Number(r.wins) : null
+  const losses = r.losses != null ? Number(r.losses) : null
+  const record =
+    wins != null && !Number.isNaN(wins) && losses != null && !Number.isNaN(losses)
+      ? `${wins}-${losses}`
+      : ""
+  const placementRaw = r.placement
+  return {
+    year: tournamentYear,
+    placement: formatPlacement(placementRaw as number | string | null | undefined),
+    record,
+    weight: (r.weight_class ?? r.weight ?? "").toString().trim(),
+    division: (r.classification ?? r.division ?? "").toString().trim(),
+  }
+}
+
+/**
+ * Live dashboard table `nhsca_roster`: NC kids, tournament record, optional placement.
+ * Matches profile by name variants + NHSCA division vs graduation year (same rules as bracket dedupe).
+ */
+async function getNHSCAFromNhscaRosterTable(
+  supabase: SupabaseClient,
+  athleteName: string,
+  graduationYear: number,
+): Promise<TournamentResultRow[]> {
+  const tournamentYear = NHSCA_ROSTER_TOURNAMENT_YEAR
+  const want = preferredNhscaBracketKeyword(graduationYear, tournamentYear)
+  if (!want) return []
+
+  const mapRows = (raw: Record<string, unknown>[]): TournamentResultRow[] => {
+    if (!raw.length) return []
+    const asResults = raw.map((r) => mapNhscaRosterRowToResult(r, tournamentYear))
+    const scored = asResults.map((row, i) => ({
+      row,
+      score: scoreNhscaDivisionMatch(raw[i].classification as string | undefined, want),
+    }))
+    const matched = scored.filter((s) => s.score > 0)
+    const list = matched.length ? matched.map((s) => s.row) : asResults
+    if (list.length === 1) return list
+    const picked = pickNhscaRowWhenUnscored(list, want)
+    return picked ? [picked] : []
+  }
+
+  const exactName = normalizeApostrophes(athleteName.trim())
+  const { data: exactRows, error: exactErr } = await supabase.from("nhsca_roster").select("*").ilike("name", exactName)
+  if (exactErr?.code === "42P01" || exactErr?.message?.includes("does not exist")) return []
+  if (exactErr) {
+    recruitNcDebugLogNhsca("nhscaRoster:exactError", { message: exactErr.message })
+    return []
+  }
+  if (exactRows?.length) return mapRows(exactRows as Record<string, unknown>[])
+
+  const lastFirst = getNameVariants(athleteName).find((n) => n.includes(","))
+  if (lastFirst) {
+    const { data: lfRows, error: lfErr } = await supabase.from("nhsca_roster").select("*").ilike("name", lastFirst)
+    if (!lfErr && lfRows?.length) return mapRows(lfRows as Record<string, unknown>[])
+  }
+
+  const namesToTry = getNameVariants(athleteName)
+  for (const searchName of namesToTry) {
+    for (const pattern of getIlikePatternsForVariation(searchName)) {
+      const { data: rows, error } = await supabase.from("nhsca_roster").select("*").ilike("name", pattern)
+      if (error?.code === "42P01" || error?.message?.includes("does not exist")) return []
+      if (error) continue
+      if (rows?.length) return mapRows(rows as Record<string, unknown>[])
+    }
+  }
+  return []
 }
 
 /**
@@ -216,6 +361,10 @@ export async function getNHSCAFromTables(
       if (results?.length) return results.map(mapResult)
     }
   }
+
+  // 3. nhsca_roster — live dashboard NC roster (name + classification vs grad year). Table may be absent in some DBs.
+  const fromRoster = await getNHSCAFromNhscaRosterTable(supabase, athleteName, graduationYear)
+  if (fromRoster.length) return fromRoster
 
   return []
 }
