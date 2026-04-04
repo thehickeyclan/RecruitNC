@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
+import { HardLink } from "@/components/hard-link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -140,6 +141,28 @@ export default function ClassOf2026RankingsPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="mb-8 sm:mb-10">
+            <Card className="border-2 border-[#D3B574]/50 bg-gradient-to-br from-white to-slate-50 shadow-md">
+              <CardContent className="p-5 sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#003366]">Editorial</p>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mt-1 mb-2">
+                  Final Class of 2026 Rankings: A Senior Sendoff
+                </h2>
+                <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4">
+                  The Class of 2026 has closed the book on high school wrestling — from NHSCA and Super 32 to
+                  four-time state champions and college opens. Read our full tribute to this class, their families,
+                  coaches, and what comes next at the next level.
+                </p>
+                <HardLink
+                  href="/news/class-of-2026-senior-sendoff"
+                  className="inline-flex items-center gap-2 rounded-md bg-[#003366] px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#1e3a5f] transition-colors"
+                >
+                  Read the full sendoff
+                </HardLink>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="space-y-6 sm:space-y-8 mb-8 sm:mb-12">

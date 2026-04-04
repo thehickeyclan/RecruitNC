@@ -32,6 +32,23 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "class-of-2026-senior-sendoff",
+    slug: "class-of-2026-senior-sendoff",
+    title: "Final Class of 2026 Rankings: A Senior Sendoff",
+    summary:
+      "Celebrating North Carolina's Class of 2026 as they close their high school careers — NHSCA, Super 32, IronMan, four-time state champions, college opens, and 24 commits across NCAA and NAIA.",
+    href: "/news/class-of-2026-senior-sendoff",
+    date: "2026-04-02",
+    image: "/images/nhsca-nationals-recap-2026-team-photo.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "CLASS OF 2026",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "7 min read",
+    isAnnouncement: true,
+  },
+  {
     id: "nhsca-mow-award-2026",
     slug: "nhsca-most-outstanding-wrestler-award-2026",
     title: "NC United Launches the NHSCA Most Outstanding Wrestler Award",

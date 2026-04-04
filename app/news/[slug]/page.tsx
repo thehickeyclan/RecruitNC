@@ -5,6 +5,7 @@ import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
+import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior-sendoff"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 
@@ -12,6 +13,7 @@ const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
   "nhsca-most-outstanding-wrestler-award-2026": () => <NhscaMostOutstandingWrestlerAward2026Content />,
   "nhsca-nationals-recap-2026": () => <NhscaNationalsRecap2026Content />,
+  "class-of-2026-senior-sendoff": () => <ClassOf2026SeniorSendoffContent />,
 }
 
 export async function generateStaticParams() {
