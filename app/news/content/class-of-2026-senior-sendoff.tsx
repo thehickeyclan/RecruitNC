@@ -1,7 +1,6 @@
-import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
 
-const TEAM_IMAGE = "/images/nhsca-nationals-recap-2026-team-photo.png"
+/** Hero photo lives only on home + /news cards via `lib/news.ts` (`image` field), not repeated here. */
 
 export function ClassOf2026SeniorSendoffContent() {
   return (
@@ -19,16 +18,6 @@ export function ClassOf2026SeniorSendoffContent() {
           View the official Class of 2026 prospect rankings
         </HardLink>
       </p>
-
-      <div className="my-6">
-        <Image
-          src={TEAM_IMAGE}
-          alt="North Carolina wrestlers at NHSCA High School Nationals"
-          width={1200}
-          height={900}
-          className="h-auto w-full rounded-lg object-cover"
-        />
-      </div>
 
       <p>
         The Class of 2026 has officially closed the chapter on their high school wrestling careers. Last weekend at

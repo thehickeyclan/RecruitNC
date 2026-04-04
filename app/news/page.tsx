@@ -39,7 +39,7 @@ export default function NewsPage() {
                     <div
                       className={`relative w-full overflow-hidden border-b border-slate-100 ${
                         item.imageFit === "contain"
-                          ? "h-52 bg-white sm:h-64 md:h-80"
+                          ? "h-64 bg-slate-100 sm:h-72 md:h-96"
                           : "h-48 bg-slate-100 sm:h-56 md:h-72"
                       }`}
                     >
@@ -49,7 +49,7 @@ export default function NewsPage() {
                         fill
                         className={
                           item.imageFit === "contain"
-                            ? "object-contain object-center p-0"
+                            ? "object-contain object-center p-2 sm:p-4"
                             : [
                                 "object-cover",
                                 item.imagePosition === "top" ? "object-top" : "object-center",
