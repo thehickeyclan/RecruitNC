@@ -1,21 +1,37 @@
 import { HardLink } from "@/components/hard-link"
 
-/** Hero photo lives only on home + /news cards via `lib/news.ts` (`image` field), not repeated here. */
+/** Hero photo is driven by `lib/news.ts` and rendered once on the article page (`app/news/[slug]/page.tsx`), not repeated in the body. */
 
 export function ClassOf2026SeniorSendoffContent() {
   return (
     <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h2]:text-[#003366] [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200">
       <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">NC United Wrestling</p>
-      <h2 className="!mt-2 !mb-2 text-[#003366]">Final Class of 2026 Rankings: A Senior Sendoff</h2>
+      <h2 className="!mt-2 !mb-2 text-[#003366]">
+        <HardLink
+          href="/public-rankings/2026"
+          className="text-[#003366] underline decoration-[#003366]/40 underline-offset-4 hover:decoration-[#003366]"
+        >
+          Final Class of 2026 Rankings
+        </HardLink>
+        <span className="text-[#003366]">: A Senior Sendoff</span>
+      </h2>
       <p className="text-base font-medium text-slate-600">
-        Celebrating North Carolina&apos;s Class of 2026 as they transition to the next level
+        Celebrating North Carolina&apos;s Class of 2026 as they transition to the next level — see every ranked senior
+        on the{" "}
+        <HardLink
+          href="/public-rankings/2026"
+          className="font-semibold text-[#003366] underline underline-offset-2 hover:no-underline"
+        >
+          Class of 2026 prospect rankings
+        </HardLink>
+        .
       </p>
       <p className="text-sm text-slate-600">
         <HardLink
           href="/public-rankings/2026"
-          className="font-medium text-[#003366] underline underline-offset-2 hover:no-underline"
+          className="inline-flex items-center rounded-md border-2 border-[#C20017] bg-transparent px-4 py-2 text-sm font-semibold text-[#C20017] transition-colors hover:bg-[#C20017] hover:text-white"
         >
-          View the official Class of 2026 prospect rankings
+          Open the Class of 2026 rankings →
         </HardLink>
       </p>
 
@@ -115,6 +131,15 @@ export function ClassOf2026SeniorSendoffContent() {
       </p>
       <p>
         We&apos;re grateful to have been part of your journey. We can&apos;t wait to see what you do next.
+      </p>
+      <p className="mt-8 rounded-lg border border-slate-200 bg-slate-50 p-4 text-center text-slate-700">
+        <HardLink
+          href="/public-rankings/2026"
+          className="font-semibold text-[#003366] underline underline-offset-2 hover:no-underline"
+        >
+          Class of 2026 rankings
+        </HardLink>{" "}
+        — full public board for North Carolina&apos;s senior class.
       </p>
     </article>
   )

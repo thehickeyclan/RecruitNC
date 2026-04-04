@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import Image from "next/image"
 import Link from "next/link"
 import { MessageCircle } from "lucide-react"
 import { getAnnouncementBySlug, getAnnouncementSlugs } from "@/lib/news"
@@ -62,6 +63,38 @@ export default async function NewsAnnouncementPage({
             })}
           </p>
         </header>
+        {item.image ? (
+          <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+            <div
+              className={`relative w-full overflow-hidden ${
+                item.imageFit === "contain"
+                  ? "h-64 sm:h-72 md:h-96"
+                  : "h-48 sm:h-56 md:h-72"
+              }`}
+            >
+              <Image
+                src={item.image}
+                alt={item.title}
+                fill
+                className={
+                  item.imageFit === "contain"
+                    ? "object-contain object-center p-2 sm:p-4"
+                    : [
+                        "object-cover",
+                        item.imagePosition === "top" ? "object-top" : "object-center",
+                        item.imageBannerZoom
+                          ? "origin-center scale-110 sm:scale-125 md:scale-[1.38]"
+                          : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                }
+                sizes="(max-width: 768px) 100vw, 48rem"
+                priority
+              />
+            </div>
+          </div>
+        ) : null}
         <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6 md:p-8 shadow-sm overflow-x-hidden">
           <div className="mb-6 flex flex-col gap-3 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
             <NchsaaArticleReactions articleSlug={slug} />
