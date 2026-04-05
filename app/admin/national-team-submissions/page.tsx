@@ -38,6 +38,8 @@ import {
   interestFormWeightClassUnion,
   weightOptionsForSubmissionInterest,
   formatNationalTeamWeightLabel,
+  isAauScholasticWeightClass,
+  nearestAauScholasticWeightClass,
 } from "@/lib/national-team-weight-classes"
 
 const NHSCA_WEIGHT_CLASSES = [...NHSCA_INTEREST_WEIGHT_CLASSES]
@@ -323,6 +325,49 @@ export default function NationalTeamSubmissionsPage() {
         alert(`Failed to clear: ${err?.message || "Unknown error"}`)
       } finally {
         setUpdatingLineupId(null)
+      }
+    },
+    [loadSubmissions]
+  )
+
+  const snapSubmissionToNearestAauWeights = useCallback(
+    async (sub: InterestFormSubmission) => {
+      const nextPrimary = nearestAauScholasticWeightClass(sub.primary_weight)
+      let nextSecondary: string | null = sub.secondary_weight?.trim()
+        ? nearestAauScholasticWeightClass(sub.secondary_weight)
+        : null
+      if (nextSecondary === nextPrimary) nextSecondary = null
+      if (nextPrimary === sub.primary_weight && nextSecondary === (sub.secondary_weight ?? null)) {
+        alert("Primary and secondary weights already match AAU classes.")
+        return
+      }
+      if (
+        !confirm(
+          `Update ${sub.last_name}, ${sub.first_name}?\nPrimary: ${sub.primary_weight} → ${nextPrimary}` +
+            (sub.secondary_weight?.trim()
+              ? `\nSecondary: ${sub.secondary_weight} → ${nextSecondary ?? "(clear if same as primary)"}`
+              : "")
+        )
+      ) {
+        return
+      }
+      try {
+        const res = await fetch("/api/admin/national-team-submissions", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sub.id,
+            primary_weight: nextPrimary,
+            secondary_weight: nextSecondary,
+          }),
+          credentials: "include",
+        })
+        const result = await res.json()
+        if (!result.ok) throw new Error(result.error || "Failed to update weights")
+        await loadSubmissions()
+      } catch (err: any) {
+        console.error(err)
+        alert(err?.message || "Failed to snap weights")
       }
     },
     [loadSubmissions]
@@ -780,6 +825,105 @@ export default function NationalTeamSubmissionsPage() {
                         </div>
                       </CardContent>
                     </Card>
+
+                    {tournamentId === "aau" && (() => {
+                      const orphanSubs = tournamentSubs
+                        .filter((s) => !isAauScholasticWeightClass(s.primary_weight))
+                        .sort((a, b) => {
+                          if (a.rank_score === null && b.rank_score === null) return 0
+                          if (a.rank_score === null) return 1
+                          if (b.rank_score === null) return -1
+                          return a.rank_score - b.rank_score
+                        })
+                      if (orphanSubs.length === 0) return null
+                      return (
+                        <Card className="border-2 border-amber-500 bg-amber-50/90">
+                          <CardHeader>
+                            <CardTitle className="text-amber-950">AAU interest — primary weight not on AAU chart</CardTitle>
+                            <CardDescription className="text-amber-900/90">
+                              Rows were not deleted. They are hidden from the weight buckets above when primary is still
+                              NHSCA-style (e.g. 145 vs 144). Use <strong>Snap to nearest AAU</strong> or run{" "}
+                              <code className="rounded bg-white/80 px-1 text-xs">
+                                scripts/sql/map-interest-weights-to-nearest-aau.sql
+                              </code>{" "}
+                              in Supabase for a bulk fix.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Rank</TableHead>
+                                  <TableHead>Name</TableHead>
+                                  <TableHead>School</TableHead>
+                                  <TableHead>Weight on file</TableHead>
+                                  <TableHead>Nearest AAU</TableHead>
+                                  <TableHead>Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {orphanSubs.map((sub) => {
+                                  const row = sub as InterestFormSubmission
+                                  const suggested = nearestAauScholasticWeightClass(row.primary_weight)
+                                  return (
+                                    <TableRow key={sub.id}>
+                                      <TableCell>
+                                        {sub.rank_score !== null ? (
+                                          <Badge variant="outline" className="font-mono">
+                                            #{sub.rank_score}
+                                          </Badge>
+                                        ) : (
+                                          "—"
+                                        )}
+                                      </TableCell>
+                                      <TableCell className="font-medium">
+                                        {sub.last_name}, {sub.first_name}
+                                      </TableCell>
+                                      <TableCell>{sub.high_school}</TableCell>
+                                      <TableCell>
+                                        {row.primary_weight} lbs
+                                        {row.secondary_weight ? ` / ${row.secondary_weight} lbs` : ""}
+                                      </TableCell>
+                                      <TableCell className="font-medium text-amber-950">
+                                        {formatNationalTeamWeightLabel(suggested, "aau")}
+                                        {row.secondary_weight?.trim() ? (
+                                          <span className="block text-xs font-normal text-muted-foreground">
+                                            2nd:{" "}
+                                            {(() => {
+                                              const s2 = nearestAauScholasticWeightClass(row.secondary_weight!)
+                                              return s2 === suggested ? "— (same as primary → cleared)" : `${s2} lbs`
+                                            })()}
+                                          </span>
+                                        ) : null}
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex flex-wrap gap-1">
+                                          <Button
+                                            size="sm"
+                                            className="h-7 text-xs bg-amber-800 hover:bg-amber-900"
+                                            onClick={() => snapSubmissionToNearestAauWeights(row)}
+                                          >
+                                            Snap to nearest AAU
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 text-xs"
+                                            onClick={() => setSelectedSubmission(sub)}
+                                          >
+                                            View
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                })}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      )
+                    })()}
 
                     {tournamentId === "nhsca" && (() => {
                       const team1Starters = submissions.filter(
