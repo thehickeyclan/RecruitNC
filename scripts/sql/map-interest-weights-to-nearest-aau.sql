@@ -1,16 +1,21 @@
 -- Map NHSCA-style primary/secondary weights to nearest AAU Scholastic class for rows with AAU interest.
 -- App logic (ties → lighter class): 145→144, 152→150, 160→157, 170→165, 182→175, 195→190, 220→215.
--- Run PREVIEW first; then the UPDATE. Adjust the WHERE clause if tournament_interest is text[] instead of jsonb.
+-- Run PREVIEW first; then the UPDATE.
+--
+-- RecruitNC / Supabase: tournament_interest is typically text[] (e.g. ARRAY['nhsca','aau']).
+-- Use the blocks below marked "text[]". If your column is jsonb instead, use the commented jsonb variant.
 
--- ── PREVIEW (jsonb array, e.g. ["nhsca","aau"]) ─────────────────────────────
+-- ═══════════════════════════════════════════════════════════════════════════
+-- PREVIEW — text[] tournament_interest (default)
+-- ═══════════════════════════════════════════════════════════════════════════
 -- SELECT id, first_name, last_name, primary_weight, secondary_weight, tournament_interest
 -- FROM national_team_interest_forms
--- WHERE EXISTS (
---   SELECT 1 FROM jsonb_array_elements_text(tournament_interest::jsonb) AS t(v) WHERE v = 'aau'
--- )
--- AND trim(primary_weight) IN ('145','152','160','170','182','195','220');
+-- WHERE 'aau' = ANY(tournament_interest)
+--   AND trim(primary_weight) IN ('145','152','160','170','182','195','220');
 
--- ── UPDATE (jsonb tournament_interest) ─────────────────────────────────────
+-- ═══════════════════════════════════════════════════════════════════════════
+-- UPDATE — text[] tournament_interest (default)
+-- ═══════════════════════════════════════════════════════════════════════════
 UPDATE national_team_interest_forms AS n
 SET
   primary_weight = CASE trim(both from n.primary_weight)
@@ -37,10 +42,8 @@ SET
     END
   END,
   updated_at = now()
-WHERE EXISTS (
-  SELECT 1 FROM jsonb_array_elements_text(n.tournament_interest::jsonb) AS t(v) WHERE v = 'aau'
-)
-AND trim(n.primary_weight) IN ('145', '152', '160', '170', '182', '195', '220');
+WHERE 'aau' = ANY(n.tournament_interest)
+  AND trim(n.primary_weight) IN ('145', '152', '160', '170', '182', '195', '220');
 
 -- If secondary equals primary after map, clear secondary
 UPDATE national_team_interest_forms
@@ -48,7 +51,9 @@ SET secondary_weight = NULL, updated_at = now()
 WHERE primary_weight = secondary_weight
   AND secondary_weight IS NOT NULL;
 
--- ── Alternate WHERE if tournament_interest is text[] ───────────────────────
--- Replace the EXISTS clause with:
--- WHERE 'aau' = ANY(tournament_interest)
---   AND trim(primary_weight) IN ('145','152','160','170','182','195','220');
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Alternate: jsonb tournament_interest (only if column is jsonb, not text[])
+-- ═══════════════════════════════════════════════════════════════════════════
+-- WHERE EXISTS (
+--   SELECT 1 FROM jsonb_array_elements_text(n.tournament_interest::jsonb) AS t(v) WHERE v = 'aau'
+-- )
