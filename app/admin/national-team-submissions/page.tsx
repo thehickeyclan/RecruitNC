@@ -32,8 +32,24 @@ import {
   Clock,
   Trash2,
 } from "lucide-react"
+import {
+  NHSCA_INTEREST_WEIGHT_CLASSES,
+  AAU_SCHOLASTIC_WEIGHT_CLASSES,
+  interestFormWeightClassUnion,
+  weightOptionsForSubmissionInterest,
+  formatNationalTeamWeightLabel,
+} from "@/lib/national-team-weight-classes"
 
-const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
+const NHSCA_WEIGHT_CLASSES = [...NHSCA_INTEREST_WEIGHT_CLASSES]
+const AAU_WEIGHT_CLASSES = [...AAU_SCHOLASTIC_WEIGHT_CLASSES]
+const ALL_INTEREST_WEIGHT_CLASSES = interestFormWeightClassUnion()
+
+function weightClassesForTournamentTab(tournamentId: string): string[] {
+  if (tournamentId === "aau") return AAU_WEIGHT_CLASSES
+  if (tournamentId === "nhsca" || tournamentId === "deep-south") return NHSCA_WEIGHT_CLASSES
+  return ALL_INTEREST_WEIGHT_CLASSES
+}
+
 const TOURNAMENTS = {
   nhsca: "NHSCA National Duals (May 23-25)",
   aau: "AAU Scholastic Duals - All-Star Boys (June 24-26)",
@@ -390,7 +406,7 @@ export default function NationalTeamSubmissionsPage() {
   const getCoverageByTournament = (tournamentId: string) => {
     const tournamentSubs = submissions.filter((sub) => sub.tournament_interest.includes(tournamentId))
     const coverage: Record<string, number> = {}
-    WEIGHT_CLASSES.forEach((weight) => {
+    weightClassesForTournamentTab(tournamentId).forEach((weight) => {
       coverage[weight] = tournamentSubs.filter((sub) => sub.primary_weight === weight).length
     })
     return coverage
@@ -425,6 +441,17 @@ export default function NationalTeamSubmissionsPage() {
         return <Clock className="w-4 h-4" />
     }
   }
+
+  const submissionEditWeightOptions = selectedSubmission
+    ? weightOptionsForSubmissionInterest(selectedSubmission.tournament_interest)
+    : ALL_INTEREST_WEIGHT_CLASSES
+  const submissionEditWeightLabelVariant: "nhsca" | "aau" | "neutral" = (() => {
+    if (!selectedSubmission) return "neutral"
+    const ti = selectedSubmission.tournament_interest
+    if (ti.includes("aau") && !ti.includes("nhsca") && !ti.includes("deep-south")) return "aau"
+    if (ti.includes("nhsca") || ti.includes("deep-south")) return "nhsca"
+    return "neutral"
+  })()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
@@ -474,9 +501,9 @@ export default function NationalTeamSubmissionsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Weights</SelectItem>
-                    {WEIGHT_CLASSES.map((weight) => (
+                    {ALL_INTEREST_WEIGHT_CLASSES.map((weight) => (
                       <SelectItem key={weight} value={weight}>
-                        {weight} lbs
+                        {formatNationalTeamWeightLabel(weight, "neutral")}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -716,6 +743,9 @@ export default function NationalTeamSubmissionsPage() {
                 const tournamentSubs = filteredSubmissions.filter((sub) =>
                   sub.tournament_interest.includes(tournamentId)
                 )
+                const tabWeights = weightClassesForTournamentTab(tournamentId)
+                const coverageLabelVariant =
+                  tournamentId === "aau" ? "aau" : tournamentId === "nhsca" ? "nhsca" : "neutral"
 
                 return (
                   <TabsContent key={tournamentId} value={tournamentId} className="space-y-6">
@@ -726,7 +756,7 @@ export default function NationalTeamSubmissionsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
-                          {WEIGHT_CLASSES.map((weight) => {
+                          {tabWeights.map((weight) => {
                             const count = coverage[weight] || 0
                             const hasCoverage = count > 0
                             return (
@@ -739,7 +769,7 @@ export default function NationalTeamSubmissionsPage() {
                                 <div
                                   className={`text-lg font-bold ${hasCoverage ? "text-green-700" : "text-red-700"}`}
                                 >
-                                  {weight}
+                                  {formatNationalTeamWeightLabel(weight, coverageLabelVariant)}
                                 </div>
                                 <div className={`text-sm ${hasCoverage ? "text-green-600" : "text-red-600"}`}>
                                   {count} {count === 1 ? "athlete" : "athletes"}
@@ -771,11 +801,13 @@ export default function NationalTeamSubmissionsPage() {
                               <div>
                                 <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_1_LABEL}</h4>
                                 <ul className="space-y-1 text-sm">
-                                  {WEIGHT_CLASSES.map((w) => {
+                                  {NHSCA_WEIGHT_CLASSES.map((w) => {
                                     const sub = team1Starters.find((s) => s.primary_weight === w)
                                     return (
                                       <li key={w} className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span className="text-muted-foreground">
+                                          {formatNationalTeamWeightLabel(w, "nhsca")}
+                                        </span>
                                         <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
                                       </li>
                                     )
@@ -785,11 +817,13 @@ export default function NationalTeamSubmissionsPage() {
                               <div>
                                 <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_2_LABEL}</h4>
                                 <ul className="space-y-1 text-sm">
-                                  {WEIGHT_CLASSES.map((w) => {
+                                  {NHSCA_WEIGHT_CLASSES.map((w) => {
                                     const sub = team2Starters.find((s) => s.primary_weight === w)
                                     return (
                                       <li key={w} className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span className="text-muted-foreground">
+                                          {formatNationalTeamWeightLabel(w, "nhsca")}
+                                        </span>
                                         <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
                                       </li>
                                     )
@@ -822,11 +856,13 @@ export default function NationalTeamSubmissionsPage() {
                               <div>
                                 <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_1_LABEL}</h4>
                                 <ul className="space-y-1 text-sm">
-                                  {WEIGHT_CLASSES.map((w) => {
+                                  {AAU_WEIGHT_CLASSES.map((w) => {
                                     const sub = team1Starters.find((s) => s.primary_weight === w)
                                     return (
                                       <li key={w} className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span className="text-muted-foreground">
+                                          {formatNationalTeamWeightLabel(w, "aau")}
+                                        </span>
                                         <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
                                       </li>
                                     )
@@ -836,11 +872,13 @@ export default function NationalTeamSubmissionsPage() {
                               <div>
                                 <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_2_LABEL}</h4>
                                 <ul className="space-y-1 text-sm">
-                                  {WEIGHT_CLASSES.map((w) => {
+                                  {AAU_WEIGHT_CLASSES.map((w) => {
                                     const sub = team2Starters.find((s) => s.primary_weight === w)
                                     return (
                                       <li key={w} className="flex justify-between gap-2">
-                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span className="text-muted-foreground">
+                                          {formatNationalTeamWeightLabel(w, "aau")}
+                                        </span>
                                         <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
                                       </li>
                                     )
@@ -854,7 +892,7 @@ export default function NationalTeamSubmissionsPage() {
                     })()}
 
                     <div className="space-y-4">
-                      {WEIGHT_CLASSES.map((weight) => {
+                      {tabWeights.map((weight) => {
                         const weightSubs = tournamentSubs
                           .filter((sub) => sub.primary_weight === weight)
                           .sort((a, b) => {
@@ -868,7 +906,13 @@ export default function NationalTeamSubmissionsPage() {
                           return (
                             <Card key={weight} className="border-2 border-red-300 bg-red-50">
                               <CardHeader>
-                                <CardTitle className="text-red-700">{weight} lbs - No Submissions</CardTitle>
+                                <CardTitle className="text-red-700">
+                                  {formatNationalTeamWeightLabel(
+                                    weight,
+                                    tournamentId === "aau" ? "aau" : tournamentId === "nhsca" ? "nhsca" : "neutral"
+                                  )}{" "}
+                                  - No Submissions
+                                </CardTitle>
                               </CardHeader>
                             </Card>
                           )
@@ -878,7 +922,11 @@ export default function NationalTeamSubmissionsPage() {
                           <Card key={weight}>
                             <CardHeader>
                               <CardTitle>
-                                {weight} lbs - {weightSubs.length}{" "}
+                                {formatNationalTeamWeightLabel(
+                                  weight,
+                                  tournamentId === "aau" ? "aau" : tournamentId === "nhsca" ? "nhsca" : "neutral"
+                                )}{" "}
+                                - {weightSubs.length}{" "}
                                 {weightSubs.length === 1 ? "Submission" : "Submissions"}
                               </CardTitle>
                             </CardHeader>
@@ -893,6 +941,9 @@ export default function NationalTeamSubmissionsPage() {
                                     <TableHead>Status</TableHead>
                                     {tournamentId === "nhsca" && (
                                       <TableHead>NHSCA Duals (2 teams)</TableHead>
+                                    )}
+                                    {tournamentId === "aau" && (
+                                      <TableHead>AAU Duals (2 teams)</TableHead>
                                     )}
                                     <TableHead>Actions</TableHead>
                                   </TableRow>
@@ -1110,8 +1161,10 @@ export default function NationalTeamSubmissionsPage() {
                             <SelectValue placeholder="Weight" />
                           </SelectTrigger>
                           <SelectContent>
-                            {WEIGHT_CLASSES.map((w) => (
-                              <SelectItem key={w} value={w}>{w}</SelectItem>
+                            {submissionEditWeightOptions.map((w) => (
+                              <SelectItem key={w} value={w}>
+                                {formatNationalTeamWeightLabel(w, submissionEditWeightLabelVariant)}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -1124,8 +1177,10 @@ export default function NationalTeamSubmissionsPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
-                            {WEIGHT_CLASSES.map((w) => (
-                              <SelectItem key={w} value={w}>{w}</SelectItem>
+                            {submissionEditWeightOptions.map((w) => (
+                              <SelectItem key={w} value={w}>
+                                {formatNationalTeamWeightLabel(w, submissionEditWeightLabelVariant)}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

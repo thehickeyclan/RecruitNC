@@ -17,8 +17,14 @@ import {
 import { CheckCircle2, Loader2, ExternalLink, Calendar, MapPin, Users } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import {
+  interestFormWeightClassUnion,
+  formatNationalTeamWeightLabel,
+  NHSCA_INTEREST_WEIGHT_CLASSES,
+  AAU_SCHOLASTIC_WEIGHT_CLASSES,
+} from "@/lib/national-team-weight-classes"
 
-const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
+const INTEREST_FORM_WEIGHT_CLASSES = interestFormWeightClassUnion()
 const GRADUATION_YEARS = ["2026", "2027", "2028", "2029"]
 
 interface FormData {
@@ -199,7 +205,7 @@ export default function NationalTeamInterestForm() {
                   <div className="pt-2 border-t">
                     <p className="text-sm font-semibold text-[#002147] mb-2">Weight Classes:</p>
                     <p className="text-xs md:text-sm text-gray-600">
-                      106, 113, 120, 126, 132, 138, 145, 152, 160, 170, 182, 195, 220, 285
+                      {NHSCA_INTEREST_WEIGHT_CLASSES.join(", ")}
                     </p>
                     <p className="text-xs md:text-sm text-gray-600 mt-1 font-semibold">
                       Weight Allowance: +3 lbs (e.g., 132 certified = can weigh up to 135)
@@ -247,7 +253,7 @@ export default function NationalTeamInterestForm() {
                   <div className="pt-2 border-t">
                     <p className="text-sm font-semibold text-[#002147] mb-2">Weight Classes:</p>
                     <p className="text-xs md:text-sm text-gray-600">
-                      106, 113, 120, 126, 132, 138, 144, 150, 157, 165, 175, 190, 215, HWT
+                      {AAU_SCHOLASTIC_WEIGHT_CLASSES.map((w) => (w === "285" ? "HWT (285)" : w)).join(", ")}
                     </p>
                     <div className="text-xs md:text-sm text-gray-600 mt-2 space-y-1">
                       <p className="font-semibold">Weight Allowance: +5 lbs</p>
@@ -483,9 +489,9 @@ export default function NationalTeamInterestForm() {
                               <SelectValue placeholder="Select primary weight class" />
                             </SelectTrigger>
                             <SelectContent>
-                              {WEIGHT_CLASSES.map((weight) => (
+                              {INTEREST_FORM_WEIGHT_CLASSES.map((weight) => (
                                 <SelectItem key={weight} value={weight}>
-                                  {weight} lbs
+                                  {formatNationalTeamWeightLabel(weight, "neutral")}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -513,9 +519,9 @@ export default function NationalTeamInterestForm() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">None</SelectItem>
-                              {WEIGHT_CLASSES.map((weight) => (
+                              {INTEREST_FORM_WEIGHT_CLASSES.map((weight) => (
                                 <SelectItem key={weight} value={weight}>
-                                  {weight} lbs
+                                  {formatNationalTeamWeightLabel(weight, "neutral")}
                                 </SelectItem>
                               ))}
                             </SelectContent>

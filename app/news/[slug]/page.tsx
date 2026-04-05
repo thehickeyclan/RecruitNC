@@ -63,7 +63,8 @@ export default async function NewsAnnouncementPage({
             })}
           </p>
         </header>
-        {item.image ? (
+        {/* Class of 2026 sendoff: hero lives inside article body to avoid showing the same asset twice. */}
+        {item.image && slug !== "class-of-2026-senior-sendoff" ? (
           <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
             <div
               className={`relative w-full overflow-hidden ${

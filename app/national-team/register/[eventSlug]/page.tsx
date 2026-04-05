@@ -17,8 +17,12 @@ import { Loader2, Lock, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { getEventSlugForApi, getEventName, getKnownEventUrlSlugs } from "@/lib/national-team-events"
+import {
+  AAU_SCHOLASTIC_WEIGHT_CLASSES,
+  NHSCA_INTEREST_WEIGHT_CLASSES,
+  formatNationalTeamWeightLabel,
+} from "@/lib/national-team-weight-classes"
 
-const WEIGHT_CLASSES = ["106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"]
 const GRAD_YEARS = ["2026", "2027", "2028", "2029", "2030"]
 
 const NHSCA_2026_EVENT_DETAILS = {
@@ -42,6 +46,11 @@ export default function NationalTeamRegisterEventPage() {
   const eventName = getEventName(urlSlug)
   const knownSlugs = getKnownEventUrlSlugs()
   const isUnknownEvent = !urlSlug || !knownSlugs.includes(urlSlug)
+  const isAauRegistration = eventSlug === "aau-2026"
+  const registerWeightClasses = isAauRegistration
+    ? [...AAU_SCHOLASTIC_WEIGHT_CLASSES]
+    : [...NHSCA_INTEREST_WEIGHT_CLASSES]
+  const registerWeightLabelVariant = isAauRegistration ? "aau" : "nhsca"
 
   const [step, setStep] = useState<"code" | "form">("code")
   const [code, setCode] = useState("")
@@ -324,8 +333,10 @@ export default function NationalTeamRegisterEventPage() {
                     <Select value={weight_class} onValueChange={setWeightClass} required>
                       <SelectTrigger><SelectValue placeholder="Select agreed weight" /></SelectTrigger>
                       <SelectContent>
-                        {WEIGHT_CLASSES.map((w) => (
-                          <SelectItem key={w} value={w}>{w} lbs</SelectItem>
+                        {registerWeightClasses.map((w) => (
+                          <SelectItem key={w} value={w}>
+                            {formatNationalTeamWeightLabel(w, registerWeightLabelVariant)}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

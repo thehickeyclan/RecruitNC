@@ -1,6 +1,9 @@
+import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
 
-/** Hero photo is driven by `lib/news.ts` and rendered once on the article page (`app/news/[slug]/page.tsx`), not repeated in the body. */
+/** Featured image: same asset as `lib/news.ts` for previews; article page does not duplicate it above the card (see `app/news/[slug]/page.tsx`). */
+
+const SENDOFF_HERO_SRC = "/images/class-of-2026-senior-sendoff-hero.png"
 
 export function ClassOf2026SeniorSendoffContent() {
   return (
@@ -34,6 +37,22 @@ export function ClassOf2026SeniorSendoffContent() {
           Open the Class of 2026 rankings →
         </HardLink>
       </p>
+
+      <figure className="my-8 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative mx-auto aspect-[387/463] w-full max-h-[min(72vh,560px)] min-h-[240px]">
+          <Image
+            src={SENDOFF_HERO_SRC}
+            alt="North Carolina Class of 2026 — senior celebration"
+            fill
+            className="object-contain object-center p-2 sm:p-4"
+            sizes="(max-width: 768px) 100vw, 48rem"
+            priority
+          />
+        </div>
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2 text-center text-sm text-slate-600">
+          Class of 2026 — thank you for representing North Carolina.
+        </figcaption>
+      </figure>
 
       <p>
         The Class of 2026 has officially closed the chapter on their high school wrestling careers. Last weekend at
