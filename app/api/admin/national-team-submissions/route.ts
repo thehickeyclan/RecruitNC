@@ -11,9 +11,12 @@ function isMissingTableError(e: { message?: string; code?: string }): boolean {
   )
 }
 
-const NHSCA_DUALS_MIGRATION_SQL = `ALTER TABLE public.national_team_interest_forms
+/** NHSCA + AAU duals roster columns (admin national-team submissions). */
+const NATIONAL_TEAM_DUALS_MIGRATION_SQL = `ALTER TABLE public.national_team_interest_forms
   ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
-  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;`
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS aau_duals_team text,
+  ADD COLUMN IF NOT EXISTS aau_duals_starter boolean DEFAULT false;`
 
 function isMissingColumnError(e: { message?: string }): boolean {
   const msg = (e?.message || "").toLowerCase()
@@ -169,8 +172,9 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            error: "Missing database columns for NHSCA Duals (team/starter). Run the SQL below in Supabase SQL Editor.",
-            fixMigrationSql: NHSCA_DUALS_MIGRATION_SQL,
+            error:
+              "Missing database columns for duals roster (NHSCA and/or AAU team/starter). Run the SQL below in Supabase SQL Editor.",
+            fixMigrationSql: NATIONAL_TEAM_DUALS_MIGRATION_SQL,
           },
           { status: 503 }
         )

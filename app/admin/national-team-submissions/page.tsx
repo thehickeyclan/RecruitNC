@@ -67,6 +67,8 @@ type InterestFormSubmission = {
   updated_at: string
   nhsca_duals_team?: string | null
   nhsca_duals_starter?: boolean
+  aau_duals_team?: string | null
+  aau_duals_starter?: boolean
 }
 
 export default function NationalTeamSubmissionsPage() {
@@ -83,7 +85,9 @@ export default function NationalTeamSubmissionsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [nhscaTeam, setNhscaTeam] = useState<string>("")
   const [nhscaStarter, setNhscaStarter] = useState(false)
-  const [updatingNhscaId, setUpdatingNhscaId] = useState<string | null>(null)
+  const [aauTeam, setAauTeam] = useState<string>("")
+  const [aauStarter, setAauStarter] = useState(false)
+  const [updatingLineupId, setUpdatingLineupId] = useState<string | null>(null)
   const [migrationSql, setMigrationSql] = useState<string | null>(null)
   const [editPrimaryWeight, setEditPrimaryWeight] = useState<string>("")
   const [editSecondaryWeight, setEditSecondaryWeight] = useState<string>("")
@@ -132,6 +136,8 @@ export default function NationalTeamSubmissionsPage() {
         setRankScore("")
         setNhscaTeam("")
         setNhscaStarter(false)
+        setAauTeam("")
+        setAauStarter(false)
       } catch (err: any) {
         console.error("Error updating submission:", err)
         alert(`Failed to update submission: ${err?.message || "Unknown error"}`)
@@ -142,7 +148,7 @@ export default function NationalTeamSubmissionsPage() {
 
   const assignNhscaDualsStarter = useCallback(
     async (sub: InterestFormSubmission, team: "team_1" | "team_2") => {
-      setUpdatingNhscaId(sub.id)
+      setUpdatingLineupId(sub.id)
       try {
         const othersSameTeamAndWeight = submissions.filter(
           (s) =>
@@ -183,7 +189,56 @@ export default function NationalTeamSubmissionsPage() {
         console.error("Error assigning NHSCA starter:", err)
         alert(`Failed to assign: ${err?.message || "Unknown error"}`)
       } finally {
-        setUpdatingNhscaId(null)
+        setUpdatingLineupId(null)
+      }
+    },
+    [submissions, loadSubmissions]
+  )
+
+  const assignAauDualsStarter = useCallback(
+    async (sub: InterestFormSubmission, team: "team_1" | "team_2") => {
+      setUpdatingLineupId(sub.id)
+      try {
+        const othersSameTeamAndWeight = submissions.filter(
+          (s) =>
+            s.id !== sub.id &&
+            s.primary_weight === sub.primary_weight &&
+            (s as InterestFormSubmission).aau_duals_team === team &&
+            (s as InterestFormSubmission).aau_duals_starter
+        )
+        for (const other of othersSameTeamAndWeight) {
+          await fetch("/api/admin/national-team-submissions", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: other.id, aau_duals_starter: false }),
+            credentials: "include",
+          })
+        }
+        const res = await fetch("/api/admin/national-team-submissions", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sub.id,
+            aau_duals_team: team,
+            aau_duals_starter: true,
+          }),
+          credentials: "include",
+        })
+        const result = await res.json()
+        if (!result.ok) {
+          if (result.fixMigrationSql) {
+            setMigrationSql(result.fixMigrationSql)
+            return
+          }
+          throw new Error(result.error || "Failed to set AAU starter")
+        }
+        setMigrationSql(null)
+        await loadSubmissions()
+      } catch (err: any) {
+        console.error("Error assigning AAU starter:", err)
+        alert(`Failed to assign: ${err?.message || "Unknown error"}`)
+      } finally {
+        setUpdatingLineupId(null)
       }
     },
     [submissions, loadSubmissions]
@@ -191,7 +246,7 @@ export default function NationalTeamSubmissionsPage() {
 
   const clearNhscaDualsAssignment = useCallback(
     async (sub: InterestFormSubmission) => {
-      setUpdatingNhscaId(sub.id)
+      setUpdatingLineupId(sub.id)
       try {
         const res = await fetch("/api/admin/national-team-submissions", {
           method: "PATCH",
@@ -217,7 +272,41 @@ export default function NationalTeamSubmissionsPage() {
         console.error("Error clearing NHSCA assignment:", err)
         alert(`Failed to clear: ${err?.message || "Unknown error"}`)
       } finally {
-        setUpdatingNhscaId(null)
+        setUpdatingLineupId(null)
+      }
+    },
+    [loadSubmissions]
+  )
+
+  const clearAauDualsAssignment = useCallback(
+    async (sub: InterestFormSubmission) => {
+      setUpdatingLineupId(sub.id)
+      try {
+        const res = await fetch("/api/admin/national-team-submissions", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: sub.id,
+            aau_duals_team: null,
+            aau_duals_starter: false,
+          }),
+          credentials: "include",
+        })
+        const result = await res.json()
+        if (!result.ok) {
+          if (result.fixMigrationSql) {
+            setMigrationSql(result.fixMigrationSql)
+            return
+          }
+          throw new Error(result.error || "Failed to clear AAU assignment")
+        }
+        setMigrationSql(null)
+        await loadSubmissions()
+      } catch (err: any) {
+        console.error("Error clearing AAU assignment:", err)
+        alert(`Failed to clear: ${err?.message || "Unknown error"}`)
+      } finally {
+        setUpdatingLineupId(null)
       }
     },
     [loadSubmissions]
@@ -256,11 +345,15 @@ export default function NationalTeamSubmissionsPage() {
     if (selectedSubmission) {
       setNhscaTeam(selectedSubmission.nhsca_duals_team ?? "")
       setNhscaStarter(selectedSubmission.nhsca_duals_starter ?? false)
+      setAauTeam(selectedSubmission.aau_duals_team ?? "")
+      setAauStarter(selectedSubmission.aau_duals_starter ?? false)
       setEditPrimaryWeight(selectedSubmission.primary_weight ?? "")
       setEditSecondaryWeight(selectedSubmission.secondary_weight ?? "")
     } else {
       setNhscaTeam("")
       setNhscaStarter(false)
+      setAauTeam("")
+      setAauStarter(false)
       setEditPrimaryWeight("")
       setEditSecondaryWeight("")
     }
@@ -408,11 +501,13 @@ export default function NationalTeamSubmissionsPage() {
 
             <Card className="mb-4 border border-amber-200 bg-amber-50/80">
               <CardContent className="p-3">
-                <p className="text-amber-900 text-sm font-medium mb-1">Team 1 / Team 2 / Starter not saving?</p>
+                <p className="text-amber-900 text-sm font-medium mb-1">NHSCA or AAU — Team 1 / Team 2 / starter not saving?</p>
                 <p className="text-amber-800 text-xs mb-2">Run this once in Supabase → SQL Editor, then refresh.</p>
-                <pre className="p-2 bg-white border rounded text-xs overflow-x-auto whitespace-pre-wrap font-mono mb-2">ALTER TABLE public.national_team_interest_forms
+                <pre className="p-2 bg-white border rounded text-xs overflow-x-auto whitespace-pre-wrap font-mono mb-2">{`ALTER TABLE public.national_team_interest_forms
   ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
-  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;</pre>
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS aau_duals_team text,
+  ADD COLUMN IF NOT EXISTS aau_duals_starter boolean DEFAULT false;`}</pre>
                 <Button
                   size="sm"
                   variant="outline"
@@ -420,7 +515,9 @@ export default function NationalTeamSubmissionsPage() {
                   onClick={() => {
                     const sql = `ALTER TABLE public.national_team_interest_forms
   ADD COLUMN IF NOT EXISTS nhsca_duals_team text,
-  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false;`
+  ADD COLUMN IF NOT EXISTS nhsca_duals_starter boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS aau_duals_team text,
+  ADD COLUMN IF NOT EXISTS aau_duals_starter boolean DEFAULT false;`
                     navigator.clipboard.writeText(sql)
                     alert("Copied. Paste in Supabase SQL Editor and run.")
                   }}
@@ -475,8 +572,11 @@ export default function NationalTeamSubmissionsPage() {
                       scripts/206-create-national-team-interest-form-table.sql
                     </code>
                     . If &quot;Set as starter&quot; does nothing, add columns:{" "}
-                    <code className="bg-amber-100 px-1 rounded text-xs">nhsca_duals_team text, nhsca_duals_starter boolean</code>{" "}
-                    to <code className="bg-amber-100 px-1 rounded text-xs">national_team_interest_forms</code> (see scripts/207-add-nhsca-duals-columns.sql).
+                    <code className="bg-amber-100 px-1 rounded text-xs">
+                      nhsca_duals_* / aau_duals_* team + starter columns
+                    </code>{" "}
+                    on <code className="bg-amber-100 px-1 rounded text-xs">national_team_interest_forms</code> (see{" "}
+                    <code className="bg-amber-100 px-1 rounded text-xs">scripts/209-aau-duals-columns-national-team-interest.sql</code>).
                   </p>
                 </CardContent>
               </Card>
@@ -702,6 +802,57 @@ export default function NationalTeamSubmissionsPage() {
                       )
                     })()}
 
+                    {tournamentId === "aau" && (() => {
+                      const team1Starters = submissions.filter(
+                        (s) => (s as InterestFormSubmission).aau_duals_team === "team_1" && (s as InterestFormSubmission).aau_duals_starter
+                      )
+                      const team2Starters = submissions.filter(
+                        (s) => (s as InterestFormSubmission).aau_duals_team === "team_2" && (s as InterestFormSubmission).aau_duals_starter
+                      )
+                      return (
+                        <Card className="border-2 border-[#002147]/20">
+                          <CardHeader>
+                            <CardTitle>AAU Scholastic Duals – Starters for 2 Teams</CardTitle>
+                            <CardDescription>
+                              One starter per weight per team. Assign from the table below or in the submission detail.
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid md:grid-cols-2 gap-6">
+                              <div>
+                                <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_1_LABEL}</h4>
+                                <ul className="space-y-1 text-sm">
+                                  {WEIGHT_CLASSES.map((w) => {
+                                    const sub = team1Starters.find((s) => s.primary_weight === w)
+                                    return (
+                                      <li key={w} className="flex justify-between gap-2">
+                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
+                                      </li>
+                                    )
+                                  })}
+                                </ul>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_2_LABEL}</h4>
+                                <ul className="space-y-1 text-sm">
+                                  {WEIGHT_CLASSES.map((w) => {
+                                    const sub = team2Starters.find((s) => s.primary_weight === w)
+                                    return (
+                                      <li key={w} className="flex justify-between gap-2">
+                                        <span className="text-muted-foreground">{w} lbs</span>
+                                        <span>{sub ? `${sub.last_name}, ${sub.first_name}` : "—"}</span>
+                                      </li>
+                                    )
+                                  })}
+                                </ul>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })()}
+
                     <div className="space-y-4">
                       {WEIGHT_CLASSES.map((weight) => {
                         const weightSubs = tournamentSubs
@@ -748,9 +899,12 @@ export default function NationalTeamSubmissionsPage() {
                                 </TableHeader>
                                 <TableBody>
                                   {weightSubs.map((sub) => {
-                                    const isUpdating = updatingNhscaId === sub.id
-                                    const team = (sub as InterestFormSubmission).nhsca_duals_team
-                                    const starter = (sub as InterestFormSubmission).nhsca_duals_starter
+                                    const isUpdating = updatingLineupId === sub.id
+                                    const row = sub as InterestFormSubmission
+                                    const team =
+                                      tournamentId === "aau" ? row.aau_duals_team : row.nhsca_duals_team
+                                    const starter =
+                                      tournamentId === "aau" ? row.aau_duals_starter : row.nhsca_duals_starter
                                     return (
                                       <TableRow key={sub.id}>
                                         <TableCell>
@@ -791,7 +945,7 @@ export default function NationalTeamSubmissionsPage() {
                                                     size="sm"
                                                     variant={team === "team_1" && starter ? "default" : "outline"}
                                                     className="text-xs h-7"
-                                                    onClick={() => assignNhscaDualsStarter(sub as InterestFormSubmission, "team_1")}
+                                                    onClick={() => assignNhscaDualsStarter(row, "team_1")}
                                                   >
                                                     {NHSCA_TEAM_1_LABEL} starter
                                                   </Button>
@@ -799,7 +953,7 @@ export default function NationalTeamSubmissionsPage() {
                                                     size="sm"
                                                     variant={team === "team_2" && starter ? "default" : "outline"}
                                                     className="text-xs h-7"
-                                                    onClick={() => assignNhscaDualsStarter(sub as InterestFormSubmission, "team_2")}
+                                                    onClick={() => assignNhscaDualsStarter(row, "team_2")}
                                                   >
                                                     {NHSCA_TEAM_2_LABEL} starter
                                                   </Button>
@@ -808,7 +962,55 @@ export default function NationalTeamSubmissionsPage() {
                                                       size="sm"
                                                       variant="ghost"
                                                       className="text-xs h-7 text-muted-foreground"
-                                                      onClick={() => clearNhscaDualsAssignment(sub as InterestFormSubmission)}
+                                                      onClick={() => clearNhscaDualsAssignment(row)}
+                                                    >
+                                                      Clear
+                                                    </Button>
+                                                  )}
+                                                </>
+                                              )}
+                                            </div>
+                                          </TableCell>
+                                        )}
+                                        {tournamentId === "aau" && (
+                                          <TableCell>
+                                            <div className="flex flex-wrap items-center gap-1">
+                                              {team && starter && (
+                                                <Badge variant="secondary" className="text-xs">
+                                                  {team === "team_1" ? NHSCA_TEAM_1_LABEL : NHSCA_TEAM_2_LABEL} starter
+                                                </Badge>
+                                              )}
+                                              {team && !starter && (
+                                                <Badge variant="outline" className="text-xs">
+                                                  {team === "team_1" ? NHSCA_TEAM_1_LABEL : NHSCA_TEAM_2_LABEL}
+                                                </Badge>
+                                              )}
+                                              {isUpdating ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                              ) : (
+                                                <>
+                                                  <Button
+                                                    size="sm"
+                                                    variant={team === "team_1" && starter ? "default" : "outline"}
+                                                    className="text-xs h-7"
+                                                    onClick={() => assignAauDualsStarter(row, "team_1")}
+                                                  >
+                                                    {NHSCA_TEAM_1_LABEL} starter
+                                                  </Button>
+                                                  <Button
+                                                    size="sm"
+                                                    variant={team === "team_2" && starter ? "default" : "outline"}
+                                                    className="text-xs h-7"
+                                                    onClick={() => assignAauDualsStarter(row, "team_2")}
+                                                  >
+                                                    {NHSCA_TEAM_2_LABEL} starter
+                                                  </Button>
+                                                  {(team || starter) && (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="ghost"
+                                                      className="text-xs h-7 text-muted-foreground"
+                                                      onClick={() => clearAauDualsAssignment(row)}
                                                     >
                                                       Clear
                                                     </Button>
@@ -1052,6 +1254,43 @@ export default function NationalTeamSubmissionsPage() {
                       </div>
                     </div>
                   )}
+
+                  {selectedSubmission.tournament_interest.includes("aau") && (
+                    <div className="border-t pt-4 space-y-3">
+                      <Label className="text-sm font-semibold text-gray-700">AAU Scholastic Duals (2 teams)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Same as NHSCA: Team 1 / Team 2 and starter per weight (stored separately so NHSCA and AAU do not overwrite each other).
+                      </p>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div>
+                          <Label htmlFor="aauTeam" className="text-xs text-muted-foreground">Team</Label>
+                          <Select
+                            value={aauTeam || "none"}
+                            onValueChange={(v) => setAauTeam(v === "none" ? "" : v)}
+                          >
+                            <SelectTrigger id="aauTeam" className="w-[140px] mt-1">
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="team_1">{NHSCA_TEAM_1_LABEL}</SelectItem>
+                              <SelectItem value="team_2">{NHSCA_TEAM_2_LABEL}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center gap-2 pt-6">
+                          <input
+                            type="checkbox"
+                            id="aauStarter"
+                            checked={aauStarter}
+                            onChange={(e) => setAauStarter(e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <Label htmlFor="aauStarter" className="text-sm">Starter for this team</Label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1085,6 +1324,8 @@ export default function NationalTeamSubmissionsPage() {
                         rank_score: rankScore ? parseInt(rankScore) : selectedSubmission.rank_score,
                         nhsca_duals_team: nhscaTeam && nhscaTeam !== "none" ? nhscaTeam : null,
                         nhsca_duals_starter: !!nhscaTeam && nhscaTeam !== "none" && nhscaStarter,
+                        aau_duals_team: aauTeam && aauTeam !== "none" ? aauTeam : null,
+                        aau_duals_starter: !!aauTeam && aauTeam !== "none" && aauStarter,
                         primary_weight: editPrimaryWeight || selectedSubmission.primary_weight,
                         secondary_weight: editSecondaryWeight || null,
                       })

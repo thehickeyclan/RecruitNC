@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { normalizeEventSlugForLookup } from "@/lib/national-team-events"
 
-/** Public lineup for an event: from admin-assigned interest forms (e.g. NHSCA Team 1 / Team 2). No PII. */
+/** Public lineup for an event: from admin-assigned interest forms (NHSCA / AAU Team 1 & Team 2). No PII. */
 export type LineupEntry = {
   first_name: string
   last_name: string
@@ -28,21 +28,32 @@ export async function GET(
 ): Promise<NextResponse<LineupResponse>> {
   const eventSlug = (await params).eventSlug?.trim() ?? ""
   const normalized = normalizeEventSlugForLookup(eventSlug)
-  if (normalized !== "nhsca-duals-2026" && normalized !== "nhsca-2026") {
+  const isNhsca = normalized === "nhsca-duals-2026" || normalized === "nhsca-2026"
+  const isAau = normalized === "aau-2026"
+  if (!isNhsca && !isAau) {
     return NextResponse.json({ ok: true, event_slug: eventSlug, team1: [], team2: [], total: 0 })
   }
+
+  const responseSlug = isNhsca ? "nhsca-duals-2026" : "aau-2026"
+  const teamCol = isNhsca ? "nhsca_duals_team" : "aau_duals_team"
+  const starterCol = isNhsca ? "nhsca_duals_starter" : "aau_duals_starter"
+  const selectCols = `first_name, last_name, high_school, graduation_year, primary_weight, ${teamCol}, ${starterCol}`
 
   try {
     const admin = createAdminClient()
     const { data: rows, error } = await admin
       .from("national_team_interest_forms")
-      .select("first_name, last_name, high_school, graduation_year, primary_weight, nhsca_duals_team, nhsca_duals_starter")
-      .not("nhsca_duals_team", "is", null)
-      .in("nhsca_duals_team", ["team_1", "team_2"])
+      .select(selectCols)
+      .not(teamCol, "is", null)
+      .in(teamCol, ["team_1", "team_2"])
 
     if (error) {
       if ((error as { code?: string })?.code === "42P01") {
-        return NextResponse.json({ ok: true, event_slug: "nhsca-duals-2026", team1: [], team2: [], total: 0 })
+        return NextResponse.json({ ok: true, event_slug: responseSlug, team1: [], team2: [], total: 0 })
+      }
+      const msg = (error.message || "").toLowerCase()
+      if (isAau && msg.includes("column") && msg.includes("aau_duals")) {
+        return NextResponse.json({ ok: true, event_slug: responseSlug, team1: [], team2: [], total: 0 })
       }
       console.warn("[national-team/lineup]", error)
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
@@ -57,19 +68,23 @@ export async function GET(
         high_school: string | null
         graduation_year: string | null
         primary_weight: string | null
-        nhsca_duals_team: string | null
-        nhsca_duals_starter: boolean
+        nhsca_duals_team?: string | null
+        nhsca_duals_starter?: boolean
+        aau_duals_team?: string | null
+        aau_duals_starter?: boolean
       }
+      const t = isNhsca ? row.nhsca_duals_team : row.aau_duals_team
+      const st = isNhsca ? row.nhsca_duals_starter : row.aau_duals_starter
       const entry: LineupEntry = {
         first_name: row.first_name ?? "",
         last_name: row.last_name ?? "",
         high_school: row.high_school ?? "",
         graduation_year: row.graduation_year ?? "",
         primary_weight: row.primary_weight ?? "",
-        team: row.nhsca_duals_team === "team_2" ? "Team 2" : "Team 1",
-        starter: !!row.nhsca_duals_starter,
+        team: t === "team_2" ? "Team 2" : "Team 1",
+        starter: !!st,
       }
-      if (row.nhsca_duals_team === "team_2") {
+      if (t === "team_2") {
         team2.push(entry)
       } else {
         team1.push(entry)
@@ -78,7 +93,7 @@ export async function GET(
     const total = team1.length + team2.length
     return NextResponse.json({
       ok: true,
-      event_slug: "nhsca-duals-2026",
+      event_slug: responseSlug,
       team1,
       team2,
       total,
