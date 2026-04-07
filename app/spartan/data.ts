@@ -1,0 +1,56 @@
+import type { SpartanRaceTier } from "./types"
+
+/** Fayetteville 2026 — update registerUrl when Spartan sends per-distance links or codes. */
+export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
+  {
+    id: "kids",
+    badge: "Family fun",
+    name: "Kids Race",
+    detail: "1–3 km + Obstacles",
+    dates: "May 2–3, 2026",
+    priceLabel: "From $29",
+    registerUrl: "https://www.spartan.com",
+  },
+  {
+    id: "sprint",
+    badge: "Challenge a friend",
+    name: "Sprint",
+    detail: "5K · 20 Obstacles",
+    dates: "May 2–3, 2026",
+    priceLabel: "From $129",
+    registerUrl: "https://www.spartan.com",
+  },
+  {
+    id: "super",
+    badge: "Great for teams",
+    name: "Super 10K",
+    detail: "10K · 25 Obstacles",
+    dates: "May 3, 2026",
+    priceLabel: "From $155",
+    featured: true,
+    registerUrl: "https://www.spartan.com",
+  },
+  {
+    id: "beast",
+    badge: "Test the mind & body",
+    name: "Beast 21K",
+    detail: "21K · 30 Obstacles · South National Series",
+    dates: "May 2, 2026",
+    priceLabel: "From $195",
+    registerUrl: "https://www.spartan.com",
+  },
+  {
+    id: "ultra",
+    badge: "For the few",
+    name: "Ultra 50K",
+    detail: "50K · 60 Obstacles",
+    dates: "May 2, 2026",
+    priceLabel: "From $255",
+    registerUrl: "https://www.spartan.com",
+  },
+]
+
+/** May 2, 2026 — 7:00 AM US Eastern (EDT). */
+export const SPARTAN_COUNTDOWN_ISO = "2026-05-02T11:00:00.000Z"
+
+export const NCU_EIN = "99-3757238"

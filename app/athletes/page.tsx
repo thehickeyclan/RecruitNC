@@ -8,7 +8,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { AuthGuard } from "@/components/auth-guard"
 import { Search, Users, Trophy, FileSearch, LayoutGrid, List } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
@@ -153,7 +152,6 @@ export default function AthletesPage() {
     selectedGender !== "all" || selectedYear !== "all" || selectedDivision !== "all" || searchTerm !== ""
 
   return (
-    <AuthGuard>
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-8">
@@ -552,7 +550,6 @@ export default function AthletesPage() {
           </>
         ) : null}
       </div>
-    </AuthGuard>
   )
 }
 

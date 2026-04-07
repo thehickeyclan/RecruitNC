@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { HighSchoolLeaderboard } from "@/components/high-school-leaderboard"
-import { AuthGuard } from "@/components/auth-guard"
 import { School, Search, Trophy } from "lucide-react"
 
 interface Stats {
@@ -61,7 +60,6 @@ export default function HighSchoolsPage() {
   const hasActiveFilters = selectedGender !== "all" || selectedYear !== "all" || searchTerm !== ""
 
   return (
-    <AuthGuard>
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-8">
@@ -212,6 +210,5 @@ export default function HighSchoolsPage() {
           </Card>
         </div>
       </div>
-    </AuthGuard>
   )
 }

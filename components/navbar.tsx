@@ -288,7 +288,6 @@ export function Navbar() {
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuLabel className="font-normal text-muted-foreground">Commitments</DropdownMenuLabel>
                   {commitmentItems.map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
                       <a href={item.href} className="block w-full cursor-pointer">{item.label}</a>

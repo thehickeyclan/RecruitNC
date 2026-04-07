@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /nchsaa*, /nhsca*, /super32, /news (list only), /store, /cart, /checkout, /national-team*.
+ * Public routes (no sign-in): /, /auth/*, /blue*, /unified-profile*, /prospects*, /athletes*, /colleges* (except .../my-recruits), /high-schools, /nchsaa*, /nhsca*, /super32, /news (list only), /store, /cart, /checkout, /national-team*.
  * Rankings hub only: /public-rankings (class picker) is public. /public-rankings/2026|2027|2028 require sign-in; /api/public-rankings stays session-protected.
  * /national-team and /national-team/* are public so parents can open the hub and enter an access code without signing in.
  */
@@ -24,6 +24,12 @@ export function ConditionalAuthGuard({
   const isViewProfile = path === "/view-profile"
   const isProspects = path === "/prospects" || path.startsWith("/prospects/")
   const isAthletes = path === "/athletes" || path.startsWith("/athletes/")
+  /** Commitments discovery: public; keep /colleges/[slug]/my-recruits behind AuthGuard (redirects to portal). */
+  const isHighSchools = path === "/high-schools" || path === "/high-schools/"
+  const isCollegesPublic =
+    path === "/colleges" ||
+    path === "/colleges/" ||
+    (path.startsWith("/colleges/") && !path.includes("/my-recruits"))
   const isPublicRankingsHub = path === "/public-rankings" || path === "/public-rankings/"
   const isStore = path === "/store" || path.startsWith("/store/") || path === "/store-app" || path.startsWith("/store-app/")
   const isCart = path === "/cart"
@@ -35,6 +41,7 @@ export function ConditionalAuthGuard({
   const isSuper32 = path === "/super32" || path.startsWith("/super32/")
   const isNewsList = path === "/news"
   const isNationalTeam = path === "/national-team" || path.startsWith("/national-team/")
+  const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
   const isPublic =
     isHomepage ||
     isAuthRoute ||
@@ -43,6 +50,8 @@ export function ConditionalAuthGuard({
     isViewProfile ||
     isProspects ||
     isAthletes ||
+    isHighSchools ||
+    isCollegesPublic ||
     isPublicRankingsHub ||
     isNewsList ||
     isStore ||
@@ -51,7 +60,8 @@ export function ConditionalAuthGuard({
     isNchsaaPublic ||
     isNhsca ||
     isSuper32 ||
-    isNationalTeam
+    isNationalTeam ||
+    isSpartanCampaign
 
   if (isPublic) {
     return <>{children}</>

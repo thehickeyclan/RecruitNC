@@ -1,0 +1,26 @@
+@keyframes spartan-colon-blink {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 0.12;
+  }
+}
+
+.spartan-colon {
+  animation: spartan-colon-blink 1s infinite;
+}
+
+@keyframes spartan-progress-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--spartan-progress-pct, 2%);
+  }
+}
+
+.spartan-progress-animate {
+  animation: spartan-progress-fill 1.2s ease-out forwards;
+}

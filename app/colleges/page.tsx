@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Search, GraduationCap, Trophy } from "lucide-react"
 import { CollegeLeaderboard } from "@/components/college-leaderboard"
-import { AuthGuard } from "@/components/auth-guard"
 
 function NewCollegesPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -52,7 +51,6 @@ function NewCollegesPage() {
   }
 
   return (
-    <AuthGuard>
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b">
           <div className="container mx-auto px-4 py-8">
@@ -227,7 +225,6 @@ function NewCollegesPage() {
           />
         </div>
       </div>
-    </AuthGuard>
   )
 }
 

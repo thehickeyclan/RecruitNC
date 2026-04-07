@@ -3,15 +3,12 @@ import Script from "next/script"
 import "@/app/globals.css"
 import "@/app/force-styles.css"
 import "@/app/flip-card.css"
-import { Footer } from "@/components/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { Navbar } from "@/components/navbar"
 import { AuthProvider } from "@/contexts/auth-context"
-import { ConditionalAuthGuard } from "@/components/conditional-auth-guard"
+import { AppChrome } from "@/components/app-chrome"
 import { LayoutOptionalClients } from "@/components/layout-optional-clients"
 import { BulletproofInternalLinks } from "@/components/bulletproof-internal-links"
-import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 import { Analytics } from "@vercel/analytics/next"
 
 export const metadata = {
@@ -112,15 +109,8 @@ export default function RootLayout({
           <AuthProvider>
             <BulletproofInternalLinks />
             <LayoutOptionalClients />
-            <div id="app-content" className="relative flex flex-col min-h-screen">
-              <Navbar />
-              <main className="flex-1">
-              <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
-            </main>
-              <Footer />
-            </div>
+            <AppChrome>{children}</AppChrome>
             <Toaster />
-            <AIChatWidget />
             <Analytics />
           </AuthProvider>
         </ThemeProvider>
