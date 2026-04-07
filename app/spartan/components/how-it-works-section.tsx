@@ -24,7 +24,8 @@ export function HowItWorksSection() {
           How it works
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-[#888]">
-          Partner process: support NC United first — then Spartan fulfills race codes by email.
+          Open to anyone — wrestlers or not. Partner process: give through NC United first, then Spartan emails your
+          code.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3">
           {steps.map((s) => (

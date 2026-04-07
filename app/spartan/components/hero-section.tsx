@@ -6,27 +6,27 @@ import { SPARTAN_COUNTDOWN_ISO } from "../data"
 
 export function HeroSection() {
   return (
-    <section className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 pb-10 pt-14 text-center">
-      <div className="absolute inset-0 z-0 bg-black">
-        {/* Wide logo art (~1024×320): contain + black letterboxing stays sharp; cover was scaling/blurring */}
-        <div className="absolute inset-x-0 top-0 h-[min(42vh,360px)] md:h-[min(38vh,400px)]">
+    <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-black text-center">
+      {/* Banner first in document flow so logo stays unobstructed; countdown sits below */}
+      <div className="relative w-full shrink-0 bg-black">
+        <div className="relative mx-auto h-[min(38vh,340px)] w-full max-w-5xl md:h-[min(36vh,380px)]">
           <Image
             src="/images/spartan-race-hero.jpg"
             alt="Spartan Race"
             fill
             priority
-            className="object-contain object-center p-4 md:p-8"
+            className="object-contain object-center p-4 md:p-6"
             sizes="100vw"
             quality={90}
           />
         </div>
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/75 to-black/[0.94]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black to-transparent"
           aria-hidden
         />
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-6 pb-12 pt-6 md:pt-8">
         <p
           className="mb-2.5 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C8A94A]"
           style={{ animationDelay: "0ms" }}
@@ -54,8 +54,9 @@ export function HeroSection() {
           Earn Your Aroo.
         </h1>
 
-        <p className="mb-8 max-w-md text-[17px] leading-relaxed text-[#ccc]">
-          Support NC&apos;s top wrestlers. Donate through NC United — Spartan sends your race code by email.
+        <p className="mb-8 max-w-lg text-[17px] leading-relaxed text-[#ccc]">
+          Wrestlers, families, fans — everyone&apos;s welcome. Every signup through NC United backs North Carolina
+          wrestling. Donate here; Spartan emails your race code.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
@@ -73,8 +74,9 @@ export function HeroSection() {
           </a>
         </div>
 
-        <p className="mt-4 max-w-md text-[11px] tracking-[0.05em] text-[#666]">
-          Tax-deductible gifts to NC United (501(c)(3)). Entry codes emailed by Spartan per partner process.
+        <p className="mt-4 max-w-lg text-[11px] leading-relaxed tracking-[0.05em] text-[#666]">
+          Tax-deductible gifts to NC United (501(c)(3)). Same mission whether you&apos;re on the course or not — it all
+          fuels NC wrestling. Entry codes from Spartan per partner process.
         </p>
       </div>
     </section>
