@@ -1,36 +1,85 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { SpartanRaceTierId } from "../types"
+import { SPARTAN_RACE_TIERS, suggestedCentsForTier } from "../data"
 
-const PRESETS_CENTS = [2500, 5000, 10_000, 25_000] as const
-const LABELS = ["$25", "$50", "$100", "$250"]
+function formatUsd(cents: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
+    cents / 100,
+  )
+}
 
-const TIER_OPTIONS: { id: SpartanRaceTierId | ""; label: string }[] = [
-  { id: "", label: "No preference yet" },
-  { id: "kids", label: "Kids Race" },
-  { id: "sprint", label: "Sprint 5K" },
-  { id: "super", label: "Super 10K" },
-  { id: "beast", label: "Beast 21K" },
-  { id: "ultra", label: "Ultra 50K" },
-]
+function tierFromSearchParams(searchParams: ReturnType<typeof useSearchParams>): SpartanRaceTierId | null {
+  const raw = searchParams.get("tier") as SpartanRaceTierId | null
+  if (!raw || !SPARTAN_RACE_TIERS.some((t) => t.id === raw)) return null
+  return raw
+}
 
 export function SpartanDonateForm() {
   const searchParams = useSearchParams()
-  const tierFromUrl = searchParams.get("tier") as SpartanRaceTierId | null
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
-  const [tierPreference, setTierPreference] = useState<SpartanRaceTierId | "">(
-    tierFromUrl && TIER_OPTIONS.some((t) => t.id === tierFromUrl) ? tierFromUrl : "",
-  )
-  const [amountCents, setAmountCents] = useState<number>(5000)
+  const [tierPreference, setTierPreference] = useState<SpartanRaceTierId | "">("sprint")
+  const [amountCents, setAmountCents] = useState(12_900)
   const [customOpen, setCustomOpen] = useState(false)
   const [customDollars, setCustomDollars] = useState("")
   const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [athleteCode, setAthleteCode] = useState<string | null>(null)
+
+  /** URL: ?mission=1&chip= / ?tier= / ?athlete= */
+  useEffect(() => {
+    const mission = searchParams.get("mission") === "1"
+    if (mission) {
+      setTierPreference("")
+      setCustomOpen(true)
+      const chip = searchParams.get("chip")
+      if (chip) {
+        const n = Number.parseFloat(chip)
+        if (Number.isFinite(n) && n >= 5) {
+          const dollars = Math.floor(n)
+          setCustomDollars(String(dollars))
+          setAmountCents(dollars * 100)
+        }
+      } else {
+        setCustomDollars("50")
+        setAmountCents(5000)
+      }
+      return
+    }
+
+    const t = tierFromSearchParams(searchParams)
+    if (t) {
+      setTierPreference(t)
+      const s = suggestedCentsForTier(t)
+      if (s != null) {
+        setAmountCents(s)
+        setCustomOpen(false)
+        setCustomDollars("")
+      }
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const raw = searchParams.get("athlete")?.trim()
+    if (raw) setAthleteCode(raw)
+    else setAthleteCode(null)
+  }, [searchParams])
+
+  /** Dropdown / chip: suggested gift tracks typical Spartan price for that distance */
+  useEffect(() => {
+    if (!tierPreference) return
+    const s = suggestedCentsForTier(tierPreference)
+    if (s != null) {
+      setAmountCents(s)
+      setCustomOpen(false)
+      setCustomDollars("")
+    }
+  }, [tierPreference])
 
   const displayAmount = useMemo(() => {
     if (customOpen && customDollars.trim()) {
@@ -43,6 +92,11 @@ export function SpartanDonateForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    const name = donorName.trim()
+    if (name.length < 2) {
+      setError("Please enter your full name (required for Spartan code fulfillment).")
+      return
+    }
     if (!consent) {
       setError("Please confirm email sharing for Spartan code delivery.")
       return
@@ -51,9 +105,9 @@ export function SpartanDonateForm() {
       setError("Enter a custom amount.")
       return
     }
-    let cents = displayAmount
+    const cents = displayAmount
     if (cents < 500) {
-      setError("Minimum donation is $5.")
+      setError("Minimum gift is $5.")
       return
     }
     setLoading(true)
@@ -63,9 +117,10 @@ export function SpartanDonateForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
-          donorName: donorName.trim(),
+          donorName: name,
           amountCents: cents,
           tierPreference: tierPreference || undefined,
+          athleteCode: athleteCode || undefined,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -86,43 +141,108 @@ export function SpartanDonateForm() {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto mt-10 max-w-md text-left">
-      <div className="flex flex-wrap justify-center gap-2">
-        {PRESETS_CENTS.map((cents, i) => (
-          <button
-            key={cents}
-            type="button"
-            onClick={() => {
-              setCustomOpen(false)
-              setAmountCents(cents)
-            }}
-            className={`min-w-[4.5rem] border px-4 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide transition-colors ${
-              !customOpen && amountCents === cents
-                ? "border-[#CC0000] bg-[#CC0000] text-white"
-                : "border-[#444] text-[#999] hover:border-[#666]"
-            }`}
-          >
-            {LABELS[i]}
-          </button>
-        ))}
+    <form onSubmit={submit} className="mx-auto mt-10 max-w-lg text-left">
+      {athleteCode && (
+        <div className="mb-6 rounded border border-[#C8A94A]/40 bg-[#141414] px-4 py-3 text-sm text-[#ccc]">
+          <span className="font-medium text-[#C8A94A]">Athlete dedication: </span>
+          {athleteCode}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#C8A94A]">Full name (required)</label>
+          <input
+            type="text"
+            required
+            minLength={2}
+            autoComplete="name"
+            value={donorName}
+            onChange={(e) => setDonorName(e.target.value)}
+            className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-white focus:border-[#CC0000] focus:outline-none"
+          />
+          <p className="mt-1 text-xs text-[#666]">Used with your email so Spartan can match your entry code.</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#C8A94A]">Email (required)</label>
+          <input
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-white focus:border-[#CC0000] focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="mb-2 mt-8">
+        <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Race / distance (optional)</label>
+        <p className="mt-1 text-xs text-[#666]">
+          We suggest a tax-deductible gift in line with Spartan&apos;s typical list price for that distance — adjust if you
+          need to.
+        </p>
+        <select
+          value={tierPreference}
+          onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId | "")}
+          className="mt-2 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-white focus:border-[#CC0000] focus:outline-none"
+        >
+          <option value="">Not sure yet / general support</option>
+          {SPARTAN_RACE_TIERS.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name} — suggested {formatUsd(t.suggestedGiftCents)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <p className="mt-6 text-xs font-medium uppercase tracking-wide text-[#888]">Gift amount</p>
+      <div className="mt-2 flex flex-wrap justify-center gap-2">
+        {SPARTAN_RACE_TIERS.map((tier) => {
+          const active = !customOpen && tierPreference === tier.id && amountCents === tier.suggestedGiftCents
+          return (
+            <button
+              key={tier.id}
+              type="button"
+              onClick={() => {
+                setTierPreference(tier.id)
+                setAmountCents(tier.suggestedGiftCents)
+                setCustomOpen(false)
+                setCustomDollars("")
+              }}
+              className={`min-w-[4.75rem] border px-2 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide transition-colors ${
+                active ? "border-[#CC0000] bg-[#CC0000] text-white" : "border-[#444] text-[#999] hover:border-[#666]"
+              }`}
+            >
+              <span className="block text-[10px] font-normal normal-case text-current opacity-90">{tier.name}</span>
+              <span className="block text-base">{formatUsd(tier.suggestedGiftCents)}</span>
+            </button>
+          )
+        })}
         <button
           type="button"
           onClick={() => setCustomOpen(true)}
-          className={`min-w-[4.5rem] border px-4 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide ${
+          className={`min-w-[4.75rem] border px-2 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide ${
             customOpen ? "border-[#CC0000] bg-[#CC0000] text-white" : "border-[#444] text-[#999] hover:border-[#666]"
           }`}
         >
-          Custom
+          <span className="block text-[10px] font-normal normal-case opacity-90">Other</span>
+          <span className="block text-base">Custom</span>
         </button>
       </div>
+
+      <p className="mt-3 text-center text-xs text-[#555]">
+        Checkout total: <strong className="text-[#aaa]">{formatUsd(displayAmount)}</strong>
+      </p>
+
       {customOpen && (
         <div className="mt-4">
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Amount (USD)</label>
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Custom amount (USD)</label>
           <input
             type="number"
             min={5}
             step={1}
-            placeholder="e.g. 75"
+            placeholder="e.g. 175"
             value={customDollars}
             onChange={(e) => setCustomDollars(e.target.value)}
             className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white placeholder:text-[#555] focus:border-[#CC0000] focus:outline-none"
@@ -130,45 +250,7 @@ export function SpartanDonateForm() {
         </div>
       )}
 
-      <div className="mt-6 space-y-3">
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Email (required)</label>
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Name (optional)</label>
-          <input
-            type="text"
-            autoComplete="name"
-            value={donorName}
-            onChange={(e) => setDonorName(e.target.value)}
-            className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Preferred race (optional)</label>
-          <select
-            value={tierPreference}
-            onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId | "")}
-            className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
-          >
-            {TIER_OPTIONS.map((t) => (
-              <option key={t.label + (t.id || "x")} value={t.id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <label className="mt-6 flex cursor-pointer gap-3 text-left text-sm text-[#bbb]">
+      <label className="mt-8 flex cursor-pointer gap-3 text-left text-sm text-[#bbb]">
         <input
           type="checkbox"
           checked={consent}
@@ -177,7 +259,8 @@ export function SpartanDonateForm() {
         />
         <span>
           I agree that NC United may share my email with Spartan Race solely so they can send my Fayetteville race entry
-          code. I understand my donation receipt remains from NC United as a 501(c)(3) gift.
+          code (typically within about 48 hours after NC United batches names to their team). I understand my receipt is
+          for a tax-deductible gift to NC United (501(c)(3)), not a purchase from Spartan.
         </span>
       </label>
 
@@ -190,6 +273,9 @@ export function SpartanDonateForm() {
       >
         {loading ? "Redirecting…" : "Continue to secure checkout"}
       </button>
+      <p className="mt-3 text-center text-xs text-[#666]">
+        After payment, watch your inbox — Spartan sends entry codes on a rolling basis; allow up to about 48 hours.
+      </p>
     </form>
   )
 }

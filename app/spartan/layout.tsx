@@ -29,6 +29,7 @@ export const metadata: Metadata = {
     siteName: "NC United / RecruitNC",
     locale: "en_US",
     type: "website",
+    images: [{ url: `${base}/images/spartan-race-hero.jpg`, width: 1200, height: 630, alt: "NC United × Spartan Race Fayetteville" }],
   },
   alternates: {
     canonical: `${base}/spartan`,

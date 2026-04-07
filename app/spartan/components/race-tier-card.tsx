@@ -1,39 +1,60 @@
 import type { SpartanRaceTier } from "../types"
 
+function formatUsd(cents: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
+    cents / 100,
+  )
+}
+
 export function RaceTierCard({ tier }: { tier: SpartanRaceTier }) {
   const featured = tier.featured === true
+  const gift = formatUsd(tier.suggestedGiftCents)
 
   return (
     <article
-      className={`flex flex-col border border-[#2A2A2A] bg-[#1A1A1A] p-6 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(204,0,0,0.12)] ${
-        featured ? "ring-2 ring-[#CC0000] ring-offset-2 ring-offset-[#0A0A0A]" : ""
+      className={`group relative flex h-full flex-col bg-[#1A1A1A] p-6 transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_16px_40px_rgba(0,0,0,0.45)] ${
+        featured
+          ? "border-2 border-[#CC0000]"
+          : "border border-[#2A2A2A] border-l-[4px] border-l-[#CC0000]"
       } `}
-      style={{ borderLeftWidth: "4px", borderLeftColor: "#CC0000" }}
     >
       {featured && (
-        <span className="mb-3 inline-block w-fit bg-[#CC0000] px-2 py-0.5 font-[family-name:var(--font-barlow-spartan)] text-[10px] font-bold uppercase tracking-wider text-white">
+        <span className="absolute right-2 top-2 inline-block bg-[#CC0000] px-2 py-1 font-[family-name:var(--font-barlow-spartan)] text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Team favorite
         </span>
       )}
-      <p className="font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.15em] text-[#999]">
+      <p className="pr-16 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#CC0000]">
         {tier.badge}
       </p>
-      <h3 className="mt-1 font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase text-white">{tier.name}</h3>
-      <p className="mt-2 text-sm text-[#bbb]">{tier.detail}</p>
-      <p className="mt-1 text-xs uppercase tracking-wide text-[#666]">{tier.dates}</p>
-      <p className="mt-6 font-[family-name:var(--font-barlow-spartan)] text-3xl font-black text-[#CC0000]">{tier.priceLabel}</p>
-      <p className="mt-2 text-xs text-[#666]">Spartan reference pricing — your gift runs through NC United first.</p>
+      <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
+        {tier.name}
+      </h3>
+      <p className="mt-2 text-sm leading-snug text-[#9a9a9a]">{tier.detail}</p>
+      <p className="mt-1 font-[family-name:var(--font-barlow-spartan)] text-[11px] uppercase tracking-[0.12em] text-[#666]">
+        {tier.dates}
+      </p>
+
+      <div className="my-5 h-px w-full bg-[#333]" aria-hidden />
+
+      <p className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#888]">
+        Donate
+      </p>
+      <p className="mt-1 font-[family-name:var(--font-barlow-spartan)] text-[clamp(2rem,5vw,2.25rem)] font-black tabular-nums leading-none text-[#CC0000]">
+        {gift}
+      </p>
+      <p className="mt-2 text-xs leading-snug text-[#888]">Tax-deductible · Code sent within 48hrs</p>
+
       <a
         href={`/spartan?tier=${encodeURIComponent(tier.id)}#donate`}
-        className="mt-4 inline-flex min-h-[48px] w-full items-center justify-center bg-[#CC0000] font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#990000]"
+        className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#CC0000] hover:bg-[#2f2f2f]"
       >
-        Donate — get code
+        Donate &amp; run
       </a>
       <a
         href={tier.registerUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 block text-center text-xs text-[#888] underline-offset-2 hover:text-[#C8A94A] hover:underline"
+        className="mt-3 block text-center text-[11px] text-[#555] underline-offset-2 hover:text-[#777] hover:underline"
       >
         Spartan.com — event info
       </a>

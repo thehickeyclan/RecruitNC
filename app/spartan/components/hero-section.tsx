@@ -1,7 +1,9 @@
 "use client"
 
 import Image from "next/image"
+import { Suspense } from "react"
 import { CountdownTimer } from "./countdown-timer"
+import { SpartanAthleteRibbon } from "./spartan-athlete-ribbon"
 import { SPARTAN_COUNTDOWN_ISO } from "../data"
 
 export function HeroSection() {
@@ -29,6 +31,10 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-6 pb-12 pt-6 md:pt-8">
+        <Suspense fallback={null}>
+          <SpartanAthleteRibbon />
+        </Suspense>
+
         <div className="mb-8 flex flex-col items-center gap-2">
           <span className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.22em] text-[#888]">
             Presented by

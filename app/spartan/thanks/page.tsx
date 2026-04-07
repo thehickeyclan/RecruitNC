@@ -3,9 +3,9 @@ export default function SpartanThanksPage() {
     <div className="mx-auto flex min-h-[60vh] max-w-lg flex-col justify-center px-4 py-16 text-center">
       <h1 className="font-[family-name:var(--font-barlow-spartan)] text-3xl font-bold uppercase text-white">Thank you</h1>
       <p className="mt-4 text-[#bbb]">
-        Your tax-deductible gift to NC United is processing. You&apos;ll receive a receipt by email. NC United will share
-        your email with Spartan Race so they can send your Fayetteville entry code — same process we&apos;re running with
-        Joe&apos;s team.
+        Your tax-deductible gift to NC United is processing. You&apos;ll receive a receipt by email. NC United batches donor
+        names to Spartan Race; they typically email your Fayetteville entry code within about <strong className="text-[#ddd]">48 hours</strong> of
+        that handoff. Same process we&apos;re running with Joe&apos;s team.
       </p>
       <p className="mt-6 text-sm text-[#666]">Questions?{" "}
         <a href="mailto:contact@ncunitedwrestling.com" className="text-[#C8A94A] hover:underline">

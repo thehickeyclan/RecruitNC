@@ -1,3 +1,4 @@
+import { AthleteDedicationSection } from "./components/athlete-dedication-section"
 import { HeroSection } from "./components/hero-section"
 import { MissionBar } from "./components/mission-bar"
 import { HowItWorksSection } from "./components/how-it-works-section"
@@ -16,6 +17,7 @@ export default function SpartanCampaignPage() {
       <LastYearSection />
       <AboutSection />
       <RaceTiersGrid />
+      <AthleteDedicationSection />
       <DonationSection />
       <PartnersFooter />
     </>

@@ -7,6 +7,8 @@ export interface SpartanRaceTier {
   detail: string
   dates: string
   priceLabel: string
+  /** Typical Spartan list price for that distance — used as suggested tax-deductible gift to NC United, not a ticket purchase. */
+  suggestedGiftCents: number
   featured?: boolean
   registerUrl: string
 }
