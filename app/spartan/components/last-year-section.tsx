@@ -14,16 +14,16 @@ export function LastYearSection() {
           NC United athletes on course — we&apos;re back May 2–3 in Fayetteville to fund the next season of training and
           competition.
         </p>
-        <div className="relative mt-10 overflow-hidden rounded-sm border border-[#2A2A2A] bg-[#1A1A1A] shadow-[inset_4px_0_0_0_#CC0000]">
-          <div className="relative aspect-[3/4] w-full max-h-[min(85vh,900px)] mx-auto md:aspect-[4/5]">
-            <Image
-              src="/images/spartan-last-year-team.png"
-              alt="NC United wrestlers at the Spartan Race, team photo on course"
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 896px) 100vw, 896px"
-            />
-          </div>
+        {/* Full photo at intrinsic 768x1024; object-contain only — no cover crop */}
+        <div className="mt-10 rounded-sm border border-[#2A2A2A] bg-[#141414] p-2 sm:p-4 shadow-[inset_4px_0_0_0_#CC0000]">
+          <Image
+            src="/images/spartan-last-year-team.png"
+            alt="NC United wrestlers at the Spartan Race, team photo on course"
+            width={768}
+            height={1024}
+            className="mx-auto h-auto w-full max-w-[min(100%,768px)] object-contain"
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
         </div>
       </div>
     </section>

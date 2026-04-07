@@ -9,16 +9,18 @@ export function HeroSection() {
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-black text-center">
       {/* Banner first in document flow so logo stays unobstructed; countdown sits below */}
       <div className="relative w-full shrink-0 bg-black">
-        <div className="relative mx-auto h-[min(38vh,340px)] w-full max-w-5xl md:h-[min(36vh,380px)]">
-          <Image
-            src="/images/spartan-race-hero.jpg"
-            alt="Spartan Race"
-            fill
-            priority
-            className="object-contain object-center p-4 md:p-6"
-            sizes="100vw"
-            quality={90}
-          />
+        <div className="relative mx-auto min-h-[200px] w-full max-w-5xl py-3 md:py-5">
+          <div className="relative h-[min(44vh,440px)] w-full min-h-[220px] md:h-[min(40vh,460px)]">
+            <Image
+              src="/images/spartan-race-hero.jpg"
+              alt="Spartan Race"
+              fill
+              priority
+              className="object-contain object-center px-3 py-2 md:px-8 md:py-4"
+              sizes="100vw"
+              quality={90}
+            />
+          </div>
         </div>
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black to-transparent"
@@ -27,6 +29,21 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-6 pb-12 pt-6 md:pt-8">
+        <div className="mb-8 flex flex-col items-center gap-2">
+          <span className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.22em] text-[#888]">
+            Presented by
+          </span>
+          <div className="relative h-12 w-[200px] md:h-14 md:w-[240px]">
+            <Image
+              src="/images/nc-united-logo-white.png"
+              alt="NC United Wrestling — 501(c)(3) nonprofit"
+              fill
+              className="object-contain object-center"
+              sizes="240px"
+            />
+          </div>
+        </div>
+
         <p
           className="mb-2.5 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C8A94A]"
           style={{ animationDelay: "0ms" }}
