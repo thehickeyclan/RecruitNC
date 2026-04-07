@@ -7,17 +7,21 @@ import { SPARTAN_COUNTDOWN_ISO } from "../data"
 export function HeroSection() {
   return (
     <section className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-6 pb-10 pt-14 text-center">
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/spartan-race-banner.png"
-          alt=""
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="100vw"
-        />
+      <div className="absolute inset-0 z-0 bg-black">
+        {/* Wide logo art (~1024×320): contain + black letterboxing stays sharp; cover was scaling/blurring */}
+        <div className="absolute inset-x-0 top-0 h-[min(42vh,360px)] md:h-[min(38vh,400px)]">
+          <Image
+            src="/images/spartan-race-hero.jpg"
+            alt="Spartan Race"
+            fill
+            priority
+            className="object-contain object-center p-4 md:p-8"
+            sizes="100vw"
+            quality={90}
+          />
+        </div>
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/70 to-black/85"
+          className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/75 to-black/[0.94]"
           aria-hidden
         />
       </div>
@@ -51,26 +55,26 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-8 max-w-md text-[17px] leading-relaxed text-[#ccc]">
-          Support NC&apos;s top wrestlers. Run the mud. Fund the mission.
+          Support NC&apos;s top wrestlers. Donate through NC United — Spartan sends your race code by email.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
           <a
-            href="#races"
+            href="#donate"
             className="inline-flex min-h-[52px] items-center justify-center bg-[#CC0000] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#990000]"
           >
-            Register now
+            Donate &amp; get your code
           </a>
           <a
-            href="#donate"
+            href="#races"
             className="inline-flex min-h-[52px] items-center justify-center border border-white/50 bg-transparent px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white"
           >
-            Donate →
+            Race distances
           </a>
         </div>
 
         <p className="mt-4 max-w-md text-[11px] tracking-[0.05em] text-[#666]">
-          100% of proceeds support NC United athletes. NC United is a 501(c)(3) nonprofit.
+          Tax-deductible gifts to NC United (501(c)(3)). Entry codes emailed by Spartan per partner process.
         </p>
       </div>
     </section>

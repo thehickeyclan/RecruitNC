@@ -10,8 +10,8 @@ export function RaceTiersGrid() {
             Choose your challenge
           </h2>
           <p className="mt-3 text-[#999]">
-            Every registration directly funds NC United athletes. Pick your distance — ticketing links will be updated as
-            Spartan finalizes codes for Fayetteville.
+            Pick your distance for reference — you&apos;ll donate on NC United first, then Spartan emails your Fayetteville
+            entry code (partner flow). See how it works above.
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">

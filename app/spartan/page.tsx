@@ -1,5 +1,6 @@
 import { HeroSection } from "./components/hero-section"
 import { MissionBar } from "./components/mission-bar"
+import { HowItWorksSection } from "./components/how-it-works-section"
 import { LastYearSection } from "./components/last-year-section"
 import { AboutSection } from "./components/about-section"
 import { RaceTiersGrid } from "./components/race-tiers-grid"
@@ -11,6 +12,7 @@ export default function SpartanCampaignPage() {
     <>
       <HeroSection />
       <MissionBar />
+      <HowItWorksSection />
       <LastYearSection />
       <AboutSection />
       <RaceTiersGrid />

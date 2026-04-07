@@ -22,13 +22,20 @@ export function RaceTierCard({ tier }: { tier: SpartanRaceTier }) {
       <p className="mt-2 text-sm text-[#bbb]">{tier.detail}</p>
       <p className="mt-1 text-xs uppercase tracking-wide text-[#666]">{tier.dates}</p>
       <p className="mt-6 font-[family-name:var(--font-barlow-spartan)] text-3xl font-black text-[#CC0000]">{tier.priceLabel}</p>
+      <p className="mt-2 text-xs text-[#666]">Spartan reference pricing — your gift runs through NC United first.</p>
+      <a
+        href={`/spartan?tier=${encodeURIComponent(tier.id)}#donate`}
+        className="mt-4 inline-flex min-h-[48px] w-full items-center justify-center bg-[#CC0000] font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#990000]"
+      >
+        Donate — get code
+      </a>
       <a
         href={tier.registerUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-6 inline-flex min-h-[48px] w-full items-center justify-center bg-[#CC0000] font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#990000]"
+        className="mt-3 block text-center text-xs text-[#888] underline-offset-2 hover:text-[#C8A94A] hover:underline"
       >
-        Register
+        Spartan.com — event info
       </a>
     </article>
   )
