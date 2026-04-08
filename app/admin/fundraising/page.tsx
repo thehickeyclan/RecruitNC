@@ -21,11 +21,19 @@ type SpartanDonationRow = {
   currency: string
   donorEmail: string | null
   donorName: string | null
+  donorListPublic: boolean
   raceParticipant: boolean
   fundraisingType: "race_donation" | "gift_only"
   athleteCode: string | null
   attribution: "athlete" | "general_nc_united"
   tierPreference: string
+}
+
+type SpartanAthleteAggregate = {
+  athleteCode: string
+  totalCents: number
+  donationCount: number
+  raceSignupCount: number
 }
 
 const LS_LEADERBOARD = "recruitnc_admin_fundraising_spartan2026_leaderboard"
@@ -48,10 +56,13 @@ export default function AdminFundraisingPage() {
   const [mounted, setMounted] = useState(false)
 
   const [donations, setDonations] = useState<SpartanDonationRow[] | null>(null)
+  const [byAthlete, setByAthlete] = useState<SpartanAthleteAggregate[] | null>(null)
+  const [generalTotalCents, setGeneralTotalCents] = useState(0)
   const [donationsLoading, setDonationsLoading] = useState(false)
   const [donationsError, setDonationsError] = useState<string | null>(null)
   const [athleteFilter, setAthleteFilter] = useState("")
-  const [sortBy, setSortBy] = useState<"date" | "athlete" | "amount">("date")
+  const [sortBy, setSortBy] = useState<"date-desc" | "date-asc" | "athlete" | "amount">("date-desc")
+  const [adminView, setAdminView] = useState<"all" | "byAthlete">("all")
 
   useEffect(() => {
     setMounted(true)
@@ -94,12 +105,21 @@ export default function AdminFundraisingPage() {
     setDonationsError(null)
     try {
       const res = await fetch("/api/admin/spartan-donations?days=120")
-      const j = (await res.json()) as { error?: string; donations?: SpartanDonationRow[] }
+      const j = (await res.json()) as {
+        error?: string
+        donations?: SpartanDonationRow[]
+        byAthlete?: SpartanAthleteAggregate[]
+        generalTotalCents?: number
+      }
       if (!res.ok) throw new Error(j.error || "Could not load donations")
       setDonations(j.donations ?? [])
+      setByAthlete(j.byAthlete ?? [])
+      setGeneralTotalCents(typeof j.generalTotalCents === "number" ? j.generalTotalCents : 0)
     } catch (e) {
       setDonationsError(e instanceof Error ? e.message : "Load failed")
       setDonations(null)
+      setByAthlete(null)
+      setGeneralTotalCents(0)
     } finally {
       setDonationsLoading(false)
     }
@@ -112,7 +132,8 @@ export default function AdminFundraisingPage() {
       ? list.filter((d) => (d.athleteCode ?? "").toLowerCase().includes(q))
       : list
     const sorted = [...filtered]
-    if (sortBy === "date") sorted.sort((a, b) => b.createdUnix - a.createdUnix)
+    if (sortBy === "date-desc") sorted.sort((a, b) => b.createdUnix - a.createdUnix)
+    else if (sortBy === "date-asc") sorted.sort((a, b) => a.createdUnix - b.createdUnix)
     else if (sortBy === "athlete")
       sorted.sort((a, b) => {
         const ac = (a.athleteCode ?? "").toLowerCase()
@@ -128,6 +149,13 @@ export default function AdminFundraisingPage() {
     () => filteredDonations.reduce((s, d) => s + d.amountCents, 0),
     [filteredDonations],
   )
+
+  const filteredByAthlete = useMemo(() => {
+    const list = byAthlete ?? []
+    const q = athleteFilter.trim().toLowerCase()
+    if (!q) return list
+    return list.filter((a) => a.athleteCode.toLowerCase().includes(q))
+  }, [byAthlete, athleteFilter])
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -226,9 +254,10 @@ export default function AdminFundraisingPage() {
                 <CardTitle>Donations (Stripe)</CardTitle>
                 <CardDescription>
                   Paid Checkout sessions with <code className="rounded bg-muted px-1 text-xs">spartan_campaign=fayetteville_2026</code>.
-                  <strong className="text-foreground"> Race path</strong> = donor used the race / entry-code flow;{" "}
-                  <strong className="text-foreground">Give only</strong> = support without that path. Filter by athlete code
-                  to see all gifts for one kid.
+                  <strong className="text-foreground"> Race path</strong> = race / entry flow;{" "}
+                  <strong className="text-foreground">Give only</strong> = no race entry.{" "}
+                  <strong className="text-foreground">Public list</strong> = donor opted in to show name on the public page.
+                  Use <strong className="text-foreground">By athlete</strong> for per–athlete totals.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -237,6 +266,19 @@ export default function AdminFundraisingPage() {
                     <RefreshCw className={`mr-2 h-4 w-4 ${donationsLoading ? "animate-spin" : ""}`} />
                     {donations === null ? "Load donations" : "Refresh"}
                   </Button>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="admin-view">View</Label>
+                    <select
+                      id="admin-view"
+                      className="border-input bg-background h-9 rounded-md border px-3 text-sm shadow-xs"
+                      value={adminView}
+                      onChange={(e) => setAdminView(e.target.value as "all" | "byAthlete")}
+                      disabled={donations === null}
+                    >
+                      <option value="all">All gifts (detail)</option>
+                      <option value="byAthlete">Totals by athlete</option>
+                    </select>
+                  </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="athlete-filter">Filter by athlete code</Label>
                     <Input
@@ -254,10 +296,13 @@ export default function AdminFundraisingPage() {
                       id="sort-donations"
                       className="border-input bg-background h-9 rounded-md border px-3 text-sm shadow-xs"
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as "date" | "athlete" | "amount")}
-                      disabled={donations === null}
+                      onChange={(e) =>
+                        setSortBy(e.target.value as "date-desc" | "date-asc" | "athlete" | "amount")
+                      }
+                      disabled={donations === null || adminView === "byAthlete"}
                     >
-                      <option value="date">Newest first</option>
+                      <option value="date-desc">Date (newest)</option>
+                      <option value="date-asc">Date (oldest)</option>
                       <option value="athlete">Athlete code (A–Z)</option>
                       <option value="amount">Amount (high → low)</option>
                     </select>
@@ -275,7 +320,7 @@ export default function AdminFundraisingPage() {
                     <strong className="text-foreground">{formatMoney(filteredTotalCents, "usd")}</strong>
                   </p>
                 )}
-                {donations !== null && filteredDonations.length > 0 && (
+                {donations !== null && adminView === "all" && filteredDonations.length > 0 && (
                   <div className="rounded-md border">
                     <Table>
                       <TableHeader>
@@ -283,6 +328,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>Date</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Donor</TableHead>
+                          <TableHead>Public list</TableHead>
                           <TableHead>Race path</TableHead>
                           <TableHead>Type</TableHead>
                           <TableHead>Athlete</TableHead>
@@ -301,6 +347,17 @@ export default function AdminFundraisingPage() {
                                 <div className="truncate text-sm">{d.donorName ?? "—"}</div>
                                 <div className="text-muted-foreground truncate text-xs">{d.donorEmail ?? "—"}</div>
                               </div>
+                            </TableCell>
+                            <TableCell>
+                              {d.donorListPublic !== false ? (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Public
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Anonymous
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell>
                               {d.raceParticipant ? (
@@ -333,6 +390,39 @@ export default function AdminFundraisingPage() {
                       </TableBody>
                     </Table>
                   </div>
+                )}
+                {donations !== null && adminView === "byAthlete" && byAthlete && filteredByAthlete.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-muted-foreground text-sm">
+                      General fund (no athlete code) in window:{" "}
+                      <strong className="text-foreground">{formatMoney(generalTotalCents, "usd")}</strong>
+                    </p>
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Athlete code</TableHead>
+                            <TableHead>Total raised</TableHead>
+                            <TableHead>Gifts</TableHead>
+                            <TableHead>Race signups</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredByAthlete.map((a) => (
+                            <TableRow key={a.athleteCode}>
+                              <TableCell className="font-mono text-xs">{a.athleteCode}</TableCell>
+                              <TableCell className="font-medium">{formatMoney(a.totalCents, "usd")}</TableCell>
+                              <TableCell>{a.donationCount}</TableCell>
+                              <TableCell>{a.raceSignupCount}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+                {donations !== null && adminView === "byAthlete" && byAthlete && filteredByAthlete.length === 0 && (
+                  <p className="text-muted-foreground text-sm">No athlete-coded gifts in this window.</p>
                 )}
                 {donations !== null && donations.length === 0 && !donationsLoading && (
                   <p className="text-muted-foreground text-sm">No paid Spartan sessions in the last 120 days.</p>

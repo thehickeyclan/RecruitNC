@@ -42,6 +42,8 @@ export function SpartanDonateForm() {
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
+  /** Public supporter list shows name; false = anonymous on /api/spartan/supporters */
+  const [donorListPublic, setDonorListPublic] = useState(true)
   const [fundraisingCode, setFundraisingCode] = useState("")
   /** Race vs donate first */
   const [flow, setFlow] = useState<"race" | "donate" | null>(null)
@@ -276,6 +278,7 @@ export function SpartanDonateForm() {
         body: JSON.stringify({
           email: email.trim(),
           donorName: name,
+          donorListPublic,
           amountCents,
           tierPreference: flow === "race" ? tierPreference : undefined,
           athleteCode: codeForCheckout,
@@ -424,6 +427,15 @@ export function SpartanDonateForm() {
                 className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
               />
             </div>
+            <label className="flex cursor-pointer items-start gap-2 text-left text-[12px] leading-snug text-[#999]">
+              <input
+                type="checkbox"
+                checked={donorListPublic}
+                onChange={(e) => setDonorListPublic(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#C8A94A]"
+              />
+              <span>Show my name on the public supporter list (uncheck to stay anonymous)</span>
+            </label>
           </div>
 
           {needsAthleteCode && (

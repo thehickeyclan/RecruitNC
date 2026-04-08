@@ -1,6 +1,7 @@
 import { AthleteDedicationSection } from "./components/athlete-dedication-section"
 import { HeroSection } from "./components/hero-section"
 import { MissionBar } from "./components/mission-bar"
+import { SupporterActivitySection } from "./components/supporter-activity-section"
 import { HowItWorksSection } from "./components/how-it-works-section"
 import { LastYearSection } from "./components/last-year-section"
 import { AboutSection } from "./components/about-section"
@@ -14,6 +15,7 @@ export default function SpartanPage() {
     <>
       <HeroSection />
       <MissionBar />
+      <SupporterActivitySection />
       <HowItWorksSection />
       <LastYearSection />
       <AboutSection />

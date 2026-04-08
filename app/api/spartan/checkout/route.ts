@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     tierPreference?: string
     /** NCU-LASTNAME-YY — attributes dollars to that athlete in Stripe exports */
     athleteCode?: string
+    /** If false, public supporter list shows "Anonymous" */
+    donorListPublic?: boolean
   } = {}
   try {
     body = await request.json()
@@ -38,6 +40,7 @@ export async function POST(request: NextRequest) {
   const tierPreference = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
   const athleteCode =
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
+  const donorListPublic = body.donorListPublic !== false
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
@@ -122,6 +125,7 @@ export async function POST(request: NextRequest) {
         spartan_campaign: "fayetteville_2026",
         tier_preference: tierPreference || "unspecified",
         donor_name: donorName,
+        donor_list_public: donorListPublic ? "true" : "false",
         race_entry_requested: raceEntryRequested ? "true" : "false",
         fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",
         tee_100_eligible: teeEligible ? "yes" : "no",
