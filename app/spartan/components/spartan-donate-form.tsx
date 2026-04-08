@@ -62,7 +62,7 @@ export function SpartanDonateForm() {
   const [athleteMenuOpen, setAthleteMenuOpen] = useState(false)
   const [athleteSearchLoading, setAthleteSearchLoading] = useState(false)
   const [athleteLookupError, setAthleteLookupError] = useState(false)
-  /** Wrestler not in directory — staff credit via Stripe manual_credit_name */
+  /** Wrestler not in directory — staff credit via Stripe manual_credit_name (up to 120 chars) */
   const [manualCreditName, setManualCreditName] = useState("")
 
   const [shirtSize, setShirtSize] = useState("")
@@ -272,11 +272,11 @@ export function SpartanDonateForm() {
       return
     }
     if (flow === "donate" && donateMode === null) {
-      setError("Choose athlete or NC United.")
+      setError("Choose wrestler or NC United.")
       return
     }
     if (needsAthleteCode && !hasAthleteCredit) {
-      setError("Select an athlete from the list, or enter their name in the box below.")
+      setError("Select a wrestler from the list, or enter their name in the box below.")
       return
     }
     if (flow === "race" && tierPreference !== "super") {
@@ -390,9 +390,9 @@ export function SpartanDonateForm() {
         </div>
         <p className="mt-2 text-[11px] leading-snug text-[#666]">
           <strong className="text-[#888]">Race with us</strong> — Super 10K with Team NC; search below to credit one
-          athlete.
+          wrestler.
           <br />
-          <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">an athlete</strong> or{" "}
+          <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">a wrestler</strong> or{" "}
           <strong className="text-[#777]">NC United</strong>.
         </p>
       </div>
@@ -410,7 +410,7 @@ export function SpartanDonateForm() {
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
               }`}
             >
-              An athlete
+              A wrestler
             </button>
             <button
               type="button"
@@ -482,7 +482,7 @@ export function SpartanDonateForm() {
           {needsAthleteCode && (
             <>
               <div className="relative mt-5">
-                <label className="text-xs text-[#888]">Which athlete? (search)</label>
+                <label className="text-xs text-[#888]">Which wrestler? (search)</label>
                 <input
                   type="text"
                   placeholder="Last name…"
@@ -546,17 +546,17 @@ export function SpartanDonateForm() {
                   >
                     NC United (general)
                   </button>{" "}
-                  with no wrestler attached — or enter their name below if they&apos;re not in search yet; we&apos;ll
-                  apply your gift on our side.
+                  with no wrestler attached — or enter their name in the box below if they&apos;re not in search yet; we
+                  credit the gift from that line on our side.
                 </p>
                 <label className="mt-3 block text-xs text-[#888]" htmlFor="spartan-manual-credit">
-                  Not in the directory? Wrestler name (manual credit)
+                  Not in the directory yet? Wrestler to credit (freeform)
                 </label>
                 <input
                   id="spartan-manual-credit"
                   type="text"
                   autoComplete="off"
-                  placeholder="e.g. Jordan Smith"
+                  placeholder="e.g. Jordan Smith · school or team if helpful"
                   value={manualCreditName}
                   onChange={(e) => {
                     const v = e.target.value
@@ -565,14 +565,16 @@ export function SpartanDonateForm() {
                   }}
                   className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-sm text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
                 />
-                <p className="mt-1.5 text-[10px] text-[#666]">Two or more characters to continue checkout.</p>
+                <p className="mt-1.5 text-[10px] text-[#666]">
+                  Same line is fine—staff match this in Stripe. Two or more characters to continue checkout.
+                </p>
               </div>
             </>
           )}
 
           {flow === "donate" && donateMode === "general" && (
             <p className="mt-5 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#999]">
-              General fund — not tied to a specific athlete.
+              General fund — not tied to a specific wrestler.
             </p>
           )}
 
@@ -739,7 +741,7 @@ export function SpartanDonateForm() {
                   <> Gift credited to {athleteQuery} (directory).</>
                 )}
                 {codeForCheckout && !athleteQuery.trim() && (
-                  <> Gift credited to the athlete you selected at checkout.</>
+                  <> Gift credited to the wrestler you selected at checkout.</>
                 )}
                 {!codeForCheckout && hasManualCredit && (
                   <> Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).</>
@@ -754,7 +756,7 @@ export function SpartanDonateForm() {
                   <> Gift credited to {athleteQuery} (directory).</>
                 )}
                 {codeForCheckout && !athleteQuery.trim() && (
-                  <> Gift credited to the athlete you selected at checkout.</>
+                  <> Gift credited to the wrestler you selected at checkout.</>
                 )}
                 {!codeForCheckout && hasManualCredit && (
                   <> Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).</>
@@ -776,14 +778,14 @@ export function SpartanDonateForm() {
       </button>
       {stepUnlocked && needsAthleteCode && !hasAthleteCredit && (
         <p className="mt-2 text-center text-[11px] text-[#888]">
-          Search and select an athlete, or enter a name under &quot;Not in the directory.&quot;
+          Search and select a wrestler, or enter a name under &quot;Not in the directory.&quot;
         </p>
       )}
       {!stepUnlocked && flow === null && (
         <p className="mt-2 text-center text-[11px] text-[#666]">Choose Race with us or Give.</p>
       )}
       {!stepUnlocked && flow === "donate" && donateMode === null && (
-        <p className="mt-2 text-center text-[11px] text-[#666]">Choose athlete or NC United.</p>
+        <p className="mt-2 text-center text-[11px] text-[#666]">Choose wrestler or NC United.</p>
       )}
     </form>
   )
