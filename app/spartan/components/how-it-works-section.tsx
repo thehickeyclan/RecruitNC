@@ -2,18 +2,18 @@ export function HowItWorksSection() {
   const steps = [
     {
       n: "01",
-      title: "Give to NC United",
-      body: "Make a tax-deductible gift through our secure checkout. Your receipt comes from NC United (EIN on file).",
+      title: "Give securely",
+      body: "Make a tax-deductible gift through checkout. You’ll get a receipt from NC United.",
     },
     {
       n: "02",
-      title: "We compile emails",
-      body: "We maintain the list of donor emails for Team NC’s Super 10K handoff to Spartan’s partner process.",
+      title: "Race, align, or fund training",
+      body: "At checkout, search for the wrestler by name and select them—whether they’re racing Spartan or not. That’s how your gift counts toward their tally and NC United summer training; no race required.",
     },
     {
       n: "03",
-      title: "Spartan sends your code",
-      body: "Spartan Race emails your Fayetteville entry code directly — timing follows their partner process with NC United.",
+      title: "Only if you’re racing",
+      body: "Spartan emails a Fayetteville Super 10K entry code when you’re the one entering the race—check inbox and spam; it may take a few days. Supporting a wrestler without racing yourself? You’re done after checkout—no code.",
     },
   ]
 
@@ -24,8 +24,9 @@ export function HowItWorksSection() {
           How it works
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-[#888]">
-          Open to anyone — wrestlers or not. Partner process: give through NC United first, then Spartan emails your
-          code.
+          You can run with Team NC, give alongside someone who is—or donate to a wrestler’s training even when they’re
+          not on the Spartan course. You always pick the athlete by <strong className="text-[#aaa]">name search</strong> at
+          checkout. Step 3 is only for people registering themselves for the Super 10K.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3">
           {steps.map((s) => (

@@ -16,10 +16,10 @@ export function SponsorAthleteCallout() {
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[#b0b0b0]">
         Not running? You can still make a <strong className="text-white">tax-deductible gift to NC United</strong> in
-        support of a wrestler. Use their <strong className="text-white">personal link</strong> or{" "}
-        <strong className="text-white">search for them by name</strong> on the form. On the form:{" "}
-        <strong className="text-white">Give</strong>, then <strong className="text-white">An athlete</strong> — so we
-        know you don&apos;t need a race entry.
+        support of a wrestler. On the form, <strong className="text-white">search for them by name</strong> and select
+        them before you pay—that&apos;s how your gift credits their training. Choose{" "}
+        <strong className="text-white">Give</strong>, then <strong className="text-white">An athlete</strong>, so we know
+        you don&apos;t need a race entry.
       </p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <a
@@ -32,7 +32,7 @@ export function SponsorAthleteCallout() {
           href="#athletes"
           className="inline-flex min-h-[44px] items-center justify-center border border-[#555] px-5 text-sm font-medium text-[#C8A94A] transition-colors hover:border-[#C8A94A]"
         >
-          Athlete share links
+          Credit by name at checkout
         </a>
       </div>
     </div>

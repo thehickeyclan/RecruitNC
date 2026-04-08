@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation"
 
-/** Subtle hero banner when ?athlete=NCU-LASTNAME-YY is present (shareable links). */
+/** Subtle hero banner when ?athlete=NCU-LASTNAME-YY is present (optional bookmark — still select at checkout). */
 export function SpartanAthleteRibbon() {
   const searchParams = useSearchParams()
   if (!searchParams.get("athlete")?.trim()) return null
@@ -13,8 +13,9 @@ export function SpartanAthleteRibbon() {
         You&apos;re here to support a teammate
       </p>
       <p className="mt-2 text-sm leading-snug text-[#ccc]">
-        This link ties your gift to their fundraising. Complete <strong className="text-white">Race with us</strong> or{" "}
-        <strong className="text-white">Give</strong> below.
+        Tap <strong className="text-white">Race with us</strong> or <strong className="text-white">Give</strong>, then on
+        the checkout form <strong className="text-white">search for them by name</strong> and select them before you
+        pay—that&apos;s how your gift credits them.
       </p>
     </div>
   )

@@ -68,11 +68,12 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          Glad you&apos;re here. We&apos;re lining up for the <strong className="text-neutral-200">Super 10K</strong> as{" "}
-          <strong className="text-neutral-200">Team NC</strong> — and if you can&apos;t run that day, you can still help by
-          backing a wrestler or the wider program.{" "}
-          <strong className="text-neutral-200">Race with us</strong> or <strong className="text-neutral-200">give</strong>{" "}
-          below; one form either way.
+          <strong className="text-neutral-200">Race</strong> with Team NC on{" "}
+          <strong className="text-neutral-200">May 3</strong>, <strong className="text-neutral-200">align</strong> your gift
+          with someone who is—or <strong className="text-neutral-200">fund a wrestler&apos;s training</strong> by{" "}
+          <strong className="text-neutral-200">searching their name</strong> and selecting them at checkout. They don&apos;t
+          have to run Spartan for your gift to count toward them. Either way,{" "}
+          <strong className="text-neutral-200">100%</strong> fuels NC United athletes this summer.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
@@ -96,8 +97,8 @@ export function HeroSection() {
         </p>
 
         <p className="mt-6 max-w-lg text-[11px] leading-relaxed tracking-[0.04em] text-neutral-500">
-          Tax-deductible gifts to NC United (501(c)(3)). Same mission whether you&apos;re on the course or not — it all
-          fuels NC wrestling. Entry codes from Spartan per partner process.
+          Tax-deductible gifts to NC United (501(c)(3)). On the course or not—every gift supports NC wrestling. Spartan
+          sends race entry codes only to people registering for the Super 10K.
         </p>
       </div>
     </section>

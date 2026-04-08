@@ -631,7 +631,7 @@ export function SpartanDonateForm() {
                     {athleteQuery.trim() ? (
                       <>Gift attributed to {athleteQuery}.</>
                     ) : (
-                      <>Gift attributed to the athlete from your link.</>
+                      <>Gift attributed to the athlete you selected at checkout.</>
                     )}
                   </>
                 )}
@@ -647,7 +647,7 @@ export function SpartanDonateForm() {
                     {athleteQuery.trim() ? (
                       <>Gift attributed to {athleteQuery}.</>
                     ) : (
-                      <>Gift attributed to the athlete from your link.</>
+                      <>Gift attributed to the athlete you selected at checkout.</>
                     )}
                   </>
                 )}

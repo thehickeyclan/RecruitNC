@@ -85,7 +85,7 @@ export default function AdminFundraisingPage() {
     typeof window !== "undefined" ? `${window.location.origin}/spartan` : "https://recruitnc.com/spartan"
 
   const copyTemplate = () => {
-    const t = `Your personal fundraising link (share this — gifts count toward your total):\n${publicBase}?athlete=NCU-LASTNAME-YY\n\nReplace LASTNAME and YY with your grad year (two digits). Example: ${publicBase}?athlete=NCU-SMITH-28`
+    const t = `Optional /spartan bookmark (opens the page ready to give):\n${publicBase}?athlete=NCU-LASTNAME-YY\n\nReplace LASTNAME and YY with grad year (two digits). Donors search and select the athlete by name at checkout — that’s what credits the gift. Example: ${publicBase}?athlete=NCU-SMITH-28`
     void navigator.clipboard.writeText(t)
   }
 
@@ -164,9 +164,10 @@ export default function AdminFundraisingPage() {
               <CardHeader>
                 <CardTitle>How dollars attach to a kid</CardTitle>
                 <CardDescription>
-                  We do not use retail &quot;promo codes.&quot; Use a <strong>fundraising code</strong> (same format as the
-                  public link): <code className="rounded bg-muted px-1">?athlete=NCU-LASTNAME-YY</code>. Stripe Checkout
-                  stores it as metadata <code className="rounded bg-muted px-1">athlete_code</code> /{" "}
+                  Donors credit an athlete by <strong>searching and selecting their name</strong> on the Spartan checkout
+                  form (not by &quot;using a link&quot; alone). Optional bookmark URL{" "}
+                  <code className="rounded bg-muted px-1">?athlete=NCU-LASTNAME-YY</code> can open the page ready to give.
+                  Stripe stores <code className="rounded bg-muted px-1">athlete_code</code> /{" "}
                   <code className="rounded bg-muted px-1">fundraising_code</code> on each payment.
                 </CardDescription>
               </CardHeader>
@@ -200,7 +201,7 @@ export default function AdminFundraisingPage() {
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button type="button" variant="outline" size="sm" onClick={copyTemplate}>
                     <ClipboardCopy className="mr-2 h-4 w-4" />
-                    Copy athlete link template
+                    Copy bookmark template
                   </Button>
                   <Button type="button" variant="outline" size="sm" asChild>
                     <a href="/spartan" target="_blank" rel="noopener noreferrer">
