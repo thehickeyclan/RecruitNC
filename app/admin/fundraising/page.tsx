@@ -25,7 +25,8 @@ type SpartanDonationRow = {
   raceParticipant: boolean
   fundraisingType: "race_donation" | "gift_only"
   athleteCode: string | null
-  attribution: "athlete" | "general_nc_united"
+  manualCreditName: string | null
+  attribution: "athlete" | "general_nc_united" | "manual_name"
   tierPreference: string
 }
 
@@ -129,7 +130,11 @@ export default function AdminFundraisingPage() {
     const list = donations ?? []
     const q = athleteFilter.trim().toLowerCase()
     const filtered = q
-      ? list.filter((d) => (d.athleteCode ?? "").toLowerCase().includes(q))
+      ? list.filter(
+          (d) =>
+            (d.athleteCode ?? "").toLowerCase().includes(q) ||
+            (d.manualCreditName ?? "").toLowerCase().includes(q),
+        )
       : list
     const sorted = [...filtered]
     if (sortBy === "date-desc") sorted.sort((a, b) => b.createdUnix - a.createdUnix)
@@ -331,7 +336,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>Public list</TableHead>
                           <TableHead>Race path</TableHead>
                           <TableHead>Type</TableHead>
-                          <TableHead>Athlete</TableHead>
+                          <TableHead>Credit</TableHead>
                           <TableHead>Fund</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -381,9 +386,15 @@ export default function AdminFundraisingPage() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="font-mono text-xs">{d.athleteCode ?? "—"}</TableCell>
+                            <TableCell className="max-w-[220px] font-mono text-xs">
+                              {d.athleteCode ?? d.manualCreditName ?? "—"}
+                            </TableCell>
                             <TableCell className="text-xs">
-                              {d.attribution === "athlete" ? "Athlete" : "NC United (general)"}
+                              {d.attribution === "athlete"
+                                ? "Athlete (code)"
+                                : d.attribution === "manual_name"
+                                  ? "Manual name"
+                                  : "NC United (general)"}
                             </TableCell>
                           </TableRow>
                         ))}

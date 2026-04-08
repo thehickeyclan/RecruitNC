@@ -61,6 +61,8 @@ export function SpartanDonateForm() {
   const [athleteMenuOpen, setAthleteMenuOpen] = useState(false)
   const [athleteSearchLoading, setAthleteSearchLoading] = useState(false)
   const [athleteLookupError, setAthleteLookupError] = useState(false)
+  /** Wrestler not in directory — staff credit via Stripe manual_credit_name */
+  const [manualCreditName, setManualCreditName] = useState("")
 
   const [shirtSize, setShirtSize] = useState("")
   const [shipLine1, setShipLine1] = useState("")
@@ -103,6 +105,7 @@ export function SpartanDonateForm() {
     if (!raw) return
     setFundraisingCode(raw)
     setAthleteQuery("")
+    setManualCreditName("")
     const hasTier = tierFromSearchParams(searchParams) != null
     if (hasTier) {
       setFlow("race")
@@ -187,6 +190,9 @@ export function SpartanDonateForm() {
   }, [teeEligible])
 
   const codeForCheckout = fundraisingCode.trim() || undefined
+  const manualCreditTrimmed = manualCreditName.trim()
+  const hasManualCredit = manualCreditTrimmed.length >= 2
+  const hasAthleteCredit = Boolean(codeForCheckout) || hasManualCredit
 
   const trimmedAthleteQuery = athleteQuery.trim()
   const showNoDirectoryMatch =
@@ -200,6 +206,7 @@ export function SpartanDonateForm() {
     const next = (tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID) as SpartanRaceTierId
     setFlow("race")
     setDonateMode(null)
+    setManualCreditName("")
     setTierPreference(next)
     setAmountDollars(suggestedDollarsString(next))
   }
@@ -208,6 +215,7 @@ export function SpartanDonateForm() {
     setFlow("donate")
     setTierPreference("")
     setDonateMode(null)
+    setManualCreditName("")
   }
 
   function pickDonateAthlete() {
@@ -218,6 +226,7 @@ export function SpartanDonateForm() {
     setDonateMode("general")
     setFundraisingCode("")
     setAthleteQuery("")
+    setManualCreditName("")
     setAthleteHits([])
     setAthleteMenuOpen(false)
   }
@@ -238,8 +247,8 @@ export function SpartanDonateForm() {
       setError("Choose athlete or NC United.")
       return
     }
-    if (needsAthleteCode && !codeForCheckout) {
-      setError("Search and select an athlete to credit.")
+    if (needsAthleteCode && !hasAthleteCredit) {
+      setError("Select an athlete from the list, or enter their name in the box below.")
       return
     }
     if (flow === "race" && tierPreference !== "super") {
@@ -282,6 +291,7 @@ export function SpartanDonateForm() {
           amountCents,
           tierPreference: flow === "race" ? tierPreference : undefined,
           athleteCode: codeForCheckout,
+          ...(!codeForCheckout && hasManualCredit ? { manualAthleteName: manualCreditTrimmed } : {}),
           ...(teeEligible
             ? {
                 shirtSize,
@@ -317,7 +327,7 @@ export function SpartanDonateForm() {
     flow === "race" ? Boolean(tierPreference) : flow === "donate" && donateMode !== null
 
   const canCheckout =
-    stepUnlocked && (!needsAthleteCode || Boolean(codeForCheckout))
+    stepUnlocked && (!needsAthleteCode || hasAthleteCredit)
 
   return (
     <form onSubmit={submit} className="mx-auto mt-8 max-w-lg text-left">
@@ -459,7 +469,13 @@ export function SpartanDonateForm() {
                   <p className="mt-1 text-[11px] text-amber-200/80">Search unavailable — try again in a moment.</p>
                 )}
                 {showNoDirectoryMatch && (
-                  <p className="mt-1 text-[11px] text-[#888]">No match — try another spelling or check the directory.</p>
+                  <p className="mt-1 text-[11px] text-[#888]">
+                    No match — try another spelling or the{" "}
+                    <HardLink href="/athletes" className="text-[#C8A94A] hover:underline">
+                      directory
+                    </HardLink>
+                    . You can still give: use the box below or switch to a general gift.
+                  </p>
                 )}
                 {athleteMenuOpen && athleteHits.length > 0 && (
                   <ul className="absolute z-20 mt-1 max-h-40 w-full overflow-auto rounded border border-[#444] bg-[#141414] py-1 shadow-lg">
@@ -471,6 +487,7 @@ export function SpartanDonateForm() {
                           onClick={() => {
                             setFundraisingCode(h.code)
                             setAthleteQuery(h.label)
+                            setManualCreditName("")
                             setAthleteHits([])
                             setAthleteMenuOpen(false)
                           }}
@@ -487,6 +504,38 @@ export function SpartanDonateForm() {
                   Directory
                 </HardLink>
               </p>
+
+              <div className="mt-5 rounded border border-[#333] bg-[#101010] px-3 py-3 text-left">
+                <p className="text-[11px] leading-relaxed text-[#999]">
+                  <strong className="text-[#ccc]">You can still give.</strong> Support{" "}
+                  <button
+                    type="button"
+                    className="font-medium text-[#C8A94A] underline underline-offset-2 hover:text-[#dfd08a]"
+                    onClick={pickDonateGeneral}
+                  >
+                    NC United (general)
+                  </button>{" "}
+                  with no wrestler attached — or enter their name below if they&apos;re not in search yet; we&apos;ll
+                  apply your gift on our side.
+                </p>
+                <label className="mt-3 block text-xs text-[#888]" htmlFor="spartan-manual-credit">
+                  Not in the directory? Wrestler name (manual credit)
+                </label>
+                <input
+                  id="spartan-manual-credit"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="e.g. Jordan Smith"
+                  value={manualCreditName}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setManualCreditName(v)
+                    if (v.trim().length > 0) setFundraisingCode("")
+                  }}
+                  className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-sm text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+                />
+                <p className="mt-1.5 text-[10px] text-[#666]">Two or more characters to continue checkout.</p>
+              </div>
             </>
           )}
 
@@ -637,15 +686,14 @@ export function SpartanDonateForm() {
             {wantsRace ? (
               <>
                 Tax gift to NC United. OK to share my email with Spartan for my entry code.
-                {codeForCheckout && (
-                  <>
-                    {" "}
-                    {athleteQuery.trim() ? (
-                      <>Gift attributed to {athleteQuery}.</>
-                    ) : (
-                      <>Gift attributed to the athlete you selected at checkout.</>
-                    )}
-                  </>
+                {codeForCheckout && athleteQuery.trim() && (
+                  <> Gift credited to {athleteQuery} (directory).</>
+                )}
+                {codeForCheckout && !athleteQuery.trim() && (
+                  <> Gift credited to the athlete you selected at checkout.</>
+                )}
+                {!codeForCheckout && hasManualCredit && (
+                  <> Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).</>
                 )}
               </>
             ) : donateMode === "general" ? (
@@ -653,15 +701,14 @@ export function SpartanDonateForm() {
             ) : (
               <>
                 Tax gift to NC United. Not requesting a race entry.
-                {codeForCheckout && (
-                  <>
-                    {" "}
-                    {athleteQuery.trim() ? (
-                      <>Gift attributed to {athleteQuery}.</>
-                    ) : (
-                      <>Gift attributed to the athlete you selected at checkout.</>
-                    )}
-                  </>
+                {codeForCheckout && athleteQuery.trim() && (
+                  <> Gift credited to {athleteQuery} (directory).</>
+                )}
+                {codeForCheckout && !athleteQuery.trim() && (
+                  <> Gift credited to the athlete you selected at checkout.</>
+                )}
+                {!codeForCheckout && hasManualCredit && (
+                  <> Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).</>
                 )}
               </>
             )}
@@ -678,8 +725,10 @@ export function SpartanDonateForm() {
       >
         {loading ? "…" : "Checkout"}
       </button>
-      {stepUnlocked && needsAthleteCode && !codeForCheckout && (
-        <p className="mt-2 text-center text-[11px] text-[#888]">Search and select an athlete to continue.</p>
+      {stepUnlocked && needsAthleteCode && !hasAthleteCredit && (
+        <p className="mt-2 text-center text-[11px] text-[#888]">
+          Search and select an athlete, or enter a name under &quot;Not in the directory.&quot;
+        </p>
       )}
       {!stepUnlocked && flow === null && (
         <p className="mt-2 text-center text-[11px] text-[#666]">Choose Race with us or Give.</p>

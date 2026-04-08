@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
 }
 
 function toPublicEntry(r: SpartanFayettevilleDonation) {
+  const creditLabel = r.athleteCode ?? r.manualCreditName ?? null
   return {
     id: r.sessionId,
     createdIso: r.createdIso,
@@ -59,6 +60,8 @@ function toPublicEntry(r: SpartanFayettevilleDonation) {
     raceSignup: r.raceParticipant,
     giftType: r.fundraisingType,
     athleteCode: r.athleteCode,
+    manualCreditName: r.manualCreditName,
+    creditLabel,
     attribution: r.attribution,
   }
 }

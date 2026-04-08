@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     tierPreference?: string
     /** NCU-LASTNAME-YY — attributes dollars to that athlete in Stripe exports */
     athleteCode?: string
+    /** If not in directory: name for staff to credit manually (Stripe metadata) */
+    manualAthleteName?: string
     /** If false, public supporter list shows "Anonymous" */
     donorListPublic?: boolean
   } = {}
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
   const tierPreference = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
   const athleteCode =
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
+  const manualAthleteName =
+    typeof body.manualAthleteName === "string" ? body.manualAthleteName.trim().slice(0, 120) : ""
   const donorListPublic = body.donorListPublic !== false
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
@@ -53,6 +57,17 @@ export async function POST(request: NextRequest) {
   }
   if (!Number.isFinite(amountCents) || amountCents < 500 || amountCents > 50_000_000) {
     return NextResponse.json({ error: "Invalid amount (min $5)." }, { status: 400 })
+  }
+
+  const hasManualCredit = manualAthleteName.length >= 2
+  if (raceEntryRequested && !athleteCode && !hasManualCredit) {
+    return NextResponse.json(
+      {
+        error:
+          "Choose an athlete from the list, or enter their name in the “not in the directory” box so we can credit your gift.",
+      },
+      { status: 400 },
+    )
   }
 
   const teeEligible = raceEntryRequested || amountCents >= SPARTAN_TEE_THRESHOLD_CENTS
@@ -147,7 +162,12 @@ export async function POST(request: NextRequest) {
               fundraising_code: athleteCode,
               fundraising_attribution: "athlete",
             }
-          : { fundraising_attribution: "general_nc_united" }),
+          : hasManualCredit
+            ? {
+                manual_credit_name: manualAthleteName,
+                fundraising_attribution: "manual_name",
+              }
+            : { fundraising_attribution: "general_nc_united" }),
       },
       success_url: `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/spartan?cancelled=1#donate`,

@@ -11,6 +11,8 @@ type PublicEntry = {
   raceSignup: boolean
   giftType: "race_donation" | "gift_only"
   athleteCode: string | null
+  manualCreditName?: string | null
+  creditLabel?: string | null
   attribution: string
 }
 
@@ -100,7 +102,7 @@ export function SupporterActivitySection() {
                   <th className="px-3 py-3">Amount</th>
                   <th className="px-3 py-3">Name</th>
                   <th className="px-3 py-3">Race / give</th>
-                  <th className="px-3 py-3">Athlete</th>
+                  <th className="px-3 py-3">Credit</th>
                 </tr>
               </thead>
               <tbody className="text-[#ccc]">
@@ -120,7 +122,9 @@ export function SupporterActivitySection() {
                         <span className="rounded bg-white/10 px-2 py-0.5 text-[11px] text-[#aaa]">Give</span>
                       )}
                     </td>
-                    <td className="font-mono text-xs text-[#C8A94A]">{row.athleteCode ?? "—"}</td>
+                    <td className="max-w-[200px] px-3 py-2.5 text-xs text-[#C8A94A]">
+                      <span className="font-mono">{row.creditLabel ?? "—"}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
