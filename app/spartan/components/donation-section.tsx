@@ -14,8 +14,11 @@ export function DonationSection() {
           Register or donate
         </h2>
         <p className="mx-auto mt-3 max-w-md text-sm text-[#999]">
-          Tax-deductible to NC United. Pick athlete vs general, racing vs donate-only, then amount.{" "}
-          <span className="text-[#777]">$100+ includes a free NC United tee (size + ship on the form).</span>
+          <strong className="text-[#ccc]">Race</strong> — running the Spartan (you or a friend); credit one athlete.
+          <br />
+          <strong className="text-[#ccc]">Donate</strong> — gift only; then athlete or NC United general.
+          <br />
+          <span className="text-[#777]">$100+ includes a free NC United tee (on the form).</span>
         </p>
         <p className="mt-2 text-xs text-[#555]">
           <a href="#sponsor" className="text-[#C8A94A] hover:underline">

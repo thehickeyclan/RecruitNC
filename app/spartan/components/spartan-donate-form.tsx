@@ -41,8 +41,10 @@ export function SpartanDonateForm() {
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
   const [fundraisingCode, setFundraisingCode] = useState("")
-  const [attribution, setAttribution] = useState<"athlete" | "general" | null>(null)
-  const [entryIntent, setEntryIntent] = useState<"race" | "gift" | null>(null)
+  /** Race vs donate first */
+  const [flow, setFlow] = useState<"race" | "donate" | null>(null)
+  /** Donate only: credit athlete vs general fund */
+  const [donateMode, setDonateMode] = useState<"athlete" | "general" | null>(null)
   const [tierPreference, setTierPreference] = useState<SpartanRaceTierId | "">("")
   const [amountDollars, setAmountDollars] = useState("50")
   const [consent, setConsent] = useState(false)
@@ -64,12 +66,14 @@ export function SpartanDonateForm() {
   const [shipPostal, setShipPostal] = useState("")
   const [shipCountry, setShipCountry] = useState("US")
 
-  const wantsRace = entryIntent === "race"
+  const wantsRace = flow === "race"
+  const needsAthleteCode = flow === "race" || (flow === "donate" && donateMode === "athlete")
 
   useEffect(() => {
     const mission = searchParams.get("mission") === "1"
     if (mission) {
-      setEntryIntent("gift")
+      setFlow("donate")
+      setDonateMode(null)
       setTierPreference("")
       const chip = searchParams.get("chip")
       if (chip) {
@@ -83,7 +87,8 @@ export function SpartanDonateForm() {
 
     const t = tierFromSearchParams(searchParams)
     if (t) {
-      setEntryIntent("race")
+      setFlow("race")
+      setDonateMode(null)
       setTierPreference(t)
       setAmountDollars(suggestedDollarsString(t))
     }
@@ -91,10 +96,16 @@ export function SpartanDonateForm() {
 
   useEffect(() => {
     const raw = searchParams.get("athlete")?.trim()
-    if (raw) {
-      setFundraisingCode(raw)
-      setAthleteQuery("")
-      setAttribution("athlete")
+    if (!raw) return
+    setFundraisingCode(raw)
+    setAthleteQuery("")
+    const hasTier = tierFromSearchParams(searchParams) != null
+    if (hasTier) {
+      setFlow("race")
+      setDonateMode(null)
+    } else {
+      setFlow("donate")
+      setDonateMode("athlete")
     }
   }, [searchParams])
 
@@ -132,15 +143,15 @@ export function SpartanDonateForm() {
   }, [athleteQuery])
 
   useEffect(() => {
-    if (entryIntent !== "race") return
+    if (flow !== "race") return
     if (!tierPreference) return
     const s = suggestedCentsForTier(tierPreference)
     if (s != null) setAmountDollars(String(Math.round(s / 100)))
-  }, [tierPreference, entryIntent])
+  }, [tierPreference, flow])
 
   useEffect(() => {
     setConsent(false)
-  }, [entryIntent, tierPreference, attribution])
+  }, [flow, donateMode, tierPreference])
 
   const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
   const teeEligible = amountCents >= TEE_THRESHOLD_CENTS
@@ -153,34 +164,36 @@ export function SpartanDonateForm() {
 
   const trimmedAthleteQuery = athleteQuery.trim()
   const showNoDirectoryMatch =
-    attribution === "athlete" &&
+    needsAthleteCode &&
     trimmedAthleteQuery.length >= 2 &&
     !athleteSearchLoading &&
     !athleteLookupError &&
     athleteHits.length === 0
 
-  function pickAttributionAthlete() {
-    setAttribution("athlete")
-  }
-
-  function pickAttributionGeneral() {
-    setAttribution("general")
-    setFundraisingCode("")
-    setAthleteQuery("")
-    setAthleteHits([])
-    setAthleteMenuOpen(false)
-  }
-
-  function selectCompetitorPath() {
+  function selectRace() {
     const next = (tierPreference || "sprint") as SpartanRaceTierId
-    setEntryIntent("race")
+    setFlow("race")
+    setDonateMode(null)
     setTierPreference(next)
     setAmountDollars(suggestedDollarsString(next))
   }
 
-  function selectDonorPath() {
-    setEntryIntent("gift")
+  function selectDonate() {
+    setFlow("donate")
     setTierPreference("")
+    setDonateMode(null)
+  }
+
+  function pickDonateAthlete() {
+    setDonateMode("athlete")
+  }
+
+  function pickDonateGeneral() {
+    setDonateMode("general")
+    setFundraisingCode("")
+    setAthleteQuery("")
+    setAthleteHits([])
+    setAthleteMenuOpen(false)
   }
 
   async function submit(e: React.FormEvent) {
@@ -191,19 +204,19 @@ export function SpartanDonateForm() {
       setError("Name required.")
       return
     }
-    if (attribution === null) {
-      setError("Choose athlete or general.")
+    if (flow === null) {
+      setError("Choose Race or Donate.")
       return
     }
-    if (attribution === "athlete" && !codeForCheckout) {
-      setError("Enter a code or pick from search.")
+    if (flow === "donate" && donateMode === null) {
+      setError("Choose athlete or NC United.")
       return
     }
-    if (entryIntent === null) {
-      setError("Choose racing or donate-only.")
+    if (needsAthleteCode && !codeForCheckout) {
+      setError("Search or enter the athlete code.")
       return
     }
-    if (entryIntent === "race" && !tierPreference) {
+    if (flow === "race" && !tierPreference) {
       setError("Pick your race.")
       return
     }
@@ -238,7 +251,7 @@ export function SpartanDonateForm() {
           email: email.trim(),
           donorName: name,
           amountCents,
-          tierPreference: entryIntent === "race" ? tierPreference : undefined,
+          tierPreference: flow === "race" ? tierPreference : undefined,
           athleteCode: codeForCheckout,
           ...(teeEligible
             ? {
@@ -270,63 +283,82 @@ export function SpartanDonateForm() {
     }
   }
 
-  const readyToPay = attribution !== null && entryIntent !== null
+  /** Show name / amount / athlete fields */
+  const stepUnlocked =
+    flow === "race" ? Boolean(tierPreference) : flow === "donate" && donateMode !== null
+
+  const canCheckout =
+    stepUnlocked && (!needsAthleteCode || Boolean(codeForCheckout))
 
   return (
     <form onSubmit={submit} className="mx-auto mt-8 max-w-lg text-left">
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Two taps</p>
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={pickAttributionAthlete}
-            className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-              attribution === "athlete"
-                ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
-                : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
-            }`}
-          >
-            Athlete
-          </button>
-          <button
-            type="button"
-            onClick={pickAttributionGeneral}
-            className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-              attribution === "general"
-                ? "border-[#888] bg-[#222] text-white"
-                : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
-            }`}
-          >
-            NC United
-          </button>
-          <button
-            type="button"
-            onClick={selectCompetitorPath}
-            className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-              entryIntent === "race"
+            onClick={selectRace}
+            className={`rounded border px-3 py-3 text-center text-sm font-bold transition-colors ${
+              flow === "race"
                 ? "border-[#CC0000] bg-[#2a1515] text-white"
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
             }`}
           >
-            Racing
+            Race
           </button>
           <button
             type="button"
-            onClick={selectDonorPath}
-            className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-              entryIntent === "gift"
+            onClick={selectDonate}
+            className={`rounded border px-3 py-3 text-center text-sm font-bold transition-colors ${
+              flow === "donate"
                 ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
             }`}
           >
-            Donate only
+            Donate
           </button>
         </div>
+        <p className="mt-2 text-[11px] leading-snug text-[#666]">
+          <strong className="text-[#888]">Race</strong> — you or a friend are running; credit goes to one athlete.
+          <br />
+          <strong className="text-[#888]">Donate</strong> — gift only; then pick athlete or NC United general.
+        </p>
       </div>
 
-      {entryIntent === "race" && (
+      {flow === "donate" && (
+        <div className="mt-5 rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Donation goes to</p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={pickDonateAthlete}
+              className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
+                donateMode === "athlete"
+                  ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
+                  : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
+              }`}
+            >
+              An athlete
+            </button>
+            <button
+              type="button"
+              onClick={pickDonateGeneral}
+              className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
+                donateMode === "general"
+                  ? "border-[#888] bg-[#222] text-white"
+                  : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
+              }`}
+            >
+              NC United
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-[#666]">Travel, ops, all teams — or one wrestler.</p>
+        </div>
+      )}
+
+      {flow === "race" && (
         <div className="mt-5">
-          <label className="text-xs text-[#888]">Race (amount follows Spartan pricing)</label>
+          <label className="text-xs text-[#888]">Your race (amount matches Spartan)</label>
           <select
             value={tierPreference}
             onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
@@ -343,7 +375,7 @@ export function SpartanDonateForm() {
         </div>
       )}
 
-      {attribution !== null && entryIntent !== null && (
+      {stepUnlocked && (
         <>
           <div className="mt-6 space-y-3">
             <div>
@@ -371,10 +403,10 @@ export function SpartanDonateForm() {
             </div>
           </div>
 
-          {attribution === "athlete" && (
+          {needsAthleteCode && (
             <>
               <div className="relative mt-5">
-                <label className="text-xs text-[#888]">Find them</label>
+                <label className="text-xs text-[#888]">Athlete — search</label>
                 <input
                   type="text"
                   placeholder="Last name…"
@@ -392,7 +424,7 @@ export function SpartanDonateForm() {
                   <p className="mt-1 text-[11px] text-amber-200/80">Search down — type code.</p>
                 )}
                 {showNoDirectoryMatch && (
-                  <p className="mt-1 text-[11px] text-[#888]">No hit — use code below.</p>
+                  <p className="mt-1 text-[11px] text-[#888]">No hit — use code.</p>
                 )}
                 {athleteMenuOpen && athleteHits.length > 0 && (
                   <ul className="absolute z-20 mt-1 max-h-40 w-full overflow-auto rounded border border-[#444] bg-[#141414] py-1 shadow-lg">
@@ -437,52 +469,56 @@ export function SpartanDonateForm() {
               </p>
             </>
           )}
+
+          {flow === "donate" && donateMode === "general" && (
+            <p className="mt-5 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#999]">
+              General fund — no athlete code on this gift.
+            </p>
+          )}
+
+          <div className="mt-6">
+            {flow === "donate" && (
+              <div className="mb-3 flex flex-wrap gap-1.5">
+                {GIFT_QUICK_AMOUNTS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setAmountDollars(String(d))}
+                    className="min-w-[2.75rem] rounded border border-[#444] bg-[#0A0A0A] px-2 py-1.5 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]"
+                  >
+                    ${d}
+                  </button>
+                ))}
+              </div>
+            )}
+            <label className="text-xs text-[#888]" htmlFor="spartan-amount-usd">
+              Amount
+            </label>
+            <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
+              <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
+              <input
+                id="spartan-amount-usd"
+                type="number"
+                min={5}
+                step={1}
+                required
+                value={amountDollars}
+                onChange={(e) => setAmountDollars(e.target.value)}
+                className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-lg font-bold tabular-nums text-white outline-none"
+              />
+            </div>
+            <p className="mt-1.5 text-center text-[11px] text-[#666]">
+              {formatUsd(amountCents)}
+              {!teeEligible && amountCents > 0 && amountCents < TEE_THRESHOLD_CENTS && (
+                <span className="text-[#555]"> · +{formatUsd(TEE_THRESHOLD_CENTS - amountCents)} to $100 tee</span>
+              )}
+              {teeEligible && <span className="text-[#C8A94A]"> · Tee unlocked</span>}
+            </p>
+          </div>
         </>
       )}
 
-      {attribution !== null && entryIntent !== null && (
-        <div className="mt-6">
-          {entryIntent === "gift" && (
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {GIFT_QUICK_AMOUNTS.map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setAmountDollars(String(d))}
-                  className="min-w-[2.75rem] rounded border border-[#444] bg-[#0A0A0A] px-2 py-1.5 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]"
-                >
-                  ${d}
-                </button>
-              ))}
-            </div>
-          )}
-          <label className="text-xs text-[#888]" htmlFor="spartan-amount-usd">
-            Amount
-          </label>
-          <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
-            <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
-            <input
-              id="spartan-amount-usd"
-              type="number"
-              min={5}
-              step={1}
-              required
-              value={amountDollars}
-              onChange={(e) => setAmountDollars(e.target.value)}
-              className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-lg font-bold tabular-nums text-white outline-none"
-            />
-          </div>
-          <p className="mt-1.5 text-center text-[11px] text-[#666]">
-            {formatUsd(amountCents)}
-            {!teeEligible && amountCents > 0 && amountCents < TEE_THRESHOLD_CENTS && (
-              <span className="text-[#555]"> · +{formatUsd(TEE_THRESHOLD_CENTS - amountCents)} to $100 tee</span>
-            )}
-            {teeEligible && <span className="text-[#C8A94A]"> · Tee unlocked</span>}
-          </p>
-        </div>
-      )}
-
-      {readyToPay && teeEligible && (
+      {stepUnlocked && teeEligible && (
         <div className="mt-5 space-y-2 rounded border border-[#C8A94A]/35 bg-[#141414] px-3 py-3">
           <p className="text-xs font-medium text-[#C8A94A]">Free tee — size &amp; ship</p>
           <select
@@ -562,7 +598,7 @@ export function SpartanDonateForm() {
         </div>
       )}
 
-      {readyToPay && (
+      {stepUnlocked && (
         <label className="mt-5 flex cursor-pointer gap-2 text-left text-[13px] leading-snug text-[#aaa]">
           <input
             type="checkbox"
@@ -574,14 +610,14 @@ export function SpartanDonateForm() {
             {wantsRace ? (
               <>
                 Tax gift to NC United. OK to share my email with Spartan for my entry code.
-                {attribution === "athlete" && codeForCheckout && <> Code {codeForCheckout}.</>}
-                {attribution === "general" && <> No athlete code.</>}
+                {codeForCheckout && <> Athlete code {codeForCheckout}.</>}
               </>
+            ) : donateMode === "general" ? (
+              <>Tax gift to NC United — general programs.</>
             ) : (
               <>
-                Tax gift to NC United. Not asking for a race entry.
-                {attribution === "athlete" && codeForCheckout && <> Code {codeForCheckout}.</>}
-                {attribution === "general" && <> General fund.</>}
+                Tax gift to NC United. Not requesting a race entry.
+                {codeForCheckout && <> Athlete code {codeForCheckout}.</>}
               </>
             )}
           </span>
@@ -592,12 +628,20 @@ export function SpartanDonateForm() {
 
       <button
         type="submit"
-        disabled={loading || !readyToPay}
+        disabled={loading || !canCheckout}
         className="mt-5 w-full min-h-[48px] bg-[#CC0000] font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-wide text-white hover:bg-[#990000] disabled:opacity-50"
       >
         {loading ? "…" : "Checkout"}
       </button>
-      {!readyToPay && <p className="mt-2 text-center text-[11px] text-[#666]">Pick all four corners above.</p>}
+      {stepUnlocked && needsAthleteCode && !codeForCheckout && (
+        <p className="mt-2 text-center text-[11px] text-[#888]">Enter or find an athlete code to continue.</p>
+      )}
+      {!stepUnlocked && flow === null && (
+        <p className="mt-2 text-center text-[11px] text-[#666]">Choose Race or Donate.</p>
+      )}
+      {!stepUnlocked && flow === "donate" && donateMode === null && (
+        <p className="mt-2 text-center text-[11px] text-[#666]">Choose where the donation goes.</p>
+      )}
     </form>
   )
 }
