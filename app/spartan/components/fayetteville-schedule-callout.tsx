@@ -1,9 +1,9 @@
-/** Super 10K only — Team NC. */
+/** 10K team race — Team NC. */
 export function FayettevilleScheduleCallout() {
   return (
     <div className="mx-auto mt-8 max-w-3xl rounded border border-[#333] bg-[#0d0d0d] px-4 py-4 text-left md:px-5">
       <p className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C8A94A]">
-        This page = Super 10K only
+        10K team race · Team NC
       </p>
       <p className="mt-2 text-sm font-medium leading-relaxed text-white">
         <strong>Team NC</strong> runs the <strong className="text-[#CC0000]">Super 10K</strong> on{" "}
@@ -17,7 +17,7 @@ export function FayettevilleScheduleCallout() {
         >
           Spartan.com
         </a>{" "}
-        — this checkout is for our 10K team race only.
+        — this checkout is for the Team NC 10K team race.
       </p>
     </div>
   )

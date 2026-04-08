@@ -21,7 +21,7 @@ export function AthleteDedicationSection() {
           <p className="text-sm text-[#bbb]">
             <strong className="text-white">Shareable link:</strong> add{" "}
             <code className="rounded bg-black px-1.5 py-0.5 text-[#C8A94A]">?athlete=NCU-LASTNAME-26</code> to the
-            campaign URL (grad year as two digits). That pre-associates the gift; donors still use{" "}
+            Spartan page link (grad year as two digits). That pre-associates the gift; donors still use{" "}
             <strong className="text-white">search</strong> on the form to confirm. Example:{" "}
             <HardLink
               href="/spartan?athlete=NCU-HICKEY-26"

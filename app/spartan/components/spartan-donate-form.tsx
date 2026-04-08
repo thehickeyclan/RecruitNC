@@ -18,7 +18,7 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100)
 }
 
-/** Legacy ?tier=sprint|kids|… deep links → Super 10K only (this campaign). */
+/** Legacy ?tier=sprint|kids|… deep links → 10K team race (this page). */
 function tierFromSearchParams(searchParams: ReturnType<typeof useSearchParams>): SpartanRaceTierId | null {
   const raw = searchParams.get("tier")?.toLowerCase() ?? ""
   if (!raw) return null
@@ -241,7 +241,7 @@ export function SpartanDonateForm() {
       return
     }
     if (flow === "race" && tierPreference !== "super") {
-      setError("Race checkout is Super 10K only — pick Race with us again or refresh.")
+      setError("This checkout is the Team NC 10K team race — pick Race with us again or refresh.")
       return
     }
     if (!consent) {

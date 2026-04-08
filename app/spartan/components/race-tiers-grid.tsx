@@ -16,8 +16,8 @@ export function RaceTiersGrid() {
             Come race with us
           </h2>
           <p className="mt-4 text-base text-[#a3a3a3]">
-            One distance on this page — the <strong className="text-[#ccc]">Super 10K</strong> with Team NC. Give through
-            NC United, get your Spartan entry code, fund NC wrestlers.
+            The <strong className="text-[#ccc]">10K team race</strong> with Team NC (Spartan Super 10K). Give through NC
+            United, get your Spartan entry code, fund NC wrestlers.
           </p>
         </div>
 

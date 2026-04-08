@@ -45,7 +45,7 @@ export function MissionBar() {
             <p className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-4xl font-black tabular-nums text-[#CC0000]">
               0
             </p>
-            <p className="mt-1 text-sm text-[#666]">Via this campaign — updating soon</p>
+            <p className="mt-1 text-sm text-[#666]">Via this page — updating soon</p>
           </div>
           <div className="text-center md:text-right">
             <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">

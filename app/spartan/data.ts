@@ -5,7 +5,7 @@ export const DEFAULT_SPARTAN_RACE_TIER_ID: SpartanRaceTierId = "super"
 
 const FAYETTEVILLE_SPARTAN_URL = "https://www.spartan.com/en/races/fayetteville-north-carolina?index=0"
 
-/** Team NC / Spartan Fayetteville — Super 10K only on this page. */
+/** Team NC / Spartan Fayetteville — 10K team race (Super) on this page. */
 export const SPARTAN_SUPER_10K: SpartanRaceTier = {
   id: "super",
   badge: "Great for teams",

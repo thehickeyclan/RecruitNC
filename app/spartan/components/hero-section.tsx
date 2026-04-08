@@ -16,7 +16,7 @@ export function HeroSection() {
           <div className="relative mx-auto w-full max-w-[1920px] h-[clamp(14rem,48vmin,32rem)] min-h-[14rem] md:min-h-[17.5rem]">
             <Image
               src="/images/spartan-race-banner.png"
-              alt="Spartan-style soldiers in formation — cinematic campaign banner"
+              alt="Spartan-style soldiers in formation — Team NC Spartan banner"
               fill
               priority
               className="object-contain object-center"

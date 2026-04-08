@@ -1,21 +1,57 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { AdminHeader } from "@/components/admin-header"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
-import { ArrowLeft, ClipboardCopy, Coins } from "lucide-react"
+import { ArrowLeft, ClipboardCopy, Coins, RefreshCw } from "lucide-react"
+
+type SpartanDonationRow = {
+  sessionId: string
+  createdIso: string
+  createdUnix: number
+  amountCents: number
+  currency: string
+  donorEmail: string | null
+  donorName: string | null
+  raceParticipant: boolean
+  fundraisingType: "race_donation" | "gift_only"
+  athleteCode: string | null
+  attribution: "athlete" | "general_nc_united"
+  tierPreference: string
+}
 
 const LS_LEADERBOARD = "recruitnc_admin_fundraising_spartan2026_leaderboard"
 const LS_NOTES = "recruitnc_admin_fundraising_spartan2026_notes"
+
+function formatMoney(cents: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: (currency || "usd").toUpperCase(),
+    }).format(cents / 100)
+  } catch {
+    return `$${(cents / 100).toFixed(2)}`
+  }
+}
 
 export default function AdminFundraisingPage() {
   const [leaderboard, setLeaderboard] = useState("")
   const [notes, setNotes] = useState("")
   const [mounted, setMounted] = useState(false)
+
+  const [donations, setDonations] = useState<SpartanDonationRow[] | null>(null)
+  const [donationsLoading, setDonationsLoading] = useState(false)
+  const [donationsError, setDonationsError] = useState<string | null>(null)
+  const [athleteFilter, setAthleteFilter] = useState("")
+  const [sortBy, setSortBy] = useState<"date" | "athlete" | "amount">("date")
 
   useEffect(() => {
     setMounted(true)
@@ -53,9 +89,49 @@ export default function AdminFundraisingPage() {
     void navigator.clipboard.writeText(t)
   }
 
+  const loadDonations = async () => {
+    setDonationsLoading(true)
+    setDonationsError(null)
+    try {
+      const res = await fetch("/api/admin/spartan-donations?days=120")
+      const j = (await res.json()) as { error?: string; donations?: SpartanDonationRow[] }
+      if (!res.ok) throw new Error(j.error || "Could not load donations")
+      setDonations(j.donations ?? [])
+    } catch (e) {
+      setDonationsError(e instanceof Error ? e.message : "Load failed")
+      setDonations(null)
+    } finally {
+      setDonationsLoading(false)
+    }
+  }
+
+  const filteredDonations = useMemo(() => {
+    const list = donations ?? []
+    const q = athleteFilter.trim().toLowerCase()
+    const filtered = q
+      ? list.filter((d) => (d.athleteCode ?? "").toLowerCase().includes(q))
+      : list
+    const sorted = [...filtered]
+    if (sortBy === "date") sorted.sort((a, b) => b.createdUnix - a.createdUnix)
+    else if (sortBy === "athlete")
+      sorted.sort((a, b) => {
+        const ac = (a.athleteCode ?? "").toLowerCase()
+        const bc = (b.athleteCode ?? "").toLowerCase()
+        if (ac !== bc) return ac.localeCompare(bc)
+        return b.createdUnix - a.createdUnix
+      })
+    else sorted.sort((a, b) => b.amountCents - a.amountCents || b.createdUnix - a.createdUnix)
+    return sorted
+  }, [donations, athleteFilter, sortBy])
+
+  const filteredTotalCents = useMemo(
+    () => filteredDonations.reduce((s, d) => s + d.amountCents, 0),
+    [filteredDonations],
+  )
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
             <HardLink href="/admin">
@@ -68,7 +144,7 @@ export default function AdminFundraisingPage() {
               Fundraising
             </h1>
             <p className="text-muted-foreground mt-1">
-              Campaign tools, Stripe export hints, and scratchpads (saved in this browser only).
+              Live Stripe donation list (admin), export hints, and scratchpads (saved in this browser only).
             </p>
           </div>
         </div>
@@ -141,6 +217,128 @@ export default function AdminFundraisingPage() {
                     </a>
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Donations (Stripe)</CardTitle>
+                <CardDescription>
+                  Paid Checkout sessions with <code className="rounded bg-muted px-1 text-xs">spartan_campaign=fayetteville_2026</code>.
+                  <strong className="text-foreground"> Race path</strong> = donor used the race / entry-code flow;{" "}
+                  <strong className="text-foreground">Give only</strong> = support without that path. Filter by athlete code
+                  to see all gifts for one kid.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-end gap-3">
+                  <Button type="button" onClick={loadDonations} disabled={donationsLoading}>
+                    <RefreshCw className={`mr-2 h-4 w-4 ${donationsLoading ? "animate-spin" : ""}`} />
+                    {donations === null ? "Load donations" : "Refresh"}
+                  </Button>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="athlete-filter">Filter by athlete code</Label>
+                    <Input
+                      id="athlete-filter"
+                      placeholder="e.g. NCU-SMITH-28"
+                      value={athleteFilter}
+                      onChange={(e) => setAthleteFilter(e.target.value)}
+                      className="w-[220px]"
+                      disabled={donations === null}
+                    />
+                  </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="sort-donations">Sort</Label>
+                    <select
+                      id="sort-donations"
+                      className="border-input bg-background h-9 rounded-md border px-3 text-sm shadow-xs"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as "date" | "athlete" | "amount")}
+                      disabled={donations === null}
+                    >
+                      <option value="date">Newest first</option>
+                      <option value="athlete">Athlete code (A–Z)</option>
+                      <option value="amount">Amount (high → low)</option>
+                    </select>
+                  </div>
+                </div>
+                {donationsError && (
+                  <p className="text-destructive text-sm" role="alert">
+                    {donationsError}
+                  </p>
+                )}
+                {donations !== null && (
+                  <p className="text-muted-foreground text-sm">
+                    Showing <strong className="text-foreground">{filteredDonations.length}</strong> of{" "}
+                    <strong className="text-foreground">{donations.length}</strong> payments — filtered total{" "}
+                    <strong className="text-foreground">{formatMoney(filteredTotalCents, "usd")}</strong>
+                  </p>
+                )}
+                {donations !== null && filteredDonations.length > 0 && (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Donor</TableHead>
+                          <TableHead>Race path</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Athlete</TableHead>
+                          <TableHead>Fund</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredDonations.map((d) => (
+                          <TableRow key={d.sessionId}>
+                            <TableCell className="whitespace-nowrap font-mono text-xs">
+                              {new Date(d.createdIso).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="font-medium">{formatMoney(d.amountCents, d.currency)}</TableCell>
+                            <TableCell>
+                              <div className="max-w-[200px]">
+                                <div className="truncate text-sm">{d.donorName ?? "—"}</div>
+                                <div className="text-muted-foreground truncate text-xs">{d.donorEmail ?? "—"}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {d.raceParticipant ? (
+                                <Badge variant="default" className="text-[10px]">
+                                  Race / entry
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Not race path
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {d.fundraisingType === "race_donation" ? (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Race donation
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Give only
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">{d.athleteCode ?? "—"}</TableCell>
+                            <TableCell className="text-xs">
+                              {d.attribution === "athlete" ? "Athlete" : "NC United (general)"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                {donations !== null && donations.length === 0 && !donationsLoading && (
+                  <p className="text-muted-foreground text-sm">No paid Spartan sessions in the last 120 days.</p>
+                )}
+                {donations !== null && donations.length > 0 && filteredDonations.length === 0 && !donationsLoading && (
+                  <p className="text-muted-foreground text-sm">No rows match this athlete filter.</p>
+                )}
               </CardContent>
             </Card>
 

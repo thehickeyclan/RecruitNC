@@ -9,7 +9,7 @@ import { RaceTiersGrid } from "./components/race-tiers-grid"
 import { DonationSection } from "./components/donation-section"
 import { PartnersFooter } from "./components/partners-footer"
 
-export default function SpartanCampaignPage() {
+export default function SpartanPage() {
   return (
     <>
       <HeroSection />

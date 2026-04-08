@@ -15,7 +15,7 @@ export function DonationSection() {
         </h2>
         <p className="mx-auto mt-3 max-w-md text-sm text-[#999]">
           <span className="block text-[#bbb]">
-            <strong className="text-[#C8A94A]">Team NC</strong> — Super 10K only · Sunday, May 3 · Fayetteville.
+            <strong className="text-[#C8A94A]">Team NC</strong> — 10K team race · Sunday, May 3 · Fayetteville.
           </span>
           <span className="mt-2 block">
           <strong className="text-[#ccc]">Race with us</strong> — Super 10K with Team NC (you or a friend); search to

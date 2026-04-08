@@ -1,4 +1,4 @@
-/** This campaign is Super 10K (Team NC) only — single distance on checkout. */
+/** Super 10K (Team NC) only — single race on checkout. */
 export type SpartanRaceTierId = "super"
 
 export interface SpartanRaceTier {
