@@ -399,7 +399,7 @@ export function SpartanDonateForm() {
             <option value="">Choose…</option>
             {raceTierSelectOptions.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.name} · {formatUsd(t.suggestedGiftCents)}
+                {t.name} · {formatUsd(t.suggestedGiftCents)} · {t.scheduleChip}
               </option>
             ))}
           </select>
