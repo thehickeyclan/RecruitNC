@@ -32,8 +32,8 @@ export function RaceTiersGrid() {
         <SponsorAthleteCallout />
 
         <p className="mx-auto mt-10 max-w-3xl text-center font-[family-name:var(--font-barlow-spartan)] text-[11px] font-medium uppercase leading-relaxed tracking-[0.12em] text-[#C8A94A]/90 md:text-xs">
-          All donations are fully tax-deductible. NC United is a registered 501(c)(3) nonprofit. Race entry codes arrive
-          within 48 hours of donation.
+          All donations are fully tax-deductible. NC United is a registered 501(c)(3) nonprofit. Spartan sends race entry
+          codes after NC United shares donor information with their team — timing follows their process.
         </p>
       </div>
     </section>

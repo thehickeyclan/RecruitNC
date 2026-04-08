@@ -42,7 +42,9 @@ export function RaceTierCard({ tier }: { tier: SpartanRaceTier }) {
       <p className="mt-1 font-[family-name:var(--font-barlow-spartan)] text-[clamp(2rem,5vw,2.25rem)] font-black tabular-nums leading-none text-[#CC0000]">
         {gift}
       </p>
-      <p className="mt-2 text-xs leading-snug text-[#888]">Tax-deductible · Code sent within 48hrs</p>
+      <p className="mt-2 text-xs leading-snug text-[#888]">
+        Tax-deductible · Entry code from Spartan after NC United&apos;s partner handoff
+      </p>
 
       <a
         href={`/spartan?tier=${encodeURIComponent(tier.id)}#donate`}

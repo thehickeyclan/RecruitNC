@@ -30,25 +30,30 @@ function suggestedDollarsString(tierId: SpartanRaceTierId): string {
   return String(Math.round(s / 100))
 }
 
+const GIFT_QUICK_AMOUNTS = [25, 50, 100, 250] as const
+
 export function SpartanDonateForm() {
   const searchParams = useSearchParams()
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
   const [fundraisingCode, setFundraisingCode] = useState("")
+  /** null until user chooses — drives race vs gift-only for Stripe metadata. */
+  const [entryIntent, setEntryIntent] = useState<"race" | "gift" | null>(null)
   const [tierPreference, setTierPreference] = useState<SpartanRaceTierId | "">("")
-  /** Always editable — chips/dropdown only suggest; override anytime (e.g. $50 → $75). */
+  /** Always editable — chips suggest; override anytime (e.g. $50 → $75). */
   const [amountDollars, setAmountDollars] = useState("50")
   const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const wantsRace = Boolean(tierPreference && tierPreference.length > 0)
+  const wantsRace = entryIntent === "race"
 
   /** URL: ?mission=1&chip= / ?tier= / ?athlete= */
   useEffect(() => {
     const mission = searchParams.get("mission") === "1"
     if (mission) {
+      setEntryIntent("gift")
       setTierPreference("")
       const chip = searchParams.get("chip")
       if (chip) {
@@ -64,6 +69,7 @@ export function SpartanDonateForm() {
 
     const t = tierFromSearchParams(searchParams)
     if (t) {
+      setEntryIntent("race")
       setTierPreference(t)
       setAmountDollars(suggestedDollarsString(t))
     }
@@ -74,21 +80,34 @@ export function SpartanDonateForm() {
     if (raw) setFundraisingCode(raw)
   }, [searchParams])
 
-  /** When distance changes, apply suggested amount (user can edit field after). */
+  /** When distance changes (race path), apply suggested amount — user can edit after. */
   useEffect(() => {
+    if (entryIntent !== "race") return
     if (!tierPreference) return
     const s = suggestedCentsForTier(tierPreference)
     if (s != null) setAmountDollars(String(Math.round(s / 100)))
-  }, [tierPreference])
+  }, [tierPreference, entryIntent])
 
-  /** Race vs gift-only uses different legal copy — reset consent when distance selection changes. */
+  /** Reset consent when race vs gift or tier changes. */
   useEffect(() => {
     setConsent(false)
-  }, [tierPreference])
+  }, [entryIntent, tierPreference])
 
   const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
 
   const codeForCheckout = fundraisingCode.trim() || undefined
+
+  function selectRaceEntry() {
+    const next = (tierPreference || "sprint") as SpartanRaceTierId
+    setEntryIntent("race")
+    setTierPreference(next)
+    setAmountDollars(suggestedDollarsString(next))
+  }
+
+  function selectGiftOnly() {
+    setEntryIntent("gift")
+    setTierPreference("")
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -96,6 +115,14 @@ export function SpartanDonateForm() {
     const name = donorName.trim()
     if (name.length < 2) {
       setError("Please enter your full name.")
+      return
+    }
+    if (entryIntent === null) {
+      setError("Please choose whether you are requesting a Spartan race entry.")
+      return
+    }
+    if (entryIntent === "race" && !tierPreference) {
+      setError("Choose a race distance.")
       return
     }
     if (!consent) {
@@ -115,7 +142,7 @@ export function SpartanDonateForm() {
           email: email.trim(),
           donorName: name,
           amountCents,
-          tierPreference: tierPreference || undefined,
+          tierPreference: entryIntent === "race" ? tierPreference : undefined,
           athleteCode: codeForCheckout,
         }),
       })
@@ -196,65 +223,117 @@ export function SpartanDonateForm() {
         </div>
       </div>
 
-      <div className="mb-2 mt-8">
-        <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Race / distance (optional)</label>
-        <p className="mt-1 text-xs text-[#666]">
-          Choose a distance if you want a Spartan entry code. Leave as &quot;general support&quot; for fundraising-only
-          gifts (no race).
+      <div className="mt-8">
+        <p className="font-[family-name:var(--font-barlow-spartan)] text-xs font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">
+          Are you requesting a Spartan race entry?
         </p>
-        <select
-          value={tierPreference}
-          onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId | "")}
-          className="mt-2 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-white focus:border-[#CC0000] focus:outline-none"
-        >
-          <option value="">General support / no race (fundraising only)</option>
-          {SPARTAN_RACE_TIERS.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name} — suggested {formatUsd(t.suggestedGiftCents)}
-            </option>
-          ))}
-        </select>
+        <p className="mt-1 text-xs text-[#666]">
+          This controls whether NC United shares your email with Spartan for a Fayetteville entry code (Yes) or treats
+          this as a gift / fundraiser only (No).
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={selectRaceEntry}
+            className={`min-h-[88px] border-2 px-4 py-3 text-left transition-colors ${
+              entryIntent === "race"
+                ? "border-[#CC0000] bg-[#2a1515]"
+                : "border-[#444] bg-[#141414] hover:border-[#666]"
+            }`}
+          >
+            <span className="font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-wide text-white">
+              Yes
+            </span>
+            <span className="mt-1 block text-xs leading-snug text-[#aaa]">
+              I want a race entry — I&apos;ll choose a distance below.
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={selectGiftOnly}
+            className={`min-h-[88px] border-2 px-4 py-3 text-left transition-colors ${
+              entryIntent === "gift"
+                ? "border-[#C8A94A] bg-[#1a170d]"
+                : "border-[#444] bg-[#141414] hover:border-[#666]"
+            }`}
+          >
+            <span className="font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-wide text-[#C8A94A]">
+              No
+            </span>
+            <span className="mt-1 block text-xs leading-snug text-[#aaa]">
+              Donation or fundraising gift only — no Spartan race code.
+            </span>
+          </button>
+        </div>
       </div>
 
-      <p className="mt-6 text-xs font-medium uppercase tracking-wide text-[#888]">Gift amount</p>
-      <p className="mt-1 text-xs text-[#666]">
-        Quick picks set a starting point — <strong className="text-[#aaa]">change the amount below</strong> anytime (e.g.
-        $50 → $75).
-      </p>
-      <div className="mt-2 flex flex-wrap justify-center gap-2">
-        {SPARTAN_RACE_TIERS.map((tier) => {
-          const active = tierPreference === tier.id
-          return (
-            <button
-              key={tier.id}
-              type="button"
-              onClick={() => {
-                setTierPreference(tier.id)
-                setAmountDollars(suggestedDollarsString(tier.id))
-              }}
-              className={`min-w-[4.75rem] border px-2 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide transition-colors ${
-                active ? "border-[#CC0000] bg-[#CC0000] text-white" : "border-[#444] text-[#999] hover:border-[#666]"
-              }`}
-            >
-              <span className="block text-[10px] font-normal normal-case text-current opacity-90">{tier.name}</span>
-              <span className="block text-base">{formatUsd(tier.suggestedGiftCents)}</span>
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          onClick={() => {
-            setTierPreference("")
-            setAmountDollars("50")
-          }}
-          className={`min-w-[4.75rem] border px-2 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide ${
-            !tierPreference ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]" : "border-[#444] text-[#999] hover:border-[#666]"
-          }`}
-        >
-          <span className="block text-[10px] font-normal normal-case opacity-90">No race</span>
-          <span className="block text-base">$50+</span>
-        </button>
-      </div>
+      {entryIntent === "race" && (
+        <div className="mb-2 mt-8">
+          <label className="block text-xs font-medium uppercase tracking-wide text-[#888]">Race / distance</label>
+          <p className="mt-1 text-xs text-[#666]">Pick the distance you want your entry code for (you can adjust the gift amount below).</p>
+          <select
+            value={tierPreference}
+            onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
+            required
+            className="mt-2 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-white focus:border-[#CC0000] focus:outline-none"
+          >
+            {SPARTAN_RACE_TIERS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} — suggested {formatUsd(t.suggestedGiftCents)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {entryIntent === "race" && (
+        <>
+          <p className="mt-6 text-xs font-medium uppercase tracking-wide text-[#888]">Suggested gift (distance)</p>
+          <p className="mt-1 text-xs text-[#666]">
+            Quick picks — <strong className="text-[#aaa]">edit the amount field</strong> anytime (e.g. $129 → $75).
+          </p>
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
+            {SPARTAN_RACE_TIERS.map((tier) => {
+              const active = tierPreference === tier.id
+              return (
+                <button
+                  key={tier.id}
+                  type="button"
+                  onClick={() => {
+                    setTierPreference(tier.id)
+                    setAmountDollars(suggestedDollarsString(tier.id))
+                  }}
+                  className={`min-w-[4.75rem] border px-2 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-wide transition-colors ${
+                    active ? "border-[#CC0000] bg-[#CC0000] text-white" : "border-[#444] text-[#999] hover:border-[#666]"
+                  }`}
+                >
+                  <span className="block text-[10px] font-normal normal-case text-current opacity-90">{tier.name}</span>
+                  <span className="block text-base">{formatUsd(tier.suggestedGiftCents)}</span>
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      {entryIntent === "gift" && (
+        <div className="mt-8">
+          <p className="text-xs font-medium uppercase tracking-wide text-[#888]">Suggested gift amount</p>
+          <p className="mt-1 text-xs text-[#666]">Quick amounts — change the field below to any amount ($5 minimum).</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {GIFT_QUICK_AMOUNTS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setAmountDollars(String(d))}
+                className="min-w-[3.5rem] border border-[#5a4d22] bg-[#1a170d] px-3 py-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-bold text-[#C8A94A] hover:border-[#C8A94A]"
+              >
+                ${d}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4">
         <label className="block text-xs font-medium uppercase tracking-wide text-[#C8A94A]" htmlFor="spartan-amount-usd">
@@ -291,8 +370,8 @@ export function SpartanDonateForm() {
           {wantsRace ? (
             <>
               I agree that NC United may share my email with Spartan Race solely so they can send my Fayetteville race
-              entry code (typically within about 48 hours after NC United batches names to their team). I understand my
-              receipt is for a tax-deductible gift to NC United (501(c)(3)), not a purchase from Spartan.
+              entry code after NC United passes donor information to their team. I understand my receipt is for a
+              tax-deductible gift to NC United (501(c)(3)), not a purchase from Spartan.
               {codeForCheckout && (
                 <>
                   {" "}
@@ -325,14 +404,17 @@ export function SpartanDonateForm() {
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || entryIntent === null}
         className="mt-6 w-full min-h-[52px] bg-[#CC0000] font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:bg-[#990000] disabled:opacity-60"
       >
         {loading ? "Redirecting…" : "Continue to secure checkout"}
       </button>
+      {entryIntent === null && (
+        <p className="mt-2 text-center text-xs text-[#888]">Choose Yes or No above to continue.</p>
+      )}
       {wantsRace && (
         <p className="mt-3 text-center text-xs text-[#666]">
-          After payment, watch your inbox — Spartan sends entry codes on a rolling basis; allow up to about 48 hours.
+          After payment, watch your inbox — Spartan sends entry codes after NC United&apos;s handoff; timing varies.
         </p>
       )}
     </form>

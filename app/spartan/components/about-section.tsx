@@ -8,8 +8,11 @@ export function AboutSection() {
           <p className="font-[family-name:var(--font-barlow-spartan)] text-xs font-semibold uppercase tracking-[0.2em] text-[#CC0000]">
             The mission
           </p>
-          <h2 className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-3xl font-bold uppercase leading-tight tracking-tight text-white md:text-4xl">
-            Wrestling builds warriors. We build wrestlers.
+          <h2 className="mt-3 font-[family-name:var(--font-barlow-spartan)] leading-tight tracking-tight text-white">
+            <span className="block text-3xl font-extrabold uppercase md:text-4xl">Strength in unity</span>
+            <span className="mt-2 block text-xl font-semibold normal-case md:text-2xl">
+              Built by Wrestling. Proven by Spartans.
+            </span>
           </h2>
           <p className="mt-6 text-base leading-relaxed text-[#bbb]">
             NC United is a 501(c)(3) nonprofit developing North Carolina&apos;s top high school wrestlers. Every dollar
@@ -24,14 +27,22 @@ export function AboutSection() {
             />
           </div>
         </div>
-        <div>
+        <div className="flex flex-col gap-10">
           <blockquote className="border-l-4 border-[#CC0000] bg-[#1A1A1A] py-6 pl-6 pr-4">
             <p className="text-lg leading-relaxed text-white md:text-xl">
-              &ldquo;All the entries are on us. You can sell tickets and keep the money.&rdquo;
+              &ldquo;I&apos;ve crossed Spartan finish lines with family and friends — mud, obstacles, exhaustion, and
+              laughter in the same hour. That&apos;s why I&apos;m fired up to bring this community behind NC United: when
+              you&apos;ve felt that course, you know what it means to push together.&rdquo;
             </p>
-            <footer className="mt-4 text-sm text-[#999]">
-              — Joe De Sena, CEO, Spartan Race
-            </footer>
+            <footer className="mt-4 text-sm text-[#999]">— Matt Hickey, founder, NC United Wrestling</footer>
+          </blockquote>
+          <blockquote className="border-l-4 border-[#C8A94A] bg-[#1A1A1A] py-6 pl-6 pr-4">
+            <p className="text-lg leading-relaxed text-white md:text-xl">
+              &ldquo;When Spartan backs NC United, they&apos;re backing North Carolina wrestlers and the training it takes
+              to compete at the highest level — travel, camps, and opportunity for kids who earn it every day in the
+              room. That support lifts our whole program.&rdquo;
+            </p>
+            <footer className="mt-4 text-sm text-[#999]">— Michael Macchiavello, NC United</footer>
           </blockquote>
         </div>
       </div>

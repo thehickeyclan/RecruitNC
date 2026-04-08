@@ -7,9 +7,14 @@ export function LastYearSection() {
         <p className="text-center font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[#C8A94A]">
           Last year&apos;s race
         </p>
-        <h2 className="mt-2 text-center font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white md:text-3xl">
-          Same mud. Same grit.
-        </h2>
+        <div className="mt-2 text-center">
+          <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.18em] text-[#C8A94A] md:text-base">
+            On course in 2025
+          </p>
+          <h2 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white md:text-3xl">
+            Same mud. Same grit.
+          </h2>
+        </div>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-[#888]">
           NC United athletes on course — we&apos;re back May 2–3 in Fayetteville to fund the next season of training and
           competition.

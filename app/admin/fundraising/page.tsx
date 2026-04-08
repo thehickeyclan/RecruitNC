@@ -112,6 +112,14 @@ export default function AdminFundraisingPage() {
                     <code className="text-xs">spartan_campaign=fayetteville_2026</code> → export CSV → pivot on{" "}
                     <code className="text-xs">athlete_code</code>. (Automated leaderboard DB is a follow-up.)
                   </li>
+                  <li>
+                    <strong className="text-foreground">Who is &quot;running&quot; vs donation-only:</strong>{" "}
+                    <code className="text-xs">race_entry_requested=true</code> + <code className="text-xs">tier_preference</code>{" "}
+                    means they went through the <em>entry-code</em> path (intend to race).{" "}
+                    <code className="text-xs">race_entry_requested=false</code> /{" "}
+                    <code className="text-xs">fundraising_type=gift_only</code> means support only. RecruitNC does not know
+                    who physically starts on race day — that lives with Spartan after they issue codes.
+                  </li>
                 </ul>
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button type="button" variant="outline" size="sm" onClick={copyTemplate}>

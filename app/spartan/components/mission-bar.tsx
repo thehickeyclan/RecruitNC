@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react"
 
-const GOAL_CENTS = 25_000_00
+/** Public goal shown next to the progress bar — wire RAISED_CENTS from Stripe/DB when ready. */
+const GOAL_CENTS = 1_000_000 // $10,000
 const RAISED_CENTS = 0
+const DONATIONS_COUNT = 0
 
 export function MissionBar() {
   const [pct, setPct] = useState(0)
@@ -47,12 +49,12 @@ export function MissionBar() {
           </div>
           <div className="text-center md:text-right">
             <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">
-              NC athletes supported
+              Donations
             </p>
             <p className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-4xl font-black tabular-nums text-white">
-              47
+              {DONATIONS_COUNT}
             </p>
-            <p className="mt-1 text-sm text-[#666]">Spring / Summer 2026 mission</p>
+            <p className="mt-1 text-sm text-[#666]">Completed gifts via this page — updating soon</p>
           </div>
         </div>
       </div>

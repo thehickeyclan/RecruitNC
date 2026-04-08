@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     : "NC United — Spartan 2026 fundraising gift (no race entry)"
 
   const productDescription = raceEntryRequested
-    ? "Tax-deductible donation to NC United. Spartan Race typically emails your entry code within about 48 hours after NC United shares donor emails with their team."
+    ? "Tax-deductible donation to NC United. Spartan Race emails entry codes after NC United shares donor information with their team — timing depends on batching and their process."
     : "Tax-deductible donation to NC United (501(c)(3)). Fundraising / sponsor gift — no Spartan race entry requested. Dollars can still be attributed to a fundraising code in Stripe metadata for student leaderboards."
 
   try {
