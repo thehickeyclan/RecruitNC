@@ -85,11 +85,6 @@ export function SupporterActivitySection() {
         <h2 className="text-center font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white md:text-3xl">
           Supporter activity
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-[#888]">
-          Recent gifts (newest first). Names show when donors choose to be listed; otherwise &quot;Anonymous.&quot;{" "}
-          <strong className="text-[#aaa]">Race</strong> = Super 10K entry path; <strong className="text-[#aaa]">Give</strong>{" "}
-          = support without that path.
-        </p>
 
         {entries.length === 0 ? (
           <p className="mt-10 text-center text-sm text-[#666]">Paid gifts will appear here as they come in.</p>
