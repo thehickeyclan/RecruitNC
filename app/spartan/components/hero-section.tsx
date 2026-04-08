@@ -9,68 +9,41 @@ import { SPARTAN_COUNTDOWN_ISO } from "../data"
 export function HeroSection() {
   return (
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-black text-center">
-      {/* Taller frame + anchored crop (right, ~upper-third) so crest / helmet top stay in view */}
+      {/* Full artwork visible: contain (not cover) + tall frame — cover in a short strip was zooming into a dark unreadable crop */}
       <div className="relative w-full shrink-0 bg-black pt-[max(0,env(safe-area-inset-top))]">
-        <div className="relative w-full overflow-hidden">
-          <div
-            className="relative w-full
-              h-[min(16.5rem,48vw)] min-[400px]:h-[min(18rem,44vw)]
-              md:h-[min(26rem,36svh)] lg:h-[min(30rem,40svh)]"
-          >
+        <div className="relative w-full">
+          <div className="relative mx-auto w-full max-w-[1920px] h-[clamp(14rem,48vmin,32rem)] min-h-[14rem] md:min-h-[17.5rem]">
             <Image
               src="/images/spartan-race-banner.png"
               alt="Spartan-style soldiers in formation — cinematic campaign banner"
               fill
               priority
-              className="object-cover object-[82%_18%] min-[400px]:object-[85%_17%] md:object-[88%_15%] lg:object-[90%_14%]"
+              className="object-contain object-center"
               sizes="100vw"
-              quality={90}
+              quality={92}
             />
             <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[42%] max-h-40 bg-gradient-to-t from-black via-black/55 to-transparent md:max-h-44"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-12 bg-gradient-to-b from-black/70 via-black/20 to-transparent md:h-14"
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-14 bg-gradient-to-t from-black/90 to-transparent md:h-16"
               aria-hidden
             />
           </div>
         </div>
-        <div
-          className="mx-auto h-px w-[min(12rem,55vw)] max-w-full bg-gradient-to-r from-transparent via-[var(--spartan-gold)]/35 to-transparent"
-          aria-hidden
-        />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-5 pb-14 pt-8 sm:px-6 md:pt-10">
+      <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-5 pb-12 pt-4 sm:px-6 md:pt-5">
         <Suspense fallback={null}>
           <SpartanAthleteRibbon />
         </Suspense>
 
-        <div className="mb-9 w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[var(--spartan-surface)] px-6 py-5 shadow-[0_24px_80px_-32px_rgba(0,0,0,0.9)] backdrop-blur-[2px] sm:max-w-md sm:px-8">
-          <span className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.26em] text-[#9a9a9a]">
-            Presented by
-          </span>
-          <div className="relative mx-auto mt-3 h-10 w-[min(200px,70vw)] sm:h-11 md:h-12 md:w-[220px]">
-            <Image
-              src="/images/nc-united-logo-white.png"
-              alt="NC United Wrestling — 501(c)(3) nonprofit"
-              fill
-              className="object-contain object-center"
-              sizes="220px"
-            />
-          </div>
-        </div>
-
-        <div className="w-full max-w-xl rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.04] to-transparent px-4 py-7 sm:px-8">
+        <div className="w-full max-w-xl rounded-xl border border-white/10 bg-white/[0.03] px-5 py-6 text-center sm:px-8 sm:py-7">
           <p
-            className="mb-4 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
+            className="mb-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
             style={{ animationDelay: "0ms" }}
           >
             Race day
           </p>
-          <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} />
-          <p className="mt-5 text-[13px] uppercase tracking-[0.14em] text-neutral-400">
+          <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
+          <p className="mt-4 text-[13px] uppercase tracking-[0.14em] text-neutral-400">
             May 2–3, 2026 · Fayetteville, NC
           </p>
           <p className="mx-auto mt-2 max-w-md text-[12px] leading-relaxed text-neutral-500">
@@ -80,7 +53,7 @@ export function HeroSection() {
         </div>
 
         <p
-          className="mb-3 mt-10 font-[family-name:var(--font-barlow-spartan)] text-[12px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
+          className="mb-3 mt-7 font-[family-name:var(--font-barlow-spartan)] text-[12px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
           style={{ animationDelay: "100ms" }}
         >
           NC United × Spartan Race
