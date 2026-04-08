@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { Suspense } from "react"
+import { HardLink } from "@/components/hard-link"
 import { CountdownTimer } from "./countdown-timer"
 import { SpartanAthleteRibbon } from "./spartan-athlete-ribbon"
 import { SPARTAN_COUNTDOWN_ISO } from "../data"
@@ -37,18 +38,22 @@ export function HeroSection() {
 
         <div className="w-full max-w-xl rounded-xl border border-white/10 bg-white/[0.03] px-5 py-6 text-center sm:px-8 sm:py-7">
           <p
-            className="mb-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
+            className="mb-2 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
             style={{ animationDelay: "0ms" }}
           >
-            Race day
+            NC United crew · Super 10K team race
+          </p>
+          <p className="mx-auto mb-4 max-w-md text-[15px] font-semibold leading-snug text-white sm:text-base">
+            Sunday, May 3, 2026 · Fayetteville, NC
           </p>
           <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
-          <p className="mt-4 text-[13px] uppercase tracking-[0.14em] text-neutral-400">
-            May 2–3, 2026 · Fayetteville, NC
+          <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-neutral-300">
+            We&apos;re lining up for Spartan&apos;s <span className="text-[var(--spartan-gold)]">Super 10K</span> — the
+            team distance so the whole NC United group races the same day.
           </p>
-          <p className="mx-auto mt-2 max-w-md text-[12px] leading-relaxed text-neutral-500">
-            Super 10K (team race day): <span className="text-[var(--spartan-gold)]">Sunday, May 3</span> — other
-            distances May 2–3 per event
+          <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-neutral-500">
+            Spartan also runs other distances across the weekend (May 2–3). Sprint, Kids, Beast &amp; Ultra may be
+            Saturday or Sunday — your Spartan email shows your wave.
           </p>
         </div>
 
@@ -67,24 +72,30 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          Wrestlers, families, fans — everyone&apos;s welcome. Every signup through NC United backs North Carolina
-          wrestling. Donate here; Spartan emails your race code.
+          Wrestlers, families, fans — everyone&apos;s welcome. Every gift through NC United backs North Carolina
+          wrestling. <strong className="text-neutral-200">Race</strong> if you&apos;re running;{" "}
+          <strong className="text-neutral-200">Donate</strong> if you&apos;re only giving — same form below.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
-          <a
-            href="#donate"
+          <HardLink
+            href="/spartan?flow=race#donate"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[var(--spartan-red)] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px"
           >
-            Donate &amp; get your code
-          </a>
-          <a
-            href="#races"
+            Race
+          </HardLink>
+          <HardLink
+            href="/spartan?flow=donate#donate"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06]"
           >
-            Race distances
-          </a>
+            Donate
+          </HardLink>
         </div>
+        <p className="mt-3 text-center">
+          <a href="#races" className="text-[12px] text-neutral-500 underline-offset-2 hover:text-neutral-300 hover:underline">
+            See race distances
+          </a>
+        </p>
 
         <p className="mt-6 max-w-lg text-[11px] leading-relaxed tracking-[0.04em] text-neutral-500">
           Tax-deductible gifts to NC United (501(c)(3)). Same mission whether you&apos;re on the course or not — it all

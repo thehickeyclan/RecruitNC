@@ -16,8 +16,8 @@ export function LastYearSection() {
           </h2>
         </div>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-[#888]">
-          NC United athletes on course — we&apos;re back May 2–3 in Fayetteville to fund the next season of training and
-          competition.
+          NC United athletes on course — we&apos;re back for the Super 10K team race Sunday, May 3 (Spartan weekend May
+          2–3) in Fayetteville to fund the next season of training and competition.
         </p>
         {/* Full photo at intrinsic 768x1024; object-contain only — no cover crop */}
         <div className="mt-10 rounded-sm border border-[#2A2A2A] bg-[#141414] p-2 sm:p-4 shadow-[inset_4px_0_0_0_#CC0000]">

@@ -109,6 +109,27 @@ export function SpartanDonateForm() {
     }
   }, [searchParams])
 
+  /** Hero CTAs: ?flow=race | ?flow=donate — after mission, tier, and athlete deep links */
+  useEffect(() => {
+    if (searchParams.get("mission") === "1") return
+    if (tierFromSearchParams(searchParams)) return
+    if (searchParams.get("athlete")?.trim()) return
+
+    const flowParam = searchParams.get("flow")
+    if (flowParam === "race") {
+      setFlow("race")
+      setDonateMode(null)
+      setTierPreference("sprint")
+      setAmountDollars(suggestedDollarsString("sprint"))
+      return
+    }
+    if (flowParam === "donate") {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode(null)
+    }
+  }, [searchParams])
+
   useEffect(() => {
     const q = athleteQuery.trim()
     if (q.length < 2) {
@@ -154,7 +175,8 @@ export function SpartanDonateForm() {
   }, [flow, donateMode, tierPreference])
 
   const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
-  const teeEligible = amountCents >= TEE_THRESHOLD_CENTS
+  /** Race path: every participant gets an NC United tee. Donate-only: $100+. */
+  const teeEligible = flow === "race" || amountCents >= TEE_THRESHOLD_CENTS
 
   useEffect(() => {
     if (!teeEligible) setTeeConsent(false)
@@ -230,11 +252,13 @@ export function SpartanDonateForm() {
     }
     if (teeEligible) {
       if (!shirtSize) {
-        setError("Shirt size required for $100+.")
+        setError(flow === "race" ? "Shirt size required for your NC United tee." : "Shirt size required for $100+.")
         return
       }
       if (!shipLine1.trim() || !shipCity.trim() || !shipState.trim() || !shipPostal.trim()) {
-        setError("Shipping address required for $100+.")
+        setError(
+          flow === "race" ? "Shipping address required for your NC United tee." : "Shipping address required for $100+.",
+        )
         return
       }
       if (!teeConsent) {
@@ -509,10 +533,15 @@ export function SpartanDonateForm() {
             </div>
             <p className="mt-1.5 text-center text-[11px] text-[#666]">
               {formatUsd(amountCents)}
-              {!teeEligible && amountCents > 0 && amountCents < TEE_THRESHOLD_CENTS && (
+              {!teeEligible && flow === "donate" && amountCents > 0 && amountCents < TEE_THRESHOLD_CENTS && (
                 <span className="text-[#555]"> · +{formatUsd(TEE_THRESHOLD_CENTS - amountCents)} to $100 tee</span>
               )}
-              {teeEligible && <span className="text-[#C8A94A]"> · Tee unlocked</span>}
+              {teeEligible && flow === "race" && (
+                <span className="text-[#C8A94A]"> · NC United tee included</span>
+              )}
+              {teeEligible && flow === "donate" && (
+                <span className="text-[#C8A94A]"> · Tee unlocked</span>
+              )}
             </p>
           </div>
         </>
@@ -520,7 +549,9 @@ export function SpartanDonateForm() {
 
       {stepUnlocked && teeEligible && (
         <div className="mt-5 space-y-2 rounded border border-[#C8A94A]/35 bg-[#141414] px-3 py-3">
-          <p className="text-xs font-medium text-[#C8A94A]">Free tee — size &amp; ship</p>
+          <p className="text-xs font-medium text-[#C8A94A]">
+            {flow === "race" ? "NC United tee (included) — size & ship" : "Free tee — size & ship"}
+          </p>
           <select
             required={teeEligible}
             value={shirtSize}

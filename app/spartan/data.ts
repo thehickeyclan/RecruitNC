@@ -61,7 +61,7 @@ export function suggestedCentsForTier(id: SpartanRaceTierId | ""): number | null
   return row ? row.suggestedGiftCents : null
 }
 
-/** May 2, 2026 — 7:00 AM US Eastern (EDT). */
-export const SPARTAN_COUNTDOWN_ISO = "2026-05-02T11:00:00.000Z"
+/** May 3, 2026 — 7:00 AM US Eastern (EDT) — Super 10K team race day for NC United crew. */
+export const SPARTAN_COUNTDOWN_ISO = "2026-05-03T11:00:00.000Z"
 
 export const NCU_EIN = "99-3757238"

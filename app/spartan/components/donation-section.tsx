@@ -18,7 +18,10 @@ export function DonationSection() {
           <br />
           <strong className="text-[#ccc]">Donate</strong> — gift only; then athlete or NC United general.
           <br />
-          <span className="text-[#777]">$100+ includes a free NC United tee (on the form).</span>
+          <span className="text-[#777]">
+            <strong className="text-[#999]">Race:</strong> every participant gets an NC United tee (size &amp; ship on the
+            form). <strong className="text-[#999]">Donate only:</strong> $100+ includes the tee.
+          </span>
         </p>
         <p className="mt-2 text-xs text-[#555]">
           <a href="#sponsor" className="text-[#C8A94A] hover:underline">

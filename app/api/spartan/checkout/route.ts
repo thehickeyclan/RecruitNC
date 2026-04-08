@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic"
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
-/** Donations at or above this amount qualify for promotional tee (ops fulfillment). */
+/** Donate-only: gifts at or above this qualify for NC United tee. Race entries always include a tee. */
 export const SPARTAN_TEE_THRESHOLD_CENTS = 10_000
 
 const TEE_SIZES = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL"])
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid amount (min $5)." }, { status: 400 })
   }
 
-  const teeEligible = amountCents >= SPARTAN_TEE_THRESHOLD_CENTS
+  const teeEligible = raceEntryRequested || amountCents >= SPARTAN_TEE_THRESHOLD_CENTS
   const shirtSize = typeof body.shirtSize === "string" ? body.shirtSize.trim().toUpperCase() : ""
   const shipLine1 = typeof body.shipLine1 === "string" ? body.shipLine1.trim().slice(0, 120) : ""
   const shipLine2 = typeof body.shipLine2 === "string" ? body.shipLine2.trim().slice(0, 120) : ""
@@ -66,11 +66,22 @@ export async function POST(request: NextRequest) {
 
   if (teeEligible) {
     if (!shirtSize || !TEE_SIZES.has(shirtSize)) {
-      return NextResponse.json({ error: "Choose a valid shirt size for your free tee ($100+ gifts)." }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: raceEntryRequested
+            ? "Choose a valid shirt size for your NC United tee (included with your race gift)."
+            : "Choose a valid shirt size for your free tee ($100+ gifts).",
+        },
+        { status: 400 },
+      )
     }
     if (!shipLine1 || !shipCity || !shipState || !shipPostal) {
       return NextResponse.json(
-        { error: "Enter a full shipping address for your free NC United tee ($100+ gifts)." },
+        {
+          error: raceEntryRequested
+            ? "Enter a full shipping address for your NC United tee (included with your race gift)."
+            : "Enter a full shipping address for your free NC United tee ($100+ gifts).",
+        },
         { status: 400 },
       )
     }
@@ -80,7 +91,7 @@ export async function POST(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   const productName = raceEntryRequested
-    ? "NC United — Spartan Race Fayetteville (May 2–3, 2026)"
+    ? "NC United — Spartan Fayetteville (Super 10K team day May 3, 2026; weekend May 2–3)"
     : "NC United — Spartan 2026 fundraising gift (no race entry)"
 
   let productDescription = raceEntryRequested
