@@ -12,10 +12,10 @@ export function HeroSection() {
       {/* Banner first in document flow so logo stays unobstructed; countdown sits below */}
       <div className="relative w-full shrink-0 bg-black">
         <div className="relative mx-auto w-full max-w-6xl px-3 py-4 md:px-6 md:py-6">
-          <div className="relative aspect-[21/5] w-full min-h-[100px] max-h-[200px] sm:max-h-[240px] md:max-h-[280px]">
+          <div className="relative aspect-[21/6] w-full min-h-[120px] max-h-[240px] sm:max-h-[280px] md:max-h-[320px]">
             <Image
               src="/images/spartan-race-banner.png"
-              alt="Spartan Race — You'll know at the finish line"
+              alt="Spartan Race — athletes on course, official banner"
               fill
               priority
               className="object-contain object-center"
