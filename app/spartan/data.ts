@@ -1,4 +1,7 @@
-import type { SpartanRaceTier } from "./types"
+import type { SpartanRaceTier, SpartanRaceTierId } from "./types"
+
+/** Form default when user picks Race — Super 10K (Team NC distance). */
+export const DEFAULT_SPARTAN_RACE_TIER_ID: SpartanRaceTierId = "super"
 
 /** Fayetteville 2026 — update registerUrl when Spartan sends per-distance links or codes. */
 export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
@@ -61,7 +64,7 @@ export function suggestedCentsForTier(id: SpartanRaceTierId | ""): number | null
   return row ? row.suggestedGiftCents : null
 }
 
-/** May 3, 2026 — 7:00 AM US Eastern (EDT) — Super 10K team race day for NC United crew. */
+/** May 3, 2026 — 7:00 AM US Eastern (EDT) — Super 10K team race day for Team NC. */
 export const SPARTAN_COUNTDOWN_ISO = "2026-05-03T11:00:00.000Z"
 
 export const NCU_EIN = "99-3757238"

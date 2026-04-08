@@ -41,15 +41,15 @@ export function HeroSection() {
             className="mb-2 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
             style={{ animationDelay: "0ms" }}
           >
-            NC United crew · Super 10K team race
+            Team NC · Super 10K team race
           </p>
           <p className="mx-auto mb-4 max-w-md text-[15px] font-semibold leading-snug text-white sm:text-base">
             Sunday, May 3, 2026 · Fayetteville, NC
           </p>
           <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
           <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-neutral-300">
-            We&apos;re lining up for Spartan&apos;s <span className="text-[var(--spartan-gold)]">Super 10K</span> — the
-            team distance so the whole NC United group races the same day.
+            Race with <span className="text-[var(--spartan-gold)]">Team NC</span> on Spartan&apos;s{" "}
+            <span className="text-[var(--spartan-gold)]">Super 10K</span> — same day for everyone on the crew.
           </p>
           <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-neutral-500">
             Spartan also runs other distances across the weekend (May 2–3). Sprint, Kids, Beast &amp; Ultra may be

@@ -14,13 +14,20 @@ export function DonationSection() {
           Register or donate
         </h2>
         <p className="mx-auto mt-3 max-w-md text-sm text-[#999]">
-          <strong className="text-[#ccc]">Race</strong> — running the Spartan (you or a friend); credit one athlete.
-          <br />
-          <strong className="text-[#ccc]">Donate</strong> — gift only; then athlete or NC United general.
-          <br />
-          <span className="text-[#777]">
-            <strong className="text-[#999]">Race:</strong> every participant gets an NC United tee (size &amp; ship on the
-            form). <strong className="text-[#999]">Donate only:</strong> $100+ includes the tee.
+          <span className="block text-[#bbb]">
+            <strong className="text-[#C8A94A]">Team NC</strong> — we&apos;re on the Super 10K Sunday, May 3 (default
+            below).
+          </span>
+          <span className="mt-2 block">
+            <strong className="text-[#ccc]">Race</strong> — run with Team NC on the Spartan (you or a friend); credit one
+            athlete.
+            <br />
+            <strong className="text-[#ccc]">Donate</strong> — gift only; then athlete or NC United general.
+            <br />
+            <span className="text-[#777]">
+              <strong className="text-[#999]">Race:</strong> every participant gets an NC United tee (size &amp; ship on
+              the form). <strong className="text-[#999]">Donate only:</strong> $100+ includes the tee.
+            </span>
           </span>
         </p>
         <p className="mt-2 text-xs text-[#555]">

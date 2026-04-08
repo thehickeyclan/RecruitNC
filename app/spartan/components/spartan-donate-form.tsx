@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import type { SpartanRaceTierId } from "../types"
-import { SPARTAN_RACE_TIERS, suggestedCentsForTier } from "../data"
+import { DEFAULT_SPARTAN_RACE_TIER_ID, SPARTAN_RACE_TIERS, suggestedCentsForTier } from "../data"
 
 function formatUsd(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
@@ -119,8 +119,8 @@ export function SpartanDonateForm() {
     if (flowParam === "race") {
       setFlow("race")
       setDonateMode(null)
-      setTierPreference("sprint")
-      setAmountDollars(suggestedDollarsString("sprint"))
+      setTierPreference(DEFAULT_SPARTAN_RACE_TIER_ID)
+      setAmountDollars(suggestedDollarsString(DEFAULT_SPARTAN_RACE_TIER_ID))
       return
     }
     if (flowParam === "donate") {
@@ -184,6 +184,12 @@ export function SpartanDonateForm() {
 
   const codeForCheckout = fundraisingCode.trim() || undefined
 
+  const raceTierSelectOptions = useMemo(() => {
+    const team = SPARTAN_RACE_TIERS.find((t) => t.id === DEFAULT_SPARTAN_RACE_TIER_ID)
+    const rest = SPARTAN_RACE_TIERS.filter((t) => t.id !== DEFAULT_SPARTAN_RACE_TIER_ID)
+    return team ? [team, ...rest] : SPARTAN_RACE_TIERS
+  }, [])
+
   const trimmedAthleteQuery = athleteQuery.trim()
   const showNoDirectoryMatch =
     needsAthleteCode &&
@@ -193,7 +199,7 @@ export function SpartanDonateForm() {
     athleteHits.length === 0
 
   function selectRace() {
-    const next = (tierPreference || "sprint") as SpartanRaceTierId
+    const next = (tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID) as SpartanRaceTierId
     setFlow("race")
     setDonateMode(null)
     setTierPreference(next)
@@ -343,7 +349,8 @@ export function SpartanDonateForm() {
           </button>
         </div>
         <p className="mt-2 text-[11px] leading-snug text-[#666]">
-          <strong className="text-[#888]">Race</strong> — you or a friend are running; credit goes to one athlete.
+          <strong className="text-[#888]">Race</strong> — Team NC on the Super 10K (default); you or a friend running;
+          credit one athlete.
           <br />
           <strong className="text-[#888]">Donate</strong> — gift only; then pick athlete or NC United general.
         </p>
@@ -390,7 +397,7 @@ export function SpartanDonateForm() {
             className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-sm text-white focus:border-[#CC0000] focus:outline-none"
           >
             <option value="">Choose…</option>
-            {SPARTAN_RACE_TIERS.map((t) => (
+            {raceTierSelectOptions.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name} · {formatUsd(t.suggestedGiftCents)}
               </option>
