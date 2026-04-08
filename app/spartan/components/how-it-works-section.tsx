@@ -13,7 +13,7 @@ export function HowItWorksSection() {
     {
       n: "03",
       title: "Only if you’re racing",
-      body: "Spartan emails a Fayetteville Super 10K entry code when you’re the one entering the race—check inbox and spam; it may take a few days. Supporting a wrestler without racing yourself? You’re done after checkout—no code.",
+      body: "Spartan sends your Fayetteville Super 10K entry code when you’re the one registering for the race. Supporting a wrestler without racing yourself? You’re done after checkout—no code.",
     },
   ]
 

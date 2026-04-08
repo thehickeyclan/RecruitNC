@@ -94,14 +94,15 @@ export async function POST(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   const productName = raceEntryRequested
-    ? "NC United — Spartan Fayetteville (Super 10K team day May 3, 2026; weekend May 2–3)"
-    : "NC United — Spartan 2026 fundraising gift (no race entry)"
+    ? "NC United × Spartan Fayetteville — Super 10K with Team NC · Sunday, May 3, 2026 (race weekend May 2–3)"
+    : "NC United — Gift to support our athletes (no race entry)"
 
   let productDescription = raceEntryRequested
-    ? "Tax-deductible donation to NC United. Spartan Race emails entry codes after NC United shares donor information with their team — timing depends on batching and their process."
-    : "Tax-deductible donation to NC United (501(c)(3)). Fundraising / sponsor gift — no Spartan race entry requested. Dollars can still be attributed to a fundraising code in Stripe metadata for student leaderboards."
+    ? "Tax-deductible gift to NC United (501(c)(3)). You’re joining Team NC for the Super 10K in Fayetteville. After your gift is processed, NC United coordinates with Spartan Race—your Fayetteville entry code arrives by email when it’s ready."
+    : "Tax-deductible gift to NC United (501(c)(3)). This is support only—no Spartan race entry. If you chose a wrestler at checkout, your gift counts toward their fundraising."
   if (teeEligible) {
-    productDescription += ` Includes NC United promotional tee (while supplies last); shipped to address in metadata.`
+    productDescription +=
+      " Includes an NC United tee (while supplies last), sent to the shipping address you provide."
   }
 
   try {
