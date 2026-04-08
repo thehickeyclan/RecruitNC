@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
@@ -170,6 +171,33 @@ export function SpartanDonateForm() {
     return () => clearTimeout(t)
   }, [athleteQuery])
 
+  /** Resolve directory label for bookmark URLs (?athlete=NCU-…) so checkout sends athlete_display_name. */
+  useEffect(() => {
+    const code = fundraisingCode.trim()
+    if (!code || athleteQuery.trim()) return
+    const m = /^NCU-([A-Za-z]+)-(\d{2})$/i.exec(code)
+    if (!m) return
+    const last = m[1]
+    let cancelled = false
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(`/api/spartan/fundraising-athletes?q=${encodeURIComponent(last)}`)
+          const data = (await res.json()) as { athletes?: { code: string; label: string }[] }
+          if (cancelled) return
+          const hit = data.athletes?.find((a) => a.code.trim().toLowerCase() === code.toLowerCase())
+          if (hit) setAthleteQuery(hit.label)
+        } catch {
+          /* ignore */
+        }
+      })()
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [fundraisingCode, athleteQuery])
+
   useEffect(() => {
     if (flow !== "race") return
     if (!tierPreference) return
@@ -291,6 +319,9 @@ export function SpartanDonateForm() {
           amountCents,
           tierPreference: flow === "race" ? tierPreference : undefined,
           athleteCode: codeForCheckout,
+          ...(codeForCheckout && athleteQuery.trim()
+            ? { athleteDisplayName: athleteQuery.trim() }
+            : {}),
           ...(!codeForCheckout && hasManualCredit ? { manualAthleteName: manualCreditTrimmed } : {}),
           ...(teeEligible
             ? {
@@ -593,10 +624,26 @@ export function SpartanDonateForm() {
       )}
 
       {stepUnlocked && teeEligible && (
-        <div className="mt-5 space-y-2 rounded border border-[#C8A94A]/35 bg-[#141414] px-3 py-3">
+        <div className="mt-5 rounded border border-[#C8A94A]/35 bg-[#141414] px-3 py-3">
           <p className="text-xs font-medium text-[#C8A94A]">
             {flow === "race" ? "NC United tee (included) — size & ship" : "Free tee — size & ship"}
           </p>
+          <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="mx-auto shrink-0 sm:mx-0">
+              <div className="relative aspect-square w-[min(100%,220px)] overflow-hidden rounded border border-[#333] bg-black sm:w-[200px]">
+                <Image
+                  src="/images/spartan-nc-united-tee.png"
+                  alt="2026 Fayetteville team tee: front and back on black shirt"
+                  fill
+                  sizes="220px"
+                  className="object-contain object-center"
+                />
+              </div>
+              <p className="mt-1.5 text-center text-[10px] leading-snug text-[#666] sm:text-left">
+                Artwork may vary; promotional item while supplies last.
+              </p>
+            </div>
+            <div className="min-w-0 flex-1 space-y-2">
           <select
             required={teeEligible}
             value={shirtSize}
@@ -671,6 +718,8 @@ export function SpartanDonateForm() {
             />
             Tee is promo / while supplies last
           </label>
+            </div>
+          </div>
         </div>
       )}
 

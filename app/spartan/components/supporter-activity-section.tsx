@@ -102,7 +102,7 @@ export function SupporterActivitySection() {
                   <th className="px-3 py-3">Amount</th>
                   <th className="px-3 py-3">Name</th>
                   <th className="px-3 py-3">Race / give</th>
-                  <th className="px-3 py-3">Credit</th>
+                  <th className="px-3 py-3">Athlete</th>
                 </tr>
               </thead>
               <tbody className="text-[#ccc]">
@@ -122,8 +122,8 @@ export function SupporterActivitySection() {
                         <span className="rounded bg-white/10 px-2 py-0.5 text-[11px] text-[#aaa]">Give</span>
                       )}
                     </td>
-                    <td className="max-w-[200px] px-3 py-2.5 text-xs text-[#C8A94A]">
-                      <span className="font-mono">{row.creditLabel ?? "—"}</span>
+                    <td className="max-w-[220px] px-3 py-2.5 text-sm text-[#ddd]">
+                      {row.creditLabel ?? "—"}
                     </td>
                   </tr>
                 ))}

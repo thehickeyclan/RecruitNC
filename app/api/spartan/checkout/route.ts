@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
     athleteCode?: string
     /** If not in directory: name for staff to credit manually (Stripe metadata) */
     manualAthleteName?: string
+    /** Directory list label (e.g. "Matt Hickey · …") — stored for public display, not just NCU-CODE */
+    athleteDisplayName?: string
     /** If false, public supporter list shows "Anonymous" */
     donorListPublic?: boolean
   } = {}
@@ -44,6 +46,8 @@ export async function POST(request: NextRequest) {
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
   const manualAthleteName =
     typeof body.manualAthleteName === "string" ? body.manualAthleteName.trim().slice(0, 120) : ""
+  const athleteDisplayName =
+    typeof body.athleteDisplayName === "string" ? body.athleteDisplayName.trim().slice(0, 120) : ""
   const donorListPublic = body.donorListPublic !== false
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
@@ -161,6 +165,7 @@ export async function POST(request: NextRequest) {
               athlete_code: athleteCode,
               fundraising_code: athleteCode,
               fundraising_attribution: "athlete",
+              ...(athleteDisplayName ? { athlete_display_name: athleteDisplayName } : {}),
             }
           : hasManualCredit
             ? {

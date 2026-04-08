@@ -73,7 +73,7 @@ export function HeroSection() {
           with someone who is—or <strong className="text-neutral-200">fund a wrestler&apos;s training</strong> by{" "}
           <strong className="text-neutral-200">searching their name</strong> and selecting them at checkout. They don&apos;t
           have to run Spartan for your gift to count toward them. Either way,{" "}
-          <strong className="text-neutral-200">100%</strong> fuels NC United athletes this summer.
+          <strong className="text-neutral-200">100%</strong> fuels NC athletes this summer.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">

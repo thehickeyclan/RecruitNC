@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import {
   aggregateSpartanByAthlete,
   listSpartanFayettevilleDonations,
+  publicAthleteCreditLabel,
   publicSupporterDisplayName,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
 }
 
 function toPublicEntry(r: SpartanFayettevilleDonation) {
-  const creditLabel = r.athleteCode ?? r.manualCreditName ?? null
+  const creditLabel = publicAthleteCreditLabel(r)
   return {
     id: r.sessionId,
     createdIso: r.createdIso,

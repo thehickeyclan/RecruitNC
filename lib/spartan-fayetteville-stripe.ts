@@ -16,6 +16,8 @@ export type SpartanFayettevilleDonation = {
   raceParticipant: boolean
   fundraisingType: "race_donation" | "gift_only"
   athleteCode: string | null
+  /** Directory display name from checkout — metadata athlete_display_name */
+  athleteDisplayName: string | null
   /** When not in directory — metadata manual_credit_name */
   manualCreditName: string | null
   attribution: "athlete" | "general_nc_united" | "manual_name"
@@ -72,6 +74,10 @@ export async function listSpartanFayettevilleDonations(
         typeof m.manual_credit_name === "string" && m.manual_credit_name.trim()
           ? m.manual_credit_name.trim().slice(0, 120)
           : null
+      const athleteDisplayName =
+        typeof m.athlete_display_name === "string" && m.athlete_display_name.trim()
+          ? m.athlete_display_name.trim().slice(0, 120)
+          : null
 
       let attr: SpartanFayettevilleDonation["attribution"]
       if (m.fundraising_attribution === "manual_name") {
@@ -98,6 +104,7 @@ export async function listSpartanFayettevilleDonations(
         raceParticipant: raceRequested,
         fundraisingType: ft,
         athleteCode,
+        athleteDisplayName,
         manualCreditName,
         attribution: attr,
         tierPreference: typeof m.tier_preference === "string" ? m.tier_preference : "",
@@ -138,4 +145,26 @@ export function publicSupporterDisplayName(d: Pick<SpartanFayettevilleDonation, 
   const n = d.donorName?.trim()
   if (n) return n
   return "Supporter"
+}
+
+/** Readable label from NCU-LASTNAME-YY when we have no directory name (legacy / bookmark-only checkout). */
+export function fallbackAthleteLabelFromCode(code: string): string | null {
+  const m = /^NCU-([A-Za-z]+)-(\d{2})$/i.exec(code.trim())
+  if (!m) return null
+  const last = m[1]
+  const yy = m[2]
+  const pretty = last.charAt(0).toUpperCase() + last.slice(1).toLowerCase()
+  return `${pretty} · '${yy}`
+}
+
+/** Public table: prefer directory/manual name over raw fundraising code. */
+export function publicAthleteCreditLabel(
+  d: Pick<SpartanFayettevilleDonation, "athleteDisplayName" | "manualCreditName" | "athleteCode" | "attribution">,
+): string | null {
+  if (d.attribution === "general_nc_united" && !d.athleteCode && !d.manualCreditName) return null
+  const direct = d.athleteDisplayName?.trim() || d.manualCreditName?.trim()
+  if (direct) return direct
+  const code = d.athleteCode?.trim()
+  if (!code) return null
+  return fallbackAthleteLabelFromCode(code) ?? code
 }

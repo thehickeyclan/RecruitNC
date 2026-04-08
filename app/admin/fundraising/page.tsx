@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
+import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
 import { ArrowLeft, ClipboardCopy, Coins, RefreshCw } from "lucide-react"
 
 type SpartanDonationRow = {
@@ -25,6 +26,7 @@ type SpartanDonationRow = {
   raceParticipant: boolean
   fundraisingType: "race_donation" | "gift_only"
   athleteCode: string | null
+  athleteDisplayName: string | null
   manualCreditName: string | null
   attribution: "athlete" | "general_nc_united" | "manual_name"
   tierPreference: string
@@ -133,7 +135,8 @@ export default function AdminFundraisingPage() {
       ? list.filter(
           (d) =>
             (d.athleteCode ?? "").toLowerCase().includes(q) ||
-            (d.manualCreditName ?? "").toLowerCase().includes(q),
+            (d.manualCreditName ?? "").toLowerCase().includes(q) ||
+            (d.athleteDisplayName ?? "").toLowerCase().includes(q),
         )
       : list
     const sorted = [...filtered]
@@ -336,7 +339,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>Public list</TableHead>
                           <TableHead>Race path</TableHead>
                           <TableHead>Type</TableHead>
-                          <TableHead>Credit</TableHead>
+                          <TableHead>Athlete</TableHead>
                           <TableHead>Fund</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -386,8 +389,13 @@ export default function AdminFundraisingPage() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="max-w-[220px] font-mono text-xs">
-                              {d.athleteCode ?? d.manualCreditName ?? "—"}
+                            <TableCell className="max-w-[240px] text-sm">
+                              <span className="text-foreground">{publicAthleteCreditLabel(d) ?? "—"}</span>
+                              {d.athleteCode && (
+                                <span className="text-muted-foreground mt-0.5 block font-mono text-[10px]">
+                                  {d.athleteCode}
+                                </span>
+                              )}
                             </TableCell>
                             <TableCell className="text-xs">
                               {d.attribution === "athlete"
