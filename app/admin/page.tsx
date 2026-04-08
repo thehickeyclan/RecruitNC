@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, UserCheck, Clock, 
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
-  ShoppingBag, Smile
+  ShoppingBag, Smile, Coins
 } from "lucide-react"
 
 interface AdminStats {
@@ -228,6 +228,12 @@ export default function AdminDashboard() {
               <span className="w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <Trophy className="h-6 w-6" />
                 <span className="text-sm font-semibold">National team</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/fundraising" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <Coins className="h-6 w-6" />
+                <span className="text-sm font-semibold">Fundraising</span>
               </span>
             </HardLink>
             <Link href="/admin/blue">

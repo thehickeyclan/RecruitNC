@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     donorName?: string
     amountCents?: number
     tierPreference?: string
+    /** NCU-LASTNAME-YY — attributes dollars to that athlete in Stripe exports */
     athleteCode?: string
   } = {}
   try {
@@ -32,6 +33,8 @@ export async function POST(request: NextRequest) {
   const tierPreference = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
   const athleteCode =
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
+  /** Race tier chosen → donor expects a Spartan entry code path; otherwise fundraising-only (e.g. kids raising $ without racing). */
+  const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -47,6 +50,14 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
   const stripe = new Stripe(stripeSecret)
 
+  const productName = raceEntryRequested
+    ? "NC United — Spartan Race Fayetteville (May 2–3, 2026)"
+    : "NC United — Spartan 2026 fundraising gift (no race entry)"
+
+  const productDescription = raceEntryRequested
+    ? "Tax-deductible donation to NC United. Spartan Race typically emails your entry code within about 48 hours after NC United shares donor emails with their team."
+    : "Tax-deductible donation to NC United (501(c)(3)). Fundraising / sponsor gift — no Spartan race entry requested. Dollars can still be attributed to a fundraising code in Stripe metadata for student leaderboards."
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -57,9 +68,8 @@ export async function POST(request: NextRequest) {
             currency: "usd",
             unit_amount: Math.round(amountCents),
             product_data: {
-              name: "NC United — Spartan Race Fayetteville (May 2–3, 2026)",
-              description:
-                "Tax-deductible donation to NC United. Spartan Race typically emails your entry code within about 48 hours after NC United shares donor emails with their team.",
+              name: productName,
+              description: productDescription,
             },
           },
           quantity: 1,
@@ -69,7 +79,9 @@ export async function POST(request: NextRequest) {
         spartan_campaign: "fayetteville_2026",
         tier_preference: tierPreference || "unspecified",
         donor_name: donorName,
-        ...(athleteCode ? { athlete_code: athleteCode } : {}),
+        race_entry_requested: raceEntryRequested ? "true" : "false",
+        fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",
+        ...(athleteCode ? { athlete_code: athleteCode, fundraising_code: athleteCode } : {}),
       },
       success_url: `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/spartan?cancelled=1#donate`,

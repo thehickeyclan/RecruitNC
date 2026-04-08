@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, DollarSign, ArrowRight, ArrowLeft, Trophy, KeyRound } from "lucide-react"
+import { FileText, DollarSign, ArrowRight, ArrowLeft, Trophy, KeyRound, Coins } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 
 const NATIONAL_TEAM_NAVY = "#003366"
@@ -26,6 +26,12 @@ const sections = [
     title: "Invite codes",
     description: "Create and manage invite codes for NHSCA 2026 registration. Copy the private registration URL to send to invitees.",
     icon: KeyRound,
+  },
+  {
+    href: "/admin/fundraising",
+    title: "Spartan & fundraising",
+    description: "Spartan 2026 campaign: Stripe export hints, fundraising codes, leaderboards scratchpad.",
+    icon: Coins,
   },
 ]
 

@@ -59,8 +59,12 @@ export function HeroSection() {
 
         <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} />
 
-        <p className="mb-7 text-[13px] uppercase tracking-[0.12em] text-[#777]">
+        <p className="mb-1 text-[13px] uppercase tracking-[0.12em] text-[#777]">
           May 2–3, 2026 · Fayetteville, NC
+        </p>
+        <p className="mb-7 max-w-md text-[12px] leading-snug text-[#666]">
+          Super 10K (team race day): <span className="text-[#C8A94A]">Sunday, May 3</span> — other distances May 2–3 per
+          event
         </p>
 
         <p

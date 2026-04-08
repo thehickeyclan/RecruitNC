@@ -16,7 +16,9 @@ export function SpartanAthleteRibbon() {
       <p className="mt-1 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-wide text-white">
         {raw}
       </p>
-      <p className="mt-1 text-xs text-[#888]">We&apos;ll carry this through checkout so the athlete gets credit.</p>
+      <p className="mt-1 text-xs text-[#888]">
+        This fundraising code is prefilled on the form so this gift counts toward their total.
+      </p>
     </div>
   )
 }

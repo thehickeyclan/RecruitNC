@@ -1,6 +1,8 @@
 import { SPARTAN_RACE_TIERS } from "../data"
+import { FayettevilleScheduleCallout } from "./fayetteville-schedule-callout"
 import { JustDonateCard } from "./just-donate-card"
 import { RaceTierCard } from "./race-tier-card"
+import { SponsorAthleteCallout } from "./sponsor-athlete-callout"
 
 export function RaceTiersGrid() {
   return (
@@ -18,12 +20,16 @@ export function RaceTiersGrid() {
           </p>
         </div>
 
+        <FayettevilleScheduleCallout />
+
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {SPARTAN_RACE_TIERS.map((tier) => (
             <RaceTierCard key={tier.id} tier={tier} />
           ))}
           <JustDonateCard />
         </div>
+
+        <SponsorAthleteCallout />
 
         <p className="mx-auto mt-10 max-w-3xl text-center font-[family-name:var(--font-barlow-spartan)] text-[11px] font-medium uppercase leading-relaxed tracking-[0.12em] text-[#C8A94A]/90 md:text-xs">
           All donations are fully tax-deductible. NC United is a registered 501(c)(3) nonprofit. Race entry codes arrive

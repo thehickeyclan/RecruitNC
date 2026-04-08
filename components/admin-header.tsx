@@ -46,6 +46,11 @@ const adminNavItems = [
     icon: "🎨",
   },
   {
+    title: "Fundraising",
+    href: "/admin/fundraising",
+    icon: "🪙",
+  },
+  {
     title: "Blue Program",
     href: "/admin/blue",
     icon: "💳",

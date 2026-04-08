@@ -15,6 +15,12 @@ export function DonationSection() {
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-3xl font-bold uppercase text-white">
           Your gift — then your code
         </h2>
+        <p className="mt-3 text-sm text-[#888]">
+          <a href="#sponsor" className="text-[#C8A94A] underline-offset-2 hover:underline">
+            Sponsor an athlete
+          </a>{" "}
+          (no race) uses the same form — choose your amount; add their link if you have it.
+        </p>
         <p className="mt-4 text-[#bbb]">
           Flow with Spartan: <strong className="text-[#ddd]">tax-deductible gift to NC United</strong>, we share{" "}
           <strong className="text-[#ddd]">donor emails</strong> (and your race choice), and{" "}
