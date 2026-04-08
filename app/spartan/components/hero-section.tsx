@@ -9,25 +9,41 @@ import { SPARTAN_COUNTDOWN_ISO } from "../data"
 export function HeroSection() {
   return (
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-black text-center">
-      {/* Banner first in document flow so logo stays unobstructed; countdown sits below */}
+      {/* Mobile-first: height scales with viewport (vmin); scrim + fades tie light artwork into page black without replacing the asset */}
       <div className="relative w-full shrink-0 bg-black">
-        <div className="relative mx-auto w-full max-w-6xl px-3 py-4 md:px-6 md:py-6">
-          <div className="relative aspect-[21/6] w-full min-h-[120px] max-h-[240px] sm:max-h-[280px] md:max-h-[320px]">
+        <div className="relative w-full pt-1 pb-0 sm:pt-2 md:pt-3 md:pb-1">
+          <div
+            className="relative w-full
+              h-[clamp(12.5rem,52vmin,17.5rem)]
+              md:h-[min(17.5rem,32svh)]
+              lg:h-[min(22.5rem,34svh)]"
+          >
             <Image
               src="/images/spartan-race-banner.png"
               alt="Spartan Race — athletes on course, official banner"
               fill
               priority
               className="object-contain object-center"
-              sizes="(max-width: 768px) 100vw, 1152px"
+              sizes="100vw"
               quality={95}
+            />
+            {/* Darken photo toward page bg — stronger on small screens so it doesn’t read as a bright “card” */}
+            <div
+              className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-b from-black/70 via-black/25 to-black/55 md:from-black/45 md:via-black/15 md:to-black/40"
+              aria-hidden
+            />
+            {/* Top: kill harsh highlight line into black */}
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[min(5.5rem,28%)] bg-gradient-to-b from-black from-[8%] via-black/50 to-transparent md:h-24 md:from-[12%]"
+              aria-hidden
+            />
+            {/* Bottom: hand off to Presented by / countdown */}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-black from-[18%] via-black/80 to-transparent sm:h-28 md:h-32"
+              aria-hidden
             />
           </div>
         </div>
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black to-transparent"
-          aria-hidden
-        />
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center px-6 pb-12 pt-6 md:pt-8">
