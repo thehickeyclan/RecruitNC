@@ -148,12 +148,12 @@ export function SpartanDonateForm() {
     setConsent(false)
   }, [entryIntent, tierPreference])
 
+  const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
+  const teeEligible = amountCents >= TEE_THRESHOLD_CENTS
+
   useEffect(() => {
     if (!teeEligible) setTeeConsent(false)
   }, [teeEligible])
-
-  const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
-  const teeEligible = amountCents >= TEE_THRESHOLD_CENTS
 
   const codeForCheckout = fundraisingCode.trim() || undefined
 
