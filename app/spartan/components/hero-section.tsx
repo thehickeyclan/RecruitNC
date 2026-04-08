@@ -11,16 +11,16 @@ export function HeroSection() {
     <section className="relative flex min-h-[100svh] flex-col overflow-hidden bg-black text-center">
       {/* Banner first in document flow so logo stays unobstructed; countdown sits below */}
       <div className="relative w-full shrink-0 bg-black">
-        <div className="relative mx-auto min-h-[200px] w-full max-w-5xl py-3 md:py-5">
-          <div className="relative h-[min(44vh,440px)] w-full min-h-[220px] md:h-[min(40vh,460px)]">
+        <div className="relative mx-auto w-full max-w-6xl px-3 py-4 md:px-6 md:py-6">
+          <div className="relative aspect-[21/5] w-full min-h-[100px] max-h-[200px] sm:max-h-[240px] md:max-h-[280px]">
             <Image
-              src="/images/spartan-race-hero.jpg"
-              alt="Spartan Race"
+              src="/images/spartan-race-banner.png"
+              alt="Spartan Race — You'll know at the finish line"
               fill
               priority
-              className="object-contain object-center px-3 py-2 md:px-8 md:py-4"
-              sizes="100vw"
-              quality={90}
+              className="object-contain object-center"
+              sizes="(max-width: 768px) 100vw, 1152px"
+              quality={95}
             />
           </div>
         </div>
