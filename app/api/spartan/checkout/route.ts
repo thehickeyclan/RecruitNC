@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const tierPreference = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
   const athleteCode =
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
-  /** Race tier chosen → donor expects a Spartan entry code path; otherwise fundraising-only (e.g. kids raising $ without racing). */
+  /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
 

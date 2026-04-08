@@ -18,7 +18,7 @@ export function SponsorAthleteCallout() {
         Not running? You can still make a <strong className="text-white">tax-deductible gift to NC United</strong> in
         support of a wrestler. Use their <strong className="text-white">personal link</strong> or{" "}
         <strong className="text-white">search for them by name</strong> on the form. On the form:{" "}
-        <strong className="text-white">Donate</strong>, then <strong className="text-white">An athlete</strong> — so we
+        <strong className="text-white">Give</strong>, then <strong className="text-white">An athlete</strong> — so we
         know you don&apos;t need a race entry.
       </p>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">

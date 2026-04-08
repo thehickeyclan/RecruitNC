@@ -48,12 +48,8 @@ export function HeroSection() {
           </p>
           <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
           <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-neutral-300">
-            Race with <span className="text-[var(--spartan-gold)]">Team NC</span> on Spartan&apos;s{" "}
-            <span className="text-[var(--spartan-gold)]">Super 10K</span> — same day for everyone on the crew.
-          </p>
-          <p className="mx-auto mt-3 max-w-md text-[11px] leading-relaxed text-neutral-500">
-            Spartan also runs other distances across the weekend (May 2–3). Sprint, Kids, Beast &amp; Ultra may be
-            Saturday or Sunday — your Spartan email shows your wave.
+            <span className="text-[var(--spartan-gold)]">Come race with us</span> — Team NC on the{" "}
+            <span className="text-[var(--spartan-gold)]">Super 10K</span>, Sunday May 3. Same day for the whole crew.
           </p>
         </div>
 
@@ -72,9 +68,8 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          Wrestlers, families, fans — everyone&apos;s welcome. Every gift through NC United backs North Carolina
-          wrestling. <strong className="text-neutral-200">Race</strong> if you&apos;re running;{" "}
-          <strong className="text-neutral-200">Donate</strong> if you&apos;re only giving — same form below.
+          Wrestlers, families, fans — everyone&apos;s welcome. This campaign is the <strong className="text-neutral-200">Super 10K</strong> with Team NC.{" "}
+          <strong className="text-neutral-200">Race with us</strong> or <strong className="text-neutral-200">give</strong> (one wrestler or NC United) — same form below.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
@@ -82,18 +77,18 @@ export function HeroSection() {
             href="/spartan?flow=race#donate"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[var(--spartan-red)] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px"
           >
-            Race
+            Race with us
           </HardLink>
           <HardLink
             href="/spartan?flow=donate#donate"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06]"
           >
-            Donate
+            Give
           </HardLink>
         </div>
         <p className="mt-3 text-center">
           <a href="#races" className="text-[12px] text-neutral-500 underline-offset-2 hover:text-neutral-300 hover:underline">
-            See race distances
+            Course &amp; checkout
           </a>
         </p>
 

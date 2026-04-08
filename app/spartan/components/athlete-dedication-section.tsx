@@ -11,7 +11,7 @@ export function AthleteDedicationSection() {
           </h2>
           <p className="mt-4 text-[#999]">
             Every athlete can share a personal link so gifts count toward them — whether the donor runs a race or only
-            gives. On the donation form, supporters <strong className="text-[#ccc]">search for the athlete by name</strong>{" "}
+            gives. On the form, supporters <strong className="text-[#ccc]">search for the athlete by name</strong>{" "}
             (no codes to memorize). Kids who aren&apos;t on the course can still fundraise: share the link so the right
             person is credited when someone checks out.
           </p>

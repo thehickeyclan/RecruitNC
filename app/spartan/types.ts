@@ -1,15 +1,16 @@
-export type SpartanRaceTierId = "kids" | "sprint" | "super" | "beast" | "ultra"
+/** This campaign is Super 10K (Team NC) only — single distance on checkout. */
+export type SpartanRaceTierId = "super"
 
 export interface SpartanRaceTier {
   id: SpartanRaceTierId
   badge: string
   name: string
   detail: string
-  /** Short schedule line from Spartan.com (e.g. May 2–3 vs May 3) — used in checkout dropdown. */
+  /** Short schedule line for compact UI */
   scheduleChip: string
   dates: string
   priceLabel: string
-  /** Typical Spartan list price for that distance — used as suggested tax-deductible gift to NC United, not a ticket purchase. */
+  /** Typical Spartan list price — suggested tax-deductible gift to NC United */
   suggestedGiftCents: number
   featured?: boolean
   registerUrl: string

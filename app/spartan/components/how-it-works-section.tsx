@@ -2,13 +2,13 @@ export function HowItWorksSection() {
   const steps = [
     {
       n: "01",
-      title: "Donate to NC United",
+      title: "Give to NC United",
       body: "Make a tax-deductible gift through our secure checkout. Your receipt comes from NC United (EIN on file).",
     },
     {
       n: "02",
       title: "We compile emails",
-      body: "We maintain the list of donor emails (and your preferred race distance if you tell us) for Spartan’s team.",
+      body: "We maintain the list of donor emails for Team NC’s Super 10K handoff to Spartan’s partner process.",
     },
     {
       n: "03",

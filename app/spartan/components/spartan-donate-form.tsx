@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import type { SpartanRaceTierId } from "../types"
-import { DEFAULT_SPARTAN_RACE_TIER_ID, SPARTAN_RACE_TIERS, suggestedCentsForTier } from "../data"
+import { DEFAULT_SPARTAN_RACE_TIER_ID, SPARTAN_SUPER_10K, suggestedCentsForTier } from "../data"
 
 function formatUsd(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
@@ -18,10 +18,12 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100)
 }
 
+/** Legacy ?tier=sprint|kids|… deep links → Super 10K only (this campaign). */
 function tierFromSearchParams(searchParams: ReturnType<typeof useSearchParams>): SpartanRaceTierId | null {
-  const raw = searchParams.get("tier") as SpartanRaceTierId | null
-  if (!raw || !SPARTAN_RACE_TIERS.some((t) => t.id === raw)) return null
-  return raw
+  const raw = searchParams.get("tier")?.toLowerCase() ?? ""
+  if (!raw) return null
+  if (["super", "sprint", "kids", "beast", "ultra"].includes(raw)) return "super"
+  return null
 }
 
 function suggestedDollarsString(tierId: SpartanRaceTierId): string {
@@ -184,12 +186,6 @@ export function SpartanDonateForm() {
 
   const codeForCheckout = fundraisingCode.trim() || undefined
 
-  const raceTierSelectOptions = useMemo(() => {
-    const team = SPARTAN_RACE_TIERS.find((t) => t.id === DEFAULT_SPARTAN_RACE_TIER_ID)
-    const rest = SPARTAN_RACE_TIERS.filter((t) => t.id !== DEFAULT_SPARTAN_RACE_TIER_ID)
-    return team ? [team, ...rest] : SPARTAN_RACE_TIERS
-  }, [])
-
   const trimmedAthleteQuery = athleteQuery.trim()
   const showNoDirectoryMatch =
     needsAthleteCode &&
@@ -233,7 +229,7 @@ export function SpartanDonateForm() {
       return
     }
     if (flow === null) {
-      setError("Choose Race or Donate.")
+      setError("Choose Race with us or Give.")
       return
     }
     if (flow === "donate" && donateMode === null) {
@@ -244,8 +240,8 @@ export function SpartanDonateForm() {
       setError("Search and select an athlete to credit.")
       return
     }
-    if (flow === "race" && !tierPreference) {
-      setError("Pick your race.")
+    if (flow === "race" && tierPreference !== "super") {
+      setError("Race checkout is Super 10K only — pick Race with us again or refresh.")
       return
     }
     if (!consent) {
@@ -328,13 +324,13 @@ export function SpartanDonateForm() {
           <button
             type="button"
             onClick={selectRace}
-            className={`rounded border px-3 py-3 text-center text-sm font-bold transition-colors ${
+            className={`rounded border px-3 py-3 text-center text-sm font-bold leading-tight transition-colors ${
               flow === "race"
                 ? "border-[#CC0000] bg-[#2a1515] text-white"
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
             }`}
           >
-            Race
+            Race with us
           </button>
           <button
             type="button"
@@ -345,20 +341,21 @@ export function SpartanDonateForm() {
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
             }`}
           >
-            Donate
+            Give
           </button>
         </div>
         <p className="mt-2 text-[11px] leading-snug text-[#666]">
-          <strong className="text-[#888]">Race</strong> — Team NC on the Super 10K (default); you or a friend running;
-          search below to credit one athlete.
+          <strong className="text-[#888]">Race with us</strong> — Super 10K with Team NC; search below to credit one
+          athlete.
           <br />
-          <strong className="text-[#888]">Donate</strong> — gift only; then pick athlete or NC United general.
+          <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">an athlete</strong> or{" "}
+          <strong className="text-[#777]">NC United</strong>.
         </p>
       </div>
 
       {flow === "donate" && (
         <div className="mt-5 rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Donation goes to</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Your gift goes to</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -388,21 +385,16 @@ export function SpartanDonateForm() {
       )}
 
       {flow === "race" && (
-        <div className="mt-5">
-          <label className="text-xs text-[#888]">Your race (amount matches Spartan)</label>
-          <select
-            value={tierPreference}
-            onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
-            required
-            className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-sm text-white focus:border-[#CC0000] focus:outline-none"
-          >
-            <option value="">Choose…</option>
-            {raceTierSelectOptions.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} · {formatUsd(t.suggestedGiftCents)} · {t.scheduleChip}
-              </option>
-            ))}
-          </select>
+        <div className="mt-5 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
+          <p className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase text-white">
+            {SPARTAN_SUPER_10K.name}
+          </p>
+          <p className="mt-1 text-sm text-[#bbb]">
+            {SPARTAN_SUPER_10K.detail} · Suggested gift {formatUsd(SPARTAN_SUPER_10K.suggestedGiftCents)} ·{" "}
+            {SPARTAN_SUPER_10K.scheduleChip}
+          </p>
+          <p className="mt-2 text-[11px] leading-relaxed text-[#888]">{SPARTAN_SUPER_10K.dates}</p>
         </div>
       )}
 
@@ -678,10 +670,10 @@ export function SpartanDonateForm() {
         <p className="mt-2 text-center text-[11px] text-[#888]">Search and select an athlete to continue.</p>
       )}
       {!stepUnlocked && flow === null && (
-        <p className="mt-2 text-center text-[11px] text-[#666]">Choose Race or Donate.</p>
+        <p className="mt-2 text-center text-[11px] text-[#666]">Choose Race with us or Give.</p>
       )}
       {!stepUnlocked && flow === "donate" && donateMode === null && (
-        <p className="mt-2 text-center text-[11px] text-[#666]">Choose where the donation goes.</p>
+        <p className="mt-2 text-center text-[11px] text-[#666]">Choose athlete or NC United.</p>
       )}
     </form>
   )

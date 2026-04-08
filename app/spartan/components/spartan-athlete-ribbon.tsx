@@ -13,8 +13,8 @@ export function SpartanAthleteRibbon() {
         You&apos;re here to support a teammate
       </p>
       <p className="mt-2 text-sm leading-snug text-[#ccc]">
-        This link ties your gift to their fundraising. Complete <strong className="text-white">Race</strong> or{" "}
-        <strong className="text-white">Donate</strong> below.
+        This link ties your gift to their fundraising. Complete <strong className="text-white">Race with us</strong> or{" "}
+        <strong className="text-white">Give</strong> below.
       </p>
     </div>
   )

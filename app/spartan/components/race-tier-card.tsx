@@ -37,7 +37,7 @@ export function RaceTierCard({ tier }: { tier: SpartanRaceTier }) {
       <div className="my-5 h-px w-full bg-[#333]" aria-hidden />
 
       <p className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#888]">
-        Donate
+        Give
       </p>
       <p className="mt-1 font-[family-name:var(--font-barlow-spartan)] text-[clamp(2rem,5vw,2.25rem)] font-black tabular-nums leading-none text-[#CC0000]">
         {gift}
@@ -50,7 +50,7 @@ export function RaceTierCard({ tier }: { tier: SpartanRaceTier }) {
         href={`/spartan?tier=${encodeURIComponent(tier.id)}#donate`}
         className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#CC0000] hover:bg-[#2f2f2f]"
       >
-        Donate &amp; run
+        Give &amp; run
       </a>
       <a
         href={tier.registerUrl}

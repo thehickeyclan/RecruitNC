@@ -25,7 +25,7 @@ export function JustDonateCard() {
         Support the mission
       </p>
       <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
-        Just donate
+        Just give
       </h3>
       <p className="mt-2 text-sm text-[#bbb]">No race required. 100% goes to NC United athletes.</p>
       <p className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] uppercase tracking-[0.14em] text-[#666]">
@@ -73,7 +73,7 @@ export function JustDonateCard() {
         href={chipHref}
         className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#C8A94A] hover:bg-[#2f2f2f]"
       >
-        Donate now
+        Give now
       </a>
     </article>
   )

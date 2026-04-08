@@ -21,11 +21,11 @@ const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.c
 export const metadata: Metadata = {
   title: "Race with Team NC × Spartan — Super 10K, May 3 · Fayetteville, NC",
   description:
-    "Race with Team NC on the Super 10K Sunday, May 3, 2026 in Fayetteville — NC United’s team distance. Full Spartan weekend May 2–3. Support the mission — 501(c)(3).",
+    "Come race with Team NC — Super 10K Sunday, May 3, 2026 · Fayetteville. One distance on this page. Tax-deductible to NC United — 501(c)(3).",
   openGraph: {
     title: "Race with Team NC × Spartan — Super 10K, May 3 · Fayetteville, NC",
     description:
-      "Team NC: Super 10K Sunday, May 3. Spartan weekend May 2–3 — other distances secondary. Fund NC wrestling through NC United.",
+      "Team NC Super 10K · May 3 · Fayetteville. This page is our team race only — fund NC wrestling through NC United.",
     url: `${base}/spartan`,
     siteName: "NC United / RecruitNC",
     locale: "en_US",
