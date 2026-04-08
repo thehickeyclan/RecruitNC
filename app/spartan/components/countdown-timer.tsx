@@ -47,7 +47,7 @@ function CdBlock({ value, label, variant }: { value: number; label: string; vari
     variant === "days" ? (value > 99 ? String(value) : pad(value)) : pad(value)
   return (
     <div className="flex min-w-[3.25rem] flex-col items-center sm:min-w-[4.5rem]">
-      <span className="font-[family-name:var(--font-barlow-spartan)] text-[clamp(3rem,8vw,5rem)] font-black leading-none tracking-[-0.02em] text-[#CC0000]">
+      <span className="tabular-nums font-[family-name:var(--font-barlow-spartan)] text-[clamp(2.75rem,7.5vw,4.5rem)] font-black leading-none tracking-[-0.02em] text-[#CC0000] [text-shadow:0_0_40px_rgba(204,0,0,0.25)] sm:text-[clamp(3rem,8vw,4.75rem)]">
         {display}
       </span>
       <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.15em] text-[#888]">{label}</span>
