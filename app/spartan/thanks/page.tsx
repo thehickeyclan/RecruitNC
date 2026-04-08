@@ -5,7 +5,7 @@ export default function SpartanThanksPage() {
       <p className="mt-4 text-[#bbb]">
         Your tax-deductible gift to NC United is processing. You&apos;ll receive a receipt by email. If you requested a race
         entry, NC United shares donor information with Spartan Race so they can email your Fayetteville code — timing
-        depends on batching and their process. Same partner flow we&apos;re running with Joe&apos;s team.
+        depends on batching and their partner process.
       </p>
       <p className="mt-6 text-sm text-[#666]">Questions?{" "}
         <a href="mailto:contact@ncunitedwrestling.com" className="text-[#C8A94A] hover:underline">

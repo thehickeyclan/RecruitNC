@@ -29,11 +29,18 @@ export function AboutSection() {
         </div>
         <div className="flex flex-col gap-10">
           <blockquote className="border-l-4 border-[#CC0000] bg-[#1A1A1A] py-6 pl-6 pr-4">
-            <p className="text-lg leading-relaxed text-white md:text-xl">
-              &ldquo;I&apos;ve crossed Spartan finish lines with family and friends — mud, obstacles, exhaustion, and
-              laughter in the same hour. That&apos;s why I&apos;m fired up to bring this community behind NC United: when
-              you&apos;ve felt that course, you know what it means to push together.&rdquo;
-            </p>
+            <div className="space-y-4 text-lg leading-relaxed text-white md:text-xl">
+              <p>
+                &ldquo;I&apos;ve crossed Spartan finish lines with family and friends — mud, obstacles, exhaustion, and
+                laughter all in the same hour.
+              </p>
+              <p>That&apos;s why this matters.</p>
+              <p>To the NC wrestling community — everyone wins.</p>
+              <p>
+                A great race, with great people, and every step helps fund spring and summer training and competition for
+                our athletes.&rdquo;
+              </p>
+            </div>
             <footer className="mt-4 text-sm text-[#999]">— Matt Hickey, founder, NC United Wrestling</footer>
           </blockquote>
           <blockquote className="border-l-4 border-[#C8A94A] bg-[#1A1A1A] py-6 pl-6 pr-4">

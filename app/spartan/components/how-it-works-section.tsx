@@ -13,7 +13,7 @@ export function HowItWorksSection() {
     {
       n: "03",
       title: "Spartan sends your code",
-      body: "Spartan Race emails your Fayetteville entry code directly — same flow Joe outlined for NC United.",
+      body: "Spartan Race emails your Fayetteville entry code directly — timing follows their partner process with NC United.",
     },
   ]
 

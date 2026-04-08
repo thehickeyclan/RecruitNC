@@ -68,8 +68,11 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          Wrestlers, families, fans — everyone&apos;s welcome. This campaign is the <strong className="text-neutral-200">Super 10K</strong> with Team NC.{" "}
-          <strong className="text-neutral-200">Race with us</strong> or <strong className="text-neutral-200">give</strong> (one wrestler or NC United) — same form below.
+          Glad you&apos;re here. We&apos;re lining up for the <strong className="text-neutral-200">Super 10K</strong> as{" "}
+          <strong className="text-neutral-200">Team NC</strong> — and if you can&apos;t run that day, you can still help by
+          backing a wrestler or the wider program.{" "}
+          <strong className="text-neutral-200">Race with us</strong> or <strong className="text-neutral-200">give</strong>{" "}
+          below; one form either way.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
