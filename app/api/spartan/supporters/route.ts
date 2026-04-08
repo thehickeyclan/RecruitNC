@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+import { createAdminClient } from "@/lib/supabase/admin"
 import {
   aggregateSpartanByAthlete,
   listSpartanFayettevilleDonations,
-  publicAthleteCreditLabel,
   publicSupporterDisplayName,
+  resolveFundraisingAthleteRowName,
+  resolvePublicAthleteCreditLabel,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
 
@@ -20,8 +23,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Not configured" }, { status: 503 })
   }
 
-  let days = Number(request.nextUrl.searchParams.get("days") ?? "90")
-  if (!Number.isFinite(days) || days < 1) days = 90
+  let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
+  if (!Number.isFinite(days) || days < 1) days = 120
   if (days > 400) days = 400
 
   const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
@@ -29,13 +32,38 @@ export async function GET(request: NextRequest) {
 
   try {
     const rows = await listSpartanFayettevilleDonations(stripe, since)
-    const entries = rows.map((r) => toPublicEntry(r))
-    const byAthlete = aggregateSpartanByAthlete(rows)
+
+    let codeToFullName = new Map<string, string>()
+    try {
+      const admin = createAdminClient()
+      const directory = await getFundraisingAthleteEntries(admin)
+      codeToFullName = fundraisingCodeToFullNameMap(directory)
+    } catch (dirErr) {
+      console.error("[spartan/supporters] directory lookup", dirErr)
+    }
+
+    const entries = rows.map((r) => toPublicEntry(r, codeToFullName))
+    const byAthleteRaw = aggregateSpartanByAthlete(rows)
+    const byAthlete = byAthleteRaw.map((a) => ({
+      athleteCode: a.athleteCode,
+      athleteName: resolveFundraisingAthleteRowName(a.athleteCode, codeToFullName),
+      totalCents: a.totalCents,
+      donationCount: a.donationCount,
+      raceSignupCount: a.raceSignupCount,
+    }))
+
+    const totalRaisedCents = rows.reduce((s, r) => s + r.amountCents, 0)
+    const raceEntryCount = rows.filter((r) => r.raceParticipant).length
 
     const res = NextResponse.json({
       campaign: "fayetteville_2026",
       days,
       count: entries.length,
+      summary: {
+        totalRaisedCents,
+        giftCount: rows.length,
+        raceEntryCount,
+      },
       entries,
       byAthlete,
     })
@@ -50,8 +78,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function toPublicEntry(r: SpartanFayettevilleDonation) {
-  const creditLabel = publicAthleteCreditLabel(r)
+function toPublicEntry(r: SpartanFayettevilleDonation, codeToFullName: Map<string, string>) {
+  const creditLabel = resolvePublicAthleteCreditLabel(r, codeToFullName)
   return {
     id: r.sessionId,
     createdIso: r.createdIso,

@@ -168,3 +168,51 @@ export function publicAthleteCreditLabel(
   if (!code) return null
   return fallbackAthleteLabelFromCode(code) ?? code
 }
+
+function lookupFundraisingDirectoryName(code: string, codeToFullName: Map<string, string>): string | undefined {
+  const c = code.trim()
+  if (!c) return undefined
+  return codeToFullName.get(c) ?? codeToFullName.get(c.toUpperCase())
+}
+
+/**
+ * Public supporter tables: prefer RecruitNC directory full name (from fundraising code) over
+ * Stripe metadata abbreviations like "Hickey '29" or code-only fallbacks.
+ */
+export function resolvePublicAthleteCreditLabel(
+  d: Pick<SpartanFayettevilleDonation, "athleteDisplayName" | "manualCreditName" | "athleteCode" | "attribution">,
+  codeToFullName: Map<string, string>,
+): string | null {
+  if (d.attribution === "general_nc_united" && !d.athleteCode?.trim() && !d.manualCreditName?.trim()) {
+    return null
+  }
+
+  if (d.attribution === "manual_name") {
+    const manual = d.manualCreditName?.trim()
+    return manual || null
+  }
+
+  const code = d.athleteCode?.trim()
+  if (code) {
+    const fromDir = lookupFundraisingDirectoryName(code, codeToFullName)
+    if (fromDir) return fromDir
+  }
+
+  const stripe = d.athleteDisplayName?.trim()
+  if (stripe) return stripe
+
+  const manual = d.manualCreditName?.trim()
+  if (manual) return manual
+
+  if (!code) return null
+  return fallbackAthleteLabelFromCode(code) ?? code
+}
+
+export function resolveFundraisingAthleteRowName(
+  athleteCode: string,
+  codeToFullName: Map<string, string>,
+): string {
+  const fromDir = lookupFundraisingDirectoryName(athleteCode, codeToFullName)
+  if (fromDir) return fromDir
+  return fallbackAthleteLabelFromCode(athleteCode) ?? athleteCode
+}

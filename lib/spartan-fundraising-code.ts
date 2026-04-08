@@ -39,8 +39,19 @@ export type FundraisingAthleteEntry = {
   id: string
   code: string
   label: string
+  /** First + last from directory (e.g. "Gavin Hickey") — public supporter tables prefer this over abbreviated `label`. */
+  fullName: string
   /** Lowercased name + code + school for substring search */
   searchBlob: string
+}
+
+function toDisplayFullName(raw: string): string {
+  const t = raw.trim()
+  if (!t) return ""
+  return t
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ")
 }
 
 function coalesceGradYear(raw: unknown): number | null {
@@ -115,11 +126,13 @@ export function buildFundraisingEntries(sources: AthleteFundraisingSource[]): Fu
       ? `${initial}${ln} '${yy} · ${r.school}`
       : `${initial}${ln} '${yy}`
 
-    const searchBlob = [code, r.firstName, r.lastName, r.school, String(r.gradYear), label]
+    const fullName = toDisplayFullName([fn, ln].filter(Boolean).join(" "))
+
+    const searchBlob = [code, r.firstName, r.lastName, r.school, String(r.gradYear), label, fullName]
       .join(" ")
       .toLowerCase()
 
-    out.push({ id: r.id, code, label, searchBlob })
+    out.push({ id: r.id, code, label, fullName, searchBlob })
   }
 
   return out
@@ -177,6 +190,18 @@ async function loadEntries(admin: SupabaseClient): Promise<FundraisingAthleteEnt
 }
 
 /** Cached full roster → fundraising entries (refreshed every ~5 min). */
+/** Map NCU fundraising code → directory full name for public labels (keys: exact + UPPERCASE). */
+export function fundraisingCodeToFullNameMap(entries: FundraisingAthleteEntry[]): Map<string, string> {
+  const m = new Map<string, string>()
+  for (const e of entries) {
+    const n = e.fullName.trim()
+    if (!n) continue
+    m.set(e.code, n)
+    m.set(e.code.toUpperCase(), n)
+  }
+  return m
+}
+
 export async function getFundraisingAthleteEntries(admin: SupabaseClient): Promise<FundraisingAthleteEntry[]> {
   const now = Date.now()
   if (cache && now - cache.builtAt < CACHE_TTL_MS) {
