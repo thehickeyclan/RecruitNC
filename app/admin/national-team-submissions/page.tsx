@@ -40,6 +40,7 @@ import {
   formatNationalTeamWeightLabel,
   isAauScholasticWeightClass,
   nearestAauScholasticWeightClass,
+  nearestNhscaInterestWeightClass,
 } from "@/lib/national-team-weight-classes"
 
 const NHSCA_WEIGHT_CLASSES = [...NHSCA_INTEREST_WEIGHT_CLASSES]
@@ -50,6 +51,15 @@ function weightClassesForTournamentTab(tournamentId: string): string[] {
   if (tournamentId === "aau") return AAU_WEIGHT_CLASSES
   if (tournamentId === "nhsca" || tournamentId === "deep-south") return NHSCA_WEIGHT_CLASSES
   return ALL_INTEREST_WEIGHT_CLASSES
+}
+
+/** Weight filter + NHSCA buckets: AAU-snapped weights (e.g. 144) still match NHSCA class (145). */
+function submissionMatchesSelectedWeight(sub: InterestFormSubmission, selectedWeight: string): boolean {
+  if (selectedWeight === "all") return true
+  if (sub.primary_weight === selectedWeight) return true
+  if (nearestNhscaInterestWeightClass(sub.primary_weight) === selectedWeight) return true
+  if (nearestAauScholasticWeightClass(sub.primary_weight) === selectedWeight) return true
+  return false
 }
 
 const TOURNAMENTS = {
@@ -168,10 +178,11 @@ export default function NationalTeamSubmissionsPage() {
     async (sub: InterestFormSubmission, team: "team_1" | "team_2") => {
       setUpdatingLineupId(sub.id)
       try {
+        const slot = nearestNhscaInterestWeightClass(sub.primary_weight)
         const othersSameTeamAndWeight = submissions.filter(
           (s) =>
             s.id !== sub.id &&
-            s.primary_weight === sub.primary_weight &&
+            nearestNhscaInterestWeightClass(s.primary_weight) === slot &&
             (s as InterestFormSubmission).nhsca_duals_team === team &&
             (s as InterestFormSubmission).nhsca_duals_starter
         )
@@ -425,7 +436,7 @@ export default function NationalTeamSubmissionsPage() {
       if (selectedTournament !== "all" && !sub.tournament_interest.includes(selectedTournament)) {
         return false
       }
-      if (selectedWeight !== "all" && sub.primary_weight !== selectedWeight) {
+      if (!submissionMatchesSelectedWeight(sub, selectedWeight)) {
         return false
       }
       return true
@@ -452,7 +463,13 @@ export default function NationalTeamSubmissionsPage() {
     const tournamentSubs = submissions.filter((sub) => sub.tournament_interest.includes(tournamentId))
     const coverage: Record<string, number> = {}
     weightClassesForTournamentTab(tournamentId).forEach((weight) => {
-      coverage[weight] = tournamentSubs.filter((sub) => sub.primary_weight === weight).length
+      if (tournamentId === "nhsca" || tournamentId === "deep-south") {
+        coverage[weight] = tournamentSubs.filter(
+          (sub) => nearestNhscaInterestWeightClass(sub.primary_weight) === weight
+        ).length
+      } else {
+        coverage[weight] = tournamentSubs.filter((sub) => sub.primary_weight === weight).length
+      }
     })
     return coverage
   }
@@ -946,7 +963,9 @@ export default function NationalTeamSubmissionsPage() {
                                 <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_1_LABEL}</h4>
                                 <ul className="space-y-1 text-sm">
                                   {NHSCA_WEIGHT_CLASSES.map((w) => {
-                                    const sub = team1Starters.find((s) => s.primary_weight === w)
+                                    const sub = team1Starters.find(
+                                      (s) => nearestNhscaInterestWeightClass(s.primary_weight) === w
+                                    )
                                     return (
                                       <li key={w} className="flex justify-between gap-2">
                                         <span className="text-muted-foreground">
@@ -962,7 +981,9 @@ export default function NationalTeamSubmissionsPage() {
                                 <h4 className="font-semibold text-[#002147] mb-2">{NHSCA_TEAM_2_LABEL}</h4>
                                 <ul className="space-y-1 text-sm">
                                   {NHSCA_WEIGHT_CLASSES.map((w) => {
-                                    const sub = team2Starters.find((s) => s.primary_weight === w)
+                                    const sub = team2Starters.find(
+                                      (s) => nearestNhscaInterestWeightClass(s.primary_weight) === w
+                                    )
                                     return (
                                       <li key={w} className="flex justify-between gap-2">
                                         <span className="text-muted-foreground">
@@ -1038,7 +1059,11 @@ export default function NationalTeamSubmissionsPage() {
                     <div className="space-y-4">
                       {tabWeights.map((weight) => {
                         const weightSubs = tournamentSubs
-                          .filter((sub) => sub.primary_weight === weight)
+                          .filter((sub) =>
+                            tournamentId === "nhsca" || tournamentId === "deep-south"
+                              ? nearestNhscaInterestWeightClass(sub.primary_weight) === weight
+                              : sub.primary_weight === weight
+                          )
                           .sort((a, b) => {
                             if (a.rank_score === null && b.rank_score === null) return 0
                             if (a.rank_score === null) return 1

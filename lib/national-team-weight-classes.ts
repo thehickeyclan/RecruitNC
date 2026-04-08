@@ -79,9 +79,38 @@ export function formatNationalTeamWeightLabel(weight: string, variant: "nhsca" |
   return `${weight} lbs`
 }
 
+export function isNhscaInterestWeightClass(weightStr: string): boolean {
+  const w = (weightStr ?? "").trim()
+  return (NHSCA_INTEREST_WEIGHT_CLASSES as readonly string[]).includes(w)
+}
+
 export function isAauScholasticWeightClass(weightStr: string): boolean {
   const w = (weightStr ?? "").trim()
   return (AAU_SCHOLASTIC_WEIGHT_CLASSES as readonly string[]).includes(w)
+}
+
+/**
+ * Map any numeric weight string to the closest NHSCA / NCHSAA-style class (ties → lighter class).
+ * Use for NHSCA dual rosters when primary_weight was snapped to AAU (e.g. 144 vs 145).
+ */
+export function nearestNhscaInterestWeightClass(weightStr: string): string {
+  const trimmed = (weightStr ?? "").trim()
+  if (!trimmed) return trimmed
+  if (isNhscaInterestWeightClass(trimmed)) return trimmed
+  const w = parseInt(trimmed, 10)
+  if (!Number.isFinite(w)) return trimmed
+  let best: string = NHSCA_INTEREST_WEIGHT_CLASSES[0]
+  let bestDist = Infinity
+  for (const c of NHSCA_INTEREST_WEIGHT_CLASSES) {
+    const n = parseInt(c, 10)
+    const d = Math.abs(w - n)
+    const bestN = parseInt(best, 10)
+    if (d < bestDist || (d === bestDist && n < bestN)) {
+      bestDist = d
+      best = c
+    }
+  }
+  return best
 }
 
 /**
