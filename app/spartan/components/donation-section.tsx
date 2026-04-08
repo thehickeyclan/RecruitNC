@@ -19,8 +19,8 @@ export function DonationSection() {
             below).
           </span>
           <span className="mt-2 block">
-            <strong className="text-[#ccc]">Race</strong> — run with Team NC on the Spartan (you or a friend); credit one
-            athlete.
+          <strong className="text-[#ccc]">Race</strong> — run with Team NC on the Spartan (you or a friend); search to
+          credit one athlete.
             <br />
             <strong className="text-[#ccc]">Donate</strong> — gift only; then athlete or NC United general.
             <br />
