@@ -5,6 +5,11 @@ export const dynamic = "force-dynamic"
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
+/** Donations at or above this amount qualify for promotional tee (ops fulfillment). */
+export const SPARTAN_TEE_THRESHOLD_CENTS = 10_000
+
+const TEE_SIZES = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL"])
+
 /** One-time tax-deductible donation; email captured for Spartan code fulfillment per partner process. */
 export async function POST(request: NextRequest) {
   if (!stripeSecret?.trim()) {
@@ -47,6 +52,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid amount (min $5)." }, { status: 400 })
   }
 
+  const teeEligible = amountCents >= SPARTAN_TEE_THRESHOLD_CENTS
+  const shirtSize = typeof body.shirtSize === "string" ? body.shirtSize.trim().toUpperCase() : ""
+  const shipLine1 = typeof body.shipLine1 === "string" ? body.shipLine1.trim().slice(0, 120) : ""
+  const shipLine2 = typeof body.shipLine2 === "string" ? body.shipLine2.trim().slice(0, 120) : ""
+  const shipCity = typeof body.shipCity === "string" ? body.shipCity.trim().slice(0, 80) : ""
+  const shipState = typeof body.shipState === "string" ? body.shipState.trim().slice(0, 32) : ""
+  const shipPostal = typeof body.shipPostal === "string" ? body.shipPostal.trim().slice(0, 20) : ""
+  const shipCountry =
+    typeof body.shipCountry === "string" && body.shipCountry.trim()
+      ? body.shipCountry.trim().slice(0, 2).toUpperCase()
+      : "US"
+
+  if (teeEligible) {
+    if (!shirtSize || !TEE_SIZES.has(shirtSize)) {
+      return NextResponse.json({ error: "Choose a valid shirt size for your free tee ($100+ gifts)." }, { status: 400 })
+    }
+    if (!shipLine1 || !shipCity || !shipState || !shipPostal) {
+      return NextResponse.json(
+        { error: "Enter a full shipping address for your free NC United tee ($100+ gifts)." },
+        { status: 400 },
+      )
+    }
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
   const stripe = new Stripe(stripeSecret)
 
@@ -54,9 +83,12 @@ export async function POST(request: NextRequest) {
     ? "NC United — Spartan Race Fayetteville (May 2–3, 2026)"
     : "NC United — Spartan 2026 fundraising gift (no race entry)"
 
-  const productDescription = raceEntryRequested
+  let productDescription = raceEntryRequested
     ? "Tax-deductible donation to NC United. Spartan Race emails entry codes after NC United shares donor information with their team — timing depends on batching and their process."
     : "Tax-deductible donation to NC United (501(c)(3)). Fundraising / sponsor gift — no Spartan race entry requested. Dollars can still be attributed to a fundraising code in Stripe metadata for student leaderboards."
+  if (teeEligible) {
+    productDescription += ` Includes NC United promotional tee (while supplies last); shipped to address in metadata.`
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -81,7 +113,25 @@ export async function POST(request: NextRequest) {
         donor_name: donorName,
         race_entry_requested: raceEntryRequested ? "true" : "false",
         fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",
-        ...(athleteCode ? { athlete_code: athleteCode, fundraising_code: athleteCode } : {}),
+        tee_100_eligible: teeEligible ? "yes" : "no",
+        ...(teeEligible
+          ? {
+              tee_sz: shirtSize,
+              ship_1: shipLine1,
+              ...(shipLine2 ? { ship_2: shipLine2 } : {}),
+              ship_city: shipCity,
+              ship_st: shipState,
+              ship_zip: shipPostal,
+              ship_ctry: shipCountry,
+            }
+          : {}),
+        ...(athleteCode
+          ? {
+              athlete_code: athleteCode,
+              fundraising_code: athleteCode,
+              fundraising_attribution: "athlete",
+            }
+          : { fundraising_attribution: "general_nc_united" }),
       },
       success_url: `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/spartan?cancelled=1#donate`,
