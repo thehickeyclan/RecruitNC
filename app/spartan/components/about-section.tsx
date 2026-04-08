@@ -40,7 +40,7 @@ export function AboutSection() {
             <p className="text-lg leading-relaxed text-white md:text-xl">
               &ldquo;When Spartan backs NC United, they&apos;re backing North Carolina wrestlers and the training it takes
               to compete at the highest level — travel, camps, and opportunity for kids who earn it every day in the
-              room. That support lifts our whole program.&rdquo;
+              room. That support lifts our whole state.&rdquo;
             </p>
             <footer className="mt-4 text-sm text-[#999]">— Michael Macchiavello, NC United</footer>
           </blockquote>
