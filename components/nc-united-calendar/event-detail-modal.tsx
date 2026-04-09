@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { X, Calendar, MapPin, Clock, Users, ExternalLink } from 'lucide-react'
 import type { CalendarEvent } from "@/lib/nc-united-calendar/types"
+import { parseCivilDateFromDatabase } from "@/lib/nc-united-calendar/calendar-date"
 import { EventShare } from "./event-share"
 import { DropInForm } from "./drop-in-form"
 import { formatTime } from "@/lib/nc-united-calendar/time-utils"
@@ -79,17 +80,18 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
     }
   }
 
-  const formatEventDate = (dateString: string) => {
+  const formatEventDate = (value: Date | string) => {
     try {
-      const date = new Date(dateString)
+      const date = value instanceof Date ? value : parseCivilDateFromDatabase(value)
+      if (Number.isNaN(date.getTime())) return String(value)
       return date.toLocaleDateString("en-US", {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
       })
-    } catch (error) {
-      return dateString
+    } catch {
+      return String(value)
     }
   }
 

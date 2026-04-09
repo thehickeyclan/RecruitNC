@@ -365,6 +365,17 @@ export default function AdminDashboard() {
               </Card>
             </Link>
 
+            {/* NC United Calendar — events CRUD, public /calendar. HardLink for reliable admin nav. */}
+            <HardLink href="/admin/calendar" className="block h-full">
+              <Card className="border-t-4 border-t-[#0f172a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
+                  <Calendar className="h-10 w-10 text-[#0f172a] mb-3" />
+                  <h3 className="font-bold text-[#003366] mb-1">NC United Calendar</h3>
+                  <p className="text-xs text-gray-600">Events, practices, camps, drop-in settings</p>
+                </CardContent>
+              </Card>
+            </HardLink>
+
             {/* Store — orders, products, promo codes. HardLink so click navigates. */}
             <HardLink href="/admin/store" className="block h-full">
               <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase"
+import { parseCivilDateFromDatabase } from "@/lib/nc-united-calendar/calendar-date"
 import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
 
 export interface DatabaseEvent {
@@ -23,11 +24,6 @@ export interface DatabaseEvent {
   max_drop_ins?: number | null
 }
 
-function createDateFromString(dateString: string): Date {
-  const [year, month, day] = dateString.split("-").map(Number)
-  return new Date(year, month - 1, day)
-}
-
 function formatDateForDatabase(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, "0")
@@ -39,8 +35,8 @@ function transformDatabaseEvent(dbEvent: DatabaseEvent): CalendarEvent {
   return {
     id: String(dbEvent.id),
     title: dbEvent.title,
-    date: createDateFromString(dbEvent.start_date),
-    endDate: dbEvent.end_date ? createDateFromString(dbEvent.end_date) : undefined,
+    date: parseCivilDateFromDatabase(dbEvent.start_date),
+    endDate: dbEvent.end_date ? parseCivilDateFromDatabase(dbEvent.end_date) : undefined,
     startTime: dbEvent.start_time ?? undefined,
     endTime: dbEvent.end_time ?? undefined,
     category: dbEvent.category,
@@ -48,7 +44,7 @@ function transformDatabaseEvent(dbEvent: DatabaseEvent): CalendarEvent {
     description: dbEvent.description ?? undefined,
     coach: dbEvent.coach ?? undefined,
     registrationDeadline: dbEvent.registration_deadline
-      ? createDateFromString(dbEvent.registration_deadline)
+      ? parseCivilDateFromDatabase(dbEvent.registration_deadline)
       : undefined,
     entryFee: dbEvent.entry_fee ?? undefined,
     travelInfo: dbEvent.travel_info ?? undefined,

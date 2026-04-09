@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import type { CalendarEvent } from "@/lib/nc-united-calendar/types"
+import { startOfLocalCalendarDay } from "@/lib/nc-united-calendar/calendar-date"
 import { formatTime } from "@/lib/nc-united-calendar/time-utils"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 
@@ -37,13 +38,12 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
 
   const getEventsForDay = (date: Date) => {
     return events.filter((event) => {
-      const eventStartDate = new Date(event.date)
-      const eventEndDate = event.endDate ? new Date(event.endDate) : eventStartDate
+      const eventStartDate = startOfLocalCalendarDay(new Date(event.date))
+      const eventEndDate = event.endDate ? startOfLocalCalendarDay(new Date(event.endDate)) : eventStartDate
 
-      // Check if the current date falls within the event's date range
-      const currentDateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-      const startDateOnly = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate())
-      const endDateOnly = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate())
+      const currentDateOnly = startOfLocalCalendarDay(date)
+      const startDateOnly = eventStartDate
+      const endDateOnly = eventEndDate
 
       return currentDateOnly >= startDateOnly && currentDateOnly <= endDateOnly
     })
@@ -69,19 +69,19 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
 
   const isMultiDayEvent = (event: CalendarEvent) => {
     if (!event.endDate) return false
-    const startDate = new Date(event.date)
-    const endDate = new Date(event.endDate)
-    return startDate.toDateString() !== endDate.toDateString()
+    const startDate = startOfLocalCalendarDay(new Date(event.date))
+    const endDate = startOfLocalCalendarDay(new Date(event.endDate))
+    return startDate.getTime() !== endDate.getTime()
   }
 
   const getMultiDayIndicator = (event: CalendarEvent, currentDate: Date) => {
     if (!isMultiDayEvent(event)) return ""
 
-    const eventStartDate = new Date(event.date)
-    const eventEndDate = new Date(event.endDate!)
-    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
-    const startDateOnly = new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate())
-    const endDateOnly = new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate())
+    const eventStartDate = startOfLocalCalendarDay(new Date(event.date))
+    const eventEndDate = startOfLocalCalendarDay(new Date(event.endDate!))
+    const currentDateOnly = startOfLocalCalendarDay(currentDate)
+    const startDateOnly = eventStartDate
+    const endDateOnly = eventEndDate
 
     if (currentDateOnly.getTime() === startDateOnly.getTime()) return " (Day 1)"
     if (currentDateOnly.getTime() === endDateOnly.getTime()) return " (Final)"
