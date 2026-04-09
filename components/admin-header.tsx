@@ -56,6 +56,11 @@ const adminNavItems = [
     icon: "💳",
   },
   {
+    title: "NC United Calendar",
+    href: "/admin/calendar",
+    icon: "📅",
+  },
+  {
     title: "Messaging",
     href: "/admin/messaging",
     icon: "📬",

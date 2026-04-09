@@ -9,6 +9,7 @@ import { EventDetailModal } from "@/components/nc-united-calendar/event-detail-m
 import { useNcUnitedCalendarEvents } from "@/hooks/use-nc-united-calendar-events"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
+import { CalendarAdminBanner } from "@/components/nc-united-calendar/calendar-admin-banner"
 
 export default function NcUnitedCalendarPage() {
   const { events, loading, error } = useNcUnitedCalendarEvents()
@@ -62,6 +63,7 @@ export default function NcUnitedCalendarPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <CalendarAdminBanner />
         <div className="mb-8 text-center">
           <h1 className="text-6xl font-extrabold mb-3 tracking-tight">
             <span className="text-nc-navy-900">Calendar</span>

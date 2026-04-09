@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { AdminHeader } from "@/components/admin-header"
 import { 
-  Users, Trophy, Target, UserCheck, Clock, 
+  Users, Trophy, Target, UserCheck, Clock, Calendar,
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins
@@ -242,6 +242,12 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Blue Program</span>
               </Button>
             </Link>
+            <HardLink href="/admin/calendar" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#0f172a] to-[#1e3a5f] hover:from-[#1e3a5f] hover:to-[#0f172a] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <Calendar className="h-6 w-6" />
+                <span className="text-sm font-semibold">NC United Calendar</span>
+              </span>
+            </HardLink>
             <HardLink href="/admin/store" className="block">
               <span className="w-full h-20 bg-gradient-to-br from-[#1a5f4a] to-[#145239] hover:from-[#145239] hover:to-[#1a5f4a] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex">
                 <ShoppingBag className="h-6 w-6" />
