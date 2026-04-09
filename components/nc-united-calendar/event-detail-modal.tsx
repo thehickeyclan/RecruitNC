@@ -74,6 +74,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
       case "pending":
         return "bg-yellow-100 text-yellow-800 border-yellow-200"
       case "rejected":
+      case "denied":
         return "bg-red-100 text-red-800 border-red-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
@@ -272,8 +273,9 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                                   Paid amount: ${(request.payment_amount_cents ?? 0) / 100} • {request.payment_status}
                                 </p>
                               </div>
-                              <Badge className={`${getStatusColor(request.status)} border`}>
-                                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                              <Badge className={`${getStatusColor(request.status ?? "pending")} border`}>
+                                {(request.status ?? "pending").charAt(0).toUpperCase() +
+                                  (request.status ?? "pending").slice(1)}
                               </Badge>
                             </div>
                           </CardContent>

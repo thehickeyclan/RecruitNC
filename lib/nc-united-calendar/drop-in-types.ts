@@ -1,31 +1,30 @@
+/** Matches `public.drop_in_requests` (Supabase). Join `events` for current event fields when needed. */
 export interface DropInRequest {
   id: string
-  wrestler_name: string
-  wrestler_age: number | null
+  event_id?: string | null
+  participant_name?: string | null
+  wrestler_name?: string | null
+  wrestler_age?: number | null
   wrestler_weight?: string | null
   wrestler_experience?: string | null
-  parent_name: string
-  parent_email: string
+  participant_email?: string | null
+  wrestler_email?: string | null
+  participant_phone?: string | null
+  parent_name?: string | null
+  parent_email?: string | null
   parent_phone?: string | null
-  phone: string
-  event_id: string
-  event_title: string
-  event_date: string
-  event_start_time?: string
-  event_end_time?: string
-  event_location?: string
-  event_category?: string
-  event_coach?: string
-  event_max_drop_ins?: number | null
-  notes: string
-  status: "pending" | "approved" | "denied"
-  payment_status: "unpaid" | "pending" | "paid" | "failed" | "refunded"
-  payment_amount_cents: number | null
-  payment_currency?: string | null
-  payment_paid_at?: string | null
+  experience_level?: string | null
+  weight_class?: string | null
+  message?: string | null
+  emergency_contact_name?: string | null
+  emergency_contact_phone?: string | null
+  medical_conditions?: string | null
+  additional_notes?: string | null
+  status?: string | null
+  payment_status?: string | null
+  payment_amount_cents?: number | null
   stripe_session_id?: string | null
   stripe_payment_intent_id?: string | null
-  stripe_customer_id?: string | null
-  created_at: string
-  updated_at: string
+  created_at?: string | null
+  updated_at?: string | null
 }

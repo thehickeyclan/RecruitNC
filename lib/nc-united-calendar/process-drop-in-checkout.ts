@@ -29,7 +29,6 @@ export async function processNcUnitedDropInCheckoutSession(
         payment_status: session.payment_status === "unpaid" ? "pending" : session.payment_status,
         stripe_session_id: session.id,
         stripe_payment_intent_id: paymentIntentId,
-        stripe_customer_id: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", dropInRequestId)
@@ -38,7 +37,6 @@ export async function processNcUnitedDropInCheckoutSession(
   }
 
   const paymentAmount = session.amount_total ?? 0
-  const paymentCurrency = session.currency ?? "usd"
 
   const { data: updatedRequest, error: updateError } = await admin
     .from("drop_in_requests")
@@ -46,11 +44,8 @@ export async function processNcUnitedDropInCheckoutSession(
       status: "approved",
       payment_status: "paid",
       payment_amount_cents: paymentAmount,
-      payment_currency: paymentCurrency,
-      payment_paid_at: new Date().toISOString(),
       stripe_session_id: session.id,
       stripe_payment_intent_id: paymentIntentId,
-      stripe_customer_id: typeof session.customer === "string" ? session.customer : session.customer?.id ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", dropInRequestId)

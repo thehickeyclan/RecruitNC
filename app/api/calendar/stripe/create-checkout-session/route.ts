@@ -100,81 +100,43 @@ export async function POST(request: Request) {
 
     const parentPhone = body.parentPhone?.trim() || null
     const parentEmail = body.parentEmail.trim().toLowerCase()
+    const wrestlerName = body.wrestlerName.trim()
+    const experienceLevel = body.experienceLevel?.trim() || null
+    const additionalNotes = body.notes?.trim() || null
 
-    const baseRow = {
+    // Columns aligned to public.drop_in_requests (see Supabase schema).
+    const insertPayload = {
       event_id: event.id,
-      wrestler_name: body.wrestlerName.trim(),
+      participant_name: wrestlerName,
+      wrestler_name: wrestlerName,
       wrestler_age: body.wrestlerAge,
       wrestler_weight: body.wrestlerWeight?.trim() || null,
+      wrestler_experience: experienceLevel,
+      participant_email: parentEmail,
+      participant_phone: parentPhone,
       parent_name: body.parentName.trim(),
       parent_email: parentEmail,
-      notes: body.notes?.trim() ?? "",
-      status: "pending" as const,
-      payment_status: "pending" as const,
+      parent_phone: parentPhone,
+      experience_level: experienceLevel,
+      additional_notes: additionalNotes,
+      status: "pending",
+      payment_status: "pending",
       payment_amount_cents: amount,
-      payment_currency: "usd",
     }
 
-    // Production DBs may differ: try richer rows first, then fall back so insert succeeds.
-    const insertAttempts: Record<string, unknown>[] = [
-      {
-        ...baseRow,
-        wrestler_experience: body.experienceLevel?.trim() || null,
-        parent_phone: parentPhone,
-        phone: parentPhone || parentEmail,
-        event_title: event.title,
-        event_date: eventDate,
-        event_start_time: event.start_time ?? null,
-        event_end_time: event.end_time ?? null,
-        event_location: event.location ?? null,
-        event_category: event.category ?? null,
-        event_coach: event.coach ?? null,
-        event_max_drop_ins: maxDropIns,
-      },
-      {
-        ...baseRow,
-        parent_phone: parentPhone,
-        phone: parentPhone || parentEmail,
-        event_title: event.title,
-        event_date: eventDate,
-        event_start_time: event.start_time ?? null,
-        event_location: event.location ?? null,
-      },
-      {
-        ...baseRow,
-        phone: parentPhone || parentEmail,
-        event_title: event.title,
-        event_date: eventDate,
-      },
-      { ...baseRow },
-    ]
+    const { data: dropInRecord, error: insertError } = await admin
+      .from("drop_in_requests")
+      .insert(insertPayload)
+      .select("*")
+      .single()
 
-    let dropInRecord: Record<string, unknown> | null = null
-    let lastInsertError: { message: string; code?: string } | null = null
-
-    for (let i = 0; i < insertAttempts.length; i++) {
-      const attempt = insertAttempts[i]
-      const { data, error } = await admin.from("drop_in_requests").insert(attempt).select("*").single()
-
-      if (!error && data) {
-        dropInRecord = data as Record<string, unknown>
-        if (i > 0) {
-          console.warn(`[calendar/stripe] drop_in_requests insert used fallback tier ${i + 1}/${insertAttempts.length}`)
-        }
-        break
-      }
-
-      lastInsertError = error ? { message: error.message, code: error.code } : { message: "unknown" }
-      console.error(`[calendar/stripe] drop_in_requests insert tier ${i + 1} failed`, error)
-    }
-
-    if (!dropInRecord) {
-      console.error("[calendar/stripe] Failed to create drop-in request after all tiers", lastInsertError)
+    if (insertError || !dropInRecord) {
+      console.error("[calendar/stripe] Failed to create drop-in request", insertError)
       return NextResponse.json(
         {
           error: "Unable to create drop-in request",
-          detail: lastInsertError?.message,
-          code: lastInsertError?.code,
+          detail: insertError?.message,
+          code: insertError?.code,
         },
         { status: 500 },
       )
@@ -182,6 +144,8 @@ export async function POST(request: Request) {
 
     const stripe = getNcUnitedStripe()
     const baseUrl = getNcUnitedCalendarBaseUrl()
+    const notesTrimmed = body.notes?.trim() ?? ""
+    const notesForStripe = notesTrimmed.length > 450 ? `${notesTrimmed.slice(0, 447)}...` : notesTrimmed
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -192,6 +156,7 @@ export async function POST(request: Request) {
           drop_in_request_id: String(dropInRecord.id ?? ""),
           event_id: String(event.id),
           business: "nc_united_calendar",
+          ...(notesForStripe ? { registration_notes: notesForStripe } : {}),
         },
         line_items: [
           {
@@ -214,7 +179,7 @@ export async function POST(request: Request) {
         .from("drop_in_requests")
         .update({
           stripe_session_id: session.id,
-          stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", String(dropInRecord.id))
 
