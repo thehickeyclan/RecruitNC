@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { HardLink } from "@/components/hard-link"
 import { StoreButton } from "@/components/store-button"
 
 export function Footer() {
@@ -34,6 +35,11 @@ export function Footer() {
                 <a href="/public-rankings" className="text-xs text-gray-300 hover:text-white sm:text-sm">
                   Rankings
                 </a>
+              </li>
+              <li>
+                <HardLink href="/calendar" className="text-xs text-gray-300 hover:text-white sm:text-sm">
+                  Calendar
+                </HardLink>
               </li>
               <li>
                 <a href="/blue" className="text-xs text-gray-300 hover:text-white sm:text-sm">

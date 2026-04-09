@@ -48,13 +48,8 @@ export default function BlueRegisterSuccessPage() {
               <p className="font-semibold text-[#03154C]">Calendar</p>
               <p className="text-gray-700">
                 Check the NC United calendar for sessions and events:{" "}
-                <a
-                  href="https://calendar.ncwrestlingunited.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#03154C] underline hover:no-underline"
-                >
-                  calendar.ncwrestlingunited.com
+                <a href="/calendar" className="text-[#03154C] underline hover:no-underline">
+                  NC United calendar
                 </a>
               </p>
             </div>

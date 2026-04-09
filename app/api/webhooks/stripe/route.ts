@@ -6,6 +6,10 @@ import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { completeBlueSignupAfterStripePayment } from "@/lib/blue-signup-webhook-complete"
+import {
+  processNcUnitedDropInCheckoutFailed,
+  processNcUnitedDropInCheckoutSession,
+} from "@/lib/nc-united-calendar/process-drop-in-checkout"
 
 export const dynamic = "force-dynamic"
 
@@ -499,6 +503,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
+  if (event.type === "checkout.session.async_payment_succeeded") {
+    const session = event.data.object as Stripe.Checkout.Session
+    const admin = createAdminClient()
+    const handledCalendarDropIn = await processNcUnitedDropInCheckoutSession(
+      admin,
+      session,
+      "checkout.session.async_payment_succeeded",
+    )
+    if (handledCalendarDropIn) {
+      return NextResponse.json({ received: true })
+    }
+    return NextResponse.json({ received: true })
+  }
+
+  if (event.type === "checkout.session.async_payment_failed" || event.type === "checkout.session.expired") {
+    const session = event.data.object as Stripe.Checkout.Session
+    const admin = createAdminClient()
+    await processNcUnitedDropInCheckoutFailed(admin, session)
+    return NextResponse.json({ received: true })
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
     const admin = createAdminClient()
@@ -667,6 +692,15 @@ export async function POST(request: NextRequest) {
           console.error("[webhooks/stripe] national team athlete enrichment (session):", enrichErr)
         }
       }
+      return NextResponse.json({ received: true })
+    }
+
+    const handledNcUnitedDropIn = await processNcUnitedDropInCheckoutSession(
+      admin,
+      session,
+      "checkout.session.completed",
+    )
+    if (handledNcUnitedDropIn) {
       return NextResponse.json({ received: true })
     }
 

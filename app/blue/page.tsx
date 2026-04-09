@@ -18,7 +18,7 @@ const NATIONAL_TEAM_ABOUT_URL = "/national-team"
 const NATIONAL_TEAM_SCHEDULE_URL = "/national-team"
 const NATIONAL_TEAM_INTEREST_FORM_URL = "/national-team/interest-form"
 const COMPETITION_CALENDAR_URL = "/national-team"
-const NC_UNITED_CALENDAR_URL = "https://calendar.ncwrestlingunited.com/"
+const NC_UNITED_CALENDAR_URL = "/calendar"
 
 export default function BluePage() {
   const [images, setImages] = useState<BlueContent | null>(null)
@@ -172,7 +172,7 @@ export default function BluePage() {
             <p className="mb-4 leading-relaxed text-[#003366]/90">
               Blue practices are <strong className="text-[#003366]">Sundays 1–3pm</strong> at the UNC wrestling room in
               Fetzer Hall.{" "}
-              <a href={NC_UNITED_CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-[#003366] hover:text-[#D3B574] hover:underline">
+              <a href={NC_UNITED_CALENDAR_URL} className="font-medium text-[#003366] hover:text-[#D3B574] hover:underline">
                 View the NC United calendar →
               </a>
             </p>

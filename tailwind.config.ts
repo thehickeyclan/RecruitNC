@@ -23,11 +23,17 @@ const config: Config = {
         // Fox News–style / NC United branding (primary blue = Fox blue)
         "nc-blue": "#003366", // Fox blue (footer, nav, primary surfaces)
         "nc-navy": {
+          DEFAULT: "#002147",
+          600: "#001a3a",
+          700: "#00132d",
+          800: "#000d1f",
+          900: "#000813",
           950: "#003366",
         },
         "fox-blue": "#003366",
         "nc-red": {
           DEFAULT: "#B31B1B",
+          600: "#8c1414",
           800: "#B31B1B", // Red
         },
         "nc-gold": {

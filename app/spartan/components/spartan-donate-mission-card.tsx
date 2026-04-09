@@ -95,14 +95,14 @@ export function SpartanDonateMissionCard() {
         id="athletes"
         className="scroll-mt-24 mt-6 border-t border-[#333] pt-5 text-left text-[11px] leading-relaxed text-[#888]"
       >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#666]">Optional link for wrestlers</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#666]">How credit works</p>
         <p className="mt-2 text-[#aaa]">
-          They can share{" "}
-          <code className="rounded bg-black px-1 py-0.5 text-[#C8A94A]">/spartan?athlete=NCU-LASTNAME-YY</code> so the
-          code pre-fills—you still <strong className="text-[#ccc]">confirm them in search</strong> at checkout. Example:{" "}
+          Everyone uses this same page. At checkout, donors <strong className="text-[#ccc]">search and select the wrestler</strong>{" "}
+          (or NC United / manual name)—that&apos;s what ties the gift. Optional:{" "}
           <HardLink href="/spartan?athlete=NCU-HICKEY-29" className="text-[#C8A94A] underline-offset-2 hover:underline">
-            /spartan?athlete=NCU-HICKEY-29
-          </HardLink>
+            /spartan?athlete=…
+          </HardLink>{" "}
+          can pre-fill the fundraising field; you still confirm in search.
         </p>
       </div>
     </article>

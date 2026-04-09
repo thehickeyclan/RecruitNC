@@ -142,6 +142,10 @@ export async function POST(request: NextRequest) {
         },
       ],
       metadata: {
+        business: "nc_united",
+        channel: "spartan",
+        category: "donation",
+        athlete_code: athleteCode || "",
         spartan_campaign: "fayetteville_2026",
         tier_preference: tierPreference || "unspecified",
         donor_name: donorName,

@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 import { useCartStore } from "@/lib/store/cart-store"
 import Image from "next/image"
+import { HardLink } from "@/components/hard-link"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -157,7 +158,6 @@ export function Navbar() {
   const profilesItem = { href: "/prospects/all", label: "Athlete Profiles" }
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
   const athletesItems = [...commitmentItems, profilesItem, rankingsItem]
-  const calendarUrl = "https://calendar.ncwrestlingunited.com"
 
   const nationalTeamItems = [{ href: "/national-team", label: "National Team" }]
 
@@ -416,7 +416,7 @@ export function Navbar() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={navLinkClass("")}>Calendar</a>
+              <HardLink href="/calendar" className={navLinkClass("")}>Calendar</HardLink>
               <a href="/blue" className={navLinkClass("/blue")}>Blue</a>
               <a href="/national-team" className={navLinkClass("/national-team")}>National Team</a>
               <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
@@ -778,7 +778,7 @@ export function Navbar() {
                       </div>
                     </div>
                   </div>
-                  <a href={calendarUrl} target="_blank" rel="noopener noreferrer" className={mobileLinkClass("")} onClick={() => setIsOpen(false)}>Calendar</a>
+                  <HardLink href="/calendar" className={mobileLinkClass("")} onNavigate={() => setIsOpen(false)}>Calendar</HardLink>
                   <a href="/blue" className={mobileLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue</a>
                   <a href="/national-team" className={mobileLinkClass("/national-team")} onClick={() => setIsOpen(false)}>National Team</a>
                   <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>

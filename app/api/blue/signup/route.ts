@@ -162,8 +162,20 @@ export async function POST(request: NextRequest) {
       customer_email: parent.email.trim(),
       success_url: `${baseUrl}/blue/register/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/blue/register/cancelled`,
-      metadata: { signup_id: signup.id },
-      subscription_data: { metadata: { signup_id: signup.id } },
+      metadata: {
+        business: "nc_united",
+        channel: "blue",
+        category: "subscription",
+        signup_id: signup.id,
+      },
+      subscription_data: {
+        metadata: {
+          business: "nc_united",
+          channel: "blue",
+          category: "subscription",
+          signup_id: signup.id,
+        },
+      },
     }
     if (stripeCouponId) {
       sessionParams.discounts = [{ coupon: stripeCouponId }]

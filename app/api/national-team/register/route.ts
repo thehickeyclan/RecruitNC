@@ -166,6 +166,9 @@ export async function POST(request: NextRequest) {
       success_url: `${baseUrl}/national-team/register/${returnUrlSlug}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/national-team/register/${returnUrlSlug}?cancelled=1`,
       metadata: {
+        business: "nc_united",
+        channel: "recruitnc",
+        category: "registration",
         source: "national_team",
         registration_id: reg.id,
       },
