@@ -113,15 +113,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div
-        className="flex-1 overflow-y-auto touch-pan-y overscroll-contain"
-        style={{
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-y",
-        }}
-      >
-        <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
           <div
             className="rounded-xl p-6 text-white shadow-lg"
             style={{
@@ -286,8 +278,6 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
               </div>
             </div>
           </form>
-        </div>
-      </div>
     </div>
   )
 }

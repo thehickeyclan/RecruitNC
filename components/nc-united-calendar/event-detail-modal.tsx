@@ -287,9 +287,9 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
         {/* Drop-in Form Modal */}
         {showDropInForm && (
           <Dialog open={showDropInForm} onOpenChange={setShowDropInForm}>
-            <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col gap-0 !translate-x-[-50%] !translate-y-[-50%]">
+            <DialogContent className="!flex max-h-[min(90vh,900px)] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 !translate-x-[-50%] !translate-y-[-50%] sm:max-w-2xl">
               <div
-                className="flex-1 overflow-y-auto touch-pan-y overscroll-contain"
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y [scrollbar-gutter:stable]"
                 style={{
                   WebkitOverflowScrolling: "touch",
                   touchAction: "pan-y",
