@@ -49,7 +49,9 @@ export function AboutSection() {
               to compete at the highest level — travel, camps, and opportunity for kids who earn it every day in the
               room. That support lifts our whole state.&rdquo;
             </p>
-            <footer className="mt-4 text-sm text-[#999]">— Michael Macchiavello, NC United</footer>
+            <footer className="mt-4 text-sm text-[#999]">
+              — Michael Macchiavello, co-founder, NC United Wrestling
+            </footer>
           </blockquote>
         </div>
       </div>
