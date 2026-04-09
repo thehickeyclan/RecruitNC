@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
+import { aggregateDropInStats } from "@/lib/nc-united-calendar/aggregate-drop-in-stats"
 import type { EventCategory } from "@/lib/nc-united-calendar/types"
 
 export const dynamic = "force-dynamic"
@@ -74,7 +75,18 @@ export async function GET() {
     console.error("[admin/calendar/events] GET:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
-  return NextResponse.json({ events: data ?? [] })
+
+  const { data: dropRows, error: dropErr } = await admin
+    .from("drop_in_requests")
+    .select("event_id, status, payment_status")
+
+  if (dropErr) {
+    console.error("[admin/calendar/events] drop_in_requests:", dropErr)
+  }
+
+  const dropInStatsByEventId = aggregateDropInStats((dropRows ?? []) as { event_id: string; status: string; payment_status: string }[])
+
+  return NextResponse.json({ events: data ?? [], dropInStatsByEventId })
 }
 
 export async function POST(request: NextRequest) {

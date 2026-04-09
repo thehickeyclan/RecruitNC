@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
@@ -26,7 +26,8 @@ import {
 import { HardLink } from "@/components/hard-link"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { EventCategory } from "@/lib/nc-united-calendar/types"
-import { Calendar, Pencil, Plus, Trash2 } from "lucide-react"
+import { Calendar, Pencil, Plus, Trash2, Users } from "lucide-react"
+import type { EventDropInStats } from "@/lib/nc-united-calendar/aggregate-drop-in-stats"
 
 type DbEvent = {
   id: number | string
@@ -48,6 +49,19 @@ type DbEvent = {
   logo_url?: string | null
   drop_in_registration_link?: string | null
   max_drop_ins?: number | null
+}
+
+type DropInRequestRow = {
+  id: string
+  wrestler_name: string
+  wrestler_age?: number | null
+  parent_name: string
+  parent_email: string
+  parent_phone?: string | null
+  status: string
+  payment_status: string
+  payment_amount_cents: number | null
+  created_at: string
 }
 
 const CATEGORIES = Object.keys(eventCategories) as EventCategory[]
@@ -84,6 +98,11 @@ export default function AdminCalendarPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm())
+  const [dropInStatsByEventId, setDropInStatsByEventId] = useState<Record<string, EventDropInStats>>({})
+  const [dropInDialogOpen, setDropInDialogOpen] = useState(false)
+  const [dropInDialogEvent, setDropInDialogEvent] = useState<DbEvent | null>(null)
+  const [dropInRows, setDropInRows] = useState<DropInRequestRow[]>([])
+  const [dropInLoading, setDropInLoading] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -92,18 +111,60 @@ export default function AdminCalendarPage() {
       const res = await fetch("/api/admin/calendar/events", { credentials: "include" })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "Failed to load events")
+        const msg =
+          res.status === 403
+            ? "Admin access required. Ask an owner to set is_admin on your account in user_profiles."
+            : res.status === 401
+              ? "Sign in to manage calendar events."
+              : data.error || "Failed to load events"
+        setError(msg)
         setEvents([])
+        setDropInStatsByEventId({})
         return
       }
       setEvents(data.events || [])
+      setDropInStatsByEventId(data.dropInStatsByEventId || {})
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load")
       setEvents([])
+      setDropInStatsByEventId({})
     } finally {
       setLoading(false)
     }
   }, [])
+
+  const dropInTotals = useMemo(() => {
+    let paid = 0
+    let awaitingPayment = 0
+    let towardCapacity = 0
+    for (const s of Object.values(dropInStatsByEventId)) {
+      paid += s.paid
+      awaitingPayment += s.awaitingPayment
+      towardCapacity += s.towardCapacity
+    }
+    return { paid, awaitingPayment, towardCapacity }
+  }, [dropInStatsByEventId])
+
+  const openDropInDialog = async (ev: DbEvent) => {
+    setError(null)
+    setDropInDialogEvent(ev)
+    setDropInDialogOpen(true)
+    setDropInRows([])
+    setDropInLoading(true)
+    try {
+      const res = await fetch(`/api/admin/calendar/events/${ev.id}/drop-ins`, { credentials: "include" })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Failed to load drop-in requests")
+        return
+      }
+      setDropInRows((data.requests || []) as DropInRequestRow[])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load drop-ins")
+    } finally {
+      setDropInLoading(false)
+    }
+  }
 
   useEffect(() => {
     load()
@@ -185,7 +246,11 @@ export default function AdminCalendarPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || "Save failed")
+        setError(
+          res.status === 403
+            ? "Admin access required to save."
+            : data.error || "Save failed",
+        )
         return
       }
       setDialogOpen(false)
@@ -221,7 +286,9 @@ export default function AdminCalendarPage() {
             <Calendar className="h-8 w-8" />
             <div>
               <h1 className="text-2xl font-bold">NC United Calendar</h1>
-              <p className="text-sm text-blue-100">Create and edit events. Practices (Blue/Gold) show the Stripe drop-in form.</p>
+              <p className="text-sm text-blue-100">
+                Add events, edit any row, delete when needed. Blue/Gold practices use Stripe drop-ins; see counts below.
+              </p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -245,10 +312,40 @@ export default function AdminCalendarPage() {
           </div>
         )}
 
+        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          <Card className="border-l-4 border-l-amber-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Users className="h-4 w-4" />
+                Drop-ins (toward cap)
+              </div>
+              <p className="mt-1 text-2xl font-bold text-[#003366]">{dropInTotals.towardCapacity}</p>
+              <p className="text-xs text-muted-foreground">Pending Stripe checkout + paid</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-green-600">
+            <CardContent className="pt-6">
+              <p className="text-sm font-medium text-muted-foreground">Paid registrations</p>
+              <p className="mt-1 text-2xl font-bold text-green-800">{dropInTotals.paid}</p>
+              <p className="text-xs text-muted-foreground">payment_status = paid</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-amber-600">
+            <CardContent className="pt-6">
+              <p className="text-sm font-medium text-muted-foreground">Awaiting payment</p>
+              <p className="mt-1 text-2xl font-bold text-amber-900">{dropInTotals.awaitingPayment}</p>
+              <p className="text-xs text-muted-foreground">Checkout started, not completed</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Events</CardTitle>
-            <CardDescription>Sorted by start date. Max drop-ins caps paid + pending Stripe drop-ins per practice.</CardDescription>
+            <CardDescription>
+              Sorted by start date. Use <strong>New event</strong> or <strong>Edit</strong> on a row. Drop-in usage counts toward{" "}
+              <strong>max drop-ins</strong> (pending + paid). Open <strong>Drop-ins</strong> for full request details.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -264,34 +361,69 @@ export default function AdminCalendarPage() {
                       <th className="py-2 pr-4">Title</th>
                       <th className="py-2 pr-4">Category</th>
                       <th className="py-2 pr-4">Location</th>
-                      <th className="py-2 pr-4">Max drop-ins</th>
+                      <th className="py-2 pr-4">Drop-in usage</th>
+                      <th className="py-2 pr-4">Max</th>
                       <th className="py-2 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {events.map((ev) => (
-                      <tr key={String(ev.id)} className="border-b border-gray-100">
-                        <td className="py-2 pr-4 whitespace-nowrap">{ev.start_date}</td>
-                        <td className="py-2 pr-4 font-medium">{ev.title}</td>
-                        <td className="py-2 pr-4">{ev.category}</td>
-                        <td className="py-2 pr-4 max-w-[200px] truncate">{ev.location || "—"}</td>
-                        <td className="py-2 pr-4">{ev.max_drop_ins ?? "—"}</td>
-                        <td className="py-2 text-right whitespace-nowrap">
-                          <Button type="button" variant="outline" size="sm" className="mr-2" onClick={() => openEdit(ev)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-red-700"
-                            onClick={() => handleDelete(String(ev.id))}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                    {events.map((ev) => {
+                      const st = dropInStatsByEventId[String(ev.id)]
+                      const max = ev.max_drop_ins ?? null
+                      const toward = st?.towardCapacity ?? 0
+                      const paid = st?.paid ?? 0
+                      const awaiting = st?.awaitingPayment ?? 0
+                      return (
+                        <tr key={String(ev.id)} className="border-b border-gray-100">
+                          <td className="py-2 pr-4 whitespace-nowrap">{ev.start_date?.slice(0, 10) ?? ev.start_date}</td>
+                          <td className="py-2 pr-4 font-medium">{ev.title}</td>
+                          <td className="py-2 pr-4">{eventCategories[ev.category as EventCategory]?.label ?? ev.category}</td>
+                          <td className="py-2 pr-4 max-w-[180px] truncate">{ev.location || "—"}</td>
+                          <td className="py-2 pr-4 text-xs">
+                            {st && st.total > 0 ? (
+                              <span>
+                                <span className="font-semibold text-[#003366]">
+                                  {toward}
+                                  {max != null ? ` / ${max}` : ""}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {" "}
+                                  cap · {paid} paid · {awaiting} awaiting pay
+                                </span>
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="py-2 pr-4">{max ?? "—"}</td>
+                          <td className="py-2 text-right whitespace-nowrap">
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              className="mr-1"
+                              onClick={() => openDropInDialog(ev)}
+                            >
+                              Drop-ins
+                            </Button>
+                            <Button type="button" variant="outline" size="sm" className="mr-1" onClick={() => openEdit(ev)}>
+                              <Pencil className="mr-1 h-4 w-4" />
+                              Edit
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="text-red-700"
+                              onClick={() => handleDelete(String(ev.id))}
+                            >
+                              <Trash2 className="mr-1 h-4 w-4" />
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -486,6 +618,73 @@ export default function AdminCalendarPage() {
             </Button>
             <Button type="button" onClick={handleSave} disabled={saving}>
               {saving ? "Saving…" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={dropInDialogOpen}
+        onOpenChange={(open) => {
+          setDropInDialogOpen(open)
+          if (!open) setDropInDialogEvent(null)
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Drop-in requests</DialogTitle>
+            {dropInDialogEvent && (
+              <p className="text-sm text-muted-foreground">
+                {dropInDialogEvent.title} · {dropInDialogEvent.start_date?.slice(0, 10) ?? dropInDialogEvent.start_date}
+              </p>
+            )}
+          </DialogHeader>
+          {dropInLoading ? (
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          ) : dropInRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No drop-in requests for this event.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 pr-3">Wrestler</th>
+                    <th className="py-2 pr-3">Parent</th>
+                    <th className="py-2 pr-3">Email</th>
+                    <th className="py-2 pr-3">Status</th>
+                    <th className="py-2 pr-3">Payment</th>
+                    <th className="py-2 pr-3">Amount</th>
+                    <th className="py-2">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dropInRows.map((r) => (
+                    <tr key={r.id} className="border-b border-gray-100">
+                      <td className="py-2 pr-3">
+                        {r.wrestler_name}
+                        {r.wrestler_age != null ? ` (${r.wrestler_age})` : ""}
+                      </td>
+                      <td className="py-2 pr-3">{r.parent_name}</td>
+                      <td className="py-2 pr-3 break-all">{r.parent_email}</td>
+                      <td className="py-2 pr-3">{r.status}</td>
+                      <td className="py-2 pr-3">{r.payment_status}</td>
+                      <td className="py-2 pr-3">
+                        {r.payment_amount_cents != null
+                          ? `$${(r.payment_amount_cents / 100).toFixed(2)}`
+                          : "—"}
+                      </td>
+                      <td className="py-2 whitespace-nowrap text-xs text-muted-foreground">
+                        {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDropInDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
