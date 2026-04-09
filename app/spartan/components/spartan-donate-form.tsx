@@ -53,7 +53,6 @@ export function SpartanDonateForm() {
   const [tierPreference, setTierPreference] = useState<SpartanRaceTierId | "">("")
   const [amountDollars, setAmountDollars] = useState("50")
   const [consent, setConsent] = useState(false)
-  const [teeConsent, setTeeConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,7 +72,6 @@ export function SpartanDonateForm() {
   const [shipPostal, setShipPostal] = useState("")
   const [shipCountry, setShipCountry] = useState("US")
 
-  const wantsRace = flow === "race"
   const needsAthleteCode = flow === "race" || (flow === "donate" && donateMode === "athlete")
 
   useEffect(() => {
@@ -213,10 +211,6 @@ export function SpartanDonateForm() {
   /** Race path: every participant gets an NC United tee. Donate-only: $100+. */
   const teeEligible = flow === "race" || amountCents >= TEE_THRESHOLD_CENTS
 
-  useEffect(() => {
-    if (!teeEligible) setTeeConsent(false)
-  }, [teeEligible])
-
   const codeForCheckout = fundraisingCode.trim() || undefined
   const manualCreditTrimmed = manualCreditName.trim()
   const hasManualCredit = manualCreditTrimmed.length >= 2
@@ -283,7 +277,7 @@ export function SpartanDonateForm() {
       setError("This checkout is the Team NC 10K team race — pick Race with us again or refresh.")
       return
     }
-    if (!consent) {
+    if (flow === "donate" && !consent) {
       setError("Check the box to continue.")
       return
     }
@@ -300,10 +294,6 @@ export function SpartanDonateForm() {
         setError(
           flow === "race" ? "Shipping address required for your NC United tee." : "Shipping address required for $100+.",
         )
-        return
-      }
-      if (!teeConsent) {
-        setError("Confirm tee terms.")
         return
       }
     }
@@ -358,7 +348,9 @@ export function SpartanDonateForm() {
     flow === "race" ? Boolean(tierPreference) : flow === "donate" && donateMode !== null
 
   const canCheckout =
-    stepUnlocked && (!needsAthleteCode || hasAthleteCredit)
+    stepUnlocked &&
+    (!needsAthleteCode || hasAthleteCredit) &&
+    (flow !== "donate" || consent)
 
   return (
     <form onSubmit={submit} className="mx-auto mt-8 max-w-lg text-left">
@@ -468,15 +460,53 @@ export function SpartanDonateForm() {
                 className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
               />
             </div>
-            <label className="flex cursor-pointer items-start gap-2 text-left text-[12px] leading-snug text-[#999]">
-              <input
-                type="checkbox"
-                checked={donorListPublic}
-                onChange={(e) => setDonorListPublic(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[#C8A94A]"
-              />
-              <span>Show my name on the public supporter list (uncheck to stay anonymous)</span>
-            </label>
+            {flow === "donate" && (
+              <div className="space-y-4 border-t border-[#2a2a2a] pt-4">
+                <label className="flex cursor-pointer items-start gap-3 text-left text-[12px] leading-relaxed text-[#999] sm:text-[13px]">
+                  <input
+                    type="checkbox"
+                    checked={donorListPublic}
+                    onChange={(e) => setDonorListPublic(e.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-[#C8A94A]"
+                  />
+                  <span className="min-w-0 flex-1 break-words">
+                    Show my name on the public supporter list (uncheck to stay anonymous)
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-3 text-left text-[12px] leading-relaxed text-[#aaa] sm:text-[13px]">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-[#CC0000]"
+                  />
+                  <span className="min-w-0 flex-1 break-words">
+                    {donateMode === "general" ? (
+                      <>Tax gift to NC United — general programs.</>
+                    ) : (
+                      <>
+                        <span className="block">Tax gift to NC United. Not requesting a race entry.</span>
+                        {codeForCheckout && athleteQuery.trim() && (
+                          <span className="mt-1 block text-[#bbb]">
+                            Gift credited to {athleteQuery} (directory).
+                          </span>
+                        )}
+                        {codeForCheckout && !athleteQuery.trim() && (
+                          <span className="mt-1 block text-[#bbb]">
+                            Gift credited to the wrestler you selected at checkout.
+                          </span>
+                        )}
+                        {!codeForCheckout && hasManualCredit && (
+                          <span className="mt-1 block text-[#bbb]">
+                            Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
 
           {needsAthleteCode && (
@@ -641,9 +671,7 @@ export function SpartanDonateForm() {
                   className="object-contain object-center"
                 />
               </div>
-              <p className="mt-1.5 text-center text-[10px] leading-snug text-[#666] sm:text-left">
-                Artwork may vary; promotional item while supplies last.
-              </p>
+              <p className="mt-1.5 text-center text-[10px] leading-snug text-[#666] sm:text-left">Artwork may vary.</p>
             </div>
             <div className="min-w-0 flex-1 space-y-2">
           <select
@@ -711,60 +739,9 @@ export function SpartanDonateForm() {
               <option value="CA">CA</option>
             </select>
           </div>
-          <label className="flex cursor-pointer gap-2 text-[11px] text-[#999]">
-            <input
-              type="checkbox"
-              checked={teeConsent}
-              onChange={(e) => setTeeConsent(e.target.checked)}
-              className="mt-0.5 h-3.5 w-3.5 accent-[#C8A94A]"
-            />
-            Tee is promo / while supplies last
-          </label>
             </div>
           </div>
         </div>
-      )}
-
-      {stepUnlocked && (
-        <label className="mt-5 flex cursor-pointer gap-2 text-left text-[13px] leading-snug text-[#aaa]">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-[#CC0000]"
-          />
-          <span>
-            {wantsRace ? (
-              <>
-                Tax gift to NC United. OK to share my email with Spartan for my entry code.
-                {codeForCheckout && athleteQuery.trim() && (
-                  <> Gift credited to {athleteQuery} (directory).</>
-                )}
-                {codeForCheckout && !athleteQuery.trim() && (
-                  <> Gift credited to the wrestler you selected at checkout.</>
-                )}
-                {!codeForCheckout && hasManualCredit && (
-                  <> Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).</>
-                )}
-              </>
-            ) : donateMode === "general" ? (
-              <>Tax gift to NC United — general programs.</>
-            ) : (
-              <>
-                Tax gift to NC United. Not requesting a race entry.
-                {codeForCheckout && athleteQuery.trim() && (
-                  <> Gift credited to {athleteQuery} (directory).</>
-                )}
-                {codeForCheckout && !athleteQuery.trim() && (
-                  <> Gift credited to the wrestler you selected at checkout.</>
-                )}
-                {!codeForCheckout && hasManualCredit && (
-                  <> Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).</>
-                )}
-              </>
-            )}
-          </span>
-        </label>
       )}
 
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
