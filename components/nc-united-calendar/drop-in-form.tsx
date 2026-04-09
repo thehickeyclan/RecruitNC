@@ -71,7 +71,9 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
               "This practice has reached its drop-in capacity. Please select another session or contact the coaching staff.",
           )
         } else {
-          setError(data?.error || "Unable to start checkout. Please try again.")
+          const base = data?.error || "Unable to start checkout. Please try again."
+          const detail = typeof data?.detail === "string" && data.detail.trim() ? ` — ${data.detail.trim()}` : ""
+          setError(base + detail)
         }
         return
       }

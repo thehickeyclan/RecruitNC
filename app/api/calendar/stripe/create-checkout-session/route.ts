@@ -101,46 +101,80 @@ export async function POST(request: Request) {
     const parentPhone = body.parentPhone?.trim() || null
     const parentEmail = body.parentEmail.trim().toLowerCase()
 
-    // Include denormalized event + contact fields required by drop_in_requests (NOT NULL / app expectations).
-    const insertPayload = {
+    const baseRow = {
       event_id: event.id,
       wrestler_name: body.wrestlerName.trim(),
       wrestler_age: body.wrestlerAge,
       wrestler_weight: body.wrestlerWeight?.trim() || null,
-      wrestler_experience: body.experienceLevel?.trim() || null,
       parent_name: body.parentName.trim(),
       parent_email: parentEmail,
-      parent_phone: parentPhone,
-      phone: parentPhone || parentEmail,
       notes: body.notes?.trim() ?? "",
-      status: "pending",
-      payment_status: "pending",
+      status: "pending" as const,
+      payment_status: "pending" as const,
       payment_amount_cents: amount,
       payment_currency: "usd",
-      event_title: event.title,
-      event_date: eventDate,
-      event_start_time: event.start_time ?? null,
-      event_end_time: event.end_time ?? null,
-      event_location: event.location ?? null,
-      event_category: event.category ?? null,
-      event_coach: event.coach ?? null,
-      event_max_drop_ins: maxDropIns,
     }
 
-    const { data: dropInRecord, error: insertError } = await admin
-      .from("drop_in_requests")
-      .insert(insertPayload)
-      .select("*")
-      .single()
+    // Production DBs may differ: try richer rows first, then fall back so insert succeeds.
+    const insertAttempts: Record<string, unknown>[] = [
+      {
+        ...baseRow,
+        wrestler_experience: body.experienceLevel?.trim() || null,
+        parent_phone: parentPhone,
+        phone: parentPhone || parentEmail,
+        event_title: event.title,
+        event_date: eventDate,
+        event_start_time: event.start_time ?? null,
+        event_end_time: event.end_time ?? null,
+        event_location: event.location ?? null,
+        event_category: event.category ?? null,
+        event_coach: event.coach ?? null,
+        event_max_drop_ins: maxDropIns,
+      },
+      {
+        ...baseRow,
+        parent_phone: parentPhone,
+        phone: parentPhone || parentEmail,
+        event_title: event.title,
+        event_date: eventDate,
+        event_start_time: event.start_time ?? null,
+        event_location: event.location ?? null,
+      },
+      {
+        ...baseRow,
+        phone: parentPhone || parentEmail,
+        event_title: event.title,
+        event_date: eventDate,
+      },
+      { ...baseRow },
+    ]
 
-    if (insertError || !dropInRecord) {
-      console.error("[calendar/stripe] Failed to create drop-in request", insertError)
+    let dropInRecord: Record<string, unknown> | null = null
+    let lastInsertError: { message: string; code?: string } | null = null
+
+    for (let i = 0; i < insertAttempts.length; i++) {
+      const attempt = insertAttempts[i]
+      const { data, error } = await admin.from("drop_in_requests").insert(attempt).select("*").single()
+
+      if (!error && data) {
+        dropInRecord = data as Record<string, unknown>
+        if (i > 0) {
+          console.warn(`[calendar/stripe] drop_in_requests insert used fallback tier ${i + 1}/${insertAttempts.length}`)
+        }
+        break
+      }
+
+      lastInsertError = error ? { message: error.message, code: error.code } : { message: "unknown" }
+      console.error(`[calendar/stripe] drop_in_requests insert tier ${i + 1} failed`, error)
+    }
+
+    if (!dropInRecord) {
+      console.error("[calendar/stripe] Failed to create drop-in request after all tiers", lastInsertError)
       return NextResponse.json(
         {
           error: "Unable to create drop-in request",
-          ...(process.env.NODE_ENV !== "production" && insertError
-            ? { debug: insertError.message, code: insertError.code }
-            : {}),
+          detail: lastInsertError?.message,
+          code: lastInsertError?.code,
         },
         { status: 500 },
       )
@@ -155,7 +189,7 @@ export async function POST(request: Request) {
         payment_method_types: ["card"],
         customer_email: body.parentEmail,
         metadata: {
-          drop_in_request_id: dropInRecord.id,
+          drop_in_request_id: String(dropInRecord.id ?? ""),
           event_id: String(event.id),
           business: "nc_united_calendar",
         },
@@ -182,7 +216,7 @@ export async function POST(request: Request) {
           stripe_session_id: session.id,
           stripe_customer_id: typeof session.customer === "string" ? session.customer : null,
         })
-        .eq("id", dropInRecord.id)
+        .eq("id", String(dropInRecord.id))
 
       return NextResponse.json({
         sessionId: session.id,
@@ -192,7 +226,7 @@ export async function POST(request: Request) {
     } catch (stripeError) {
       console.error("[calendar/stripe] Failed to create checkout session", stripeError)
 
-      await admin.from("drop_in_requests").delete().eq("id", dropInRecord.id)
+      await admin.from("drop_in_requests").delete().eq("id", String(dropInRecord.id))
 
       return NextResponse.json({ error: "Unable to start checkout session" }, { status: 500 })
     }
