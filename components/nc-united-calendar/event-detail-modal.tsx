@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -111,6 +111,11 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] p-0 flex flex-col gap-0 !translate-x-[-50%] !translate-y-[-50%]">
+        <DialogTitle className="sr-only">Event details: {event.title}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {formatEventDate(event.date)}
+          {event.location ? ` · ${event.location}` : ""}
+        </DialogDescription>
         {/* Header - Fixed */}
         <div className="relative flex-shrink-0" style={{ backgroundColor: "#002147" }}>
           <div className="flex justify-between items-start p-6">
@@ -288,6 +293,10 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
         {showDropInForm && (
           <Dialog open={showDropInForm} onOpenChange={setShowDropInForm}>
             <DialogContent className="!flex max-h-[min(90vh,900px)] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden p-0 !translate-x-[-50%] !translate-y-[-50%] sm:max-w-2xl">
+              <DialogTitle className="sr-only">NC United drop-in registration</DialogTitle>
+              <DialogDescription className="sr-only">
+                Enter wrestler and parent information to continue to Stripe checkout for this practice.
+              </DialogDescription>
               <div
                 className="min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y [scrollbar-gutter:stable]"
                 style={{

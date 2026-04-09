@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     const { data: event, error: eventError } = await admin
       .from("events")
-      .select("id, title, start_date, start_time, location, max_drop_ins")
+      .select("id, title, start_date, start_time, end_time, location, category, coach, max_drop_ins")
       .eq("id", body.eventId)
       .single()
 
@@ -94,20 +94,37 @@ export async function POST(request: Request) {
     }
 
     const amount = getDropInFeeCents()
-    const eventDate = event.start_date ?? new Date().toISOString().split("T")[0]
+    const rawStart = event.start_date
+    const eventDate =
+      typeof rawStart === "string" ? rawStart.slice(0, 10) : new Date().toISOString().split("T")[0]
 
+    const parentPhone = body.parentPhone?.trim() || null
+    const parentEmail = body.parentEmail.trim().toLowerCase()
+
+    // Include denormalized event + contact fields required by drop_in_requests (NOT NULL / app expectations).
     const insertPayload = {
       event_id: event.id,
       wrestler_name: body.wrestlerName.trim(),
       wrestler_age: body.wrestlerAge,
       wrestler_weight: body.wrestlerWeight?.trim() || null,
+      wrestler_experience: body.experienceLevel?.trim() || null,
       parent_name: body.parentName.trim(),
-      parent_email: body.parentEmail.trim().toLowerCase(),
-      notes: body.notes?.trim() || null,
+      parent_email: parentEmail,
+      parent_phone: parentPhone,
+      phone: parentPhone || parentEmail,
+      notes: body.notes?.trim() ?? "",
       status: "pending",
       payment_status: "pending",
       payment_amount_cents: amount,
       payment_currency: "usd",
+      event_title: event.title,
+      event_date: eventDate,
+      event_start_time: event.start_time ?? null,
+      event_end_time: event.end_time ?? null,
+      event_location: event.location ?? null,
+      event_category: event.category ?? null,
+      event_coach: event.coach ?? null,
+      event_max_drop_ins: maxDropIns,
     }
 
     const { data: dropInRecord, error: insertError } = await admin
@@ -118,7 +135,15 @@ export async function POST(request: Request) {
 
     if (insertError || !dropInRecord) {
       console.error("[calendar/stripe] Failed to create drop-in request", insertError)
-      return NextResponse.json({ error: "Unable to create drop-in request" }, { status: 500 })
+      return NextResponse.json(
+        {
+          error: "Unable to create drop-in request",
+          ...(process.env.NODE_ENV !== "production" && insertError
+            ? { debug: insertError.message, code: insertError.code }
+            : {}),
+        },
+        { status: 500 },
+      )
     }
 
     const stripe = getNcUnitedStripe()
