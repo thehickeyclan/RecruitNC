@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { HardLink } from "@/components/hard-link"
 
 const QUICK_AMOUNTS = [25, 50, 100, 250] as const
 
@@ -10,7 +11,11 @@ function parseDollars(raw: string): number | null {
   return Math.round(n * 100) / 100
 }
 
-export function JustDonateCard() {
+/**
+ * Single “donate (no race)” entry: same checkout as hero “Give”.
+ * On the form, donors choose NC United (general) or a wrestler (search / manual line).
+ */
+export function SpartanDonateMissionCard() {
   const [dollars, setDollars] = useState("50")
 
   const chipHref = useMemo(() => {
@@ -20,21 +25,31 @@ export function JustDonateCard() {
   }, [dollars])
 
   return (
-    <article className="group flex h-full flex-col border-2 border-[#C8A94A] bg-[#141414] p-6 transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_16px_48px_rgba(200,169,74,0.12)]">
+    <article
+      id="sponsor"
+      className="group flex h-full flex-col border-2 border-[#C8A94A] bg-[#141414] p-6 transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_16px_48px_rgba(200,169,74,0.12)]"
+    >
       <p className="font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C8A94A]">
-        Support the mission
+        Donate — no race
       </p>
       <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
-        Just give
+        NC United or a wrestler
       </h3>
-      <p className="mt-2 text-sm text-[#bbb]">No race required. 100% goes to NC United athletes.</p>
+      <p className="mt-2 text-sm leading-relaxed text-[#bbb]">
+        Tax-deductible gift to NC United. On the next screen, choose{" "}
+        <strong className="text-white">NC United</strong> for the general fund, or{" "}
+        <strong className="text-white">a wrestler</strong> and search for them before you pay—same checkout either way.
+      </p>
       <p className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] uppercase tracking-[0.14em] text-[#666]">
-        Any amount · Any time
+        Any amount · Pick who it supports on the form
       </p>
 
       <div className="my-5 h-px w-full bg-[#333]" aria-hidden />
 
-      <label htmlFor="just-donate-amount" className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#888]">
+      <label
+        htmlFor="donate-mission-amount"
+        className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#888]"
+      >
         Your amount
       </label>
       <div className="mt-2 flex min-h-[48px] items-stretch overflow-hidden rounded border border-[#444] bg-white">
@@ -42,17 +57,17 @@ export function JustDonateCard() {
           $
         </span>
         <input
-          id="just-donate-amount"
+          id="donate-mission-amount"
           type="text"
           inputMode="decimal"
           autoComplete="off"
           value={dollars}
           onChange={(e) => setDollars(e.target.value)}
           className="min-w-0 flex-1 border-0 bg-white px-3 font-[family-name:var(--font-barlow-spartan)] text-xl font-black tabular-nums text-[#0A0A0A] outline-none focus:ring-2 focus:ring-inset focus:ring-[#C8A94A]"
-          aria-describedby="just-donate-hint"
+          aria-describedby="donate-mission-hint"
         />
       </div>
-      <p id="just-donate-hint" className="mt-2 text-xs text-[#888]">
+      <p id="donate-mission-hint" className="mt-2 text-xs text-[#888]">
         Fully tax-deductible · 501(c)(3) nonprofit
       </p>
 
@@ -73,8 +88,23 @@ export function JustDonateCard() {
         href={chipHref}
         className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#C8A94A] hover:bg-[#2f2f2f]"
       >
-        Give now
+        Continue to donate
       </a>
+
+      <div
+        id="athletes"
+        className="scroll-mt-24 mt-6 border-t border-[#333] pt-5 text-left text-[11px] leading-relaxed text-[#888]"
+      >
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#666]">Optional link for wrestlers</p>
+        <p className="mt-2 text-[#aaa]">
+          They can share{" "}
+          <code className="rounded bg-black px-1 py-0.5 text-[#C8A94A]">/spartan?athlete=NCU-LASTNAME-YY</code> so the
+          code pre-fills—you still <strong className="text-[#ccc]">confirm them in search</strong> at checkout. Example:{" "}
+          <HardLink href="/spartan?athlete=NCU-HICKEY-29" className="text-[#C8A94A] underline-offset-2 hover:underline">
+            /spartan?athlete=NCU-HICKEY-29
+          </HardLink>
+        </p>
+      </div>
     </article>
   )
 }

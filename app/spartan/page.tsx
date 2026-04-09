@@ -1,4 +1,3 @@
-import { AthleteDedicationSection } from "./components/athlete-dedication-section"
 import { HeroSection } from "./components/hero-section"
 import { MissionBar } from "./components/mission-bar"
 import { SpartanMetricsProvider } from "./components/spartan-metrics-provider"
@@ -22,7 +21,6 @@ export default function SpartanPage() {
       <AboutSection />
       <AboutThisRaceSection />
       <RaceTiersGrid />
-      <AthleteDedicationSection />
       <DonationSection />
       <PartnersFooter />
     </SpartanMetricsProvider>
