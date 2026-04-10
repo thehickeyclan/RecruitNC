@@ -4,8 +4,15 @@ import { NextResponse } from "next/server"
 
 export const dynamic = "force-dynamic"
 
-const GUILD_API_URL = process.env.GUILD_API_URL ?? "https://www.wrestlingguild.com"
+/** Origin only (e.g. https://guild-app.vercel.app). No trailing slash. */
+const GUILD_API_URL = (process.env.GUILD_API_URL ?? "").trim().replace(/\/$/, "")
+/** Path under that origin, default api/admin/stats — override if the Guild app uses a different route. */
+const GUILD_API_STATS_PATH = (process.env.GUILD_API_STATS_PATH ?? "api/admin/stats").replace(/^\/+/, "").replace(/\/+$/, "")
 const GUILD_API_SECRET = process.env.GUILD_API_SECRET ?? ""
+
+const STORE_API_URL = (process.env.STORE_API_URL ?? "").trim().replace(/\/$/, "")
+const STORE_API_STATS_PATH = (process.env.STORE_API_STATS_PATH ?? "api/admin/stats").replace(/^\/+/, "").replace(/\/+$/, "")
+const STORE_API_SECRET = process.env.STORE_API_SECRET ?? ""
 
 type Period = "today" | "this_week" | "this_month" | "this_year"
 
@@ -27,13 +34,38 @@ type GuildStatsNormalized = {
 }
 
 async function fetchGuildStats(period: string): Promise<GuildStatsNormalized> {
+  if (!GUILD_API_URL) {
+    return {
+      bookingCount: 0,
+      bookingRevenue: 0,
+      bookingDelta: 0,
+      bySessionType: { ...EMPTY_GUILD_BY_TYPE },
+      dataAvailable: false,
+      message: "Guild metrics disabled until GUILD_API_URL is set (Wrestling Guild stats API base URL).",
+    }
+  }
+
   try {
-    const url = `${GUILD_API_URL.replace(/\/$/, "")}/api/admin/stats?period=${encodeURIComponent(period)}`
-    const res = await fetch(url, {
-      headers: { "x-guild-api-secret": GUILD_API_SECRET },
-      cache: "no-store",
-    })
-    if (!res.ok) throw new Error(`Guild API ${res.status}`)
+    const url = `${GUILD_API_URL}/${GUILD_API_STATS_PATH}?period=${encodeURIComponent(period)}`
+    const headers: HeadersInit = { ...(GUILD_API_SECRET ? { "x-guild-api-secret": GUILD_API_SECRET } : {}) }
+    const res = await fetch(url, { headers, cache: "no-store" })
+
+    if (!res.ok) {
+      const hint =
+        res.status === 404
+          ? `Guild stats returned 404 (${url}). Point GUILD_API_URL at the Guild app that serves this API, or set GUILD_API_STATS_PATH if the route differs from api/admin/stats.`
+          : `Guild stats API returned HTTP ${res.status}.`
+      console.warn("[dashboard] Guild:", hint)
+      return {
+        bookingCount: 0,
+        bookingRevenue: 0,
+        bookingDelta: 0,
+        bySessionType: { ...EMPTY_GUILD_BY_TYPE },
+        dataAvailable: false,
+        message: hint,
+      }
+    }
+
     const raw = (await res.json()) as Record<string, unknown>
 
     const byRaw = raw.bySessionType as Record<string, { count?: number; revenue?: number }> | undefined
@@ -68,14 +100,80 @@ async function fetchGuildStats(period: string): Promise<GuildStatsNormalized> {
       ...(typeof raw.message === "string" ? { message: raw.message } : {}),
     }
   } catch (e) {
-    console.error("[dashboard] Guild fetch failed:", e)
+    const msg = e instanceof Error ? e.message : String(e)
+    console.warn("[dashboard] Guild fetch error:", msg)
     return {
       bookingCount: 0,
       bookingRevenue: 0,
       bookingDelta: 0,
       bySessionType: { ...EMPTY_GUILD_BY_TYPE },
       dataAvailable: false,
-      message: "Guild data temporarily unavailable",
+      message: `Guild stats request failed (${msg}). Check GUILD_API_URL, GUILD_API_STATS_PATH, and network/DNS.`,
+    }
+  }
+}
+
+type StoreStatsNormalized = {
+  orderCount: number
+  orderRevenue: number
+  orderDelta: number
+  dataAvailable: boolean
+  message?: string
+}
+
+async function fetchStoreStats(period: string): Promise<StoreStatsNormalized> {
+  if (!STORE_API_URL) {
+    return {
+      orderCount: 0,
+      orderRevenue: 0,
+      orderDelta: 0,
+      dataAvailable: false,
+      message: "Store metrics disabled until STORE_API_URL is set (Woo/store stats API base URL).",
+    }
+  }
+
+  try {
+    const url = `${STORE_API_URL}/${STORE_API_STATS_PATH}?period=${encodeURIComponent(period)}`
+    const headers: HeadersInit = { ...(STORE_API_SECRET ? { "x-store-api-secret": STORE_API_SECRET } : {}) }
+    const res = await fetch(url, { headers, cache: "no-store" })
+
+    if (!res.ok) {
+      const hint =
+        res.status === 404
+          ? `Store stats returned 404 (${url}). Point STORE_API_URL at the app that serves this API, or set STORE_API_STATS_PATH.`
+          : `Store stats API returned HTTP ${res.status}.`
+      console.warn("[dashboard] Store:", hint)
+      return {
+        orderCount: 0,
+        orderRevenue: 0,
+        orderDelta: 0,
+        dataAvailable: false,
+        message: hint,
+      }
+    }
+
+    const raw = (await res.json()) as Record<string, unknown>
+    const orderCount = Number(raw.orderCount ?? 0)
+    const orderRevenue = Number(raw.orderRevenue ?? 0)
+    const orderDelta =
+      typeof raw.orderDelta === "number" && !Number.isNaN(raw.orderDelta) ? raw.orderDelta : 0
+
+    return {
+      orderCount,
+      orderRevenue,
+      orderDelta,
+      dataAvailable: raw.dataAvailable !== false,
+      ...(typeof raw.message === "string" ? { message: raw.message } : {}),
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.warn("[dashboard] Store fetch error:", msg)
+    return {
+      orderCount: 0,
+      orderRevenue: 0,
+      orderDelta: 0,
+      dataAvailable: false,
+      message: "Store data temporarily unavailable",
     }
   }
 }
@@ -156,7 +254,7 @@ export async function GET(request: Request) {
 
   const supabase = createAdminClient()
 
-  const guildStats = await fetchGuildStats(period)
+  const [guildStats, storeStats] = await Promise.all([fetchGuildStats(period), fetchStoreStats(period)])
 
   // ── BLUE ──────────────────────────────────────────────────────────────
   const { data: blueActive } = await supabase
@@ -182,34 +280,6 @@ export async function GET(request: Request) {
   const newPrevPeriod = allBlue.filter(
     (m) => new Date(m.created_at) >= previous.start && new Date(m.created_at) < previous.end,
   ).length
-
-  // ── STORE ─────────────────────────────────────────────────────────────
-  const { data: storeCurrent } = await supabase
-    .from("orders")
-    .select("id, total")
-    .or("channel.eq.store,channel.is.null")
-    .not("shipping_method->>name", "eq", "National team event")
-    .not("shipping_method->>name", "eq", "Practice Drop-in")
-    .not("shipping_method->>name", "eq", "Blue membership")
-    .gte("created_at", current.start.toISOString())
-    .lte("created_at", current.end.toISOString())
-
-  const { data: storePrevious } = await supabase
-    .from("orders")
-    .select("id, total")
-    .or("channel.eq.store,channel.is.null")
-    .not("shipping_method->>name", "eq", "National team event")
-    .not("shipping_method->>name", "eq", "Practice Drop-in")
-    .not("shipping_method->>name", "eq", "Blue membership")
-    .gte("created_at", previous.start.toISOString())
-    .lte("created_at", previous.end.toISOString())
-
-  const storeOrders = storeCurrent ?? []
-  const storePrev = storePrevious ?? []
-
-  const orderCount = storeOrders.length
-  const orderRevenue = storeOrders.reduce((s, r) => s + Number(r.total ?? 0), 0)
-  const prevOrderRevenue = storePrev.reduce((s, r) => s + Number(r.total ?? 0), 0)
 
   // ── DROP-IN ───────────────────────────────────────────────────────────
   const { data: dropInCurrent } = await supabase
@@ -282,9 +352,11 @@ export async function GET(request: Request) {
       ...(guildStats.message ? { message: guildStats.message } : {}),
     },
     store: {
-      orderCount,
-      orderRevenue,
-      orderDelta: delta(orderRevenue, prevOrderRevenue),
+      orderCount: storeStats.orderCount,
+      orderRevenue: storeStats.orderRevenue,
+      orderDelta: storeStats.orderDelta,
+      dataAvailable: storeStats.dataAvailable,
+      ...(storeStats.message ? { message: storeStats.message } : {}),
     },
     dropIn: {
       count: dropInCount,

@@ -68,21 +68,46 @@ function KpiCard({
   )
 }
 
+function isDashboardPayload(d: unknown): d is {
+  blue: Record<string, unknown>
+  store: Record<string, unknown>
+  guild: Record<string, unknown>
+  dropIn: Record<string, unknown>
+  spartan: Record<string, unknown>
+} {
+  if (!d || typeof d !== "object" || Array.isArray(d)) return false
+  const o = d as Record<string, unknown>
+  if ("error" in o) return false
+  const blocks = [o.blue, o.store, o.guild, o.dropIn, o.spartan]
+  return blocks.every((x) => x != null && typeof x === "object" && !Array.isArray(x))
+}
+
 export default function UnifiedDashboardPage() {
   const [period, setPeriod] = useState<Period>("this_week")
   const [category, setCategory] = useState<Category>("all")
   const [data, setData] = useState<unknown>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
+    setLoadError(null)
     fetch(`/api/admin/dashboard?period=${period}`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
+      .then(async (r) => {
+        const d = (await r.json()) as { error?: string }
+        if (!r.ok) {
+          setLoadError(typeof d?.error === "string" ? d.error : `Request failed (${r.status})`)
+          setData(null)
+          setLoading(false)
+          return
+        }
         setData(d)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => {
+        setLoadError("Network error loading dashboard.")
+        setLoading(false)
+      })
   }, [period])
 
   const fmt = (n: number) =>
@@ -90,7 +115,13 @@ export default function UnifiedDashboardPage() {
 
   const payload = data as {
     blue?: { mrr: number; mrrDelta: number; subscribers: number; newThisPeriod: number; subscribersDelta: number }
-    store?: { orderRevenue: number; orderCount: number; orderDelta: number }
+    store?: {
+      orderRevenue: number
+      orderCount: number
+      orderDelta: number
+      dataAvailable?: boolean
+      message?: string
+    }
     guild?: {
       dataAvailable?: boolean
       message?: string
@@ -126,12 +157,7 @@ export default function UnifiedDashboardPage() {
             ? "lg:grid-cols-2"
             : "lg:grid-cols-1"
 
-  const dashboardOk =
-    payload?.blue &&
-    payload?.store &&
-    payload?.guild &&
-    payload?.dropIn !== undefined &&
-    payload?.spartan !== undefined
+  const dashboardOk = isDashboardPayload(data)
 
   return (
     <div className="p-6 space-y-6">
@@ -182,7 +208,15 @@ export default function UnifiedDashboardPage() {
         </p>
       ) : null}
 
-      {loading ? (
+      {payload?.store?.dataAvailable === false && payload.store.message && showStore ? (
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+          {payload.store.message}
+        </p>
+      ) : null}
+
+      {loadError ? (
+        <p className="text-destructive">{loadError}</p>
+      ) : loading ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
