@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { EventCategory } from "@/lib/nc-united-calendar/types"
+import { cn } from "@/lib/utils"
 
 interface EventLegendProps {
   visibleCategories: Set<EventCategory>
@@ -11,15 +12,14 @@ interface EventLegendProps {
 }
 
 export function EventLegend({ visibleCategories, onCategoryToggle }: EventLegendProps) {
-  // Ensure visibleCategories is always a Set
   const categories = visibleCategories || new Set()
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Event Types</CardTitle>
+    <Card className="rounded-2xl border border-slate-200/90 shadow-sm lg:sticky lg:top-24 lg:self-start">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold text-nc-navy-900">Event types</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2.5">
         {Object.entries(eventCategories).map(([key, config]) => {
           const category = key as EventCategory
           const isVisible = categories.has(category)
@@ -29,10 +29,14 @@ export function EventLegend({ visibleCategories, onCategoryToggle }: EventLegend
               <Checkbox id={category} checked={isVisible} onCheckedChange={() => onCategoryToggle(category)} />
               <label
                 htmlFor={category}
-                className="flex items-center gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                className="flex cursor-pointer items-center gap-2.5 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
+                <span
+                  className={cn("h-2 w-2 shrink-0 rounded-full", config.accentDot)}
+                  aria-hidden
+                />
                 <span className="text-base">{config.icon}</span>
-                <span>{config.label}</span>
+                <span className="text-nc-navy-900">{config.label}</span>
               </label>
             </div>
           )

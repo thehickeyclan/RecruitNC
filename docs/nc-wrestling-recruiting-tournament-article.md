@@ -1,6 +1,6 @@
 # The 5 Most Impactful Tournaments on North Carolina's Path to College Recruiting
 
-**NC United Wrestling** (a 501(c)(3) nonprofit) compiled tournament participation and recruiting data for **86 North Carolina wrestlers** who committed to college programs in the Classes of 2025 and 2026. By examining their competitive histories, clear patterns emerge regarding which tournaments appear most often in the recruiting journeys of North Carolina wrestlers.
+**NC United Wrestling** (a 501(c)(3) nonprofit) compiled tournament participation and recruiting data for **87 North Carolina wrestlers** who committed to college programs in the Classes of 2025 and 2026. By examining their competitive histories, clear patterns emerge regarding which tournaments appear most often in the recruiting journeys of North Carolina wrestlers.
 
 This analysis focuses on tournament participation patterns rather than individual recruiting decisions, allowing us to identify the competitive environments where North Carolina wrestlers most often gain national exposure.
 
@@ -12,14 +12,14 @@ The goal of this analysis is to better understand the competitive environments w
 
 **Class of 2025 (66 commits):** D1: 17 (26%) | D2: 27 (41%) | D3: 15 (23%) | NAIA: 3 (5%) | NJCAA: 4 (6%)
 
-**Class of 2026 (20 commits):** D1: 10 (50%) | D2: 4 (20%) | D3: 5 (25%) | NAIA: 1 (5%) | NJCAA: 0
+**Class of 2026 (21 commits):** D1: 11 (52%) | D2: 4 (19%) | D3: 5 (24%) | NAIA: 1 (5%) | NJCAA: 0
 
-**86 total college commits tracked**
+**87 total college commits tracked**
 
 ### Most Common Destinations by Division
 
-**Division I (27 commits):**
-Appalachian State (7), NC State (3), Presbyterian (3), Gardner Webb (3), Davidson (2), UNC (1), Citadel (1), Duke (1), Campbell (1), Binghamton (1), Ohio U (1), Utah Valley (1), VMI (1), Mercyhurst (1)
+**Division I (28 commits):**
+Appalachian State (7), NC State (3), Presbyterian (3), Gardner Webb (4), Davidson (2), UNC (1), Citadel (1), Duke (1), Campbell (1), Binghamton (1), Ohio U (1), Utah Valley (1), VMI (1), Mercyhurst (1)
 
 **Division III (20 commits):**
 Roanoke (8), Randolph (3), Averett (2), Lynchburg (2), Arcadia (1), Marymount (1), Mount Union (1), Case Western (1), Hiram (1)
@@ -31,7 +31,7 @@ Andrew College (1), Carl Albert State (1), Minnesota West (1), Indian Hills CC (
 
 Across Division I and Division III commits, approximately **80% compete within 3 hours of home** (NC/VA/SC region), regardless of division level:
 
-- **Division I:** 22 of 27 commits (81%) compete regionally
+- **Division I:** 23 of 28 commits (82%) compete regionally
 - **Division III:** 15 of 20 commits (75%) compete regionally
 
 This regional clustering reinforces why tournaments in Virginia and North Carolina (NHSCA Nationals, Super32, College Opens across NC/VA/SC) align with where NC wrestlers ultimately compete in college.
@@ -61,10 +61,10 @@ This regional clustering reinforces why tournaments in Virginia and North Caroli
 
 When examining only Division I commits from the dataset, the tournament patterns become even clearer.
 
-Among the 27 Division I commits from the Classes of 2025 and 2026:
+Among the 28 Division I commits from the Classes of 2025 and 2026:
 
 - **93% competed at NHSCA Nationals**
-- **74% competed at Super32**
+- **71% competed at Super32**
 - **Multiple College Opens placers**
 - **NHSCA Duals — NC United Wrestling's 7-1 Gold Pool finish signaled a shift in how college coaches evaluate NC talent in team settings**
 - **Journeymen participation up over 300% year-over-year - direct impact on college recruiting exposure**
@@ -75,7 +75,7 @@ The tournaments that appear most consistently in the competitive histories of No
 
 ## Division I Tournament Participation - Complete Data
 
-The table below shows tournament participation for all 27 Division I commits from Classes 2025 and 2026.
+The table below shows tournament participation for all 28 Division I commits from Classes 2025 and 2026.
 
 ### Class of 2025 (17 D1 Commits)
 
@@ -99,7 +99,7 @@ The table below shows tournament participation for all 27 Division I commits fro
 | [Ryan Mann](/unified-profile/by-name?name=Ryan+Mann&year=2025) | Presbyterian | 0-2 (2025 Sr), 3-2 (2024 Jr), 2-2 (2023 So) | 2-2 (2024), 1-2 (2023), 0-2 (2022) | DNC | - | NHSCA Duals (2024) |
 | [John Henry Ehrenberger](/unified-profile/by-name?name=John+Henry+Ehrenberger&year=2025) | VMI | DNC | DNC | DNC | DNC | - |
 
-### Class of 2026 (10 D1 Commits)
+### Class of 2026 (11 D1 Commits)
 
 | Athlete | College | NHSCA Result | Super32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
@@ -113,25 +113,26 @@ The table below shows tournament participation for all 27 Division I commits fro
 | [Alexander May](/unified-profile/by-name?name=Alexander+May&year=2026) | Mercyhurst | 1-2 (2024 So), 2-2 (2023 Fr) | 0-2 (2025) | DNC | - | - |
 | [Avery Rhymer](/unified-profile/by-name?name=Avery+Rhymer&year=2026) | App State | 1-2 (2025 Jr) | 1-2 (2025) | DNC | - | Journeymen, NHSCA Duals (2025) |
 | [Spear Gorelick](/unified-profile/by-name?name=Spear+Gorelick&year=2026) | Davidson | 0-2 (2024 So) | 0-2 (2024) | DNC | - | - |
+| [Marcello Scaldaferri](/unified-profile/by-name?name=Marcello+Scaldaferri&year=2026) | Gardner Webb | 2-2 (2026 Sr), 4-2 (2025 Jr) | DNC | DNC | - | NCHSAA 3rd (8A, 144) 2026; 6th (4A, 138) 2025 • South Mecklenburg • career 147-38 |
 
 **Key:**
 - DNC = Did Not Compete
 - All-American = Top 8 placement at national tournament
 
 **D1 Tournament Participation Summary:**
-- **NHSCA:** 25 of 27 (93%) - 10 All-Americans
-- **Super32:** 20 of 27 (74%) - 1 All-American ([Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026), 4th)
-- **Fargo:** 6 of 27 (22%) - 0 All-Americans (2 winning records: [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) 5-2, [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) 3-2)
+- **NHSCA:** 26 of 28 (93%) - 10 All-Americans
+- **Super32:** 20 of 28 (71%) - 1 All-American ([Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026), 4th)
+- **Fargo:** 6 of 28 (21%) - 0 All-Americans (2 winning records: [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) 5-2, [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) 3-2)
 - **College Opens:** 8 participants - Multiple documented placers
 - **Journeymen:** 7 participants - Multiple placers
 
-The pattern is clear: 93% of Division I commits in this dataset competed at NHSCA, and 74% competed at Super32. These are the tournaments where North Carolina Division I commits most frequently competed and earned All-American honors, while College Opens and Journeymen are growing significantly for good reason.
+The pattern is clear: 93% of Division I commits in this dataset competed at NHSCA, and 71% competed at Super32. These are the tournaments where North Carolina Division I commits most frequently competed and earned All-American honors, while College Opens and Journeymen are growing significantly for good reason.
 
 ---
 
 ## The Tournaments That Appear Most Often on the Recruiting Path
 
-Based on participation data and recruiting outcomes from the 86 commits tracked, five tournaments appear most frequently along the recruiting journey for North Carolina wrestlers.
+Based on participation data and recruiting outcomes from the 87 commits tracked, five tournaments appear most frequently along the recruiting journey for North Carolina wrestlers.
 
 ### 1. NHSCA Nationals – Virginia Beach, VA
 
@@ -214,7 +215,7 @@ Super32 is best suited for wrestlers who:
 
 Because of the depth of competition, Super32 serves as one of the clearest early-season benchmarks for elite high school wrestlers.
 
-73% of Division I commits in this dataset competed at Super32, winning at twice the rate of Division II commits (49% vs 24%), reflecting the elite level of competition. At ~$250 with no travel required for NC families, it combines national-level competition with accessibility.
+71% of Division I commits in this dataset competed at Super32, winning at twice the rate of Division II commits (49% vs 24%), reflecting the elite level of competition. At ~$250 with no travel required for NC families, it combines national-level competition with accessibility.
 
 **Only one All-American from tracked commits:** [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) (4th place)
 
@@ -271,7 +272,7 @@ NHSCA Duals is best suited for wrestlers who:
 
 ![NC United - NHSCA Duals 2025. Virginia Beach, VA • Historic 7-1 Record.](/images/nhsca-duals-2025-team.png)
 
-Among the 27 Division I commits from the Classes of 2025 and 2026 in this dataset, **17 competed at NHSCA Duals** (11 of 17 from the Class of 2025, 6 of 10 from the Class of 2026)—further evidence of the event’s role on the recruiting path. The NC United National Team's 7-1 Gold Pool finish set a record for North Carolina teams, increasing exposure for NC athletes alongside top national programs like Shutt. Dual meet competition allows college coaches to evaluate athletes in high-level team environments against nationally ranked opponents.
+Among the 28 Division I commits from the Classes of 2025 and 2026 in this dataset, **17 competed at NHSCA Duals** (11 of 17 from the Class of 2025, 6 of 11 from the Class of 2026)—further evidence of the event’s role on the recruiting path. The NC United National Team's 7-1 Gold Pool finish set a record for North Carolina teams, increasing exposure for NC athletes alongside top national programs like Shutt. Dual meet competition allows college coaches to evaluate athletes in high-level team environments against nationally ranked opponents.
 
 ---
 
@@ -342,10 +343,10 @@ For athletes serious about freestyle or Greco long-term, Southeast Regionals is 
 
 Fargo represents the biggest commitment among all tournaments analyzed due to its cost, location, qualification process, and the training required for style transition. However, from a college recruiting perspective, the data suggests better alternatives often exist for North Carolina wrestlers.
 
-**Among the 27 Division I commits tracked:**
-- 6 competed at Fargo (22%)
+**Among the 28 Division I commits tracked:**
+- 6 competed at Fargo (21%)
 - 0 placements recorded
-- By comparison: 25 competed at NHSCA Nationals (93%), producing 10 All-Americans
+- By comparison: 26 competed at NHSCA Nationals (93%), producing 10 All-Americans
 
 Because this study focuses on the tournaments that appear most often in the recruiting paths of North Carolina college commits, Fargo was not included among the primary five tournaments highlighted.
 
@@ -369,7 +370,7 @@ College coaches often evaluate prospects more efficiently at national folkstyle 
 
 ## Final Takeaway
 
-The data suggests that North Carolina's recruiting path most often runs through national folkstyle tournaments such as NHSCA Nationals, Super32, College Opens, NHSCA Duals, and Journeymen. These five tournaments appear consistently in the competitive histories of 86 college commits, producing measurable results where NC wrestlers have competed and succeeded.
+The data suggests that North Carolina's recruiting path most often runs through national folkstyle tournaments such as NHSCA Nationals, Super32, College Opens, NHSCA Duals, and Journeymen. These five tournaments appear consistently in the competitive histories of 87 college commits, producing measurable results where NC wrestlers have competed and succeeded.
 
 Colleges need to see you compete against the best competition in the country. Any tournament that gives you an opportunity to wrestle against nationally ranked kids (for our most elite) will be the best path to exposure at all levels of college wrestling.
 
@@ -377,4 +378,4 @@ North Carolina's path to college recruiting is unique and a direct comparison to
 
 ---
 
-*Analysis based on tournament participation and college commitment data from 86 North Carolina wrestlers (Classes of 2025–2026). Compiled by **NC United Wrestling**, a 501(c)(3) nonprofit organization dedicated to advancing wrestling in North Carolina.*
+*Analysis based on tournament participation and college commitment data from 87 North Carolina wrestlers (Classes of 2025–2026). Compiled by **NC United Wrestling**, a 501(c)(3) nonprofit organization dedicated to advancing wrestling in North Carolina.*

@@ -33,8 +33,12 @@ const config: Config = {
         "fox-blue": "#003366",
         "nc-red": {
           DEFAULT: "#B31B1B",
+          50: "#fdf5f5",
+          100: "#fce8e8",
+          200: "#f5cfcf",
           600: "#8c1414",
-          800: "#B31B1B", // Red
+          700: "#751010",
+          800: "#5e0c0c",
         },
         "nc-gold": {
           DEFAULT: "#CBAF5D",

@@ -132,7 +132,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
           </div>
 
           {capacityError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
+            <div className="rounded-lg border border-nc-red-200 bg-nc-red-50 px-4 py-3 text-sm text-nc-red-800">
               {capacityError}
             </div>
           )}
@@ -252,7 +252,7 @@ export function DropInForm({ eventId, eventTitle, onClose }: DropInFormProps) {
             </section>
 
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">{error}</div>
+              <div className="rounded-lg border border-nc-red-200 bg-nc-red-50 px-4 py-3 text-sm text-nc-red-800">{error}</div>
             )}
 
             <div

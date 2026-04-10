@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { X, Calendar, MapPin, Clock, Users, ExternalLink } from 'lucide-react'
-import type { CalendarEvent } from "@/lib/nc-united-calendar/types"
+import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
+import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import { parseCivilDateFromDatabase } from "@/lib/nc-united-calendar/calendar-date"
 import { EventShare } from "./event-share"
 import { DropInForm } from "./drop-in-form"
@@ -52,21 +53,6 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
 
   if (!event) return null
 
-  const getCategoryColor = (category: string) => {
-    switch (category.toLowerCase()) {
-      case "tournament":
-        return "bg-red-100 text-red-800 border-red-200"
-      case "practice":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      case "camp":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "meeting":
-        return "bg-purple-100 text-purple-800 border-purple-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
-    }
-  }
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "approved":
@@ -75,11 +61,13 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
         return "bg-yellow-100 text-yellow-800 border-yellow-200"
       case "rejected":
       case "denied":
-        return "bg-red-100 text-red-800 border-red-200"
+        return "border border-nc-red-200 bg-nc-red-50 text-nc-red-800"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
+
+  const categoryConfig = eventCategories[event.category as EventCategory]
 
   const formatEventDate = (value: Date | string) => {
     try {
@@ -131,7 +119,14 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
               )}
               <div className="space-y-2">
                 <h2 className="text-xl font-bold text-white">{event.title}</h2>
-                <Badge className={`${getCategoryColor(event.category)} border`}>{event.category}</Badge>
+                <Badge
+                  className={
+                    categoryConfig?.badgeClass ??
+                    "border border-gray-200 bg-gray-100 text-gray-800"
+                  }
+                >
+                  {categoryConfig?.label ?? event.category}
+                </Badge>
               </div>
             </div>
 
@@ -238,7 +233,13 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                       <Badge className="bg-emerald-100 text-emerald-800">
                         {paidDropIns.length} paid • {capacity} capacity
                       </Badge>
-                      <Badge className={remainingSlots > 0 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}>
+                      <Badge
+                        className={
+                          remainingSlots > 0
+                            ? "border border-amber-200 bg-amber-50 text-amber-950"
+                            : "border border-nc-red-200 bg-nc-red-50 text-nc-red-800"
+                        }
+                      >
                         {remainingSlots > 0 ? `${remainingSlots} slots left` : "At capacity"}
                       </Badge>
                       <Button

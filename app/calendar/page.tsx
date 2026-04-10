@@ -10,6 +10,7 @@ import { useNcUnitedCalendarEvents } from "@/hooks/use-nc-united-calendar-events
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
 import { CalendarAdminBanner } from "@/components/nc-united-calendar/calendar-admin-banner"
+import { CalendarLoadingSkeleton } from "@/components/nc-united-calendar/calendar-loading-skeleton"
 
 export default function NcUnitedCalendarPage() {
   const { events, loading, error } = useNcUnitedCalendarEvents()
@@ -32,26 +33,32 @@ export default function NcUnitedCalendarPage() {
 
   const filteredEvents = events?.filter((e) => visibleCategories.has(e.category as EventCategory)) || []
 
+  const y = currentDate.getFullYear()
+  const m = currentDate.getMonth()
+  const eventsThisMonth = filteredEvents.filter((e) => {
+    const d = e.date
+    return d.getFullYear() === y && d.getMonth() === m
+  }).length
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nc-navy-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading calendar...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100/80">
+        <CalendarLoadingSkeleton />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Error loading calendar: {error}</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-slate-50 to-white px-4">
+        <div className="max-w-md text-center">
+          <p className="mb-4 rounded-xl border border-nc-red-200 bg-nc-red-50 px-4 py-3 text-sm text-nc-red-800">
+            Error loading calendar: {error}
+          </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-nc-navy-600 text-white rounded hover:bg-nc-navy-700"
+            className="rounded-lg bg-nc-navy-950 px-4 py-2 text-white shadow-sm transition-colors hover:bg-nc-navy-800"
           >
             Retry
           </button>
@@ -61,29 +68,40 @@ export default function NcUnitedCalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 via-white to-slate-100/90">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(179,27,27,0.06),transparent),radial-gradient(ellipse_60%_40%_at_100%_0%,rgba(0,51,102,0.05),transparent)]"
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:py-12">
         <CalendarAdminBanner />
-        <div className="mb-8 text-center">
-          <h1 className="text-6xl font-extrabold mb-3 tracking-tight">
-            <span className="text-nc-navy-900">Calendar</span>
-            <span className="text-nc-red-600">NC</span>
-          </h1>
-          <p className="text-gray-600 text-xl font-medium">
-            Powered by <span className="font-bold text-nc-navy-600">NC</span>{" "}
-            <span className="font-bold text-nc-red-600">United</span>. Built for the entire{" "}
-            <span className="font-bold text-nc-navy-600">NC</span> wrestling community.
+        <header className="mb-10 text-center sm:mb-12">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-nc-red/90 sm:text-xs">
+            NC United Wrestling
           </p>
-        </div>
+          <h1 className="mb-3 text-4xl font-extrabold tracking-tight text-nc-navy-900 sm:text-6xl sm:tracking-tighter">
+            Calendar<span className="text-nc-red">NC</span>
+          </h1>
+          <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            Practices, tournaments, and community events — built for the{" "}
+            <span className="font-semibold text-nc-navy-900">NC</span> wrestling community.
+          </p>
+        </header>
 
-        <CalendarHeader currentDate={currentDate} onDateChange={setCurrentDate} view={view} onViewChange={setView} />
+        <CalendarHeader
+          currentDate={currentDate}
+          onDateChange={setCurrentDate}
+          view={view}
+          onViewChange={setView}
+          eventsThisMonth={eventsThisMonth}
+        />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-4">
           <div className="lg:col-span-1">
             <EventLegend visibleCategories={visibleCategories} onCategoryToggle={handleCategoryToggle} />
           </div>
 
-          <div className="lg:col-span-3">
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 lg:col-span-3">
             {view === "month" ? (
               <MonthView currentDate={currentDate} events={filteredEvents} onEventClick={setSelectedEvent} />
             ) : (

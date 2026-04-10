@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, Clock, MapPin, User, ExternalLink, Users } from 'lucide-react'
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
+import { cn } from "@/lib/utils"
 import { formatTime } from "@/lib/nc-united-calendar/time-utils"
 import type { CalendarViewProps, EventCategory } from "@/lib/nc-united-calendar/types"
 
@@ -30,7 +31,18 @@ export function ListView({
   const sortedEvents = filteredEvents.sort((a, b) => a.date.getTime() - b.date.getTime())
 
   if (sortedEvents.length === 0) {
-    return <div className="text-center py-8 text-muted-foreground">No events found for the selected filters.</div>
+    const monthLabel = currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-200/90 bg-gradient-to-br from-slate-50/90 via-white to-nc-red-50/40 px-6 py-14 text-center shadow-sm">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-nc-navy-950/5 text-2xl shadow-inner">
+          📅
+        </div>
+        <p className="text-base font-semibold text-nc-navy-900">No events in {monthLabel}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-slate-600">
+          Nothing matches this month with your current event-type filters. Adjust the legend or pick another month.
+        </p>
+      </div>
+    )
   }
 
   const isPastEvent = (eventDate: Date) => {
@@ -42,13 +54,25 @@ export function ListView({
   return (
     <div className="space-y-4">
       {sortedEvents.map((event) => {
-        const categoryConfig = eventCategories[event.category]
+        const categoryConfig = eventCategories[event.category] ?? {
+          label: "Event",
+          icon: "📅",
+          listStrip: "border-l-slate-400",
+        }
         const showDropInLink =
           (event.category === "blue-practice" || event.category === "gold-practice") && event.dropInRegistrationLink
         const isEventPast = isPastEvent(event.date)
 
         return (
-          <Card key={event.id} className={`hover:shadow-md transition-shadow ${isEventPast ? 'opacity-60' : ''}`}>
+          <Card
+            key={event.id}
+            className={cn(
+              "overflow-hidden rounded-xl border border-slate-200/90 shadow-sm transition-all hover:shadow-md",
+              "border-l-4",
+              categoryConfig.listStrip,
+              isEventPast ? "opacity-60" : "",
+            )}
+          >
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex-1 space-y-2">

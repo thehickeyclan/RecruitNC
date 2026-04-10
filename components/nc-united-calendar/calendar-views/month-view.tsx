@@ -90,11 +90,14 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
 
   const getEventCategory = (categoryKey: string) => {
     return (
-      eventCategories[categoryKey] || {
+      eventCategories[categoryKey as keyof typeof eventCategories] || {
         label: "Event",
         color: "text-gray-700",
         bgColor: "bg-transparent",
         icon: "📅",
+        badgeClass: "border border-gray-200 bg-gray-100 text-gray-800",
+        accentDot: "bg-gray-400",
+        listStrip: "border-l-gray-400",
       }
     )
   }
@@ -105,15 +108,30 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
     return eventDateOnly < today
   }
 
+  const eventsInDisplayedMonth = events.filter((e) => {
+    const d = e.date
+    return d.getFullYear() === year && d.getMonth() === month
+  }).length
+
   return (
-    <Card>
+    <Card className="overflow-hidden rounded-2xl border border-slate-200/90 shadow-sm">
       <CardContent className="p-0">
+        {eventsInDisplayedMonth === 0 && (
+          <div className="border-b border-slate-200/90 bg-gradient-to-r from-nc-red-50/90 via-white to-nc-navy/[0.04] px-4 py-4 sm:px-6">
+            <p className="text-center text-sm font-medium text-nc-navy-900">
+              No events scheduled this month with your current filters.
+            </p>
+            <p className="mt-1 text-center text-xs text-slate-600">
+              Try another month, or turn event types back on in the sidebar.
+            </p>
+          </div>
+        )}
         <div className="grid grid-cols-7 gap-0">
           {/* Day headers */}
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
               key={day}
-              className="p-2 sm:p-3 text-center font-semibold text-gray-600 border-b border-gray-200 text-xs sm:text-sm"
+              className="border-b border-slate-200 bg-slate-50/90 p-2 text-center text-xs font-semibold text-nc-navy-900 sm:p-3 sm:text-sm"
             >
               {day}
             </div>
@@ -129,19 +147,19 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
             return (
               <div
                 key={index}
-                className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border-b border-r border-gray-200 ${
-                  !isCurrentMonthDate ? "bg-gray-50" : isPastDay && !isTodayDate ? "bg-gray-50" : "bg-white"
+                className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border-b border-r border-slate-200/90 ${
+                  !isCurrentMonthDate ? "bg-slate-50/80" : isPastDay && !isTodayDate ? "bg-slate-50/50" : "bg-white"
                 }`}
               >
                 <div
-                  className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
-                    isTodayDate 
-                      ? "bg-[#C6B069] text-white" 
-                      : isCurrentMonthDate 
-                        ? isPastDay 
-                          ? "text-gray-400" 
-                          : "text-gray-900" 
-                        : "text-gray-400"
+                  className={`mb-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold sm:mb-2 sm:h-6 sm:w-6 sm:text-sm ${
+                    isTodayDate
+                      ? "bg-nc-gold text-white shadow-sm ring-2 ring-nc-red/20"
+                      : isCurrentMonthDate
+                        ? isPastDay
+                          ? "text-slate-400"
+                          : "text-nc-navy-900"
+                        : "text-slate-400"
                   }`}
                 >
                   {date.getDate()}
@@ -157,13 +175,17 @@ export function MonthView({ currentDate, events, onEventClick }: MonthViewProps)
                       <div
                         key={eventIndex}
                         onClick={() => onEventClick(event)}
-                        className={`text-xs cursor-pointer hover:bg-gray-100 transition-colors p-0.5 sm:p-1 rounded ${
-                          isEventPast ? 'opacity-60' : ''
+                        className={`group text-xs cursor-pointer rounded-md border border-transparent p-0.5 transition-colors hover:border-slate-200 hover:bg-slate-50 sm:p-1 ${
+                          isEventPast ? "opacity-60" : ""
                         }`}
                         title={event.title + multiDayIndicator}
                       >
                         <div className="flex items-center gap-0.5 sm:gap-1">
-                          <span className="text-xs flex-shrink-0">{category.icon}</span>
+                          <span
+                            className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${category.accentDot}`}
+                            aria-hidden
+                          />
+                          <span className="flex-shrink-0 text-xs">{category.icon}</span>
                           <span className={`break-words leading-tight font-medium whitespace-normal ${
                             isEventPast ? 'text-gray-500' : 'text-gray-800'
                           }`}>

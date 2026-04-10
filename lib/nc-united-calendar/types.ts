@@ -3,6 +3,12 @@ export interface EventCategoryConfig {
   color: string
   bgColor: string
   icon: string
+  /** Modal / chip — use NC United palette, not generic `red-*`. */
+  badgeClass: string
+  /** Legend & list row accent dot */
+  accentDot: string
+  /** List view left border color */
+  listStrip: string
 }
 
 export type EventCategory =

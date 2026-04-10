@@ -43,52 +43,57 @@ export function CalendarSync() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+        <Button
+          variant="outline"
+          className="flex items-center gap-2 rounded-full border-slate-200 bg-white/90 font-medium text-nc-navy-900 hover:border-nc-navy/25 hover:bg-slate-50"
+        >
           <Calendar className="h-4 w-4" />
           Sync Calendar
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="border-slate-200/90 bg-white sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Sync with Google Calendar
+          <DialogTitle className="flex items-center gap-2 text-nc-navy-900">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-nc-red/10 text-nc-red">
+              <Calendar className="h-5 w-5" />
+            </span>
+            Sync calendar
           </DialogTitle>
-          <DialogDescription>
-            Add the NC United Wrestling calendar to your Google Calendar to stay updated on all events.
+          <DialogDescription className="text-slate-600">
+            Add the NC United Wrestling feed to Google Calendar or download an{" "}
+            <span className="font-medium text-nc-navy-900">.ics</span> file for Apple and other apps.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Button
               onClick={downloadICS}
               variant="outline"
               size="sm"
-              className="flex items-center gap-1 bg-transparent"
+              className="flex items-center justify-center gap-2 rounded-xl border-slate-200 font-medium text-nc-navy-900 hover:bg-slate-50"
             >
-              <Download className="h-3 w-3" />
-              Download ICS
+              <Download className="h-4 w-4" />
+              Download .ics
             </Button>
-            <Button onClick={openGoogleCalendar} className="bg-blue-600 hover:bg-blue-700">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Add to Google Calendar
+            <Button
+              onClick={openGoogleCalendar}
+              className="flex items-center justify-center gap-2 rounded-xl bg-nc-navy-950 font-medium text-white hover:bg-nc-navy-800"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Add in Google
             </Button>
           </div>
 
-          {/* Instructions */}
-          <div className="text-sm text-gray-600 space-y-2">
-            <p className="font-semibold">Instructions:</p>
-            <ol className="list-decimal list-inside space-y-1 text-xs">
-              <li>Click "Add to Google Calendar" above</li>
-              <li>Paste the calendar URL when prompted by Google</li>
-              <li>Wait 5-15 minutes for events to sync</li>
-              <li>Look for "NC United Wrestling" events in your calendar</li>
+          <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-700">
+            <p className="font-semibold text-nc-navy-900">How it works</p>
+            <ol className="list-inside list-decimal space-y-1.5 text-xs leading-relaxed text-slate-600">
+              <li>Use <span className="font-medium text-nc-navy-900">Add in Google</span> or paste the URL below.</li>
+              <li>Google may take a few minutes to refresh the feed.</li>
+              <li>Look for events labeled NC United Wrestling.</li>
             </ol>
-            <p className="text-xs text-gray-500 mt-3">
-              Calendar URL:{" "}
-              {typeof window !== "undefined" ? `${window.location.origin}/api/calendar/feed` : "Loading..."}
+            <p className="break-all rounded-lg bg-white/80 px-2 py-2 font-mono text-[11px] text-slate-600">
+              {typeof window !== "undefined" ? `${window.location.origin}/api/calendar/feed` : "…"}
             </p>
           </div>
         </div>
