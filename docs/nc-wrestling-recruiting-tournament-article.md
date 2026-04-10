@@ -81,43 +81,44 @@ The table below shows tournament participation for all 28 Division I commits fro
 
 | Athlete | College | NHSCA Result | Super32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
-| [Ian Fritz](/unified-profile/by-name?name=Ian+Fritz&year=2025) | Utah Valley | All-American 7-2 (2024 Jr), 4-2 (2023 So), 4-2 (2022 Fr) | 2-2 (2024), 0-2 (2023), 2-2 (2022) | DNC | - | - |
-| [Liam Hickey](/unified-profile/by-name?name=Liam+Hickey&year=2025) | UNC | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | DNC | Patriot Open placer, Southeast Open | Journeymen |
-| [Colt Campbell](/unified-profile/by-name?name=Colt+Campbell&year=2025) | App State | 3rd (2025 Sr), 5-2 (2024 Jr) | 3-2 (2024), 0-2 (2022) | DNC | Pembroke Open Champion | NHSCA Duals (2024) |
-| [Nathan McCartney](/unified-profile/by-name?name=Nathan+McCartney&year=2025) | Gardner Webb | 5th (2025 Sr), competed 2024 Jr, 2023 So | DNC | DNC | - | NHSCA Duals (2025) <small>(NC United National Team)</small> |
-| [Everest Ouellette](/unified-profile/by-name?name=Everest+Ouellette&year=2025) | NC State | 3rd (2025 Sr) | 1-2 (2024) | DNC | Patriot Open | NHSCA Duals (2025) <small>(NC United National Team)</small> |
-| [Cooper Foster](/unified-profile/by-name?name=Cooper+Foster&year=2025) | App State | 3rd (2025 Sr), 3rd (2024 Jr) | 4-2 (2023), 1-2 (2022) | DNC | DNC | NHSCA Duals (2024) |
-| [Kyser Kostoff](/unified-profile/by-name?name=Kyser+Kostoff&year=2025) | Presbyterian | DNC | 4-2 (2024) | DNC | DNC | NHSCA Duals (2025) |
-| [Xavier Wilson](/unified-profile/by-name?name=Xavier+Wilson&year=2025) | NC State | 4th (2024 Jr) | DNC | DNC | - | NHSCA Duals (2025) <small>(NC United National Team)</small> |
-| [Alex Schweitzer](/unified-profile/by-name?name=Alex+Schweitzer&year=2025) | Presbyterian | 0-2 (2024 Jr) | DNC | 2-2 | DNC | NHSCA Duals (2025) |
-| [Damien Couture](/unified-profile/by-name?name=Damien+Couture&year=2025) | Ohio U | 6th (2025 Sr) | 3-2 (2024) | 1-2 (2024), 1-2 (2025) | DNC | NHSCA Duals (2024) |
-| [Hayden Haynes](/unified-profile/by-name?name=Hayden+Haynes&year=2025) | App State | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | 0-2 | DNC | NHSCA Duals (2025) |
-| [Kenneth Pritz](/unified-profile/by-name?name=Kenneth+Pritz&year=2025) | App State | 4-2 (2025 Sr), 4-2 (2024 Jr) | 1-2 (2024), 1-2 (2022) | DNC | DNC | NHSCA Duals (2024) |
-| [Kaden Helms](/unified-profile/by-name?name=Kaden+Helms&year=2025) | Gardner Webb | 1-2 (2025 Sr), 1-1 (2024 Jr) | 0-2 (2024) | DNC | - | - |
-| [Till Helms](/unified-profile/by-name?name=Till+Helms&year=2025) | Gardner Webb | 3-2 (2025 Sr), 3-2 (2024 Jr) | 1-2 (2024) | DNC | - | - |
-| [Gage Helms](/unified-profile/by-name?name=Gage+Helms&year=2025) | Gardner Webb | 1-2 (2025 Sr), 0-2 (2024 Jr) | 0-2 (2024) | DNC | - | - |
-| [Ryan Mann](/unified-profile/by-name?name=Ryan+Mann&year=2025) | Presbyterian | 0-2 (2025 Sr), 3-2 (2024 Jr), 2-2 (2023 So) | 2-2 (2024), 1-2 (2023), 0-2 (2022) | DNC | - | NHSCA Duals (2024) |
-| [John Henry Ehrenberger](/unified-profile/by-name?name=John+Henry+Ehrenberger&year=2025) | VMI | DNC | DNC | DNC | DNC | - |
+| [Ian Fritz](/unified-profile/by-name?name=Ian+Fritz&year=2025) | Utah Valley | All-American 7-2 (2024 Jr), 4-2 (2023 So), 4-2 (2022 Fr) | 2-2 (2024), 0-2 (2023), 2-2 (2022) | DNC | - | NCHSAA 4A state champion at Topsail (132 ’23, 150 ’24); senior year UHSAA 6A champ (Pleasant Grove, Utah) • Topsail (NC) / Pleasant Grove (Utah) • career 165-11 |
+| [Liam Hickey](/unified-profile/by-name?name=Liam+Hickey&year=2025) | UNC | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | DNC | Patriot Open placer, Southeast Open | NCHSAA 4A state champion (132 ’25, 138 ’24); 3rd ’23 • Cardinal Gibbons • career 90-5 • Journeymen |
+| [Colt Campbell](/unified-profile/by-name?name=Colt+Campbell&year=2025) | App State | 3rd (2025 Sr), 5-2 (2024 Jr) | 3-2 (2024), 0-2 (2022) | DNC | Pembroke Open Champion | NCHSAA 4A 175 champion 2025 (55-0); 4A 165 champion 2024 (58-0) • Hickory Ridge • Pembroke Open Champion • NHSCA Duals (2024) |
+| [Nathan McCartney](/unified-profile/by-name?name=Nathan+McCartney&year=2025) | Gardner Webb | 5th (2025 Sr), competed 2024 Jr, 2023 So | DNC | DNC | - | NCHSAA 3A 157 runner-up 2024 (53-1); 3A 152 4th 2023 • Central Davidson • NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Everest Ouellette](/unified-profile/by-name?name=Everest+Ouellette&year=2025) | NC State | 3rd (2025 Sr) | 1-2 (2024) | DNC | Patriot Open | NCHSAA state honors — see profile • First Flight • Patriot Open • NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Cooper Foster](/unified-profile/by-name?name=Cooper+Foster&year=2025) | App State | 3rd (2025 Sr), 3rd (2024 Jr) | 4-2 (2023), 1-2 (2022) | DNC | DNC | NCHSAA two-time state champion • Avery County • NHSCA Duals (2024) |
+| [Kyser Kostoff](/unified-profile/by-name?name=Kyser+Kostoff&year=2025) | Presbyterian | DNC | 4-2 (2024) | DNC | DNC | NCHSAA 4A 150 state champion 2025 • William Amos Hough • NHSCA Duals (2025) |
+| [Xavier Wilson](/unified-profile/by-name?name=Xavier+Wilson&year=2025) | NC State | 4th (2024 Jr) | DNC | DNC | - | NCHSAA two-time state champion • Eastern Guilford • NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Alex Schweitzer](/unified-profile/by-name?name=Alex+Schweitzer&year=2025) | Presbyterian | 0-2 (2024 Jr) | DNC | 2-2 | DNC | NCHSAA state honors — see profile • Cary • NHSCA Duals (2025) |
+| [Damien Couture](/unified-profile/by-name?name=Damien+Couture&year=2025) | Ohio U | 6th (2025 Sr) | 3-2 (2024) | 1-2 (2024), 1-2 (2025) | DNC | NCHSAA 4A 285 runner-up 2025 (53-1) • Hickory Ridge • NHSCA Duals (2024) |
+| [Hayden Haynes](/unified-profile/by-name?name=Hayden+Haynes&year=2025) | App State | 4th (2025 Sr), 8th (2024 Jr) | 3-2 (2024) | 0-2 | DNC | NCHSAA state honors — see profile • McDowell • NHSCA Duals (2025) |
+| [Kenneth Pritz](/unified-profile/by-name?name=Kenneth+Pritz&year=2025) | App State | 4-2 (2025 Sr), 4-2 (2024 Jr) | 1-2 (2024), 1-2 (2022) | DNC | DNC | NCHSAA two-time state champion • Avery County • NHSCA Duals (2024) |
+| [Kaden Helms](/unified-profile/by-name?name=Kaden+Helms&year=2025) | Gardner Webb | 1-2 (2025 Sr), 1-1 (2024 Jr) | 0-2 (2024) | DNC | - | NCHSAA state honors — see profile • North Lincoln |
+| [Till Helms](/unified-profile/by-name?name=Till+Helms&year=2025) | Gardner Webb | 3-2 (2025 Sr), 3-2 (2024 Jr) | 1-2 (2024) | DNC | - | NCHSAA state honors — see profile • North Lincoln |
+| [Gage Helms](/unified-profile/by-name?name=Gage+Helms&year=2025) | Gardner Webb | 1-2 (2025 Sr), 0-2 (2024 Jr) | 0-2 (2024) | DNC | - | NCHSAA state honors — see profile • North Lincoln |
+| [Ryan Mann](/unified-profile/by-name?name=Ryan+Mann&year=2025) | Presbyterian | 0-2 (2025 Sr), 3-2 (2024 Jr), 2-2 (2023 So) | 2-2 (2024), 1-2 (2023), 0-2 (2022) | DNC | - | NCHSAA state honors — see profile • North East Carolina Prep • NHSCA Duals (2024) |
+| [John Henry Ehrenberger](/unified-profile/by-name?name=John+Henry+Ehrenberger&year=2025) | VMI | DNC | DNC | DNC | DNC | NCHSAA state honors — see profile • Cardinal Gibbons |
 
 ### Class of 2026 (11 D1 Commits)
 
 | Athlete | College | NHSCA Result | Super32 Result | Fargo | College Opens | Other Notable |
 |---------|---------|--------------|-----------------|-------|---------------|---------------|
-| [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) | App State | 3rd (2025 Jr), 6th (2024 So) | 4th AA 8-2 (2025), 5-2 (2024) | 5-2 | App State 2nd, Southeast Open, Patriot Open | Iron Man, Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
-| [Lorenzo Alston](/unified-profile/by-name?name=Lorenzo+Alston&year=2026) | NC State | 2nd (2025 Jr), 4th (2024 So) | 5-2 (2025), 2-2 (2024) | DNC | Southeast Open, Patriot Open | Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
-| [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) | Binghamton | Competed 2025 Jr | 4-2 (2025), 2-2 (2024) | 3-2 | Pembroke Champion, Southeast Open | Journeymen, NHSCA Duals (2025) |
-| [Cael Dunn](/unified-profile/by-name?name=Cael+Dunn&year=2026) | Campbell | 3-2 (2024 So), 6th place 4-3 (2023 Fr) | 2-2 (2025), 3-2 (2024) | DNC | - | Journeymen, NHSCA Duals (2024, 2025) |
-| [Andrew Meadows](/unified-profile/by-name?name=Andrew+Meadows&year=2026) | Citadel | 4-2 (2025 Jr), 4-2 (2024 So) | 0-2 (2025) | 1-2 | - | Beast of East, Journeymen, NHSCA Duals (2024, 2025) |
-| [Austin Laws](/unified-profile/by-name?name=Austin+Laws&year=2026) | Duke | 2-2 (2025 Jr) | 1-2 (2025) | DNC | - | - |
-| [Austin Green](/unified-profile/by-name?name=Austin+Green&year=2026) | Davidson | 2-2 (2024 So), 1-2 (2023 Fr) | DNC | DNC | - | - |
-| [Alexander May](/unified-profile/by-name?name=Alexander+May&year=2026) | Mercyhurst | 1-2 (2024 So), 2-2 (2023 Fr) | 0-2 (2025) | DNC | - | - |
-| [Avery Rhymer](/unified-profile/by-name?name=Avery+Rhymer&year=2026) | App State | 1-2 (2025 Jr) | 1-2 (2025) | DNC | - | Journeymen, NHSCA Duals (2025) |
-| [Spear Gorelick](/unified-profile/by-name?name=Spear+Gorelick&year=2026) | Davidson | 0-2 (2024 So) | 0-2 (2024) | DNC | - | - |
+| [Bentley Sly](/unified-profile/by-name?name=Bentley+Sly&year=2026) | App State | 3rd (2025 Jr), 6th (2024 So) | 4th AA 8-2 (2025), 5-2 (2024) | 5-2 | App State 2nd, Southeast Open, Patriot Open | NCHSAA 4x state champion (3A→4A; 120–132–144–150) • Stuart Cramer • career 207-6 • Iron Man, Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Lorenzo Alston](/unified-profile/by-name?name=Lorenzo+Alston&year=2026) | NC State | 2nd (2025 Jr), 4th (2024 So) | 5-2 (2025), 2-2 (2024) | DNC | Southeast Open, Patriot Open | NCHSAA 4x state champion (1A→4A; 144–145–157–175) • Uwharrie Charter • career 202-2 • Journeymen, NHSCA Duals (2025) <small>(NC United National Team)</small> |
+| [Gabe Rogers](/unified-profile/by-name?name=Gabe+Rogers&year=2026) | Binghamton | Competed 2025 Jr | 4-2 (2025), 2-2 (2024) | 3-2 | Pembroke Champion, Southeast Open | NCHSAA 5A 144 state champion 2026 (28-1 season) • Seaforth • Journeymen, NHSCA Duals (2025) |
+| [Cael Dunn](/unified-profile/by-name?name=Cael+Dunn&year=2026) | Campbell | 3-2 (2024 So), 6th place 4-3 (2023 Fr) | 2-2 (2025), 3-2 (2024) | DNC | - | NCHSAA 4x state champion (1A/2A 215) • Avery / South Davidson • career 217-1 • Journeymen, NHSCA Duals (2024, 2025) |
+| [Andrew Meadows](/unified-profile/by-name?name=Andrew+Meadows&year=2026) | Citadel | 4-2 (2025 Jr), 4-2 (2024 So) | 0-2 (2025) | 1-2 | - | NCHSAA 3x state champion; 3A 175 (51-2, 2026 preview) • Mount Airy • Beast of East, Journeymen, NHSCA Duals (2024, 2025) |
+| [Austin Laws](/unified-profile/by-name?name=Austin+Laws&year=2026) | Duke | 2-2 (2025 Jr) | 1-2 (2025) | DNC | - | NCHSAA 4A 138 (2026 state tournament) • Fred T. Foard |
+| [Austin Green](/unified-profile/by-name?name=Austin+Green&year=2026) | Davidson | 2-2 (2024 So), 1-2 (2023 Fr) | DNC | DNC | - | NCHSAA state honors — see profile • Mooresville |
+| [Alexander May](/unified-profile/by-name?name=Alexander+May&year=2026) | Mercyhurst | 1-2 (2024 So), 2-2 (2023 Fr) | 0-2 (2025) | DNC | - | NCHSAA 3A 150 state champion 2026 • Hendersonville • career on profile |
+| [Avery Rhymer](/unified-profile/by-name?name=Avery+Rhymer&year=2026) | App State | 1-2 (2025 Jr) | 1-2 (2025) | DNC | - | NCHSAA state honors — see profile • St. Stephens • Journeymen, NHSCA Duals (2025) |
+| [Spear Gorelick](/unified-profile/by-name?name=Spear+Gorelick&year=2026) | Davidson | 0-2 (2024 So) | 0-2 (2024) | DNC | - | NCISAA 1st (150) 2026; 2nd (140) 2025 • Charlotte Latin • career 57-6 (prep) |
 | [Marcello Scaldaferri](/unified-profile/by-name?name=Marcello+Scaldaferri&year=2026) | Gardner Webb | 2-2 (2026 Sr), 4-2 (2025 Jr) | DNC | DNC | - | NCHSAA 3rd (8A, 144) 2026; 6th (4A, 138) 2025 • South Mecklenburg • career 147-38 |
 
 **Key:**
 - DNC = Did Not Compete
 - All-American = Top 8 placement at national tournament
+- **Other Notable** lists NCHSAA (and NCISAA where noted) state-level honors, high school, and career or season record when tracked; use the linked **unified profile** for the full stat block when a cell says *see profile* or *on profile*.
 
 **D1 Tournament Participation Summary:**
 - **NHSCA:** 26 of 28 (93%) - 10 All-Americans
