@@ -33,6 +33,14 @@ function generateOrderNumber(): string {
   return "NC-" + Date.now().toString(36).toUpperCase().slice(-6) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase()
 }
 
+/** Persist Stripe metadata on orders for filtering (store vs national team vs drop-in, etc.). */
+function channelBusinessFromMetadata(metadata: Stripe.Metadata | Record<string, string> | null | undefined) {
+  const m = (metadata ?? {}) as Record<string, string>
+  const ch = m.channel?.trim()
+  const bus = m.business?.trim()
+  return { channel: ch || null, business: bus || null }
+}
+
 export async function POST(request: NextRequest) {
   const webhookSecrets = getWebhookSecrets()
   if (webhookSecrets.length === 0 || !stripeSecret) {
@@ -228,6 +236,7 @@ export async function POST(request: NextRequest) {
             const totalCents = regCents + apparelCents
             const customerEmail = (reg.parent_email as string) ?? ""
             const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
+            const { channel: ntChannel, business: ntBusiness } = channelBusinessFromMetadata(session?.metadata)
             const { error: orderErr } = await admin.from("orders").insert({
               id: orderId,
               order_number: orderNumber,
@@ -245,6 +254,8 @@ export async function POST(request: NextRequest) {
               status: "paid",
               stripe_payment_intent_id: paymentIntent.id,
               promo_code: null,
+              channel: ntChannel,
+              business: ntBusiness,
             })
             let orderIdToUse = orderId
             if ((orderErr as { code?: string })?.code === "23505") {
@@ -442,6 +453,7 @@ export async function POST(request: NextRequest) {
         image_url: i.image ?? product?.image_url ?? null,
       }
     })
+    const { channel: storeChannel, business: storeBusiness } = channelBusinessFromMetadata(meta)
     const { error: orderError } = await admin.from("orders").insert({
       id: orderId,
       order_number: orderNumber,
@@ -459,6 +471,8 @@ export async function POST(request: NextRequest) {
       status: "paid",
       stripe_payment_intent_id: paymentIntent.id,
       promo_code: payload.promoCode ?? null,
+      channel: storeChannel,
+      business: storeBusiness,
     })
     if (orderError) {
       const code = (orderError as { code?: string }).code
@@ -612,6 +626,7 @@ export async function POST(request: NextRequest) {
         const totalCents = regCents + apparelCents
         const customerEmail = (session as { customer_email?: string }).customer_email ?? (session.customer_details as { email?: string })?.email ?? reg.parent_email ?? ""
         const customerName = [reg.athlete_first_name, reg.athlete_last_name].filter(Boolean).join(" ") || "National team registrant"
+        const { channel: ntSessionChannel, business: ntSessionBusiness } = channelBusinessFromMetadata(session.metadata)
         const { error: orderErr } = await admin.from("orders").insert({
           id: orderId,
           order_number: orderNumber,
@@ -629,6 +644,8 @@ export async function POST(request: NextRequest) {
           status: "paid",
           stripe_payment_intent_id: paymentIntentId,
           promo_code: null,
+          channel: ntSessionChannel,
+          business: ntSessionBusiness,
         })
         let orderIdToUse = orderId
         if ((orderErr as { code?: string })?.code === "23505") {
@@ -704,6 +721,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    // Sync Spartan donations to spartan_donations table
+    if (session.metadata?.channel === "spartan") {
+      const meta = session.metadata
+      const { error: spartanErr } = await admin.from("spartan_donations").upsert(
+        {
+          id: session.id,
+          created_at: new Date(session.created * 1000).toISOString(),
+          amount_cents: session.amount_total ?? 0,
+          currency: session.currency ?? "usd",
+          status: "paid",
+          athlete_code: meta.athlete_code || null,
+          athlete_display_name: meta.athlete_display_name || null,
+          fundraising_type: meta.fundraising_type || null,
+          spartan_campaign: meta.spartan_campaign || null,
+          donor_email: session.customer_details?.email || null,
+          donor_name: session.customer_details?.name || null,
+          stripe_charge_id: session.id,
+          raw_metadata: meta ? { ...meta } : {},
+        },
+        { onConflict: "id" },
+      )
+
+      if (spartanErr) {
+        console.error("[webhook] spartan_donations upsert:", spartanErr.message)
+      }
+      return NextResponse.json({ received: true })
+    }
+
     const amountTotal = ((session as { amount_total?: number }).amount_total ?? 0) / 100
     const hasStoreMetadata = !!(session.metadata?.items && session.metadata?.customer_email)
     const shippingLower = (session.metadata?.shipping_method as string)?.toLowerCase() ?? ""
@@ -750,6 +795,7 @@ export async function POST(request: NextRequest) {
         const dropInName = (sessionForLineItems as { line_items?: { data?: { description?: string }[] } }).line_items?.data?.[0]?.description ?? "Practice Drop-in"
         const orderNumber = generateOrderNumber()
         const orderId = crypto.randomUUID()
+        const { channel: dropInChannel, business: dropInBusiness } = channelBusinessFromMetadata(session.metadata)
         const { error: orderErr } = await admin.from("orders").insert({
           id: orderId,
           order_number: orderNumber,
@@ -768,6 +814,8 @@ export async function POST(request: NextRequest) {
           stripe_payment_intent_id: paymentIntentId,
           stripe_session_id: session.id,
           promo_code: null,
+          channel: dropInChannel,
+          business: dropInBusiness,
         })
         if ((orderErr as { code?: string })?.code === "23505") {
           return NextResponse.json({ received: true })
