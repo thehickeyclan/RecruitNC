@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { getSpartanRaceTierOrDefault, isSpartanRaceTierId } from "@/app/spartan/data"
 
 export const dynamic = "force-dynamic"
 
@@ -41,7 +42,11 @@ export async function POST(request: NextRequest) {
 
   const email = typeof body.email === "string" ? body.email.trim() : ""
   const donorName = typeof body.donorName === "string" ? body.donorName.trim().slice(0, 120) : ""
-  const tierPreference = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
+  const rawTier = typeof body.tierPreference === "string" ? body.tierPreference.trim().slice(0, 32) : ""
+  if (rawTier && !isSpartanRaceTierId(rawTier)) {
+    return NextResponse.json({ error: "Invalid race selection." }, { status: 400 })
+  }
+  const tierPreference = isSpartanRaceTierId(rawTier) ? rawTier : ""
   const athleteCode =
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
   const manualAthleteName =
@@ -112,13 +117,19 @@ export async function POST(request: NextRequest) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin
   const stripe = new Stripe(stripeSecret)
 
-  const productName = raceEntryRequested
-    ? "NC United × Spartan Fayetteville — Super 10K with Team NC · Sunday, May 3, 2026 (race weekend May 2–3)"
+  const raceTier = raceEntryRequested && tierPreference ? getSpartanRaceTierOrDefault(tierPreference) : null
+
+  const productName = raceEntryRequested && raceTier
+    ? `NC United × Spartan Fayetteville — ${raceTier.name} (${raceTier.priceLabel} suggested)`
     : "NC United — Gift to support our athletes (no race entry)"
 
-  let productDescription = raceEntryRequested
-    ? "Tax-deductible gift to NC United (501(c)(3)). You’re joining Team NC for the Super 10K in Fayetteville. After your gift is processed, NC United coordinates with Spartan Race—your Fayetteville entry code arrives by email when it’s ready."
-    : "Tax-deductible gift to NC United (501(c)(3)). This is support only—no Spartan race entry. If you chose a wrestler at checkout, your gift counts toward their fundraising."
+  let productDescription =
+    raceEntryRequested && raceTier
+      ? `Tax-deductible gift to NC United (501(c)(3)). Race intent: ${raceTier.name} — ${raceTier.detail}. ${raceTier.dates}. Register and choose Open vs Age Group on Spartan.com. After your gift, NC United coordinates with Spartan—entry details follow their process.`
+      : "Tax-deductible gift to NC United (501(c)(3)). This is support only—no Spartan race entry. If you chose a wrestler at checkout, your gift counts toward their fundraising."
+  if (raceEntryRequested && raceTier?.id === "super") {
+    productDescription += " Team NC’s crew race is the Super 10K (May 3)."
+  }
   if (teeEligible) {
     productDescription +=
       " Includes an NC United tee (while supplies last), sent to the shipping address you provide."

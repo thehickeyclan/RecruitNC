@@ -15,9 +15,10 @@ export function RaceTiersGrid() {
             Come race with us
           </h2>
           <p className="mt-4 text-base text-[#a3a3a3]">
-            The <strong className="text-[#ccc]">10K team race</strong> with Team NC (Spartan Super 10K)—or{" "}
-            <strong className="text-[#ccc]">donate without racing</strong> and choose the general fund or a wrestler on
-            the same secure form.
+            The <strong className="text-[#ccc]">10K team race</strong> with Team NC (Spartan Super 10K)—or pick Sprint,
+            Beast, Ultra, Kids, or other distances with ballpark pricing in the <strong className="text-[#ccc]">checkout form
+            below</strong>. Or <strong className="text-[#ccc]">donate without racing</strong> and choose the general fund or a
+            wrestler on the same secure form.
           </p>
         </div>
 

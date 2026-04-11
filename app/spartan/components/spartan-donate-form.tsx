@@ -5,7 +5,12 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { HardLink } from "@/components/hard-link"
 import type { SpartanRaceTierId } from "../types"
-import { DEFAULT_SPARTAN_RACE_TIER_ID, SPARTAN_SUPER_10K, suggestedCentsForTier } from "../data"
+import {
+  DEFAULT_SPARTAN_RACE_TIER_ID,
+  FAYETTEVILLE_SPARTAN_URL,
+  SPARTAN_RACE_TIERS,
+  suggestedCentsForTier,
+} from "../data"
 
 function formatUsd(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(
@@ -19,12 +24,13 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100)
 }
 
-/** Legacy ?tier=sprint|kids|… deep links → 10K team race (this page). */
+const VALID_TIER_PARAMS = new Set<string>(["sprint", "super", "beast", "ultra", "kids", "other"])
+
+/** Legacy ?tier=… deep links — must match a known distance. */
 function tierFromSearchParams(searchParams: ReturnType<typeof useSearchParams>): SpartanRaceTierId | null {
   const raw = searchParams.get("tier")?.toLowerCase() ?? ""
-  if (!raw) return null
-  if (["super", "sprint", "kids", "beast", "ultra"].includes(raw)) return "super"
-  return null
+  if (!raw || !VALID_TIER_PARAMS.has(raw)) return null
+  return raw as SpartanRaceTierId
 }
 
 function suggestedDollarsString(tierId: SpartanRaceTierId): string {
@@ -273,10 +279,6 @@ export function SpartanDonateForm() {
       setError("Select a wrestler from the list, or enter their name in the box below.")
       return
     }
-    if (flow === "race" && tierPreference !== "super") {
-      setError("This checkout is the Team NC 10K team race — pick Race with us again or refresh.")
-      return
-    }
     if (flow === "donate" && !consent) {
       setError("Check the box to continue.")
       return
@@ -307,7 +309,8 @@ export function SpartanDonateForm() {
           donorName: name,
           donorListPublic,
           amountCents,
-          tierPreference: flow === "race" ? tierPreference : undefined,
+          tierPreference:
+            flow === "race" ? tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID : undefined,
           athleteCode: codeForCheckout,
           ...(codeForCheckout && athleteQuery.trim()
             ? { athleteDisplayName: athleteQuery.trim() }
@@ -381,8 +384,8 @@ export function SpartanDonateForm() {
           </button>
         </div>
         <p className="mt-2 text-[11px] leading-snug text-[#666]">
-          <strong className="text-[#888]">Race with us</strong> — Super 10K with Team NC; search below to credit one
-          wrestler.
+          <strong className="text-[#888]">Race with us</strong> — pick your Spartan distance (Team NC centers on the{" "}
+          <strong className="text-[#ccc]">Super 10K</strong>); search below to credit one wrestler.
           <br />
           <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">a wrestler</strong> or{" "}
           <strong className="text-[#777]">NC United</strong>.
@@ -421,16 +424,46 @@ export function SpartanDonateForm() {
       )}
 
       {flow === "race" && (
-        <div className="mt-5 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
-          <p className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase text-white">
-            {SPARTAN_SUPER_10K.name}
-          </p>
-          <p className="mt-1 text-sm text-[#bbb]">
-            {SPARTAN_SUPER_10K.detail} · Suggested gift {formatUsd(SPARTAN_SUPER_10K.suggestedGiftCents)} ·{" "}
-            {SPARTAN_SUPER_10K.scheduleChip}
-          </p>
-          <p className="mt-2 text-[11px] leading-relaxed text-[#888]">{SPARTAN_SUPER_10K.dates}</p>
+        <div className="mt-5 space-y-3 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
+            <p className="mt-2 text-[12px] leading-relaxed text-[#aaa]">
+              <strong className="text-white">Team NC</strong> is on the <strong className="text-[#C8A94A]">Super 10K</strong>{" "}
+              (May 3). Choose any distance below — suggested gift is ballpark vs Spartan&apos;s &quot;from&quot; pricing; change
+              the amount if you like.
+            </p>
+          </div>
+          <div>
+            <label htmlFor="spartan-race-tier" className="text-[11px] text-[#888]">
+              Which race are you targeting?
+            </label>
+            <select
+              id="spartan-race-tier"
+              value={tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID}
+              onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
+              className="mt-1.5 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-sm text-white focus:border-[#CC0000] focus:outline-none"
+            >
+              {SPARTAN_RACE_TIERS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.featured ? "★ " : ""}
+                  {t.name} · {t.priceLabel} suggested · {t.scheduleChip}
+                  {t.featured ? " — Team NC" : ""}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-[10px] leading-relaxed text-[#666]">
+              Open vs Age Group / competitive waves are selected when you register on{" "}
+              <span className="text-[#888]">Spartan.com</span>.
+            </p>
+            <a
+              href={FAYETTEVILLE_SPARTAN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-[11px] font-medium text-[#C8A94A] underline-offset-2 hover:underline"
+            >
+              Learn more about Fayetteville race options on Spartan.com →
+            </a>
+          </div>
         </div>
       )}
 

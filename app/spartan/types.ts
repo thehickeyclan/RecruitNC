@@ -1,5 +1,5 @@
-/** Super 10K (Team NC) only — single race on checkout. */
-export type SpartanRaceTierId = "super"
+/** Fayetteville 2026 — distances available on fundraising checkout (ballpark Spartan “from” pricing). */
+export type SpartanRaceTierId = "sprint" | "super" | "beast" | "ultra" | "kids" | "other"
 
 export interface SpartanRaceTier {
   id: SpartanRaceTierId
@@ -10,8 +10,9 @@ export interface SpartanRaceTier {
   scheduleChip: string
   dates: string
   priceLabel: string
-  /** Typical Spartan list price — suggested tax-deductible gift to NC United */
+  /** Typical Spartan list price — suggested tax-deductible gift to NC United (editable at checkout) */
   suggestedGiftCents: number
+  /** NC United crew / team race highlight */
   featured?: boolean
   registerUrl: string
 }
