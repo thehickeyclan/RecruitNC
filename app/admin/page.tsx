@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, UserCheck, Clock, Calendar,
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
-  ShoppingBag, Smile, Coins, LayoutDashboard
+  ShoppingBag, Smile, Coins, LayoutDashboard, DollarSign
 } from "lucide-react"
 
 interface AdminStats {
@@ -186,6 +186,12 @@ export default function AdminDashboard() {
               <span className="w-full h-20 bg-gradient-to-br from-[#0c4a6e] to-[#075985] hover:from-[#075985] hover:to-[#0c4a6e] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <LayoutDashboard className="h-6 w-6" />
                 <span className="text-sm font-semibold">Executive Dashboard</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/revenue" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-emerald-800 to-emerald-950 hover:from-emerald-900 hover:to-emerald-800 text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <DollarSign className="h-6 w-6" />
+                <span className="text-sm font-semibold">Revenue snapshot</span>
               </span>
             </HardLink>
             <Link href="/admin/athletes">
