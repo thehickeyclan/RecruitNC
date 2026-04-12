@@ -712,9 +712,9 @@ function RosterSizeCell({
     const opts: RequestInit = {
       method: "PATCH",
       headers,
+      credentials: "include",
       body: JSON.stringify({ [field]: newVal || null }),
     }
-    if (!openMode) opts.credentials = "include"
     fetch(url, opts)
       .then((r) => {
         if (!r.ok) {
@@ -748,7 +748,7 @@ function RosterSizeCell({
             onChange={(e) => handleChange(e.target.value)}
             onBlur={() => setSaveError(false)}
             disabled={saving}
-            className="rounded border border-gray-300 bg-white px-1.5 py-1 text-sm text-gray-800 focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366] min-w-[52px] w-full max-w-[72px] touch-manipulation"
+            className="rounded border border-gray-300 bg-white px-1.5 py-1.5 text-base text-gray-800 focus:border-[#003366] focus:outline-none focus:ring-1 focus:ring-[#003366] min-w-[52px] w-full max-w-[80px] touch-manipulation"
             aria-label={field.replace("_", " ")}
             aria-invalid={saveError}
           >

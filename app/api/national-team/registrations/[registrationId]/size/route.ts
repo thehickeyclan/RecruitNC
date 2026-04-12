@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
@@ -17,9 +17,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ registrationId: string }> }
 ) {
-  const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user?.id) {
+  const user = await getUserFromRequest(request)
+  if (!user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -39,7 +38,11 @@ export async function PATCH(
   if (Object.prototype.hasOwnProperty.call(body, "shirt_size")) update.shirt_size = parseSize(body.shirt_size)
   if (Object.prototype.hasOwnProperty.call(body, "singlet_size")) update.singlet_size = parseSize(body.singlet_size)
   if (Object.prototype.hasOwnProperty.call(body, "shorts_size")) update.shorts_size = parseSize(body.shorts_size)
-  if (Object.keys(update).length <= 1) {
+  const hasSizeInBody =
+    Object.prototype.hasOwnProperty.call(body, "shirt_size") ||
+    Object.prototype.hasOwnProperty.call(body, "singlet_size") ||
+    Object.prototype.hasOwnProperty.call(body, "shorts_size")
+  if (!hasSizeInBody) {
     return NextResponse.json({ error: "Send at least one of shirt_size, singlet_size, shorts_size" }, { status: 400 })
   }
 
