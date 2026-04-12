@@ -1,10 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { HardLink } from "@/components/hard-link"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { DollarSign, Loader2, ArrowLeft, Store, Dumbbell, Droplets, Flame } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 type Period = "today" | "this_week" | "this_month" | "this_year"
 
@@ -15,241 +12,138 @@ const PERIODS: { label: string; value: Period }[] = [
   { label: "This Year", value: "this_year" },
 ]
 
-type RevenuePayload = {
-  period: Period
-  grandTotal: number
-  blue: { total: number; newMembers: number; totalActive: number }
-  guild: {
-    total: number
-    count: number
-    bySessionType: Record<string, unknown>
-    dataAvailable: boolean
-  }
-  store: {
-    total: number
-    count: number
-    products: unknown[]
-    dataAvailable: boolean
-  }
-  dropIn: { total: number; count: number }
-  spartan: { total: number; byAthlete: { name: string; total: number }[] }
+const fmt = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+
+function Section({ title, total, children }: {
+  title: string; total: number; children: React.ReactNode
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-base font-semibold">{title}</CardTitle>
+        <span className="text-lg font-bold">{fmt(total)}</span>
+      </CardHeader>
+      <CardContent>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-muted-foreground">
+              <th className="text-left py-2">Item</th>
+              <th className="text-right py-2">Count</th>
+              <th className="text-right py-2">Revenue</th>
+            </tr>
+          </thead>
+          <tbody>{children}</tbody>
+        </table>
+      </CardContent>
+    </Card>
+  )
 }
 
-export default function AdminRevenuePage() {
+function Row({ label, count, revenue }: { label: string; count: number | string; revenue: number }) {
+  return (
+    <tr className="border-b last:border-0">
+      <td className="py-2 font-medium">{label}</td>
+      <td className="py-2 text-right text-muted-foreground">{count}</td>
+      <td className="py-2 text-right">{fmt(revenue)}</td>
+    </tr>
+  )
+}
+
+export default function RevenuePage() {
   const [period, setPeriod] = useState<Period>("this_month")
-  const [data, setData] = useState<RevenuePayload | null>(null)
+  const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
-    setError(null)
-    fetch(`/api/admin/revenue?period=${encodeURIComponent(period)}`, { credentials: "include" })
-      .then(async (r) => {
-        const json = (await r.json()) as { error?: string } & Partial<RevenuePayload>
-        if (!r.ok) {
-          setError(typeof json.error === "string" ? json.error : `Request failed (${r.status})`)
-          setData(null)
-          return
-        }
-        setData(json as RevenuePayload)
-      })
-      .catch(() => {
-        setError("Network error loading revenue.")
-        setData(null)
-      })
-      .finally(() => setLoading(false))
+    fetch(`/api/admin/revenue?period=${period}`, { credentials: "include" })
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [period])
 
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 })
-
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <HardLink
-            href="/admin"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Admin home
-          </HardLink>
-          <h1 className="text-2xl font-bold text-[#003366] flex items-center gap-2">
-            <DollarSign className="h-7 w-7 text-emerald-700" />
-            Cross-business revenue
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Combined snapshot (Blue new seats × $55, Guild, Store, Drop-ins, Spartan) for the selected window.
-          </p>
+          <h1 className="text-2xl font-bold">Revenue</h1>
+          <p className="text-muted-foreground">All businesses — every dollar in one place</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {PERIODS.map((p) => (
-            <Button
+        <div className="flex gap-2">
+          {PERIODS.map(p => (
+            <button
               key={p.value}
               type="button"
-              variant={period === p.value ? "default" : "outline"}
-              size="sm"
               onClick={() => setPeriod(p.value)}
-              className={period === p.value ? "bg-[#003366]" : ""}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                period === p.value
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
             >
               {p.label}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
 
-      {loading && (
-        <div className="flex items-center gap-2 text-muted-foreground py-8">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          Loading revenue…
-        </div>
-      )}
-
-      {error && !loading && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6 text-red-800">{error}</CardContent>
-        </Card>
-      )}
-
-      {!loading && data && (
+      {loading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : data ? (
         <>
-          <Card className="border-2 border-emerald-700/30 bg-gradient-to-br from-emerald-50 to-white">
-            <CardHeader>
-              <CardTitle className="text-lg text-emerald-900">Grand total</CardTitle>
-              <CardDescription>Sum of all segments below for {data.period.replace(/_/g, " ")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-bold tracking-tight text-emerald-900">{fmt(data.grandTotal)}</p>
+          {/* Grand Total */}
+          <Card className="border-2 border-primary">
+            <CardContent className="py-6 flex items-center justify-between">
+              <p className="text-lg font-semibold">Total Revenue — All Businesses</p>
+              <p className="text-3xl font-bold">{fmt(data.grandTotal)}</p>
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-blue-700" />
-                  Blue (new seats × $55)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{fmt(data.blue.total)}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {data.blue.newMembers} new in period · {data.blue.totalActive} active / paused total
-                </p>
-              </CardContent>
-            </Card>
+          {/* Blue */}
+          <Section title="Blue Program" total={data.blue.total}>
+            <Row label="New members this period" count={data.blue.newMembers} revenue={data.blue.total} />
+            <tr className="text-muted-foreground text-xs">
+              <td colSpan={3} className="py-1">{data.blue.totalActive} total active members @ $55/mo</td>
+            </tr>
+          </Section>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Dumbbell className="h-4 w-4" />
-                  Wrestling Guild
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{fmt(data.guild.total)}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {data.guild.count} bookings
-                  {!data.guild.dataAvailable && " · external data unavailable"}
-                </p>
-              </CardContent>
-            </Card>
+          {/* Guild */}
+          <Section title="Guild Bookings" total={data.guild.total}>
+            {Object.entries(data.guild.bySessionType ?? {}).map(([type, vals]: any) => (
+              <Row key={type} label={type} count={vals.count} revenue={vals.revenue} />
+            ))}
+          </Section>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Store className="h-4 w-4" />
-                  Store
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{fmt(data.store.total)}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {data.store.count} orders
-                  {!data.store.dataAvailable && " · external data unavailable"}
-                </p>
-                {Array.isArray(data.store.products) && data.store.products.length > 0 && (
-                  <div className="mt-3 max-h-40 overflow-auto rounded border text-xs">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="border-b bg-muted/50">
-                          <th className="p-2">Product</th>
-                          <th className="p-2 text-right">$</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.store.products.map((row, i) => {
-                          const r = row as Record<string, unknown>
-                          const name = String(r.name ?? r.title ?? r.sku ?? "Item")
-                          const rev = Number(r.revenue ?? r.total ?? 0)
-                          return (
-                            <tr key={i} className="border-b border-muted last:border-0">
-                              <td className="p-2">{name}</td>
-                              <td className="p-2 text-right">{fmt(rev)}</td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* Store */}
+          <Section title="Apparel Store" total={data.store.total}>
+            {data.store.products?.length > 0 ? (
+              data.store.products.map((p: any) => (
+                <Row key={p.name} label={p.name} count={p.units} revenue={p.revenue} />
+              ))
+            ) : (
+              <tr><td colSpan={3} className="py-2 text-muted-foreground text-sm">No product breakdown available</td></tr>
+            )}
+          </Section>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Droplets className="h-4 w-4" />
-                  Drop-ins
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{fmt(data.dropIn.total)}</p>
-                <p className="text-sm text-muted-foreground mt-1">{data.dropIn.count} paid requests</p>
-              </CardContent>
-            </Card>
+          {/* Drop-In */}
+          <Section title="Drop-In" total={data.dropIn.total}>
+            <Row label="Practice drop-ins" count={data.dropIn.count} revenue={data.dropIn.total} />
+          </Section>
 
-            <Card className="md:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Spartan fundraising</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold mb-3">{fmt(data.spartan.total)}</p>
-                {data.spartan.byAthlete.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No paid donations in this period.</p>
-                ) : (
-                  <div className="overflow-x-auto rounded border">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b bg-muted/50 text-left">
-                          <th className="p-2 font-medium">Athlete / fund</th>
-                          <th className="p-2 font-medium text-right">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.spartan.byAthlete.map((row, i) => (
-                          <tr key={i} className="border-b border-muted last:border-0">
-                            <td className="p-2">{row.name}</td>
-                            <td className="p-2 text-right">{fmt(row.total)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            For period-over-period trends and deltas, use{" "}
-            <HardLink href="/admin/dashboard" className="text-[#003366] underline underline-offset-2">
-              Executive Dashboard
-            </HardLink>
-            .
-          </p>
+          {/* Spartan */}
+          <Section title="Spartan Donations" total={data.spartan.total}>
+            {data.spartan.byAthlete?.length > 0 ? (
+              data.spartan.byAthlete.map((a: any) => (
+                <Row key={a.name} label={a.name} count="—" revenue={a.total} />
+              ))
+            ) : (
+              <tr><td colSpan={3} className="py-2 text-muted-foreground text-sm">No donations this period</td></tr>
+            )}
+          </Section>
         </>
+      ) : (
+        <p className="text-muted-foreground">Failed to load revenue data.</p>
       )}
     </div>
   )
