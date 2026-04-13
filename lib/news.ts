@@ -36,7 +36,7 @@ const ALL_NEWS: NewsItem[] = [
     slug: "lynchburg-building-a-program-with-intention",
     title: "Building a Program with Intention: Lynchburg’s NC Pipeline and Class of 2026",
     summary:
-      "New DIII program (first varsity season ahead) — five NC commits for ’26 on the ledger (~2× the next school), 13,000+ sq ft facility, NC United ties, and more NC names we’re hearing; national recruiting hustle with Vincent Barber and Sammy Hillegas.",
+      "Class of ’26 NC board: Lynchburg leads (~2× the next) — new DIII program, 13,000+ sq ft facility, NC United ties, more names expected; Vincent Barber & Sammy Hillegas.",
     href: "/news/lynchburg-building-a-program-with-intention",
     date: "2026-04-13",
     image: "/images/lynchburg-hornets-facility-hero.png",

@@ -13,17 +13,20 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
     <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200">
       <p className="text-slate-600 font-medium">
         Under head coach <strong>Vincent Barber</strong> and assistant coach <strong>Sammy Hillegas</strong>, Lynchburg is
-        standing up a new Division III program — its <strong>first official varsity season</strong> is still ahead — with
-        clear structure, investment, and alignment. On RecruitNC&apos;s Class of 2026 ledger for North Carolina, Lynchburg
-        lists <strong>five</strong> in-state commits — about <strong>2×</strong> the total of the{" "}
-        <strong>next-closest</strong> program on that ledger for NC recruits in this class — and we&apos;re hearing more
-        North Carolina names may be announced soon.
+        building a new Division III program — with its <strong>first official varsity season</strong> still ahead — but
+        already operating with clear structure, investment, and alignment.
       </p>
-
-      <p className="mt-6 text-slate-700">
-        <strong>Here&apos;s why</strong> that recruiting pace matches what families see on a visit: the through-line starts
-        with infrastructure — the part of the story you can walk through before Lynchburg&apos;s first official varsity
-        season even opens.
+      <p className="text-slate-600 font-medium">
+        On RecruitNC&apos;s Class of 2026 board for North Carolina, Lynchburg currently holds <strong>five</strong>{" "}
+        in-state commits — roughly double the next-closest program — with more names expected to follow.
+      </p>
+      <p className="text-slate-600 font-medium">That pace isn&apos;t accidental.</p>
+      <p className="text-slate-600 font-medium">
+        It matches what families see the moment they step on campus.
+      </p>
+      <p className="text-slate-600 font-medium">
+        It starts with infrastructure — something you can see the moment you walk in, even before their first varsity
+        season begins.
       </p>
 
       <h2>A facility that stands out</h2>
@@ -217,10 +220,9 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
       <h2>Takeaway</h2>
       <p>
         The numbers above track <strong>Class of 2026</strong> commitments from North Carolina to four-year programs — the
-        same lens RecruitNC uses across the site. Leading the state with five NC signees — about <strong>2×</strong> the
-        next program on the ledger — before year one
-        on the mat lines up with the facility, the travel
-        schedule, and the work in front of families.
+        same lens RecruitNC uses across the site. On that board, Lynchburg leads with five NC signees — roughly double the
+        next program — before year one on the mat lines up with the facility, the travel schedule, and the work in front of
+        families.
       </p>
     </article>
   )
