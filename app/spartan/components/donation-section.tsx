@@ -55,7 +55,7 @@ export function DonationSection() {
 
         <p className="mt-8 text-xs text-[#555]">
           501(c)(3) · EIN {NCU_EIN} ·{" "}
-          <a href="mailto:contact@ncunitedwrestling.com" className="text-[#C8A94A] hover:underline">
+          <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
             help
           </a>
         </p>

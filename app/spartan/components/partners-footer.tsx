@@ -17,8 +17,8 @@ export function PartnersFooter() {
         </div>
         <p className="text-sm text-[#666]">
           Questions?{" "}
-          <a href="mailto:contact@ncunitedwrestling.com" className="text-[#C8A94A] hover:underline">
-            contact@ncunitedwrestling.com
+          <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] hover:underline">
+            info@ncwrestlingunited.com
           </a>
         </p>
         <p className="text-xs text-[#555]">

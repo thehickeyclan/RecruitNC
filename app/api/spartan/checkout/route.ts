@@ -15,7 +15,7 @@ const TEE_SIZES = new Set(["XS", "S", "M", "L", "XL", "2XL", "3XL"])
 export async function POST(request: NextRequest) {
   if (!stripeSecret?.trim()) {
     return NextResponse.json(
-      { error: "Payment is not configured. Contact contact@ncunitedwrestling.com." },
+      { error: "Payment is not configured. Contact info@ncwrestlingunited.com." },
       { status: 503 },
     )
   }
