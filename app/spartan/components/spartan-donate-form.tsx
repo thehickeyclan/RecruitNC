@@ -264,7 +264,7 @@ export function SpartanDonateForm() {
     setError(null)
     const name = donorName.trim()
     if (name.length < 2) {
-      setError("Name required.")
+      setError("Enter your name (the person paying).")
       return
     }
     if (flow === null) {
@@ -471,8 +471,12 @@ export function SpartanDonateForm() {
         <>
           <div className="mt-6 space-y-3">
             <div>
-              <label className="text-xs text-[#888]">Name</label>
+              <label htmlFor="spartan-donor-name" className="text-xs text-[#888]">
+                Your name
+              </label>
+              <p className="mt-0.5 text-[10px] leading-snug text-[#666]">You, the supporter paying — not the wrestler.</p>
               <input
+                id="spartan-donor-name"
                 type="text"
                 required
                 minLength={2}
@@ -483,8 +487,11 @@ export function SpartanDonateForm() {
               />
             </div>
             <div>
-              <label className="text-xs text-[#888]">Email</label>
+              <label htmlFor="spartan-donor-email" className="text-xs text-[#888]">
+                Your email
+              </label>
               <input
+                id="spartan-donor-email"
                 type="email"
                 required
                 autoComplete="email"
@@ -545,10 +552,10 @@ export function SpartanDonateForm() {
           {needsAthleteCode && (
             <>
               <div className="relative mt-5">
-                <label className="text-xs text-[#888]">Which wrestler? (search)</label>
+                <label className="text-xs text-[#888]">Which wrestler should receive credit? (search)</label>
                 <input
                   type="text"
-                  placeholder="Last name…"
+                  placeholder="Wrestler’s last name…"
                   value={athleteQuery}
                   onChange={(e) => {
                     setAthleteQuery(e.target.value)
