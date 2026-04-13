@@ -21,7 +21,7 @@ export function SpartanDonateMissionCard() {
   const chipHref = useMemo(() => {
     const n = parseDollars(dollars)
     const d = n ?? 50
-    return `/spartan?mission=1&chip=${encodeURIComponent(String(d))}#donate`
+    return `/spartan?mission=1&chip=${encodeURIComponent(String(d))}#spartan-checkout`
   }, [dollars])
 
   return (
@@ -36,7 +36,7 @@ export function SpartanDonateMissionCard() {
         Support a wrestler or make a donation
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[#bbb]">
-        Tax-deductible gift to NC United. On the next screen, either{" "}
+        Tax-deductible gift to NC United. On the form below (opens when you continue), either{" "}
         <strong className="text-white">support a wrestler</strong> (search and select before you pay) or{" "}
         <strong className="text-white">make a donation</strong> to the general fund—same checkout.
       </p>
@@ -84,12 +84,12 @@ export function SpartanDonateMissionCard() {
         ))}
       </div>
 
-      <a
+      <HardLink
         href={chipHref}
         className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#C8A94A] hover:bg-[#2f2f2f]"
       >
         Continue to donate
-      </a>
+      </HardLink>
 
       <div
         id="athletes"

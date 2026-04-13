@@ -78,13 +78,13 @@ export function HeroSection() {
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
           <HardLink
-            href="/spartan?flow=race#donate"
+            href="/spartan?flow=race#spartan-checkout"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[var(--spartan-red)] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px"
           >
             Race with us
           </HardLink>
           <HardLink
-            href="/spartan?flow=donate#donate"
+            href="/spartan?flow=donate#spartan-checkout"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06]"
           >
             Give

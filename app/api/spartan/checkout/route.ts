@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
             : { fundraising_attribution: "general_nc_united" }),
       },
       success_url: `${baseUrl}/spartan/thanks?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/spartan?cancelled=1#donate`,
+      cancel_url: `${baseUrl}/spartan?cancelled=1#spartan-checkout`,
     })
 
     if (!session.url) {

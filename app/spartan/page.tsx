@@ -22,8 +22,8 @@ export default function SpartanPage() {
       <AboutSection />
       <AboutThisRaceSection />
       <RaceTiersGrid />
-      <FundraisingGuideSection />
       <DonationSection />
+      <FundraisingGuideSection />
       <PartnersFooter />
     </SpartanMetricsProvider>
   )

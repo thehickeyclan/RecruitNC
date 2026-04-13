@@ -1,7 +1,9 @@
 import Image from "next/image"
 import { Suspense } from "react"
+import { HardLink } from "@/components/hard-link"
 import { NCU_EIN } from "../data"
 import { SpartanDonateForm } from "./spartan-donate-form"
+import { SpartanHashScroll } from "./spartan-hash-scroll"
 
 function DonateFallback() {
   return <p className="mt-8 text-center text-sm text-[#666]">Loading…</p>
@@ -9,7 +11,8 @@ function DonateFallback() {
 
 export function DonationSection() {
   return (
-    <section id="donate" className="scroll-mt-4 border-t border-[#2A2A2A] bg-[#1A1A1A] py-14 md:py-16">
+    <section className="border-t border-[#2A2A2A] bg-[#1A1A1A] py-14 md:py-16">
+      <SpartanHashScroll />
       <div className="mx-auto max-w-lg px-4 text-center">
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">
           Race or give
@@ -44,14 +47,16 @@ export function DonationSection() {
           </span>
         </p>
         <p className="mt-2 text-xs text-[#555]">
-          <a href="#sponsor" className="text-[#C8A94A] hover:underline">
+          <HardLink href="/spartan?mission=1#spartan-checkout" className="text-[#C8A94A] hover:underline">
             No race — donate (NC United or a wrestler)
-          </a>
+          </HardLink>
         </p>
 
-        <Suspense fallback={<DonateFallback />}>
-          <SpartanDonateForm />
-        </Suspense>
+        <div id="spartan-checkout" className="scroll-mt-28 mt-8 w-full text-left">
+          <Suspense fallback={<DonateFallback />}>
+            <SpartanDonateForm />
+          </Suspense>
+        </div>
 
         <p className="mt-8 text-xs text-[#555]">
           501(c)(3) · EIN {NCU_EIN} ·{" "}
