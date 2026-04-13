@@ -356,14 +356,25 @@ export function SpartanDonateForm() {
     (flow !== "donate" || consent)
 
   return (
-    <form onSubmit={submit} className="mx-auto mt-8 max-w-lg text-left">
+    <form
+      onSubmit={submit}
+      className="mx-auto mt-6 max-w-lg px-1 pb-[max(1rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
+    >
+      <p className="mb-3 rounded border border-[#333] bg-[#0f0f0f] px-3 py-2.5 text-left text-[13px] leading-snug text-[#ccc] sm:text-sm">
+        <span className="font-semibold text-white">Two different people: </span>
+        <span className="text-[#aaa]">the </span>
+        <span className="font-medium text-[#8ab4d8]">donor</span>
+        <span className="text-[#aaa]"> (you — whoever pays) and the </span>
+        <span className="font-medium text-[#C8A94A]">wrestler</span>
+        <span className="text-[#aaa]"> (who gets credit — chosen in search).</span>
+      </p>
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={selectRace}
-            className={`rounded border px-3 py-3 text-center text-sm font-bold leading-tight transition-colors ${
+            className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-3 ${
               flow === "race"
                 ? "border-[#CC0000] bg-[#2a1515] text-white"
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
@@ -374,7 +385,7 @@ export function SpartanDonateForm() {
           <button
             type="button"
             onClick={selectDonate}
-            className={`rounded border px-3 py-3 text-center text-sm font-bold transition-colors ${
+            className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold transition-colors sm:px-3 ${
               flow === "donate"
                 ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
@@ -390,12 +401,11 @@ export function SpartanDonateForm() {
           <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">a wrestler</strong> or{" "}
           <strong className="text-[#777]">NC United</strong>.
         </p>
-        <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2 text-[11px] leading-snug text-[#ccc]">
-          <strong className="text-[#C8A94A]">Multiple wrestlers in your family?</strong> Each checkout credits{" "}
-          <strong className="text-white">one</strong> athlete — finish payment for the first, then start again for the
-          next. Put <strong className="text-white">your</strong> name as the payer each time (same parent is fine). Friends
-          use <strong className="text-white">their</strong> name and email, then pick who they&apos;re supporting in the
-          search below.
+        <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-xs leading-snug text-[#ccc] sm:text-[11px]">
+          <strong className="text-[#C8A94A]">More than one wrestler?</strong> Each payment credits{" "}
+          <strong className="text-white">one</strong> athlete — check out for the first, then repeat for the next.{" "}
+          <strong className="text-[#8ab4d8]">Donor</strong> fields = who pays (can be the same parent both times).{" "}
+          <strong className="text-[#C8A94A]">Wrestler</strong> = pick in search each time.
         </p>
       </div>
 
@@ -406,7 +416,7 @@ export function SpartanDonateForm() {
             <button
               type="button"
               onClick={pickDonateAthlete}
-              className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
+              className={`min-h-[48px] rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
                 donateMode === "athlete"
                   ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
@@ -417,7 +427,7 @@ export function SpartanDonateForm() {
             <button
               type="button"
               onClick={pickDonateGeneral}
-              className={`rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
+              className={`min-h-[48px] rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
                 donateMode === "general"
                   ? "border-[#888] bg-[#222] text-white"
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
@@ -448,7 +458,7 @@ export function SpartanDonateForm() {
               id="spartan-race-tier"
               value={tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID}
               onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
-              className="mt-1.5 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-sm text-white focus:border-[#CC0000] focus:outline-none"
+              className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
             >
               {SPARTAN_RACE_TIERS.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -476,15 +486,16 @@ export function SpartanDonateForm() {
 
       {stepUnlocked && (
         <>
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 space-y-3 rounded-lg border border-[#2a3d4f] border-l-4 border-l-[#5a8ab0] bg-[#0c1014] p-3 sm:p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8ab4d8]">1 · Donor (who pays)</p>
+            <p className="text-xs leading-snug text-[#9ca3af]">
+              Receipt and card holder — parent, friend, or you.{" "}
+              <span className="text-[#666]">Not the wrestler&apos;s name unless they pay themselves.</span>
+            </p>
             <div>
-              <label htmlFor="spartan-donor-name" className="text-xs text-[#888]">
-                Your name
+              <label htmlFor="spartan-donor-name" className="text-sm font-medium text-[#ccc]">
+                Full name
               </label>
-              <p className="mt-0.5 text-[10px] leading-snug text-[#666]">
-                The person whose card is used (parent, friend — whoever is paying). Credit goes to the wrestler you{" "}
-                <strong className="text-[#888]">select in search below</strong>, not from this field.
-              </p>
               <input
                 id="spartan-donor-name"
                 type="text"
@@ -493,12 +504,12 @@ export function SpartanDonateForm() {
                 autoComplete="name"
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
-                className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
+                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
               />
             </div>
             <div>
-              <label htmlFor="spartan-donor-email" className="text-xs text-[#888]">
-                Your email
+              <label htmlFor="spartan-donor-email" className="text-sm font-medium text-[#ccc]">
+                Email
               </label>
               <input
                 id="spartan-donor-email"
@@ -507,28 +518,28 @@ export function SpartanDonateForm() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-white focus:border-[#CC0000] focus:outline-none"
+                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
               />
             </div>
             {flow === "donate" && (
-              <div className="space-y-4 border-t border-[#2a2a2a] pt-4">
-                <label className="flex cursor-pointer items-start gap-3 text-left text-[12px] leading-relaxed text-[#999] sm:text-[13px]">
+              <div className="space-y-4 border-t border-[#2a3d4f] pt-4">
+                <label className="flex min-h-[44px] cursor-pointer items-start gap-3 text-left text-[13px] leading-relaxed text-[#999] sm:text-[13px]">
                   <input
                     type="checkbox"
                     checked={donorListPublic}
                     onChange={(e) => setDonorListPublic(e.target.checked)}
-                    className="mt-1 h-4 w-4 shrink-0 accent-[#C8A94A]"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#C8A94A]"
                   />
                   <span className="min-w-0 flex-1 break-words">
                     Show my name on the public supporter list (uncheck to stay anonymous)
                   </span>
                 </label>
-                <label className="flex cursor-pointer items-start gap-3 text-left text-[12px] leading-relaxed text-[#aaa] sm:text-[13px]">
+                <label className="flex min-h-[44px] cursor-pointer items-start gap-3 text-left text-[13px] leading-relaxed text-[#aaa] sm:text-[13px]">
                   <input
                     type="checkbox"
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-1 h-4 w-4 shrink-0 accent-[#CC0000]"
+                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#CC0000]"
                   />
                   <span className="min-w-0 flex-1 break-words">
                     {donateMode === "general" ? (
@@ -561,22 +572,30 @@ export function SpartanDonateForm() {
 
           {needsAthleteCode && (
             <>
-              <div className="relative mt-5">
-                <label className="text-xs text-[#888]">Which wrestler should receive credit? (search)</label>
-                <p className="mt-0.5 text-[10px] leading-snug text-[#666]">
-                  One wrestler per checkout — run through Stripe again to credit a sibling or second athlete.
+              <div className="relative mt-5 rounded-lg border border-[#4a3d1a] border-l-4 border-l-[#C8A94A] bg-[#141008] p-3 sm:p-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">2 · Wrestler (credit)</p>
+                <p className="mt-1 text-xs leading-snug text-[#b9a86e]">
+                  Who the gift counts for — search and tap their name. This is separate from the donor name above.
+                </p>
+                <label className="mt-3 block text-sm font-medium text-[#ddd]" htmlFor="spartan-athlete-search">
+                  Find wrestler
+                </label>
+                <p className="mt-0.5 text-[11px] leading-snug text-[#888]">
+                  One wrestler per payment — pay again for a second athlete.
                 </p>
                 <input
+                  id="spartan-athlete-search"
                   type="text"
-                  placeholder="Wrestler’s last name…"
+                  placeholder="Type last name…"
                   value={athleteQuery}
                   onChange={(e) => {
                     setAthleteQuery(e.target.value)
                     setAthleteMenuOpen(true)
                   }}
                   onFocus={() => athleteHits.length > 0 && setAthleteMenuOpen(true)}
-                  className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-sm text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+                  className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
                   autoComplete="off"
+                  enterKeyHint="search"
                 />
                 {athleteSearchLoading && <p className="mt-1 text-[11px] text-[#666]">…</p>}
                 {athleteLookupError && (
@@ -592,12 +611,12 @@ export function SpartanDonateForm() {
                   </p>
                 )}
                 {athleteMenuOpen && athleteHits.length > 0 && (
-                  <ul className="absolute z-20 mt-1 max-h-40 w-full overflow-auto rounded border border-[#444] bg-[#141414] py-1 shadow-lg">
+                  <ul className="absolute z-20 mt-1 max-h-[min(50vh,16rem)] w-full overflow-auto rounded border border-[#444] bg-[#141414] py-1 shadow-lg">
                     {athleteHits.map((h) => (
                       <li key={h.code}>
                         <button
                           type="button"
-                          className="w-full px-3 py-2 text-left text-sm text-[#ddd] hover:bg-[#252525]"
+                          className="min-h-[48px] w-full px-3 py-3 text-left text-base text-[#ddd] hover:bg-[#252525] active:bg-[#303030]"
                           onClick={() => {
                             setFundraisingCode(h.code)
                             setAthleteQuery(h.label)
@@ -612,45 +631,45 @@ export function SpartanDonateForm() {
                     ))}
                   </ul>
                 )}
-              </div>
-              <p className="mt-2 text-[11px] text-[#555]">
-                <HardLink href="/athletes" className="text-[#777] hover:text-[#C8A94A]">
-                  Directory
-                </HardLink>
-              </p>
+                <p className="mt-3 text-[11px] text-[#666]">
+                  <HardLink href="/athletes" className="text-[#C8A94A] underline-offset-2 hover:underline">
+                    Open full athlete directory
+                  </HardLink>
+                </p>
 
-              <div className="mt-5 rounded border border-[#333] bg-[#101010] px-3 py-3 text-left">
-                <p className="text-[11px] leading-relaxed text-[#999]">
-                  <strong className="text-[#ccc]">You can still give.</strong> Support{" "}
-                  <button
-                    type="button"
-                    className="font-medium text-[#C8A94A] underline underline-offset-2 hover:text-[#dfd08a]"
-                    onClick={pickDonateGeneral}
-                  >
-                    NC United (general)
-                  </button>{" "}
-                  with no wrestler attached — or enter their name in the box below if they&apos;re not in search yet; we
-                  credit the gift from that line on our side.
-                </p>
-                <label className="mt-3 block text-xs text-[#888]" htmlFor="spartan-manual-credit">
-                  Not in the directory yet? Wrestler to credit (freeform)
-                </label>
-                <input
-                  id="spartan-manual-credit"
-                  type="text"
-                  autoComplete="off"
-                  placeholder="e.g. Jordan Smith · school or team if helpful"
-                  value={manualCreditName}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setManualCreditName(v)
-                    if (v.trim().length > 0) setFundraisingCode("")
-                  }}
-                  className="mt-1 w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-sm text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
-                />
-                <p className="mt-1.5 text-[10px] text-[#666]">
-                  Same line is fine—staff match this in Stripe. Two or more characters to continue checkout.
-                </p>
+                <div className="mt-5 border-t border-[#333] pt-4">
+                  <p className="text-[11px] leading-relaxed text-[#999]">
+                    <strong className="text-[#C8A94A]">Wrestler not in search?</strong> Type their name for staff to
+                    credit — still the <strong className="text-[#ccc]">athlete</strong>, not the donor.
+                  </p>
+                  <label className="mt-3 block text-sm font-medium text-[#bbb]" htmlFor="spartan-manual-credit">
+                    Athlete name (manual)
+                  </label>
+                  <input
+                    id="spartan-manual-credit"
+                    type="text"
+                    autoComplete="off"
+                    placeholder="e.g. Jordan Smith · school if helpful"
+                    value={manualCreditName}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setManualCreditName(v)
+                      if (v.trim().length > 0) setFundraisingCode("")
+                    }}
+                    className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+                  />
+                  <p className="mt-2 text-[11px] text-[#666]">
+                    Or give to{" "}
+                    <button
+                      type="button"
+                      className="font-medium text-[#C8A94A] underline underline-offset-2 hover:text-[#dfd08a]"
+                      onClick={pickDonateGeneral}
+                    >
+                      NC United (general)
+                    </button>{" "}
+                    with no wrestler.
+                  </p>
+                </div>
               </div>
             </>
           )}
@@ -669,7 +688,7 @@ export function SpartanDonateForm() {
                     key={d}
                     type="button"
                     onClick={() => setAmountDollars(String(d))}
-                    className="min-w-[2.75rem] rounded border border-[#444] bg-[#0A0A0A] px-2 py-1.5 text-xs font-semibold text-[#C8A94A] hover:border-[#C8A94A]"
+                    className="min-h-[44px] min-w-[3rem] rounded border border-[#444] bg-[#0A0A0A] px-2.5 text-sm font-semibold text-[#C8A94A] hover:border-[#C8A94A] active:scale-[0.98]"
                   >
                     ${d}
                   </button>
@@ -731,7 +750,7 @@ export function SpartanDonateForm() {
             required={teeEligible}
             value={shirtSize}
             onChange={(e) => setShirtSize(e.target.value)}
-            className="w-full border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white focus:border-[#C8A94A] focus:outline-none"
+            className="min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white focus:border-[#C8A94A] focus:outline-none"
           >
             <option value="">Size</option>
             {TEE_SIZES.map((s) => (
@@ -745,7 +764,7 @@ export function SpartanDonateForm() {
             placeholder="Street"
             value={shipLine1}
             onChange={(e) => setShipLine1(e.target.value)}
-            className="w-full border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+            className="min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
             autoComplete="address-line1"
           />
           <input
@@ -753,7 +772,7 @@ export function SpartanDonateForm() {
             placeholder="Apt (opt)"
             value={shipLine2}
             onChange={(e) => setShipLine2(e.target.value)}
-            className="w-full border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+            className="min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
             autoComplete="address-line2"
           />
           <div className="grid grid-cols-2 gap-2">
@@ -762,7 +781,7 @@ export function SpartanDonateForm() {
               placeholder="City"
               value={shipCity}
               onChange={(e) => setShipCity(e.target.value)}
-              className="border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white placeholder:text-[#555]"
+              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555]"
               autoComplete="address-level2"
             />
             <input
@@ -770,7 +789,7 @@ export function SpartanDonateForm() {
               placeholder="ST"
               value={shipState}
               onChange={(e) => setShipState(e.target.value)}
-              className="border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white placeholder:text-[#555]"
+              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555]"
               autoComplete="address-level1"
             />
           </div>
@@ -780,13 +799,13 @@ export function SpartanDonateForm() {
               placeholder="ZIP"
               value={shipPostal}
               onChange={(e) => setShipPostal(e.target.value)}
-              className="border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white placeholder:text-[#555]"
+              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555]"
               autoComplete="postal-code"
             />
             <select
               value={shipCountry}
               onChange={(e) => setShipCountry(e.target.value)}
-              className="border border-[#444] bg-[#0A0A0A] px-2 py-2 text-sm text-white"
+              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white"
             >
               <option value="US">US</option>
               <option value="CA">CA</option>

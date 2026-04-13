@@ -7,10 +7,12 @@ import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-s
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
 import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior-sendoff"
+import { LynchburgBuildingAProgramWithIntentionContent } from "../content/lynchburg-building-a-program-with-intention"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "lynchburg-building-a-program-with-intention": () => <LynchburgBuildingAProgramWithIntentionContent />,
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
   "nhsca-most-outstanding-wrestler-award-2026": () => <NhscaMostOutstandingWrestlerAward2026Content />,
   "nhsca-nationals-recap-2026": () => <NhscaNationalsRecap2026Content />,
@@ -63,7 +65,7 @@ export default async function NewsAnnouncementPage({
             })}
           </p>
         </header>
-        {/* Class of 2026 sendoff: hero lives inside article body to avoid showing the same asset twice. */}
+        {/* Class of 2026 sendoff: hero lives inside article body to avoid duplicate asset. */}
         {item.image && slug !== "class-of-2026-senior-sendoff" ? (
           <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
             <div

@@ -86,7 +86,7 @@ export function SpartanDonateMissionCard() {
 
       <HardLink
         href={chipHref}
-        className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#C8A94A] hover:bg-[#2f2f2f]"
+        className="mt-5 inline-flex min-h-[52px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] px-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#C8A94A] hover:bg-[#2f2f2f] active:opacity-90"
       >
         Continue to donate
       </HardLink>

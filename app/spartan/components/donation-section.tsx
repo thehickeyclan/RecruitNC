@@ -13,10 +13,16 @@ export function DonationSection() {
   return (
     <section className="border-t border-[#2A2A2A] bg-[#1A1A1A] py-14 md:py-16">
       <SpartanHashScroll />
-      <div className="mx-auto max-w-lg px-4 text-center">
+      <div className="mx-auto max-w-lg px-4 pb-1 text-center sm:px-4">
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">
           Race or give
         </h2>
+        <p className="mx-auto mt-4 max-w-md rounded border border-[#333] bg-[#141414] px-3 py-3 text-left text-[13px] leading-snug text-[#ccc] sm:text-sm">
+          <span className="block font-medium text-[#8ab4d8]">Donor</span>
+          <span className="text-[#aaa]">Your name &amp; email — whoever is paying (often a parent).</span>
+          <span className="mt-2 block font-medium text-[#C8A94A]">Wrestler</span>
+          <span className="text-[#aaa]">Chosen in the search on the form — who gets fundraising credit.</span>
+        </p>
         <div className="mx-auto mt-5 w-full max-w-[240px]">
           <div className="relative aspect-square overflow-hidden rounded border border-[#333] bg-[#0a0a0a]">
             <Image
@@ -46,8 +52,11 @@ export function DonationSection() {
             </span>
           </span>
         </p>
-        <p className="mt-2 text-xs text-[#555]">
-          <HardLink href="/spartan?mission=1#spartan-checkout" className="text-[#C8A94A] hover:underline">
+        <p className="mt-3">
+          <HardLink
+            href="/spartan?mission=1#spartan-checkout"
+            className="inline-flex min-h-[44px] items-center justify-center text-sm font-medium text-[#C8A94A] underline-offset-2 hover:underline"
+          >
             No race — donate (NC United or a wrestler)
           </HardLink>
         </p>

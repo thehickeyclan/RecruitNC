@@ -32,6 +32,23 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "lynchburg-building-a-program-with-intention",
+    slug: "lynchburg-building-a-program-with-intention",
+    title: "Building a Program with Intention: Lynchburg’s NC Pipeline and Class of 2026",
+    summary:
+      "Stand-alone facility, NC United ties, and national recruiting hustle — how Lynchburg (DIII) is building wrestling with purpose, plus Vincent Barber and Matt Hickey on showing up for athletes.",
+    href: "/news/lynchburg-building-a-program-with-intention",
+    date: "2026-04-13",
+    image: "/images/lynchburg-hornets-facility-hero.png",
+    imagePosition: "top",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "RECRUITING",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "8 min read",
+    isAnnouncement: true,
+  },
+  {
     id: "class-of-2026-senior-sendoff",
     slug: "class-of-2026-senior-sendoff",
     title: "Final Class of 2026 Rankings: A Senior Sendoff",
