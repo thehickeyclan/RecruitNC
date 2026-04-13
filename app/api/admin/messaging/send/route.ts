@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { markdownToHtml, toPlainText } from "@/lib/blast-format"
 import { sendAdminBlastEmail } from "@/lib/email"
 import { sendSms, toE164 } from "@/lib/sms"
+import { buildReplyToForThread, getRecruitNcEmailReplyDomain } from "@/lib/recruitnc-admin-email"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -125,6 +126,40 @@ export async function POST(request: NextRequest) {
     sms: { sent: 0, failed: 0 },
   }
 
+  /** Log row created up front so each email can reference it for Reply-To threads. */
+  let blastLogId: string | null = null
+  try {
+    const { data: logRow } = await admin
+      .from("admin_blast_log")
+      .insert({
+        sent_by_user_id: adminUserId,
+        sent_at: new Date().toISOString(),
+        audience_profile: profile ?? null,
+        audience_group: group ?? null,
+        subject,
+        body: rawBody,
+        body_snippet: rawBody.slice(0, 200),
+        channels_in_app: channels.inApp,
+        channels_email: channels.email,
+        channels_sms: channels.sms,
+        recipient_count: recipients.length,
+        result_in_app_sent: null,
+        result_in_app_thread_id: null,
+        result_email_sent: 0,
+        result_email_failed: 0,
+        result_sms_sent: 0,
+        result_sms_failed: 0,
+      })
+      .select("id")
+      .single()
+    blastLogId = logRow?.id ?? null
+  } catch (e) {
+    console.warn("[admin/messaging/send] admin_blast_log early insert skipped:", (e as Error).message)
+  }
+
+  const replyDomain = getRecruitNcEmailReplyDomain()
+  const useEmailThreads = Boolean(replyDomain && blastLogId && !testEmail)
+
   if (channels.inApp && group && !testEmail) {
     let threadId: string | null = null
     if (group === "blue") {
@@ -156,6 +191,47 @@ export async function POST(request: NextRequest) {
   if (channels.email) {
     for (const r of recipients) {
       if (!r.email?.trim()) continue
+      let threaded = false
+      if (useEmailThreads && r.user_id !== "test") {
+        try {
+          const { data: thr, error: thrErr } = await admin
+            .from("admin_email_threads")
+            .insert({
+              recipient_user_id: r.user_id,
+              admin_blast_log_id: blastLogId,
+              subject,
+              created_by_admin_id: adminUserId,
+            })
+            .select("id")
+            .single()
+          if (!thrErr && thr?.id && replyDomain) {
+            threaded = true
+            try {
+              const ok = await sendAdminBlastEmail(r.email.trim(), subject, htmlBody, logoVariant, {
+                replyTo: buildReplyToForThread(thr.id, replyDomain),
+                headers: { "X-RecruitNC-Email-Thread-Id": thr.id },
+              })
+              if (ok.success) {
+                result.email.sent++
+                await admin.from("admin_email_messages").insert({
+                  thread_id: thr.id,
+                  direction: "outbound",
+                  body_text: plainBody.slice(0, 100_000),
+                  resend_sent_message_id: ok.resendMessageId ?? null,
+                })
+              } else {
+                result.email.failed++
+              }
+            } catch (sendErr) {
+              result.email.failed++
+              console.warn("[admin/messaging/send] threaded email send:", (sendErr as Error).message)
+            }
+          }
+        } catch (e) {
+          console.warn("[admin/messaging/send] admin_email_threads:", (e as Error).message)
+        }
+      }
+      if (threaded) continue
       const ok = await sendAdminBlastEmail(r.email.trim(), subject, htmlBody, logoVariant)
       if (ok.success) result.email.sent++
       else result.email.failed++
@@ -172,28 +248,46 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  try {
-    await admin.from("admin_blast_log").insert({
-      sent_by_user_id: adminUserId,
-      sent_at: new Date().toISOString(),
-      audience_profile: profile ?? null,
-      audience_group: group ?? null,
-      subject,
-      body: rawBody,
-      body_snippet: rawBody.slice(0, 200),
-      channels_in_app: channels.inApp,
-      channels_email: channels.email,
-      channels_sms: channels.sms,
-      recipient_count: recipients.length,
-      result_in_app_sent: result.inApp?.sent ?? null,
-      result_in_app_thread_id: result.inApp?.threadId ?? null,
-      result_email_sent: result.email.sent,
-      result_email_failed: result.email.failed,
-      result_sms_sent: result.sms.sent,
-      result_sms_failed: result.sms.failed,
-    })
-  } catch (e) {
-    console.warn("[admin/messaging/send] admin_blast_log insert skipped:", (e as Error).message)
+  if (blastLogId) {
+    try {
+      await admin
+        .from("admin_blast_log")
+        .update({
+          result_in_app_sent: result.inApp?.sent ?? null,
+          result_in_app_thread_id: result.inApp?.threadId ?? null,
+          result_email_sent: result.email.sent,
+          result_email_failed: result.email.failed,
+          result_sms_sent: result.sms.sent,
+          result_sms_failed: result.sms.failed,
+        })
+        .eq("id", blastLogId)
+    } catch (e) {
+      console.warn("[admin/messaging/send] admin_blast_log update skipped:", (e as Error).message)
+    }
+  } else {
+    try {
+      await admin.from("admin_blast_log").insert({
+        sent_by_user_id: adminUserId,
+        sent_at: new Date().toISOString(),
+        audience_profile: profile ?? null,
+        audience_group: group ?? null,
+        subject,
+        body: rawBody,
+        body_snippet: rawBody.slice(0, 200),
+        channels_in_app: channels.inApp,
+        channels_email: channels.email,
+        channels_sms: channels.sms,
+        recipient_count: recipients.length,
+        result_in_app_sent: result.inApp?.sent ?? null,
+        result_in_app_thread_id: result.inApp?.threadId ?? null,
+        result_email_sent: result.email.sent,
+        result_email_failed: result.email.failed,
+        result_sms_sent: result.sms.sent,
+        result_sms_failed: result.sms.failed,
+      })
+    } catch (e) {
+      console.warn("[admin/messaging/send] admin_blast_log insert skipped:", (e as Error).message)
+    }
   }
 
   return NextResponse.json({

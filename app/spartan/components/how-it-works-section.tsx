@@ -26,7 +26,8 @@ export function HowItWorksSection() {
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-[#888]">
           You can run with Team NC, give alongside someone who is—or donate to a wrestler’s training even when they’re
           not on the Spartan course. You always pick the athlete by <strong className="text-[#aaa]">name search</strong> at
-          checkout. Step 3 is only for people registering themselves for the Super 10K.
+          checkout (one wrestler per gift). Supporting more than one kid? Complete checkout for the first, then start
+          again for the next. Step 3 is only for people registering themselves for the Super 10K.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3">
           {steps.map((s) => (

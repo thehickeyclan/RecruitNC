@@ -15,7 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send, Inbox, FolderOpen, Trash2, Eye } from "lucide-react"
+import { MessageSquare, Users, Loader2, ArrowLeft, Bold, Italic, Link2, List, ListOrdered, Send, Inbox, FolderOpen, Trash2, Eye, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
 import type { RecipientRow } from "@/app/api/admin/messaging/recipients/route"
@@ -166,7 +166,7 @@ export default function AdminMessagingPage() {
       <div className="container mx-auto px-4 py-8">
         <AdminHeader />
 
-        <div className="flex gap-1 border-b border-[#003366]/20 mb-6 max-w-3xl">
+        <div className="flex flex-wrap items-end gap-1 border-b border-[#003366]/20 mb-6 max-w-4xl">
           <button
             type="button"
             onClick={() => setActiveTab("compose")}
@@ -200,6 +200,13 @@ export default function AdminMessagingPage() {
             <FolderOpen className="inline w-4 h-4 mr-2" />
             Folders
           </button>
+          <HardLink
+            href="/admin/messaging/email-replies"
+            className="ml-auto mb-px flex min-h-[44px] items-center gap-1.5 rounded-t px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-[#003366]"
+          >
+            <Mail className="h-4 w-4" />
+            Email replies
+          </HardLink>
         </div>
 
         {activeTab === "sent" && (

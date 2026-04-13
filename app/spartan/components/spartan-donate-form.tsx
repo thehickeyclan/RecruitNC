@@ -390,6 +390,13 @@ export function SpartanDonateForm() {
           <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">a wrestler</strong> or{" "}
           <strong className="text-[#777]">NC United</strong>.
         </p>
+        <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2 text-[11px] leading-snug text-[#ccc]">
+          <strong className="text-[#C8A94A]">Multiple wrestlers in your family?</strong> Each checkout credits{" "}
+          <strong className="text-white">one</strong> athlete — finish payment for the first, then start again for the
+          next. Put <strong className="text-white">your</strong> name as the payer each time (same parent is fine). Friends
+          use <strong className="text-white">their</strong> name and email, then pick who they&apos;re supporting in the
+          search below.
+        </p>
       </div>
 
       {flow === "donate" && (
@@ -474,7 +481,10 @@ export function SpartanDonateForm() {
               <label htmlFor="spartan-donor-name" className="text-xs text-[#888]">
                 Your name
               </label>
-              <p className="mt-0.5 text-[10px] leading-snug text-[#666]">You, the supporter paying — not the wrestler.</p>
+              <p className="mt-0.5 text-[10px] leading-snug text-[#666]">
+                The person whose card is used (parent, friend — whoever is paying). Credit goes to the wrestler you{" "}
+                <strong className="text-[#888]">select in search below</strong>, not from this field.
+              </p>
               <input
                 id="spartan-donor-name"
                 type="text"
@@ -553,6 +563,9 @@ export function SpartanDonateForm() {
             <>
               <div className="relative mt-5">
                 <label className="text-xs text-[#888]">Which wrestler should receive credit? (search)</label>
+                <p className="mt-0.5 text-[10px] leading-snug text-[#666]">
+                  One wrestler per checkout — run through Stripe again to credit a sibling or second athlete.
+                </p>
                 <input
                   type="text"
                   placeholder="Wrestler’s last name…"

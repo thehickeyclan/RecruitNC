@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
+import { SpartanFundraisingVisuals } from "@/components/admin/spartan-fundraising-visuals"
 import { ArrowLeft, ClipboardCopy, Coins, RefreshCw } from "lucide-react"
 
 type SpartanDonationRow = {
@@ -256,6 +257,14 @@ export default function AdminFundraisingPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <SpartanFundraisingVisuals
+              donations={donations}
+              byAthlete={byAthlete}
+              generalTotalCents={generalTotalCents}
+              onPickAthlete={(code) => setAthleteFilter(code)}
+              selectedAthleteFilter={athleteFilter}
+            />
 
             <Card>
               <CardHeader>

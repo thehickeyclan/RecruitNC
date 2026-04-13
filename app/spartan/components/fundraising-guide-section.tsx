@@ -14,8 +14,9 @@ export function FundraisingGuideSection() {
           <li>Make a donation</li>
         </ul>
         <p className="mt-6 text-base leading-relaxed text-[#bbb]">
-          When registering or donating, they simply enter the athlete&apos;s name — and that value is credited directly
-          toward that athlete&apos;s training, travel, and competition expenses.
+          When registering or donating, supporters <strong className="text-white">search and select</strong> the athlete
+          from the directory at checkout. That ties the gift to that wrestler&apos;s tally — separate from &ldquo;Your
+          name,&rdquo; which is whoever is paying.
         </p>
 
         <h2 className="mt-14 font-[family-name:var(--font-barlow-spartan)] text-xl font-bold uppercase tracking-tight text-[#C8A94A] md:text-2xl">
@@ -41,13 +42,25 @@ export function FundraisingGuideSection() {
               2. How do I make sure a registration or donation is credited to a specific athlete?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
-              During registration or donation, simply enter the athlete&apos;s name. That ensures the credit is applied
-              correctly.
+              At checkout, use <strong className="text-white">search</strong> to find the wrestler and select them from
+              the list. &ldquo;Your name&rdquo; is the supporter paying (parent or friend) — credit goes to whoever you
+              select in search, not from the name field alone.
             </p>
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              3. Does an athlete have to run a specific race (like the 10K)?
+              3. What if I&apos;m paying for two (or more) wrestlers — siblings or friends?
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed md:text-base">
+              Each checkout credits <strong className="text-white">one</strong> athlete. Finish payment for the first
+              wrestler, then go through again for the next. You can use the same parent name and email each time; pick the
+              correct wrestler in search on each checkout. Friends use their own name and email, then select who
+              they&apos;re supporting.
+            </p>
+          </div>
+          <div>
+            <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
+              4. Does an athlete have to run a specific race (like the 10K)?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               No — participants can choose any race distance.
@@ -55,7 +68,7 @@ export function FundraisingGuideSection() {
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              4. Does an athlete have to run the race to benefit from fundraising?
+              5. Does an athlete have to run the race to benefit from fundraising?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               No — participation is not required.
@@ -67,7 +80,7 @@ export function FundraisingGuideSection() {
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              5. Can someone make a donation without running the race?
+              6. Can someone make a donation without running the race?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               Yes — donations can be made on behalf of an athlete without participating in the race.
@@ -75,7 +88,7 @@ export function FundraisingGuideSection() {
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              6. Do you have to be a member of NC United to participate?
+              7. Do you have to be a member of NC United to participate?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               No — this is open to the entire wrestling community.
@@ -86,7 +99,7 @@ export function FundraisingGuideSection() {
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              7. Are donations tax-deductible?
+              8. Are donations tax-deductible?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               Yes — NC United is a 501(c)(3) nonprofit organization, and all donations are tax-deductible.
@@ -95,7 +108,7 @@ export function FundraisingGuideSection() {
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              8. Is there a limit to how much an athlete can raise?
+              9. Is there a limit to how much an athlete can raise?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               No — there is no limit.
@@ -106,7 +119,7 @@ export function FundraisingGuideSection() {
           </div>
           <div>
             <h3 className="font-[family-name:var(--font-barlow-spartan)] text-base font-bold text-white md:text-lg">
-              9. What can the funds be used for?
+              10. What can the funds be used for?
             </h3>
             <p className="mt-2 text-sm leading-relaxed md:text-base">
               Funds can be applied toward any wrestling-related training and competition expenses, including:
@@ -168,8 +181,8 @@ export function FundraisingGuideSection() {
             money for training, camps, and competition.
             <br />
             <br />
-            If you&apos;re interested, you can sign up for a race or make a donation — and just include my name so it
-            gets credited toward my training.
+            If you&apos;re interested, you can sign up for a race or make a donation — on the NC United page, search for
+            my name in the wrestler list at checkout so it gets credited toward my training.
             <br />
             <br />
             I&apos;d really appreciate the support. Thank you so much.

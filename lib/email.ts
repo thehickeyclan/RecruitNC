@@ -415,8 +415,12 @@ export async function sendAdminBlastEmail(
   to: string,
   subject: string,
   htmlBody: string,
-  logoVariant: "recruitnc" | "nc-united" = "recruitnc"
-): Promise<{ success: boolean; error?: string }> {
+  logoVariant: "recruitnc" | "nc-united" = "recruitnc",
+  options?: {
+    replyTo?: string
+    headers?: Record<string, string>
+  }
+): Promise<{ success: boolean; error?: string; resendMessageId?: string }> {
   if (!process.env.RESEND_API_KEY) {
     return { success: false, error: "Email service not configured" }
   }
@@ -431,12 +435,17 @@ export async function sendAdminBlastEmail(
       to: [to.trim()],
       subject: subject.trim() || "Update from RecruitNC",
       html,
+      ...(options?.replyTo ? { reply_to: options.replyTo } : {}),
+      ...(options?.headers && Object.keys(options.headers).length > 0
+        ? { headers: options.headers as Record<string, string> }
+        : {}),
     })
     if (result.error) {
       console.error("[RecruitNC] Admin blast email error:", result.error)
       return { success: false, error: result.error.message }
     }
-    return { success: true }
+    const id = result.data?.id
+    return { success: true, ...(typeof id === "string" ? { resendMessageId: id } : {}) }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to send email"
     console.error("sendAdminBlastEmail:", err)
