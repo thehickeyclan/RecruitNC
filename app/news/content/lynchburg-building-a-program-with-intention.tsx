@@ -19,6 +19,12 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
         <strong>next-closest</strong> program on that ledger for NC recruits in this class.
       </p>
 
+      <p className="mt-6 text-slate-700">
+        <strong>Here&apos;s why</strong> that recruiting pace matches what families see on a visit: the through-line starts
+        with infrastructure — the part of the story you can walk through before Lynchburg&apos;s first official varsity
+        season even opens.
+      </p>
+
       <h2>A facility that stands out</h2>
       <p>
         The university recently unveiled a <strong>12,000-square-foot stand-alone wrestling facility</strong>, one of the
