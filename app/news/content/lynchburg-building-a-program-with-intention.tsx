@@ -16,7 +16,8 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
         standing up a new Division III program — its <strong>first official varsity season</strong> is still ahead — with
         clear structure, investment, and alignment. On RecruitNC&apos;s Class of 2026 ledger for North Carolina, Lynchburg
         lists <strong>five</strong> in-state commits — about <strong>2×</strong> the total of the{" "}
-        <strong>next-closest</strong> program on that ledger for NC recruits in this class.
+        <strong>next-closest</strong> program on that ledger for NC recruits in this class — and we&apos;re hearing more
+        North Carolina names may be announced soon.
       </p>
 
       <p className="mt-6 text-slate-700">
@@ -27,8 +28,8 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
 
       <h2>A facility that stands out</h2>
       <p>
-        The university recently unveiled a <strong>12,000-square-foot stand-alone wrestling facility</strong>, one of the
-        largest in NCAA wrestling. The space includes more than <strong>7,200 square feet of mat space</strong> with four
+        The university recently unveiled a <strong>stand-alone wrestling facility of more than 13,000 square feet</strong>,
+        one of the largest in NCAA wrestling. The space includes more than <strong>7,200 square feet of mat space</strong> with four
         full collegiate mats, along with a fully equipped weight room featuring Olympic platforms, multiple racks, and
         conditioning equipment. The facility also includes a team lounge, locker rooms, and a dedicated athletic training
         and recovery area.
@@ -165,6 +166,12 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
           upside.
         </li>
       </ul>
+      <p>
+        We&apos;re hearing from the Lynchburg staff that <strong>additional North Carolina names</strong> may be announced
+        soon as the first roster comes together. Among the in-state athletes connected to the program ahead of formal
+        announcements are <strong>Xander McAnaw</strong> (prep), <strong>Joe Ricci</strong> (Hough), and{" "}
+        <strong>Jojo Trahan</strong> (Trinity). We&apos;ll update this story as commitments and signings are made public.
+      </p>
 
       <hr />
 
@@ -210,7 +217,8 @@ export function LynchburgBuildingAProgramWithIntentionContent() {
       <h2>Takeaway</h2>
       <p>
         The numbers above track <strong>Class of 2026</strong> commitments from North Carolina to four-year programs — the
-        same lens RecruitNC uses across the site.         Leading the state with five NC signees — about <strong>2×</strong> the next program on the ledger — before year one
+        same lens RecruitNC uses across the site. Leading the state with five NC signees — about <strong>2×</strong> the
+        next program on the ledger — before year one
         on the mat lines up with the facility, the travel
         schedule, and the work in front of families.
       </p>
