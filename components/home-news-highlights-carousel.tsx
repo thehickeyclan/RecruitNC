@@ -64,8 +64,10 @@ export function HomeNewsHighlightsCarousel() {
               <div
                 className={`relative w-full overflow-hidden border-b border-slate-100 ${
                   mainStory.imageFit === "contain"
-                    ? "h-72 bg-slate-100 sm:h-80 md:h-96 lg:h-[28rem]"
-                    : "h-52 sm:h-64 md:h-80 lg:h-[22rem] bg-slate-100"
+                    ? // Same small/mid breakpoints as before; only cap the old lg:h-[28rem] desktop tower.
+                      "h-72 bg-slate-100 sm:h-80 md:h-96 lg:h-80 xl:h-72"
+                    : // h-52 / sm:h-64 unchanged. lg+ only: shorter strip on wide desktop so the card isn’t image-dominated.
+                      "h-52 sm:h-64 md:h-64 lg:h-52 xl:h-48 2xl:h-52 bg-slate-100"
                 }`}
               >
                 <Image

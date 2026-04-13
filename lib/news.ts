@@ -36,7 +36,7 @@ const ALL_NEWS: NewsItem[] = [
     slug: "lynchburg-building-a-program-with-intention",
     title: "Building a Program with Intention: Lynchburg’s NC Pipeline and Class of 2026",
     summary:
-      "Stand-alone facility, NC United ties, and national recruiting hustle — how Lynchburg (DIII) is building wrestling with purpose, plus Vincent Barber and Matt Hickey on showing up for athletes.",
+      "New DIII program (first varsity season ahead) — five NC commits for ’26, ~2× the next school on RecruitNC’s ledger; facility, NC United ties, and national recruiting hustle with Vincent Barber and Matt Hickey.",
     href: "/news/lynchburg-building-a-program-with-intention",
     date: "2026-04-13",
     image: "/images/lynchburg-hornets-facility-hero.png",
