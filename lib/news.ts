@@ -40,7 +40,7 @@ const ALL_NEWS: NewsItem[] = [
     href: "/news/lynchburg-building-a-program-with-intention",
     date: "2026-04-13",
     image: "/images/lynchburg-hornets-facility-hero.png",
-    imagePosition: "top",
+    imagePosition: "center",
     imageFit: "cover",
     newsListBanner: true,
     category: "RECRUITING",

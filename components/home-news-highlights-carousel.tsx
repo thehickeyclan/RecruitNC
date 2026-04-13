@@ -65,7 +65,8 @@ export function HomeNewsHighlightsCarousel() {
                 className={`relative w-full overflow-hidden border-b border-slate-100 ${
                   mainStory.imageFit === "contain"
                     ? "h-72 bg-slate-100 sm:h-80 md:h-96 lg:h-[28rem]"
-                    : "h-52 sm:h-64 md:h-80 lg:h-[22rem] bg-slate-100"
+                    : // Aspect-ratio frame (no magic h-*). Phone: 16/10 like side cards. md+: wider ratio so full-width isn’t a skyscraper.
+                      "aspect-[16/10] bg-slate-100 md:aspect-[2.15/1]"
                 }`}
               >
                 <Image
