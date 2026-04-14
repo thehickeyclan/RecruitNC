@@ -30,7 +30,7 @@ export async function GET() {
 
   const { data: athletes, error: athleteError } = await supabase
     .from("athletes")
-    .select("id, name, profile_verified, updated_at")
+    .select("id, name, profile_verified, updated_at, claimed_by_user_id")
     .in("id", athleteIds)
 
   if (athleteError) return NextResponse.json({ error: athleteError.message }, { status: 500 })
@@ -40,6 +40,7 @@ export async function GET() {
     name: a.name ?? "—",
     profileVerified: !!a.profile_verified,
     updatedAt: a.updated_at ?? null,
+    claimedByUserId: (a as Record<string, unknown>).claimed_by_user_id as string | null ?? null,
   }))
 
   return NextResponse.json({ athletes: list })

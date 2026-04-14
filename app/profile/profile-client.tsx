@@ -26,6 +26,7 @@ const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   academic: "Academic info",
   highlightVideo: "Highlight video",
   photo: "Photo",
+  contact: "Contact info (phone, email, or Instagram)",
 }
 
 interface UserProfile {
@@ -55,7 +56,9 @@ export function ProfileClient() {
   const [blueLoading, setBlueLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState<string | null>(null)
   const [blueBillingPortalError, setBlueBillingPortalError] = useState("")
-  const [linkedAthletes, setLinkedAthletes] = useState<{ id: string; name: string; profileVerified: boolean; updatedAt: string | null }[]>([])
+  const [linkedAthletes, setLinkedAthletes] = useState<
+    { id: string; name: string; profileVerified: boolean; updatedAt: string | null; claimedByUserId: string | null }[]
+  >([])
   const [linkedLoading, setLinkedLoading] = useState(true)
   const [athleteCompleteness, setAthleteCompleteness] = useState<Record<string, { percent: number; completed: string[]; missing: string[] }>>({})
   const [completenessLoading, setCompletenessLoading] = useState(false)
@@ -842,19 +845,62 @@ export function ProfileClient() {
                                     <li key={m}>{ATHLETE_COMPLETENESS_LABELS[m] ?? m}</li>
                                   ))}
                                 </ul>
-                                <p className="text-xs text-gray-500 mt-1">Use &quot;Edit profile&quot; below to fill these in.</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {comp.missing.includes("contact")
+                                    ? "Add contact info so coaches can reach you directly — "
+                                    : "Use "}
+                                  <a
+                                    href={`/athletes/${a.id}/edit`}
+                                    className="underline text-[#03154C] font-medium"
+                                  >
+                                    Edit profile
+                                  </a>
+                                  {comp.missing.includes("contact")
+                                    ? " to add phone, email, or Instagram."
+                                    : " to fill these in."}
+                                </p>
                               </div>
                             ) : (
-                              <p className="text-xs text-green-600 mt-1">All sections complete — bio, achievements, academics, highlight video, and photo are filled.</p>
+                              <p className="text-xs text-green-600 mt-1">
+                                Profile complete — bio, achievements, academics, highlight video, photo, and contact info
+                                are filled.
+                              </p>
                             )}
                           </div>
                         ) : null}
+                        {!a.claimedByUserId && (
+                          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 mt-2">
+                            <span className="text-amber-500 text-[13px] shrink-0 mt-px">!</span>
+                            <p className="text-[12px] text-amber-800 leading-snug">
+                              {(a.name?.split(" ")[0] || "This athlete")} hasn&apos;t claimed this profile yet.
+                              When they sign up and claim it, they can manage their own recruiting info.{" "}
+                              <a
+                                href={`/view-profile?id=${encodeURIComponent(a.id)}`}
+                                className="underline font-medium"
+                              >
+                                View profile
+                              </a>{" "}
+                              to share the link with them.
+                            </p>
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-2 mt-2">
                           <Button asChild variant="outline" size="sm">
                             <a href={`/view-profile?id=${encodeURIComponent(a.id)}`}>View</a>
                           </Button>
-                          <Button asChild variant="outline" size="sm">
-                            <a href={`/edit-profile/${a.id}`}>Edit profile</a>
+                          <Button
+                            asChild
+                            size="sm"
+                            variant={comp && comp.percent === 0 ? "default" : "outline"}
+                            className={
+                              comp && comp.percent === 0
+                                ? "bg-[#03154C] hover:bg-[#0a2a6e] text-white"
+                                : ""
+                            }
+                          >
+                            <a href={`/athletes/${a.id}/edit`}>
+                              {comp && comp.percent === 0 ? "Complete profile" : "Edit profile"}
+                            </a>
                           </Button>
                         </div>
                       </div>
@@ -925,7 +971,7 @@ export function ProfileClient() {
                       <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id)}`}>View {profile.athlete_name}&apos;s profile</a>
                     </Button>
                     <Button asChild variant="outline" size="sm">
-                      <a href={`/edit-profile/${profile.athlete_id}`}>Edit profile</a>
+                      <a href={`/athletes/${profile.athlete_id}/edit`}>Edit profile</a>
                     </Button>
                   </div>
                 </CardContent>

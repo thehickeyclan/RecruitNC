@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { ArrowLeft, Save } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { PublicImageUpload } from "@/components/public-image-upload"
 
 interface Athlete {
   id: string
   name?: string
+  firstName?: string
   bio?: string
   bio_headline?: string
   highschool?: string
@@ -33,6 +35,8 @@ interface Athlete {
   college_opens_experience?: string
   nationally_ranked_wins?: string
   prospect_ranking?: number
+  highlight_video_url?: string | null
+  photourl?: string | null
 }
 
 export default function AthleteEditPage({ params }: { params: { id: string } }) {
@@ -57,6 +61,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
   const [collegeOpens, setCollegeOpens] = useState("")
   const [nationallyRankedWins, setNationallyRankedWins] = useState("")
   const [prospectRanking, setProspectRanking] = useState("")
+  const [highlightVideo, setHighlightVideo] = useState("")
 
   useEffect(() => {
     if (!user) {
@@ -95,6 +100,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
       setCollegeOpens(data.college_opens_experience || "")
       setNationallyRankedWins(data.nationally_ranked_wins || "")
       setProspectRanking(data.prospect_ranking ? String(data.prospect_ranking) : "")
+      setHighlightVideo(data.highlight_video_url || "")
     } catch (error) {
       console.error("Error fetching athlete:", error)
       toast({
@@ -131,6 +137,9 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
       if (nationallyRankedWins !== (athlete?.nationally_ranked_wins || "")) updates.nationally_ranked_wins = nationallyRankedWins
       if (prospectRanking !== (athlete?.prospect_ranking ? String(athlete.prospect_ranking) : "")) {
         updates.prospect_ranking = prospectRanking ? parseInt(prospectRanking) : null
+      }
+      if (highlightVideo !== (athlete?.highlight_video_url || "")) {
+        updates.highlight_video_url = highlightVideo.trim() || null
       }
 
       if (Object.keys(updates).length === 0) {
@@ -372,6 +381,20 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
           </CardContent>
         </Card>
 
+        <div className="space-y-2 mb-6">
+          <Label htmlFor="highlight_video_url">Highlight Video URL</Label>
+          <Input
+            id="highlight_video_url"
+            type="url"
+            value={highlightVideo}
+            onChange={(e) => setHighlightVideo(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+          />
+          <p className="text-xs text-gray-500">
+            Paste a YouTube link. It will be embedded on your public profile.
+          </p>
+        </div>
+
         <div className="flex justify-end gap-4">
           <Button
             type="button"
@@ -386,6 +409,15 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
           </Button>
         </div>
       </form>
+
+      <div className="mt-6">
+        <PublicImageUpload
+          athleteId={params.id}
+          athleteName={athlete?.name ?? athlete?.firstName ?? "Athlete"}
+          currentImageUrl={athlete?.photourl ?? undefined}
+          onUploadComplete={() => fetchAthlete()}
+        />
+      </div>
 
       <Card className="mt-6 bg-yellow-50 border-yellow-200">
         <CardContent className="pt-6">
