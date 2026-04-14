@@ -25,6 +25,8 @@ function computeCompleteness(row: {
   cell_number?: string | null
   phone?: string | null
   contact_email?: string | null
+  contactEmail?: string | null
+  email?: string | null
   socialMedia?: unknown
   social_media?: unknown
   photourl?: string | null
@@ -51,7 +53,7 @@ function computeCompleteness(row: {
 
   // Contact: phone OR email OR instagram (from socialMedia JSON or legacy top-level)
   const rawPhone = row.cell ?? row.cell_number ?? row.phone ?? null
-  const rawEmail = row.contact_email ?? null
+  const rawEmail = row.contact_email ?? row.contactEmail ?? row.email ?? null
   const rawSocial = row.socialMedia ?? row.social_media ?? null
   const instagramVal =
     rawSocial !== null &&
@@ -98,12 +100,8 @@ export async function GET(request: NextRequest) {
     .filter(Boolean)
   if (ids.length === 0) return NextResponse.json({ athletes: [] })
 
-  const { data: rows, error } = await supabase
-    .from("athletes")
-    .select(
-      "id, bio, bio_headline, achievements, additional_achievements, academic_gpa, academic_sat, academic_act, academic_summary, highlight_video_url, photourl, photo_url, gpa, sat, act, cell, cell_number, phone, contact_email, socialMedia, social_media"
-    )
-    .in("id", ids)
+  // Full row — avoids 42703 when prod schema differs (missing cell, photo_url, etc.).
+  const { data: rows, error } = await supabase.from("athletes").select("*").in("id", ids)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
