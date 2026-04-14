@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { pauseBlueSubscription, cancelBlueSubscription } from "@/lib/blue-subscription-actions"
+import { pauseBlueSubscription, cancelBlueSubscription, resumeBlueSubscription } from "@/lib/blue-subscription-actions"
 
 export const dynamic = "force-dynamic"
 
@@ -38,9 +38,22 @@ export async function POST(
   } catch {
     body = {}
   }
-  const action = body.action === "pause" ? "pause" : body.action === "cancel" ? "cancel" : null
+  const action =
+    body.action === "pause"
+      ? "pause"
+      : body.action === "cancel"
+        ? "cancel"
+        : body.action === "resume"
+          ? "resume"
+          : null
   if (!action) {
-    return NextResponse.json({ error: "action required: pause or cancel" }, { status: 400 })
+    return NextResponse.json({ error: "action required: pause, resume, or cancel" }, { status: 400 })
+  }
+
+  if (action === "resume") {
+    const result = await resumeBlueSubscription(membershipId)
+    if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
+    return NextResponse.json({ success: true, message: "Subscription resumed. Billing is active again." })
   }
 
   if (action === "pause") {

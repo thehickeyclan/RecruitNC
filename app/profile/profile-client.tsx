@@ -10,23 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Pause, Ban, Upload, X, LayoutDashboard } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Upload, X, LayoutDashboard } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
+import { NcUnitedBlueSection, type ParentBlueMembership } from "@/components/profile/nc-united-blue-section"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -59,13 +49,10 @@ export function ProfileClient() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  const [blueMemberships, setBlueMemberships] = useState<{ id: string; athleteId: string; athleteName: string; status: string; startedAt: string; stripeCustomerId: string | null; stripeSubscriptionId: string | null; resumeAt: string | null }[]>([])
+  const [blueMemberships, setBlueMemberships] = useState<ParentBlueMembership[]>([])
   const [blueLoading, setBlueLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState<string | null>(null)
-  const [pauseMembership, setPauseMembership] = useState<{ id: string; athleteName: string } | null>(null)
-  const [resumeAt, setResumeAt] = useState("")
-  const [cancelMembership, setCancelMembership] = useState<{ id: string; athleteName: string } | null>(null)
-  const [subscriptionActionLoading, setSubscriptionActionLoading] = useState(false)
+  const [blueBillingPortalError, setBlueBillingPortalError] = useState("")
   const [linkedAthletes, setLinkedAthletes] = useState<{ id: string; name: string; profileVerified: boolean; updatedAt: string | null }[]>([])
   const [linkedLoading, setLinkedLoading] = useState(true)
   const [athleteCompleteness, setAthleteCompleteness] = useState<Record<string, { percent: number; completed: string[]; missing: string[] }>>({})
@@ -197,7 +184,7 @@ export function ProfileClient() {
       const res = await fetch("/api/blue/my-memberships", { credentials: "include" })
       if (res.ok) {
         const data = await res.json()
-        setBlueMemberships(data.memberships ?? [])
+        setBlueMemberships((data.memberships ?? []) as ParentBlueMembership[])
       }
       await fetch("/api/blue/resume-check", { method: "POST", credentials: "include" }).catch(() => {})
     } catch {
@@ -207,55 +194,9 @@ export function ProfileClient() {
     }
   }
 
-  const runPause = async () => {
-    if (!pauseMembership || !resumeAt || !/^\d{4}-\d{2}-\d{2}$/.test(resumeAt)) return
-    setSubscriptionActionLoading(true)
-    try {
-      const res = await fetch(`/api/blue/membership/${encodeURIComponent(pauseMembership.id)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ action: "pause", resumeAt }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        setPauseMembership(null)
-        setResumeAt("")
-        setSuccess(data.message ?? "Subscription paused.")
-        fetchBlueMemberships()
-      } else {
-        setError(data.error ?? "Failed to pause")
-      }
-    } finally {
-      setSubscriptionActionLoading(false)
-    }
-  }
-
-  const runCancel = async () => {
-    if (!cancelMembership) return
-    setSubscriptionActionLoading(true)
-    try {
-      const res = await fetch(`/api/blue/membership/${encodeURIComponent(cancelMembership.id)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ action: "cancel", atPeriodEnd: true }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        setCancelMembership(null)
-        setSuccess(data.message ?? "Subscription will cancel at period end.")
-        fetchBlueMemberships()
-      } else {
-        setError(data.error ?? "Failed to cancel")
-      }
-    } finally {
-      setSubscriptionActionLoading(false)
-    }
-  }
-
   const openBillingPortal = async (customerId: string) => {
     setPortalLoading(customerId)
+    setBlueBillingPortalError("")
     try {
       const res = await fetch("/api/blue/billing-portal", {
         method: "POST",
@@ -268,9 +209,9 @@ export function ProfileClient() {
         window.location.href = data.url
         return
       }
-      setError(data.error || "Could not open billing portal")
+      setBlueBillingPortalError(data.error || "Could not open billing portal")
     } catch {
-      setError("Could not open billing portal")
+      setBlueBillingPortalError("Could not open billing portal")
     } finally {
       setPortalLoading(null)
     }
@@ -480,8 +421,19 @@ export function ProfileClient() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Profile Form */}
-          <div className="lg:col-span-2">
+          {/* Main column: Blue billing (full width when payer) + profile */}
+          <div className="lg:col-span-2 space-y-6">
+            {(blueLoading || blueMemberships.length > 0) && (
+              <NcUnitedBlueSection
+                memberships={blueMemberships}
+                loading={blueLoading}
+                portalLoading={portalLoading}
+                onOpenBillingPortal={openBillingPortal}
+                onRefresh={fetchBlueMemberships}
+                billingPortalError={blueBillingPortalError || undefined}
+              />
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -615,7 +567,7 @@ export function ProfileClient() {
             </Card>
 
             {/* Notification preferences — messaging (SMS & email) */}
-            <Card className="mt-6">
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5" />
@@ -880,118 +832,6 @@ export function ProfileClient() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* NC United Blue memberships — only when user is payer for at least one */}
-            {!blueLoading && blueMemberships.length > 0 && (
-              <Card className="border-[#03154C]/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                    <CreditCard className="h-5 w-5" />
-                    NC United Blue
-                  </CardTitle>
-                  <CardDescription>Your Blue memberships and billing</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {blueMemberships.map((m) => (
-                    <div key={m.id} className="rounded-lg border bg-gray-50/50 p-3">
-                      <p className="font-medium text-gray-900">{m.athleteName}</p>
-                      <p className="text-sm text-gray-500 capitalize">{m.status.replace("_", " ")}</p>
-                      {m.status === "paused" && m.resumeAt && (
-                        <p className="text-xs text-amber-600 mt-0.5">Resumes {new Date(m.resumeAt).toLocaleDateString()}</p>
-                      )}
-                      <p className="text-xs text-gray-400 mt-1">Since {new Date(m.startedAt).toLocaleDateString()}</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {m.stripeCustomerId && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-[#03154C] border-[#03154C]/30 hover:bg-[#03154C]/5"
-                            onClick={() => openBillingPortal(m.stripeCustomerId!)}
-                            disabled={!!portalLoading}
-                          >
-                            {portalLoading === m.stripeCustomerId ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                            )}
-                            Manage billing
-                          </Button>
-                        )}
-                        {m.stripeSubscriptionId && (m.status === "active" || m.status === "pending_payment") && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-amber-700 border-amber-300 hover:bg-amber-50"
-                              onClick={() => { setPauseMembership({ id: m.id, athleteName: m.athleteName }); setResumeAt(""); setError("") }}
-                              disabled={!!subscriptionActionLoading}
-                            >
-                              <Pause className="h-3 w-3 mr-1" /> Pause
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-gray-700"
-                              onClick={() => { setCancelMembership({ id: m.id, athleteName: m.athleteName }); setError("") }}
-                              disabled={!!subscriptionActionLoading}
-                            >
-                              <Ban className="h-3 w-3 mr-1" /> Cancel
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  <p className="text-xs text-gray-500">Manage billing opens Stripe&apos;s portal. Use Pause to set a resume date; subscription resumes automatically on that date.</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Pause subscription dialog */}
-            <Dialog open={!!pauseMembership} onOpenChange={(open) => { if (!open) setPauseMembership(null) }}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Pause subscription</DialogTitle>
-                  <DialogDescription>
-                    {pauseMembership && <>Pause billing for {pauseMembership.athleteName}. Pick the date to automatically resume.</>}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-2 py-2">
-                  <Label htmlFor="profile-resumeAt">Resume on date</Label>
-                  <Input
-                    id="profile-resumeAt"
-                    type="date"
-                    value={resumeAt}
-                    onChange={(e) => setResumeAt(e.target.value)}
-                    min={new Date().toISOString().slice(0, 10)}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setPauseMembership(null)}>Cancel</Button>
-                  <Button onClick={runPause} disabled={subscriptionActionLoading || !resumeAt || !/^\d{4}-\d{2}-\d{2}$/.test(resumeAt)}>
-                    {subscriptionActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pause"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Cancel subscription confirmation */}
-            <AlertDialog open={!!cancelMembership} onOpenChange={(open) => { if (!open) setCancelMembership(null) }}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Cancel at period end?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {cancelMembership && <>Subscription for {cancelMembership.athleteName} will stop at the end of the current billing period. You won&apos;t be charged again.</>}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setCancelMembership(null)}>Keep subscription</AlertDialogCancel>
-                  <AlertDialogAction onClick={runCancel} disabled={subscriptionActionLoading} className="bg-red-600 hover:bg-red-700">
-                    {subscriptionActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancel at period end"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
 
             {/* Athlete Profile Upload - Only show if user has an associated athlete profile */}
             {profile.athlete_id && profile.athlete_name && (

@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getBlueMembershipStripeDetails } from "@/lib/blue-membership-stripe-details"
 
 export const dynamic = "force-dynamic"
 
-/** GET: List Blue memberships where the current user is the payer (for profile / "My Blue"). */
+type BlueMembershipForParent = {
+  id: string
+  athleteId: string
+  athleteName: string
+  status: string
+  startedAt: string
+  endedAt: string | null
+  stripeCustomerId: string | null
+  stripeSubscriptionId: string | null
+  resumeAt: string | null
+  /** From DB (webhook sync); may match Stripe current_period_end when enriched */
+  nextBillingAt: string | null
+  /** Stripe-only when subscription exists */
+  lastPaymentAt: string | null
+  amountFormatted: string | null
+  cancelAtPeriodEnd: boolean
+  cardBrand: string | null
+  cardLast4: string | null
+  stripeDetailsError: string | null
+}
+
+/** GET: List Blue memberships where the current user is the payer — with billing details when Stripe is available. */
 export async function GET() {
   const supabase = await createClient()
   const {
@@ -19,7 +41,9 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: rows, error } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, status, started_at, stripe_customer_id, stripe_subscription_id, resume_at")
+    .select(
+      "id, athlete_id, status, started_at, ended_at, stripe_customer_id, stripe_subscription_id, resume_at, next_billing_at"
+    )
     .eq("payer_user_id", user.id)
     .order("started_at", { ascending: false })
 
@@ -48,16 +72,55 @@ export async function GET() {
     nameById[id] = name || "Athlete"
   }
 
-  const memberships = rows.map((r) => ({
-    id: r.id,
-    athleteId: r.athlete_id,
-    athleteName: nameById[r.athlete_id] ?? "—",
-    status: r.status,
-    startedAt: r.started_at,
-    stripeCustomerId: r.stripe_customer_id ?? null,
-    stripeSubscriptionId: (r as { stripe_subscription_id?: string }).stripe_subscription_id ?? null,
-    resumeAt: (r as { resume_at?: string | null }).resume_at ?? null,
-  }))
+  const stripeKey = process.env.STRIPE_SECRET_KEY
+  const memberships: BlueMembershipForParent[] = []
+
+  for (const r of rows) {
+    const stripeSubId = (r as { stripe_subscription_id?: string | null }).stripe_subscription_id ?? null
+    const dbNext = (r as { next_billing_at?: string | null }).next_billing_at ?? null
+
+    let lastPaymentAt: string | null = null
+    let amountFormatted: string | null = null
+    let cancelAtPeriodEnd = false
+    let cardBrand: string | null = null
+    let cardLast4: string | null = null
+    let nextBillingAt: string | null = dbNext
+    let stripeDetailsError: string | null = null
+
+    if (stripeSubId && stripeKey) {
+      const enriched = await getBlueMembershipStripeDetails(stripeSubId)
+      if (enriched.ok) {
+        const d = enriched.details
+        lastPaymentAt = d.lastPaymentAt
+        amountFormatted = d.amountFormatted
+        cancelAtPeriodEnd = d.cancelAtPeriodEnd
+        cardBrand = d.cardBrand
+        cardLast4 = d.cardLast4
+        if (d.nextBillingAt) nextBillingAt = d.nextBillingAt
+      } else {
+        stripeDetailsError = enriched.error
+      }
+    }
+
+    memberships.push({
+      id: r.id,
+      athleteId: r.athlete_id,
+      athleteName: nameById[r.athlete_id] ?? "—",
+      status: r.status,
+      startedAt: r.started_at,
+      endedAt: (r as { ended_at?: string | null }).ended_at ?? null,
+      stripeCustomerId: r.stripe_customer_id ?? null,
+      stripeSubscriptionId: stripeSubId,
+      resumeAt: (r as { resume_at?: string | null }).resume_at ?? null,
+      nextBillingAt,
+      lastPaymentAt,
+      amountFormatted,
+      cancelAtPeriodEnd,
+      cardBrand,
+      cardLast4,
+      stripeDetailsError,
+    })
+  }
 
   return NextResponse.json({ memberships })
 }

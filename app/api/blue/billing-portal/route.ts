@@ -32,15 +32,21 @@ export async function POST(request: NextRequest) {
   }
 
   // Billing access is only for the payer (payer_user_id). Linking an athlete via parent_athlete_links does NOT grant access to manage their Blue subscription.
+  // Two athletes can share one Stripe customer (same parent checkout) → multiple rows match; do not use maybeSingle().
   const admin = createAdminClient()
-  const { data: membership } = await admin
+  const { data: membershipRows, error: membershipError } = await admin
     .from("blue_memberships")
     .select("id")
     .eq("payer_user_id", user.id)
     .eq("stripe_customer_id", customerId)
-    .maybeSingle()
+    .limit(1)
 
-  if (!membership) {
+  if (membershipError) {
+    console.error("[blue/billing-portal] membership lookup:", membershipError.message)
+    return NextResponse.json({ error: "Could not verify billing access" }, { status: 500 })
+  }
+
+  if (!membershipRows?.length) {
     return NextResponse.json({ error: "Not authorized for this customer" }, { status: 403 })
   }
 
