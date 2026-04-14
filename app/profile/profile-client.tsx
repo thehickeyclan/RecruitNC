@@ -13,10 +13,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Upload, X, LayoutDashboard } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Upload, X, LayoutDashboard } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NcUnitedBlueSection, type ParentBlueMembership } from "@/components/profile/nc-united-blue-section"
+import { HardLink } from "@/components/hard-link"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -415,26 +417,37 @@ export function ProfileClient() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Profile</h1>
-          <p className="text-gray-600">Manage your account information and preferences</p>
+        <div className="mb-8 border-b border-[#03154C]/10 pb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-[#03154C] mb-1">My Profile</h1>
+          <p className="text-slate-600 text-sm sm:text-base">Account settings and NC United Blue membership</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main column: Blue billing (full width when payer) + profile */}
-          <div className="lg:col-span-2 space-y-6">
-            {(blueLoading || blueMemberships.length > 0) && (
-              <NcUnitedBlueSection
-                memberships={blueMemberships}
-                loading={blueLoading}
-                portalLoading={portalLoading}
-                onOpenBillingPortal={openBillingPortal}
-                onRefresh={fetchBlueMemberships}
-                billingPortalError={blueBillingPortalError || undefined}
-              />
-            )}
+          <div className="lg:col-span-2">
+            <Tabs defaultValue="account" className="w-full">
+              <TabsList className="mb-6 grid w-full grid-cols-2 gap-1.5 rounded-xl border border-[#03154C]/12 bg-slate-100/90 p-1.5 h-auto shadow-inner sm:inline-flex sm:w-full sm:max-w-md">
+                <TabsTrigger
+                  value="account"
+                  className="rounded-lg py-2.5 text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+                >
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <User className="h-4 w-4 shrink-0 opacity-80" />
+                    Account
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="blue"
+                  className="rounded-lg py-2.5 text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+                >
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <CreditCard className="h-4 w-4 shrink-0 opacity-80" />
+                    NC United Blue
+                  </span>
+                </TabsTrigger>
+              </TabsList>
 
-            <Card>
+              <TabsContent value="account" className="mt-0 space-y-6 focus-visible:outline-none">
+            <Card className="border-[#03154C]/10 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
@@ -613,6 +626,44 @@ export function ProfileClient() {
                 </div>
               </CardContent>
             </Card>
+              </TabsContent>
+
+              <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
+                {blueLoading || blueMemberships.length > 0 ? (
+                  <NcUnitedBlueSection
+                    memberships={blueMemberships}
+                    loading={blueLoading}
+                    portalLoading={portalLoading}
+                    onOpenBillingPortal={openBillingPortal}
+                    onRefresh={fetchBlueMemberships}
+                    billingPortalError={blueBillingPortalError || undefined}
+                  />
+                ) : (
+                  <Card className="border-[#03154C]/15 border-dashed bg-white shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                        <CreditCard className="h-5 w-5" />
+                        NC United Blue
+                      </CardTitle>
+                      <CardDescription>
+                        Training, apparel, and member benefits — billed separately when you join.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-slate-600">
+                        You don&apos;t have an active Blue membership on this account yet. Parents who join can manage billing here.
+                      </p>
+                      <HardLink
+                        href="/blue"
+                        className="inline-flex h-10 items-center justify-center rounded-md border border-[#03154C]/30 bg-background px-4 text-sm font-medium text-[#03154C] shadow-sm transition-colors hover:bg-[#03154C]/5"
+                      >
+                        Learn about NC United Blue
+                      </HardLink>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Sidebar */}

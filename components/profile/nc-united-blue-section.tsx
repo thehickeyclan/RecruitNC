@@ -184,7 +184,7 @@ export function NcUnitedBlueSection({
 
   if (loading) {
     return (
-      <Card className="border-[#03154C]/20">
+      <Card className="border-[#03154C]/12 bg-white shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-[#03154C]">
             <CreditCard className="h-5 w-5" />
@@ -204,7 +204,7 @@ export function NcUnitedBlueSection({
 
   return (
     <>
-      <Card className="border-[#03154C]/20 shadow-sm">
+      <Card className="border-[#03154C]/12 bg-white shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-[#03154C] text-xl">
             <CreditCard className="h-5 w-5 shrink-0" />
