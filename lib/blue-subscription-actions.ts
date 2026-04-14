@@ -120,6 +120,38 @@ export async function cancelBlueSubscription(
   return { ok: true }
 }
 
+export async function retryBlueSubscriptionPayment(
+  membershipId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const admin = createAdminClient()
+  const { data: row, error: fetchErr } = await admin
+    .from("blue_memberships")
+    .select("id, stripe_subscription_id, status")
+    .eq("id", membershipId)
+    .single()
+  if (fetchErr || !row?.stripe_subscription_id) {
+    return { ok: false, error: "Membership not found or no Stripe subscription" }
+  }
+  const stripe = getStripe()
+  try {
+    const invoices = await stripe.invoices.list({
+      subscription: row.stripe_subscription_id as string,
+      status: "open",
+      limit: 1,
+    })
+    if (!invoices.data.length) {
+      return { ok: false, error: "no_open_invoice" }
+    }
+    await stripe.invoices.pay(invoices.data[0].id)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return { ok: false, error: msg }
+  }
+  // Do NOT update blue_memberships.status here.
+  // The invoice.paid webhook owns that transition.
+  return { ok: true }
+}
+
 /** Run resume for all paused memberships where resume_at <= today. */
 export async function runResumeDueSubscriptions(): Promise<{ resumed: number; errors: string[] }> {
   const admin = createAdminClient()

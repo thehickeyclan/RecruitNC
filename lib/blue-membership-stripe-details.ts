@@ -14,6 +14,8 @@ export type BlueStripeBillingDetails = {
   cancelAtPeriodEnd: boolean
   cardBrand: string | null
   cardLast4: string | null
+  planName: string | null
+  source: "live"
 }
 
 /** Live subscription billing: next charge, last paid invoice, card on file, cancel-at-period-end. */
@@ -23,10 +25,19 @@ export async function getBlueMembershipStripeDetails(
   try {
     const stripe = getStripe()
     const sub = await stripe.subscriptions.retrieve(subscriptionId, {
-      expand: ["default_payment_method"],
+      expand: ["default_payment_method", "items.data.price.product"],
     })
 
     const item = sub.items.data[0]
+    let planName: string | null = null
+    if (item?.price?.nickname && String(item.price.nickname).trim()) {
+      planName = String(item.price.nickname).trim()
+    } else {
+      const product = item?.price?.product
+      if (product && typeof product !== "string") {
+        planName = (product as Stripe.Product).name ?? null
+      }
+    }
     const unitAmount = item?.price?.unit_amount ?? null
     const currency = (item?.price?.currency ?? "usd").toLowerCase()
     const amountFormatted =
@@ -79,6 +90,8 @@ export async function getBlueMembershipStripeDetails(
         cancelAtPeriodEnd,
         cardBrand,
         cardLast4,
+        planName,
+        source: "live" as const,
       },
     }
   } catch (e) {

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { pauseBlueSubscription, cancelBlueSubscription, resumeBlueSubscription } from "@/lib/blue-subscription-actions"
+import {
+  pauseBlueSubscription,
+  cancelBlueSubscription,
+  resumeBlueSubscription,
+  retryBlueSubscriptionPayment,
+} from "@/lib/blue-subscription-actions"
 
 export const dynamic = "force-dynamic"
 
@@ -45,15 +50,32 @@ export async function POST(
         ? "cancel"
         : body.action === "resume"
           ? "resume"
-          : null
+          : body.action === "retry-payment"
+            ? "retry-payment"
+            : null
   if (!action) {
-    return NextResponse.json({ error: "action required: pause, resume, or cancel" }, { status: 400 })
+    return NextResponse.json({ error: "action required: pause, resume, cancel, or retry-payment" }, { status: 400 })
   }
 
   if (action === "resume") {
     const result = await resumeBlueSubscription(membershipId)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
     return NextResponse.json({ success: true, message: "Subscription resumed. Billing is active again." })
+  }
+
+  if (action === "retry-payment") {
+    const result = await retryBlueSubscriptionPayment(membershipId)
+    if (!result.ok) {
+      const userMsg =
+        result.error === "no_open_invoice"
+          ? "No payment is currently due. If your status looks wrong, message NC United."
+          : result.error
+      return NextResponse.json({ error: userMsg }, { status: 400 })
+    }
+    return NextResponse.json({
+      success: true,
+      message: "Payment submitted. Your membership status will update shortly.",
+    })
   }
 
   if (action === "pause") {
