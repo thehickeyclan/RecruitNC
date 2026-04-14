@@ -192,6 +192,7 @@ export async function completeBlueSignupAfterStripePayment(
               started_at: startedAt,
               stripe_customer_id: customerId,
               stripe_subscription_id: subscriptionId,
+              signup_id: signupId,
               source: "invite",
               created_at: startedAt,
               updated_at: startedAt,

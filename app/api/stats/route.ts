@@ -118,7 +118,7 @@ function extractGender(a: AnyAthlete): "male" | "female" | "other" {
 }
 
 async function fetchFromInternalAPIs(origin: string): Promise<AnyAthlete[] | null> {
-  const endpoints = ["/api/athletes", "/api/mock-athletes"]
+  const endpoints = ["/api/athletes"]
   for (const path of endpoints) {
     try {
       console.log(`[v0] Stats API: Attempting to fetch from: ${origin}${path}`)

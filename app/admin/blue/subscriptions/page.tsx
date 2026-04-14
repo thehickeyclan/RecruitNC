@@ -25,7 +25,7 @@ import { BlueAdminAuthBanner, isBlueAuthError } from "@/components/blue-admin-au
 
 const BLUE_DATA_RETRY_MS = 2000
 
-type Tab = "good_standing" | "paused" | "canceled"
+type Tab = "good_standing" | "pending" | "paused" | "canceled"
 
 const STRIPE_DASHBOARD_SUB = "https://dashboard.stripe.com/subscriptions"
 const stripeCustomer = (id: string) => `https://dashboard.stripe.com/customers/${id}`
@@ -54,6 +54,12 @@ export default function AdminBlueSubscriptionsBillingPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [bannerError, setBannerError] = useState<string | null>(null)
+  const [retryLoading, setRetryLoading] = useState<string | null>(null)
+  const [retryResult, setRetryResult] = useState<Record<string, { ok: boolean; message: string }>>({})
+  const [notesOpen, setNotesOpen] = useState<Record<string, boolean>>({})
+  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({})
+  const [notesSaving, setNotesSaving] = useState<string | null>(null)
+  const [notesError, setNotesError] = useState<Record<string, string>>({})
   const { isLoading: authLoading } = useAuth()
   const retryCountRef = useRef(0)
 
@@ -142,6 +148,76 @@ export default function AdminBlueSubscriptionsBillingPage() {
     }
   }
 
+  const runRetry = async (sub: BlueSubscriptionRow) => {
+    setRetryLoading(sub.id)
+    setRetryResult((prev) => {
+      const next = { ...prev }
+      delete next[sub.id]
+      return next
+    })
+    try {
+      const r = await fetch(`/api/admin/blue/subscriptions/${encodeURIComponent(sub.id)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "retry-payment" }),
+      })
+      const data = await r.json().catch(() => ({}))
+      if (r.ok) {
+        setRetryResult((prev) => ({
+          ...prev,
+          [sub.id]: { ok: true, message: data.message ?? "Payment retry submitted." },
+        }))
+        await reload()
+      } else {
+        setRetryResult((prev) => ({
+          ...prev,
+          [sub.id]: { ok: false, message: data.error ?? "Retry failed." },
+        }))
+      }
+    } catch {
+      setRetryResult((prev) => ({
+        ...prev,
+        [sub.id]: { ok: false, message: "Something went wrong." },
+      }))
+    } finally {
+      setRetryLoading(null)
+    }
+  }
+
+  const saveNotes = async (sub: BlueSubscriptionRow) => {
+    const draft = notesDraft[sub.id] ?? sub.notes ?? ""
+    setNotesSaving(sub.id)
+    setNotesError((prev) => ({ ...prev, [sub.id]: "" }))
+    try {
+      const r = await fetch(`/api/admin/blue/subscriptions/${encodeURIComponent(sub.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ notes: draft }),
+      })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        setNotesError((prev) => ({
+          ...prev,
+          [sub.id]: data.error ?? "Failed to save",
+        }))
+      } else {
+        setNotesOpen((prev) => ({ ...prev, [sub.id]: false }))
+        setSubscriptions((prev) =>
+          prev.map((s) => (s.id === sub.id ? { ...s, notes: data.notes ?? null } : s))
+        )
+      }
+    } catch {
+      setNotesError((prev) => ({
+        ...prev,
+        [sub.id]: "Something went wrong.",
+      }))
+    } finally {
+      setNotesSaving(null)
+    }
+  }
+
   useEffect(() => {
     if (authLoading) return
     let cancelled = false
@@ -216,10 +292,12 @@ export default function AdminBlueSubscriptionsBillingPage() {
 
   const filtered =
     tab === "good_standing"
-      ? subscriptions.filter((s) => s.status === "active" || s.status === "pending_payment")
-      : tab === "paused"
-        ? subscriptions.filter((s) => s.status === "paused")
-        : subscriptions.filter((s) => s.status === "cancelled" || s.status === "alumni")
+      ? subscriptions.filter((s) => s.status === "active")
+      : tab === "pending"
+        ? subscriptions.filter((s) => s.status === "pending_payment")
+        : tab === "paused"
+          ? subscriptions.filter((s) => s.status === "paused")
+          : subscriptions.filter((s) => s.status === "cancelled" || s.status === "alumni")
 
   const statusBadge = (s: BlueSubscriptionRow) => {
     if (s.status === "pending_payment") return <Badge className="bg-amber-100 text-amber-900 hover:bg-amber-100">Pending payment</Badge>
@@ -338,6 +416,19 @@ export default function AdminBlueSubscriptionsBillingPage() {
             >
               Good standing
             </Button>
+            <Button
+              variant={tab === "pending" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setTab("pending")}
+              className={tab === "pending" ? "bg-amber-700 hover:bg-amber-800" : ""}
+            >
+              Pending payment
+              {stats.pending_payment > 0 && (
+                <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-900">
+                  {stats.pending_payment}
+                </span>
+              )}
+            </Button>
             <Button variant={tab === "paused" ? "default" : "ghost"} size="sm" onClick={() => setTab("paused")} className={tab === "paused" ? "bg-[#03154C] hover:bg-[#03154C]/90" : ""}>
               Paused
             </Button>
@@ -358,7 +449,8 @@ export default function AdminBlueSubscriptionsBillingPage() {
             </div>
           ) : filtered.length === 0 ? (
             <p className="py-12 text-center text-slate-500">
-              {tab === "good_standing" && "No active or pending subscriptions."}
+              {tab === "good_standing" && "No active subscriptions."}
+              {tab === "pending" && "No subscriptions pending payment."}
               {tab === "paused" && "No paused subscriptions."}
               {tab === "canceled" && "No cancelled subscriptions."}
             </p>
@@ -397,17 +489,130 @@ export default function AdminBlueSubscriptionsBillingPage() {
                         {sub.stripe_enrichment_error && (
                           <span className="mt-1 block text-xs text-amber-700">{sub.stripe_enrichment_error}</span>
                         )}
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            className="text-[11px] text-slate-400 hover:text-slate-600 underline underline-offset-2"
+                            onClick={() => {
+                              setNotesOpen((prev) => ({ ...prev, [sub.id]: !prev[sub.id] }))
+                              if (!notesOpen[sub.id]) {
+                                setNotesDraft((prev) => ({
+                                  ...prev,
+                                  [sub.id]: sub.notes ?? "",
+                                }))
+                              }
+                            }}
+                          >
+                            {notesOpen[sub.id] ? "Hide notes" : sub.notes ? "Edit note" : "Add note"}
+                          </button>
+
+                          {notesOpen[sub.id] && (
+                            <div className="mt-1.5 space-y-1.5">
+                              <textarea
+                                rows={2}
+                                value={notesDraft[sub.id] ?? ""}
+                                onChange={(e) =>
+                                  setNotesDraft((prev) => ({ ...prev, [sub.id]: e.target.value }))
+                                }
+                                placeholder="Internal note (admin only)"
+                                className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#03154C]/30 resize-none"
+                              />
+                              {notesError[sub.id] && (
+                                <p className="text-[11px] text-red-600">{notesError[sub.id]}</p>
+                              )}
+                              <div className="flex gap-1.5">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  className="h-6 px-2.5 text-[11px] bg-[#03154C] hover:bg-[#0a2a6e] text-white"
+                                  disabled={notesSaving === sub.id}
+                                  onClick={() => saveNotes(sub)}
+                                >
+                                  {notesSaving === sub.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    "Save"
+                                  )}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[11px] text-slate-500"
+                                  disabled={notesSaving === sub.id}
+                                  onClick={() => setNotesOpen((prev) => ({ ...prev, [sub.id]: false }))}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {!notesOpen[sub.id] && sub.notes && (
+                            <p className="mt-1 text-[11px] text-slate-500 leading-snug max-w-[180px] truncate">
+                              {sub.notes}
+                            </p>
+                          )}
+                        </div>
+                        {sub.signup_id && (
+                          <div className="mt-1.5">
+                            <a
+                              href={`/admin/blue/signups/${encodeURIComponent(sub.signup_id)}`}
+                              className="inline-flex items-center gap-1 text-[11px] text-[#03154C] hover:underline"
+                            >
+                              View signup record
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 12 12"
+                                width="10"
+                                height="10"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M2 10 10 2M5 2h5v5" />
+                              </svg>
+                            </a>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="align-top text-sm">
                         <span className="font-medium text-slate-900">{sub.payer_name}</span>
                         {sub.payer_email && <span className="mt-0.5 block text-xs text-slate-500">{sub.payer_email}</span>}
                       </TableCell>
-                      <TableCell className="align-top text-sm tabular-nums">{sub.amount_display}</TableCell>
+                      <TableCell className="align-top text-sm tabular-nums">
+                        {sub.plan_name && (
+                          <span className="block text-xs text-slate-500 mb-0.5">{sub.plan_name}</span>
+                        )}
+                        {sub.amount_display}
+                      </TableCell>
                       <TableCell className="align-top text-sm text-slate-700">{fmtDate(sub.last_payment_at)}</TableCell>
                       <TableCell className="align-top text-sm text-slate-700">
-                        {sub.status === "paused" ? "—" : fmtDate(sub.next_billing_at)}
+                        <span className="inline-flex items-center gap-1.5">
+                          {sub.status !== "paused" && sub.next_billing_at && (
+                            <span
+                              className={[
+                                "inline-block h-1.5 w-1.5 rounded-full shrink-0",
+                                sub.source === "live"
+                                  ? "bg-emerald-400"
+                                  : sub.source === "cached"
+                                    ? "bg-amber-400"
+                                    : "bg-red-400",
+                              ].join(" ")}
+                            />
+                          )}
+                          {sub.status === "paused" ? "—" : fmtDate(sub.next_billing_at)}
+                        </span>
                         {sub.status === "paused" && sub.resume_at && (
                           <span className="mt-1 block text-xs text-amber-800">Resume {fmtDate(sub.resume_at)}</span>
+                        )}
+                        {sub.source === "cached" && sub.status !== "paused" && (
+                          <span className="mt-0.5 block text-[11px] text-amber-700">Estimated</span>
+                        )}
+                        {sub.source === "unavailable" && sub.status !== "paused" && (
+                          <span className="mt-0.5 block text-[11px] text-red-600">Unavailable</span>
                         )}
                       </TableCell>
                       <TableCell className="align-top text-sm text-slate-600">{sub.card_display ?? "—"}</TableCell>
@@ -416,6 +621,20 @@ export default function AdminBlueSubscriptionsBillingPage() {
                         <div className="flex flex-wrap justify-end gap-1.5">
                           {sub.stripe_subscription_id && (sub.status === "active" || sub.status === "pending_payment") && (
                             <>
+                              {sub.status === "pending_payment" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 border-amber-300 text-amber-900 hover:bg-amber-50"
+                                  disabled={retryLoading === sub.id || actionLoading}
+                                  onClick={() => runRetry(sub)}
+                                >
+                                  {retryLoading === sub.id ? (
+                                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                  ) : null}
+                                  Retry
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -498,6 +717,16 @@ export default function AdminBlueSubscriptionsBillingPage() {
                             </a>
                           )}
                         </div>
+                        {retryResult[sub.id] && (
+                          <p
+                            className={[
+                              "mt-1.5 text-right text-[11px]",
+                              retryResult[sub.id].ok ? "text-emerald-700" : "text-red-600",
+                            ].join(" ")}
+                          >
+                            {retryResult[sub.id].message}
+                          </p>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

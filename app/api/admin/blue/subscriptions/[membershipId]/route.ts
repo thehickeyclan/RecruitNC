@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { pauseBlueSubscription, cancelBlueSubscription, resumeBlueSubscription } from "@/lib/blue-subscription-actions"
+import { createAdminClient } from "@/lib/supabase/admin"
+import {
+  pauseBlueSubscription,
+  cancelBlueSubscription,
+  resumeBlueSubscription,
+  retryBlueSubscriptionPayment,
+} from "@/lib/blue-subscription-actions"
 
 export const dynamic = "force-dynamic"
 
@@ -39,15 +45,32 @@ export async function POST(
           ? "delete"
           : body.action === "resume"
             ? "resume"
-            : null
+            : body.action === "retry-payment"
+              ? "retry-payment"
+              : null
   if (!action) {
-    return NextResponse.json({ error: "action required: pause, resume, cancel, or delete" }, { status: 400 })
+    return NextResponse.json({ error: "action required: pause, resume, cancel, delete, or retry-payment" }, { status: 400 })
   }
 
   if (action === "resume") {
     const result = await resumeBlueSubscription(membershipId)
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
     return NextResponse.json({ success: true, message: "Subscription resumed." })
+  }
+
+  if (action === "retry-payment") {
+    const result = await retryBlueSubscriptionPayment(membershipId)
+    if (!result.ok) {
+      const adminMsg =
+        result.error === "no_open_invoice"
+          ? "No open invoice found for this subscription."
+          : result.error
+      return NextResponse.json({ error: adminMsg }, { status: 400 })
+    }
+    return NextResponse.json({
+      success: true,
+      message: "Payment retry submitted. Status will update via webhook.",
+    })
   }
 
   if (action === "pause") {
@@ -77,4 +100,45 @@ export async function POST(
   }
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ membershipId: string }> }
+) {
+  const auth = await requireAdmin()
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const { membershipId } = await params
+  if (!membershipId) {
+    return NextResponse.json({ error: "membershipId required" }, { status: 400 })
+  }
+
+  let body: { notes?: string } = {}
+  try {
+    body = await request.json()
+  } catch {
+    body = {}
+  }
+
+  if (typeof body.notes !== "string") {
+    return NextResponse.json({ error: "notes (string) required" }, { status: 400 })
+  }
+
+  const notes = body.notes.trim()
+
+  const admin = createAdminClient()
+  const { error: updateErr } = await admin
+    .from("blue_memberships")
+    .update({
+      notes: notes === "" ? null : notes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", membershipId)
+
+  if (updateErr) {
+    return NextResponse.json({ error: updateErr.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true, notes: notes === "" ? null : notes })
 }

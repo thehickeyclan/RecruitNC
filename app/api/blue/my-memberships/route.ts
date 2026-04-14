@@ -24,6 +24,8 @@ type BlueMembershipForParent = {
   cardBrand: string | null
   cardLast4: string | null
   stripeDetailsError: string | null
+  planName: string | null
+  source: "live" | "cached" | "unavailable"
 }
 
 /** GET: List Blue memberships where the current user is the payer — with billing details when Stripe is available. */
@@ -86,6 +88,8 @@ export async function GET() {
     let cardLast4: string | null = null
     let nextBillingAt: string | null = dbNext
     let stripeDetailsError: string | null = null
+    let planName: string | null = null
+    let source: "live" | "cached" | "unavailable" = dbNext ? "cached" : "unavailable"
 
     if (stripeSubId && stripeKey) {
       const enriched = await getBlueMembershipStripeDetails(stripeSubId)
@@ -97,6 +101,8 @@ export async function GET() {
         cardBrand = d.cardBrand
         cardLast4 = d.cardLast4
         if (d.nextBillingAt) nextBillingAt = d.nextBillingAt
+        planName = d.planName ?? null
+        source = "live"
       } else {
         stripeDetailsError = enriched.error
       }
@@ -119,6 +125,8 @@ export async function GET() {
       cardBrand,
       cardLast4,
       stripeDetailsError,
+      planName,
+      source,
     })
   }
 

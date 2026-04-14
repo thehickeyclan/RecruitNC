@@ -36,6 +36,10 @@ export type BlueSubscriptionRow = {
   cancel_at_period_end: boolean
   card_display: string | null
   stripe_enrichment_error: string | null
+  plan_name: string | null
+  source: "live" | "cached" | "unavailable"
+  notes: string | null
+  signup_id: string | null
 }
 
 export type BlueSignupRow = {
@@ -68,7 +72,7 @@ export async function GET() {
   const { data: rows, error } = await admin
     .from("blue_memberships")
     .select(
-      "id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id, stripe_customer_id, resume_at, next_billing_at, ended_at"
+      "id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id, stripe_customer_id, resume_at, next_billing_at, ended_at, notes, signup_id"
     )
     .order("created_at", { ascending: false })
 
@@ -192,6 +196,10 @@ export async function GET() {
       cancel_at_period_end: false,
       card_display: null,
       stripe_enrichment_error: null,
+      plan_name: null,
+      source: (row.next_billing_at ?? null) ? "cached" : "unavailable",
+      notes: ((row as Record<string, unknown>).notes as string | null | undefined) ?? null,
+      signup_id: (row as Record<string, unknown>).signup_id as string | null ?? null,
     }
   })
 
@@ -220,6 +228,7 @@ export async function GET() {
         return {
           ...sub,
           stripe_enrichment_error: enriched.error,
+          source: sub.next_billing_at ? "cached" : "unavailable",
         }
       }
       const d = enriched.details
@@ -234,6 +243,8 @@ export async function GET() {
         amount_display: d.amountFormatted ? `${d.amountFormatted}/mo` : sub.amount_display,
         cancel_at_period_end: d.cancelAtPeriodEnd,
         card_display,
+        plan_name: d.planName ?? null,
+        source: "live" as const,
       }
     })
   )
