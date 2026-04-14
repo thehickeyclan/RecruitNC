@@ -47,6 +47,8 @@ export async function GET() {
       "id, athlete_id, status, started_at, ended_at, stripe_customer_id, stripe_subscription_id, resume_at, next_billing_at"
     )
     .eq("payer_user_id", user.id)
+    .in("status", ["active", "paused", "pending_payment"])
+    .not("stripe_subscription_id", "is", null)
     .order("started_at", { ascending: false })
 
   if (error) {
