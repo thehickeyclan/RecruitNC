@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getBlueMembershipStripeDetails } from "@/lib/blue-membership-stripe-details"
 
 export const dynamic = "force-dynamic"
 
@@ -21,11 +22,20 @@ export type BlueSubscriptionRow = {
   payer_name: string
   payer_email: string | null
   status: string
+  /** Display amount (Stripe when available, else default) */
   amount_display: string
   started_at: string
   created_at: string
   stripe_subscription_id: string | null
+  stripe_customer_id: string | null
   resume_at: string | null
+  /** DB or Stripe current_period_end */
+  next_billing_at: string | null
+  last_payment_at: string | null
+  ended_at: string | null
+  cancel_at_period_end: boolean
+  card_display: string | null
+  stripe_enrichment_error: string | null
 }
 
 export type BlueSignupRow = {
@@ -57,7 +67,9 @@ export async function GET() {
 
   const { data: rows, error } = await admin
     .from("blue_memberships")
-    .select("id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id, resume_at")
+    .select(
+      "id, athlete_id, payer_user_id, status, started_at, created_at, stripe_subscription_id, stripe_customer_id, resume_at, next_billing_at, ended_at"
+    )
     .order("created_at", { ascending: false })
 
   const membershipsError: string | null =
@@ -154,6 +166,12 @@ export async function GET() {
 
   const allSubscriptions: BlueSubscriptionRow[] = rows.map((r) => {
     const payer = payers[r.payer_user_id]
+    const row = r as {
+      resume_at?: string | null
+      next_billing_at?: string | null
+      ended_at?: string | null
+      stripe_customer_id?: string | null
+    }
     return {
       id: r.id,
       athlete_id: r.athlete_id,
@@ -166,7 +184,14 @@ export async function GET() {
       started_at: r.started_at,
       created_at: r.created_at,
       stripe_subscription_id: r.stripe_subscription_id ?? null,
-      resume_at: (r as { resume_at?: string | null }).resume_at ?? null,
+      stripe_customer_id: row.stripe_customer_id ?? null,
+      resume_at: row.resume_at ?? null,
+      next_billing_at: row.next_billing_at ?? null,
+      last_payment_at: null,
+      ended_at: row.ended_at ?? null,
+      cancel_at_period_end: false,
+      card_display: null,
+      stripe_enrichment_error: null,
     }
   })
 
@@ -180,8 +205,37 @@ export async function GET() {
       (Boolean(sub.stripe_subscription_id) === Boolean(existing.stripe_subscription_id) && sub.created_at > existing.created_at)
     if (preferThis) byAthlete.set(sub.athlete_id, sub)
   }
-  const subscriptions = Array.from(byAthlete.values()).sort(
+  let subscriptions = Array.from(byAthlete.values()).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
+
+  const stripeKey = process.env.STRIPE_SECRET_KEY
+  subscriptions = await Promise.all(
+    subscriptions.map(async (sub) => {
+      if (!sub.stripe_subscription_id || !stripeKey) {
+        return sub
+      }
+      const enriched = await getBlueMembershipStripeDetails(sub.stripe_subscription_id)
+      if (!enriched.ok) {
+        return {
+          ...sub,
+          stripe_enrichment_error: enriched.error,
+        }
+      }
+      const d = enriched.details
+      const card_display =
+        d.cardBrand && d.cardLast4
+          ? `${d.cardBrand.charAt(0).toUpperCase()}${d.cardBrand.slice(1)} •••• ${d.cardLast4}`
+          : null
+      return {
+        ...sub,
+        next_billing_at: d.nextBillingAt ?? sub.next_billing_at,
+        last_payment_at: d.lastPaymentAt,
+        amount_display: d.amountFormatted ? `${d.amountFormatted}/mo` : sub.amount_display,
+        cancel_at_period_end: d.cancelAtPeriodEnd,
+        card_display,
+      }
+    })
   )
 
   const stats = {
