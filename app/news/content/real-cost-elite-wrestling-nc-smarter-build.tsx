@@ -1,5 +1,6 @@
 import Image from "next/image"
 
+/** Inline figures only. Hero for home + /news list + article header: `lib/news.ts` → `real-cost-elite-wrestling-nc-hero.png`. */
 const IMG = {
   annual: "/images/real-cost-nc-annual-cost-infographic.png",
   scholarship: "/images/real-cost-nc-scholarship-reality.png",
@@ -184,11 +185,6 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           </tbody>
         </table>
       </div>
-      <p>
-        Over four years of high school, that stacks to roughly <strong>$60,000–$100,000</strong> before you count middle school or anything
-        prior to ninth grade. You can offset a little by stacking vacation with a tournament trip or comparing travel meals to normal grocery
-        spend — usually hundreds a year, not thousands.
-      </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
         <Image
@@ -204,12 +200,32 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         </figcaption>
       </figure>
 
+      <p>
+        Over four years of high school, that stacks to roughly <strong>$60,000–$100,000</strong> before you count middle school or anything
+        prior to ninth grade. You can offset a little by stacking vacation with a tournament trip or comparing travel meals to normal grocery
+        spend — usually hundreds a year, not thousands.
+      </p>
+
       <h2>The tax reality (illustrative)</h2>
       <p>
         Taxes change the feel of the number. In many middle- and upper-middle-income households, needing roughly <strong>$80,000 after tax</strong>{" "}
         can mean earning a materially larger gross figure — the exact ratio depends on your federal bracket, state taxes, deductions, and
         year. The point is simple: the &ldquo;sticker price&rdquo; of wrestling is not the same as the pre-tax income required to fund it.
       </p>
+
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+        <Image
+          src={IMG.quotes}
+          alt="Pull quotes: long-term value of wrestling investment, tax reality of pre-tax dollars, and sharing the load through the tax code and community"
+          width={1600}
+          height={600}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          Themes from families and advisors — including the gap between after-tax spend and pre-tax earnings.
+        </figcaption>
+      </figure>
 
       <h2>What families are buying — and what a scholarship actually covers</h2>
       <p>
@@ -428,20 +444,6 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <li>Corporate and foundation partners giving through a recognized charitable entity</li>
         <li>Statewide coordination so clubs complement instead of accidentally working at cross purposes</li>
       </ul>
-
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-        <Image
-          src={IMG.quotes}
-          alt="Pull quotes: long-term value of wrestling investment, tax reality of pre-tax dollars, and sharing the load through the tax code and community"
-          width={1600}
-          height={600}
-          className="h-auto w-full object-contain"
-          sizes="(max-width: 768px) 100vw, 48rem"
-        />
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          Themes from families and advisors in the NC United community.
-        </figcaption>
-      </figure>
 
       <h2>Closing</h2>
       <p>
