@@ -1,6 +1,8 @@
 import Image from "next/image"
 
-/** Inline figures only. Hero for home + /news list + article header: `lib/news.ts` → `real-cost-elite-wrestling-nc-hero.png`. */
+/** Hero: same file as `lib/news.ts` for home + /news cards; article page uses it only below (template banner skipped — see `app/news/[slug]/page.tsx`). */
+const HERO_SRC = "/images/real-cost-elite-wrestling-nc-hero.png"
+
 const IMG = {
   annual: "/images/real-cost-nc-annual-cost-infographic.png",
   scholarship: "/images/real-cost-nc-scholarship-reality.png",
@@ -20,6 +22,19 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <p className="text-slate-600 font-medium not-italic">
         By <strong>Matt Hickey</strong>, Founder — NC United Wrestling
       </p>
+
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[2.15/1] w-full min-h-[200px] sm:min-h-[240px]">
+          <Image
+            src={HERO_SRC}
+            alt="The Real Cost of Elite Wrestling in North Carolina — NC United Wrestling"
+            fill
+            className="object-cover object-center"
+            sizes="(max-width: 768px) 100vw, 48rem"
+            priority
+          />
+        </div>
+      </figure>
 
       <h2>The number almost nobody puts on paper</h2>
       <p>
