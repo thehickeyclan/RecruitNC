@@ -136,6 +136,13 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           </tbody>
         </table>
       </div>
+      <p className="text-sm text-slate-600">
+        <strong className="text-slate-700">What these ranges include:</strong> For multi-day or out-of-state trips, each figure is an{" "}
+        <strong>all-in trip estimate</strong>—registration or entry for that event, transportation (typical drive or flight from North Carolina), lodging for
+        the tournament stay, and meals on the road. In-state or shorter trips (e.g. Super 32, NCHSAA states) assume less travel and fewer hotel nights. The{" "}
+        <strong>entry fees</strong> line in the next section covers additional weekend tournaments across the year so it is not meant to double-count what is
+        already folded into these trip totals.
+      </p>
 
       <h3>Additional events &amp; extras</h3>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
