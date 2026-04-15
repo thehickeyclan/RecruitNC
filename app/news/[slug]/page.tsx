@@ -8,10 +8,12 @@ import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-m
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
 import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior-sendoff"
 import { LynchburgBuildingAProgramWithIntentionContent } from "../content/lynchburg-building-a-program-with-intention"
+import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cost-elite-wrestling-nc-smarter-build"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "real-cost-elite-wrestling-nc-smarter-build": () => <RealCostEliteWrestlingNcSmarterBuildContent />,
   "lynchburg-building-a-program-with-intention": () => <LynchburgBuildingAProgramWithIntentionContent />,
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
   "nhsca-most-outstanding-wrestler-award-2026": () => <NhscaMostOutstandingWrestlerAward2026Content />,

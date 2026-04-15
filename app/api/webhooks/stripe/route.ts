@@ -170,6 +170,57 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
+  /** Blue renewals / dunning: invoice outcome → blue_memberships (subscription invoices only) */
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as Stripe.Invoice
+    const subscriptionId =
+      typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id ?? null
+    if (!subscriptionId) {
+      return NextResponse.json({ received: true })
+    }
+    const { error } = await admin
+      .from("blue_memberships")
+      .update({
+        status: "pending_payment",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_subscription_id", subscriptionId)
+      .in("status", ["active", "paused", "pending_payment"])
+    if (error) {
+      console.error("[webhooks/stripe] invoice.payment_failed blue_memberships:", error.message)
+    }
+    return NextResponse.json({ received: true })
+  }
+
+  if (event.type === "invoice.paid") {
+    const invoice = event.data.object as Stripe.Invoice
+    const subscriptionId =
+      typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id ?? null
+    if (!subscriptionId) {
+      return NextResponse.json({ received: true })
+    }
+    let nextBillingAt: string | null = null
+    try {
+      const sub = await getStripe().subscriptions.retrieve(subscriptionId)
+      if (sub.current_period_end) {
+        nextBillingAt = new Date(sub.current_period_end * 1000).toISOString()
+      }
+    } catch (e) {
+      console.error("[webhooks/stripe] invoice.paid retrieve subscription:", e)
+    }
+    const updatePayload: Record<string, unknown> = {
+      status: "active",
+      updated_at: new Date().toISOString(),
+      ended_at: null,
+      ...(nextBillingAt && { next_billing_at: nextBillingAt }),
+    }
+    const { error } = await admin.from("blue_memberships").update(updatePayload).eq("stripe_subscription_id", subscriptionId)
+    if (error) {
+      console.error("[webhooks/stripe] invoice.paid blue_memberships:", error.message)
+    }
+    return NextResponse.json({ received: true })
+  }
+
   if (event.type === "charge.updated") {
     const charge = event.data.object as Stripe.Charge
     if (!charge.billing_details?.email || !charge.payment_intent) return NextResponse.json({ received: true })

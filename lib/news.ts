@@ -32,6 +32,23 @@ export interface NewsItem {
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "real-cost-elite-wrestling-nc-smarter-build",
+    slug: "real-cost-elite-wrestling-nc-smarter-build",
+    title: "The Real Cost of Elite Wrestling in North Carolina — And the Smarter Way to Build",
+    summary:
+      "A representative budget for serious NC families, the scholarship math nobody prints on a flyer, 529 planning as parallel strategy, and how a 501(c)(3) plus the Spartan campaign share the load — with clear disclaimers on what is modeled vs. hypothetical.",
+    href: "/news/real-cost-elite-wrestling-nc-smarter-build",
+    date: "2026-04-14",
+    image: "/images/spartan-race-hero.jpg",
+    imagePosition: "center",
+    imageFit: "cover",
+    newsListBanner: true,
+    category: "NC UNITED",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "14 min read",
+    isAnnouncement: true,
+  },
+  {
     id: "lynchburg-building-a-program-with-intention",
     slug: "lynchburg-building-a-program-with-intention",
     title: "Building a Program with Intention: Lynchburg’s NC Pipeline and Class of 2026",
