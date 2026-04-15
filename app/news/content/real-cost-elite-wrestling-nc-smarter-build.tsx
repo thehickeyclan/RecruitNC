@@ -1,3 +1,14 @@
+import Image from "next/image"
+
+const IMG = {
+  annual: "/images/real-cost-nc-annual-cost-infographic.png",
+  scholarship: "/images/real-cost-nc-scholarship-reality.png",
+  five29: "/images/real-cost-nc-529-plan-smarter.png",
+  nonprofit: "/images/real-cost-nc-nonprofit-build.png",
+  spartan: "/images/real-cost-nc-spartan-campaign.png",
+  quotes: "/images/real-cost-nc-quote-tiles.png",
+} as const
+
 /**
  * The Real Cost of Elite Wrestling in NC — analysis + 529 + 501(c)(3) + Spartan.
  * Financial illustrations labeled hypothetical where appropriate.
@@ -179,6 +190,20 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         spend — usually hundreds a year, not thousands.
       </p>
 
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+        <Image
+          src={IMG.annual}
+          alt="Infographic: annual cost to develop an elite NC wrestler — training, travel, events, and gear as a bar chart with yearly total ranges"
+          width={1600}
+          height={900}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          Representative model (same numbers as the tables above). Individual families vary.
+        </figcaption>
+      </figure>
+
       <h2>The tax reality (illustrative)</h2>
       <p>
         Taxes change the feel of the number. In many middle- and upper-middle-income households, needing roughly <strong>$80,000 after tax</strong>{" "}
@@ -238,6 +263,20 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         without wrestling, which is why honest net-value conversations matter.
       </p>
 
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+        <Image
+          src={IMG.scholarship}
+          alt="Chart: development cost vs average D1 wrestling scholarship value vs out-of-pocket college cost, 9th grade through graduation — illustrative four-year totals"
+          width={1600}
+          height={900}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          Illustrative four-year totals — not a guarantee for any one school or athlete.
+        </figcaption>
+      </figure>
+
       <h2>The 529 illustration families should see</h2>
       <p>
         The families who feel the least trapped are often the ones who build <strong>college savings alongside wrestling</strong>, not instead of
@@ -275,6 +314,21 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           </tbody>
         </table>
       </div>
+
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-amber-50/40 shadow-sm">
+        <Image
+          src={IMG.five29}
+          alt="Chart: hypothetical growth of $370 per month from birth to age 18 at 10% average annual return, with contribution vs balance lines"
+          width={1600}
+          height={900}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          Hypothetical illustration — not a projection or guarantee. Returns, fees, and rules vary.
+        </figcaption>
+      </figure>
+
       <p>
         The point is structural: when college is funded in parallel, a wrestling scholarship becomes <strong>upside</strong>, not oxygen. Many
         families also benefit from rules allowing unused 529 funds to roll into a Roth IRA within limits (SECURE Act provisions) — another reason
@@ -292,6 +346,20 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         IRS rules), which lets the community share the load in a structured way — and lets athletes practice the skill of building support around
         their goals.
       </p>
+
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+        <Image
+          src={IMG.nonprofit}
+          alt="NC United Wrestling: Build Athletes, Build Futures, Build NC Wrestling — registered 501(c)(3) nonprofit messaging"
+          width={1600}
+          height={900}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          North Carolina&apos;s wrestling development nonprofit — community investment with accountability.
+        </figcaption>
+      </figure>
 
       <h2>Spartan Race × NC United (April 2026)</h2>
       <p>
@@ -313,6 +381,21 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         Donors can often <strong>designate support to a specific athlete</strong> or to the <strong>statewide athlete fund</strong>, depending on
         campaign setup. See the live campaign page for current options.
       </p>
+
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+        <Image
+          src={IMG.spartan}
+          alt="Spartan Race campaign: Run, Sponsor, Give — designate an athlete or the statewide fund; example donor math"
+          width={1600}
+          height={900}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          Three ways to participate; dollars can support a named athlete or the statewide fund.
+        </figcaption>
+      </figure>
+
       <p>
         <a
           href="/spartan"
@@ -345,6 +428,20 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <li>Corporate and foundation partners giving through a recognized charitable entity</li>
         <li>Statewide coordination so clubs complement instead of accidentally working at cross purposes</li>
       </ul>
+
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+        <Image
+          src={IMG.quotes}
+          alt="Pull quotes: long-term value of wrestling investment, tax reality of pre-tax dollars, and sharing the load through the tax code and community"
+          width={1600}
+          height={600}
+          className="h-auto w-full object-contain"
+          sizes="(max-width: 768px) 100vw, 48rem"
+        />
+        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
+          Themes from families and advisors in the NC United community.
+        </figcaption>
+      </figure>
 
       <h2>Closing</h2>
       <p>
