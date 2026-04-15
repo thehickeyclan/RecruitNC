@@ -41,7 +41,8 @@ const ALL_NEWS: NewsItem[] = [
     date: "2026-04-14",
     image: "/images/real-cost-elite-wrestling-nc-hero.png",
     imagePosition: "center",
-    imageFit: "contain",
+    /** Match Lynchburg / NHSCA recap: wide banner fills aspect frame on desktop; `contain` left a tiny graphic in a tall gray box. */
+    imageFit: "cover",
     newsListBanner: true,
     category: "NC UNITED",
     categoryBadgeClass: "bg-[#003366]",
