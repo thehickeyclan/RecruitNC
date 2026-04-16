@@ -17,16 +17,31 @@ const MAX_ROWS = 40
 const MAX_Q_LEN = 120
 const FUZZY_POOL = 260
 
+/** RecruitNC `athletes` table uses camelCase columns in Postgres (firstName, lastName, graduationyear). */
+const AFN = "firstName"
+const ALN = "lastName"
+const AGY = "graduationyear"
+
 function sanitizeFragment(q: string): string {
   return q.replace(/%/g, "").replace(/,/g, " ").trim().slice(0, MAX_Q_LEN)
 }
 
-const ATHLETE_SELECT = "id,first_name,last_name,highschool,grad_year,college,division"
+const ATHLETE_SELECT = `id,name,${AFN},${ALN},highschool,${AGY},college,division`
 
 function athleteDisplayName(row: Record<string, unknown>): string {
-  const f = String(row.first_name ?? "").trim()
-  const l = String(row.last_name ?? "").trim()
+  const full = String(row.name ?? "").trim()
+  if (full) return full
+  const f = String(row[AFN] ?? row.first_name ?? "").trim()
+  const l = String(row[ALN] ?? row.last_name ?? "").trim()
   return `${f} ${l}`.trim()
+}
+
+function rowFirst(row: Record<string, unknown>): string {
+  return String(row[AFN] ?? row.first_name ?? "").trim()
+}
+
+function rowLast(row: Record<string, unknown>): string {
+  return String(row[ALN] ?? row.last_name ?? "").trim()
 }
 
 export async function toolSearchAthletes(args: { query: string; limit?: number }) {
@@ -42,12 +57,14 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
   const base = () => admin.from("athletes").select(ATHLETE_SELECT)
   const pattern = `%${escapeForIlike(q)}%`
 
-  const [a, b, c] = await Promise.all([
-    base().ilike("first_name", pattern).limit(limit),
-    base().ilike("last_name", pattern).limit(limit),
+  const [a, b, c, nFull] = await Promise.all([
+    base().ilike(AFN, pattern).limit(limit),
+    base().ilike(ALN, pattern).limit(limit),
     base().ilike("highschool", pattern).limit(limit),
+    // Many profiles store only `name` (combined); first/last can be empty — match "Liam Hickey" here.
+    base().ilike("name", pattern).limit(limit),
   ])
-  const err = a.error || b.error || c.error
+  const err = a.error || b.error || c.error || nFull.error
   if (err) {
     return { error: err.message, rows: [] as unknown[] }
   }
@@ -62,6 +79,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
   pushRows(a.data as Record<string, unknown>[])
   pushRows(b.data as Record<string, unknown>[])
   pushRows(c.data as Record<string, unknown>[])
+  pushRows(nFull.data as Record<string, unknown>[])
 
   const tokens = tokenizeMeaningfulWords(raw)
   if (tokens.length >= 2) {
@@ -69,12 +87,14 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     const t1 = tokens[tokens.length - 1]
     const p0 = `%${escapeForIlike(t0)}%`
     const p1 = `%${escapeForIlike(t1)}%`
-    const [d1, d2] = await Promise.all([
-      base().ilike("first_name", p0).ilike("last_name", p1).limit(limit),
-      base().ilike("first_name", p1).ilike("last_name", p0).limit(limit),
+    const [d1, d2, dName] = await Promise.all([
+      base().ilike(AFN, p0).ilike(ALN, p1).limit(limit),
+      base().ilike(AFN, p1).ilike(ALN, p0).limit(limit),
+      base().ilike("name", p0).ilike("name", p1).limit(limit),
     ])
     if (!d1.error) pushRows(d1.data as Record<string, unknown>[])
     if (!d2.error) pushRows(d2.data as Record<string, unknown>[])
+    if (!dName.error) pushRows(dName.data as Record<string, unknown>[])
   }
 
   const qLower = q.toLowerCase()
@@ -83,29 +103,36 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     const anchor = tokens.length ? tokens.reduce((a, t) => (t.length > a.length ? t : a), "") : q
     const prefix = anchor.slice(0, Math.min(4, Math.max(2, anchor.length)))
     const loose = `%${escapeForIlike(prefix)}%`
-    const [p1, p2] = await Promise.all([
-      base().ilike("last_name", loose).limit(FUZZY_POOL),
-      base().ilike("first_name", loose).limit(FUZZY_POOL),
+    const [p1, p2, p3] = await Promise.all([
+      base().ilike(ALN, loose).limit(FUZZY_POOL),
+      base().ilike(AFN, loose).limit(FUZZY_POOL),
+      base().ilike("name", loose).limit(FUZZY_POOL),
     ])
     if (!p1.error) pushRows(p1.data as Record<string, unknown>[])
     if (!p2.error) pushRows(p2.data as Record<string, unknown>[])
+    if (!p3.error) pushRows(p3.data as Record<string, unknown>[])
   }
 
   const scored = [...byId.values()]
     .map((row) => {
-      const f = String(row.first_name ?? "")
-      const l = String(row.last_name ?? "")
-      const disp = athleteDisplayName(row)
+      const r = row as Record<string, unknown>
+      const f = rowFirst(r)
+      const l = rowLast(r)
+      const disp = athleteDisplayName(r)
       const score = scoreAthleteNameMatch(qLower, f, l, disp)
       return { row, score, disp }
     })
     .filter((x) => {
       if (x.score >= 0.38) return true
-      const last = String(x.row.last_name ?? "").toLowerCase()
+      const last = rowLast(x.row as Record<string, unknown>).toLowerCase()
+      const nameField = String(x.row.name ?? "").trim()
+      const lastFromFullName =
+        nameField && nameField.includes(" ") ? (nameField.split(/\s+/).pop() ?? "").toLowerCase() : ""
+      const lastCompare = last || lastFromFullName
       const parts = qLower.split(/\s+/)
       const wantLast = parts.length > 1 ? parts[parts.length - 1] : qLower
-      if (last && wantLast.length >= 3) {
-        return levenshteinDistance(wantLast, last) <= 2
+      if (lastCompare && wantLast.length >= 3) {
+        return levenshteinDistance(wantLast, lastCompare) <= 2
       }
       return x.score >= 0.32
     })
@@ -335,7 +362,7 @@ export async function toolCollegeCommitsSearch(args: {
 }) {
   const limit = Math.min(Math.max(Number(args.limit) || 25, 1), MAX_ROWS)
   const admin = getSupabaseAdmin()
-  const sel = "first_name,last_name,highschool,grad_year,college,division"
+  const sel = `${AFN},${ALN},highschool,${AGY},college,division`
   const rawFrag = args.query ? sanitizeFragment(args.query) : ""
   const frag = rawFrag ? extractSearchablePhrase(rawFrag) || stripConversationalNoise(rawFrag) : ""
   const gy =
@@ -347,10 +374,10 @@ export async function toolCollegeCommitsSearch(args: {
     const pattern = `%${escapeForIlike(frag.trim())}%`
     const base = () => admin.from("athletes").select(sel).not("college", "is", null)
     const [a, b, c, d] = await Promise.all([
-      gy != null ? base().eq("grad_year", gy).ilike("first_name", pattern).limit(limit) : base().ilike("first_name", pattern).limit(limit),
-      gy != null ? base().eq("grad_year", gy).ilike("last_name", pattern).limit(limit) : base().ilike("last_name", pattern).limit(limit),
-      gy != null ? base().eq("grad_year", gy).ilike("college", pattern).limit(limit) : base().ilike("college", pattern).limit(limit),
-      gy != null ? base().eq("grad_year", gy).ilike("highschool", pattern).limit(limit) : base().ilike("highschool", pattern).limit(limit),
+      gy != null ? base().eq(AGY, gy).ilike(AFN, pattern).limit(limit) : base().ilike(AFN, pattern).limit(limit),
+      gy != null ? base().eq(AGY, gy).ilike(ALN, pattern).limit(limit) : base().ilike(ALN, pattern).limit(limit),
+      gy != null ? base().eq(AGY, gy).ilike("college", pattern).limit(limit) : base().ilike("college", pattern).limit(limit),
+      gy != null ? base().eq(AGY, gy).ilike("highschool", pattern).limit(limit) : base().ilike("highschool", pattern).limit(limit),
     ])
     const err = a.error || b.error || c.error || d.error
     if (err) {
@@ -359,7 +386,7 @@ export async function toolCollegeCommitsSearch(args: {
     const byKey = new Map<string, Record<string, unknown>>()
     for (const row of [...(a.data ?? []), ...(b.data ?? []), ...(c.data ?? []), ...(d.data ?? [])]) {
       const r = row as Record<string, unknown>
-      const k = `${r.first_name}|${r.last_name}|${r.grad_year}|${r.college}`
+      const k = `${r[AFN] ?? r.first_name}|${r[ALN] ?? r.last_name}|${r[AGY] ?? r.grad_year}|${r.college}`
       if (!byKey.has(k)) byKey.set(k, r)
     }
     return { rows: [...byKey.values()].slice(0, limit) }
@@ -367,7 +394,7 @@ export async function toolCollegeCommitsSearch(args: {
 
   let q = admin.from("athletes").select(sel).not("college", "is", null).limit(limit)
   if (gy != null) {
-    q = q.eq("grad_year", gy)
+    q = q.eq(AGY, gy)
   }
   const { data, error } = await q
   if (error) {

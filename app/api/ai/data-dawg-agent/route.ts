@@ -42,9 +42,16 @@ export async function POST(req: NextRequest) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error("[data-dawg-agent]", msg)
+    const answer =
+      msg.startsWith("The OpenAI API key") ||
+      msg.startsWith("OpenAI rate limit") ||
+      msg.startsWith("OpenAI rejected") ||
+      msg.startsWith("OpenAI request failed")
+        ? msg
+        : `Data Dawg hit an error: ${msg}`
     return NextResponse.json(
       {
-        answer: `Data Dawg hit an error: ${msg}`,
+        answer,
         queryType: "data_dawg_agent_v2_error",
         source: "data_dawg_agent_v2",
         error: msg,

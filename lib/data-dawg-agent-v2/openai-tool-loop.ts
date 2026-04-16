@@ -3,6 +3,7 @@
  * Requires OPENAI_API_KEY; Anthropic-only setups should not enable v2.
  */
 
+import { formatOpenAiHttpError } from "@/lib/openai-user-facing-error"
 import { DATA_DAWG_AGENT_TOOLS } from "./tool-definitions"
 import { executeDataTool } from "./execute-data-tools"
 
@@ -72,7 +73,7 @@ export async function runOpenAiDataDawgToolLoop(options: {
 
     const raw = await res.text()
     if (!res.ok) {
-      throw new Error(`OpenAI error (${res.status}): ${raw.slice(0, 800)}`)
+      throw new Error(formatOpenAiHttpError(res.status, raw))
     }
 
     let data: {
