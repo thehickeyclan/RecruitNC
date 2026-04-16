@@ -372,7 +372,7 @@ export function SpartanDonateForm() {
       className="mx-auto mt-6 max-w-lg px-1 pb-[max(1rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
     >
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">What are you doing?</p>
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Choose how you want to support:</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
             <button
@@ -387,8 +387,8 @@ export function SpartanDonateForm() {
               Racing
             </button>
             <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              Sign up for <strong className="text-[#999]">any distance</strong> in the menu — then search the wrestler to
-              credit. Dollar amount is a <strong className="text-[#999]">suggestion</strong>.
+              Any Spartan distance · <strong className="text-[#999]">credit a wrestler</strong> · amount is a{" "}
+              <strong className="text-[#999]">suggestion</strong>
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -404,8 +404,8 @@ export function SpartanDonateForm() {
               Sponsoring
             </button>
             <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              Sponsor <strong className="text-[#999]">one athlete</strong>. <strong className="text-[#C8A94A]">$5 minimum</strong>
-              — enter <strong className="text-[#999]">any</strong> dollar amount.
+              <strong className="text-[#999]">One athlete</strong> · <strong className="text-[#C8A94A]">$5 minimum</strong> · any
+              amount
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -421,8 +421,8 @@ export function SpartanDonateForm() {
               Donating
             </button>
             <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              Gift to the <strong className="text-[#999]">NC United athlete training fund</strong> — not one wrestler.{" "}
-              <strong className="text-[#8ab4d8]">$5 minimum</strong>, any amount.
+              <strong className="text-[#999]">Training fund</strong> — not one wrestler ·{" "}
+              <strong className="text-[#8ab4d8]">$5 minimum</strong>
             </p>
           </div>
         </div>
@@ -461,7 +461,8 @@ export function SpartanDonateForm() {
               ))}
             </select>
             <p className="mt-2 text-[10px] leading-relaxed text-[#666]">
-              Spartan emails your code after NC United sends names; you finish registration on Spartan.com.
+              After checkout, NC United sends your details to Spartan — you&apos;ll get email to finish registration on
+              Spartan.com (no extra hoops before you pay here).
             </p>
             <a
               href={FAYETTEVILLE_SPARTAN_URL}

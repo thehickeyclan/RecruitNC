@@ -2,7 +2,6 @@
 
 import Image from "next/image"
 import { Suspense } from "react"
-import { HardLink } from "@/components/hard-link"
 import { CountdownTimer } from "./countdown-timer"
 import { SpartanAthleteRibbon } from "./spartan-athlete-ribbon"
 import { SPARTAN_COUNTDOWN_ISO } from "../data"
@@ -47,9 +46,8 @@ export function HeroSection() {
             Weekend May 2–3, 2026 · Fayetteville, NC
           </p>
           <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
-          <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-neutral-300">
-            <span className="text-[var(--spartan-gold)]">Come race with us</span> — pick any Spartan distance that weekend
-            (Sprint to Ultra and more). Team NC lines up together — details when you check out below.
+          <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-neutral-300">
+            Support a wrestler. Race. Or donate. <strong className="text-neutral-200">Every dollar funds training.</strong>
           </p>
         </div>
 
@@ -67,41 +65,22 @@ export function HeroSection() {
           Earn Your Aroo.
         </h1>
 
-        <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          <strong className="text-neutral-200">Race:</strong> pick any distance in the form&apos;s menu, credit a wrestler.{" "}
-          <strong className="text-neutral-200">Sponsor or give:</strong>{" "}
-          <strong className="text-neutral-200">$5+</strong> to one athlete or to the NC United fund — any amount at or above
-          $5. Same checkout below.
-        </p>
+        <a
+          href="#spartan-checkout"
+          className="mb-6 inline-flex min-h-[52px] min-w-[12rem] items-center justify-center rounded-sm bg-[var(--spartan-red)] px-8 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.1em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px sm:text-lg"
+        >
+          Get started
+        </a>
 
-        <div className="flex w-full max-w-2xl flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-3">
-          <HardLink
-            href="/spartan?flow=race#spartan-checkout"
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm bg-[var(--spartan-red)] px-6 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px sm:min-w-[9.5rem] sm:text-lg"
-          >
-            Racing
-          </HardLink>
-          <HardLink
-            href="/spartan?flow=sponsor#spartan-checkout"
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border border-[#C8A94A]/50 bg-[#1a170d] px-6 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-[#C8A94A] transition-colors hover:border-[#C8A94A] hover:bg-[#231c0d] sm:min-w-[9.5rem] sm:text-lg"
-          >
-            Sponsoring
-          </HardLink>
-          <HardLink
-            href="/spartan?flow=fund#spartan-checkout"
-            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-6 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06] sm:min-w-[9.5rem] sm:text-lg"
-          >
-            Donating
-          </HardLink>
-        </div>
-        <p className="mt-3 text-center">
+        <p className="mb-2 text-center">
           <a href="#races" className="text-[12px] text-neutral-500 underline-offset-2 hover:text-neutral-300 hover:underline">
-            Course &amp; checkout
+            Super 10K &amp; course details
           </a>
         </p>
 
-        <p className="mt-6 max-w-lg text-[11px] leading-relaxed tracking-[0.04em] text-neutral-500">
-          501(c)(3) tax-deductible. Race codes: Spartan sends them after NC United passes names along — timing varies.
+        <p className="mt-4 max-w-lg text-[11px] leading-relaxed tracking-[0.03em] text-neutral-500">
+          501(c)(3) tax-deductible. NC United emails your receipt. If you&apos;re running, Spartan sends your registration steps
+          by email after checkout — same flow for everyone.
         </p>
       </div>
     </section>

@@ -17,25 +17,10 @@ export function DonationSection() {
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">
           Checkout
         </h2>
-        <div className="mx-auto mt-4 max-w-md space-y-2 text-left text-[13px] leading-snug text-[#bbb] sm:text-sm">
-          <p>
-            <strong className="text-[#f5f5f5]">Racing</strong> — Choose <strong className="text-white">any distance</strong>{" "}
-            from the dropdown; align your gift to a wrestler in search. Amount shown is a guideline.
-          </p>
-          <p>
-            <strong className="text-[#C8A94A]">Sponsoring</strong> — Gift to <strong className="text-white">one athlete</strong>.{" "}
-            <strong className="text-white">$5 minimum</strong>; any dollar amount.
-          </p>
-          <p>
-            <strong className="text-[#8ab4d8]">Donating</strong> — Gift to the{" "}
-            <strong className="text-white">NC United training fund</strong> (not an individual).{" "}
-            <strong className="text-white">$5 minimum</strong>; any dollar amount.
-          </p>
-          <p className="text-[12px] text-[#888]">
-            <strong className="text-white">Your name</strong> = who pays. <strong className="text-[#C8A94A]">Wrestler search</strong>{" "}
-            = credit (racing &amp; sponsoring only).
-          </p>
-        </div>
+        <p className="mx-auto mt-3 max-w-md text-left text-[13px] leading-snug text-[#aaa] sm:text-sm">
+          One secure form. <strong className="text-[#e5e5e5]">Your name</strong> = who pays.{" "}
+          <strong className="text-[#C8A94A]">Wrestler search</strong> = who gets credit (racing &amp; sponsoring).
+        </p>
         <div className="mx-auto mt-5 w-full max-w-[240px]">
           <div className="relative aspect-square overflow-hidden rounded border border-[#333] bg-[#0a0a0a]">
             <Image

@@ -44,7 +44,7 @@ export function RaceTierCard({ tier }: { tier: SpartanRaceTier }) {
         {gift}
       </p>
       <p className="mt-2 text-xs leading-snug text-[#888]">
-        Tax-deductible · Entry code from Spartan after NC United&apos;s partner handoff
+        Suggested gift · Tax-deductible · Spartan registration steps arrive by email after checkout
       </p>
 
       <HardLink

@@ -5,7 +5,7 @@ export const FAYETTEVILLE_SPARTAN_URL = "https://www.spartan.com/en/races/fayett
 
 /**
  * Ballpark “from” prices from Spartan.com — suggested gift only; donors can override.
- * Dates: May 2–3 weekend; confirm heat / Open vs Age Group on Spartan when registering.
+ * Schedule & waves: set when you complete registration on Spartan.com.
  */
 export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
   {
@@ -14,7 +14,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
     name: "Super 10K",
     detail: "10K · ~25 obstacles — NC United team race (same day for the crew)",
     scheduleChip: "May 3",
-    dates: "Fayetteville weekend May 2–3, 2026 · Super on Sun May 3 — confirm on Spartan",
+    dates: "Fayetteville weekend May 2–3, 2026 · Team NC on the Super 10K Sun May 3",
     priceLabel: "~$155",
     suggestedGiftCents: 15_500,
     featured: true,
@@ -26,7 +26,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
     name: "Sprint 5K",
     detail: "~5K · ~20 obstacles",
     scheduleChip: "May 2–3",
-    dates: "May 2–3, 2026 — confirm day & heat on Spartan",
+    dates: "May 2–3, 2026 · Fayetteville",
     priceLabel: "~$129",
     suggestedGiftCents: 12_900,
     registerUrl: FAYETTEVILLE_SPARTAN_URL,
@@ -37,7 +37,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
     name: "Beast 21K",
     detail: "~21K · ~30 obstacles",
     scheduleChip: "May 2",
-    dates: "May 2, 2026 — confirm on Spartan",
+    dates: "May 2, 2026 · Fayetteville",
     priceLabel: "~$195",
     suggestedGiftCents: 19_500,
     registerUrl: FAYETTEVILLE_SPARTAN_URL,
@@ -48,7 +48,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
     name: "Ultra 50K",
     detail: "~50K · ~60 obstacles",
     scheduleChip: "May 2",
-    dates: "May 2, 2026 — confirm on Spartan",
+    dates: "May 2, 2026 · Fayetteville",
     priceLabel: "~$255",
     suggestedGiftCents: 25_500,
     registerUrl: FAYETTEVILLE_SPARTAN_URL,
@@ -59,7 +59,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
     name: "Kids race",
     detail: "~1–3K + obstacles",
     scheduleChip: "May 2–3",
-    dates: "May 2–3, 2026 — confirm on Spartan",
+    dates: "May 2–3, 2026 · Fayetteville",
     priceLabel: "~$29",
     suggestedGiftCents: 2900,
     registerUrl: FAYETTEVILLE_SPARTAN_URL,
@@ -70,7 +70,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
     name: "Other / TBD",
     detail: "Pick a ballpark amount; tell us the race when you lock it on Spartan",
     scheduleChip: "May 2–3",
-    dates: "Fayetteville weekend — confirm distance & day on Spartan.com",
+    dates: "Fayetteville weekend · pick distance when you register",
     priceLabel: "Your choice",
     suggestedGiftCents: 5000,
     registerUrl: FAYETTEVILLE_SPARTAN_URL,

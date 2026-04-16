@@ -1,6 +1,7 @@
 import { HeroSection } from "./components/hero-section"
 import { MissionBar } from "./components/mission-bar"
 import { SpartanMetricsProvider } from "./components/spartan-metrics-provider"
+import { SpartanSimpleExplainer } from "./components/spartan-simple-explainer"
 import { SupporterActivitySection } from "./components/supporter-activity-section"
 import { HowItWorksSection } from "./components/how-it-works-section"
 import { LastYearSection } from "./components/last-year-section"
@@ -15,6 +16,8 @@ export default function SpartanPage() {
   return (
     <SpartanMetricsProvider>
       <HeroSection />
+      <SpartanSimpleExplainer />
+      <DonationSection />
       <MissionBar />
       <SupporterActivitySection />
       <HowItWorksSection />
@@ -22,7 +25,6 @@ export default function SpartanPage() {
       <AboutSection />
       <AboutThisRaceSection />
       <RaceTiersGrid />
-      <DonationSection />
       <FundraisingGuideSection />
       <PartnersFooter />
     </SpartanMetricsProvider>
