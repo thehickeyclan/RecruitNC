@@ -5,6 +5,8 @@ export const SPARTAN_STRIPE_LIST_MAX_PAGES = 80
 
 export type SpartanFayettevilleDonation = {
   sessionId: string
+  /** Stripe PaymentIntent id (pi_…) — for credit fixes keyed by PI when cs_ is hard to find */
+  paymentIntentId: string | null
   createdIso: string
   createdUnix: number
   amountCents: number
@@ -32,6 +34,13 @@ export type SpartanAthleteAggregate = {
   raceSignupCount: number
 }
 
+function paymentIntentIdFromSession(s: Stripe.Checkout.Session): string | null {
+  const pi = s.payment_intent
+  if (!pi) return null
+  if (typeof pi === "string") return pi
+  return pi.id ?? null
+}
+
 function parseDonorListPublic(m: Record<string, string> | null | undefined): boolean {
   const v = m?.donor_list_public
   if (v === "false" || v === "0" || v === "no") return false
@@ -54,6 +63,7 @@ export async function listSpartanFayettevilleDonations(
     const res = await stripe.checkout.sessions.list({
       created: { gte: createdGteUnix },
       limit: 100,
+      expand: ["data.payment_intent"],
       ...(startingAfter ? { starting_after: startingAfter } : {}),
     })
 
@@ -94,6 +104,7 @@ export async function listSpartanFayettevilleDonations(
 
       rows.push({
         sessionId: s.id,
+        paymentIntentId: paymentIntentIdFromSession(s),
         createdIso: new Date((s.created ?? 0) * 1000).toISOString(),
         createdUnix: s.created ?? 0,
         amountCents: s.amount_total ?? 0,
