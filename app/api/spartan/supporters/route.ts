@@ -3,6 +3,10 @@ import Stripe from "stripe"
 import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
+  applySpartanCreditCorrectionsToDonations,
+  fetchSpartanCreditCorrectionsMap,
+} from "@/lib/spartan-credit-corrections"
+import {
   aggregateSpartanByAthlete,
   listSpartanFayettevilleDonations,
   publicSupporterDisplayName,
@@ -31,15 +35,17 @@ export async function GET(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const rows = await listSpartanFayettevilleDonations(stripe, since)
-
+    const rowsRaw = await listSpartanFayettevilleDonations(stripe, since)
+    let rows = rowsRaw
     let codeToFullName = new Map<string, string>()
     try {
       const admin = createAdminClient()
+      const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
+      rows = applySpartanCreditCorrectionsToDonations(rowsRaw, correctionMap)
       const directory = await getFundraisingAthleteEntries(admin)
       codeToFullName = fundraisingCodeToFullNameMap(directory)
     } catch (dirErr) {
-      console.error("[spartan/supporters] directory lookup", dirErr)
+      console.error("[spartan/supporters] directory / credit corrections", dirErr)
     }
 
     const entries = rows.map((r) => toPublicEntry(r, codeToFullName))

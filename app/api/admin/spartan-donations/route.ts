@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import {
+  applySpartanCreditCorrectionsToDonations,
+  fetchSpartanCreditCorrectionsMap,
+} from "@/lib/spartan-credit-corrections"
+import { createAdminClient } from "@/lib/supabase/admin"
+import {
   aggregateSpartanByAthlete,
   listSpartanFayettevilleDonations,
   type SpartanAthleteAggregate,
@@ -45,7 +50,10 @@ export async function GET(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const donations = await listSpartanFayettevilleDonations(stripe, since)
+    const raw = await listSpartanFayettevilleDonations(stripe, since)
+    const admin = createAdminClient()
+    const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
+    const donations = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
     const byAthlete: SpartanAthleteAggregate[] = aggregateSpartanByAthlete(donations)
     const generalTotalCents = donations
       .filter((d) => !d.athleteCode?.trim())
