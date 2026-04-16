@@ -775,6 +775,14 @@ export async function POST(request: NextRequest) {
     // Sync Spartan donations to spartan_donations table
     if (session.metadata?.channel === "spartan") {
       const meta = session.metadata
+      const piRaw = session.payment_intent
+      const stripePaymentIntentId =
+        typeof piRaw === "string" ? piRaw : piRaw && typeof piRaw === "object" && "id" in piRaw
+          ? String((piRaw as { id: string }).id)
+          : null
+      const rawMetadata: Record<string, string> = meta ? { ...meta } : {}
+      if (stripePaymentIntentId) rawMetadata.stripe_payment_intent_id = stripePaymentIntentId
+
       const { error: spartanErr } = await admin.from("spartan_donations").upsert(
         {
           id: session.id,
@@ -789,7 +797,7 @@ export async function POST(request: NextRequest) {
           donor_email: session.customer_details?.email || null,
           donor_name: session.customer_details?.name || null,
           stripe_charge_id: session.id,
-          raw_metadata: meta ? { ...meta } : {},
+          raw_metadata: rawMetadata,
         },
         { onConflict: "id" },
       )
