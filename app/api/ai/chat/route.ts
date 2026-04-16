@@ -2794,7 +2794,14 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
       lowerQuestion.match(/\b(20\d{2})\b/) ||
       /\b(?:past|last|over the past)\s+(\d+)\s+years?\b/i.test(lowerQuestion) ||
       (/\bbreak\s*down\b/i.test(lowerQuestion) && (lowerQuestion.includes("commitments") || lowerQuestion.includes("commits")))
-    const isCollegeCommitmentQuery = !lowerQuestion.includes("most") && hasCommitmentKeyword && hasYearOrRange
+    // Without this, open-ended questions ("Who are some college commits…?") never hit this block and fall through to
+    // name-search → bogus "couldn't find … in the wrestling results". Year defaults inside the block (e.g. class of current year).
+    const isOpenEndedCommitQuestion =
+      /\b(who are|list|show|give me|some|all|any)\b/i.test(lowerQuestion) ||
+      /\bcommits?\s+from\s+(the\s+)?(state\s+of\s+)?(north\s+)?carolina\b/i.test(lowerQuestion) ||
+      /\bnorth\s+carolina\b/i.test(lowerQuestion)
+    const isCollegeCommitmentQuery =
+      !lowerQuestion.includes("most") && hasCommitmentKeyword && (hasYearOrRange || isOpenEndedCommitQuestion)
 
     if (isCollegeCommitmentQuery) {
       handlerName = "college_commitments_list"
