@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
 import { SpartanFundraisingVisuals } from "@/components/admin/spartan-fundraising-visuals"
-import { ArrowLeft, ClipboardCopy, Coins, RefreshCw } from "lucide-react"
+import { ArrowLeft, ClipboardCopy, Coins, Download, RefreshCw, Wrench } from "lucide-react"
 
 type SpartanDonationRow = {
   sessionId: string
@@ -67,6 +67,14 @@ export default function AdminFundraisingPage() {
   const [athleteFilter, setAthleteFilter] = useState("")
   const [sortBy, setSortBy] = useState<"date-desc" | "date-asc" | "athlete" | "amount">("date-desc")
   const [adminView, setAdminView] = useState<"all" | "byAthlete">("all")
+
+  const [creditFixSessionId, setCreditFixSessionId] = useState("")
+  const [creditFixCode, setCreditFixCode] = useState("")
+  const [creditFixBusy, setCreditFixBusy] = useState(false)
+  const [creditFixMsg, setCreditFixMsg] = useState<string | null>(null)
+
+  const [exportBusy, setExportBusy] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -126,6 +134,60 @@ export default function AdminFundraisingPage() {
       setGeneralTotalCents(0)
     } finally {
       setDonationsLoading(false)
+    }
+  }
+
+  const downloadSpartanCsv = async (kind: "runners" | "receipts" | "credits") => {
+    setExportError(null)
+    setExportBusy(kind)
+    try {
+      const res = await fetch(`/api/admin/spartan-export?kind=${kind}&days=120`, { credentials: "include" })
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string }
+        throw new Error(j.error || "Download failed")
+      }
+      const blob = await res.blob()
+      const dispo = res.headers.get("Content-Disposition")
+      const nameMatch = dispo?.match(/filename="([^"]+)"/)
+      const filename = nameMatch?.[1] ?? `spartan-${kind}.csv`
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      a.rel = "noopener"
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : "Download failed")
+    } finally {
+      setExportBusy(null)
+    }
+  }
+
+  const applySpartanCreditFix = async () => {
+    setCreditFixMsg(null)
+    setCreditFixBusy(true)
+    try {
+      const res = await fetch("/api/admin/spartan-credit-corrections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: creditFixSessionId.trim(),
+          athlete_code: creditFixCode.trim(),
+        }),
+      })
+      const j = (await res.json()) as { error?: string; message?: string }
+      if (!res.ok) throw new Error(j.error || "Save failed")
+      setCreditFixMsg(j.message ?? "Saved.")
+      setCreditFixSessionId("")
+      setCreditFixCode("")
+      if (donations !== null) await loadDonations()
+    } catch (e) {
+      setCreditFixMsg(e instanceof Error ? e.message : "Save failed")
+    } finally {
+      setCreditFixBusy(false)
     }
   }
 
@@ -255,6 +317,103 @@ export default function AdminFundraisingPage() {
                     </a>
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Wrench className="h-4 w-4 text-amber-700 dark:text-amber-500" />
+                  Fix athlete credit (after a bad checkout)
+                </CardTitle>
+                <CardDescription>
+                  If the public list shows the right name but <strong className="text-foreground">totals by athlete</strong> are
+                  wrong, Stripe metadata probably missed <code className="rounded bg-muted px-1 text-xs">athlete_code</code>.
+                  Paste the <strong className="text-foreground">PaymentIntent id</strong> (<code className="text-xs">pi_…</code>)
+                  or <strong className="text-foreground">Checkout Session id</strong> (<code className="text-xs">cs_…</code>) from
+                  Stripe, and the correct NCU code. No SQL — saves to{" "}
+                  <code className="rounded bg-muted px-1 text-xs">spartan_credit_corrections</code> and merges everywhere.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <div className="grid min-w-[200px] flex-1 gap-1.5">
+                  <Label htmlFor="credit-fix-session">Session or PI id</Label>
+                  <Input
+                    id="credit-fix-session"
+                    placeholder="pi_… or cs_live_…"
+                    value={creditFixSessionId}
+                    onChange={(e) => setCreditFixSessionId(e.target.value)}
+                    autoComplete="off"
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div className="grid min-w-[180px] flex-1 gap-1.5">
+                  <Label htmlFor="credit-fix-code">Athlete code</Label>
+                  <Input
+                    id="credit-fix-code"
+                    placeholder="NCU-APONTEJ-31"
+                    value={creditFixCode}
+                    onChange={(e) => setCreditFixCode(e.target.value)}
+                    autoComplete="off"
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <Button type="button" onClick={() => void applySpartanCreditFix()} disabled={creditFixBusy}>
+                  {creditFixBusy ? "Saving…" : "Apply fix"}
+                </Button>
+                {creditFixMsg ? (
+                  <p className="w-full text-sm text-muted-foreground sm:basis-full">{creditFixMsg}</p>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">CSV exports (last 120 days)</CardTitle>
+                <CardDescription>
+                  Three lanes: <strong className="text-foreground">Runners</strong> (race entry path + who is on course in
+                  metadata), <strong className="text-foreground">Receipts</strong> (payer-focused for records),{" "}
+                  <strong className="text-foreground">Credits</strong> (fundraising attribution aligned with corrections).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={exportBusy !== null}
+                    onClick={() => void downloadSpartanCsv("runners")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportBusy === "runners" ? "Preparing…" : "Runners (Spartan)"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={exportBusy !== null}
+                    onClick={() => void downloadSpartanCsv("receipts")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportBusy === "receipts" ? "Preparing…" : "Receipts (payers)"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={exportBusy !== null}
+                    onClick={() => void downloadSpartanCsv("credits")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportBusy === "credits" ? "Preparing…" : "Fundraising credits"}
+                  </Button>
+                </div>
+                {exportError ? (
+                  <p className="text-destructive text-sm" role="alert">
+                    {exportError}
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
 

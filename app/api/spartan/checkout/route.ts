@@ -6,6 +6,9 @@ export const dynamic = "force-dynamic"
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY
 
+/** When set, must match directory fundraising code shape (Stripe metadata). */
+const ATHLETE_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
+
 /** Donate-only: gifts at or above this qualify for NC United tee. Race entries always include a tee. */
 export const SPARTAN_TEE_THRESHOLD_CENTS = 10_000
 
@@ -49,14 +52,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid race selection." }, { status: 400 })
   }
   const tierPreference = isSpartanRaceTierId(rawTier) ? rawTier : ""
-  const athleteCode =
+  let athleteCode =
     typeof body.athleteCode === "string" ? body.athleteCode.trim().slice(0, 64) : ""
+  if (athleteCode && !ATHLETE_CODE_RE.test(athleteCode)) {
+    return NextResponse.json(
+      { error: "Athlete code looks invalid — pick the wrestler from search again (format NCU-LASTNAME-YY)." },
+      { status: 400 },
+    )
+  }
+  if (athleteCode) athleteCode = athleteCode.toUpperCase()
   const manualAthleteName =
     typeof body.manualAthleteName === "string" ? body.manualAthleteName.trim().slice(0, 120) : ""
   const athleteDisplayName =
     typeof body.athleteDisplayName === "string" ? body.athleteDisplayName.trim().slice(0, 120) : ""
   const donorListPublic = body.donorListPublic !== false
-  const raceParticipantName =
+  let raceParticipantName =
     typeof body.raceParticipantName === "string" ? body.raceParticipantName.trim().slice(0, 120) : ""
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
@@ -73,6 +83,15 @@ export async function POST(request: NextRequest) {
   }
 
   const hasManualCredit = manualAthleteName.length >= 2
+  if (athleteDisplayName.trim() && !athleteCode && !hasManualCredit) {
+    return NextResponse.json(
+      {
+        error:
+          "Athlete display name was sent without a directory code — go back and select the wrestler from search so credit saves correctly.",
+      },
+      { status: 400 },
+    )
+  }
   if (raceEntryRequested && !athleteCode && !hasManualCredit) {
     return NextResponse.json(
       {
@@ -81,6 +100,18 @@ export async function POST(request: NextRequest) {
       },
       { status: 400 },
     )
+  }
+
+  /**
+   * Race path: always persist who is on the course for Spartan coordination.
+   * If the payer didn’t fill “runner,” assume the credited athlete (parent pays / kid runs is the common case).
+   */
+  if (raceEntryRequested && !raceParticipantName) {
+    if (athleteDisplayName.trim()) {
+      raceParticipantName = athleteDisplayName.trim().slice(0, 120)
+    } else if (hasManualCredit) {
+      raceParticipantName = manualAthleteName.trim().slice(0, 120)
+    }
   }
 
   const teeEligible = raceEntryRequested || amountCents >= SPARTAN_TEE_THRESHOLD_CENTS
@@ -139,6 +170,11 @@ export async function POST(request: NextRequest) {
       " Includes an NC United tee (while supplies last), sent to the shipping address you provide."
   }
 
+  /** Who Spartan / ops treat as “on course” — always set on race path (defaults above + payer as last resort). */
+  const runnerForStripeMetadata = raceEntryRequested
+    ? (raceParticipantName || donorName).trim().slice(0, 120)
+    : ""
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -167,8 +203,8 @@ export async function POST(request: NextRequest) {
         donor_list_public: donorListPublic ? "true" : "false",
         race_entry_requested: raceEntryRequested ? "true" : "false",
         fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",
-        ...(raceEntryRequested && raceParticipantName
-          ? { race_participant_name: raceParticipantName }
+        ...(raceEntryRequested && runnerForStripeMetadata
+          ? { race_participant_name: runnerForStripeMetadata }
           : {}),
         tee_100_eligible: teeEligible ? "yes" : "no",
         ...(teeEligible
