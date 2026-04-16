@@ -68,23 +68,30 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          <strong className="text-neutral-200">Racing?</strong> Choose your distance and tie the gift to a wrestler at
-          checkout. <strong className="text-neutral-200">Not racing?</strong> Sponsor a wrestler or give to NC United —{" "}
-          <strong className="text-neutral-200">any amount from $5</strong> helps. Same secure form below.
+          <strong className="text-neutral-200">Race:</strong> pick any distance in the form&apos;s menu, credit a wrestler.{" "}
+          <strong className="text-neutral-200">Sponsor or give:</strong>{" "}
+          <strong className="text-neutral-200">$5+</strong> to one athlete or to the NC United fund — any amount at or above
+          $5. Same checkout below.
         </p>
 
-        <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
+        <div className="flex w-full max-w-2xl flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-3">
           <HardLink
             href="/spartan?flow=race#spartan-checkout"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-sm bg-[var(--spartan-red)] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px"
+            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm bg-[var(--spartan-red)] px-6 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white shadow-[0_12px_40px_-8px_rgba(204,0,0,0.45)] transition-[transform,background-color] hover:bg-[#990000] active:translate-y-px sm:min-w-[9.5rem] sm:text-lg"
           >
-            Race with us
+            Racing
           </HardLink>
           <HardLink
-            href="/spartan?flow=donate#spartan-checkout"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06]"
+            href="/spartan?flow=sponsor#spartan-checkout"
+            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border border-[#C8A94A]/50 bg-[#1a170d] px-6 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-[#C8A94A] transition-colors hover:border-[#C8A94A] hover:bg-[#231c0d] sm:min-w-[9.5rem] sm:text-lg"
           >
-            Not racing
+            Sponsoring
+          </HardLink>
+          <HardLink
+            href="/spartan?flow=fund#spartan-checkout"
+            className="inline-flex min-h-[52px] flex-1 items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-6 font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06] sm:min-w-[9.5rem] sm:text-lg"
+          >
+            Donating
           </HardLink>
         </div>
         <p className="mt-3 text-center">
@@ -94,8 +101,7 @@ export function HeroSection() {
         </p>
 
         <p className="mt-6 max-w-lg text-[11px] leading-relaxed tracking-[0.04em] text-neutral-500">
-          Tax-deductible gifts to NC United (501(c)(3)). Every amount counts. Race entry codes come from Spartan after NC
-          United completes their partner steps — timing varies by distance.
+          501(c)(3) tax-deductible. Race codes: Spartan sends them after NC United passes names along — timing varies.
         </p>
       </div>
     </section>

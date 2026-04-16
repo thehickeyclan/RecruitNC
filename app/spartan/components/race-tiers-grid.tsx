@@ -15,9 +15,7 @@ export function RaceTiersGrid() {
             Come race with us
           </h2>
           <p className="mt-4 text-base text-[#a3a3a3]">
-            <strong className="text-[#ccc]">Racing?</strong> Pick any Spartan distance that weekend — ballpark amounts are in
-            the checkout. <strong className="text-[#ccc]">Not racing?</strong> Sponsor a wrestler or give to NC United;{" "}
-            <strong className="text-[#ccc]">any amount from $5</strong> counts. Same secure form.
+            Scroll to <strong className="text-[#ccc]">checkout</strong> for the full form — same page, $5 minimum, tax-deductible.
           </p>
         </div>
 
@@ -28,9 +26,8 @@ export function RaceTiersGrid() {
           <SpartanDonateMissionCard />
         </div>
 
-        <p className="mx-auto mt-10 max-w-3xl text-center font-[family-name:var(--font-barlow-spartan)] text-[11px] font-medium uppercase leading-relaxed tracking-[0.12em] text-[#C8A94A]/90 md:text-xs">
-          Gifts to NC United are fully tax-deductible. NC United is a registered 501(c)(3) nonprofit. Spartan sends race entry
-          codes after NC United shares donor information with their team — timing follows their process.
+        <p className="mx-auto mt-10 max-w-3xl text-center text-[12px] leading-relaxed text-[#666] md:text-sm">
+          Spartan sends race codes after NC United shares your info — not instant.
         </p>
       </div>
     </section>

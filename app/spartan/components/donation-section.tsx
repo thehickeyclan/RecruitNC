@@ -15,14 +15,27 @@ export function DonationSection() {
       <SpartanHashScroll />
       <div className="mx-auto max-w-lg px-4 pb-1 text-center sm:px-4">
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">
-          One form — two paths
+          Checkout
         </h2>
-        <p className="mx-auto mt-4 max-w-md rounded border border-[#333] bg-[#141414] px-3 py-3 text-left text-[13px] leading-snug text-[#ccc] sm:text-sm">
-          <span className="block font-medium text-[#8ab4d8]">Who pays</span>
-          <span className="text-[#aaa]">Your name &amp; email (often a parent).</span>
-          <span className="mt-2 block font-medium text-[#C8A94A]">Who gets credit</span>
-          <span className="text-[#aaa]">Pick a wrestler in search — or NC United for the general fund.</span>
-        </p>
+        <div className="mx-auto mt-4 max-w-md space-y-2 text-left text-[13px] leading-snug text-[#bbb] sm:text-sm">
+          <p>
+            <strong className="text-[#f5f5f5]">Racing</strong> — Choose <strong className="text-white">any distance</strong>{" "}
+            from the dropdown; align your gift to a wrestler in search. Amount shown is a guideline.
+          </p>
+          <p>
+            <strong className="text-[#C8A94A]">Sponsoring</strong> — Gift to <strong className="text-white">one athlete</strong>.{" "}
+            <strong className="text-white">$5 minimum</strong>; any dollar amount.
+          </p>
+          <p>
+            <strong className="text-[#8ab4d8]">Donating</strong> — Gift to the{" "}
+            <strong className="text-white">NC United training fund</strong> (not an individual).{" "}
+            <strong className="text-white">$5 minimum</strong>; any dollar amount.
+          </p>
+          <p className="text-[12px] text-[#888]">
+            <strong className="text-white">Your name</strong> = who pays. <strong className="text-[#C8A94A]">Wrestler search</strong>{" "}
+            = credit (racing &amp; sponsoring only).
+          </p>
+        </div>
         <div className="mx-auto mt-5 w-full max-w-[240px]">
           <div className="relative aspect-square overflow-hidden rounded border border-[#333] bg-[#0a0a0a]">
             <Image
@@ -35,24 +48,22 @@ export function DonationSection() {
           </div>
           <p className="mt-2 text-center text-[10px] text-[#666]">Artwork may vary; while supplies last.</p>
         </div>
-        <p className="mx-auto mt-5 max-w-md text-sm text-[#999]">
-          <span className="block text-[#bbb]">
-            <strong className="text-[#C8A94A]">Race</strong> — pick your Spartan distance; credit one wrestler in search.
-          </span>
-          <span className="mt-2 block text-[#aaa]">
-            <strong className="text-[#ccc]">Not racing</strong> — sponsor a wrestler or give to NC United.{" "}
-            <strong className="text-white">Any amount from $5</strong> counts.
-          </span>
-          <span className="mt-2 block text-[#777]">
-            Runners get a team tee (size &amp; ship on the form). No race, $100+ also qualifies for a tee while supplies last.
-          </span>
+        <p className="mx-auto mt-5 max-w-md text-sm text-[#888]">
+          Team tee: included for race signups; $100+ gifts without a race also qualify (while supplies last). Size and ship on
+          the form.
         </p>
-        <p className="mt-3">
+        <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
           <HardLink
-            href="/spartan?mission=1#spartan-checkout"
-            className="inline-flex min-h-[44px] items-center justify-center text-sm font-medium text-[#C8A94A] underline-offset-2 hover:underline"
+            href="/spartan?mission=1&mode=athlete#spartan-checkout"
+            className="inline-flex min-h-[44px] items-center justify-center font-medium text-[#C8A94A] underline-offset-2 hover:underline"
           >
-            Skip to not racing — wrestler or NC United
+            Skip to sponsoring
+          </HardLink>
+          <HardLink
+            href="/spartan?mission=1&mode=fund#spartan-checkout"
+            className="inline-flex min-h-[44px] items-center justify-center font-medium text-[#8ab4d8] underline-offset-2 hover:underline"
+          >
+            Skip to training fund
           </HardLink>
         </p>
 

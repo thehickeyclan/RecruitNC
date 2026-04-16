@@ -60,7 +60,6 @@ export function SpartanDonateForm() {
   const [donateMode, setDonateMode] = useState<"athlete" | "general" | null>(null)
   const [tierPreference, setTierPreference] = useState<SpartanRaceTierId | "">("")
   const [amountDollars, setAmountDollars] = useState("50")
-  const [consent, setConsent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -86,7 +85,9 @@ export function SpartanDonateForm() {
     const mission = searchParams.get("mission") === "1"
     if (mission) {
       setFlow("donate")
-      setDonateMode(null)
+      // Default mission landing to sponsoring a wrestler; ?mode=fund switches to NC United fund only
+      const mode = searchParams.get("mode")?.toLowerCase()
+      setDonateMode(mode === "fund" || mode === "ncunited" ? "general" : "athlete")
       setTierPreference("")
       const chip = searchParams.get("chip")
       if (chip) {
@@ -123,13 +124,13 @@ export function SpartanDonateForm() {
     }
   }, [searchParams])
 
-  /** Hero CTAs: ?flow=race | ?flow=donate — after mission, tier, and athlete deep links */
+  /** Hero CTAs: ?flow=race | ?flow=sponsor | ?flow=fund | legacy ?flow=donate */
   useEffect(() => {
     if (searchParams.get("mission") === "1") return
     if (tierFromSearchParams(searchParams)) return
     if (searchParams.get("athlete")?.trim()) return
 
-    const flowParam = searchParams.get("flow")
+    const flowParam = searchParams.get("flow")?.toLowerCase() ?? ""
     if (flowParam === "race") {
       setFlow("race")
       setDonateMode(null)
@@ -137,10 +138,28 @@ export function SpartanDonateForm() {
       setAmountDollars(suggestedDollarsString(DEFAULT_SPARTAN_RACE_TIER_ID))
       return
     }
+    if (flowParam === "sponsor") {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("athlete")
+      setAmountDollars("50")
+      return
+    }
+    if (flowParam === "fund" || flowParam === "ncunited") {
+      setFlow("donate")
+      setTierPreference("")
+      setDonateMode("general")
+      setFundraisingCode("")
+      setAthleteQuery("")
+      setManualCreditName("")
+      setAmountDollars("50")
+      return
+    }
     if (flowParam === "donate") {
       setFlow("donate")
       setTierPreference("")
-      setDonateMode(null)
+      setDonateMode("athlete")
+      setAmountDollars("50")
     }
   }, [searchParams])
 
@@ -211,10 +230,6 @@ export function SpartanDonateForm() {
     if (s != null) setAmountDollars(String(Math.round(s / 100)))
   }, [tierPreference, flow])
 
-  useEffect(() => {
-    setConsent(false)
-  }, [flow, donateMode, tierPreference])
-
   const amountCents = useMemo(() => dollarsToCents(amountDollars), [amountDollars])
   /** Race path: every participant gets an NC United tee. Donate-only: $100+. */
   const teeEligible = flow === "race" || amountCents >= TEE_THRESHOLD_CENTS
@@ -241,18 +256,16 @@ export function SpartanDonateForm() {
     setAmountDollars(suggestedDollarsString(next))
   }
 
-  function selectDonate() {
+  function selectSponsoring() {
     setFlow("donate")
     setTierPreference("")
-    setDonateMode(null)
+    setDonateMode("athlete")
     setManualCreditName("")
   }
 
-  function pickDonateAthlete() {
-    setDonateMode("athlete")
-  }
-
-  function pickDonateGeneral() {
+  function selectDonatingFund() {
+    setFlow("donate")
+    setTierPreference("")
     setDonateMode("general")
     setFundraisingCode("")
     setAthleteQuery("")
@@ -266,23 +279,19 @@ export function SpartanDonateForm() {
     setError(null)
     const name = donorName.trim()
     if (name.length < 2) {
-      setError("Enter your name (the person paying).")
+      setError('Enter "Your name" — the person paying (cardholder), not the wrestler you\'re sponsoring.')
       return
     }
     if (flow === null) {
-      setError("Choose Race with us or Not racing.")
+      setError("Choose racing, sponsoring, or donating.")
       return
     }
     if (flow === "donate" && donateMode === null) {
-      setError("Choose a wrestler to sponsor or NC United (general fund).")
+      setError("Choose sponsoring (a wrestler) or donating (NC United training fund).")
       return
     }
     if (needsAthleteCode && !hasAthleteCredit) {
       setError("Select a wrestler from the list, or enter their name in the box below.")
-      return
-    }
-    if (flow === "donate" && !consent) {
-      setError("Check the box to continue.")
       return
     }
     if (!amountDollars.trim() || amountCents < 500) {
@@ -355,109 +364,87 @@ export function SpartanDonateForm() {
   const stepUnlocked =
     flow === "race" ? Boolean(tierPreference) : flow === "donate" && donateMode !== null
 
-  const canCheckout =
-    stepUnlocked &&
-    (!needsAthleteCode || hasAthleteCredit) &&
-    (flow !== "donate" || consent)
+  const canCheckout = stepUnlocked && (!needsAthleteCode || hasAthleteCredit)
 
   return (
     <form
       onSubmit={submit}
       className="mx-auto mt-6 max-w-lg px-1 pb-[max(1rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
     >
-      <p className="mb-3 rounded border border-[#333] bg-[#0f0f0f] px-3 py-2.5 text-left text-[13px] leading-snug text-[#ccc] sm:text-sm">
-        <span className="font-semibold text-white">Two different people: </span>
-        <span className="text-[#aaa]">the </span>
-        <span className="font-medium text-[#8ab4d8]">donor</span>
-        <span className="text-[#aaa]"> (you — whoever pays) and the </span>
-        <span className="font-medium text-[#C8A94A]">wrestler</span>
-        <span className="text-[#aaa]"> (who gets credit — chosen in search).</span>
-      </p>
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={selectRace}
-            className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-3 ${
-              flow === "race"
-                ? "border-[#CC0000] bg-[#2a1515] text-white"
-                : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
-            }`}
-          >
-            Race with us
-          </button>
-          <button
-            type="button"
-            onClick={selectDonate}
-            className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold transition-colors sm:px-3 ${
-              flow === "donate"
-                ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
-                : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
-            }`}
-          >
-            Not racing
-          </button>
-        </div>
-        <p className="mt-2 text-[11px] leading-snug text-[#666]">
-          <strong className="text-[#888]">Race with us</strong> — choose any Spartan distance below; credit one wrestler in
-          search.
-          <br />
-          <strong className="text-[#888]">Not racing</strong> — sponsor a wrestler or give to NC United.{" "}
-          <strong className="text-[#aaa]">Any amount from $5.</strong>
-        </p>
-        <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-xs leading-snug text-[#ccc] sm:text-[11px]">
-          <strong className="text-[#C8A94A]">More than one wrestler?</strong> Each payment credits{" "}
-          <strong className="text-white">one</strong> athlete — check out for the first, then repeat for the next.{" "}
-          <strong className="text-[#8ab4d8]">Donor</strong> fields = who pays (can be the same parent both times).{" "}
-          <strong className="text-[#C8A94A]">Wrestler</strong> = pick in search each time.
-        </p>
-      </div>
-
-      {flow === "donate" && (
-        <div className="mt-5 rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Not racing — send support to</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">What are you doing?</p>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              onClick={pickDonateAthlete}
-              className={`min-h-[48px] rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-                donateMode === "athlete"
+              onClick={selectRace}
+              className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-2 ${
+                flow === "race"
+                  ? "border-[#CC0000] bg-[#2a1515] text-white"
+                  : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
+              }`}
+            >
+              Racing
+            </button>
+            <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
+              Sign up for <strong className="text-[#999]">any distance</strong> in the menu — then search the wrestler to
+              credit. Dollar amount is a <strong className="text-[#999]">suggestion</strong>.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <button
+              type="button"
+              onClick={selectSponsoring}
+              className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-2 ${
+                flow === "donate" && donateMode === "athlete"
                   ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
               }`}
             >
-              Sponsor a wrestler
+              Sponsoring
             </button>
+            <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
+              Sponsor <strong className="text-[#999]">one athlete</strong>. <strong className="text-[#C8A94A]">$5 minimum</strong>
+              — enter <strong className="text-[#999]">any</strong> dollar amount.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              onClick={pickDonateGeneral}
-              className={`min-h-[48px] rounded border px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-                donateMode === "general"
+              onClick={selectDonatingFund}
+              className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-2 ${
+                flow === "donate" && donateMode === "general"
                   ? "border-[#888] bg-[#222] text-white"
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
               }`}
             >
-              NC United (general)
+              Donating
             </button>
+            <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
+              Gift to the <strong className="text-[#999]">NC United athlete training fund</strong> — not one wrestler.{" "}
+              <strong className="text-[#8ab4d8]">$5 minimum</strong>, any amount.
+            </p>
           </div>
-          <p className="mt-2 text-[11px] text-[#666]">Every amount helps — minimum $5 at checkout.</p>
         </div>
-      )}
+        <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-[11px] leading-snug text-[#bbb] sm:text-xs">
+          <strong className="text-[#C8A94A]">Two kids?</strong> Finish checkout once, start again. Same parent name is fine —
+          pick a different wrestler each time.
+        </p>
+      </div>
 
       {flow === "race" && (
         <div className="mt-5 space-y-3 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
             <p className="mt-2 text-[12px] leading-relaxed text-[#aaa]">
-              Choose the <strong className="text-white">Spartan distance</strong> you&apos;re registering for (Team NC&apos;s
-              crew race is the Super 10K on May 3). Suggested amounts are ballparks — change the number to match what you
-              need.
+              Use the menu to pick <strong className="text-white">any Spartan distance</strong> you&apos;re signing up for
+              this weekend (Sprint through Ultra — all count). Team NC groups on the <strong className="text-white">Super 10K</strong>{" "}
+              May 3. Amount is a <strong className="text-white">suggested</strong> gift — change it to match what you need.
             </p>
           </div>
           <div>
             <label htmlFor="spartan-race-tier" className="text-[11px] text-[#888]">
-              Which race are you targeting?
+              Which race are you signing up for?
             </label>
             <select
               id="spartan-race-tier"
@@ -474,8 +461,7 @@ export function SpartanDonateForm() {
               ))}
             </select>
             <p className="mt-2 text-[10px] leading-relaxed text-[#666]">
-              Open vs Age Group / competitive waves are selected when you register on{" "}
-              <span className="text-[#888]">Spartan.com</span>.
+              Spartan emails your code after NC United sends names; you finish registration on Spartan.com.
             </p>
             <a
               href={FAYETTEVILLE_SPARTAN_URL}
@@ -483,7 +469,7 @@ export function SpartanDonateForm() {
               rel="noopener noreferrer"
               className="mt-2 inline-block text-[11px] font-medium text-[#C8A94A] underline-offset-2 hover:underline"
             >
-              Learn more about Fayetteville race options on Spartan.com →
+              Fayetteville venue &amp; distances (reference) →
             </a>
           </div>
         </div>
@@ -492,14 +478,15 @@ export function SpartanDonateForm() {
       {stepUnlocked && (
         <>
           <div className="mt-6 space-y-3 rounded-lg border border-[#2a3d4f] border-l-4 border-l-[#5a8ab0] bg-[#0c1014] p-3 sm:p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8ab4d8]">1 · Donor (who pays)</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8ab4d8]">
+              1 · Your name (person paying)
+            </p>
             <p className="text-xs leading-snug text-[#9ca3af]">
-              Receipt and card holder — parent, friend, or you.{" "}
-              <span className="text-[#666]">Not the wrestler&apos;s name unless they pay themselves.</span>
+              Cardholder / receipt — not the wrestler (that&apos;s step 2).
             </p>
             <div>
               <label htmlFor="spartan-donor-name" className="text-sm font-medium text-[#ccc]">
-                Full name
+                Your name
               </label>
               <input
                 id="spartan-donor-name"
@@ -507,9 +494,11 @@ export function SpartanDonateForm() {
                 required
                 minLength={2}
                 autoComplete="name"
+                placeholder="Your full name as on the payment / receipt"
+                aria-label="Your name — person paying, not the wrestler you sponsor"
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
-                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
+                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
               />
             </div>
             <div>
@@ -532,8 +521,7 @@ export function SpartanDonateForm() {
                   Runner / race participant <span className="font-normal text-[#666]">(optional)</span>
                 </label>
                 <p className="mt-0.5 text-[11px] leading-snug text-[#888]">
-                  If someone other than the donor is racing (e.g. parent pays, child runs), enter their name. Shown on
-                  the public list; donor name above stays on the tax receipt.
+                  Only if someone else is running (e.g. you pay, your kid runs). Receipt still uses your name above.
                 </p>
                 <input
                   id="spartan-race-runner"
@@ -547,50 +535,20 @@ export function SpartanDonateForm() {
               </div>
             )}
             {flow === "donate" && (
-              <div className="space-y-4 border-t border-[#2a3d4f] pt-4">
-                <label className="flex min-h-[44px] cursor-pointer items-start gap-3 text-left text-[13px] leading-relaxed text-[#999] sm:text-[13px]">
-                  <input
-                    type="checkbox"
-                    checked={donorListPublic}
-                    onChange={(e) => setDonorListPublic(e.target.checked)}
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#C8A94A]"
-                  />
-                  <span className="min-w-0 flex-1 break-words">
-                    Show my name on the public supporter list (uncheck to stay anonymous)
-                  </span>
+              <div className="border-t border-[#2a3d4f] pt-4">
+                <label htmlFor="spartan-supporter-list" className="text-sm font-medium text-[#ccc]">
+                  Supporter page
                 </label>
-                <label className="flex min-h-[44px] cursor-pointer items-start gap-3 text-left text-[13px] leading-relaxed text-[#aaa] sm:text-[13px]">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    className="mt-0.5 h-5 w-5 shrink-0 accent-[#CC0000]"
-                  />
-                  <span className="min-w-0 flex-1 break-words">
-                    {donateMode === "general" ? (
-                      <>Tax gift to NC United — general programs.</>
-                    ) : (
-                      <>
-                        <span className="block">Tax gift to NC United. Not requesting a race entry.</span>
-                        {codeForCheckout && athleteQuery.trim() && (
-                          <span className="mt-1 block text-[#bbb]">
-                            Gift credited to {athleteQuery} (directory).
-                          </span>
-                        )}
-                        {codeForCheckout && !athleteQuery.trim() && (
-                          <span className="mt-1 block text-[#bbb]">
-                            Gift credited to the wrestler you selected at checkout.
-                          </span>
-                        )}
-                        {!codeForCheckout && hasManualCredit && (
-                          <span className="mt-1 block text-[#bbb]">
-                            Gift credit request for {manualCreditTrimmed} (manual — not in directory yet).
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </span>
-                </label>
+                <p className="mt-0.5 text-[11px] text-[#666]">Optional — how you appear on public activity</p>
+                <select
+                  id="spartan-supporter-list"
+                  value={donorListPublic ? "show" : "anon"}
+                  onChange={(e) => setDonorListPublic(e.target.value === "show")}
+                  className="mt-1.5 min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2 text-base text-white focus:border-[#5a8ab0] focus:outline-none"
+                >
+                  <option value="show">Show my name</option>
+                  <option value="anon">Anonymous</option>
+                </select>
               </div>
             )}
           </div>
@@ -598,16 +556,14 @@ export function SpartanDonateForm() {
           {needsAthleteCode && (
             <>
               <div className="relative mt-5 rounded-lg border border-[#4a3d1a] border-l-4 border-l-[#C8A94A] bg-[#141008] p-3 sm:p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">2 · Wrestler (credit)</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">2 · Wrestler credit</p>
                 <p className="mt-1 text-xs leading-snug text-[#b9a86e]">
-                  Who the gift counts for — search and tap their name. This is separate from the donor name above.
+                  Who gets training credit — search and tap them (parent pays → child&apos;s name here).
                 </p>
                 <label className="mt-3 block text-sm font-medium text-[#ddd]" htmlFor="spartan-athlete-search">
-                  Find wrestler
+                  Search wrestler
                 </label>
-                <p className="mt-0.5 text-[11px] leading-snug text-[#888]">
-                  One wrestler per payment — pay again for a second athlete.
-                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-[#888]">One wrestler per checkout.</p>
                 <input
                   id="spartan-athlete-search"
                   type="text"
@@ -664,8 +620,8 @@ export function SpartanDonateForm() {
 
                 <div className="mt-5 border-t border-[#333] pt-4">
                   <p className="text-[11px] leading-relaxed text-[#999]">
-                    <strong className="text-[#C8A94A]">Wrestler not in search?</strong> Type their name for staff to
-                    credit — still the <strong className="text-[#ccc]">athlete</strong>, not the donor.
+                    <strong className="text-[#C8A94A]">Not in the list?</strong> Type the athlete&apos;s name for staff (not
+                    the payer&apos;s name).
                   </p>
                   <label className="mt-3 block text-sm font-medium text-[#bbb]" htmlFor="spartan-manual-credit">
                     Athlete name (manual)
@@ -688,9 +644,9 @@ export function SpartanDonateForm() {
                     <button
                       type="button"
                       className="font-medium text-[#C8A94A] underline underline-offset-2 hover:text-[#dfd08a]"
-                      onClick={pickDonateGeneral}
+                      onClick={selectDonatingFund}
                     >
-                      NC United (general)
+                      NC United athlete training fund
                     </button>{" "}
                     with no wrestler.
                   </p>
@@ -701,7 +657,7 @@ export function SpartanDonateForm() {
 
           {flow === "donate" && donateMode === "general" && (
             <p className="mt-5 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#999]">
-              General fund — not tied to a specific wrestler.
+              NC United athlete training fund — not tied to one wrestler.
             </p>
           )}
 
@@ -721,7 +677,7 @@ export function SpartanDonateForm() {
               </div>
             )}
             <label className="text-xs text-[#888]" htmlFor="spartan-amount-usd">
-              Amount
+              Amount <span className="font-normal text-[#666]">($5 minimum — any amount)</span>
             </label>
             <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
               <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
@@ -843,20 +799,37 @@ export function SpartanDonateForm() {
 
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
+      {stepUnlocked && flow === "donate" && (
+        <div className="mt-5 rounded border border-[#2a2a2a] bg-[#0f0f0f] px-3 py-3 text-[12px] leading-snug text-[#9ca3af]">
+          <p>
+            {donateMode === "general"
+              ? "Tax-deductible gift to NC United's athlete training fund (not one wrestler)."
+              : "Tax-deductible gift to NC United — support only, not a race registration."}
+          </p>
+          {donateMode === "athlete" && codeForCheckout && athleteQuery.trim() && (
+            <p className="mt-1.5 font-medium text-[#ccc]">Credit: {athleteQuery}</p>
+          )}
+          {donateMode === "athlete" && !codeForCheckout && hasManualCredit && (
+            <p className="mt-1.5 font-medium text-[#ccc]">Credit request: {manualCreditTrimmed}</p>
+          )}
+          <p className="mt-2 text-[11px] text-[#666]">Stripe emails your receipt after you pay.</p>
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={loading || !canCheckout}
         className="mt-5 w-full min-h-[48px] bg-[#CC0000] font-[family-name:var(--font-barlow-spartan)] text-base font-bold uppercase tracking-wide text-white hover:bg-[#990000] disabled:opacity-50"
       >
-        {loading ? "…" : "Checkout"}
+        {loading ? "…" : "Continue to payment"}
       </button>
       {stepUnlocked && needsAthleteCode && !hasAthleteCredit && (
         <p className="mt-2 text-center text-[11px] text-[#888]">
-          Search and select a wrestler, or enter a name under &quot;Not in the directory.&quot;
+          Select a wrestler from search or use the manual name box.
         </p>
       )}
       {!stepUnlocked && flow === null && (
-        <p className="mt-2 text-center text-[11px] text-[#666]">Choose Race with us or Give.</p>
+        <p className="mt-2 text-center text-[11px] text-[#666]">Pick Racing, Sponsoring, or Donating above.</p>
       )}
       {!stepUnlocked && flow === "donate" && donateMode === null && (
         <p className="mt-2 text-center text-[11px] text-[#666]">Choose wrestler or NC United.</p>

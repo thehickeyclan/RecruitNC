@@ -2,18 +2,18 @@ export function HowItWorksSection() {
   const steps = [
     {
       n: "01",
-      title: "Give securely",
-      body: "Make a tax-deductible gift through checkout. You’ll get a receipt from NC United.",
+      title: "Checkout",
+      body: "Pay safely; NC United emails your receipt (501(c)(3)).",
     },
     {
       n: "02",
-      title: "Race, align, or fund training",
-      body: "At checkout, search for the wrestler by name and select them—whether they’re racing Spartan or not. That’s how your gift counts toward their tally and NC United summer training; no race required.",
+      title: "Who gets credit",
+      body: "Racing or sponsoring? Search and tap the wrestler — one athlete per checkout. Repeat for a second kid.",
     },
     {
       n: "03",
-      title: "Only if you’re racing",
-      body: "Spartan sends your Fayetteville entry code when you’re the one registering for a race that weekend. Supporting a wrestler without racing yourself? You’re done after checkout—no code.",
+      title: "Race entry codes",
+      body: "You only need a Spartan code if you’re registering yourself to run. Sponsor-only gifts don’t need one.",
     },
   ]
 
@@ -23,11 +23,8 @@ export function HowItWorksSection() {
         <h2 className="text-center font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white md:text-3xl">
           How it works
         </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-[#888]">
-          You can run with Team NC, give alongside someone who is—or donate to a wrestler’s training even when they’re
-          not on the Spartan course. You always pick the athlete by <strong className="text-[#aaa]">name search</strong> at
-          checkout (one wrestler per gift). Supporting more than one kid? Complete checkout for the first, then start
-          again for the next. Step 3 is only for people registering themselves for a Spartan race that weekend.
+        <p className="mx-auto mt-3 max-w-xl text-center text-sm text-[#888]">
+          The form below walks through it — payer name first, then wrestler (if needed).
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3">
           {steps.map((s) => (

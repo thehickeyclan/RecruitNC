@@ -12,15 +12,21 @@ function parseDollars(raw: string): number | null {
 }
 
 /**
- * “Not racing” entry: same checkout as hero. Form: sponsor one wrestler or NC United general.
+ * Sponsor / fund entry: same checkout as hero (mission pre-fills amount; mode picks path).
  */
 export function SpartanDonateMissionCard() {
   const [dollars, setDollars] = useState("50")
 
-  const chipHref = useMemo(() => {
+  const chipHrefSponsor = useMemo(() => {
     const n = parseDollars(dollars)
     const d = n ?? 50
-    return `/spartan?mission=1&chip=${encodeURIComponent(String(d))}#spartan-checkout`
+    return `/spartan?mission=1&mode=athlete&chip=${encodeURIComponent(String(d))}#spartan-checkout`
+  }, [dollars])
+
+  const chipHrefFund = useMemo(() => {
+    const n = parseDollars(dollars)
+    const d = n ?? 50
+    return `/spartan?mission=1&mode=fund&chip=${encodeURIComponent(String(d))}#spartan-checkout`
   }, [dollars])
 
   return (
@@ -29,15 +35,13 @@ export function SpartanDonateMissionCard() {
       className="group flex h-full flex-col border-2 border-[#C8A94A] bg-[#141414] p-6 transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_16px_48px_rgba(200,169,74,0.12)]"
     >
       <p className="font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C8A94A]">
-        Not racing
+        Sponsoring or donating
       </p>
       <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
-        Sponsor a wrestler or give to NC United
+        Sponsor a wrestler or give to the training fund
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[#bbb]">
-        Tax-deductible to NC United (501(c)(3)). On the next screen, choose{" "}
-        <strong className="text-white">one wrestler</strong> to sponsor or <strong className="text-white">NC United</strong>{" "}
-        for the general fund — same checkout.
+        501(c)(3). One wrestler or the general training fund — set it on the next screen.
       </p>
       <p className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] uppercase tracking-[0.14em] text-[#666]">
         Any amount from $5 — every gift counts
@@ -83,25 +87,28 @@ export function SpartanDonateMissionCard() {
         ))}
       </div>
 
-      <HardLink
-        href={chipHref}
-        className="mt-5 inline-flex min-h-[52px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] px-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-[#C8A94A] hover:bg-[#2f2f2f] active:opacity-90"
-      >
-        Continue to donate
-      </HardLink>
+      <div className="mt-5 flex flex-col gap-2">
+        <HardLink
+          href={chipHrefSponsor}
+          className="inline-flex min-h-[52px] w-full items-center justify-center border border-[#C8A94A]/40 bg-[#1a170d] px-2 font-[family-name:var(--font-barlow-spartan)] text-sm font-bold uppercase tracking-[0.12em] text-[#C8A94A] transition-colors hover:border-[#C8A94A] hover:bg-[#231c0d] active:opacity-90"
+        >
+          Continue — sponsor a wrestler
+        </HardLink>
+        <HardLink
+          href={chipHrefFund}
+          className="inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] px-2 font-[family-name:var(--font-barlow-spartan)] text-xs font-bold uppercase tracking-[0.12em] text-[#aaa] transition-colors hover:border-[#8ab4d8]/50 hover:text-white active:opacity-90"
+        >
+          Continue — training fund only
+        </HardLink>
+      </div>
 
       <div
         id="athletes"
         className="scroll-mt-24 mt-6 border-t border-[#333] pt-5 text-left text-[11px] leading-relaxed text-[#888]"
       >
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#666]">How credit works</p>
-        <p className="mt-2 text-[#aaa]">
-          Everyone uses this same page. At checkout, donors <strong className="text-[#ccc]">search and select the wrestler</strong>{" "}
-          (or NC United / manual name)—that&apos;s what ties the gift. Optional:{" "}
-          <HardLink href="/spartan?athlete=NCU-HICKEY-29" className="text-[#C8A94A] underline-offset-2 hover:underline">
-            /spartan?athlete=…
-          </HardLink>{" "}
-          can pre-fill the fundraising field; you still confirm in search.
+        <p className="text-[#aaa]">
+          At checkout: <strong className="text-[#ccc]">your name</strong> first, then <strong className="text-[#ccc]">search the wrestler</strong>{" "}
+          (unless you chose the training fund).
         </p>
       </div>
     </article>

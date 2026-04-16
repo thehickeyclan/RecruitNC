@@ -9,16 +9,18 @@ export function FayettevilleScheduleCallout() {
         <strong>Team NC</strong> lines up together on the <strong className="text-[#CC0000]">Super 10K</strong>{" "}
         <strong>Sunday, May 3, 2026</strong> at <strong>McCormick Farms · Fayetteville, NC</strong>.{" "}
         <strong className="text-[#ccc]">Other Spartan distances</strong> run the same weekend — pick the race you&apos;re
-        joining in the menu below. Confirm heats and registration on{" "}
+        joining in the menu below. After your gift, <strong className="text-[#ccc]">NC United submits our racer list and
+        emails to Spartan</strong>; <strong className="text-[#ccc]">Spartan emails registration codes</strong> to those
+        addresses. You complete registration with your code — not by hunting heats on your own beforehand.{" "}
         <a
           href="https://www.spartan.com/en/races/fayetteville-north-carolina?index=0"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#C8A94A] underline-offset-2 hover:underline"
         >
-          Spartan.com
-        </a>
-        .
+          Event info on Spartan.com
+        </a>{" "}
+        is optional context only.
       </p>
     </div>
   )
