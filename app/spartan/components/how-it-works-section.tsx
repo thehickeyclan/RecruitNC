@@ -13,7 +13,7 @@ export function HowItWorksSection() {
     {
       n: "03",
       title: "Only if you’re racing",
-      body: "Spartan sends your Fayetteville Super 10K entry code when you’re the one registering for the race. Supporting a wrestler without racing yourself? You’re done after checkout—no code.",
+      body: "Spartan sends your Fayetteville entry code when you’re the one registering for a race that weekend. Supporting a wrestler without racing yourself? You’re done after checkout—no code.",
     },
   ]
 
@@ -27,7 +27,7 @@ export function HowItWorksSection() {
           You can run with Team NC, give alongside someone who is—or donate to a wrestler’s training even when they’re
           not on the Spartan course. You always pick the athlete by <strong className="text-[#aaa]">name search</strong> at
           checkout (one wrestler per gift). Supporting more than one kid? Complete checkout for the first, then start
-          again for the next. Step 3 is only for people registering themselves for the Super 10K.
+          again for the next. Step 3 is only for people registering themselves for a Spartan race that weekend.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3">
           {steps.map((s) => (

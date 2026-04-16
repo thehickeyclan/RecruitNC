@@ -64,7 +64,7 @@ export function MissionBar() {
             >
               {loading ? "…" : runners}
             </p>
-            <p className="mt-1 text-sm text-[#666]">Super 10K entry path via this page</p>
+            <p className="mt-1 text-sm text-[#666]">Any Spartan distance · checkout here</p>
           </div>
           <div className="text-center md:text-right">
             <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">

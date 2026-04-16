@@ -19,13 +19,13 @@ const dmSans = DM_Sans({
 const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.com"
 
 export const metadata: Metadata = {
-  title: "Race with Team NC × Spartan — Super 10K, May 3 · Fayetteville, NC",
+  title: "Team NC × Spartan — Fayetteville May 2–3, 2026 · Race or sponsor NC wrestling",
   description:
-    "Come race with Team NC — 10K team race (Super 10K) Sunday, May 3, 2026 · Fayetteville. Tax-deductible to NC United — 501(c)(3).",
+    "Race any Spartan distance with Team NC, or sponsor a wrestler / give to NC United — tax-deductible 501(c)(3). Fayetteville weekend May 2–3, 2026.",
   openGraph: {
-    title: "Race with Team NC × Spartan — Super 10K, May 3 · Fayetteville, NC",
+    title: "Team NC × Spartan — Fayetteville 2026 · Race or give",
     description:
-      "Team NC 10K team race · Super 10K · May 3 · Fayetteville. Fund NC wrestling through NC United.",
+      "Spartan weekend in Fayetteville: run with Team NC or donate — every amount from $5 helps NC wrestling through NC United.",
     url: `${base}/spartan`,
     siteName: "NC United / RecruitNC",
     locale: "en_US",

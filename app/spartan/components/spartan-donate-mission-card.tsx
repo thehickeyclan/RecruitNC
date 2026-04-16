@@ -12,8 +12,7 @@ function parseDollars(raw: string): number | null {
 }
 
 /**
- * Single “donate (no race)” entry: same checkout as hero “Give”.
- * On the form, donors choose NC United (general) or a wrestler (search / manual line).
+ * “Not racing” entry: same checkout as hero. Form: sponsor one wrestler or NC United general.
  */
 export function SpartanDonateMissionCard() {
   const [dollars, setDollars] = useState("50")
@@ -30,18 +29,18 @@ export function SpartanDonateMissionCard() {
       className="group flex h-full flex-col border-2 border-[#C8A94A] bg-[#141414] p-6 transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-[0_16px_48px_rgba(200,169,74,0.12)]"
     >
       <p className="font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[#C8A94A]">
-        Donate — no race
+        Not racing
       </p>
       <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
-        Support a wrestler or make a donation
+        Sponsor a wrestler or give to NC United
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[#bbb]">
-        Tax-deductible gift to NC United. On the form below (opens when you continue), either{" "}
-        <strong className="text-white">support a wrestler</strong> (search and select before you pay) or{" "}
-        <strong className="text-white">make a donation</strong> to the general fund—same checkout.
+        Tax-deductible to NC United (501(c)(3)). On the next screen, choose{" "}
+        <strong className="text-white">one wrestler</strong> to sponsor or <strong className="text-white">NC United</strong>{" "}
+        for the general fund — same checkout.
       </p>
       <p className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] uppercase tracking-[0.14em] text-[#666]">
-        Any amount · You choose on the form
+        Any amount from $5 — every gift counts
       </p>
 
       <div className="my-5 h-px w-full bg-[#333]" aria-hidden />

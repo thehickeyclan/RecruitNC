@@ -15,13 +15,13 @@ export function DonationSection() {
       <SpartanHashScroll />
       <div className="mx-auto max-w-lg px-4 pb-1 text-center sm:px-4">
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-2xl font-bold uppercase tracking-tight text-white sm:text-3xl">
-          Race or give
+          One form — two paths
         </h2>
         <p className="mx-auto mt-4 max-w-md rounded border border-[#333] bg-[#141414] px-3 py-3 text-left text-[13px] leading-snug text-[#ccc] sm:text-sm">
-          <span className="block font-medium text-[#8ab4d8]">Donor</span>
-          <span className="text-[#aaa]">Your name &amp; email — whoever is paying (often a parent).</span>
-          <span className="mt-2 block font-medium text-[#C8A94A]">Wrestler</span>
-          <span className="text-[#aaa]">Chosen in the search on the form — who gets fundraising credit.</span>
+          <span className="block font-medium text-[#8ab4d8]">Who pays</span>
+          <span className="text-[#aaa]">Your name &amp; email (often a parent).</span>
+          <span className="mt-2 block font-medium text-[#C8A94A]">Who gets credit</span>
+          <span className="text-[#aaa]">Pick a wrestler in search — or NC United for the general fund.</span>
         </p>
         <div className="mx-auto mt-5 w-full max-w-[240px]">
           <div className="relative aspect-square overflow-hidden rounded border border-[#333] bg-[#0a0a0a]">
@@ -37,19 +37,14 @@ export function DonationSection() {
         </div>
         <p className="mx-auto mt-5 max-w-md text-sm text-[#999]">
           <span className="block text-[#bbb]">
-            <strong className="text-[#C8A94A]">Team NC</strong> — 10K team race · Sunday, May 3 · Fayetteville.
+            <strong className="text-[#C8A94A]">Race</strong> — pick your Spartan distance; credit one wrestler in search.
           </span>
-          <span className="mt-2 block">
-          <strong className="text-[#ccc]">Race with us</strong> — Super 10K with Team NC (you or a friend); search to
-          credit one wrestler.
-            <br />
-            <strong className="text-[#ccc]">Give</strong> — gift only; then <strong className="text-[#999]">a wrestler</strong> or{" "}
-            <strong className="text-[#999]">NC United</strong> (general).
-            <br />
-            <span className="text-[#777]">
-              <strong className="text-[#999]">Race with us:</strong> every runner gets an NC United tee (size &amp; ship on
-              the form). <strong className="text-[#999]">Give only (no race):</strong> $100+ includes the tee.
-            </span>
+          <span className="mt-2 block text-[#aaa]">
+            <strong className="text-[#ccc]">Not racing</strong> — sponsor a wrestler or give to NC United.{" "}
+            <strong className="text-white">Any amount from $5</strong> counts.
+          </span>
+          <span className="mt-2 block text-[#777]">
+            Runners get a team tee (size &amp; ship on the form). No race, $100+ also qualifies for a tee while supplies last.
           </span>
         </p>
         <p className="mt-3">
@@ -57,7 +52,7 @@ export function DonationSection() {
             href="/spartan?mission=1#spartan-checkout"
             className="inline-flex min-h-[44px] items-center justify-center text-sm font-medium text-[#C8A94A] underline-offset-2 hover:underline"
           >
-            No race — donate (NC United or a wrestler)
+            Skip to not racing — wrestler or NC United
           </HardLink>
         </p>
 

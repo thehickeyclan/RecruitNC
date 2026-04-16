@@ -270,11 +270,11 @@ export function SpartanDonateForm() {
       return
     }
     if (flow === null) {
-      setError("Choose Race with us or Give.")
+      setError("Choose Race with us or Not racing.")
       return
     }
     if (flow === "donate" && donateMode === null) {
-      setError("Choose wrestler or NC United.")
+      setError("Choose a wrestler to sponsor or NC United (general fund).")
       return
     }
     if (needsAthleteCode && !hasAthleteCredit) {
@@ -396,15 +396,15 @@ export function SpartanDonateForm() {
                 : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
             }`}
           >
-            Give
+            Not racing
           </button>
         </div>
         <p className="mt-2 text-[11px] leading-snug text-[#666]">
-          <strong className="text-[#888]">Race with us</strong> — pick your Spartan distance (Team NC centers on the{" "}
-          <strong className="text-[#ccc]">Super 10K</strong>); search below to credit one wrestler.
+          <strong className="text-[#888]">Race with us</strong> — choose any Spartan distance below; credit one wrestler in
+          search.
           <br />
-          <strong className="text-[#888]">Give</strong> — no race; then <strong className="text-[#777]">a wrestler</strong> or{" "}
-          <strong className="text-[#777]">NC United</strong>.
+          <strong className="text-[#888]">Not racing</strong> — sponsor a wrestler or give to NC United.{" "}
+          <strong className="text-[#aaa]">Any amount from $5.</strong>
         </p>
         <p className="mt-3 rounded border border-[#C8A94A]/35 bg-[#1a170d] px-3 py-2.5 text-xs leading-snug text-[#ccc] sm:text-[11px]">
           <strong className="text-[#C8A94A]">More than one wrestler?</strong> Each payment credits{" "}
@@ -416,7 +416,7 @@ export function SpartanDonateForm() {
 
       {flow === "donate" && (
         <div className="mt-5 rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Your gift goes to</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Not racing — send support to</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -427,7 +427,7 @@ export function SpartanDonateForm() {
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
               }`}
             >
-              A wrestler
+              Sponsor a wrestler
             </button>
             <button
               type="button"
@@ -438,10 +438,10 @@ export function SpartanDonateForm() {
                   : "border-[#444] bg-[#0A0A0A] text-[#ccc] hover:border-[#666]"
               }`}
             >
-              NC United
+              NC United (general)
             </button>
           </div>
-          <p className="mt-2 text-[11px] text-[#666]">Travel, ops, all teams — or one wrestler.</p>
+          <p className="mt-2 text-[11px] text-[#666]">Every amount helps — minimum $5 at checkout.</p>
         </div>
       )}
 
@@ -450,9 +450,9 @@ export function SpartanDonateForm() {
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
             <p className="mt-2 text-[12px] leading-relaxed text-[#aaa]">
-              <strong className="text-white">Team NC</strong> is on the <strong className="text-[#C8A94A]">Super 10K</strong>{" "}
-              (May 3). Choose any distance below — suggested gift is ballpark vs Spartan&apos;s &quot;from&quot; pricing; change
-              the amount if you like.
+              Choose the <strong className="text-white">Spartan distance</strong> you&apos;re registering for (Team NC&apos;s
+              crew race is the Super 10K on May 3). Suggested amounts are ballparks — change the number to match what you
+              need.
             </p>
           </div>
           <div>

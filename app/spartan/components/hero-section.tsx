@@ -41,15 +41,15 @@ export function HeroSection() {
             className="mb-2 font-[family-name:var(--font-barlow-spartan)] text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--spartan-gold)]"
             style={{ animationDelay: "0ms" }}
           >
-            Team NC · Super 10K team race
+            Team NC · Spartan · Fayetteville
           </p>
           <p className="mx-auto mb-4 max-w-md text-[15px] font-semibold leading-snug text-white sm:text-base">
-            Sunday, May 3, 2026 · Fayetteville, NC
+            Weekend May 2–3, 2026 · Fayetteville, NC
           </p>
           <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
           <p className="mx-auto mt-4 max-w-md text-[13px] leading-relaxed text-neutral-300">
-            <span className="text-[var(--spartan-gold)]">Come race with us</span> — Team NC on the{" "}
-            <span className="text-[var(--spartan-gold)]">Super 10K</span>, Sunday May 3. Same day for the whole crew.
+            <span className="text-[var(--spartan-gold)]">Come race with us</span> — pick any Spartan distance that weekend
+            (Sprint to Ultra and more). Team NC lines up together — details when you check out below.
           </p>
         </div>
 
@@ -68,12 +68,9 @@ export function HeroSection() {
         </h1>
 
         <p className="mb-9 max-w-lg text-[17px] leading-relaxed text-neutral-300">
-          <strong className="text-neutral-200">Race</strong> with Team NC on{" "}
-          <strong className="text-neutral-200">May 3</strong>, <strong className="text-neutral-200">align</strong> your gift
-          with someone who is—or <strong className="text-neutral-200">fund a wrestler&apos;s training</strong> by{" "}
-          <strong className="text-neutral-200">searching their name</strong> and selecting them at checkout. They don&apos;t
-          have to run Spartan for your gift to count toward them. Either way,{" "}
-          <strong className="text-neutral-200">100%</strong> fuels NC athletes this summer.
+          <strong className="text-neutral-200">Racing?</strong> Choose your distance and tie the gift to a wrestler at
+          checkout. <strong className="text-neutral-200">Not racing?</strong> Sponsor a wrestler or give to NC United —{" "}
+          <strong className="text-neutral-200">any amount from $5</strong> helps. Same secure form below.
         </p>
 
         <div className="flex w-full max-w-lg flex-col items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
@@ -87,7 +84,7 @@ export function HeroSection() {
             href="/spartan?flow=donate#spartan-checkout"
             className="inline-flex min-h-[52px] items-center justify-center rounded-sm border border-white/40 bg-white/[0.03] px-8 font-[family-name:var(--font-barlow-spartan)] text-lg font-bold uppercase tracking-[0.08em] text-white transition-colors hover:border-white hover:bg-white/[0.06]"
           >
-            Give
+            Not racing
           </HardLink>
         </div>
         <p className="mt-3 text-center">
@@ -97,8 +94,8 @@ export function HeroSection() {
         </p>
 
         <p className="mt-6 max-w-lg text-[11px] leading-relaxed tracking-[0.04em] text-neutral-500">
-          Tax-deductible gifts to NC United (501(c)(3)). On the course or not—every gift supports NC wrestling. Spartan
-          sends race entry codes only to people registering for the Super 10K.
+          Tax-deductible gifts to NC United (501(c)(3)). Every amount counts. Race entry codes come from Spartan after NC
+          United completes their partner steps — timing varies by distance.
         </p>
       </div>
     </section>
