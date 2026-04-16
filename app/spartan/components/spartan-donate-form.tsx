@@ -432,6 +432,23 @@ export function SpartanDonateForm() {
         </p>
       </div>
 
+      <div className="mx-auto mt-6 w-full max-w-[240px] text-center">
+        <div className="relative aspect-square overflow-hidden rounded border border-[#333] bg-[#0a0a0a]">
+          <Image
+            src="/images/spartan-nc-united-tee.png"
+            alt="2026 Fayetteville team tee: black shirt, NC mark and Spartan helmet on front; back reads Strength in Unity, Fayetteville May 2026"
+            fill
+            sizes="240px"
+            className="object-contain object-center"
+          />
+        </div>
+        <p className="mt-2 text-center text-[10px] text-[#666]">Artwork may vary; while supplies last.</p>
+      </div>
+      <p className="mx-auto mt-4 max-w-md text-center text-sm text-[#888]">
+        Team tee: included for race signups; $100+ gifts without a race also qualify (while supplies last). Size and ship on
+        this form.
+      </p>
+
       {flow === "race" && (
         <div className="mt-5 space-y-3 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
           <div>

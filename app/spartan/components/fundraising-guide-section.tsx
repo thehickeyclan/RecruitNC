@@ -33,8 +33,7 @@ export function FundraisingGuideSection() {
           Common questions
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-[#999]">
-          Racing: any distance in the dropdown + wrestler search. Sponsoring: $5+ to one athlete. Donating: $5+ to the NC United
-          training fund. Same form above.
+          One topic at a time — the checkout form is still where you actually give.
         </p>
 
         <ul className="mt-10 space-y-8 text-[#bbb]">

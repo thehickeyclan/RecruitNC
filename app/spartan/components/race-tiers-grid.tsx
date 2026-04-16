@@ -25,11 +25,6 @@ export function RaceTiersGrid() {
         <div className="mx-auto mt-12 max-w-md">
           <RaceTierCard tier={SPARTAN_SUPER_10K} />
         </div>
-
-        <p className="mx-auto mt-10 max-w-3xl text-center text-[12px] leading-relaxed text-[#666] md:text-sm">
-          After checkout, NC United passes names to Spartan; you&apos;ll get email to finish Spartan registration — usually within
-          a few business days.
-        </p>
       </div>
     </section>
   )

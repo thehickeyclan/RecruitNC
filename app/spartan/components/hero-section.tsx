@@ -79,8 +79,7 @@ export function HeroSection() {
         </p>
 
         <p className="mt-4 max-w-lg text-[11px] leading-relaxed tracking-[0.03em] text-neutral-500">
-          501(c)(3) tax-deductible. NC United emails your receipt. If you&apos;re running, Spartan sends your registration steps
-          by email after checkout — same flow for everyone.
+          501(c)(3) tax-deductible — NC United emails your receipt after payment.
         </p>
       </div>
     </section>

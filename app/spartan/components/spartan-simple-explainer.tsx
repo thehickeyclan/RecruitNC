@@ -1,4 +1,3 @@
-/** Mobile-first: sets expectations before checkout — one mental model, no duplicate “how to” below. */
 export function SpartanSimpleExplainer() {
   return (
     <section className="border-b border-[#2A2A2A] bg-black px-4 py-10 md:py-12">
@@ -20,9 +19,6 @@ export function SpartanSimpleExplainer() {
         <p className="mt-4 font-[family-name:var(--font-barlow-spartan)] text-lg font-semibold text-white">That&apos;s it.</p>
         <p className="mt-6 rounded-md border border-[var(--spartan-gold)]/40 bg-[#1a170d]/80 px-4 py-3 text-sm leading-snug text-[#e8dcb8]">
           You do <strong className="text-white">not</strong> need to run a race to support an athlete.
-        </p>
-        <p className="mt-5 text-[13px] leading-snug text-neutral-500">
-          May 2–3 · Fayetteville, NC · Team NC lines up on the <strong className="text-neutral-400">Super 10K</strong> Sun May 3
         </p>
       </div>
     </section>

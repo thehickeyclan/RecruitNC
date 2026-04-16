@@ -8,7 +8,7 @@ export function HowItWorksSection() {
     {
       n: "02",
       title: "Who gets credit",
-      body: "Racing or sponsoring? Search the wrestler — one athlete per checkout. Two kids? Check out twice.",
+      body: "Racing or sponsoring? Search the wrestler — one athlete per checkout.",
     },
     {
       n: "03",
@@ -24,7 +24,7 @@ export function HowItWorksSection() {
           What happens next
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-sm text-[#888]">
-          Receipt, wrestler credit, and race codes — in plain language.
+          After you complete checkout above.
         </p>
         <div className="mt-12 grid gap-8 md:grid-cols-3">
           {steps.map((s) => (

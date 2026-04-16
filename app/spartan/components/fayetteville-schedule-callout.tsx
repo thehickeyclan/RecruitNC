@@ -6,21 +6,18 @@ export function FayettevilleScheduleCallout() {
         Fayetteville weekend · Team NC
       </p>
       <p className="mt-2 text-sm font-medium leading-relaxed text-white">
-        <strong>Team NC</strong> lines up together on the <strong className="text-[#CC0000]">Super 10K</strong>{" "}
-        <strong>Sunday, May 3, 2026</strong> at <strong>McCormick Farms · Fayetteville, NC</strong>.{" "}
-        <strong className="text-[#ccc]">Other Spartan distances</strong> run the same weekend — pick the race you&apos;re
-        joining in the menu below. After your gift, <strong className="text-[#ccc]">NC United submits our racer list and
-        emails to Spartan</strong>; <strong className="text-[#ccc]">Spartan emails registration codes</strong> to those
-        addresses. You complete registration with your code — not by hunting heats on your own beforehand.{" "}
+        <strong>Team NC</strong> on the <strong className="text-[#CC0000]">Super 10K</strong>{" "}
+        <strong>Sunday, May 3, 2026</strong> · <strong>McCormick Farms · Fayetteville, NC</strong>. Other Spartan distances
+        run the same weekend — choose distance in <strong className="text-[#ccc]">checkout</strong> if you&apos;re racing.
+        After you pay, NC United passes names to Spartan; you get email to finish Spartan registration.{" "}
         <a
           href="https://www.spartan.com/en/races/fayetteville-north-carolina?index=0"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#C8A94A] underline-offset-2 hover:underline"
         >
-          Event info on Spartan.com
-        </a>{" "}
-        is optional context only.
+          Full schedule on Spartan.com
+        </a>
       </p>
     </div>
   )
