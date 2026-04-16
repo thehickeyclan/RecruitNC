@@ -1,9 +1,25 @@
 /**
  * NCHSAA high school classification (1A–8A).
- * Canonical sources: school_classifications DB table, or static classificationData.
+ * Canonical sources: school_classifications DB table, or static overview data.
  */
 
+import { nchsaaClassificationOverviewData } from "./nchsaa-classification-overview-data"
+
 export const VALID_CLASSIFICATIONS = ["1A", "2A", "3A", "4A", "5A", "6A", "7A", "8A", "1A/2A"] as const
+
+/**
+ * Static fallback school display names by classification (from NCHSAA overview data).
+ * Used when `school_classifications` returns no rows.
+ */
+export function getSchoolsByClassification(classification: string): string[] {
+  const raw = classification.trim().toUpperCase().replace(/\s/g, "")
+  const m = raw.match(/^(\d+)A$/)
+  if (!m) return []
+  const key = `${m[1]}A` as keyof typeof nchsaaClassificationOverviewData
+  const schools = nchsaaClassificationOverviewData[key]?.schools
+  if (!schools?.length) return []
+  return [...schools]
+}
 
 /**
  * Find a school's classification from school_classifications table (authoritative DB source).

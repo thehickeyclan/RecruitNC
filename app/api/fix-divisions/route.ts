@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
-import { normalizeDivision } from "@/lib/athlete-utils"
+import { normalizeDivision } from "@/lib/division-normalize"
 
 export async function GET() {
   try {
@@ -18,7 +18,7 @@ export async function GET() {
 
     // Process each athlete and normalize the division
     for (const athlete of athletes) {
-      const normalizedDivision = await normalizeDivision(athlete.division)
+      const normalizedDivision = normalizeDivision(athlete.division)
 
       // Only update if the normalized division is different
       if (normalizedDivision !== athlete.division) {

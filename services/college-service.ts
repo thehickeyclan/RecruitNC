@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase"
 import { mockColleges } from "@/lib/mock-data"
 import { normalizeCollegeName } from "@/lib/college-utils"
-import { normalizeDivision } from "@/lib/athlete-utils"
+import { normalizeDivision } from "@/lib/division-normalize"
 
 export interface College {
   name: string
