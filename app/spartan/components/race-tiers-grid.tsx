@@ -12,11 +12,12 @@ export function RaceTiersGrid() {
             For those racing with Team NC
           </p>
           <h2 className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-[clamp(1.75rem,5vw,2.75rem)] font-extrabold uppercase leading-tight tracking-tight text-white">
-            Super 10K &amp; Fayetteville
+            Fayetteville &amp; distances
           </h2>
           <p className="mt-4 text-base text-[#a3a3a3]">
-            Reference only — <strong className="text-[#ccc]">register, sponsor, or donate in checkout above.</strong> This is the
-            crew race &amp; venue context.
+            Reference only — <strong className="text-[#ccc]">register, sponsor, or donate in checkout above.</strong> Card
+            below shows the <strong className="text-[#ccc]">suggested default</strong> (Super 10K); any distance can be selected
+            there.
           </p>
         </div>
 

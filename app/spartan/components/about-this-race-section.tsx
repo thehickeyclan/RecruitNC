@@ -13,8 +13,8 @@ export function AboutThisRaceSection() {
           Don&apos;t underestimate McCormick Farms in Fayetteville – a staff favorite Spartan venue renowned for its
           challenging obstacle course racing. With over 1000 acres of demanding terrain, including dense forests, a
           200-foot deep quarry, and steep riverbanks, this course will test your technical skills and demand you embrace
-          the challenge. <strong className="text-[#ccc]">Team NC is here for the Super 10K</strong> — Spartan lists other
-          distances the same weekend if you browse their full schedule.
+          the challenge. <strong className="text-[#ccc]">Many NC United athletes line up on the Super 10K Sunday</strong> —
+          Spartan lists every distance for the same weekend; pick what fits you.
         </p>
         <p className="mt-6">
           <a

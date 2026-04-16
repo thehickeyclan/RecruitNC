@@ -5,15 +5,19 @@ export function SpartanSimpleExplainer() {
         <h2 className="font-[family-name:var(--font-barlow-spartan)] text-xl font-bold uppercase tracking-tight text-white md:text-2xl">
           How it works
         </h2>
+        <p className="mt-3 text-[14px] leading-snug text-[#a8a8a8]">
+          Most supporters complete this in <strong className="text-neutral-200">under 60 seconds</strong>.
+        </p>
         <ul className="mt-5 list-none space-y-2.5 text-[15px] leading-relaxed text-neutral-300">
           <li>
-            <strong className="text-white">Pick one:</strong> Race · Sponsor an athlete · Donate
+            <strong className="text-white">Race</strong>, <strong className="text-white">sponsor one athlete</strong>, or{" "}
+            <strong className="text-white">donate to the training fund</strong> — the form walks you through it.
           </li>
           <li>
             <strong className="text-white">Enter the athlete&apos;s name at checkout</strong> (racing or sponsoring).
           </li>
           <li>
-            <strong className="text-white">That money goes toward their training.</strong>
+            <strong className="text-white">That money directly supports their training, travel, and competition.</strong>
           </li>
         </ul>
         <p className="mt-4 font-[family-name:var(--font-barlow-spartan)] text-lg font-semibold text-white">That&apos;s it.</p>

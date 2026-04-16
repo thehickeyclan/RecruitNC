@@ -21,9 +21,9 @@ const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.c
 export const metadata: Metadata = {
   title: "Team NC × Spartan — Fayetteville May 2–3, 2026 · Race or sponsor NC wrestling",
   description:
-    "Race any Spartan distance with Team NC, or sponsor a wrestler / give to NC United — tax-deductible 501(c)(3). Fayetteville weekend May 2–3, 2026.",
+    "Race any Spartan distance with Team NC, or sponsor a wrestler or donate to NC United — tax-deductible 501(c)(3). Fayetteville weekend May 2–3, 2026.",
   openGraph: {
-    title: "Team NC × Spartan — Fayetteville 2026 · Race or give",
+    title: "Team NC × Spartan — Fayetteville 2026 · Race, sponsor, or donate",
     description:
       "Spartan weekend in Fayetteville: run with Team NC or donate — every amount from $5 helps NC wrestling through NC United.",
     url: `${base}/spartan`,

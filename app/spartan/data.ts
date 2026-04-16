@@ -10,11 +10,11 @@ export const FAYETTEVILLE_SPARTAN_URL = "https://www.spartan.com/en/races/fayett
 export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
   {
     id: "super",
-    badge: "Team NC — our crew",
+    badge: "Super 10K — crew line-up",
     name: "Super 10K",
-    detail: "10K · ~25 obstacles — NC United team race (same day for the crew)",
+    detail: "10K · ~25 obstacles · lots of teammates on Sun May 3 (any distance is fine)",
     scheduleChip: "May 3",
-    dates: "Fayetteville weekend May 2–3, 2026 · Team NC on the Super 10K Sun May 3",
+    dates: "Fayetteville May 2–3, 2026 · Super 10K Sun May 3 (popular with NC United)",
     priceLabel: "~$155",
     suggestedGiftCents: 15_500,
     featured: true,
@@ -77,7 +77,7 @@ export const SPARTAN_RACE_TIERS: SpartanRaceTier[] = [
   },
 ]
 
-/** Form default — Super 10K is the Team NC race. */
+/** Form defaults to Super 10K; dropdown lists every Fayetteville distance. */
 export const DEFAULT_SPARTAN_RACE_TIER_ID: SpartanRaceTierId = "super"
 
 export const SPARTAN_SUPER_10K: SpartanRaceTier =
@@ -103,7 +103,7 @@ export function suggestedCentsForTier(id: SpartanRaceTierId | ""): number | null
   return row ? row.suggestedGiftCents : null
 }
 
-/** May 3, 2026 — 7:00 AM US Eastern (EDT) — Super 10K team race day for Team NC. */
+/** May 3, 2026 — 7:00 AM US Eastern (EDT) — many NC United athletes on the Super 10K wave. */
 export const SPARTAN_COUNTDOWN_ISO = "2026-05-03T11:00:00.000Z"
 
 export const NCU_EIN = "99-3757238"

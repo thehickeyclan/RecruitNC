@@ -38,7 +38,7 @@ export function SpartanDonateMissionCard() {
         Sponsoring or donating
       </p>
       <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
-        Sponsor a wrestler or give to the training fund
+        Sponsor a wrestler or donate to the training fund
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[#bbb]">
         501(c)(3). One wrestler or the general training fund — set it on the next screen.

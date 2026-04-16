@@ -13,9 +13,9 @@ export function SpartanAthleteRibbon() {
         You&apos;re here to support a teammate
       </p>
       <p className="mt-2 text-sm leading-snug text-[#ccc]">
-        Tap <strong className="text-white">Race with us</strong> or <strong className="text-white">Give</strong>, then on
+        Tap <strong className="text-white">Racing</strong> or <strong className="text-white">Sponsor / Donate</strong>, then on
         the checkout form <strong className="text-white">search for them by name</strong> and select them before you
-        pay—that&apos;s how your gift credits them.
+        pay—that&apos;s how your support credits them.
       </p>
     </div>
   )

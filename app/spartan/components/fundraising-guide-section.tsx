@@ -14,7 +14,7 @@ export function FundraisingGuideSection() {
     },
     {
       q: "Can I sign up for any race distance and still align to an athlete?",
-      a: "Yes. Pick any distance from the menu at checkout, then search and select the wrestler to credit. You can also give without racing — use Sponsoring (one athlete) or Donating (NC United fund only).",
+      a: "Yes. Pick any distance from the menu at checkout, then search and select the wrestler to credit. You can also sponsor or donate without racing — use Sponsoring (one athlete) or Donating (NC United fund only).",
     },
     {
       q: "Are gifts tax-deductible?",
@@ -33,7 +33,7 @@ export function FundraisingGuideSection() {
           Common questions
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-[#999]">
-          One topic at a time — the checkout form is still where you actually give.
+          One topic at a time — the checkout form is still where you pay.
         </p>
 
         <ul className="mt-10 space-y-8 text-[#bbb]">

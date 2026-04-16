@@ -6,10 +6,11 @@ export function FayettevilleScheduleCallout() {
         Fayetteville weekend · Team NC
       </p>
       <p className="mt-2 text-sm font-medium leading-relaxed text-white">
-        <strong>Team NC</strong> on the <strong className="text-[#CC0000]">Super 10K</strong>{" "}
-        <strong>Sunday, May 3, 2026</strong> · <strong>McCormick Farms · Fayetteville, NC</strong>. Other Spartan distances
-        run the same weekend — choose distance in <strong className="text-[#ccc]">checkout</strong> if you&apos;re racing.
-        After you pay, NC United passes names to Spartan; you get email to finish Spartan registration.{" "}
+        <strong>Fayetteville</strong> · <strong>May 2–3, 2026</strong> · <strong>McCormick Farms · Fayetteville, NC</strong>.
+        Many NC United athletes typically run the <strong className="text-[#CC0000]">Super 10K</strong>{" "}
+        <strong>Sunday, May 3</strong> — <strong className="text-[#ccc]">any Spartan distance</strong> that weekend is fine;
+        choose yours in <strong className="text-[#ccc]">checkout</strong>. After you pay, NC United passes names to Spartan;
+        you get email to finish Spartan registration.{" "}
         <a
           href="https://www.spartan.com/en/races/fayetteville-north-carolina?index=0"
           target="_blank"

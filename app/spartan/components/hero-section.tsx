@@ -74,7 +74,7 @@ export function HeroSection() {
 
         <p className="mb-2 text-center">
           <a href="#races" className="text-[12px] text-neutral-500 underline-offset-2 hover:text-neutral-300 hover:underline">
-            Super 10K &amp; course details
+            Race &amp; venue details
           </a>
         </p>
 

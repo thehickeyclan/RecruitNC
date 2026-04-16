@@ -372,7 +372,7 @@ export function SpartanDonateForm() {
       className="mx-auto mt-6 max-w-lg px-1 pb-[max(1rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
     >
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Choose how you want to support:</p>
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Pick how you want to support:</p>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1.5">
             <button
@@ -386,9 +386,10 @@ export function SpartanDonateForm() {
             >
               Racing
             </button>
-            <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              Any Spartan distance · <strong className="text-[#999]">credit a wrestler</strong> · amount is a{" "}
-              <strong className="text-[#999]">suggestion</strong>
+            <p className="text-[10px] leading-snug text-[#777] sm:min-h-[4.5rem]">
+              Sign up for a Spartan race and <strong className="text-[#999]">credit a wrestler</strong>. You&apos;ll receive
+              registration steps <strong className="text-[#999]">after checkout</strong> — not here. Amount is a{" "}
+              <strong className="text-[#999]">suggestion</strong>.
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -404,8 +405,8 @@ export function SpartanDonateForm() {
               Sponsoring
             </button>
             <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              <strong className="text-[#999]">One athlete</strong> · <strong className="text-[#C8A94A]">$5 minimum</strong> · any
-              amount
+              <strong className="text-[#999]">Sponsor one athlete</strong> · <strong className="text-[#C8A94A]">$5 minimum</strong>{" "}
+              · any amount
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -421,7 +422,7 @@ export function SpartanDonateForm() {
               Donating
             </button>
             <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              <strong className="text-[#999]">Training fund</strong> — not one wrestler ·{" "}
+              <strong className="text-[#999]">Donate to the training fund</strong> — not one wrestler ·{" "}
               <strong className="text-[#8ab4d8]">$5 minimum</strong>
             </p>
           </div>
@@ -454,15 +455,18 @@ export function SpartanDonateForm() {
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
             <p className="mt-2 text-[12px] leading-relaxed text-[#aaa]">
-              Use the menu to pick <strong className="text-white">any Spartan distance</strong> you&apos;re signing up for
-              this weekend (Sprint through Ultra — all count). Team NC groups on the <strong className="text-white">Super 10K</strong>{" "}
-              May 3. Amount is a <strong className="text-white">suggested</strong> gift — change it to match what you need.
+              Pick <strong className="text-white">any Fayetteville Spartan distance</strong> below — Sprint through Ultra all
+              count. Amount is a <strong className="text-white">suggested</strong> donation; change it to what you need.
             </p>
           </div>
           <div>
             <label htmlFor="spartan-race-tier" className="text-[11px] text-[#888]">
               Which race are you signing up for?
             </label>
+            <p className="mt-1.5 text-[10px] leading-snug text-[#777]">
+              <strong className="text-[#999]">Super 10K</strong> is the default — many NC United athletes line up on{" "}
+              <strong className="text-[#999]">Sunday, May 3</strong>. You can select any race in the menu.
+            </p>
             <select
               id="spartan-race-tier"
               value={tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID}
@@ -473,7 +477,6 @@ export function SpartanDonateForm() {
                 <option key={t.id} value={t.id}>
                   {t.featured ? "★ " : ""}
                   {t.name} · {t.priceLabel} suggested · {t.scheduleChip}
-                  {t.featured ? " — Team NC" : ""}
                 </option>
               ))}
             </select>
@@ -606,7 +609,7 @@ export function SpartanDonateForm() {
                     <HardLink href="/athletes" className="text-[#C8A94A] hover:underline">
                       directory
                     </HardLink>
-                    . You can still give: use the box below or switch to a general gift.
+                    . You can still sponsor or donate: use the box below or switch to the training fund.
                   </p>
                 )}
                 {athleteMenuOpen && athleteHits.length > 0 && (
@@ -658,7 +661,7 @@ export function SpartanDonateForm() {
                     className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
                   />
                   <p className="mt-2 text-[11px] text-[#666]">
-                    Or give to{" "}
+                    Or donate to{" "}
                     <button
                       type="button"
                       className="font-medium text-[#C8A94A] underline underline-offset-2 hover:text-[#dfd08a]"

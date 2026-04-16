@@ -45,7 +45,7 @@ export function SupporterActivitySection() {
                   <th className="px-3 py-3">Amount</th>
                   <th className="px-3 py-3">Donor</th>
                   <th className="px-3 py-3">Runner</th>
-                  <th className="px-3 py-3">Race / give</th>
+                  <th className="px-3 py-3">Race / support</th>
                   <th className="px-3 py-3">Athlete</th>
                 </tr>
               </thead>
@@ -66,7 +66,7 @@ export function SupporterActivitySection() {
                           Race
                         </span>
                       ) : (
-                        <span className="rounded bg-white/10 px-2 py-0.5 text-[11px] text-[#aaa]">Give</span>
+                        <span className="rounded bg-white/10 px-2 py-0.5 text-[11px] text-[#aaa]">Support</span>
                       )}
                     </td>
                     <td className="max-w-[220px] px-3 py-2.5 text-sm text-[#ddd]">{row.creditLabel ?? "—"}</td>
