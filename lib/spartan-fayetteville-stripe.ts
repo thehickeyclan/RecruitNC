@@ -22,6 +22,8 @@ export type SpartanFayettevilleDonation = {
   athleteDisplayName: string | null
   /** When not in directory — metadata manual_credit_name */
   manualCreditName: string | null
+  /** Optional: who is running the race if different from donor (metadata race_participant_name) */
+  raceParticipantName: string | null
   attribution: "athlete" | "general_nc_united" | "manual_name"
   tierPreference: string
 }
@@ -88,6 +90,10 @@ export async function listSpartanFayettevilleDonations(
         typeof m.athlete_display_name === "string" && m.athlete_display_name.trim()
           ? m.athlete_display_name.trim().slice(0, 120)
           : null
+      const raceParticipantName =
+        typeof m.race_participant_name === "string" && m.race_participant_name.trim()
+          ? m.race_participant_name.trim().slice(0, 120)
+          : null
 
       let attr: SpartanFayettevilleDonation["attribution"]
       if (m.fundraising_attribution === "manual_name") {
@@ -117,6 +123,7 @@ export async function listSpartanFayettevilleDonations(
         athleteCode,
         athleteDisplayName,
         manualCreditName,
+        raceParticipantName,
         attribution: attr,
         tierPreference: typeof m.tier_preference === "string" ? m.tier_preference : "",
       })

@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
     athleteDisplayName?: string
     /** If false, public supporter list shows "Anonymous" */
     donorListPublic?: boolean
+    /** Who is running the race if not the donor (race path); stored in Stripe metadata */
+    raceParticipantName?: string
   } = {}
   try {
     body = await request.json()
@@ -54,6 +56,8 @@ export async function POST(request: NextRequest) {
   const athleteDisplayName =
     typeof body.athleteDisplayName === "string" ? body.athleteDisplayName.trim().slice(0, 120) : ""
   const donorListPublic = body.donorListPublic !== false
+  const raceParticipantName =
+    typeof body.raceParticipantName === "string" ? body.raceParticipantName.trim().slice(0, 120) : ""
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
@@ -163,6 +167,9 @@ export async function POST(request: NextRequest) {
         donor_list_public: donorListPublic ? "true" : "false",
         race_entry_requested: raceEntryRequested ? "true" : "false",
         fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",
+        ...(raceEntryRequested && raceParticipantName
+          ? { race_participant_name: raceParticipantName }
+          : {}),
         tee_100_eligible: teeEligible ? "yes" : "no",
         ...(teeEligible
           ? {

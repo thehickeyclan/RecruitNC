@@ -16,6 +16,8 @@ export type SpartanPublicEntry = {
   manualCreditName?: string | null
   creditLabel?: string | null
   attribution: string
+  /** Who is running the race when different from donor (race gifts only) */
+  raceParticipantName?: string | null
 }
 
 export type SpartanByAthlete = {

@@ -38,12 +38,13 @@ export function SupporterActivitySection() {
           <p className="mt-10 text-center text-sm text-[#666]">Paid gifts will appear here as they come in.</p>
         ) : (
           <div className="mt-10 overflow-x-auto rounded border border-[#2A2A2A]">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[800px] text-left text-sm">
               <thead>
                 <tr className="border-b border-[#2A2A2A] bg-[#141414] text-[11px] font-semibold uppercase tracking-wider text-[#888]">
                   <th className="px-3 py-3">Date</th>
                   <th className="px-3 py-3">Amount</th>
-                  <th className="px-3 py-3">Name</th>
+                  <th className="px-3 py-3">Donor</th>
+                  <th className="px-3 py-3">Runner</th>
                   <th className="px-3 py-3">Race / give</th>
                   <th className="px-3 py-3">Athlete</th>
                 </tr>
@@ -55,7 +56,10 @@ export function SupporterActivitySection() {
                       {new Date(row.createdIso).toLocaleString()}
                     </td>
                     <td className="px-3 py-2.5 font-semibold tabular-nums text-white">{formatUsd(row.amountCents)}</td>
-                    <td className="max-w-[180px] truncate px-3 py-2.5">{row.displayName}</td>
+                    <td className="max-w-[160px] truncate px-3 py-2.5">{row.displayName}</td>
+                    <td className="max-w-[140px] truncate px-3 py-2.5 text-[#aaa]">
+                      {row.raceParticipantName?.trim() ? row.raceParticipantName : "—"}
+                    </td>
                     <td className="px-3 py-2.5">
                       {row.raceSignup ? (
                         <span className="rounded bg-[#CC0000]/25 px-2 py-0.5 text-[11px] font-medium text-[#f0a0a0]">

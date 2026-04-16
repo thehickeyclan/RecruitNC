@@ -49,6 +49,8 @@ export function SpartanDonateForm() {
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
+  /** Race path: optional — who is actually running if not the donor (shown on public supporter table) */
+  const [raceParticipantName, setRaceParticipantName] = useState("")
   /** Public supporter list shows name; false = anonymous on /api/spartan/supporters */
   const [donorListPublic, setDonorListPublic] = useState(true)
   const [fundraisingCode, setFundraisingCode] = useState("")
@@ -327,6 +329,9 @@ export function SpartanDonateForm() {
                 shipCountry: shipCountry.trim() || "US",
               }
             : {}),
+          ...(flow === "race" && raceParticipantName.trim()
+            ? { raceParticipantName: raceParticipantName.trim() }
+            : {}),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -521,6 +526,26 @@ export function SpartanDonateForm() {
                 className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
               />
             </div>
+            {flow === "race" && (
+              <div>
+                <label htmlFor="spartan-race-runner" className="text-sm font-medium text-[#ccc]">
+                  Runner / race participant <span className="font-normal text-[#666]">(optional)</span>
+                </label>
+                <p className="mt-0.5 text-[11px] leading-snug text-[#888]">
+                  If someone other than the donor is racing (e.g. parent pays, child runs), enter their name. Shown on
+                  the public list; donor name above stays on the tax receipt.
+                </p>
+                <input
+                  id="spartan-race-runner"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="e.g. Roland Owen"
+                  value={raceParticipantName}
+                  onChange={(e) => setRaceParticipantName(e.target.value)}
+                  className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
+                />
+              </div>
+            )}
             {flow === "donate" && (
               <div className="space-y-4 border-t border-[#2a3d4f] pt-4">
                 <label className="flex min-h-[44px] cursor-pointer items-start gap-3 text-left text-[13px] leading-relaxed text-[#999] sm:text-[13px]">

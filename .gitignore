@@ -28,3 +28,10 @@ next-env.d.ts
 
 # Local bulk SQL output (can be large; regenerate with scripts/import-nchsaa-2026-placers-from-json.js)
 scripts/generated-nchsaa-2026-placers-insert.sql
+
+# Full LegacyNC tree (local reference only; ~600MB+ — keep out of git)
+legacy-nc/
+
+# Accidental backup files next to ported Data Dawg route
+app/api/ai/chat/route.ts.bak
+app/api/ai/chat/route.ts.bak2
