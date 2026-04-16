@@ -12,6 +12,8 @@ import { callChat, hasChatKey, getChatProvider } from "@/lib/ai-chat"
 import { normalizeNhscaPlacementFromRow } from "@/lib/recruitnc-wrestling-achievements"
 import { applyRecruitNcDataDawgAnswerPostProcess } from "@/lib/recruitnc-data-dawg-postprocess"
 
+export const maxDuration = 120
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 // Lightweight, internal FAQ for NHSCA High School Nationals so we can answer
@@ -11686,13 +11688,14 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
         })
         // CRITICAL: Always return error response for school queries - never fall through to LLM
         schoolQueryHandled = true
+        // 200 so clients and monitors treat this as a handled, user-visible message (not a blind 500).
         return NextResponse.json({
           answer: `I encountered an error while looking up information for ${schoolName}. Please try again with a more specific question like "${schoolName} All-Americans" or "${schoolName} state champions".`,
           error: err?.message || "Unknown error",
           results: [],
           count: 0,
           messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        }, { status: 500 })
+        })
       } finally {
         // Double-check: if school was detected but handler didn't return, log critical error
         if (effectiveDetectedSchool && !schoolQueryHandled && !shouldSkipSchoolQuery && !searchForCollege) {
@@ -11715,7 +11718,7 @@ CRITICAL: Data Dawg can answer questions about ANY of these data sources, regard
           results: [],
           count: 0,
           messageId: messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        }, { status: 500 })
+        })
       }
     }
     

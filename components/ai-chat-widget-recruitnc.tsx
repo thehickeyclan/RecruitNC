@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { MessageCircle, X, Send, Loader2, ThumbsUp, ThumbsDown, Mic, MicOff, Home } from "lucide-react"
+import { MessageCircle, X, Send, Loader2, Mic, MicOff, Home } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatDataDawgMessage } from "@/lib/data-dawg-render-links"
 
@@ -19,7 +19,6 @@ interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  feedback?: "positive" | "negative" | null
   messageId?: string
   queryResults?: any[]
   queryType?: string
@@ -53,6 +52,18 @@ const getSuggestedPrompts = (pathname: string): string[] => {
 
 const DATA_DAWG_IMAGE_URL =
   "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/mrF_BS_MLNADT9HWhny2B-Data%20Dawg%203.png"
+
+const DATA_DAWG_LEGACY_CHAT_API = "/api/ai/chat"
+const DATA_DAWG_AGENT_V2_API = "/api/ai/data-dawg-agent"
+
+/** Default: tool-calling agent v2. Set NEXT_PUBLIC_DATA_DAWG_USE_LEGACY_CHAT=true to use the monolithic /api/ai/chat. Feedback stays on legacy. */
+const DATA_DAWG_USE_LEGACY =
+  typeof process !== "undefined" &&
+  process.env.NEXT_PUBLIC_DATA_DAWG_USE_LEGACY_CHAT === "true"
+
+const DATA_DAWG_MESSAGE_API = DATA_DAWG_USE_LEGACY
+  ? DATA_DAWG_LEGACY_CHAT_API
+  : DATA_DAWG_AGENT_V2_API
 
 export function AIChatWidget() {
   const pathname = usePathname()
@@ -201,23 +212,60 @@ export function AIChatWidget() {
         queryType: m.queryType || null
       }))
 
-      const response = await fetch("/api/ai/chat", {
+      const chatPayload = {
+        message: userMessage.content,
+        project: project,
+        conversationHistory: conversationHistory,
+      }
+
+      let response = await fetch(DATA_DAWG_MESSAGE_API, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          message: userMessage.content,
-          project: project,
-          conversationHistory: conversationHistory,
-        }),
+        body: JSON.stringify(chatPayload),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to get response")
+      let rawText = await response.text()
+      let data: {
+        answer?: string
+        messageId?: string
+        results?: unknown[]
+        queryType?: string
+        error?: string
+      } = {}
+      try {
+        data = rawText ? (JSON.parse(rawText) as typeof data) : {}
+      } catch {
+        data = {}
       }
 
-      const data = await response.json()
+      // v2 requires OPENAI_API_KEY; if missing, server returns data_dawg_agent_v2_config — fall back to legacy once.
+      if (
+        !DATA_DAWG_USE_LEGACY &&
+        data.queryType === "data_dawg_agent_v2_config" &&
+        typeof data.answer === "string"
+      ) {
+        response = await fetch(DATA_DAWG_LEGACY_CHAT_API, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(chatPayload),
+        })
+        rawText = await response.text()
+        try {
+          data = rawText ? (JSON.parse(rawText) as typeof data) : {}
+        } catch {
+          data = {}
+        }
+      }
+
+      // Some API paths incorrectly return 4xx/5xx while still sending a user-facing `answer`.
+      // Never discard that — show it instead of the generic "Sorry, I encountered an error."
+      if (!response.ok && !(typeof data.answer === "string" && data.answer.trim().length > 0)) {
+        throw new Error(data.error || "Failed to get response")
+      }
 
       const assistantMessage: Message = {
         role: "assistant",
@@ -254,36 +302,6 @@ export function AIChatWidget() {
 
   const handleSuggestionClick = (prompt: string) => {
     void sendMessage(prompt)
-  }
-
-  const handleFeedback = async (messageId: string, feedback: "positive" | "negative") => {
-    // Update local state
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.messageId === messageId ? { ...msg, feedback } : msg
-      )
-    )
-
-    // Send feedback to API (non-blocking)
-    try {
-      const project = detectProject()
-      await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: "", // Empty message indicates this is a feedback submission
-          project: project,
-          feedback: feedback,
-          messageId: messageId,
-        }),
-      }).catch(() => {
-        // Silently fail - feedback is nice to have but not critical
-      })
-    } catch (e) {
-      // Ignore errors
-    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -641,37 +659,6 @@ export function AIChatWidget() {
                                 className="whitespace-pre-wrap [&_a]:text-blue-600 [&_a]:hover:text-blue-800 [&_a]:underline"
                                 dangerouslySetInnerHTML={{ __html: formatDataDawgMessage(message.content) }}
                               />
-                            )}
-                            {!isUser && message.messageId && (
-                              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200">
-                                <span className="text-[10px] text-slate-500">Helpful?</span>
-                                <button
-                                  onClick={() => handleFeedback(message.messageId!, "positive")}
-                                  className={cn(
-                                    "p-1 rounded hover:bg-slate-200 transition-colors",
-                                    message.feedback === "positive" && "bg-green-100"
-                                  )}
-                                  aria-label="Thumbs up"
-                                >
-                                  <ThumbsUp className={cn(
-                                    "h-3 w-3",
-                                    message.feedback === "positive" ? "text-green-600" : "text-slate-400"
-                                  )} />
-                                </button>
-                                <button
-                                  onClick={() => handleFeedback(message.messageId!, "negative")}
-                                  className={cn(
-                                    "p-1 rounded hover:bg-slate-200 transition-colors",
-                                    message.feedback === "negative" && "bg-red-100"
-                                  )}
-                                  aria-label="Thumbs down"
-                                >
-                                  <ThumbsDown className={cn(
-                                    "h-3 w-3",
-                                    message.feedback === "negative" ? "text-red-600" : "text-slate-400"
-                                  )} />
-                                </button>
-                              </div>
                             )}
                             <p className="text-[10px] opacity-60 mt-1">
                               {message.timestamp.toLocaleTimeString([], {
