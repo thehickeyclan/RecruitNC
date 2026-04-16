@@ -25,19 +25,24 @@ const KNOWN_ATHLETE_COLUMNS = new Set([
 
 /**
  * Get the set of column names that exist on the athletes table.
- * Queries the DB first (one row); if table is empty, returns a known allowlist so we never send invalid columns.
+ * Merges keys from several rows so we don’t miss `firstName` / `lastName` when one sample row omitted null keys
+ * (Supabase/PostgREST sometimes omits null fields — Data Dawg then picked wrong column names and every search returned empty).
  */
 export async function getAthletesColumnNames(
   adminSupabase: SupabaseClient
 ): Promise<Set<string>> {
-  const { data: sample } = await adminSupabase
-    .from("athletes")
-    .select("*")
-    .limit(1)
-    .maybeSingle()
+  const { data: rows } = await adminSupabase.from("athletes").select("*").limit(12)
 
-  if (sample && typeof sample === "object" && Object.keys(sample).length > 0) {
-    return new Set(Object.keys(sample))
+  const names = new Set<string>()
+  for (const row of rows ?? []) {
+    if (row && typeof row === "object") {
+      for (const k of Object.keys(row as Record<string, unknown>)) {
+        names.add(k)
+      }
+    }
+  }
+  if (names.size > 0) {
+    return names
   }
   return new Set(KNOWN_ATHLETE_COLUMNS)
 }

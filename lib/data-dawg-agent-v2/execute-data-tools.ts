@@ -4,6 +4,8 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
+import { getAthletesColumnNames } from "@/lib/athletes-schema"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import {
   extractSearchablePhrase,
@@ -17,31 +19,54 @@ const MAX_ROWS = 40
 const MAX_Q_LEN = 120
 const FUZZY_POOL = 260
 
-/** RecruitNC `athletes` table uses camelCase columns in Postgres (firstName, lastName, graduationyear). */
-const AFN = "firstName"
-const ALN = "lastName"
-const AGY = "graduationyear"
+type AthleteSearchCols = { fn: string; ln: string; gy: string; hs: string }
+
+let cachedAthleteSearchCols: AthleteSearchCols | null = null
+
+function pickExisting(names: Set<string>, candidates: string[], fallback: string): string {
+  for (const c of candidates) {
+    if (names.has(c)) return c
+  }
+  return fallback
+}
+
+/**
+ * Resolve real PostgREST column names once per process. Always use `select('*')` for reads — a bad
+ * explicit column list (e.g. missing `division`) makes every query fail with zero rows.
+ */
+async function getAthleteSearchCols(admin: SupabaseClient): Promise<AthleteSearchCols> {
+  if (cachedAthleteSearchCols) return cachedAthleteSearchCols
+  const names = await getAthletesColumnNames(admin)
+  const fn = pickExisting(names, ["firstName", "firstname", "first_name"], "firstName")
+  const ln = pickExisting(names, ["lastName", "lastname", "last_name"], "lastName")
+  const gy = pickExisting(names, ["graduationyear", "graduation_year", "graduationYear"], "graduationyear")
+  const hs = pickExisting(names, ["highschool", "high_school", "highSchool"], "highschool")
+  cachedAthleteSearchCols = { fn, ln, gy, hs }
+  return cachedAthleteSearchCols
+}
+
+function athletesBase(admin: SupabaseClient) {
+  return admin.from("athletes").select("*")
+}
 
 function sanitizeFragment(q: string): string {
   return q.replace(/%/g, "").replace(/,/g, " ").trim().slice(0, MAX_Q_LEN)
 }
 
-const ATHLETE_SELECT = `id,name,${AFN},${ALN},highschool,${AGY},college,division`
-
-function athleteDisplayName(row: Record<string, unknown>): string {
+function athleteDisplayName(row: Record<string, unknown>, cols: AthleteSearchCols): string {
   const full = String(row.name ?? "").trim()
   if (full) return full
-  const f = String(row[AFN] ?? row.first_name ?? "").trim()
-  const l = String(row[ALN] ?? row.last_name ?? "").trim()
+  const f = String(row[cols.fn] ?? row.first_name ?? row.firstname ?? "").trim()
+  const l = String(row[cols.ln] ?? row.last_name ?? row.lastname ?? "").trim()
   return `${f} ${l}`.trim()
 }
 
-function rowFirst(row: Record<string, unknown>): string {
-  return String(row[AFN] ?? row.first_name ?? "").trim()
+function rowFirst(row: Record<string, unknown>, cols: AthleteSearchCols): string {
+  return String(row[cols.fn] ?? row.first_name ?? row.firstname ?? "").trim()
 }
 
-function rowLast(row: Record<string, unknown>): string {
-  return String(row[ALN] ?? row.last_name ?? "").trim()
+function rowLast(row: Record<string, unknown>, cols: AthleteSearchCols): string {
+  return String(row[cols.ln] ?? row.last_name ?? row.lastname ?? "").trim()
 }
 
 export async function toolSearchAthletes(args: { query: string; limit?: number }) {
@@ -54,32 +79,53 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
   }
 
   const admin = getSupabaseAdmin()
-  const base = () => admin.from("athletes").select(ATHLETE_SELECT)
+  const cols = await getAthleteSearchCols(admin)
   const pattern = `%${escapeForIlike(q)}%`
 
-  const [a, b, c, nFull] = await Promise.all([
-    base().ilike(AFN, pattern).limit(limit),
-    base().ilike(ALN, pattern).limit(limit),
-    base().ilike("highschool", pattern).limit(limit),
-    // Many profiles store only `name` (combined); first/last can be empty — match "Liam Hickey" here.
-    base().ilike("name", pattern).limit(limit),
-  ])
-  const err = a.error || b.error || c.error || nFull.error
-  if (err) {
-    return { error: err.message, rows: [] as unknown[] }
-  }
-
   const byId = new Map<string, Record<string, unknown>>()
+  const queryErrors: string[] = []
+
   const pushRows = (rows: Record<string, unknown>[] | null | undefined) => {
     for (const row of rows ?? []) {
       const id = String((row as { id?: string }).id ?? "")
       if (id && !byId.has(id)) byId.set(id, row)
     }
   }
-  pushRows(a.data as Record<string, unknown>[])
-  pushRows(b.data as Record<string, unknown>[])
-  pushRows(c.data as Record<string, unknown>[])
-  pushRows(nFull.data as Record<string, unknown>[])
+
+  const merge = (res: { data: unknown; error: { message: string } | null }, label?: string) => {
+    if (res.error) {
+      const msg = res.error.message || "unknown error"
+      queryErrors.push(label ? `${label}: ${msg}` : msg)
+      return
+    }
+    pushRows(res.data as Record<string, unknown>[])
+  }
+
+  /** Single OR filter hits name + first + last + school in one round trip (PostgREST). */
+  const orClause = [
+    `name.ilike.${pattern}`,
+    `${cols.fn}.ilike.${pattern}`,
+    `${cols.ln}.ilike.${pattern}`,
+    `${cols.hs}.ilike.${pattern}`,
+  ].join(",")
+  const broad = await athletesBase(admin).or(orClause).limit(limit)
+  merge(broad, "or(name,first,last,school)")
+  if (byId.size === 0 && broad.error) {
+    const narrowOr = [`name.ilike.${pattern}`, `${cols.fn}.ilike.${pattern}`, `${cols.ln}.ilike.${pattern}`].join(",")
+    const retry = await athletesBase(admin).or(narrowOr).limit(limit)
+    merge(retry, "or(name,first,last)")
+  }
+
+  const [a, b, c, nFull] = await Promise.all([
+    athletesBase(admin).ilike(cols.fn, pattern).limit(limit),
+    athletesBase(admin).ilike(cols.ln, pattern).limit(limit),
+    athletesBase(admin).ilike(cols.hs, pattern).limit(limit),
+    athletesBase(admin).ilike("name", pattern).limit(limit),
+  ])
+  merge(a, "ilike_first")
+  merge(b, "ilike_last")
+  merge(c, "ilike_school")
+  merge(nFull, "ilike_name")
 
   const tokens = tokenizeMeaningfulWords(raw)
   if (tokens.length >= 2) {
@@ -88,13 +134,13 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     const p0 = `%${escapeForIlike(t0)}%`
     const p1 = `%${escapeForIlike(t1)}%`
     const [d1, d2, dName] = await Promise.all([
-      base().ilike(AFN, p0).ilike(ALN, p1).limit(limit),
-      base().ilike(AFN, p1).ilike(ALN, p0).limit(limit),
-      base().ilike("name", p0).ilike("name", p1).limit(limit),
+      athletesBase(admin).ilike(cols.fn, p0).ilike(cols.ln, p1).limit(limit),
+      athletesBase(admin).ilike(cols.fn, p1).ilike(cols.ln, p0).limit(limit),
+      athletesBase(admin).ilike("name", p0).ilike("name", p1).limit(limit),
     ])
-    if (!d1.error) pushRows(d1.data as Record<string, unknown>[])
-    if (!d2.error) pushRows(d2.data as Record<string, unknown>[])
-    if (!dName.error) pushRows(dName.data as Record<string, unknown>[])
+    merge(d1, "first+last_tokens")
+    merge(d2, "first+last_swap")
+    merge(dName, "name_tokens")
   }
 
   const qLower = q.toLowerCase()
@@ -104,27 +150,31 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     const prefix = anchor.slice(0, Math.min(4, Math.max(2, anchor.length)))
     const loose = `%${escapeForIlike(prefix)}%`
     const [p1, p2, p3] = await Promise.all([
-      base().ilike(ALN, loose).limit(FUZZY_POOL),
-      base().ilike(AFN, loose).limit(FUZZY_POOL),
-      base().ilike("name", loose).limit(FUZZY_POOL),
+      athletesBase(admin).ilike(cols.ln, loose).limit(FUZZY_POOL),
+      athletesBase(admin).ilike(cols.fn, loose).limit(FUZZY_POOL),
+      athletesBase(admin).ilike("name", loose).limit(FUZZY_POOL),
     ])
-    if (!p1.error) pushRows(p1.data as Record<string, unknown>[])
-    if (!p2.error) pushRows(p2.data as Record<string, unknown>[])
-    if (!p3.error) pushRows(p3.data as Record<string, unknown>[])
+    merge(p1, "fuzzy_last")
+    merge(p2, "fuzzy_first")
+    merge(p3, "fuzzy_name")
+  }
+
+  if (byId.size === 0 && queryErrors.length > 0) {
+    console.error("[RecruitNC Data Dawg] search_athletes DB errors (0 rows):", queryErrors[0], { searched_for: q })
   }
 
   const scored = [...byId.values()]
     .map((row) => {
       const r = row as Record<string, unknown>
-      const f = rowFirst(r)
-      const l = rowLast(r)
-      const disp = athleteDisplayName(r)
+      const f = rowFirst(r, cols)
+      const l = rowLast(r, cols)
+      const disp = athleteDisplayName(r, cols)
       const score = scoreAthleteNameMatch(qLower, f, l, disp)
       return { row, score, disp }
     })
     .filter((x) => {
-      if (x.score >= 0.38) return true
-      const last = rowLast(x.row as Record<string, unknown>).toLowerCase()
+      if (x.score >= 0.28) return true
+      const last = rowLast(x.row as Record<string, unknown>, cols).toLowerCase()
       const nameField = String(x.row.name ?? "").trim()
       const lastFromFullName =
         nameField && nameField.includes(" ") ? (nameField.split(/\s+/).pop() ?? "").toLowerCase() : ""
@@ -134,7 +184,7 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
       if (lastCompare && wantLast.length >= 3) {
         return levenshteinDistance(wantLast, lastCompare) <= 2
       }
-      return x.score >= 0.32
+      return x.score >= 0.22
     })
     .sort((a, b) => b.score - a.score)
 
@@ -146,6 +196,22 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     seen.add(id)
     out.push(row)
     if (out.length >= limit) break
+  }
+
+  if (out.length === 0 && byId.size > 0) {
+    for (const row of byId.values()) {
+      out.push(row)
+      if (out.length >= limit) break
+    }
+  }
+
+  if (out.length === 0 && queryErrors.length > 0) {
+    return {
+      error:
+        "Athlete directory lookup failed (database). Try again in a minute or search on RecruitNC. If this persists, contact support.",
+      rows: out,
+      searched_for: q,
+    }
   }
 
   return {
@@ -362,7 +428,7 @@ export async function toolCollegeCommitsSearch(args: {
 }) {
   const limit = Math.min(Math.max(Number(args.limit) || 25, 1), MAX_ROWS)
   const admin = getSupabaseAdmin()
-  const sel = `${AFN},${ALN},highschool,${AGY},college,division`
+  const cols = await getAthleteSearchCols(admin)
   const rawFrag = args.query ? sanitizeFragment(args.query) : ""
   const frag = rawFrag ? extractSearchablePhrase(rawFrag) || stripConversationalNoise(rawFrag) : ""
   const gy =
@@ -374,27 +440,31 @@ export async function toolCollegeCommitsSearch(args: {
     const pattern = `%${escapeForIlike(frag.trim())}%`
     const base = () => admin.from("athletes").select(sel).not("college", "is", null)
     const [a, b, c, d] = await Promise.all([
-      gy != null ? base().eq(AGY, gy).ilike(AFN, pattern).limit(limit) : base().ilike(AFN, pattern).limit(limit),
-      gy != null ? base().eq(AGY, gy).ilike(ALN, pattern).limit(limit) : base().ilike(ALN, pattern).limit(limit),
-      gy != null ? base().eq(AGY, gy).ilike("college", pattern).limit(limit) : base().ilike("college", pattern).limit(limit),
-      gy != null ? base().eq(AGY, gy).ilike("highschool", pattern).limit(limit) : base().ilike("highschool", pattern).limit(limit),
+      gy != null ? base().eq(cols.gy, gy).ilike(cols.fn, pattern).limit(limit) : base().ilike(cols.fn, pattern).limit(limit),
+      gy != null ? base().eq(cols.gy, gy).ilike(cols.ln, pattern).limit(limit) : base().ilike(cols.ln, pattern).limit(limit),
+      gy != null ? base().eq(cols.gy, gy).ilike("college", pattern).limit(limit) : base().ilike("college", pattern).limit(limit),
+      gy != null ? base().eq(cols.gy, gy).ilike(cols.hs, pattern).limit(limit) : base().ilike(cols.hs, pattern).limit(limit),
     ])
-    const err = a.error || b.error || c.error || d.error
-    if (err) {
-      return { error: err.message, rows: [] as unknown[] }
+    const rows: Record<string, unknown>[] = []
+    for (const res of [a, b, c, d]) {
+      if (!res.error && res.data?.length) rows.push(...(res.data as Record<string, unknown>[]))
+    }
+    if (rows.length === 0 && (a.error || b.error || c.error || d.error)) {
+      const msg = a.error?.message || b.error?.message || c.error?.message || d.error?.message
+      return { error: msg || "Query failed", rows: [] as unknown[] }
     }
     const byKey = new Map<string, Record<string, unknown>>()
-    for (const row of [...(a.data ?? []), ...(b.data ?? []), ...(c.data ?? []), ...(d.data ?? [])]) {
+    for (const row of rows) {
       const r = row as Record<string, unknown>
-      const k = `${r[AFN] ?? r.first_name}|${r[ALN] ?? r.last_name}|${r[AGY] ?? r.grad_year}|${r.college}`
+      const k = `${r[cols.fn] ?? r.first_name}|${r[cols.ln] ?? r.last_name}|${r[cols.gy] ?? r.graduation_year}|${r.college}`
       if (!byKey.has(k)) byKey.set(k, r)
     }
     return { rows: [...byKey.values()].slice(0, limit) }
   }
 
-  let q = admin.from("athletes").select(sel).not("college", "is", null).limit(limit)
+  let q = admin.from("athletes").select("*").not("college", "is", null).limit(limit)
   if (gy != null) {
-    q = q.eq(AGY, gy)
+    q = q.eq(cols.gy, gy)
   }
   const { data, error } = await q
   if (error) {
