@@ -107,38 +107,77 @@ export async function GET(_request: NextRequest) {
       console.warn("[Admin API] blue-express-interest getAll2026Results:", e)
     }
 
-    // Who actually signed up: blue_signups (by athlete name + grad year) and blue_memberships + athletes
+    // Enrolled = Stripe-backed: paid blue_signups and/or active Blue memberships (not athletes.ncUnitedTeam).
     const enrolledKeys = new Set<string>()
     try {
-      const { data: signups } = await adminClient
+      const { data: paidSignups } = await adminClient
         .from("blue_signups")
         .select("athlete_first_name, athlete_last_name, athlete_graduation_year")
+        .eq("status", "paid")
         .limit(5000)
-      if (Array.isArray(signups)) {
-        for (const s of signups) {
+      if (Array.isArray(paidSignups)) {
+        for (const s of paidSignups) {
           const first = (s as { athlete_first_name?: string }).athlete_first_name ?? ""
           const last = (s as { athlete_last_name?: string }).athlete_last_name ?? ""
           const gy = (s as { athlete_graduation_year?: number }).athlete_graduation_year
           if (first || last) enrolledKeys.add(normalizeNameForMatch(first, last) + "|" + String(gy ?? ""))
         }
       }
+
       const { data: memberships } = await adminClient
         .from("blue_memberships")
-        .select("athlete_id")
-        .in("status", ["active", "pending_payment"])
-        .limit(2000)
-      if (Array.isArray(memberships) && memberships.length > 0) {
-        const aids = [...new Set((memberships as { athlete_id: string }[]).map((m) => m.athlete_id))]
-        const { data: athletes } = await adminClient.from("athletes").select("id, name, graduationyear").in("id", aids)
-        if (Array.isArray(athletes)) {
-          for (const a of athletes) {
-            const name = (a as { name?: string }).name ?? ""
-            const gy = (a as { graduationyear?: number }).graduationyear ?? ""
-            if (name) {
-              const parts = (name as string).trim().split(/\s+/)
-              const first = parts[0] ?? ""
-              const last = parts.slice(1).join(" ")
-              enrolledKeys.add(normalizeNameForMatch(first, last) + "|" + String(gy))
+        .select("athlete_id, signup_id")
+        .in("status", ["active", "paused", "pending_payment"])
+        .limit(5000)
+      if (!Array.isArray(memberships) || memberships.length === 0) {
+        /* skip */
+      } else {
+        const signupIds = [...new Set(memberships.map((m) => (m as { signup_id?: string | null }).signup_id).filter(Boolean) as string[])]
+        type SignupNameRow = {
+          athlete_first_name?: string
+          athlete_last_name?: string
+          athlete_graduation_year?: number | null
+        }
+        const signupById = new Map<string, SignupNameRow>()
+        if (signupIds.length > 0) {
+          const { data: su } = await adminClient
+            .from("blue_signups")
+            .select("id, athlete_first_name, athlete_last_name, athlete_graduation_year")
+            .in("id", signupIds)
+          if (Array.isArray(su)) {
+            for (const r of su) {
+              const id = (r as { id?: string }).id
+              if (id) signupById.set(id, r as SignupNameRow)
+            }
+          }
+        }
+        const athleteIdsNeedingProfile: string[] = []
+        for (const m of memberships) {
+          const row = m as { athlete_id?: string; signup_id?: string | null }
+          const sid = row.signup_id
+          if (sid && signupById.has(sid)) {
+            const s = signupById.get(sid)!
+            const first = s.athlete_first_name ?? ""
+            const last = s.athlete_last_name ?? ""
+            const gy = s.athlete_graduation_year
+            if (first || last) enrolledKeys.add(normalizeNameForMatch(first, last) + "|" + String(gy ?? ""))
+          } else if (row.athlete_id) {
+            athleteIdsNeedingProfile.push(row.athlete_id)
+          }
+        }
+        if (athleteIdsNeedingProfile.length > 0) {
+          const aids = [...new Set(athleteIdsNeedingProfile)]
+          const { data: athletes } = await adminClient.from("athletes").select("id, name, graduationyear").in("id", aids)
+          if (Array.isArray(athletes)) {
+            for (const a of athletes) {
+              const name = (a as { name?: string }).name ?? ""
+              const gy = (a as { graduationyear?: number }).graduationyear ?? ""
+              if (name) {
+                const parts = (name as string).trim().split(/\s+/)
+                const first = parts[0] ?? ""
+                const last = parts.slice(1).join(" ")
+                enrolledKeys.add(normalizeNameForMatch(first, last) + "|" + String(gy))
+              }
             }
           }
         }

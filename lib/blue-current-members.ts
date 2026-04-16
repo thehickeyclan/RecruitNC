@@ -14,25 +14,6 @@ export type BlueCurrentMember = {
   accolades: string[]
 }
 
-/** Get NC United team value from a row regardless of DB column name (camelCase vs snake_case). */
-function getTeamValue(row: Record<string, unknown>): string {
-  const keys = Object.keys(row)
-  for (const k of keys) {
-    const lower = k.toLowerCase().replace(/_/g, "")
-    if (lower === "ncunitedteam" || lower === "team") {
-      const val = row[k]
-      if (val != null && String(val).trim() !== "") return String(val).trim()
-    }
-  }
-  return ""
-}
-
-function isBlue(row: Record<string, unknown>) {
-  const raw = getTeamValue(row)
-  const v = raw.toLowerCase()
-  return v === "blue" || v === "blue team" || v === "both" || v.includes("blue")
-}
-
 function placementNumber(value: unknown): number | null {
   if (value == null) return null
   const n = Number(value)
@@ -59,45 +40,30 @@ export async function getBlueCurrentMembers(): Promise<BlueCurrentMember[]> {
       .select("athlete_id")
       .eq("status", "active")
 
-    let athleteIds: string[] = []
-    if (!membershipError && membershipRows?.length) {
-      athleteIds = [...new Set(membershipRows.map((r) => r.athlete_id).filter(Boolean))]
-    }
-    // Fallback: if no blue_memberships table or no rows, use legacy logic (athletes with ncUnitedTeam = blue)
-    const useLegacy = athleteIds.length === 0
+    const athleteIds: string[] =
+      !membershipError && membershipRows?.length
+        ? [...new Set(membershipRows.map((r) => r.athlete_id).filter(Boolean) as string[])]
+        : []
 
-    let data: Record<string, unknown>[] | null = null
-    let error: { message: string } | null = null
-
-    if (useLegacy) {
-      const result = await supabase
-        .from("athletes")
-        .select("*")
-        .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
-        .lte("graduationyear", CURRENT_YEAR + 6)
-        .order("graduationyear", { ascending: true })
-        .order("name", { ascending: true })
-      data = result.data
-      error = result.error
-    } else {
-      const result = await supabase
-        .from("athletes")
-        .select("*")
-        .in("id", athleteIds)
-        .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
-        .lte("graduationyear", CURRENT_YEAR + 6)
-        .order("graduationyear", { ascending: true })
-        .order("name", { ascending: true })
-      data = result.data
-      error = result.error
+    if (athleteIds.length === 0) {
+      return []
     }
+
+    const { data, error } = await supabase
+      .from("athletes")
+      .select("*")
+      .in("id", athleteIds)
+      .gte("graduationyear", CURRENT_ROSTER_MIN_GRAD_YEAR)
+      .lte("graduationyear", CURRENT_YEAR + 6)
+      .order("graduationyear", { ascending: true })
+      .order("name", { ascending: true })
 
     if (error) {
       console.error("[blue-current-members] query error:", error)
       return []
     }
 
-    const blueRows = useLegacy ? (data ?? []).filter((row) => isBlue(row as Record<string, unknown>)) : (data ?? [])
+    const blueRows = data ?? []
     const members: BlueCurrentMember[] = []
 
     for (const row of blueRows) {

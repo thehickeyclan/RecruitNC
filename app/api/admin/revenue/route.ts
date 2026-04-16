@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     fetchStoreProducts(period),
   ])
 
-  // Blue: new memberships in window × flat seat rate (same convention as admin dashboard aggregates).
+  // Blue: new memberships in window × flat seat rate — blue_memberships only (Stripe), not athletes table.
   const { data: blueData } = await supabase
     .from("blue_memberships")
     .select("id, status, created_at")

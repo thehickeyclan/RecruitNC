@@ -256,7 +256,7 @@ export async function GET(request: Request) {
 
   const [guildStats, storeStats] = await Promise.all([fetchGuildStats(period), fetchStoreStats(period)])
 
-  // ── BLUE ──────────────────────────────────────────────────────────────
+  // ── BLUE: counts & MRR from blue_memberships (Stripe sync), not athlete profile flags ──
   const { data: blueActive } = await supabase
     .from("blue_memberships")
     .select("id, status, created_at")

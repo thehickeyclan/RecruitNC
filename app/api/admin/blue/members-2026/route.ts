@@ -83,14 +83,13 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient()
 
+  /** Roster IDs = Stripe-synced memberships only. Do not merge athletes.ncUnitedTeam (profile flag ≠ subscription). */
   const blueAthleteIds = new Set<string>()
   const { data: memberships } = await admin
     .from("blue_memberships")
     .select("athlete_id")
     .in("status", ["active", "pending_payment", "alumni"])
-  if (memberships?.length) memberships.forEach((r) => blueAthleteIds.add(r.athlete_id))
-  const { data: athletesWithFlag } = await admin.from("athletes").select("id").ilike("ncUnitedTeam", "%blue%")
-  if (athletesWithFlag?.length) athletesWithFlag.forEach((a) => blueAthleteIds.add(a.id))
+  if (memberships?.length) memberships.forEach((r) => r.athlete_id && blueAthleteIds.add(r.athlete_id))
 
   const emptyStats: BlueMembers2026Stats = {
     totalMembers: 0, stateChamps2026: 0, statePlacers2026: 0, stateQualifiers2026: 0,
