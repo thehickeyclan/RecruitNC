@@ -11,6 +11,7 @@ import {
   listSpartanFayettevilleDonations,
   resolvePublicAthleteCreditLabel,
   publicSupporterDisplayName,
+  resolvePublicRunnerDisplay,
 } from "@/lib/spartan-fayetteville-stripe"
 
 export const dynamic = "force-dynamic"
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
             csvCell(r.tierPreference),
             csvCell(r.athleteCode ?? ""),
             csvCell(resolvePublicAthleteCreditLabel(r, codeToFullName) ?? ""),
-            csvCell(r.raceParticipantName ?? ""),
+            csvCell(resolvePublicRunnerDisplay(r, { anonymousDonorFallback: true }) ?? ""),
             csvCell(r.fundraisingType),
           ].join(","),
         ),

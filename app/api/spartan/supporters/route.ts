@@ -12,6 +12,7 @@ import {
   publicSupporterDisplayName,
   resolveFundraisingAthleteRowName,
   resolvePublicAthleteCreditLabel,
+  resolvePublicRunnerDisplay,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
 
@@ -86,7 +87,6 @@ export async function GET(request: NextRequest) {
 
 function toPublicEntry(r: SpartanFayettevilleDonation, codeToFullName: Map<string, string>) {
   const creditLabel = resolvePublicAthleteCreditLabel(r, codeToFullName)
-  const runner = r.raceParticipantName?.trim() || null
   return {
     id: r.sessionId,
     createdIso: r.createdIso,
@@ -99,6 +99,6 @@ function toPublicEntry(r: SpartanFayettevilleDonation, codeToFullName: Map<strin
     manualCreditName: r.manualCreditName,
     creditLabel,
     attribution: r.attribution,
-    raceParticipantName: r.raceParticipant && runner ? runner : null,
+    raceParticipantName: resolvePublicRunnerDisplay(r),
   }
 }

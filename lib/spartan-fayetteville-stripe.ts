@@ -165,6 +165,48 @@ export function publicSupporterDisplayName(d: Pick<SpartanFayettevilleDonation, 
   return "Supporter"
 }
 
+/** Strip ` · …` suffix from directory-style labels (e.g. "Liam Hickey · …" → "Liam Hickey"). */
+export function shortDirectoryDisplayName(label: string | null | undefined): string | null {
+  const t = label?.trim()
+  if (!t) return null
+  const idx = t.indexOf(" · ")
+  return idx > 0 ? t.slice(0, idx).trim() : t
+}
+
+export type ResolvePublicRunnerOptions = {
+  /** Admin/ops CSV: allow donor name when donor hid public list (default: false — avoids leaking payer name on /spartan). */
+  anonymousDonorFallback?: boolean
+}
+
+/**
+ * Runner column: prefer Stripe `race_participant_name`; if missing (legacy sessions), infer credited
+ * athlete, then donor only when public-safe (see `anonymousDonorFallback`).
+ */
+export function resolvePublicRunnerDisplay(
+  r: Pick<
+    SpartanFayettevilleDonation,
+    | "raceParticipant"
+    | "raceParticipantName"
+    | "athleteDisplayName"
+    | "manualCreditName"
+    | "donorName"
+    | "donorListPublic"
+  >,
+  options?: ResolvePublicRunnerOptions,
+): string | null {
+  if (!r.raceParticipant) return null
+  const meta = r.raceParticipantName?.trim()
+  if (meta) return meta.slice(0, 120)
+  const fromAthlete = shortDirectoryDisplayName(r.athleteDisplayName) || r.manualCreditName?.trim()
+  if (fromAthlete) return fromAthlete.slice(0, 120)
+  const allowDonor = options?.anonymousDonorFallback === true || r.donorListPublic
+  if (allowDonor) {
+    const donor = r.donorName?.trim()
+    if (donor) return donor.slice(0, 120)
+  }
+  return null
+}
+
 /** Readable label from NCU-LASTNAME-YY when we have no directory name (legacy / bookmark-only checkout). */
 export function fallbackAthleteLabelFromCode(code: string): string | null {
   const m = /^NCU-([A-Za-z]+)-(\d{2})$/i.exec(code.trim())

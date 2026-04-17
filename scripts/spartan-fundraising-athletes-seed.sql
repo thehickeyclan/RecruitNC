@@ -1,6 +1,6 @@
 -- Auto-generated from CSV — requires unique(code) on public.spartan_fundraising_athletes. Safe to re-run (upserts).
 -- Source: spartan-ncu-athletes.csv
--- Rows: 103
+-- Rows: 105
 
 INSERT INTO public.spartan_fundraising_athletes (code, first_name, last_name, grad_year, school, active) VALUES ('NCU-ROWLING-25', 'Jackson', 'Rowling', 2025, 'Hough', true)
 ON CONFLICT (code) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, grad_year = EXCLUDED.grad_year, school = EXCLUDED.school, active = EXCLUDED.active;
@@ -309,5 +309,11 @@ INSERT INTO public.spartan_fundraising_athletes (code, first_name, last_name, gr
 ON CONFLICT (code) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, grad_year = EXCLUDED.grad_year, school = EXCLUDED.school, active = EXCLUDED.active;
 
 INSERT INTO public.spartan_fundraising_athletes (code, first_name, last_name, grad_year, school, active) VALUES ('NCU-HICKEY-29', 'Gavin', 'Hickey', 2029, 'Cardinal Gibbons', true)
+ON CONFLICT (code) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, grad_year = EXCLUDED.grad_year, school = EXCLUDED.school, active = EXCLUDED.active;
+
+INSERT INTO public.spartan_fundraising_athletes (code, first_name, last_name, grad_year, school, active) VALUES ('NCU-SALAS-26', 'Eyan', 'Salas', 2026, 'Gray''s Creek High School', true)
+ON CONFLICT (code) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, grad_year = EXCLUDED.grad_year, school = EXCLUDED.school, active = EXCLUDED.active;
+
+INSERT INTO public.spartan_fundraising_athletes (code, first_name, last_name, grad_year, school, active) VALUES ('NCU-SALAS-28', 'Emmett', 'Salas', 2028, 'Gray''s Creek High School', true)
 ON CONFLICT (code) DO UPDATE SET first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, grad_year = EXCLUDED.grad_year, school = EXCLUDED.school, active = EXCLUDED.active;
 

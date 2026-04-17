@@ -34,9 +34,9 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "real-cost-elite-wrestling-nc-smarter-build",
     slug: "real-cost-elite-wrestling-nc-smarter-build",
-    title: "The Real Cost of Elite Wrestling in North Carolina — And the Smarter Way to Build",
+    title: "Your Kid's Wrestling Career Will Cost More Than Their College",
     summary:
-      "A representative budget for serious NC families, the scholarship math nobody prints on a flyer, 529 planning as parallel strategy, and how a 501(c)(3) plus the Spartan campaign share the load — with clear disclaimers on what is modeled vs. hypothetical.",
+      "The full line-item picture for elite NC families, the tax and scholarship math in one place, 529 planning vs. tournament spend, and how NC United’s 501(c)(3) and the Spartan campaign turn community giving into training dollars — with clear disclaimers on modeled vs. hypothetical figures.",
     href: "/news/real-cost-elite-wrestling-nc-smarter-build",
     date: "2026-04-14",
     image: "/images/real-cost-elite-wrestling-nc-hero.png",
@@ -46,7 +46,7 @@ const ALL_NEWS: NewsItem[] = [
     newsListBanner: true,
     category: "NC UNITED",
     categoryBadgeClass: "bg-[#003366]",
-    readTime: "14 min read",
+    readTime: "18 min read",
     isAnnouncement: true,
   },
   {

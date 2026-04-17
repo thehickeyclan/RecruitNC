@@ -184,9 +184,71 @@ async function fetchAllAthleteRows(admin: SupabaseClient): Promise<AthleteFundra
   return all
 }
 
+type SpartanFundraisingAthleteRow = {
+  code?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  grad_year?: number | null
+  school?: string | null
+  active?: boolean | null
+}
+
+function spartanFundraisingRowToEntry(r: SpartanFundraisingAthleteRow): FundraisingAthleteEntry | null {
+  const code = typeof r.code === "string" ? r.code.trim() : ""
+  if (!code) return null
+  if (r.active === false) return null
+  const gy = coalesceGradYear(r.grad_year)
+  if (!gy) return null
+  const fn = (typeof r.first_name === "string" ? r.first_name : "").trim()
+  const ln = (typeof r.last_name === "string" ? r.last_name : "").trim()
+  if (!ln) return null
+  const yy = String(gy).slice(-2)
+  const school = (typeof r.school === "string" ? r.school : "").trim().slice(0, 120)
+  const initial = fn ? `${fn[0]}. ` : ""
+  const label = school
+    ? `${initial}${ln} '${yy} · ${school}`
+    : `${initial}${ln} '${yy}`
+  const fullName = toDisplayFullName([fn, ln].filter(Boolean).join(" "))
+  const searchBlob = [code, fn, ln, school, String(gy), label, fullName].join(" ").toLowerCase()
+  return { id: `spartan-fundraising:${code}`, code, label, fullName, searchBlob }
+}
+
+/** Roster-only racers from `spartan_fundraising_athletes` (not every athlete has a RecruitNC profile). */
+async function loadSpartanFundraisingExtras(admin: SupabaseClient): Promise<FundraisingAthleteEntry[]> {
+  try {
+    const { data, error } = await admin
+      .from("spartan_fundraising_athletes")
+      .select("code, first_name, last_name, grad_year, school, active")
+      .eq("active", true)
+    if (error) {
+      console.error("[spartan-fundraising] spartan_fundraising_athletes:", error.message)
+      return []
+    }
+    const out: FundraisingAthleteEntry[] = []
+    for (const row of data ?? []) {
+      const e = spartanFundraisingRowToEntry(row as SpartanFundraisingAthleteRow)
+      if (e) out.push(e)
+    }
+    return out
+  } catch (e) {
+    console.error("[spartan-fundraising] loadSpartanFundraisingExtras", e)
+    return []
+  }
+}
+
 async function loadEntries(admin: SupabaseClient): Promise<FundraisingAthleteEntry[]> {
   const rows = await fetchAllAthleteRows(admin)
-  return buildFundraisingEntries(rows)
+  const fromAthletes = buildFundraisingEntries(rows)
+  const extras = await loadSpartanFundraisingExtras(admin)
+  const seen = new Set(fromAthletes.map((e) => e.code))
+  const merged = [...fromAthletes]
+  for (const e of extras) {
+    if (!seen.has(e.code)) {
+      seen.add(e.code)
+      merged.push(e)
+    }
+  }
+  return merged
 }
 
 /** Cached full roster → fundraising entries (refreshed every ~5 min). */
