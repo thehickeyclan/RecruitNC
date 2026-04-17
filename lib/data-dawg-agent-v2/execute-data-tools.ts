@@ -12,7 +12,12 @@ import {
   stripConversationalNoise,
   tokenizeMeaningfulWords,
 } from "./search-normalize"
-import { levenshteinDistance, scoreAthleteNameMatch, scoreSchoolMatch } from "./fuzzy-utils"
+import {
+  combinedAthleteSearchScore,
+  levenshteinDistance,
+  scoreAthleteNameMatch,
+  scoreSchoolMatch,
+} from "./fuzzy-utils"
 import { buildAthleteDossierMarkdown } from "@/lib/data-dawg-athlete-dossier"
 
 const MAX_ROWS = 40
@@ -163,13 +168,16 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     console.error("[RecruitNC Data Dawg] search_athletes DB errors (0 rows):", queryErrors[0], { searched_for: q })
   }
 
+  const nameTokens = tokenizeMeaningfulWords(raw)
+
   const scored = [...byId.values()]
     .map((row) => {
       const r = row as Record<string, unknown>
       const f = rowFirst(r, cols)
       const l = rowLast(r, cols)
       const disp = athleteDisplayName(r, cols)
-      const score = scoreAthleteNameMatch(qLower, f, l, disp)
+      const hs = String(r[cols.hs] ?? "").trim()
+      const score = combinedAthleteSearchScore(qLower, nameTokens, f, l, disp, hs)
       return { row, score, disp }
     })
     .filter((x) => {
@@ -180,7 +188,9 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
         nameField && nameField.includes(" ") ? (nameField.split(/\s+/).pop() ?? "").toLowerCase() : ""
       const lastCompare = last || lastFromFullName
       const parts = qLower.split(/\s+/)
-      const wantLast = parts.length > 1 ? parts[parts.length - 1] : qLower
+      // For "First Last School …" queries, surname is the second token, not the last ("Gibbons").
+      const wantLast =
+        parts.length >= 3 ? parts[1] : parts.length > 1 ? parts[parts.length - 1] : qLower
       if (lastCompare && wantLast.length >= 3) {
         return levenshteinDistance(wantLast, lastCompare) <= 2
       }
@@ -214,9 +224,38 @@ export async function toolSearchAthletes(args: { query: string; limit?: number }
     }
   }
 
+  const byDisplay = new Map<string, Record<string, unknown>[]>()
+  for (const row of out) {
+    const r = row as Record<string, unknown>
+    const key = athleteDisplayName(r, cols).toLowerCase().replace(/\s+/g, " ").trim()
+    if (!key) continue
+    if (!byDisplay.has(key)) byDisplay.set(key, [])
+    byDisplay.get(key)!.push(r)
+  }
+  const disambiguation = [...byDisplay.entries()]
+    .filter(([, rows]) => rows.length >= 2)
+    .map(([athlete_name, rows]) => ({
+      athlete_name,
+      candidates: rows.map((r) => ({
+        id: String((r as { id?: string }).id ?? ""),
+        highschool: String(r[cols.hs] ?? "").trim() || null,
+        graduationyear:
+          r[cols.gy] != null && String(r[cols.gy]).trim() !== ""
+            ? Number(r[cols.gy])
+            : null,
+      })),
+    }))
+
   return {
     rows: out,
     searched_for: q,
+    ...(disambiguation.length
+      ? {
+          disambiguation,
+          disambiguation_note:
+            "Multiple directory rows share this display name. Prefer the candidate whose high school matches the user's message (or ask which school). Then call get_athlete_full_dossier for that id.",
+        }
+      : {}),
   }
 }
 

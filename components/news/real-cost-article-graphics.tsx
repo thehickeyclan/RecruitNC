@@ -19,12 +19,14 @@ const SLATE = "#64748b"
 
 /** Midpoints from ranges in the article; tooltips note ranges where applicable. */
 const ANNUAL_BREAKDOWN = [
-  { name: "Training", amount: 7200, range: null as string | null, fill: NAVY },
-  { name: "Major travel", amount: 8425, range: "$6,750–$10,100", fill: "#1e4976" },
-  { name: "Additional events", amount: 2000, range: "$1,600–$2,400", fill: "#2a5a8a" },
-  { name: "Family / spectator", amount: 400, range: null, fill: SLATE },
-  { name: "Camps & clinics", amount: 1000, range: null, fill: "#475569" },
-  { name: "Gear & Flo", amount: 650, range: null, fill: "#94a3b8" },
+  { name: "Training", amount: 7500, range: null as string | null, fill: NAVY },
+  { name: "Major travel", amount: 4725, range: "$4,050–$5,400", fill: "#1e4976" },
+  { name: "Additional events", amount: 1700, range: "$1,300–$2,100", fill: "#2a5a8a" },
+  { name: "Family / spectator", amount: 800, range: null, fill: SLATE },
+  { name: "Transportation", amount: 1800, range: "$1,400–$2,200", fill: "#475569" },
+  { name: "Nutrition & recovery", amount: 1400, range: "$1,000–$1,800", fill: "#64748b" },
+  { name: "Development", amount: 1500, range: "$1,000–$2,000", fill: "#334155" },
+  { name: "Gear & access", amount: 1000, range: null, fill: "#94a3b8" },
 ]
 
 function formatMoney(n: number) {
@@ -41,15 +43,15 @@ export function RealCostAnnualBreakdownGraphic() {
         <h4 className="text-lg font-bold text-slate-900">Where the dollars go (representative)</h4>
         <p className="text-sm text-slate-600">
           Line-item subtotals sum to about <strong className="text-slate-800">{formatMoney(sum)}</strong> — aligned with the{" "}
-          <strong>$17,500–$22,000</strong> base elite path before Fargo add-ons.
+          <strong>$18,050–$22,800</strong> base elite path total in the article.
         </p>
       </div>
-      <div className="h-[280px] w-full sm:h-[320px]">
+      <div className="h-[320px] w-full sm:h-[380px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart layout="vertical" data={ANNUAL_BREAKDOWN} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" horizontal={false} />
             <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} domain={[0, "dataMax + 1000"]} className="text-xs" />
-            <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 10 }} />
+            <YAxis type="category" dataKey="name" width={148} tick={{ fontSize: 10 }} />
             <Tooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null
@@ -71,23 +73,20 @@ export function RealCostAnnualBreakdownGraphic() {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-3 text-center text-xs text-slate-500">
-        Road to Fargo full pathway adds roughly <strong>$3,000–$5,000</strong> / year on top of this base model.
-      </p>
       <p className="mt-2 text-center text-[11px] text-slate-400">Representative model — individual families vary.</p>
     </div>
   )
 }
 
-/** HS dev & total use article midpoints within stated ranges; total bill range $174k–$212k. */
+/** HS dev & total use article midpoints within stated ranges; total bill range $180k–$200k. */
 const SCHOLARSHIP_COMPARE = [
-  { label: "HS development (4 yr range $70k–$108k)", short: "HS dev", amount: 89000, fill: NAVY },
+  { label: "HS development (4 yr range $72k–$91k)", short: "HS dev", amount: 81500, fill: NAVY },
   { label: "Avg. D1 scholarship value (~40%, 4 yr)", short: "Scholarship", amount: 68000, fill: "#1e4976" },
   { label: "Out-of-pocket after scholarship (4 yr)", short: "College OOP", amount: 104000, fill: RED },
   {
-    label: "Total bill 9th grade → graduation (illustrative range $174k–$212k)",
+    label: "Total bill 9th grade → graduation (illustrative range $180k–$200k)",
     short: "Total bill",
-    amount: 193000,
+    amount: 190000,
     fill: "#0e7490",
   },
 ]
@@ -99,9 +98,9 @@ export function RealCostScholarshipRealityGraphic() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">The scholarship reality</p>
         <h4 className="text-lg font-bold text-slate-900">The full financial picture — 9th grade through graduation</h4>
         <p className="mt-1 text-sm text-slate-600">
-          Illustrative midpoints for bars; HS development spans <strong>$70,000–$108,000</strong> over four years. The{" "}
+          Illustrative midpoints for bars; HS development spans <strong>$72,000–$91,000</strong> over four years. The{" "}
           <strong>total bill</strong> bar reflects HS development plus college out-of-pocket — often discussed as roughly{" "}
-          <strong>$174,000–$212,000</strong> in this model. Scholarship value is shown separately.
+          <strong>$180,000–$200,000</strong> in this model. Scholarship value is shown separately.
         </p>
       </div>
       <div className="h-[280px] w-full sm:h-[320px]">
@@ -109,7 +108,7 @@ export function RealCostScholarshipRealityGraphic() {
           <BarChart data={SCHOLARSHIP_COMPARE} margin={{ top: 12, right: 12, left: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
             <XAxis dataKey="short" tick={{ fontSize: 10 }} interval={0} />
-            <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={48} domain={[0, 220000]} />
+            <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={48} domain={[0, 210000]} />
             <Tooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null
@@ -221,8 +220,9 @@ export function RealCostTwoLeversGraphic() {
             <p className="text-xs font-bold uppercase tracking-wide">Lever 1 — Fundraise</p>
           </div>
           <p className="text-sm leading-relaxed text-slate-700">
-            Use community support and the tax code to fund training <strong>right now</strong>. Every gift to NC United is fully tax-deductible.
-            Ten donors × $155 = <strong>$1,550</strong> toward your athlete&apos;s summer.
+            Use community support and the tax code to fund training <strong>right now</strong>. Ten people giving $150 each is{" "}
+            <strong>$1,500</strong> toward your athlete&apos;s summer — every gift to a 501(c)(3) like NC United is fully tax-deductible for the
+            donor.
           </p>
         </div>
         <div className="flex flex-col rounded-xl border-2 border-[#003366]/25 bg-slate-50/80 p-5 shadow-sm">
@@ -371,8 +371,13 @@ export function RealCostSpartanCampaignGraphic() {
             </p>
             <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600">
               <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              <a href="/spartan" className="font-semibold text-[#003366] underline underline-offset-2">
-                recruitnc.com/spartan
+              <a
+                href="https://app.ncwrestlingunited.com/spartan"
+                className="font-semibold text-[#003366] underline underline-offset-2"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                app.ncwrestlingunited.com/spartan
               </a>
               <span aria-hidden>·</span>
               <span>EIN: 99-3757238</span>

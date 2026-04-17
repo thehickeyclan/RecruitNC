@@ -137,7 +137,9 @@ function IgShareCard({
         </div>
 
         <div className="mt-auto border-t border-white/10 pt-4">
-          <p className="text-center text-[11px] font-medium text-white/55">recruitnc.com/spartan</p>
+          <p className="text-center text-[11px] font-medium text-white/55">
+            app.ncwrestlingunited.com/spartan · EIN: 99-3757238
+          </p>
           <p className="text-center text-[10px] text-white/40">501(c)(3) · NC United Wrestling</p>
         </div>
       </div>

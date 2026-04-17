@@ -23,7 +23,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
           query: {
             type: "string",
             description:
-              "Athlete name and/or school fragment (e.g. 'Jane Smith', 'Smith', 'Cardinal Gibbons'). Min 2 meaningful characters after stripping chat phrases.",
+              "Athlete name and/or school fragment (e.g. 'Jane Smith', 'Jacob Perry Cardinal Gibbons'). Include school when the user named it — disambiguates duplicate names. Min 2 meaningful characters after stripping chat phrases.",
           },
           limit: { type: "integer", description: "Max rows (default 20, max 40)." },
         },
@@ -36,7 +36,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "get_athlete_full_dossier",
       description:
-        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes when you have an athlete UUID from the search results. Required for 'tell me about [name]' / full bio questions.",
+        "FULL athlete report (legacy Data Dawg format): NCHSAA, duals, Super32, NHSCA, NC United, Dave Schultz, career record — same data path as unified profile. Call AFTER search_athletes whenever answering about a specific athlete by name. Required for 'tell me about [name]'; do not substitute narrative bio text from other fields.",
       parameters: {
         type: "object",
         additionalProperties: false,

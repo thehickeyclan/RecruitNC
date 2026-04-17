@@ -79,3 +79,40 @@ export function scoreSchoolMatch(queryNorm: string, schoolName: string): number 
   const d = levenshteinDistance(q, s)
   return simFromDistance(d, q.length, s.length)
 }
+
+/**
+ * When the query mixes a person name with a school ("Jacob Perry Cardinal Gibbons"),
+ * plain `scoreAthleteNameMatch` treats the last token as last name and scores poorly.
+ * Combine: best name score from full phrase + "first two tokens" as first+last, plus school-token match.
+ */
+export function combinedAthleteSearchScore(
+  phraseLower: string,
+  nameTokens: string[],
+  first: string,
+  last: string,
+  displayName: string,
+  highschool: string,
+): number {
+  let nameScore = scoreAthleteNameMatch(phraseLower, first, last, displayName)
+  if (nameTokens.length >= 2) {
+    const two = `${nameTokens[0]} ${nameTokens[1]}`
+    nameScore = Math.max(nameScore, scoreAthleteNameMatch(two, first, last, displayName))
+  }
+
+  const hs = (highschool || "").toLowerCase().trim()
+  let schoolMatch = 0
+  if (hs && nameTokens.length >= 3) {
+    schoolMatch = Math.max(schoolMatch, scoreSchoolMatch(nameTokens.slice(2).join(" "), hs))
+    for (let i = 2; i < nameTokens.length; i++) {
+      schoolMatch = Math.max(schoolMatch, scoreSchoolMatch(nameTokens[i], hs))
+      for (let j = i + 1; j <= Math.min(i + 3, nameTokens.length); j++) {
+        schoolMatch = Math.max(schoolMatch, scoreSchoolMatch(nameTokens.slice(i, j).join(" "), hs))
+      }
+    }
+  }
+
+  if (schoolMatch > 0.35) {
+    return Math.min(1, nameScore + schoolMatch * 0.45)
+  }
+  return nameScore
+}

@@ -38,14 +38,18 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
 
       <h2>The moment every wrestling family knows</h2>
       <p>
-        There is a moment every wrestling family knows. It is not the state championship. It is not the recruiting call. It is somewhere around
-        sophomore year, sitting in a hotel lobby in Greensboro or Virginia Beach or wherever the next tournament has taken you, doing the quiet
-        math on your phone while your kid is asleep upstairs.
+        There is a moment every wrestling family knows.
       </p>
       <p>
-        You add it up. The entry fees. The hotel. The gas. The privates on Tuesday. The club dues that came out last week. The gear he
-        outgrew in August. And you think — how did we get here? And more importantly — how do we keep going?
+        It is not the state championship. It is not the recruiting call. It is somewhere around sophomore year, sitting in a hotel lobby in
+        Greensboro or Virginia Beach or wherever the next tournament has taken you, doing the quiet math on your phone while your kid is asleep
+        upstairs.
       </p>
+      <p>
+        You add it up. The entry fees. The hotel. The gas. The privates on Tuesday. The club dues that came out last week. The gear he outgrew in
+        August.
+      </p>
+      <p>And you think — how did we get here? And more importantly — how do we keep going?</p>
       <p>
         If you are raising a serious wrestler in North Carolina, you are probably spending somewhere between{" "}
         <strong>$15,000 and $25,000 per year</strong> on their development. Over four years of high school that is{" "}
@@ -57,18 +61,21 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
 
       <h2>What it actually costs to develop an elite NC wrestler</h2>
       <p>
-        Let&apos;s put the full picture on the table. This is not an estimate. This is what families are actually spending. We recently shared
-        this breakdown with 15 of NC United&apos;s most competitive wrestling families. The response was immediate and consistent. One parent
-        summed it up simply: <em>&ldquo;I feel like I spend more.&rdquo;</em> They&apos;re probably right — and that&apos;s exactly the point.
+        Let&apos;s put the full picture on the table. This is not an estimate. This is what families are actually spending.
+      </p>
+      <p>
+        We recently shared this breakdown with 15 of NC United&apos;s most competitive wrestling families. The response was immediate and
+        consistent. One parent summed it up simply: <em>&ldquo;I feel like I spend more.&rdquo;</em> They&apos;re probably right — and
+        that&apos;s exactly the point.
       </p>
 
       <h3>Training</h3>
       <ul>
-        <li>Club dues: $1,800/year</li>
+        <li>Club dues: $2,100/year</li>
         <li>NC United membership: $600/year</li>
         <li>Private lessons (8/month × $75): $4,800/year</li>
         <li>
-          <strong>Training total: $7,200/year</strong>
+          <strong>Training total: $7,500/year</strong>
         </li>
       </ul>
       <p>
@@ -77,13 +84,13 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       </p>
 
       <h3>Major competition travel</h3>
-      <p>These are the tournaments that matter for college recruiting. Skip them and you fall off the radar.</p>
       <ul>
         <li>
-          <strong>NHSCA Nationals</strong> (Virginia Beach): $1,100–$1,300 <em>(hotel 3 nights × $180, travel, entry, food)</em>
+          <strong>NHSCA Nationals</strong> (Virginia Beach): $1,100–$1,300{" "}
+          <em>(Hotel 3 nights × $180, travel, entry, food)</em>
         </li>
         <li>
-          <strong>NHSCA Duals</strong> (Virginia Beach): $1,100–$1,300 <em>(same venue, same costs)</em>
+          <strong>NHSCA Duals</strong> (Virginia Beach): $1,100–$1,300 <em>(Same venue, same costs)</em>
         </li>
         <li>
           <strong>Journeymen</strong> (travel event): $1,200–$1,800
@@ -95,75 +102,128 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           <strong>State tournament</strong> (Greensboro, NC): $150–$300
         </li>
         <li>
-          <strong>Road to Fargo</strong> (full pathway — Tarheel, state qualifiers, Southeast Open, Fargo nationals — travel, entry, extended
-          stay): $3,000–$5,000
+          <strong>College opens</strong>: $300
         </li>
         <li>
-          <strong>Subtotal: $6,750–$10,100</strong>
+          <strong>Subtotal: $4,050–$5,400</strong>
         </li>
       </ul>
 
       <h3>Additional events</h3>
       <ul>
         <li>2 additional tournaments: $800–$1,600</li>
-        <li>College opens: $300</li>
         <li>High school season / misc events: $500</li>
         <li>
-          <strong>Subtotal: $1,600–$2,400</strong>
+          <strong>Subtotal: $1,300–$2,100</strong>
         </li>
       </ul>
 
       <h3>Family &amp; spectator costs</h3>
       <ul>
-        <li>Entry fees: $50 × 8 weekends = $400</li>
+        <li>Entry fees: $50 × 8 weekends = <strong>$400</strong></li>
+        <li>Additional spectator costs (parking, food, lodging): <strong>$400</strong></li>
+        <li>
+          <strong>Subtotal: $800</strong>
+        </li>
+      </ul>
+
+      <h3>Transportation</h3>
+      <ul>
+        <li>Gas to/from club practice (3× week, 50 weeks): $800–$1,200</li>
+        <li>Gas to/from privates and NC United: $400–$600</li>
+        <li>Local tournament mileage: $200–$400</li>
+        <li>
+          <strong>Subtotal: $1,400–$2,200</strong>
+        </li>
+      </ul>
+
+      <h3>Nutrition &amp; recovery</h3>
+      <ul>
+        <li>Competition day meals and travel food: $400–$600</li>
+        <li>Clean eating premium above normal grocery budget: $600–$1,200</li>
+        <li>
+          <strong>Subtotal: $1,000–$1,800</strong>
+        </li>
       </ul>
 
       <h3>Development</h3>
       <ul>
-        <li>Summer camps + clinics: $1,000</li>
+        <li>Summer training camp (1 elite camp): $700–$1,500</li>
+        <li>Additional clinics: $300–$500</li>
+        <li>
+          <strong>Subtotal: $1,000–$2,000</strong>
+        </li>
       </ul>
 
       <h3>Gear &amp; access</h3>
       <ul>
-        <li>Gear and apparel (annual): $500</li>
+        <li>Gear and apparel (annual): $850</li>
         <li>FloWrestling subscription: $150</li>
         <li>
-          <strong>Subtotal: $650</strong>
+          <strong>Subtotal: $1,000</strong>
         </li>
       </ul>
 
-      <h3>Full annual cost</h3>
+      <h3>
+        <span aria-hidden>💰</span> Full annual cost
+      </h3>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table>
           <thead>
             <tr>
-              <th>Path</th>
+              <th>Category</th>
               <th>Annual cost</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>Base elite path</td>
-              <td>$17,500 – $22,000</td>
+              <td>Training</td>
+              <td>$7,500</td>
             </tr>
             <tr>
-              <td>Road to Fargo add-on</td>
-              <td>+ $3,000 – $5,000</td>
+              <td>Major competition travel</td>
+              <td>$4,050–$5,400</td>
+            </tr>
+            <tr>
+              <td>Additional events</td>
+              <td>$1,300–$2,100</td>
+            </tr>
+            <tr>
+              <td>Family / spectator</td>
+              <td>$800</td>
+            </tr>
+            <tr>
+              <td>Transportation</td>
+              <td>$1,400–$2,200</td>
+            </tr>
+            <tr>
+              <td>Nutrition &amp; recovery</td>
+              <td>$1,000–$1,800</td>
+            </tr>
+            <tr>
+              <td>Development (camp + clinics)</td>
+              <td>$1,000–$2,000</td>
+            </tr>
+            <tr>
+              <td>Gear &amp; access</td>
+              <td>$1,000</td>
             </tr>
             <tr>
               <td>
-                <strong>Total with Fargo pathway</strong>
+                <strong>Base elite path total</strong>
               </td>
               <td>
-                <strong>$20,500 – $27,000</strong>
+                <strong>$18,050–$22,800</strong>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
       <p>
-        <strong>Over 4 years of high school: $70,000 – $108,000.</strong> And that doesn&apos;t include middle school development or anything
-        before 9th grade. One parent in our community put it plainly:{" "}
+        <strong>Over 4 years of high school: $72,000 – $91,000.</strong>
+      </p>
+      <p>
+        And that doesn&apos;t include middle school development or anything before 9th grade. One parent in our community put it plainly:{" "}
         <em>
           &ldquo;You can offset some of it by planning vacation around a tournament trip, or subtracting regular meal costs from travel meals —
           but you&apos;re talking maybe $500 to $750 a year. It doesn&apos;t dent the $15K to $20K.&rdquo;
@@ -206,10 +266,6 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       </p>
 
       <h3>Average NC college costs (in-state, including living expenses)</h3>
-      <p className="text-sm text-slate-500">
-        Published cost of attendance varies by school and year; treat the table below as <strong>approximate</strong> totals useful for
-        orientation — not a quote for financial aid.
-      </p>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table>
           <thead>
@@ -296,7 +352,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <strong>$100,000+ for college</strong>.
       </p>
       <p>
-        The total bill from 9th grade through graduation: <strong>$174,000–$212,000.</strong>
+        The total bill from 9th grade through graduation: <strong>$180,000–$200,000.</strong>
       </p>
       <p>
         Most families arrive at the scholarship conversation having never seen the full financial picture laid out in one place. That&apos;s not a
@@ -315,11 +371,29 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
         <RealCostScholarshipRealityGraphic />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          The <strong>total bill</strong> bar ties HS development to college out-of-pocket in the ~<strong>$174k–$212k</strong> range discussed above.
-          Scholarship value is shown separately. Division I — average scholarship covers ~40% per athlete. Academic and need-based aid would likely
-          exist regardless of wrestling.
+          The <strong>total bill</strong> bar ties HS development to college out-of-pocket in the ~<strong>$180k–$200k</strong> range discussed
+          above. Scholarship value is shown separately. Division I — average scholarship covers ~40% per athlete. Academic and need-based aid would
+          likely exist regardless of wrestling.
         </figcaption>
       </figure>
+
+      <h2>Investing where it matters most</h2>
+      <p>
+        Not every dollar spent on wrestling carries equal weight. The families who get the most out of their investment are not necessarily
+        spending the most — they are being intentional about where each dollar goes.
+      </p>
+      <p>
+        One of the most overlooked opportunities in NC wrestling is the college open. For roughly $50–$100 in entry fees, an athlete can compete in
+        front of college coaches on their home mat — one of the highest-impact, lowest-cost investments available at any stage of development.
+        Most families don&apos;t know they exist. The ones who do use them consistently.
+      </p>
+      <p>
+        Beyond that, a focused private lesson targeting a specific technical weakness delivers more than scattered sessions with no clear purpose.
+        One elite summer camp beats two average ones. And on the tournament side, the events that move recruiting conversations — NHSCA Nationals,
+        NHSCA Duals, Super 32, Journeymen — deserve priority over national tournaments across the country that require significant investments in
+        time and money with limited upside and real opportunity cost. The goal is depth over breadth. Fewer things done at the highest level will
+        always outperform more things done at an average one.
+      </p>
 
       <h2>The smarter plan — for every stage</h2>
       <p>
@@ -329,19 +403,24 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       </p>
       <p>There are two levers every NC wrestling family should be pulling simultaneously.</p>
       <p>
-        <strong>Lever 1 — Use other people&apos;s money to fund the sport.</strong> Community fundraising through a 501(c)(3) nonprofit is how families
-        claw back a meaningful portion of what wrestling costs — right now, regardless of your athlete&apos;s age. It is not a workaround. It is the
-        system working exactly as it was designed to. Every dollar raised through NC United in your athlete&apos;s name goes directly to their
-        training, travel, and competition costs. Ten people in your network donating $155 each is <strong>$1,550</strong> toward your
-        wrestler&apos;s summer. Twenty people is $3,100. The math is simple. The ask is not as hard as it feels. And every gift is fully
-        tax-deductible — which means your donors are saving money at tax time while funding your athlete&apos;s development.
+        <strong>Lever 1 — Use other people&apos;s money to fund the sport</strong>
       </p>
       <p>
-        <strong>Lever 2 — Save early and consistently.</strong> It is never too late to start a 529. Even opening one during high school years
-        captures tax-advantaged growth and keeps college savings intentional. For families with younger children — a sibling, a neighbor&apos;s child
-        — the earlier it starts the more powerful it becomes. A plan funded at $370 a month from birth grows to <strong>$228,000+</strong> over 18
-        years at a 10% average annual return. That covers four years at most NC schools with money left over. One parent in our community — a
-        financial advisor — added something most families don&apos;t know:{" "}
+        Community fundraising through a 501(c)(3) nonprofit is one of the most underutilized tools available to wrestling families. When donations
+        are made to a recognized nonprofit in your athlete&apos;s name, every dollar goes directly toward their training, travel, and competition
+        costs — and every gift is fully tax-deductible for the donor. That means your network has a real financial incentive to support your
+        wrestler, not just an emotional one. Ten people giving $150 each is <strong>$1,500</strong> toward your athlete&apos;s summer. Twenty
+        people is $3,000. The math is simple. The ask is not as hard as it feels. And the system exists to make it work.
+      </p>
+      <p>
+        <strong>Lever 2 — Save early and consistently</strong>
+      </p>
+      <p>
+        It is never too late to start a 529. Even opening one during high school years captures tax-advantaged growth and keeps college savings
+        intentional. For families with younger children — a sibling, a neighbor&apos;s child — the earlier it starts the more powerful it becomes. A
+        plan funded at $370 a month from birth grows to <strong>$228,000+</strong> over 18 years at a 10% average annual return. That covers four
+        years at most NC schools with money left over. One parent in our community — a financial advisor — added something most families
+        don&apos;t know:{" "}
         <em>
           &ldquo;If your child doesn&apos;t use the full 529, the SECURE Act now allows you to roll up to $35,000 into a Roth IRA — up to $7,000 per
           year. Your college savings becomes a retirement head start. There is no bad outcome when you start saving.&rdquo;
@@ -351,15 +430,14 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <p>
         Pull both levers. Raise what you can. Save what you can. And let the sport open the doors it was always meant to open.
       </p>
+      <p className="text-sm italic text-slate-600">
+        The 529 illustration is hypothetical — not a prediction, projection, or offer. Real returns vary; plans have fees; balances fluctuate.
+        Talk to a licensed professional about your situation.
+      </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 shadow-sm">
         <RealCostTwoLeversGraphic />
       </figure>
-
-      <p className="text-sm italic text-slate-600">
-        The 529 illustration below is <strong>hypothetical</strong> — not a prediction, projection, or offer. Real returns vary; plans have fees;
-        balances fluctuate. Talk to a licensed professional about your situation.
-      </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-amber-200/60 bg-amber-50/40 shadow-sm">
         <RealCost529ComparisonGraphic />
@@ -368,11 +446,6 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           Not a projection or guarantee.
         </figcaption>
       </figure>
-
-      <p>
-        When college is funded in parallel, a wrestling scholarship becomes <strong>upside</strong>, not oxygen — another reason to review
-        current rules with a tax advisor as your situation evolves.
-      </p>
 
       <h2>The better path forward</h2>
       <p>
@@ -449,9 +522,9 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         neighbors, coworkers — who each donate $155 using that athlete&apos;s name:
       </p>
       <p>
-        <strong>10 × $155 = $1,550</strong> toward that athlete&apos;s summer training fund — not a general pool, not organizational overhead.
-        Directly to that wrestler&apos;s camps, travel, and competition costs.
+        <strong>10 × $155 = $1,550</strong> toward that athlete&apos;s summer training fund
       </p>
+      <p>Not a general pool. Not organizational overhead. Directly to that wrestler&apos;s camps, travel, and competition costs.</p>
       <p>That&apos;s $1,550 earned by making 10 phone calls.</p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm">
@@ -463,10 +536,12 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
 
       <p>
         <a
-          href="/spartan"
+          href="https://app.ncwrestlingunited.com/spartan"
           className="font-semibold text-[#C20017] underline decoration-[#C20017]/40 underline-offset-2 hover:decoration-[#C20017]"
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          Donate to a specific athlete — recruitnc.com/spartan
+          Donate to a specific athlete — app.ncwrestlingunited.com/spartan
         </a>
       </p>
 
@@ -543,8 +618,13 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         </p>
         <p className="my-2">
           Donate to a specific athlete:{" "}
-          <a href="/spartan" className="font-medium text-[#003366] underline">
-            recruitnc.com/spartan
+          <a
+            href="https://app.ncwrestlingunited.com/spartan"
+            className="font-medium text-[#003366] underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            app.ncwrestlingunited.com/spartan
           </a>
         </p>
         <p className="my-2">
