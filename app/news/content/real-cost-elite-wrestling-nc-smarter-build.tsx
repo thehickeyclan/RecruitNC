@@ -6,6 +6,7 @@ import {
   RealCostQuoteTilesGraphic,
   RealCostScholarshipRealityGraphic,
   RealCostSpartanCampaignGraphic,
+  RealCostTwoLeversGraphic,
 } from "@/components/news/real-cost-article-graphics"
 
 /** Hero: same file as `lib/news.ts` for home + /news cards; article page uses it only below (template banner skipped — see `app/news/[slug]/page.tsx`). */
@@ -172,7 +173,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
         <RealCostAnnualBreakdownGraphic />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          Representative model (aligned with the line items above). Individual families vary.
+          Representative model — individual families vary. Ranges in the article (e.g. major travel) use midpoints in the chart.
         </figcaption>
       </figure>
 
@@ -188,19 +189,20 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm">
         <RealCostQuoteTilesGraphic />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          Themes from families and advisors — including the gap between after-tax spend and pre-tax earnings.
+          Perspective on what the investment is really funding — and the tax reality of pre-tax dollars.
         </figcaption>
       </figure>
 
-      <h2>So what are families actually buying?</h2>
+      <h2>Understanding the full college picture</h2>
       <p>
-        The dream, of course, is a Division I scholarship. Let&apos;s look at what that actually pays out — and what it actually costs on the
-        other end.
+        For many families the goal is a Division I scholarship — and that is a worthy and achievable goal for the right athlete. Before making
+        major financial decisions around that path though, it helps to see the full picture of what college actually costs and what a wrestling
+        scholarship typically covers.
       </p>
       <p>
-        One data point every NC wrestling family should know: of NC wrestlers in the class of 2025 and 2026 who signed Division I,{" "}
-        <strong>86% committed to a school within 3 hours of home.</strong> The recruiting landscape for most NC athletes is closer than families
-        think — which makes understanding the real net cost of those specific schools even more important.
+        One data point worth knowing: of NC wrestlers in the class of 2025 and 2026 who signed Division I,{" "}
+        <strong>86% committed to a school within 3 hours of home.</strong> For most NC families the recruiting conversation is closer to home than
+        they might expect — which makes understanding the real net cost of those specific schools especially useful.
       </p>
 
       <h3>Average NC college costs (in-state, including living expenses)</h3>
@@ -294,7 +296,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <strong>$100,000+ for college</strong>.
       </p>
       <p>
-        The total bill from 9th grade through graduation: <strong>$180,000–$200,000.</strong>
+        The total bill from 9th grade through graduation: <strong>$174,000–$212,000.</strong>
       </p>
       <p>
         Most families arrive at the scholarship conversation having never seen the full financial picture laid out in one place. That&apos;s not a
@@ -309,80 +311,53 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         most athletes never reach. That is the North Star worth orienting around — not the scholarship, not the podium, but the person the sport
         is building and where that person can go.
       </p>
-      <p>
-        With strong planning and intentional fundraising, the same families who find money for the next trip can fund training{" "}
-        <em>without</em> letting the scholarship chase define the home. Early savings, a clear budget, and a real ask list—grandparents, employers,
-        neighbors, a Spartan or NC United gift—buy runway for elite academics and career prep: camps and travel get covered, and the athlete keeps
-        room to chase the best <em>school and life</em> fit, not just the next fee.
-      </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
         <RealCostScholarshipRealityGraphic />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          Division I — average scholarship covers ~40% per athlete. Illustrative 4-year totals. Academic and need-based aid would likely exist
-          regardless of wrestling.
+          The <strong>total bill</strong> bar ties HS development to college out-of-pocket in the ~<strong>$174k–$212k</strong> range discussed above.
+          Scholarship value is shown separately. Division I — average scholarship covers ~40% per athlete. Academic and need-based aid would likely
+          exist regardless of wrestling.
         </figcaption>
       </figure>
 
-      <h2>The 529 math that will stop you cold</h2>
-      <p>Here&apos;s the comparison that changes everything.</p>
+      <h2>The smarter plan — for every stage</h2>
       <p>
-        What if instead of spending $80,000 on high school wrestling, a family invested the equivalent monthly amount into a 529 college savings
-        plan from the day their child was born?
+        Most families don&apos;t set out to underfund college savings — life just moves fast and wrestling expenses have a way of arriving before
+        the long-term plan does. Each tournament, each private, each camp feels necessary in the moment because it usually is. The goal isn&apos;t
+        to choose between wrestling and planning — it&apos;s to build a system where both can happen at the same time.
+      </p>
+      <p>There are two levers every NC wrestling family should be pulling simultaneously.</p>
+      <p>
+        <strong>Lever 1 — Use other people&apos;s money to fund the sport.</strong> Community fundraising through a 501(c)(3) nonprofit is how families
+        claw back a meaningful portion of what wrestling costs — right now, regardless of your athlete&apos;s age. It is not a workaround. It is the
+        system working exactly as it was designed to. Every dollar raised through NC United in your athlete&apos;s name goes directly to their
+        training, travel, and competition costs. Ten people in your network donating $155 each is <strong>$1,550</strong> toward your
+        wrestler&apos;s summer. Twenty people is $3,100. The math is simple. The ask is not as hard as it feels. And every gift is fully
+        tax-deductible — which means your donors are saving money at tax time while funding your athlete&apos;s development.
       </p>
       <p>
-        <strong>$80,000 over 4 high school years = ~$1,667/month</strong>
-      </p>
-      <p>
-        If that same family had invested <strong>$370/month from birth</strong> (the 18-year equivalent of the same total), at a 10% average annual
-        return:
-      </p>
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <table>
-          <thead>
-            <tr>
-              <th>Investment</th>
-              <th>Monthly</th>
-              <th>Years</th>
-              <th>Total contributed</th>
-              <th>Value at 18</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>529 from birth</td>
-              <td>$370/mo</td>
-              <td>18 years</td>
-              <td>$79,920</td>
-              <td>
-                <strong>$228,000+</strong>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p>
-        Here is the part that surprises most families. The same household that says they cannot find $350 a month to invest in a 529 will find
-        $20,000 in a year once their athlete is in high school. Not because they were wrong before — but because the sport has a way of making
-        each expense feel necessary in the moment. And it is. The question is simply whether the college plan got the same urgency the
-        tournament schedule did.
-      </p>
-      <p>
-        <strong>$228,000.</strong> That covers 4 years at most NC schools — public or private — with money left over.
-      </p>
-      <p>
-        Compare that to spending $80,000 on wrestling development to earn a scholarship that still leaves a $104,000 college bill.
-      </p>
-      <p>
-        One parent in our community — a financial advisor — added something most families don&apos;t know:{" "}
+        <strong>Lever 2 — Save early and consistently.</strong> It is never too late to start a 529. Even opening one during high school years
+        captures tax-advantaged growth and keeps college savings intentional. For families with younger children — a sibling, a neighbor&apos;s child
+        — the earlier it starts the more powerful it becomes. A plan funded at $370 a month from birth grows to <strong>$228,000+</strong> over 18
+        years at a 10% average annual return. That covers four years at most NC schools with money left over. One parent in our community — a
+        financial advisor — added something most families don&apos;t know:{" "}
         <em>
           &ldquo;If your child doesn&apos;t use the full 529, the SECURE Act now allows you to roll up to $35,000 into a Roth IRA — up to $7,000 per
-          year. Your college savings becomes a retirement head start. Wins on both sides.&rdquo;
-        </em>
+          year. Your college savings becomes a retirement head start. There is no bad outcome when you start saving.&rdquo;
+        </em>{" "}
+        Talk to a licensed professional about what makes sense for your family.
+      </p>
+      <p>
+        Pull both levers. Raise what you can. Save what you can. And let the sport open the doors it was always meant to open.
       </p>
 
-      <p className="text-sm text-slate-500">
-        The 529 illustration is <strong>hypothetical</strong> — not a prediction, projection, or offer. Real returns vary; plans have fees;
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 shadow-sm">
+        <RealCostTwoLeversGraphic />
+      </figure>
+
+      <p className="text-sm italic text-slate-600">
+        The 529 illustration below is <strong>hypothetical</strong> — not a prediction, projection, or offer. Real returns vary; plans have fees;
         balances fluctuate. Talk to a licensed professional about your situation.
       </p>
 
@@ -395,9 +370,8 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       </figure>
 
       <p>
-        The point is structural: when college is funded in parallel, a wrestling scholarship becomes <strong>upside</strong>, not oxygen. And
-        it keeps compounding: funds drawn down over four college years mean the remaining balance can keep growing while your athlete is in school
-        — another reason to review current rules with a tax advisor.
+        When college is funded in parallel, a wrestling scholarship becomes <strong>upside</strong>, not oxygen — another reason to review
+        current rules with a tax advisor as your situation evolves.
       </p>
 
       <h2>The better path forward</h2>
@@ -428,7 +402,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
         <RealCostNonprofitMissionGraphic />
         <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          North Carolina&apos;s wrestling development nonprofit — community investment with accountability.
+          The 501(c)(3) structure exists to serve the athlete — accountable dollars, tax-deductible gifts. NCUnitedWrestling.com · #StrengthInUnity
         </figcaption>
       </figure>
 
@@ -552,8 +526,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <strong>That&apos;s not a small thing. That&apos;s the whole game.</strong>
       </p>
       <p>
-        Use other people&apos;s money to fund your kid&apos;s wrestling. NC United is building that system. The Spartan Race campaign is the first
-        proof of concept. And this is just the beginning.
+        NC United is building that system. The Spartan Race campaign is the first proof of concept. And this is just the beginning.
       </p>
 
       <hr />

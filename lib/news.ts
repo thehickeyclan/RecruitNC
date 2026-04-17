@@ -36,7 +36,7 @@ const ALL_NEWS: NewsItem[] = [
     slug: "real-cost-elite-wrestling-nc-smarter-build",
     title: "Your Kid's Wrestling Career Will Cost More Than Their College",
     summary:
-      "The full line-item picture for elite NC families, the tax and scholarship math in one place, 529 planning vs. tournament spend, and how NC United’s 501(c)(3) and the Spartan campaign turn community giving into training dollars — with clear disclaimers on modeled vs. hypothetical figures.",
+      "Line-item costs for elite NC families, a softer look at college and scholarship math, two levers (fundraise + save), and how NC United’s 501(c)(3) and the Spartan campaign put training dollars back in athletes’ hands — with clear disclaimers on modeled vs. hypothetical figures.",
     href: "/news/real-cost-elite-wrestling-nc-smarter-build",
     date: "2026-04-14",
     image: "/images/real-cost-elite-wrestling-nc-hero.png",
