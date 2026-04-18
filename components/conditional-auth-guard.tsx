@@ -4,8 +4,8 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): `/`, the news index `/news` (article list to entice sign-up), and `/auth/*`.
- * Individual articles `/news/[slug]` require login; all other app routes require login too.
+ * Public routes (no sign-in): `/`, `/news` (index only), `/spartan` and `/spartan/*`, and `/auth/*`.
+ * Individual `/news/[slug]` articles require login; other app routes require login.
  */
 export function ConditionalAuthGuard({
   children,
@@ -18,9 +18,11 @@ export function ConditionalAuthGuard({
   const isHomepage = path === "/"
   /** News listing only — not `/news/some-article` */
   const isNewsIndex = path === "/news" || path === "/news/"
+  /** Spartan fundraising campaign — must stay public (links from article, email, social). */
+  const isSpartan = path === "/spartan" || path.startsWith("/spartan/")
   const isAuthRoute = path.startsWith("/auth/")
 
-  const isPublic = isHomepage || isNewsIndex || isAuthRoute
+  const isPublic = isHomepage || isNewsIndex || isSpartan || isAuthRoute
 
   if (isPublic) {
     return <>{children}</>
