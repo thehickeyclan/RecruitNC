@@ -13,6 +13,7 @@ export function MissionBar() {
   const raisedCents = summary?.totalRaisedCents ?? 0
   const runners = summary?.raceEntryCount ?? 0
   const donations = summary?.giftCount ?? 0
+  const ncUnitedFundCents = summary?.ncUnitedCommunityFundCents ?? 0
 
   useEffect(() => {
     const target = GOAL_CENTS > 0 ? Math.min(100, (raisedCents / GOAL_CENTS) * 100) : 0
@@ -26,6 +27,11 @@ export function MissionBar() {
     maximumFractionDigits: 0,
   })
   const goalUsd = (GOAL_CENTS / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  })
+  const ncUnitedUsd = (ncUnitedFundCents / 100).toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
@@ -54,6 +60,12 @@ export function MissionBar() {
                 style={{ width: `${pct}%` }}
               />
             </div>
+            {!loading && ncUnitedFundCents > 0 && (
+              <p className="mt-3 max-w-md text-left text-xs leading-snug text-[#888] md:max-w-none">
+                <span className="font-semibold text-[#aaa]">NC United fund</span> (community programs, not tied to a
+                single athlete): {ncUnitedUsd}
+              </p>
+            )}
           </div>
           <div className="text-center">
             <p className="font-[family-name:var(--font-barlow-spartan)] text-sm font-semibold uppercase tracking-[0.12em] text-[#999]">

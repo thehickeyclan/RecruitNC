@@ -217,11 +217,20 @@ export function fallbackAthleteLabelFromCode(code: string): string | null {
   return `${pretty} · '${yy}`
 }
 
+/** Athlete column for gifts with no wrestler credit — pooled NC United / community programs. */
+export const SPARTAN_NC_UNITED_FUND_CREDIT_LABEL = "NC United fund"
+
 /** Public table: prefer directory/manual name over raw fundraising code. */
 export function publicAthleteCreditLabel(
   d: Pick<SpartanFayettevilleDonation, "athleteDisplayName" | "manualCreditName" | "athleteCode" | "attribution">,
 ): string | null {
-  if (d.attribution === "general_nc_united" && !d.athleteCode && !d.manualCreditName) return null
+  if (
+    d.attribution === "general_nc_united" &&
+    !d.athleteCode?.trim() &&
+    !d.manualCreditName?.trim()
+  ) {
+    return SPARTAN_NC_UNITED_FUND_CREDIT_LABEL
+  }
   const direct = d.athleteDisplayName?.trim() || d.manualCreditName?.trim()
   if (direct) return direct
   const code = d.athleteCode?.trim()
@@ -244,7 +253,7 @@ export function resolvePublicAthleteCreditLabel(
   codeToFullName: Map<string, string>,
 ): string | null {
   if (d.attribution === "general_nc_united" && !d.athleteCode?.trim() && !d.manualCreditName?.trim()) {
-    return null
+    return SPARTAN_NC_UNITED_FUND_CREDIT_LABEL
   }
 
   if (d.attribution === "manual_name") {

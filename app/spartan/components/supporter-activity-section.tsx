@@ -9,7 +9,7 @@ function formatUsd(cents: number) {
 }
 
 export function SupporterActivitySection() {
-  const { entries, byAthlete, loading, error } = useSpartanMetrics()
+  const { entries, byAthlete, summary, loading, error } = useSpartanMetrics()
 
   if (error) {
     return (
@@ -77,13 +77,13 @@ export function SupporterActivitySection() {
           </div>
         )}
 
-        {byAthlete.length > 0 && (
+        {(byAthlete.length > 0 || (summary?.ncUnitedCommunityFundCents ?? 0) > 0) && (
           <div className="mt-14">
             <h3 className="text-center font-[family-name:var(--font-barlow-spartan)] text-xl font-bold uppercase tracking-tight text-white">
               Totals by athlete
             </h3>
             <p className="mx-auto mt-2 max-w-xl text-center text-xs text-[#666]">
-              Aggregated from gifts with an athlete code in the same window as above.
+              NC United fund (no wrestler credit) and per-athlete totals for the same window as above.
             </p>
             <div className="mt-6 overflow-x-auto rounded border border-[#2A2A2A]">
               <table className="w-full min-w-[520px] text-left text-sm">
@@ -96,6 +96,21 @@ export function SupporterActivitySection() {
                   </tr>
                 </thead>
                 <tbody className="text-[#ccc]">
+                  {(summary?.ncUnitedCommunityFundCents ?? 0) > 0 && summary && (
+                    <tr className="border-b border-[#222] bg-[#141414]/60">
+                      <td className="px-3 py-2.5 text-sm text-[#ddd]">
+                        <span className="font-medium text-white">NC United fund</span>
+                        <span className="mt-0.5 block text-[11px] text-[#888]">Community · not credited to a wrestler</span>
+                      </td>
+                      <td className="px-3 py-2.5 font-semibold tabular-nums text-white">
+                        {formatUsd(summary.ncUnitedCommunityFundCents ?? 0)}
+                      </td>
+                      <td className="px-3 py-2.5 tabular-nums">{summary.ncUnitedCommunityGiftCount ?? 0}</td>
+                      <td className="px-3 py-2.5 tabular-nums text-[#aaa]">
+                        {summary.ncUnitedCommunityRaceSignupCount ?? 0}
+                      </td>
+                    </tr>
+                  )}
                   {byAthlete.map((a) => (
                     <tr key={a.athleteCode} className="border-b border-[#222] last:border-0">
                       <td className="px-3 py-2.5 text-sm text-[#ddd]">

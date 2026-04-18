@@ -33,6 +33,10 @@ export type SpartanMetricsSummary = {
   totalRaisedCents: number
   giftCount: number
   raceEntryCount: number
+  /** Gifts with no athlete code / manual credit — NC United community fund */
+  ncUnitedCommunityFundCents?: number
+  ncUnitedCommunityGiftCount?: number
+  ncUnitedCommunityRaceSignupCount?: number
 }
 
 type SpartanMetricsState = {

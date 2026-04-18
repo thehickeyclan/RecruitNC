@@ -62,6 +62,16 @@ export async function GET(request: NextRequest) {
     const totalRaisedCents = rows.reduce((s, r) => s + r.amountCents, 0)
     const raceEntryCount = rows.filter((r) => r.raceParticipant).length
 
+    const ncUnitedCommunityRows = rows.filter(
+      (r) =>
+        r.attribution === "general_nc_united" &&
+        !r.athleteCode?.trim() &&
+        !r.manualCreditName?.trim(),
+    )
+    const ncUnitedCommunityFundCents = ncUnitedCommunityRows.reduce((s, r) => s + r.amountCents, 0)
+    const ncUnitedCommunityGiftCount = ncUnitedCommunityRows.length
+    const ncUnitedCommunityRaceSignupCount = ncUnitedCommunityRows.filter((r) => r.raceParticipant).length
+
     const res = NextResponse.json({
       campaign: "fayetteville_2026",
       days,
@@ -70,6 +80,9 @@ export async function GET(request: NextRequest) {
         totalRaisedCents,
         giftCount: rows.length,
         raceEntryCount,
+        ncUnitedCommunityFundCents,
+        ncUnitedCommunityGiftCount,
+        ncUnitedCommunityRaceSignupCount,
       },
       entries,
       byAthlete,
