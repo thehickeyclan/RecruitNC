@@ -36,7 +36,7 @@ const ALL_NEWS: NewsItem[] = [
     slug: "real-cost-elite-wrestling-nc-smarter-build",
     title: "Your Kid's Wrestling Career Will Cost More Than Their College",
     summary:
-      "Full line-item annual model ($18K–$23K base path), college and scholarship math ($180K–$200K total bill), investing where it counts, two levers (501(c)(3) fundraising + 529), and the Spartan Race / NC United campaign — with clear disclaimers on modeled vs. hypothetical figures.",
+      "Annual cost table for elite NC families, tax reality, roster caps and college net costs, investing in opens and local training, two levers (community ecosystem + 529), and the Spartan × NC United model — with clear disclaimers on hypothetical figures.",
     href: "/news/real-cost-elite-wrestling-nc-smarter-build",
     date: "2026-04-14",
     image: "/images/real-cost-elite-wrestling-nc-hero.png",

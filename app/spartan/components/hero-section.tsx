@@ -2,9 +2,7 @@
 
 import Image from "next/image"
 import { Suspense } from "react"
-import { CountdownTimer } from "./countdown-timer"
 import { SpartanAthleteRibbon } from "./spartan-athlete-ribbon"
-import { SPARTAN_COUNTDOWN_ISO } from "../data"
 
 export function HeroSection() {
   return (
@@ -45,7 +43,6 @@ export function HeroSection() {
           <p className="mx-auto mb-4 max-w-md text-[15px] font-semibold leading-snug text-white sm:text-base">
             Weekend May 2–3, 2026 · Fayetteville, NC
           </p>
-          <CountdownTimer targetIso={SPARTAN_COUNTDOWN_ISO} className="justify-center" />
           <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-neutral-300">
             Support a wrestler. Race. Or donate. <strong className="text-neutral-200">Every dollar funds training.</strong>
           </p>

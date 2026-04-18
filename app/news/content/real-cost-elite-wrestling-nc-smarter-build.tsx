@@ -2,9 +2,7 @@ import Image from "next/image"
 import {
   RealCost529ComparisonGraphic,
   RealCostAnnualBreakdownGraphic,
-  RealCostNonprofitMissionGraphic,
   RealCostQuoteTilesGraphic,
-  RealCostScholarshipRealityGraphic,
   RealCostSpartanCampaignGraphic,
   RealCostTwoLeversGraphic,
 } from "@/components/news/real-cost-article-graphics"
@@ -22,6 +20,9 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <p className="text-slate-600 font-medium not-italic">
         By <strong>Matt Hickey</strong>, Co-Founder — NC United Wrestling
       </p>
+      <p className="text-slate-500 text-sm">
+        <em>Raleigh, NC — April 2026</em>
+      </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
         <div className="relative aspect-[2.15/1] w-full min-h-[200px] sm:min-h-[240px]">
@@ -37,9 +38,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       </figure>
 
       <h2>The moment every wrestling family knows</h2>
-      <p>
-        There is a moment every wrestling family knows.
-      </p>
+      <p>There is a moment every wrestling family knows.</p>
       <p>
         It is not the state championship. It is not the recruiting call. It is somewhere around sophomore year, sitting in a hotel lobby in
         Greensboro or Virginia Beach or wherever the next tournament has taken you, doing the quiet math on your phone while your kid is asleep
@@ -59,114 +58,12 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <p>Nobody talks about the total. But everybody feels it.</p>
       <p>The good news is there is a smarter way to carry it. This article is about that.</p>
 
-      <h2>What it actually costs to develop an elite NC wrestler</h2>
+      <h2>What it actually costs</h2>
       <p>
-        Let&apos;s put the full picture on the table. This is not an estimate. This is what families are actually spending.
-      </p>
-      <p>
-        We recently shared this breakdown with 15 of NC United&apos;s most competitive wrestling families. The response was immediate and
-        consistent. One parent summed it up simply: <em>&ldquo;I feel like I spend more.&rdquo;</em> They&apos;re probably right — and
-        that&apos;s exactly the point.
+        We shared this breakdown with 15 of NC United&apos;s most competitive wrestling families. One parent summed up the response simply:{" "}
+        <em>&ldquo;I feel like I spend more.&rdquo;</em> They&apos;re probably right.
       </p>
 
-      <h3>Training</h3>
-      <ul>
-        <li>Club dues: $2,100/year</li>
-        <li>NC United membership: $600/year</li>
-        <li>Private lessons (8/month × $75): $4,800/year</li>
-        <li>
-          <strong>Training total: $7,500/year</strong>
-        </li>
-      </ul>
-      <p>
-        A growing number of elite families are also adding mindset and performance coaching — typically $300 to $400 a month — bringing an
-        additional $4,000 to $5,000 to the annual total for those who pursue it.
-      </p>
-
-      <h3>Major competition travel</h3>
-      <ul>
-        <li>
-          <strong>NHSCA Nationals</strong> (Virginia Beach): $1,100–$1,300{" "}
-          <em>(Hotel 3 nights × $180, travel, entry, food)</em>
-        </li>
-        <li>
-          <strong>NHSCA Duals</strong> (Virginia Beach): $1,100–$1,300 <em>(Same venue, same costs)</em>
-        </li>
-        <li>
-          <strong>Journeymen</strong> (travel event): $1,200–$1,800
-        </li>
-        <li>
-          <strong>Super 32</strong> (Greensboro, NC): $200–$400
-        </li>
-        <li>
-          <strong>State tournament</strong> (Greensboro, NC): $150–$300
-        </li>
-        <li>
-          <strong>College opens</strong>: $300
-        </li>
-        <li>
-          <strong>Subtotal: $4,050–$5,400</strong>
-        </li>
-      </ul>
-
-      <h3>Additional events</h3>
-      <ul>
-        <li>2 additional tournaments: $800–$1,600</li>
-        <li>High school season / misc events: $500</li>
-        <li>
-          <strong>Subtotal: $1,300–$2,100</strong>
-        </li>
-      </ul>
-
-      <h3>Family &amp; spectator costs</h3>
-      <ul>
-        <li>Entry fees: $50 × 8 weekends = <strong>$400</strong></li>
-        <li>Additional spectator costs (parking, food, lodging): <strong>$400</strong></li>
-        <li>
-          <strong>Subtotal: $800</strong>
-        </li>
-      </ul>
-
-      <h3>Transportation</h3>
-      <ul>
-        <li>Gas to/from club practice (3× week, 50 weeks): $800–$1,200</li>
-        <li>Gas to/from privates and NC United: $400–$600</li>
-        <li>Local tournament mileage: $200–$400</li>
-        <li>
-          <strong>Subtotal: $1,400–$2,200</strong>
-        </li>
-      </ul>
-
-      <h3>Nutrition &amp; recovery</h3>
-      <ul>
-        <li>Competition day meals and travel food: $400–$600</li>
-        <li>Clean eating premium above normal grocery budget: $600–$1,200</li>
-        <li>
-          <strong>Subtotal: $1,000–$1,800</strong>
-        </li>
-      </ul>
-
-      <h3>Development</h3>
-      <ul>
-        <li>Summer training camp (1 elite camp): $700–$1,500</li>
-        <li>Additional clinics: $300–$500</li>
-        <li>
-          <strong>Subtotal: $1,000–$2,000</strong>
-        </li>
-      </ul>
-
-      <h3>Gear &amp; access</h3>
-      <ul>
-        <li>Gear and apparel (annual): $850</li>
-        <li>FloWrestling subscription: $150</li>
-        <li>
-          <strong>Subtotal: $1,000</strong>
-        </li>
-      </ul>
-
-      <h3>
-        <span aria-hidden>💰</span> Full annual cost
-      </h3>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table>
           <thead>
@@ -177,7 +74,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           </thead>
           <tbody>
             <tr>
-              <td>Training</td>
+              <td>Training (club, NC United, private lessons)</td>
               <td>$7,500</td>
             </tr>
             <tr>
@@ -189,11 +86,11 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
               <td>$1,300–$2,100</td>
             </tr>
             <tr>
-              <td>Family / spectator</td>
+              <td>Family / spectator costs</td>
               <td>$800</td>
             </tr>
             <tr>
-              <td>Transportation</td>
+              <td>Transportation (gas, mileage)</td>
               <td>$1,400–$2,200</td>
             </tr>
             <tr>
@@ -201,7 +98,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
               <td>$1,000–$1,800</td>
             </tr>
             <tr>
-              <td>Development (camp + clinics)</td>
+              <td>Development (elite camp + clinics)</td>
               <td>$1,000–$2,000</td>
             </tr>
             <tr>
@@ -219,14 +116,19 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           </tbody>
         </table>
       </div>
+
       <p>
-        <strong>Over 4 years of high school: $72,000 – $91,000.</strong>
+        <strong>Over 4 years of high school: $72,000–$91,000.</strong>
       </p>
       <p>
-        And that doesn&apos;t include middle school development or anything before 9th grade. One parent in our community put it plainly:{" "}
+        A growing number of elite families are also adding mindset and performance coaching — typically $300 to $400 a month — bringing an
+        additional $4,000 to $5,000 for those who pursue it. And none of this includes anything before 9th grade.
+      </p>
+      <p>
+        One parent put it plainly:{" "}
         <em>
-          &ldquo;You can offset some of it by planning vacation around a tournament trip, or subtracting regular meal costs from travel meals —
-          but you&apos;re talking maybe $500 to $750 a year. It doesn&apos;t dent the $15K to $20K.&rdquo;
+          &ldquo;You can offset some of it by planning vacation around a tournament trip — but you&apos;re talking maybe $500 to $750 a year. It
+          doesn&apos;t dent the $15K to $20K.&rdquo;
         </em>
       </p>
 
@@ -239,11 +141,15 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
 
       <h2>The tax reality nobody mentions</h2>
       <p>
-        To spend $80,000 on wrestling over four years, a family in the 28–32% combined federal and state tax bracket needs to{" "}
-        <strong>earn approximately $115,000–$120,000 in gross income</strong> just to net that $80,000 after taxes.
+        To spend $80,000 on wrestling over four years, a family in a typical combined federal and state tax bracket needs to earn approximately{" "}
+        <strong>$115,000–$120,000 in gross income</strong> just to net that amount after taxes.
       </p>
       <p>
         You&apos;re not spending $80,000. You&apos;re spending <strong>$120,000 of your life&apos;s work</strong>.
+      </p>
+      <p>
+        For families counting on a scholarship to offset that investment — the landscape has shifted in ways most haven&apos;t heard about yet.
+        For everyone else — the college cost picture is worth understanding regardless.
       </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm">
@@ -253,19 +159,25 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         </figcaption>
       </figure>
 
-      <h2>Understanding the full college picture</h2>
+      <h2>The new era — roster caps and the scholarship reality</h2>
       <p>
-        For many families the goal is a Division I scholarship — and that is a worthy and achievable goal for the right athlete. Before making
-        major financial decisions around that path though, it helps to see the full picture of what college actually costs and what a wrestling
-        scholarship typically covers.
+        <strong>The 30-man roster cap</strong> — Schools opting into the House v. NCAA revenue-sharing model are now capped at 30 athletes.
+        Programs that once carried 40 to 50 wrestlers are making harder decisions with fewer spots.
+      </p>
+      <p>
+        <strong>A tighter path to the roster</strong> — With fewer available spots, coaches have less room for development projects. Athletes
+        arriving on campus need to be more ready than ever.
+      </p>
+      <p>
+        <strong>Scholarships remain partial</strong> — Wrestling is an equivalency sport. The average Division I program covers roughly{" "}
+        <strong>40% of a full scholarship</strong> per athlete. A D1 offer is a meaningful reward — not a financial exit strategy.
       </p>
       <p>
         One data point worth knowing: of NC wrestlers in the class of 2025 and 2026 who signed Division I,{" "}
-        <strong>86% committed to a school within 3 hours of home.</strong> For most NC families the recruiting conversation is closer to home than
-        they might expect — which makes understanding the real net cost of those specific schools especially useful.
+        <strong>86% committed to a school within 3 hours of home.</strong> The recruiting conversation for most NC athletes is closer than
+        families expect — which makes understanding the real net cost of those schools especially useful.
       </p>
 
-      <h3>Average NC college costs (in-state, including living expenses)</h3>
       <div className="overflow-x-auto rounded-lg border border-slate-200">
         <table>
           <thead>
@@ -335,47 +247,21 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         </table>
       </div>
 
-      <h3>The scholarship reality</h3>
       <p>
-        Wrestling is an equivalency sport. The average Division I wrestling program offers approximately <strong>40% of a full scholarship</strong>{" "}
-        per athlete. That means:
-      </p>
-      <ul>
-        <li>Average scholarship value: ~$17,000/year</li>
-        <li>Average family out-of-pocket after scholarship: ~$26,000/year</li>
-        <li>
-          <strong>4-year family cost after scholarship: ~$104,000</strong>
-        </li>
-      </ul>
-      <p>
-        So a family spends <strong>$80,000–$100,000 developing a wrestler</strong> who then earns a scholarship that still requires them to pay{" "}
-        <strong>$100,000+ for college</strong>.
-      </p>
-      <p>
-        The total bill from 9th grade through graduation: <strong>$180,000–$200,000.</strong>
-      </p>
-      <p>
-        Most families arrive at the scholarship conversation having never seen the full financial picture laid out in one place. That&apos;s not a
-        failure of planning — it&apos;s a failure of information. Nobody hands wrestling parents a roadmap at the start. The goal of this article
-        is to be that roadmap — so the scholarship, if it comes, is a bonus rather than the only plan.
-      </p>
-      <p>
-        The families who get the most out of this sport are the ones who figure out early that wrestling was never the destination. It is the
-        foundation. The discipline, the resilience, the ability to perform under pressure and get back up when you lose — those are the tools.
-        The goal is to leverage those tools to access the best academic institutions, the strongest networks, and the life opportunities that
-        follow. A wrestler with a 3.8 GPA and a national tournament on their resume has a story that opens doors at schools and in careers that
-        most athletes never reach. That is the North Star worth orienting around — not the scholarship, not the podium, but the person the sport
-        is building and where that person can go.
+        The goal of this article is to be the roadmap nobody handed you — so the scholarship, if it comes, is a bonus rather than the only plan.
       </p>
 
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-        <RealCostScholarshipRealityGraphic />
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          The <strong>total bill</strong> bar ties HS development to college out-of-pocket in the ~<strong>$180k–$200k</strong> range discussed
-          above. Scholarship value is shown separately. Division I — average scholarship covers ~40% per athlete. Academic and need-based aid would
-          likely exist regardless of wrestling.
-        </figcaption>
-      </figure>
+      <h2>Wrestling was never the destination</h2>
+      <p>
+        The families who get the most out of this sport figure out early that wrestling was never the destination. It is the foundation. The
+        discipline, the resilience, the ability to perform under pressure and get back up when you lose — those are the tools. The goal is to
+        leverage those tools to access the best academic institutions, the strongest networks, and the life opportunities that follow.
+      </p>
+      <p>
+        A wrestler with a strong GPA and a national tournament on their resume has a story that opens doors at schools and in careers that most
+        athletes never reach. That is the North Star worth orienting around — not the scholarship, not the podium, but the person the sport is
+        building and where that person can go.
+      </p>
 
       <h2>Investing where it matters most</h2>
       <p>
@@ -383,35 +269,55 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         spending the most — they are being intentional about where each dollar goes.
       </p>
       <p>
-        One of the most overlooked opportunities in NC wrestling is the college open. For roughly $50–$100 in entry fees, an athlete can compete in
-        front of college coaches on their home mat — one of the highest-impact, lowest-cost investments available at any stage of development.
-        Most families don&apos;t know they exist. The ones who do use them consistently.
+        For elite wrestlers actively pursuing a college program, one of the most overlooked opportunities in NC is the <strong>college open</strong>.
+        For roughly $50–$100 in entry fees, an athlete can compete in front of college coaches on their home mat — direct visibility at a fraction of
+        the cost of most travel tournaments. Most families don&apos;t know they exist. The ones who do use them consistently.
       </p>
       <p>
-        Beyond that, a focused private lesson targeting a specific technical weakness delivers more than scattered sessions with no clear purpose.
-        One elite summer camp beats two average ones. And on the tournament side, the events that move recruiting conversations — NHSCA Nationals,
-        NHSCA Duals, Super 32, Journeymen — deserve priority over national tournaments across the country that require significant investments in
-        time and money with limited upside and real opportunity cost. The goal is depth over breadth. Fewer things done at the highest level will
-        always outperform more things done at an average one.
+        North Carolina is also home to more than a dozen collegiate wrestling programs within driving distance of most families in the state.
+        Leveraging access to current NCAA athletes for small group training — often available for $50–$100 per athlete — can deliver more focused,
+        personalized development than a large national camp at ten times the cost. The ratio of instruction to athlete matters. Smaller is almost
+        always better.
+      </p>
+      <p>
+        On the tournament side, the events that move recruiting conversations — NHSCA Nationals, NHSCA Duals, Super 32, Journeymen — deserve
+        priority over national tournaments that require significant investment in time and money with limited upside and real opportunity cost.
+        One elite summer camp beats two average ones. A focused private lesson targeting a specific weakness beats scattered sessions with no clear
+        purpose.
+      </p>
+      <p>
+        The goal is depth over breadth. Fewer things done at the highest level will always outperform more things done at an average one.
       </p>
 
-      <h2>The smarter plan — for every stage</h2>
+      <h2>The smarter plan — two levers</h2>
       <p>
-        Most families don&apos;t set out to underfund college savings — life just moves fast and wrestling expenses have a way of arriving before
-        the long-term plan does. Each tournament, each private, each camp feels necessary in the moment because it usually is. The goal isn&apos;t
-        to choose between wrestling and planning — it&apos;s to build a system where both can happen at the same time.
+        The goal isn&apos;t to choose between wrestling and planning. It&apos;s to build a system where both happen at the same time. There are two
+        levers every NC wrestling family should pull simultaneously.
       </p>
-      <p>There are two levers every NC wrestling family should be pulling simultaneously.</p>
+
       <p>
-        <strong>Lever 1 — Use other people&apos;s money to fund the sport</strong>
+        <strong>Lever 1 — The wrestling community takes care of its own</strong>
       </p>
       <p>
-        Community fundraising through a 501(c)(3) nonprofit is one of the most underutilized tools available to wrestling families. When donations
-        are made to a recognized nonprofit in your athlete&apos;s name, every dollar goes directly toward their training, travel, and competition
-        costs — and every gift is fully tax-deductible for the donor. That means your network has a real financial incentive to support your
-        wrestler, not just an emotional one. Ten people giving $150 each is <strong>$1,500</strong> toward your athlete&apos;s summer. Twenty
-        people is $3,000. The math is simple. The ask is not as hard as it feels. And the system exists to make it work.
+        Of all the sports communities in the world, few are as naturally tight as wrestling. We train together. We travel together. We compete
+        against each other on Saturday and help each other&apos;s kids on Sunday. Coaches open their rooms to athletes from other programs. College
+        wrestlers mentor the high schoolers coming up behind them. Families who have been through the journey reach back to help the ones just
+        starting it.
       </p>
+      <p>
+        But without a shared system, that community operates tactically instead of strategically. Every family makes decisions in isolation — which
+        camp, which tournament, whether the scholarship is worth chasing — under financial pressure, without the benefit of a community that has
+        seen the full picture.
+      </p>
+      <p>
+        A strong ecosystem changes that. When there is shared infrastructure for mentorship, training, career pathways, and collective
+        investment, families stop making survival decisions and start making strategic ones. The North Star shifts from &ldquo;how do we pay for next
+        month&rdquo; to &ldquo;where does this sport take my athlete in ten years.&rdquo;
+      </p>
+      <p>
+        That is what NC United aims to build. And that is why it matters beyond any single camp, clinic, or tournament.
+      </p>
+
       <p>
         <strong>Lever 2 — Save early and consistently</strong>
       </p>
@@ -419,20 +325,21 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         It is never too late to start a 529. Even opening one during high school years captures tax-advantaged growth and keeps college savings
         intentional. For families with younger children — a sibling, a neighbor&apos;s child — the earlier it starts the more powerful it becomes. A
         plan funded at $370 a month from birth grows to <strong>$228,000+</strong> over 18 years at a 10% average annual return. That covers four
-        years at most NC schools with money left over. One parent in our community — a financial advisor — added something most families
-        don&apos;t know:{" "}
+        years at most NC schools with money left over.
+      </p>
+      <p>
+        One parent in our community — a financial advisor — added something most families don&apos;t know:{" "}
         <em>
           &ldquo;If your child doesn&apos;t use the full 529, the SECURE Act now allows you to roll up to $35,000 into a Roth IRA — up to $7,000 per
           year. Your college savings becomes a retirement head start. There is no bad outcome when you start saving.&rdquo;
-        </em>{" "}
-        Talk to a licensed professional about what makes sense for your family.
+        </em>
       </p>
       <p>
         Pull both levers. Raise what you can. Save what you can. And let the sport open the doors it was always meant to open.
       </p>
       <p className="text-sm italic text-slate-600">
-        The 529 illustration is hypothetical — not a prediction, projection, or offer. Real returns vary; plans have fees; balances fluctuate.
-        Talk to a licensed professional about your situation.
+        The 529 illustration is hypothetical — not a prediction, projection, or offer. Real returns vary. Talk to a licensed professional about
+        your situation.
       </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2 shadow-sm">
@@ -447,85 +354,62 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         </figcaption>
       </figure>
 
-      <h2>The better path forward</h2>
+      <h2>NC United × Spartan Race — the model in action</h2>
       <p>
-        Wrestling builds something no 529 can buy — discipline, resilience, competitive instincts, and character that carries athletes through
-        life. The lessons learned on the mat are worth every dollar. That is not in question.
+        In April 2026, NC United partnered with Spartan Race to create the most tangible proof of what community fundraising through a 501(c)(3)
+        can do for NC wrestling families.
       </p>
       <p>
-        <strong>But the financial model is broken.</strong> And the families bearing the full weight of it deserve a better system.
+        Spartan is donating the value of every race entry — zero cost to the participant. The motivation behind the partnership is personal:
+        Spartan&apos;s CEO&apos;s son is an NHSCA National Champion heading to the University of Pennsylvania. This is not a corporate sponsorship.
+        It is a wrestling family taking care of the wrestling community.
       </p>
       <p>
-        There is a familiar defense that comes up whenever anyone questions the cost: &ldquo;The lessons wrestling teaches are invaluable.&rdquo;
-        And they are. Nobody is arguing that. But the life lessons wrestling builds don&apos;t require your family to arrive at college decision
-        day with no savings and a partial scholarship. The discipline, the resilience, the work ethic — none of that is diminished by a 529 plan.
-        In fact, the family that plans well can invest more in training, access more resources, and give their athlete a genuine shot at schools
-        most families never consider — the Ivies, the academically elite programs, the full range of opportunity that a great wrestler with a
-        strong academic profile can actually reach. The sport deserves better than to be used as a reason not to plan.
+        <strong>Three ways to participate — all fully tax-deductible:</strong>
       </p>
-      <p>
-        Compared to many elite youth sports — travel baseball, hockey, gymnastics, lacrosse — wrestling is actually one of the more accessible
-        paths. The investment is real but it is not out of line with what competitive athletics demands at the highest level. The opportunity is
-        in building a smarter system around it — one where families are not carrying the full weight alone.
-      </p>
-      <p>
-        <strong>That changes with a 501(c)(3).</strong>
-      </p>
-
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-        <RealCostNonprofitMissionGraphic />
-        <figcaption className="border-t border-slate-200 bg-white px-3 py-2.5 text-center text-sm text-slate-600">
-          The 501(c)(3) structure exists to serve the athlete — accountable dollars, tax-deductible gifts. NCUnitedWrestling.com · #StrengthInUnity
-        </figcaption>
-      </figure>
-
-      <h2>What a nonprofit changes — the Spartan Race example</h2>
-      <p>
-        In <strong>April 2026</strong>, NC United — North Carolina&apos;s only active 501(c)(3) wrestling development organization — partnered
-        with <strong>Spartan Race CEO Joe De Sena</strong> to create a fundraising campaign that puts real money back in athletes&apos; hands.
-      </p>
-      <p>There are three ways to participate — all fully tax-deductible charitable donations to NC United:</p>
       <ul>
         <li>
-          <strong>Race</strong> — Register for any Spartan Race event at a discounted rate through NC United. Your donation can be designated to
-          a specific athlete&apos;s training fund or to the NC United general training fund.
+          <strong>Race</strong> — Register for any Spartan Race event at a discounted rate through NC United. Designate your donation to a specific
+          athlete or the NC United general training fund. Spartan sends your entry code directly.
         </li>
         <li>
-          <strong>Sponsor an athlete</strong> — Don&apos;t want to race? Make a tax-deductible donation in support of a specific wrestler. Search
-          their name at checkout and your gift credits directly to their training and competition costs.
+          <strong>Sponsor an athlete</strong> — Make a tax-deductible donation in support of a specific wrestler. Search their name at checkout —
+          your gift credits directly to their training and competition costs.
         </li>
         <li>
-          <strong>Support NC United</strong> — Make a direct tax-deductible donation to the NC United training fund, supporting NC wrestlers
-          statewide.
+          <strong>Give</strong> — Make a direct tax-deductible donation to the NC United training fund, supporting NC wrestlers statewide.
         </li>
       </ul>
-      <p>
-        Every dollar — whether you run or not — is a fully tax-deductible charitable gift to NC United. No race required to make an impact.
-      </p>
 
-      <h3>What the charitable deduction actually means</h3>
-      <p>Say your uncle donates $500 to NC United in your wrestler&apos;s name. At tax time:</p>
-      <ul>
-        <li>He deducts $500 from his taxable income</li>
-        <li>In a 22% tax bracket, that saves him $110 on his tax bill</li>
-        <li>His $500 donation effectively costs him $390 out of pocket</li>
-        <li>100% of the $500 goes to your athlete&apos;s training</li>
-      </ul>
+      <h3>What the deduction actually means</h3>
       <p>
-        Compare that to paying $500 in fees to a non-501(c)(3) organization: no deduction, no accountability, no benefit at tax time. The money
-        disappears.
+        Say your uncle donates $500 to NC United in your wrestler&apos;s name. At tax time he deducts $500 from his taxable income. In a 22% bracket
+        that saves him $110 on his tax bill — his $500 donation effectively costs him $390 out of pocket. And 100% of it goes to your athlete&apos;s
+        training. Compare that to paying fees to a non-501(c)(3): no deduction, no accountability, no benefit at tax time.
       </p>
 
       <h3>The math every athlete needs to run</h3>
       <p>
-        The Spartan Super 10K donation is $155. An athlete with a network of 10 people — parents, grandparents, aunts and uncles, coaches,
-        neighbors, coworkers — who each donate $155 using that athlete&apos;s name:
+        <strong>10 donors × $155 = $1,550 toward your summer training fund.</strong>
+      </p>
+      <p>Not a general pool. Not overhead. Directly to your camps, travel, and competition costs. Earned by making 10 phone calls.</p>
+      <p>
+        Athletes — build your network. Make the ask. Show up for your own development the way you show up on the mat.
       </p>
       <p>
-        <strong>10 × $155 = $1,550</strong> toward that athlete&apos;s summer training fund
+        <strong>Race, sponsor, or give:</strong>{" "}
+        <a
+          href="https://app.ncwrestlingunited.com/spartan"
+          className="font-semibold text-[#C20017] underline decoration-[#C20017]/40 underline-offset-2 hover:decoration-[#C20017]"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          app.ncwrestlingunited.com/spartan
+        </a>
       </p>
-      <p>Not a general pool. Not organizational overhead. Directly to that wrestler&apos;s camps, travel, and competition costs.</p>
-      <p>That&apos;s $1,550 earned by making 10 phone calls.</p>
+      <p className="text-slate-600">
+        <em>Fayetteville, NC · May 2–3, 2026</em>
+      </p>
 
       <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1 shadow-sm">
         <RealCostSpartanCampaignGraphic />
@@ -534,90 +418,37 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         </figcaption>
       </figure>
 
-      <p>
-        <a
-          href="https://app.ncwrestlingunited.com/spartan"
-          className="font-semibold text-[#C20017] underline decoration-[#C20017]/40 underline-offset-2 hover:decoration-[#C20017]"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Donate to a specific athlete — app.ncwrestlingunited.com/spartan
-        </a>
-      </p>
-
-      <h2>The ecosystem NC wrestling has been missing</h2>
-      <p>The 501(c)(3) structure isn&apos;t just about fundraising. It&apos;s the foundation for building something that has never existed in North Carolina wrestling — a true developmental ecosystem.</p>
-      <p>
-        <strong>What that looks like:</strong>
-      </p>
-      <ul>
-        <li>
-          <strong>Developmental programs</strong> — organized pathways from middle school through high school with real funding behind them
-        </li>
-        <li>
-          <strong>Mentorship</strong> — college wrestlers mentoring high schoolers, high schoolers mentoring middle schoolers
-        </li>
-        <li>
-          <strong>Internships</strong> — opportunities for athletes aging out of competition to stay connected to the sport through coaching,
-          operations, and program management
-        </li>
-        <li>
-          <strong>Career pathways</strong> — connecting the discipline and work ethic of wrestling to professional networks and opportunities
-          beyond the mat
-        </li>
-        <li>
-          <strong>Community investment</strong> — corporate sponsors, foundations, and individual donors who can give tax-advantaged dollars to a
-          cause they believe in
-        </li>
-        <li>
-          <strong>Statewide coordination</strong> — a single organizing body that elevates the entire state rather than individual clubs competing
-          in isolation
-        </li>
-      </ul>
-      <p>
-        Every dollar raised through NC United&apos;s nonprofit model funds this ecosystem. Every athlete who earns their training costs through
-        community fundraising learns something more valuable than a single tournament result — they learn how to build support, communicate their
-        value, and ask for what they&apos;ve worked for.
-      </p>
-      <p>Those are skills that follow them for life.</p>
-
       <h2>The bottom line</h2>
       <p>
-        Wrestling families in North Carolina are spending $15,000–$25,000 per year on a sport that builds extraordinary human beings. The
-        financial burden is real, it&apos;s significant, and for too many families it&apos;s the reason their athlete never reaches their
-        potential.
+        Save early if you can. Leverage your community and the tax code to fund training. And use the sport for what it was always meant to be — a
+        foundation that opens doors to the best academic institutions, the strongest networks, and a life built on everything the mat taught your
+        athlete to become.
       </p>
       <p>
-        The ultimate goal should always be to use wrestling to open opportunities that wouldn&apos;t otherwise exist — educationally and in life.
-        The families who plan well give their athlete real choice and real freedom when that moment comes. Save early if you can. Leverage your
-        community and the tax code to fund training. And use the sport for what it was always meant to be — a foundation that opens doors to the
-        best academic institutions, the strongest networks, and a life built on everything the mat taught your athlete to become.
-      </p>
-      <p>
-        A 501(c)(3) nonprofit doesn&apos;t eliminate that cost. But it does something no for-profit organization ever could — it turns the entire
-        community into investors in your athlete&apos;s development, with the IRS sharing the cost through the tax code.
+        A 501(c)(3) nonprofit doesn&apos;t eliminate the cost of wrestling. But it does something no for-profit organization ever could — it turns
+        the entire community into investors in your athlete&apos;s development, with the IRS sharing the cost through the tax code.
       </p>
       <p>
         <strong>That&apos;s not a small thing. That&apos;s the whole game.</strong>
       </p>
       <p>
-        NC United is building that system. The Spartan Race campaign is the first proof of concept. And this is just the beginning.
+        NC United aims to build that system. The Spartan Race campaign is the first proof of concept. And this is just the beginning.
       </p>
 
       <hr />
 
       <footer className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-        <p className="my-0 font-medium text-slate-700">NC United Wrestling</p>
         <p className="my-2">
-          Registered 501(c)(3) nonprofit. EIN: <strong>99-3757238</strong>. All donations are fully tax-deductible. Learn more and support NC
-          athletes at{" "}
+          <em>
+            NC United Wrestling is a registered 501(c)(3) nonprofit. EIN: <strong>99-3757238</strong>. All donations are fully tax-deductible.
+            Nothing in this article is tax, legal, or investment advice — consult a licensed professional before making planning decisions.
+          </em>
+        </p>
+        <p className="my-2">
           <a href="https://ncunitedwrestling.com" className="font-medium text-[#003366] underline" target="_blank" rel="noopener noreferrer">
             NCUnitedWrestling.com
           </a>
-          .
-        </p>
-        <p className="my-2">
-          Donate to a specific athlete:{" "}
+          {" · "}
           <a
             href="https://app.ncwrestlingunited.com/spartan"
             className="font-medium text-[#003366] underline"
@@ -627,12 +458,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
             app.ncwrestlingunited.com/spartan
           </a>
         </p>
-        <p className="my-2">
-          Consult a tax or financial professional before making planning decisions. Nothing in this article is tax, legal, or investment advice.
-        </p>
-        <p className="my-3 text-slate-500">
-          #NCUnited #StrengthInUnity #NCWrestling #SpartanRace
-        </p>
+        <p className="my-3 text-slate-500">#NCUnited #StrengthInUnity #NCWrestling #SpartanRace</p>
       </footer>
     </article>
   )

@@ -42,8 +42,9 @@ export function RealCostAnnualBreakdownGraphic() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">Annual model</p>
         <h4 className="text-lg font-bold text-slate-900">Where the dollars go (representative)</h4>
         <p className="text-sm text-slate-600">
-          Line-item subtotals sum to about <strong className="text-slate-800">{formatMoney(sum)}</strong> — aligned with the{" "}
-          <strong>$18,050–$22,800</strong> base elite path total in the article.
+          Representative midpoints sum to about <strong className="text-slate-800">{formatMoney(sum)}</strong>.{" "}
+          <strong>Base elite path total: $18,050–$22,800</strong> per year (no Road to Fargo add-on in this model). Transportation and nutrition
+          are broken out as their own categories.
         </p>
       </div>
       <div className="h-[320px] w-full sm:h-[380px]">
@@ -78,15 +79,15 @@ export function RealCostAnnualBreakdownGraphic() {
   )
 }
 
-/** HS dev & total use article midpoints within stated ranges; total bill range $180k–$200k. */
+/** HS dev uses $72k–$91k (4 yr); total bill ≈ HS dev midpoint + college OOP (~$176k–$195k illustrative). */
 const SCHOLARSHIP_COMPARE = [
-  { label: "HS development (4 yr range $72k–$91k)", short: "HS dev", amount: 81500, fill: NAVY },
+  { label: "HS development (4 yr range $72,000–$91,000)", short: "HS dev", amount: 81500, fill: NAVY },
   { label: "Avg. D1 scholarship value (~40%, 4 yr)", short: "Scholarship", amount: 68000, fill: "#1e4976" },
   { label: "Out-of-pocket after scholarship (4 yr)", short: "College OOP", amount: 104000, fill: RED },
   {
-    label: "Total bill 9th grade → graduation (illustrative range $180k–$200k)",
+    label: "Total bill 9th grade → graduation (illustrative ~$176k–$195k)",
     short: "Total bill",
-    amount: 190000,
+    amount: 185500,
     fill: "#0e7490",
   },
 ]
@@ -98,9 +99,9 @@ export function RealCostScholarshipRealityGraphic() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">The scholarship reality</p>
         <h4 className="text-lg font-bold text-slate-900">The full financial picture — 9th grade through graduation</h4>
         <p className="mt-1 text-sm text-slate-600">
-          Illustrative midpoints for bars; HS development spans <strong>$72,000–$91,000</strong> over four years. The{" "}
-          <strong>total bill</strong> bar reflects HS development plus college out-of-pocket — often discussed as roughly{" "}
-          <strong>$180,000–$200,000</strong> in this model. Scholarship value is shown separately.
+          HS wrestling development is modeled at <strong>$72,000–$91,000</strong> over four years (not $80k–$100k). The{" "}
+          <strong>total bill</strong> bar uses the combined illustrative range with college out-of-pocket — roughly{" "}
+          <strong>$176,000–$195,000</strong> in this update. Scholarship value is shown separately.
         </p>
       </div>
       <div className="h-[280px] w-full sm:h-[320px]">
@@ -108,7 +109,7 @@ export function RealCostScholarshipRealityGraphic() {
           <BarChart data={SCHOLARSHIP_COMPARE} margin={{ top: 12, right: 12, left: 8, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
             <XAxis dataKey="short" tick={{ fontSize: 10 }} interval={0} />
-            <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={48} domain={[0, 210000]} />
+            <YAxis tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} width={48} domain={[0, 200000]} />
             <Tooltip
               content={({ active, payload }) => {
                 if (!active || !payload?.[0]) return null
@@ -208,36 +209,65 @@ export function RealCost529ComparisonGraphic() {
 
 export function RealCostTwoLeversGraphic() {
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">The smarter plan</p>
-        <h4 className="text-xl font-bold text-slate-900">Two levers. Pull both.</h4>
+    <div className="overflow-hidden rounded-2xl border-2 border-[#003366]/25 shadow-[0_20px_50px_-20px_rgba(0,51,102,0.35)]">
+      <div className="bg-gradient-to-r from-[#003366] via-[#0a4a7a] to-[#003366] px-5 py-5 text-center sm:py-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-amber-200/95">The smarter plan</p>
+        <p className="mt-2 font-sans text-2xl font-black uppercase leading-tight tracking-tight text-white sm:text-3xl">
+          <span className="block sm:inline">Two levers.</span>{" "}
+          <span className="block text-amber-200/95 sm:inline">Pull both.</span>
+        </p>
+        <p className="mt-2 text-sm font-medium text-white/85">Built for NC wrestling families — shareable as one idea.</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col rounded-xl border-2 border-[#C20017]/25 bg-white p-5 shadow-sm">
-          <div className="mb-2 flex items-center gap-2 text-[#C20017]">
-            <HeartHandshake className="h-5 w-5 shrink-0" aria-hidden />
-            <p className="text-xs font-bold uppercase tracking-wide">Lever 1 — Fundraise</p>
+
+      <div className="grid bg-white md:grid-cols-2">
+        <div className="relative border-b border-[#003366]/10 p-6 sm:p-8 md:border-b-0 md:border-r md:border-[#003366]/10">
+          <span
+            className="pointer-events-none absolute right-3 top-2 font-sans text-7xl font-black leading-none text-[#C20017]/[0.12] sm:right-5 sm:text-8xl"
+            aria-hidden
+          >
+            1
+          </span>
+          <div className="relative flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#C20017]/12 text-[#C20017] ring-2 ring-[#C20017]/25">
+              <HeartHandshake className="h-6 w-6" aria-hidden />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C20017]">Lever 1</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">The community takes care of its own</p>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                Shared infrastructure for mentorship, training, and collective investment — strategic decisions, not survival mode. That&apos;s
+                what NC United is building for North Carolina wrestling.
+              </p>
+            </div>
           </div>
-          <p className="text-sm leading-relaxed text-slate-700">
-            Use community support and the tax code to fund training <strong>right now</strong>. Ten people giving $150 each is{" "}
-            <strong>$1,500</strong> toward your athlete&apos;s summer — every gift to a 501(c)(3) like NC United is fully tax-deductible for the
-            donor.
-          </p>
         </div>
-        <div className="flex flex-col rounded-xl border-2 border-[#003366]/25 bg-slate-50/80 p-5 shadow-sm">
-          <div className="mb-2 flex items-center gap-2 text-[#003366]">
-            <PiggyBank className="h-5 w-5 shrink-0" aria-hidden />
-            <p className="text-xs font-bold uppercase tracking-wide">Lever 2 — Save</p>
+
+        <div className="relative p-6 sm:p-8">
+          <span
+            className="pointer-events-none absolute right-3 top-2 font-sans text-7xl font-black leading-none text-[#003366]/[0.12] sm:right-5 sm:text-8xl"
+            aria-hidden
+          >
+            2
+          </span>
+          <div className="relative flex items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#003366]/10 text-[#003366] ring-2 ring-[#003366]/20">
+              <PiggyBank className="h-6 w-6" aria-hidden />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#003366]">Lever 2</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">Save early and consistently</p>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                A 529 turns time and discipline into optionality for college — tax-advantaged, intentional, and never too late to start.
+              </p>
+            </div>
           </div>
-          <p className="text-sm leading-relaxed text-slate-700">
-            It is never too late to start a 529. Tax-advantaged growth works at any stage. Talk to a licensed advisor about what fits your family.
-          </p>
         </div>
       </div>
-      <p className="text-center text-sm font-medium text-slate-700">
-        Pull both levers. Raise what you can. Save what you can.
-      </p>
+
+      <div className="border-t border-[#003366]/10 bg-slate-50 px-4 py-4 text-center">
+        <p className="text-sm font-bold tracking-tight text-[#003366]">Pull both levers. Raise what you can. Save what you can.</p>
+        <p className="mt-1 text-xs text-slate-500">NC United Wrestling · RecruitNC</p>
+      </div>
     </div>
   )
 }
@@ -322,7 +352,7 @@ export function RealCostSpartanCampaignGraphic() {
   const threeWays = [
     {
       title: "Race",
-      body: "Register for any Spartan Race event at a discounted rate through NC United. Your donation can be designated to a specific athlete's training fund or to the NC United general training fund.",
+      body: "Register at a discounted rate through NC United. Spartan sends your entry code directly.",
     },
     {
       title: "Sponsor",

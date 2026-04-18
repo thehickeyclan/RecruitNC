@@ -17,7 +17,9 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   if (isSpartanCampaign) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A0A0A]">
-        <main className="flex-1">{children}</main>
+        <ConditionalAuthGuard>
+          <main className="flex-1">{children}</main>
+        </ConditionalAuthGuard>
       </div>
     )
   }
