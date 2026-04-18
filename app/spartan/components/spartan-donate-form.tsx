@@ -279,7 +279,9 @@ export function SpartanDonateForm() {
     setError(null)
     const name = donorName.trim()
     if (name.length < 2) {
-      setError('Enter "Your name" — the person paying (cardholder), not the wrestler you\'re sponsoring.')
+      setError(
+        "Enter the name that should appear on the receipt — individual or organization — not the wrestler you're sponsoring.",
+      )
       return
     }
     if (flow === null) {
@@ -500,14 +502,15 @@ export function SpartanDonateForm() {
         <>
           <div className="mt-6 space-y-3 rounded-lg border border-[#2a3d4f] border-l-4 border-l-[#5a8ab0] bg-[#0c1014] p-3 sm:p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8ab4d8]">
-              1 · Your name (person paying)
+              1 · Name on receipt
             </p>
             <p className="text-xs leading-snug text-[#9ca3af]">
-              Cardholder / receipt — not the wrestler (that&apos;s step 2).
+              Individual <strong className="font-medium text-[#c5d4e0]">or</strong> company / foundation — whoever is on the
+              card or should appear on the tax receipt. Not the wrestler (that&apos;s step 2).
             </p>
             <div>
               <label htmlFor="spartan-donor-name" className="text-sm font-medium text-[#ccc]">
-                Your name
+                Full name or organization
               </label>
               <input
                 id="spartan-donor-name"
@@ -515,8 +518,8 @@ export function SpartanDonateForm() {
                 required
                 minLength={2}
                 autoComplete="name"
-                placeholder="Your full name as on the payment / receipt"
-                aria-label="Your name — person paying, not the wrestler you sponsor"
+                placeholder="e.g. Jane Doe — or Acme Industries, LLC / Your Town Rotary"
+                aria-label="Full name or organization on receipt — not the wrestler you sponsor"
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
                 className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"

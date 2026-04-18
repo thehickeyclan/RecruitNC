@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 })
   }
   if (!donorName || donorName.length < 2) {
-    return NextResponse.json({ error: "Your full name is required." }, { status: 400 })
+    return NextResponse.json(
+      { error: "Full name or organization name on the receipt is required." },
+      { status: 400 },
+    )
   }
   if (!Number.isFinite(amountCents) || amountCents < 500 || amountCents > 50_000_000) {
     return NextResponse.json({ error: "Invalid amount (min $5)." }, { status: 400 })
