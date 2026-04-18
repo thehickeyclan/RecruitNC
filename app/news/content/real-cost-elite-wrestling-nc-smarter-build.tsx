@@ -11,7 +11,7 @@ import {
 const HERO_SRC = "/images/real-cost-elite-wrestling-nc-hero.png"
 
 /**
- * Your Kid's Wrestling Career Will Cost More Than Their College — NC United analysis, 529, 501(c)(3), Spartan.
+ * What Elite Wrestling Really Costs — NC United analysis, 529, 501(c)(3), Spartan.
  * Financial illustrations labeled hypothetical where appropriate.
  */
 export function RealCostEliteWrestlingNcSmarterBuildContent() {

@@ -34,7 +34,7 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "real-cost-elite-wrestling-nc-smarter-build",
     slug: "real-cost-elite-wrestling-nc-smarter-build",
-    title: "Your Kid's Wrestling Career Will Cost More Than Their College",
+    title: "What Elite Wrestling Really Costs — And When the Bill Rivals College",
     summary:
       "Annual cost table for elite NC families, tax reality, roster caps and college net costs, investing in opens and local training, two levers (community ecosystem + 529), and the Spartan × NC United model — with clear disclaimers on hypothetical figures.",
     href: "/news/real-cost-elite-wrestling-nc-smarter-build",
