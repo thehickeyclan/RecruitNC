@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 
 /**
- * Public routes (no sign-in): **home**, **news index + articles**, and **/auth/*** (sign-in, sign-up, callback, reset, etc.).
+ * Public routes (no sign-in): `/`, `/news` and `/news/*`, and `/auth/*` (sign-in, sign-up, callback, reset, etc.).
  * All other app routes require login — profiles, rankings, store, national team, Spartan, NCHSAA hubs, etc.
  */
 export function ConditionalAuthGuard({
