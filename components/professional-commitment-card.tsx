@@ -372,6 +372,16 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
 
   const instagramHandle = getInstagramHandle()
 
+  const rawNcRank =
+    athlete?.prospect_ranking != null && String(athlete.prospect_ranking).trim() !== ""
+      ? Number(athlete.prospect_ranking)
+      : athlete?.rankings?.nc_rank != null
+        ? Number(athlete.rankings.nc_rank)
+        : null
+  const ncRankPositive = rawNcRank != null && Number.isFinite(rawNcRank) && rawNcRank >= 1 ? rawNcRank : null
+  /** Shown below header on card back only when ranked (header already shows Class of). */
+  const backCardNcRank = ncRankPositive != null && ncRankPositive <= 30 ? ncRankPositive : null
+
   const getImagePositionClass = () => {
     const athleteName = athlete.name?.toLowerCase() || ""
     if (athleteName.includes("lorenzo alston")) {
@@ -511,24 +521,11 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
               </button>
             </div>
 
-            {/* Ranking — blends with card back (gold on dark blue), no box */}
-            {(() => {
-              const gradYear = athlete?.graduationyear ?? athlete?.graduationYear ?? null
-              const raw =
-                athlete?.prospect_ranking != null && String(athlete.prospect_ranking).trim() !== ""
-                  ? Number(athlete.prospect_ranking)
-                  : athlete?.rankings?.nc_rank != null
-                    ? Number(athlete.rankings.nc_rank)
-                    : null
-              const num = raw != null && Number.isFinite(raw) && raw >= 1 ? raw : null
-              const displayRank = num != null && num <= 30 ? num : null
-
-              return (
-                <p className="text-center text-sm mb-3" style={{ color: "#D3B574" }}>
-                  Class of {gradYear ?? "—"} {displayRank != null ? `· #${displayRank}` : ""}
-                </p>
-              )
-            })()}
+            {backCardNcRank != null && (
+              <p className="text-center text-sm mb-3" style={{ color: "#D3B574" }}>
+                #{backCardNcRank} in NC
+              </p>
+            )}
 
             <div className="bg-white rounded-lg p-3 mb-3 shadow-sm border relative overflow-hidden">
               <h4 className="font-bold text-gray-900 mb-2 text-center text-xs relative z-10">COLLEGE COMMITMENT</h4>
