@@ -7,8 +7,8 @@ import {
   RealCostTwoLeversGraphic,
 } from "@/components/news/real-cost-article-graphics"
 
-/** Hero: same file as `lib/news.ts` for home + /news cards; article page uses it only below (template banner skipped — see `app/news/[slug]/page.tsx`). */
-const HERO_SRC = "/images/real-cost-elite-wrestling-nc-hero.png"
+/** Campaign headline graphic (aligned to NC United social): annual + career totals. Also listed in `lib/news.ts` for cards. */
+const HERO_SRC = "/images/real-cost-campaign-headline-nc-united.png"
 
 /**
  * What Elite Wrestling Really Costs — NC United analysis, 529, 501(c)(3), Spartan.
@@ -24,13 +24,13 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <em>Raleigh, NC — April 2026</em>
       </p>
 
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-        <div className="relative aspect-[2.15/1] w-full min-h-[200px] sm:min-h-[240px]">
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-[#0a1628] shadow-sm">
+        <div className="relative aspect-[4/5] w-full min-h-[220px] sm:aspect-[16/11] sm:min-h-[280px]">
           <Image
             src={HERO_SRC}
-            alt="The real cost of elite wrestling in North Carolina — and the smarter way to develop your athlete without betting your family's financial future on a scholarship"
+            alt="NC United: $15,000–$25,000 per year; $70,000–$100,000 or more over a career — most families never see it as one number"
             fill
-            className="object-cover object-center"
+            className="object-contain object-center"
             sizes="(max-width: 768px) 100vw, 48rem"
             priority
           />
@@ -51,8 +51,8 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       <p>And you think — how did we get here? And more importantly — how do we keep going?</p>
       <p>
         If you are raising a serious wrestler in North Carolina, you are probably spending somewhere between{" "}
-        <strong>$15,000 and $25,000 per year</strong> on their development. Over four years of high school that is{" "}
-        <strong>$60,000 to $100,000</strong>. Most families never see it as one number because it never arrives as one number. It comes in
+        <strong>$15,000 and $25,000 per year</strong> on their development. Over a high school career — about four years — that stacks to{" "}
+        <strong>$70,000–$100,000+</strong>. Most families never see it as <em>one number</em> because it never arrives as one number. It comes in
         pieces — a few hundred here, a few hundred there — each one easy to justify on its own.
       </p>
       <p>Nobody talks about the total. But everybody feels it.</p>
@@ -60,7 +60,7 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
 
       <h2>What it actually costs</h2>
       <p>
-        We shared this breakdown with 15 of NC United&apos;s most competitive wrestling families. One parent summed up the response simply:{" "}
+        We shared this breakdown with 25 of NC United&apos;s most competitive wrestling families. One parent summed up the response simply:{" "}
         <em>&ldquo;I feel like I spend more.&rdquo;</em> They&apos;re probably right.
       </p>
 
@@ -118,7 +118,8 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
       </div>
 
       <p>
-        <strong>Over 4 years of high school: $72,000–$91,000.</strong>
+        <strong>Over four years of high school, the line-by-line model above totals $72,000–$91,000</strong> — squarely in the{" "}
+        <strong>$70,000–$100,000+</strong> career band we use in statewide messaging (before optional add-ons like mindset coaching).
       </p>
       <p>
         A growing number of elite families are also adding mindset and performance coaching — typically $300 to $400 a month — bringing an
@@ -141,11 +142,13 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
 
       <h2>The tax reality nobody mentions</h2>
       <p>
-        To spend $80,000 on wrestling over four years, a family in a typical combined federal and state tax bracket needs to earn approximately{" "}
-        <strong>$115,000–$120,000 in gross income</strong> just to net that amount after taxes.
+        To spend about <strong>$85,000</strong> on wrestling over four years (midpoint of the <strong>$70,000–$100,000+</strong> career range), a
+        family in a typical combined federal and state tax bracket needs to earn approximately{" "}
+        <strong>$115,000–$125,000 in gross income</strong> just to net that amount after taxes.
       </p>
       <p>
-        You&apos;re not spending $80,000. You&apos;re spending <strong>$120,000 of your life&apos;s work</strong>.
+        You&apos;re not spending one number on paper. You&apos;re spending <strong>well over $100,000 of your life&apos;s work</strong> once you count
+        the tax bite.
       </p>
       <p>
         For families counting on a scholarship to offset that investment — the landscape has shifted in ways most haven&apos;t heard about yet.

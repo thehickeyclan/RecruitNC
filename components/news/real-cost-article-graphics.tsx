@@ -99,9 +99,10 @@ export function RealCostScholarshipRealityGraphic() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">The scholarship reality</p>
         <h4 className="text-lg font-bold text-slate-900">The full financial picture — 9th grade through graduation</h4>
         <p className="mt-1 text-sm text-slate-600">
-          HS wrestling development is modeled at <strong>$72,000–$91,000</strong> over four years (not $80k–$100k). The{" "}
-          <strong>total bill</strong> bar uses the combined illustrative range with college out-of-pocket — roughly{" "}
-          <strong>$176,000–$195,000</strong> in this update. Scholarship value is shown separately.
+          HS wrestling development is modeled at <strong>$72,000–$91,000</strong> over four years — inside the{" "}
+          <strong>$70,000–$100,000+</strong> career band from NC United&apos;s statewide messaging. The <strong>total bill</strong> bar combines
+          that HS window with illustrative college out-of-pocket — roughly <strong>$176,000–$195,000</strong>. Scholarship value is shown
+          separately.
         </p>
       </div>
       <div className="h-[280px] w-full sm:h-[320px]">
@@ -280,7 +281,7 @@ export function RealCostQuoteTilesGraphic() {
       featured: false,
     },
     {
-      q: "You're not spending $80,000. You're spending $120,000 of your life's work.",
+      q: "You're not spending $85,000 after tax on paper. You're spending about $120,000 of earned income to fund it.",
       sub: "The tax reality nobody mentions",
       featured: true,
     },

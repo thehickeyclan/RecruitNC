@@ -39,7 +39,7 @@ const ALL_NEWS: NewsItem[] = [
       "Annual cost table for elite NC families, tax reality, roster caps and college net costs, investing in opens and local training, two levers (community ecosystem + 529), and the Spartan × NC United model — with clear disclaimers on hypothetical figures.",
     href: "/news/real-cost-elite-wrestling-nc-smarter-build",
     date: "2026-04-14",
-    image: "/images/real-cost-elite-wrestling-nc-hero.png",
+    image: "/images/real-cost-campaign-headline-nc-united.png",
     imagePosition: "center",
     /** Match Lynchburg / NHSCA recap: wide banner fills aspect frame on desktop; `contain` left a tiny graphic in a tall gray box. */
     imageFit: "cover",
