@@ -280,6 +280,7 @@ export const WRESTLING_CLUBS_LIST = [
   "Iron Tide",
   "K-Vegas",
   "Mooresville",
+  "Mount Airy Wrestling Club",
   "Mustang",
   "NC Pride",
   "None",

@@ -110,6 +110,7 @@ const WRESTLING_CLUBS = [
   "K-Vegas",
   "Lake Norman Wrestling Club",
   "Mooresville",
+  "Mount Airy Wrestling Club",
   "Mustang",
   "NC Pride",
   "None",
