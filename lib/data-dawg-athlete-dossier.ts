@@ -98,12 +98,19 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
   const displayName = athleteDisplayName(athlete)
   const nameForQueries = displayName
   const highSchool = String(athlete.highschool ?? athlete.high_school ?? "").trim()
-  const gradYear = Number(athlete.graduationyear ?? athlete.grad_year ?? 0) || new Date().getFullYear()
+  const rawGrad = athlete.graduationyear ?? athlete.grad_year
+  const hasValidGrad =
+    rawGrad != null &&
+    String(rawGrad).trim() !== "" &&
+    Number.isFinite(Number(rawGrad)) &&
+    Number(rawGrad) >= 1990 &&
+    Number(rawGrad) <= 2050
+  const gradYear = hasValidGrad ? Math.floor(Number(rawGrad)) : new Date().getFullYear()
   const profileAthlete = toAthleteForProfile(athlete)
 
   const [tournament, nhscaDisplay, ncUnited] = await Promise.all([
     loadProfileTournamentData(supabase, profileAthlete, { allTime: true }),
-    getNHSCAForAthlete(supabase, athlete),
+    getNHSCAForAthlete(supabase, athlete, { tablesAllTime: true }),
     getUltimateClubDualsFromTables(supabase, nameForQueries, highSchool || undefined),
   ])
 
@@ -134,8 +141,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     }
   }
 
-  const yearMin = gradYear - 4
-  const yearMax = gradYear + 1
+  const yearMin = hasValidGrad ? gradYear - 4 : 1990
+  const yearMax = hasValidGrad ? gradYear + 1 : 2035
   let stateDualLines: string[] = []
   if (highSchool) {
     const { data: dualRows } = await supabase

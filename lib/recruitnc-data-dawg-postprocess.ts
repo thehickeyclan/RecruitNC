@@ -4,41 +4,12 @@
  * on the final `answer` string before `NextResponse.json` (main success path and any path that returns `answer`).
  */
 
-const MIN_YEAR = 1990
-const MAX_YEAR = 2035
-
+/**
+ * Previously stripped NCHSAA lines outside an inferred "Class of" window — that removed real alumni
+ * history when grad year was mis-inferred from the answer text. Disabled; keep formatting fixes only.
+ */
 function stripImpossibleNchsaaYears(answer: string): string {
-  const nchsaaBlock = answer.match(
-    /((🏆\s*)?NCHSAA\s+State\s+Results\s*:?\s*\n)([\s\S]*?)(?=\n\s*(🏆|Super32|NHSCA|National Team|Career|High School Career|🇺🇸|\n\n\s*[A-Z])|$)/i,
-  )
-  if (!nchsaaBlock) return answer
-
-  const [, header, , sectionContent] = nchsaaBlock
-  const classMatch = answer.match(/\b[Cc]lass\s+of\s+(20\d{2})\b/)
-  let gradYear: number | null = classMatch ? parseInt(classMatch[1], 10) : null
-  if (!gradYear && sectionContent) {
-    const yearMatches = sectionContent.match(/^\s*[-•*]\s*(20\d{2})\s*:/gm)
-    if (yearMatches?.length) {
-      const maxY = Math.max(...yearMatches.map((m) => parseInt(m.replace(/\D/g, "").slice(0, 4), 10)))
-      gradYear = maxY + 2
-    }
-  }
-  if (!gradYear || gradYear < 2000 || gradYear > 2040) return answer
-
-  const minYear = Math.max(MIN_YEAR, gradYear - 4)
-  const maxYear = Math.min(MAX_YEAR, gradYear)
-
-  const filtered = sectionContent
-    .replace(/^(\s*[-•*]\s*)(20\d{2})(\s*:\s*[^\n]*)/gm, (match, _p, yearStr) => {
-      const y = parseInt(yearStr, 10)
-      return y >= minYear && y <= maxYear ? match : ""
-    })
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
-
-  const fullBlock = nchsaaBlock[0]
-  const newBlock = header + filtered
-  return answer.replace(fullBlock, newBlock).replace(/\n{3,}/g, "\n\n").trim()
+  return answer
 }
 
 export function applyRecruitNcDataDawgAnswerPostProcess(answer: string): string {

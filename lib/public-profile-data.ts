@@ -9,6 +9,7 @@ import { recruitNcDebugLogNhsca } from "@/lib/recruitnc-debug"
 import {
   dedupeNhscaByYearForGradYear,
   getNHSCAFromTables,
+  getNHSCAFromTablesAllTime,
   type TournamentResultRow,
 } from "@/lib/tournament-tables"
 import {
@@ -138,6 +139,15 @@ export function resolveGraduationYear(athlete: Record<string, unknown>): number 
   return new Date().getFullYear()
 }
 
+/** Real grad year on row for NHSCA Senior/Junior dedupe; undefined when missing/invalid (do not substitute current year). */
+function gradYearForNhscaBracketDedupe(athlete: Record<string, unknown>): number | undefined {
+  const raw =
+    athlete.graduationyear ?? athlete.graduationYear ?? (athlete as { graduation_year?: unknown }).graduation_year
+  const n = Number(raw)
+  if (Number.isFinite(n) && n >= 1990 && n <= 2050) return Math.floor(n)
+  return undefined
+}
+
 /**
  * Merge NHSCA from placement tables (name lookup) with athlete row (nhsca_results JSON + legacy columns).
  * Prefer table row when both have the same year and the table row has data.
@@ -208,12 +218,16 @@ export function mergeNhscaForPublicRankings(
  * merged with `nhsca_results` JSON + legacy columns (any year). Do not reimplement table walks elsewhere.
  *
  * Pass a full `athletes` row when possible; for name-only lookups use `{ name, wrestling_name?, graduationyear }`.
+ * `tablesAllTime`: load placement tables across all years (Data Dawg / alumni dossiers); merge still uses profile JSON + optional bracket dedupe when grad year is known.
  */
 export async function getNHSCAForAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
+  options?: { tablesAllTime?: boolean },
 ): Promise<TournamentResultForDisplay[]> {
+  const useAllTime = options?.tablesAllTime === true
   const gradYear = resolveGraduationYear(athlete)
+  const bracketGrad = gradYearForNhscaBracketDedupe(athlete)
   const name = (athlete.name ?? "").toString().trim()
   const fromParts = [athlete.firstName, athlete.firstname, athlete.lastName, athlete.lastname]
     .filter(Boolean)
@@ -227,13 +241,16 @@ export async function getNHSCAForAthlete(
   if (wrestlingName && wrestlingName.toLowerCase() !== primaryName.toLowerCase()) bases.add(wrestlingName)
   const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
   for (const n of bases) {
-    const rows = await getNHSCAFromTables(supabase, n, gradYear)
+    const rows = useAllTime
+      ? await getNHSCAFromTablesAllTime(supabase, n)
+      : await getNHSCAFromTables(supabase, n, gradYear)
     merged.push(...rows)
   }
   const uniq = uniqNhscaTableRows(merged)
   uniq.sort((a, b) => (b.year as number) - (a.year as number))
   const fromRow = buildPublicProfileTournamentData(athlete)
-  const out = mergeNhscaForPublicRankings(uniq, fromRow.nhscaResults, gradYear)
+  const mergeBracketYear = useAllTime ? bracketGrad ?? undefined : gradYear
+  const out = mergeNhscaForPublicRankings(uniq, fromRow.nhscaResults, mergeBracketYear)
   const aid = athlete.id != null ? String(athlete.id).slice(0, 8) : "n/a"
   recruitNcDebugLogNhsca("getNHSCAForAthlete:done", {
     athleteIdPrefix: aid,

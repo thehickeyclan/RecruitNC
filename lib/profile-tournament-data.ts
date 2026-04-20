@@ -35,9 +35,18 @@ export interface LoadProfileTournamentDataOptions {
   allTime?: boolean
 }
 
+/** Valid graduation year on profile; avoids defaulting NULL to current year (which hid alumni state/NHSCA rows). */
+function parseGradYearForProfile(athlete: AthleteForProfile): { grad: number; hasValid: boolean } {
+  const raw = athlete.graduationyear
+  if (raw == null || String(raw).trim() === "") return { grad: new Date().getFullYear(), hasValid: false }
+  const n = Number(raw)
+  if (!Number.isFinite(n) || n < 1990 || n > 2050) return { grad: new Date().getFullYear(), hasValid: false }
+  return { grad: Math.floor(n), hasValid: true }
+}
+
 /**
  * Load NCHSAA, NHSCA, and Super32 for one athlete.
- * allTime: true = NHSCA/Super32 over all years; false = grad-year window (unified profile default).
+ * allTime: true = full-history paths (no bogus grad-year clamp on NCHSAA state); false = grad-year window when year is known.
  */
 export async function loadProfileTournamentData(
   supabase: SupabaseClient,
@@ -45,18 +54,24 @@ export async function loadProfileTournamentData(
   options?: LoadProfileTournamentDataOptions
 ): Promise<ProfileTournamentData> {
   const name = (athlete.name ?? "").toString().trim()
-  const gradYear = Number(athlete.graduationyear) || new Date().getFullYear()
+  const { grad, hasValid } = parseGradYearForProfile(athlete)
   const highSchool = (athlete.highschool ?? "").toString().trim()
   const allTime = options?.allTime === true
 
   const [nchsaa, nhsca, super32] = await Promise.all([
-    getNCHSAAResultsForProfile(supabase, name, gradYear),
+    allTime
+      ? getNCHSAAResultsForProfile(supabase, name, undefined)
+      : getNCHSAAResultsForProfile(supabase, name, hasValid ? grad : undefined),
     allTime
       ? getNHSCAFromTablesAllTime(supabase, name)
-      : getNHSCAFromTables(supabase, name, gradYear),
+      : hasValid
+        ? getNHSCAFromTables(supabase, name, grad)
+        : Promise.resolve([]),
     allTime
       ? getSuper32FromTableAllTime(supabase, name, { highSchool: highSchool || undefined })
-      : getSuper32FromTable(supabase, name, gradYear, { highSchool: highSchool || undefined }),
+      : hasValid
+        ? getSuper32FromTable(supabase, name, grad, { highSchool: highSchool || undefined })
+        : Promise.resolve([]),
   ])
 
   return { nchsaa, nhsca, super32 }
