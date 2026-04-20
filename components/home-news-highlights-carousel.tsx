@@ -64,7 +64,7 @@ export function HomeNewsHighlightsCarousel() {
               <div
                 className={`relative w-full overflow-hidden border-b border-slate-100 ${
                   mainStory.imageFit === "contain"
-                    ? "h-72 bg-slate-100 sm:h-80 md:h-96 lg:h-[28rem]"
+                    ? `h-72 sm:h-80 md:h-96 lg:h-[28rem] ${mainStory.imageBannerBgClass ?? "bg-slate-100"}`
                     : // Aspect-ratio frame (no magic h-*). Phone: 16/10 like side cards. md+: wider ratio so full-width isn’t a skyscraper.
                       "aspect-[16/10] bg-slate-100 md:aspect-[2.15/1]"
                 }`}
@@ -165,7 +165,9 @@ function StoryCard({ item }: { item: NewsItem }) {
     >
       <div className="flex flex-col">
         <div
-          className={`relative aspect-[16/10] w-full shrink-0 ${item.imageFit === "contain" ? "bg-white" : "bg-slate-100"}`}
+          className={`relative aspect-[16/10] w-full shrink-0 ${
+            item.imageFit === "contain" ? item.imageBannerBgClass ?? "bg-white" : "bg-slate-100"
+          }`}
         >
           {item.image ? (
             <Image

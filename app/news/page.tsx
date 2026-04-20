@@ -39,7 +39,7 @@ export default function NewsPage() {
                     <div
                       className={`relative w-full overflow-hidden border-b border-slate-100 ${
                         item.imageFit === "contain"
-                          ? "h-64 bg-slate-100 sm:h-72 md:h-96"
+                          ? `h-64 sm:h-72 md:h-96 ${item.imageBannerBgClass ?? "bg-slate-100"}`
                           : // Match home main story: aspect frame for cover (no h-* strip/skyscraper fights).
                               "aspect-[16/10] bg-slate-100 md:aspect-[2.15/1]"
                       }`}
@@ -93,7 +93,9 @@ export default function NewsPage() {
                   <div className="flex gap-4 p-5">
                     {item.image ? (
                       <div
-                        className={`relative h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg ${item.imageFit === "contain" ? "bg-white" : "bg-slate-100"}`}
+                        className={`relative h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg ${
+                          item.imageFit === "contain" ? item.imageBannerBgClass ?? "bg-white" : "bg-slate-100"
+                        }`}
                       >
                         <Image
                           src={item.image}

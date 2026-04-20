@@ -42,9 +42,10 @@ export function RealCostAnnualBreakdownGraphic() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]">Annual model</p>
         <h4 className="text-lg font-bold text-slate-900">Where the dollars go (representative)</h4>
         <p className="text-sm text-slate-600">
-          Representative midpoints sum to about <strong className="text-slate-800">{formatMoney(sum)}</strong>.{" "}
-          <strong>Base elite path total: $18,050–$22,800</strong> per year (no Road to Fargo add-on in this model). Transportation and nutrition
-          are broken out as their own categories.
+          <span className="font-semibold text-[#003366]">Same headline as statewide messaging:</span> about{" "}
+          <strong>$15,000–$25,000</strong> per year and <strong>$70,000–$100,000+</strong> over a high school career. Below, representative
+          midpoints sum to about <strong className="text-slate-800">{formatMoney(sum)}</strong> per year — matching the article&apos;s{" "}
+          <strong>$18,050–$22,800</strong> base elite path (no Road to Fargo add-on; transportation and nutrition are broken out).
         </p>
       </div>
       <div className="h-[320px] w-full sm:h-[380px]">
@@ -81,7 +82,12 @@ export function RealCostAnnualBreakdownGraphic() {
 
 /** HS dev uses $72k–$91k (4 yr); total bill ≈ HS dev midpoint + college OOP (~$176k–$195k illustrative). */
 const SCHOLARSHIP_COMPARE = [
-  { label: "HS development (4 yr range $72,000–$91,000)", short: "HS dev", amount: 81500, fill: NAVY },
+  {
+    label: "HS development (4 yr: detailed model $72k–$91k; career headline $70k–$100k+)",
+    short: "HS dev",
+    amount: 81500,
+    fill: NAVY,
+  },
   { label: "Avg. D1 scholarship value (~40%, 4 yr)", short: "Scholarship", amount: 68000, fill: "#1e4976" },
   { label: "Out-of-pocket after scholarship (4 yr)", short: "College OOP", amount: 104000, fill: RED },
   {

@@ -23,6 +23,11 @@ export interface NewsItem {
   imageFit?: "cover" | "contain"
   /** With cover: scale up slightly so logo-style PNGs fill the banner. */
   imageBannerZoom?: boolean
+  /**
+   * When imageFit is "contain", background behind the image (default slate-100).
+   * Use a dark class for campaign art so headline numbers read clearly.
+   */
+  imageBannerBgClass?: string
   /** On /news index: full-width image banner above text (hero-style). */
   newsListBanner?: boolean
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
@@ -36,13 +41,14 @@ const ALL_NEWS: NewsItem[] = [
     slug: "real-cost-elite-wrestling-nc-smarter-build",
     title: "What Elite Wrestling Really Costs — And When the Bill Rivals College",
     summary:
-      "Annual cost table for elite NC families, tax reality, roster caps and college net costs, investing in opens and local training, two levers (community ecosystem + 529), and the Spartan × NC United model — with clear disclaimers on hypothetical figures.",
+      "Headline numbers: about $15,000–$25,000 per year and $70,000–$100,000+ over a high school career — plus the full cost table, tax reality, roster caps, two levers (community + 529), and the Spartan × NC United model.",
     href: "/news/real-cost-elite-wrestling-nc-smarter-build",
     date: "2026-04-14",
     image: "/images/real-cost-campaign-headline-nc-united.png",
     imagePosition: "center",
-    /** Match Lynchburg / NHSCA recap: wide banner fills aspect frame on desktop; `contain` left a tiny graphic in a tall gray box. */
-    imageFit: "cover",
+    /** Full-bleed campaign art: contain + dark bg so $15k–$25k / $70k–$100k+ stay legible (cover was cropping the headline). */
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#0a1628]",
     newsListBanner: true,
     category: "NC UNITED",
     categoryBadgeClass: "bg-[#003366]",
