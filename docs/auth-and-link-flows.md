@@ -35,11 +35,13 @@
 
 1. User goes to **Sign in** → **Forgot your password?** → enters email → **Send reset link**.
 2. App calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: base + "/auth/reset-password" })`. Supabase sends an email.
-3. Link in email goes to `https://app.ncwrestlingunited.com/auth/reset-password?code=...` (or Supabase may send to Site URL; then **RecoveryRedirect** on any page detects `code` / `token_hash` and redirects to `/auth/reset-password` with the same params).
-4. **Reset-password page** (client): reads `code` (or token_hash + type) from URL, calls `exchangeCodeForSession(code)` (or verifyOtp), then shows the “new password” form. User submits → `updateUser({ password })` → success.
-5. **Supabase:** Site URL and Redirect URLs must include your production origin (e.g. `https://YOUR_DOMAIN/**`) so the link is allowed.
+3. Link in email goes to `https://app.ncwrestlingunited.com/auth/reset-password?code=...` or via **`/auth/callback?code=...&next=/auth/reset-password`** (or Supabase may send to Site URL; then **RecoveryRedirect** on any page detects `code` / `token_hash` and redirects to `/auth/reset-password` with the same params).
+4. **Reset-password page**: The **server** checks for an existing session in cookies (covers the callback redirect case where the browser client could not read HttpOnly cookies). The **client** still exchanges `code` / hash / `token_hash` when present. User enters new + confirm password → **POST `/api/auth/update-password`** (server runs `updateUser` with the cookie session) → success → redirect to sign-in.
+5. **Supabase:** Site URL and Redirect URLs must include your production origin (e.g. `https://YOUR_DOMAIN/**`) and **`https://YOUR_DOMAIN/auth/reset-password`** so the link is allowed.
 
 **Association:** The reset link is one-time and is tied to the **email** you requested it for. No “user” is associated until the link is used and the code is exchanged; then that session is the user.
+
+**If someone sees a “landing” page but no password fields:** Usually the reset session never reached the browser (expired link, wrong domain, or email opened the generic home URL without `code`). They should request a new link from **Forgot password** and use the same email as their account.
 
 ---
 

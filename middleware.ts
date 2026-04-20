@@ -43,6 +43,7 @@ export async function middleware(request: NextRequest) {
     '/auth/clear-cooldown',
     '/auth/callback',
     '/api/auth/signin',
+    '/api/auth/update-password',
     '/api/auth/signup',
     '/api/auth/reset-password',
     '/api/auth/clear-cooldown',
