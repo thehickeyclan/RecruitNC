@@ -602,11 +602,14 @@ export function SpartanDonateFormWizard() {
             {flow === "race" && (
               <>
                 {raceFor && <li>{raceFor === "self" ? "You are the runner" : "Runner is someone else"}</li>}
-                {tierPreference && <li>Distance: {SPARTAN_RACE_TIERS.find((t) => t.id === tierPreference)?.name ?? tierPreference}</li>}
-                {amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
+                {raceStep >= 5 && tierPreference && (
+                  <li>Distance: {SPARTAN_RACE_TIERS.find((t) => t.id === tierPreference)?.name ?? tierPreference}</li>
+                )}
+                {/* Amount defaults to a suggestion in state; only show in summary after the amount step (6) is passed */}
+                {raceStep >= 7 && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
               </>
             )}
-            {flow === "donate" && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
+            {flow === "donate" && donateStep >= 4 && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
             {teeEligible && shirtSize && <li>Tee: {shirtSize}</li>}
           </ul>
         </div>
