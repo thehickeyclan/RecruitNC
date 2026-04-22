@@ -318,8 +318,11 @@ export function SpartanDonateFormWizard() {
       if (raceFor) {
         items.push({
           id: "runner",
-          kicker: "Runner",
-          text: raceFor === "self" ? "You are the runner" : "Someone else is running",
+          kicker: "Who’s racing",
+          text:
+            raceFor === "self"
+              ? "You’re the Spartan race runner (you on the course)"
+              : "Someone else is the race runner",
         })
       }
       if (raceStep >= 4 && hasAthleteCredit) {
@@ -1097,11 +1100,18 @@ export function SpartanDonateFormWizard() {
                 setRaceRegEmail(email)
                 setError(null)
               }}
-              className={`min-h-[48px] rounded border px-3 text-sm font-bold ${
+              className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded border px-2 py-2.5 text-center text-sm font-bold ${
                 raceFor === "self" ? "border-[#CC0000] bg-[#2a1515] text-white" : "border-[#444] bg-[#0A0A0A] text-[#ccc]"
               }`}
             >
-              I am the runner
+              <span className="leading-tight">You&apos;re the Spartan</span>
+              <span
+                className={`text-[10px] font-medium leading-tight ${
+                  raceFor === "self" ? "text-[#d4d4d4]" : "text-[#888]"
+                }`}
+              >
+                Race runner (you, on the course)
+              </span>
             </button>
             <button
               type="button"
@@ -1111,11 +1121,18 @@ export function SpartanDonateFormWizard() {
                 setRaceRegEmail((prev) => prev || email)
                 setError(null)
               }}
-              className={`min-h-[48px] rounded border px-3 text-sm font-bold ${
+              className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded border px-2 py-2.5 text-center text-sm font-bold ${
                 raceFor === "other" ? "border-[#CC0000] bg-[#2a1515] text-white" : "border-[#444] bg-[#0A0A0A] text-[#ccc]"
               }`}
             >
-              A family member / friend runs
+              <span className="leading-tight">Someone else runs</span>
+              <span
+                className={`text-[10px] font-medium leading-tight ${
+                  raceFor === "other" ? "text-[#d4d4d4]" : "text-[#888]"
+                }`}
+              >
+                Family or friend is the race runner
+              </span>
             </button>
           </div>
         </div>
