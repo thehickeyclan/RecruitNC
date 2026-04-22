@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Barlow_Condensed, DM_Sans } from "next/font/google"
 import "./spartan-campaign.css"
 
@@ -18,7 +18,23 @@ const dmSans = DM_Sans({
 
 const base = process.env.NEXT_PUBLIC_APP_URL || "https://app.ncwrestlingunited.com"
 
+/** Own manifest + icons so “Add to Home Screen” uses /spartan and the campaign mark, not the main app. */
 export const metadata: Metadata = {
+  metadataBase: new URL(base),
+  applicationName: "Team NC × Spartan",
+  manifest: "/api/manifest/spartan",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Team NC × Spartan",
+  },
+  icons: {
+    icon: [
+      { url: "/images/spartan-app-icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/spartan-app-icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/images/spartan-apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   title: "Team NC × Spartan — Fayetteville May 2–3, 2026 · Race or sponsor NC wrestling",
   description:
     "Race any Spartan distance with Team NC, or sponsor a wrestler or donate to NC United — tax-deductible 501(c)(3). Fayetteville weekend May 2–3, 2026.",
@@ -35,6 +51,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: `${base}/spartan`,
   },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#0a0a0a",
 }
 
 export default function SpartanLayout({ children }: { children: React.ReactNode }) {

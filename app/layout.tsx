@@ -46,9 +46,9 @@ export default function RootLayout({
   return (
     <html lang="en" style={{ scrollBehavior: "smooth" }} suppressHydrationWarning>
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="NC Wrestling" />
+        {/*
+          Apple PWA / home-screen title & capable flags come from export const metadata.appleWebApp
+          so /spartan can override. Keep generic mobile cap flags here. */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#003366" />
         <meta name="msapplication-tap-highlight" content="no" />
