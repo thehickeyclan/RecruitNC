@@ -50,6 +50,8 @@ export function SpartanDonateFormClassic() {
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
+  /** Optional: contact person if receipt is an organization (Stripe: payer_contact_name) */
+  const [payerContactName, setPayerContactName] = useState("")
   /** Race path: optional — who is actually running if not the donor (shown on public supporter table) */
   const [raceParticipantName, setRaceParticipantName] = useState("")
   /** Public supporter list shows name; false = anonymous on /api/spartan/supporters */
@@ -321,6 +323,7 @@ export function SpartanDonateFormClassic() {
         body: JSON.stringify({
           email: email.trim(),
           donorName: name,
+          ...(payerContactName.trim() ? { payerContactName: payerContactName.trim().slice(0, 120) } : {}),
           donorListPublic,
           amountCents,
           tierPreference:
@@ -537,6 +540,20 @@ export function SpartanDonateFormClassic() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
+              />
+            </div>
+            <div>
+              <label htmlFor="spartan-donor-contact" className="text-sm font-medium text-[#ccc]">
+                Contact name <span className="font-normal text-[#666]">(optional)</span>
+              </label>
+              <p className="mt-0.5 text-[11px] text-[#666]">If the receipt is a company, who we should thank or follow up with.</p>
+              <input
+                id="spartan-donor-contact"
+                type="text"
+                autoComplete="name"
+                value={payerContactName}
+                onChange={(e) => setPayerContactName(e.target.value)}
                 className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
               />
             </div>

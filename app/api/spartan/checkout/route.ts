@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
     raceRegistrationEmail?: string
     /** Receipt / metadata: individual vs organization name */
     payerType?: string
+    /** If receipt name is a company, optional person for thank-yous / follow-up (Stripe metadata) */
+    payerContactName?: string
     shirtSize?: string
     shipLine1?: string
     shipLine2?: string
@@ -83,6 +85,8 @@ export async function POST(request: NextRequest) {
     typeof body.raceRegistrationEmail === "string" ? body.raceRegistrationEmail.trim().slice(0, 320) : ""
   const payerTypeRaw = typeof body.payerType === "string" ? body.payerType.trim().toLowerCase() : ""
   const payerTypeNormalized = payerTypeRaw === "organization" || payerTypeRaw === "org" ? "organization" : "person"
+  const payerContactName =
+    typeof body.payerContactName === "string" ? body.payerContactName.trim().slice(0, 120) : ""
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
@@ -233,6 +237,7 @@ export async function POST(request: NextRequest) {
         tier_preference: tierPreference || "unspecified",
         donor_name: donorName,
         payer_type: payerTypeNormalized,
+        ...(payerContactName ? { payer_contact_name: payerContactName } : {}),
         donor_list_public: donorListPublic ? "true" : "false",
         race_entry_requested: raceEntryRequested ? "true" : "false",
         fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",

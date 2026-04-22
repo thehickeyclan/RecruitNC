@@ -58,6 +58,8 @@ export function SpartanDonateFormWizard() {
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
+  /** Optional: person at the org (thank-yous) when receipt is a business name */
+  const [payerContactName, setPayerContactName] = useState("")
   const [donorListPublic, setDonorListPublic] = useState(true)
   const [fundraisingCode, setFundraisingCode] = useState("")
 
@@ -493,6 +495,7 @@ export function SpartanDonateFormWizard() {
         body: JSON.stringify({
           email: email.trim(),
           donorName: name,
+          ...(payerContactName.trim() ? { payerContactName: payerContactName.trim().slice(0, 120) } : {}),
           donorListPublic: flow === "donate" ? donorListPublic : true,
           amountCents,
           tierPreference:
@@ -830,6 +833,20 @@ export function SpartanDonateFormWizard() {
             />
           </div>
           <div>
+            <label htmlFor="spartan-donor-contact-d" className="text-sm font-medium text-[#ccc]">
+              Contact name <span className="font-normal text-[#666]">(optional)</span>
+            </label>
+            <p className="mt-0.5 text-[11px] text-[#666]">If the receipt is a company, who we should thank or follow up with.</p>
+            <input
+              id="spartan-donor-contact-d"
+              type="text"
+              autoComplete="name"
+              value={payerContactName}
+              onChange={(e) => setPayerContactName(e.target.value)}
+              className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none"
+            />
+          </div>
+          <div>
             <label htmlFor="spartan-supporter-list-d" className="text-sm font-medium text-[#ccc]">
               Public supporter list
             </label>
@@ -892,6 +909,11 @@ export function SpartanDonateFormWizard() {
             <li>
               <span className="text-[#666]">Email:</span> {email}
             </li>
+            {payerContactName.trim() && (
+              <li>
+                <span className="text-[#666]">Contact:</span> {payerContactName.trim()}
+              </li>
+            )}
             <li>
               <span className="text-[#666]">Supporter list:</span> {donorListPublic ? "Show name" : "Anonymous"}
             </li>
@@ -939,6 +961,20 @@ export function SpartanDonateFormWizard() {
                 setEmail(e.target.value)
                 setRaceRegEmail((r) => (r === e.target.value ? r : r))
               }}
+              className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="spartan-race-donor-contact" className="text-sm font-medium text-[#ccc]">
+              Contact name <span className="font-normal text-[#666]">(optional)</span>
+            </label>
+            <p className="mt-0.5 text-[11px] text-[#666]">If the receipt is a company, who we should thank or follow up with.</p>
+            <input
+              id="spartan-race-donor-contact"
+              type="text"
+              autoComplete="name"
+              value={payerContactName}
+              onChange={(e) => setPayerContactName(e.target.value)}
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
             />
           </div>
@@ -1168,6 +1204,11 @@ export function SpartanDonateFormWizard() {
             <li>
               <span className="text-[#666]">Payer:</span> {donorName} · {email}
             </li>
+            {payerContactName.trim() && (
+              <li>
+                <span className="text-[#666]">Contact:</span> {payerContactName.trim()}
+              </li>
+            )}
             <li>
               <span className="text-[#666]">Runner:</span> {resolvedRaceParticipantName() || "—"} · reg email:{" "}
               {raceRegEmail.trim() || email}
