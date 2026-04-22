@@ -14,7 +14,9 @@ export function SpartanSimpleExplainer() {
             (a wrestler or the NC United Training Fund) — short steps, then Stripe.
           </li>
           <li>
-            <strong className="text-white">Wrestler credit</strong> uses search; race fees list a parent email for Spartan codes if needed.
+            <strong className="text-white">Wrestler credit</strong> — search the directory. <strong className="text-white">Racing</strong>{" "}
+            — we need an email (parent is fine) for Spartan to send race codes. Your gift here is the tax-deductible team
+            support in checkout, not the Spartan.com entry.
           </li>
           <li>
             <strong className="text-white">Gifts go to training, travel, and competition — 501(c)(3).</strong>

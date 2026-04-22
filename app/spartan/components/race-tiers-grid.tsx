@@ -15,16 +15,16 @@ export function RaceTiersGrid() {
             Fayetteville &amp; distances
           </h2>
           <p className="mt-4 text-base text-[#a3a3a3]">
-            Reference only — <strong className="text-[#ccc]">register, sponsor, or donate in checkout above.</strong> Card
-            below shows the <strong className="text-[#ccc]">suggested default</strong> (Super 10K); any distance can be selected
-            there.
+            Reference only — <strong className="text-[#ccc]">use checkout above to register, sponsor, or donate.</strong> The
+            card is the <strong className="text-[#ccc]">Super 10K</strong> (Sunday) many Team NC athletes run; any Fayetteville
+            distance can be chosen in checkout. Spartan.com has full event detail.
           </p>
         </div>
 
         <FayettevilleScheduleCallout />
 
         <div className="mx-auto mt-12 max-w-md">
-          <RaceTierCard tier={SPARTAN_SUPER_10K} />
+          <RaceTierCard tier={SPARTAN_SUPER_10K} variant="reference" />
         </div>
       </div>
     </section>
