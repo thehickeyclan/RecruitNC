@@ -16,8 +16,8 @@ export function DonationSection() {
           Checkout
         </h2>
         <p className="mx-auto mt-3 max-w-md text-left text-[13px] leading-snug text-[#aaa] sm:text-sm">
-          One secure form. <strong className="text-[#e5e5e5]">Name on receipt</strong> = you or your organization.{" "}
-          <strong className="text-[#C8A94A]">Wrestler search</strong> = who gets credit (racing &amp; sponsoring).
+          Pick <strong className="text-[#e5e5e5]">Race</strong> or <strong className="text-[#e5e5e5]">Donate</strong>, then follow
+          the steps. Receipt name = payer; wrestler search = who gets training credit. Stripe finishes payment.
         </p>
 
         <div id="spartan-checkout" className="scroll-mt-28 mt-8 w-full text-left">

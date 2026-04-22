@@ -38,6 +38,17 @@ export async function POST(request: NextRequest) {
     donorListPublic?: boolean
     /** Who is running the race if not the donor (race path); stored in Stripe metadata */
     raceParticipantName?: string
+    /** Race path: inbox for Spartan/registration codes (often parent); defaults to payer email if omitted */
+    raceRegistrationEmail?: string
+    /** Receipt / metadata: individual vs organization name */
+    payerType?: string
+    shirtSize?: string
+    shipLine1?: string
+    shipLine2?: string
+    shipCity?: string
+    shipState?: string
+    shipPostal?: string
+    shipCountry?: string
   } = {}
   try {
     body = await request.json()
@@ -68,12 +79,22 @@ export async function POST(request: NextRequest) {
   const donorListPublic = body.donorListPublic !== false
   let raceParticipantName =
     typeof body.raceParticipantName === "string" ? body.raceParticipantName.trim().slice(0, 120) : ""
+  const raceRegistrationEmailRaw =
+    typeof body.raceRegistrationEmail === "string" ? body.raceRegistrationEmail.trim().slice(0, 320) : ""
+  const payerTypeRaw = typeof body.payerType === "string" ? body.payerType.trim().toLowerCase() : ""
+  const payerTypeNormalized = payerTypeRaw === "organization" || payerTypeRaw === "org" ? "organization" : "person"
   /** Super 10K tier → donor expects Spartan entry code path; omit for donate-only. */
   const raceEntryRequested = Boolean(tierPreference && tierPreference.length > 0)
   const amountCents = Number(body.amountCents)
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 })
+  }
+  if (
+    raceRegistrationEmailRaw &&
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raceRegistrationEmailRaw)
+  ) {
+    return NextResponse.json({ error: "Registration email must be a valid address." }, { status: 400 })
   }
   if (!donorName || donorName.length < 2) {
     return NextResponse.json(
@@ -178,6 +199,14 @@ export async function POST(request: NextRequest) {
     ? (raceParticipantName || donorName).trim().slice(0, 120)
     : ""
 
+  /** Inbox Spartan should use for codes/updates (often parent); falls back to payer email. */
+  const spartanNotificationEmail =
+    raceEntryRequested && raceRegistrationEmailRaw
+      ? raceRegistrationEmailRaw
+      : raceEntryRequested
+        ? email
+        : ""
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -203,11 +232,15 @@ export async function POST(request: NextRequest) {
         spartan_campaign: "fayetteville_2026",
         tier_preference: tierPreference || "unspecified",
         donor_name: donorName,
+        payer_type: payerTypeNormalized,
         donor_list_public: donorListPublic ? "true" : "false",
         race_entry_requested: raceEntryRequested ? "true" : "false",
         fundraising_type: raceEntryRequested ? "race_donation" : "gift_only",
         ...(raceEntryRequested && runnerForStripeMetadata
           ? { race_participant_name: runnerForStripeMetadata }
+          : {}),
+        ...(raceEntryRequested && spartanNotificationEmail
+          ? { spartan_notification_email: spartanNotificationEmail }
           : {}),
         tee_100_eligible: teeEligible ? "yes" : "no",
         ...(teeEligible

@@ -10,14 +10,14 @@ export function SpartanSimpleExplainer() {
         </p>
         <ul className="mt-5 list-none space-y-2.5 text-[15px] leading-relaxed text-neutral-300">
           <li>
-            <strong className="text-white">Race</strong>, <strong className="text-white">sponsor one athlete</strong>, or{" "}
-            <strong className="text-white">donate to the training fund</strong> — the form walks you through it.
+            <strong className="text-white">Race</strong> (Spartan + credit a wrestler) or <strong className="text-white">Donate</strong>{" "}
+            (a wrestler or the training fund) — short steps, then you pay in Stripe.
           </li>
           <li>
-            <strong className="text-white">Enter the athlete&apos;s name at checkout</strong> (racing or sponsoring).
+            <strong className="text-white">Wrestler credit</strong> uses search; race fees list a parent email for Spartan codes if needed.
           </li>
           <li>
-            <strong className="text-white">That money directly supports their training, travel, and competition.</strong>
+            <strong className="text-white">Gifts go to training, travel, and competition — 501(c)(3).</strong>
           </li>
         </ul>
         <p className="mt-4 font-[family-name:var(--font-barlow-spartan)] text-lg font-semibold text-white">That&apos;s it.</p>
