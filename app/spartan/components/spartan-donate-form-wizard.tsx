@@ -350,6 +350,10 @@ export function SpartanDonateFormWizard() {
     return null
   }
 
+  /**
+   * Step numbers must match UI: 1 payer · 2 runner? · 3 runner email · 4 wrestler credit ·
+   * 5 distance · 6 amount · 7 tee+ship · 8 review. (The tee must not be validated before step 7.)
+   */
   function validateRaceNext(fromStep: number): string | null {
     if (fromStep === 1) {
       if (donorName.trim().length < 2) return "Enter your name (or the payer name for the receipt)."
@@ -366,11 +370,13 @@ export function SpartanDonateFormWizard() {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reg)) return "Enter an email for Spartan race registration and codes."
       }
     }
-    if (fromStep === 4 && !tierPreference) return "Select a race distance."
-    if (fromStep === 5) {
+    if (fromStep === 4 && !hasAthleteCredit) {
+      return "Select a wrestler or enter a name in the manual box."
+    }
+    if (fromStep === 6) {
       if (!amountDollars.trim() || amountCents < 500) return "Minimum $5."
     }
-    if (fromStep === 6 && teeEligible) {
+    if (fromStep === 7 && teeEligible) {
       if (!shirtSize) return "Choose a shirt size for your team tee."
       if (!shipLine1.trim() || !shipCity.trim() || !shipState.trim() || !shipPostal.trim()) {
         return "Enter a full shipping address for your team tee."
