@@ -24,6 +24,24 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100)
 }
 
+const emailOk = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())
+
+type FieldValidation = { error: null; fields: [] } | { error: string; fields: string[] }
+
+function scrollToFieldId(id: string) {
+  if (typeof document === "undefined") return
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.scrollIntoView({ behavior: "smooth", block: "center" })
+    if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+      el.focus()
+    } else {
+      el.querySelector<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>("input, select, button")?.focus()
+    }
+  })
+}
+
 const VALID_TIER_PARAMS = new Set<string>(["sprint", "super", "beast", "ultra", "kids", "other"])
 
 /** Legacy ?tier=… deep links — must match a known distance. */
@@ -199,6 +217,10 @@ export function SpartanDonateFormClassic() {
     return () => clearTimeout(t)
   }, [athleteQuery])
 
+  useEffect(() => {
+    setFieldHighlights([])
+  }, [flow, donateMode, tierPreference])
+
   /** Resolve directory label for bookmark URLs (?athlete=NCU-…) so checkout sends athlete_display_name. */
   useEffect(() => {
     const code = fundraisingCode.trim()
@@ -277,44 +299,70 @@ export function SpartanDonateFormClassic() {
     setAthleteMenuOpen(false)
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
+  function validateClassicSubmit(): FieldValidation {
     const name = donorName.trim()
     if (name.length < 2) {
-      setError(
-        "Enter the name that should appear on the receipt — individual or organization — not the wrestler you're sponsoring.",
-      )
-      return
+      return {
+        error:
+          "Enter the name that should appear on the receipt — individual or organization — not the wrestler you're sponsoring.",
+        fields: ["spartan-donor-name"],
+      }
+    }
+    if (!email.trim() || !emailOk(email)) {
+      return { error: "Enter a valid email.", fields: ["spartan-donor-email"] }
     }
     if (flow === null) {
-      setError("Choose racing, sponsoring, or donating.")
-      return
+      return { error: "Choose racing, sponsoring, or donating.", fields: ["spartan-classic-pick-support"] }
     }
     if (flow === "donate" && donateMode === null) {
-      setError("Choose sponsoring (a wrestler) or donating (NC United Training Fund).")
-      return
+      return {
+        error: "Choose sponsoring (a wrestler) or donating (NC United Training Fund).",
+        fields: ["spartan-classic-pick-support"],
+      }
     }
     if (needsAthleteCode && !hasAthleteCredit) {
-      setError("Select a wrestler from the list, or enter their name in the box below.")
-      return
+      return {
+        error: "Select a wrestler from the list, or enter their name in the box below.",
+        fields: ["spartan-athlete-search", "spartan-manual-credit"],
+      }
     }
     if (!amountDollars.trim() || amountCents < 500) {
-      setError("Minimum $5.")
-      return
+      return { error: "Minimum $5.", fields: ["spartan-amount-usd"] }
     }
     if (teeEligible) {
       if (!shirtSize) {
-        setError(flow === "race" ? "Shirt size required for your NC United tee." : "Shirt size required for $100+.")
-        return
+        return {
+          error: flow === "race" ? "Shirt size required for your NC United tee." : "Shirt size required for $100+.",
+          fields: ["spartan-c-tee-size"],
+        }
       }
-      if (!shipLine1.trim() || !shipCity.trim() || !shipState.trim() || !shipPostal.trim()) {
-        setError(
-          flow === "race" ? "Shipping address required for your NC United tee." : "Shipping address required for $100+.",
-        )
-        return
+      const miss: string[] = []
+      if (!shipLine1.trim()) miss.push("spartan-c-ship-line1")
+      if (!shipCity.trim()) miss.push("spartan-c-ship-city")
+      if (!shipState.trim()) miss.push("spartan-c-ship-state")
+      if (!shipPostal.trim()) miss.push("spartan-c-ship-postal")
+      if (miss.length) {
+        return {
+          error:
+            flow === "race" ? "Shipping address required for your NC United tee." : "Shipping address required for $100+.",
+          fields: miss,
+        }
       }
     }
+    return { error: null, fields: [] }
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    const v = validateClassicSubmit()
+    if (v.error) {
+      setError(v.error)
+      setFieldHighlights(v.fields)
+      if (v.fields[0]) scrollToFieldId(v.fields[0])
+      return
+    }
+    setFieldHighlights([])
     setLoading(true)
     try {
       const res = await fetch("/api/spartan/checkout", {
@@ -372,6 +420,13 @@ export function SpartanDonateFormClassic() {
 
   const canCheckout = stepUnlocked && (!needsAthleteCode || hasAthleteCredit)
 
+  const ringInvalid = (id: string) =>
+    fieldHighlights.includes(id)
+      ? "ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#0a0a0a] border-amber-500/50"
+      : ""
+
+  const dismissHighlight = (id: string) => setFieldHighlights((f) => f.filter((x) => x !== id))
+
   return (
     <form
       onSubmit={submit}
@@ -379,11 +434,21 @@ export function SpartanDonateFormClassic() {
     >
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Pick how you want to support:</p>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div
+          id="spartan-classic-pick-support"
+          className={`mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 ${
+            fieldHighlights.includes("spartan-classic-pick-support")
+              ? "rounded-md p-0.5 ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#141414]"
+              : ""
+          }`}
+        >
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              onClick={selectRace}
+              onClick={() => {
+                selectRace()
+                dismissHighlight("spartan-classic-pick-support")
+              }}
               className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-2 ${
                 flow === "race"
                   ? "border-[#CC0000] bg-[#2a1515] text-white"
@@ -401,7 +466,10 @@ export function SpartanDonateFormClassic() {
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              onClick={selectSponsoring}
+              onClick={() => {
+                selectSponsoring()
+                dismissHighlight("spartan-classic-pick-support")
+              }}
               className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-2 ${
                 flow === "donate" && donateMode === "athlete"
                   ? "border-[#C8A94A] bg-[#1a170d] text-[#C8A94A]"
@@ -418,7 +486,10 @@ export function SpartanDonateFormClassic() {
           <div className="flex flex-col gap-1.5">
             <button
               type="button"
-              onClick={selectDonatingFund}
+              onClick={() => {
+                selectDonatingFund()
+                dismissHighlight("spartan-classic-pick-support")
+              }}
               className={`min-h-[48px] rounded border px-2 py-3 text-center text-sm font-bold leading-tight transition-colors sm:px-2 ${
                 flow === "donate" && donateMode === "general"
                   ? "border-[#888] bg-[#222] text-white"
@@ -530,8 +601,12 @@ export function SpartanDonateFormClassic() {
                 placeholder="e.g. Jane Doe — or Acme Industries, LLC / Your Town Rotary"
                 aria-label="Full name or organization on receipt — not the wrestler you sponsor"
                 value={donorName}
-                onChange={(e) => setDonorName(e.target.value)}
-                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
+                onChange={(e) => {
+                  setDonorName(e.target.value)
+                  dismissHighlight("spartan-donor-name")
+                }}
+                aria-invalid={fieldHighlights.includes("spartan-donor-name")}
+                className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0] ${ringInvalid("spartan-donor-name")}`}
               />
             </div>
             <div>
@@ -544,8 +619,12 @@ export function SpartanDonateFormClassic() {
                 required
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0]"
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  dismissHighlight("spartan-donor-email")
+                }}
+                aria-invalid={fieldHighlights.includes("spartan-donor-email")}
+                className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none focus:ring-1 focus:ring-[#5a8ab0] ${ringInvalid("spartan-donor-email")}`}
               />
             </div>
             <div>
@@ -619,9 +698,11 @@ export function SpartanDonateFormClassic() {
                   onChange={(e) => {
                     setAthleteQuery(e.target.value)
                     setAthleteMenuOpen(true)
+                    dismissHighlight("spartan-athlete-search")
                   }}
                   onFocus={() => athleteHits.length > 0 && setAthleteMenuOpen(true)}
-                  className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A]"
+                  aria-invalid={fieldHighlights.includes("spartan-athlete-search")}
+                  className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A] ${ringInvalid("spartan-athlete-search")}`}
                   autoComplete="off"
                   enterKeyHint="search"
                 />
@@ -651,6 +732,8 @@ export function SpartanDonateFormClassic() {
                             setManualCreditName("")
                             setAthleteHits([])
                             setAthleteMenuOpen(false)
+                            dismissHighlight("spartan-athlete-search")
+                            dismissHighlight("spartan-manual-credit")
                           }}
                         >
                           {h.label}
@@ -683,8 +766,10 @@ export function SpartanDonateFormClassic() {
                       const v = e.target.value
                       setManualCreditName(v)
                       if (v.trim().length > 0) setFundraisingCode("")
+                      dismissHighlight("spartan-manual-credit")
                     }}
-                    className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+                    aria-invalid={fieldHighlights.includes("spartan-manual-credit")}
+                    className={`mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none ${ringInvalid("spartan-manual-credit")}`}
                   />
                   <p className="mt-2 text-[11px] text-[#666]">
                     Or the{" "}
@@ -735,7 +820,13 @@ export function SpartanDonateFormClassic() {
                 </>
               )}
             </label>
-            <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
+            <div
+              className={`mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000] ${
+                fieldHighlights.includes("spartan-amount-usd")
+                  ? "ring-2 ring-amber-500/90 ring-offset-2 ring-offset-[#0a0a0a]"
+                  : ""
+              }`}
+            >
               <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
               <input
                 id="spartan-amount-usd"
@@ -744,7 +835,11 @@ export function SpartanDonateFormClassic() {
                 step={1}
                 required
                 value={amountDollars}
-                onChange={(e) => setAmountDollars(e.target.value)}
+                onChange={(e) => {
+                  setAmountDollars(e.target.value)
+                  dismissHighlight("spartan-amount-usd")
+                }}
+                aria-invalid={fieldHighlights.includes("spartan-amount-usd")}
                 className="min-w-0 flex-1 border-0 bg-transparent px-3 py-2 text-lg font-bold tabular-nums text-white outline-none"
               />
             </div>
@@ -783,11 +878,19 @@ export function SpartanDonateFormClassic() {
               <p className="mt-1.5 text-center text-[10px] leading-snug text-[#666] sm:text-left">Artwork may vary.</p>
             </div>
             <div className="min-w-0 flex-1 space-y-2">
+          <label htmlFor="spartan-c-tee-size" className="sr-only">
+            Shirt size
+          </label>
           <select
+            id="spartan-c-tee-size"
             required={teeEligible}
             value={shirtSize}
-            onChange={(e) => setShirtSize(e.target.value)}
-            className="min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white focus:border-[#C8A94A] focus:outline-none"
+            onChange={(e) => {
+              setShirtSize(e.target.value)
+              dismissHighlight("spartan-c-tee-size")
+            }}
+            aria-invalid={fieldHighlights.includes("spartan-c-tee-size")}
+            className={`min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white focus:border-[#C8A94A] focus:outline-none ${ringInvalid("spartan-c-tee-size")}`}
           >
             <option value="">Size</option>
             {TEE_SIZES.map((s) => (
@@ -797,11 +900,16 @@ export function SpartanDonateFormClassic() {
             ))}
           </select>
           <input
+            id="spartan-c-ship-line1"
             type="text"
             placeholder="Street"
             value={shipLine1}
-            onChange={(e) => setShipLine1(e.target.value)}
-            className="min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
+            onChange={(e) => {
+              setShipLine1(e.target.value)
+              dismissHighlight("spartan-c-ship-line1")
+            }}
+            aria-invalid={fieldHighlights.includes("spartan-c-ship-line1")}
+            className={`min-h-[44px] w-full border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none ${ringInvalid("spartan-c-ship-line1")}`}
             autoComplete="address-line1"
           />
           <input
@@ -814,29 +922,44 @@ export function SpartanDonateFormClassic() {
           />
           <div className="grid grid-cols-2 gap-2">
             <input
+              id="spartan-c-ship-city"
               type="text"
               placeholder="City"
               value={shipCity}
-              onChange={(e) => setShipCity(e.target.value)}
-              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555]"
+              onChange={(e) => {
+                setShipCity(e.target.value)
+                dismissHighlight("spartan-c-ship-city")
+              }}
+              aria-invalid={fieldHighlights.includes("spartan-c-ship-city")}
+              className={`min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] ${ringInvalid("spartan-c-ship-city")}`}
               autoComplete="address-level2"
             />
             <input
+              id="spartan-c-ship-state"
               type="text"
               placeholder="ST"
               value={shipState}
-              onChange={(e) => setShipState(e.target.value)}
-              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555]"
+              onChange={(e) => {
+                setShipState(e.target.value)
+                dismissHighlight("spartan-c-ship-state")
+              }}
+              aria-invalid={fieldHighlights.includes("spartan-c-ship-state")}
+              className={`min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] ${ringInvalid("spartan-c-ship-state")}`}
               autoComplete="address-level1"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <input
+              id="spartan-c-ship-postal"
               type="text"
               placeholder="ZIP"
               value={shipPostal}
-              onChange={(e) => setShipPostal(e.target.value)}
-              className="min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555]"
+              onChange={(e) => {
+                setShipPostal(e.target.value)
+                dismissHighlight("spartan-c-ship-postal")
+              }}
+              aria-invalid={fieldHighlights.includes("spartan-c-ship-postal")}
+              className={`min-h-[44px] border border-[#444] bg-[#0A0A0A] px-2 py-2.5 text-base text-white placeholder:text-[#555] ${ringInvalid("spartan-c-ship-postal")}`}
               autoComplete="postal-code"
             />
             <select
