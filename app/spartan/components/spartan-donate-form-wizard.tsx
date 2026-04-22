@@ -24,6 +24,36 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100)
 }
 
+/** Read-only “journey” for checkout recap — vertical step rail, not a bullet list */
+function ProgressJourneyTimeline({ items }: { items: { id: string; kicker: string; text: string }[] }) {
+  if (items.length === 0) return null
+  return (
+    <ol className="m-0 list-none p-0" aria-label="Progress so far">
+      {items.map((m, i) => (
+        <li key={m.id} className="flex gap-0 sm:gap-1">
+          <div className="flex w-7 shrink-0 flex-col items-center sm:w-8">
+            <span
+              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a3f1c] bg-gradient-to-b from-[#d4b85c] to-[#C8A94A] text-[11px] font-bold text-[#0a0a0a] shadow-[0_0_0_1px_rgba(200,169,74,0.15)]"
+              aria-hidden
+            >
+              ✓
+            </span>
+            {i < items.length - 1 && (
+              <span className="my-0.5 min-h-6 w-px grow bg-gradient-to-b from-[#C8A94A]/35 via-[#3d3d3d] to-[#2a2a2a] sm:min-h-7" aria-hidden />
+            )}
+          </div>
+          <div className="min-w-0 flex-1 pb-4 last:pb-0 pr-0.5 sm:pr-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#5a5a5a] sm:text-[10px] sm:tracking-[0.16em]">
+              {m.kicker}
+            </p>
+            <p className="mt-0.5 text-[13px] leading-snug text-[#ececec] sm:text-sm">{m.text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 const VALID_TIER_PARAMS = new Set<string>(["sprint", "super", "beast", "ultra", "kids", "other"])
 
 function tierFromSearchParams(searchParams: ReturnType<typeof useSearchParams>): SpartanRaceTierId | null {
@@ -274,6 +304,80 @@ export function SpartanDonateFormWizard() {
   const showProgressRecap =
     flow &&
     !((flow === "donate" && donateStep === 1) || (flow === "race" && raceStep === 1))
+
+  const progressMilestones = useMemo(() => {
+    const items: { id: string; kicker: string; text: string }[] = []
+    if (!flow) return items
+    if (flow === "race") {
+      items.push({ id: "path", kicker: "Path", text: "Race + wrestler credit" })
+      if (raceFor) {
+        items.push({
+          id: "runner",
+          kicker: "Runner",
+          text: raceFor === "self" ? "You are the runner" : "Someone else is running",
+        })
+      }
+      if (raceStep >= 4 && hasAthleteCredit) {
+        items.push({
+          id: "wrestler",
+          kicker: "Wrestler",
+          text: (athleteQuery.trim() || manualCreditTrimmed) || "—",
+        })
+      }
+      if (raceStep >= 6 && tierPreference) {
+        items.push({
+          id: "distance",
+          kicker: "Distance",
+          text: SPARTAN_RACE_TIERS.find((t) => t.id === tierPreference)?.name ?? tierPreference,
+        })
+      }
+      if (raceStep >= 7 && amountCents >= 500) {
+        items.push({ id: "amount", kicker: "Your gift", text: formatUsd(amountCents) })
+      }
+      if (raceStep >= 7 && teeEligible && Boolean(shirtSize)) {
+        items.push({ id: "tee", kicker: "Team tee", text: `Size ${shirtSize}` })
+      }
+    } else {
+      items.push({ id: "path", kicker: "Path", text: "Donation" })
+      if (donateMode === "athlete" && donateStep >= 2 && (codeForCheckout || hasManualCredit)) {
+        items.push({
+          id: "wrestler",
+          kicker: "Wrestler",
+          text:
+            codeForCheckout && athleteQuery.trim()
+              ? athleteQuery.trim()
+              : hasManualCredit
+                ? manualCreditTrimmed
+                : "—",
+        })
+      }
+      if (donateMode === "general" && donateStep >= 3) {
+        items.push({ id: "fund", kicker: "Where it goes", text: "NC United Training Fund" })
+      }
+      if (donateStep >= 4 && amountCents >= 500) {
+        items.push({ id: "amount", kicker: "Your gift", text: formatUsd(amountCents) })
+      }
+      if (donateStep >= 5 && teeEligible && Boolean(shirtSize)) {
+        items.push({ id: "tee", kicker: "Tee", text: `Size ${shirtSize}` })
+      }
+    }
+    return items
+  }, [
+    flow,
+    raceFor,
+    raceStep,
+    donateMode,
+    donateStep,
+    hasAthleteCredit,
+    athleteQuery,
+    manualCreditTrimmed,
+    codeForCheckout,
+    hasManualCredit,
+    tierPreference,
+    amountCents,
+    teeEligible,
+    shirtSize,
+  ])
 
   function goToDonate() {
     setFlow("donate")
@@ -597,39 +701,22 @@ export function SpartanDonateFormWizard() {
         </p>
       </div>
 
-      {showProgressRecap && (
+      {showProgressRecap && progressMilestones.length > 0 && (
         <div
-          className="mt-4 rounded border border-[#2a2a2a] bg-[#101010] px-3 py-2.5 text-[11px] leading-snug text-[#9ca3af]"
+          className="mt-4 overflow-hidden rounded-xl border border-[#2c2c2c] bg-gradient-to-b from-[#151515] to-[#0c0c0c] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-4 sm:py-3.5"
           role="status"
         >
-          <p className="font-semibold uppercase tracking-[0.1em] text-[#666]">Your progress</p>
-          <p className="mt-0.5 text-[10px] text-[#6b6b6b]">Choices you already made (not future steps).</p>
-          <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-[#b8b8b8]">
-            <li>{flow === "race" ? "Race + wrestler credit" : "Donation"}</li>
-            {flow === "donate" && donateMode === "athlete" && donateStep >= 2 && (codeForCheckout || hasManualCredit) && (
-              <li>
-                Credit: {codeForCheckout && athleteQuery.trim() ? athleteQuery.trim() : hasManualCredit ? manualCreditTrimmed : "—"}
-              </li>
-            )}
-            {flow === "donate" && donateMode === "general" && donateStep >= 3 && <li>NC United Training Fund</li>}
-            {flow === "race" && (
-              <>
-                {raceFor && <li>{raceFor === "self" ? "You are the runner" : "Runner is someone else"}</li>}
-                {raceStep >= 4 && hasAthleteCredit && (
-                  <li>Wrestler credit: {athleteQuery.trim() || manualCreditTrimmed}</li>
-                )}
-                {/* Tier is prefilled with a default; only show after the distance step (5) is completed */}
-                {raceStep >= 6 && tierPreference && (
-                  <li>Distance: {SPARTAN_RACE_TIERS.find((t) => t.id === tierPreference)?.name ?? tierPreference}</li>
-                )}
-                {raceStep >= 7 && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
-              </>
-            )}
-            {flow === "donate" && donateStep >= 4 && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
-            {((flow === "donate" && donateStep >= 5) || (flow === "race" && raceStep >= 7)) &&
-              teeEligible &&
-              Boolean(shirtSize) && <li>Tee: {shirtSize}</li>}
-          </ul>
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-1 border-b border-[#252525] pb-2.5">
+            <div>
+              <p className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-bold uppercase tracking-[0.2em] text-[#C8A94A] sm:text-[11px]">
+                Your progress
+              </p>
+              <p className="mt-0.5 text-[10px] leading-snug text-[#6a6a6a] sm:text-[11px]">
+                Confirmed steps — use <span className="text-[#888]">Back</span> to change an earlier answer.
+              </p>
+            </div>
+          </div>
+          <ProgressJourneyTimeline items={progressMilestones} />
         </div>
       )}
 
