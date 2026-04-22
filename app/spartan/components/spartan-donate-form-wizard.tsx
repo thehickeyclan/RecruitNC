@@ -58,8 +58,6 @@ export function SpartanDonateFormWizard() {
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
-  /** Receipt metadata for Stripe — one checkbox instead of radio that didn’t change fields */
-  const [payerIsOrg, setPayerIsOrg] = useState(false)
   const [donorListPublic, setDonorListPublic] = useState(true)
   const [fundraisingCode, setFundraisingCode] = useState("")
 
@@ -495,7 +493,6 @@ export function SpartanDonateFormWizard() {
         body: JSON.stringify({
           email: email.trim(),
           donorName: name,
-          payerType: payerIsOrg ? "org" : "person",
           donorListPublic: flow === "donate" ? donorListPublic : true,
           amountCents,
           tierPreference:
@@ -816,18 +813,7 @@ export function SpartanDonateFormWizard() {
               onChange={(e) => setDonorName(e.target.value)}
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none"
             />
-            <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 text-[12px] leading-snug text-[#8a8a8a]">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#555] bg-[#0A0A0A]"
-                checked={payerIsOrg}
-                onChange={(e) => setPayerIsOrg(e.target.checked)}
-              />
-              <span>
-                The name above is a <strong className="font-medium text-[#c5c5c5]">company, team, or organization</strong> on the
-                receipt (not an individual) — for bookkeeping
-              </span>
-            </label>
+            <p className="mt-1.5 text-[11px] text-[#666]">Individual or org — as it should read on the receipt.</p>
           </div>
           <div>
             <label htmlFor="spartan-donor-email-d" className="text-sm font-medium text-[#ccc]">
@@ -902,7 +888,6 @@ export function SpartanDonateFormWizard() {
             </li>
             <li>
               <span className="text-[#666]">Receipt name:</span> {donorName || "—"}
-              {payerIsOrg && <span className="text-[#888]"> (organization)</span>}
             </li>
             <li>
               <span className="text-[#666]">Email:</span> {email}
@@ -938,18 +923,7 @@ export function SpartanDonateFormWizard() {
               onChange={(e) => setDonorName(e.target.value)}
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
             />
-            <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 text-[12px] leading-snug text-[#8a8a8a]">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#555] bg-[#0A0A0A]"
-                checked={payerIsOrg}
-                onChange={(e) => setPayerIsOrg(e.target.checked)}
-              />
-              <span>
-                The name above is a <strong className="font-medium text-[#c5c5c5]">company, team, or organization</strong> on the
-                receipt (not an individual) — for bookkeeping
-              </span>
-            </label>
+            <p className="mt-1.5 text-[11px] text-[#666]">Individual or org — as it should read on the receipt.</p>
           </div>
           <div>
             <label htmlFor="spartan-race-donor-email" className="text-sm font-medium text-[#ccc]">
@@ -1192,8 +1166,7 @@ export function SpartanDonateFormWizard() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#888]">Review</p>
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
-              <span className="text-[#666]">Payer:</span> {donorName}
-              {payerIsOrg && <span className="text-[#888]"> (organization)</span>} · {email}
+              <span className="text-[#666]">Payer:</span> {donorName} · {email}
             </li>
             <li>
               <span className="text-[#666]">Runner:</span> {resolvedRaceParticipantName() || "—"} · reg email:{" "}
