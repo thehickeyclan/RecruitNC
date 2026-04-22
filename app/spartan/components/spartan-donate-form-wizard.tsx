@@ -24,29 +24,34 @@ function dollarsToCents(raw: string): number {
   return Math.round(n * 100)
 }
 
-/** Read-only “journey” for checkout recap — vertical step rail, not a bullet list */
+/** Read-only “journey” for checkout recap — vertical step rail (mobile-first spacing & type) */
 function ProgressJourneyTimeline({ items }: { items: { id: string; kicker: string; text: string }[] }) {
   if (items.length === 0) return null
   return (
-    <ol className="m-0 list-none p-0" aria-label="Progress so far">
+    <ol className="m-0 list-none p-0 antialiased" aria-label="Progress so far">
       {items.map((m, i) => (
-        <li key={m.id} className="flex gap-0 sm:gap-1">
+        <li key={m.id} className="flex gap-3.5 sm:gap-3">
           <div className="flex w-7 shrink-0 flex-col items-center sm:w-8">
             <span
-              className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4a3f1c] bg-gradient-to-b from-[#d4b85c] to-[#C8A94A] text-[11px] font-bold text-[#0a0a0a] shadow-[0_0_0_1px_rgba(200,169,74,0.15)]"
+              className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#3d3518] bg-gradient-to-b from-[#d4b85c] to-[#C8A94A] text-xs font-bold text-[#0a0a0a] shadow-sm shadow-black/20 sm:h-6 sm:w-6 sm:text-[11px]"
               aria-hidden
             >
               ✓
             </span>
             {i < items.length - 1 && (
-              <span className="my-0.5 min-h-6 w-px grow bg-gradient-to-b from-[#C8A94A]/35 via-[#3d3d3d] to-[#2a2a2a] sm:min-h-7" aria-hidden />
+              <span
+                className="my-0.5 h-3.5 w-px flex-none bg-gradient-to-b from-[#C8A94A]/45 via-[#404040] to-[#2a2a2a] sm:my-0.5 sm:h-4"
+                aria-hidden
+              />
             )}
           </div>
-          <div className="min-w-0 flex-1 pb-4 last:pb-0 pr-0.5 sm:pr-0">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#5a5a5a] sm:text-[10px] sm:tracking-[0.16em]">
+          <div className="min-w-0 flex-1 pb-4 last:pb-1 sm:pb-4 sm:last:pb-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6b6b6b] sm:text-[10px] sm:tracking-[0.16em]">
               {m.kicker}
             </p>
-            <p className="mt-0.5 text-[13px] leading-snug text-[#ececec] sm:text-sm">{m.text}</p>
+            <p className="mt-1 text-[15px] font-medium leading-snug tracking-tight text-white sm:mt-0.5 sm:text-sm sm:font-normal sm:text-[#ececec]">
+              {m.text}
+            </p>
           </div>
         </li>
       ))}
@@ -656,7 +661,7 @@ export function SpartanDonateFormWizard() {
   return (
     <form
       onSubmit={submit}
-      className="mx-auto mt-6 max-w-lg px-1 pb-[max(1rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
+      className="mx-auto mt-6 max-w-lg px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-left sm:mt-8 sm:px-0"
     >
       <div className="rounded-lg border border-[#333] bg-[#141414] p-3 sm:p-4">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#888]">Start here</p>
@@ -703,31 +708,37 @@ export function SpartanDonateFormWizard() {
 
       {showProgressRecap && progressMilestones.length > 0 && (
         <div
-          className="mt-4 overflow-hidden rounded-xl border border-[#2c2c2c] bg-gradient-to-b from-[#151515] to-[#0c0c0c] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-4 sm:py-3.5"
+          className="mt-4 overflow-hidden rounded-2xl border border-white/[0.06] bg-gradient-to-b from-[#161616] to-[#0a0a0a] px-3.5 py-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.35)] sm:rounded-xl sm:px-4 sm:py-3.5 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
           role="status"
         >
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-1 border-b border-[#252525] pb-2.5">
-            <div>
-              <p className="font-[family-name:var(--font-barlow-spartan)] text-[10px] font-bold uppercase tracking-[0.2em] text-[#C8A94A] sm:text-[11px]">
-                Your progress
-              </p>
-              <p className="mt-0.5 text-[10px] leading-snug text-[#6a6a6a] sm:text-[11px]">
-                Confirmed steps — use <span className="text-[#888]">Back</span> to change an earlier answer.
-              </p>
-            </div>
+          <div className="mb-3 border-b border-white/[0.06] pb-3 sm:mb-3 sm:pb-2.5 sm:border-[#252525]">
+            <p className="font-[family-name:var(--font-barlow-spartan)] text-[11px] font-bold uppercase tracking-[0.18em] text-[#C8A94A] sm:text-[11px] sm:tracking-[0.2em]">
+              Your progress
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-[#7a7a7a] sm:mt-0.5 sm:text-[11px] sm:text-[#6a6a6a]">
+              <span className="sm:hidden">Tap </span>
+              <span className="hidden sm:inline">Use </span>
+              <span className="font-medium text-[#9a9a9a]">Back</span>
+              <span className="sm:hidden"> to edit a previous step.</span>
+              <span className="hidden sm:inline"> to change an earlier answer.</span>
+            </p>
           </div>
           <ProgressJourneyTimeline items={progressMilestones} />
         </div>
       )}
 
       {flow === "donate" && (
-        <div className="mt-2 text-center text-[10px] text-[#555]">
-          Step {donateStep} of {DONATE_STEPS} · Donate
+        <div className="mt-3 flex justify-center sm:mt-2">
+          <span className="inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tabular-nums text-[#8a8a8a] sm:border-transparent sm:bg-transparent sm:px-0 sm:py-0 sm:font-normal sm:text-[#555]">
+            Step {donateStep} of {DONATE_STEPS} · Donate
+          </span>
         </div>
       )}
       {flow === "race" && (
-        <div className="mt-2 text-center text-[10px] text-[#555]">
-          Step {raceStep} of {RACE_STEPS} · Race
+        <div className="mt-3 flex justify-center sm:mt-2">
+          <span className="inline-flex items-center rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium tabular-nums text-[#8a8a8a] sm:border-transparent sm:bg-transparent sm:px-0 sm:py-0 sm:font-normal sm:text-[#555]">
+            Step {raceStep} of {RACE_STEPS} · Race
+          </span>
         </div>
       )}
 
