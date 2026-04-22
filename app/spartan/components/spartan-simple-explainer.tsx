@@ -11,7 +11,7 @@ export function SpartanSimpleExplainer() {
         <ul className="mt-5 list-none space-y-2.5 text-[15px] leading-relaxed text-neutral-300">
           <li>
             <strong className="text-white">Race</strong> (Spartan + credit a wrestler) or <strong className="text-white">Donate</strong>{" "}
-            (a wrestler or the training fund) — short steps, then you pay in Stripe.
+            (a wrestler or the NC United Training Fund) — short steps, then Stripe.
           </li>
           <li>
             <strong className="text-white">Wrestler credit</strong> uses search; race fees list a parent email for Spartan codes if needed.

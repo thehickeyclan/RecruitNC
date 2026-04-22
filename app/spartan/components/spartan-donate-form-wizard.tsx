@@ -58,7 +58,8 @@ export function SpartanDonateFormWizard() {
 
   const [email, setEmail] = useState("")
   const [donorName, setDonorName] = useState("")
-  const [payerType, setPayerType] = useState<"person" | "org">("person")
+  /** Receipt metadata for Stripe — one checkbox instead of radio that didn’t change fields */
+  const [payerIsOrg, setPayerIsOrg] = useState(false)
   const [donorListPublic, setDonorListPublic] = useState(true)
   const [fundraisingCode, setFundraisingCode] = useState("")
 
@@ -268,6 +269,11 @@ export function SpartanDonateFormWizard() {
     !athleteSearchLoading &&
     !athleteLookupError &&
     athleteHits.length === 0
+
+  /** Don’t show the recap until past the first “pick path / pick mode” screen — defaults in state are not “choices” yet. */
+  const showProgressRecap =
+    flow &&
+    !((flow === "donate" && donateStep === 1) || (flow === "race" && raceStep === 1))
 
   function goToDonate() {
     setFlow("donate")
@@ -489,7 +495,7 @@ export function SpartanDonateFormWizard() {
         body: JSON.stringify({
           email: email.trim(),
           donorName: name,
-          payerType,
+          payerType: payerIsOrg ? "org" : "person",
           donorListPublic: flow === "donate" ? donorListPublic : true,
           amountCents,
           tierPreference:
@@ -575,7 +581,7 @@ export function SpartanDonateFormWizard() {
               Donate
             </button>
             <p className="text-[10px] leading-snug text-[#777]">
-              Support a <strong className="text-[#999]">named wrestler</strong> or the <strong className="text-[#8ab4d8]">training fund</strong> —{" "}
+              <strong className="text-[#999]">Named wrestler</strong> or <strong className="text-[#8ab4d8]">NC United Training Fund</strong> —{" "}
               <strong className="text-[#C8A94A]">$5 min</strong>
             </p>
           </div>
@@ -585,32 +591,38 @@ export function SpartanDonateFormWizard() {
         </p>
       </div>
 
-      {flow && (
+      {showProgressRecap && (
         <div
           className="mt-4 rounded border border-[#2a2a2a] bg-[#101010] px-3 py-2.5 text-[11px] leading-snug text-[#9ca3af]"
           role="status"
         >
-          <p className="font-semibold uppercase tracking-[0.1em] text-[#666]">So far</p>
+          <p className="font-semibold uppercase tracking-[0.1em] text-[#666]">Your progress</p>
+          <p className="mt-0.5 text-[10px] text-[#6b6b6b]">Choices you already made (not future steps).</p>
           <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-[#b8b8b8]">
             <li>{flow === "race" ? "Race + wrestler credit" : "Donation"}</li>
-            {flow === "donate" && donateMode === "athlete" && (codeForCheckout || hasManualCredit) && (
+            {flow === "donate" && donateMode === "athlete" && donateStep >= 2 && (codeForCheckout || hasManualCredit) && (
               <li>
                 Credit: {codeForCheckout && athleteQuery.trim() ? athleteQuery.trim() : hasManualCredit ? manualCreditTrimmed : "—"}
               </li>
             )}
-            {flow === "donate" && donateMode === "general" && <li>NC United training fund (not one wrestler)</li>}
+            {flow === "donate" && donateMode === "general" && donateStep >= 3 && <li>NC United Training Fund</li>}
             {flow === "race" && (
               <>
                 {raceFor && <li>{raceFor === "self" ? "You are the runner" : "Runner is someone else"}</li>}
-                {raceStep >= 5 && tierPreference && (
+                {raceStep >= 4 && hasAthleteCredit && (
+                  <li>Wrestler credit: {athleteQuery.trim() || manualCreditTrimmed}</li>
+                )}
+                {/* Tier is prefilled with a default; only show after the distance step (5) is completed */}
+                {raceStep >= 6 && tierPreference && (
                   <li>Distance: {SPARTAN_RACE_TIERS.find((t) => t.id === tierPreference)?.name ?? tierPreference}</li>
                 )}
-                {/* Amount defaults to a suggestion in state; only show in summary after the amount step (6) is passed */}
                 {raceStep >= 7 && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
               </>
             )}
             {flow === "donate" && donateStep >= 4 && amountCents >= 500 && <li>Amount: {formatUsd(amountCents)}</li>}
-            {teeEligible && shirtSize && <li>Tee: {shirtSize}</li>}
+            {((flow === "donate" && donateStep >= 5) || (flow === "race" && raceStep >= 7)) &&
+              teeEligible &&
+              Boolean(shirtSize) && <li>Tee: {shirtSize}</li>}
           </ul>
         </div>
       )}
@@ -630,7 +642,7 @@ export function SpartanDonateFormWizard() {
       {flow === "donate" && donateStep === 1 && (
         <div className="mt-5 space-y-3 rounded border border-[#4a3d1a] border-l-4 border-l-[#C8A94A] bg-[#141008] p-3 sm:p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C8A94A]">Who should this support?</p>
-          <p className="text-xs text-[#9ca3af]">You can name a wrestler, or give to the team training fund with no one athlete on the check.</p>
+          <p className="text-xs text-[#9ca3af]">Credit a wrestler, or the NC United Training Fund.</p>
           <div className="grid gap-2 sm:grid-cols-2">
             <button
               type="button"
@@ -650,7 +662,7 @@ export function SpartanDonateFormWizard() {
               }}
               className="min-h-[48px] rounded border border-[#444] bg-[#0A0A0A] px-3 text-sm font-bold text-[#ccc] hover:border-[#666]"
             >
-              Training fund (not one wrestler)
+              NC United Training Fund
             </button>
           </div>
         </div>
@@ -726,15 +738,14 @@ export function SpartanDonateFormWizard() {
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
             />
             <p className="mt-2 text-[11px] text-[#666]">
-              Or give to the{" "}
+              Or the{" "}
               <button
                 type="button"
                 className="font-medium text-[#C8A94A] underline underline-offset-2"
                 onClick={goToDonateGeneralFund}
               >
-                training fund only
+                NC United Training Fund
               </button>
-              .
             </p>
           </div>
         </div>
@@ -744,8 +755,8 @@ export function SpartanDonateFormWizard() {
       {flow === "donate" && donateStep === 3 && (
         <div className="mt-6">
           {donateMode === "general" && (
-            <p className="mb-3 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#999]">
-              NC United athlete training fund — not tied to one wrestler.
+            <p className="mb-3 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-center text-sm font-semibold text-[#C8A94A]">
+              NC United Training Fund
             </p>
           )}
           <div className="mb-3 flex flex-wrap gap-1.5">
@@ -791,31 +802,6 @@ export function SpartanDonateFormWizard() {
         <div className="mt-6 space-y-3 rounded-lg border border-[#2a3d4f] border-l-4 border-l-[#5a8ab0] bg-[#0c1014] p-3 sm:p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8ab4d8]">Receipt & visibility</p>
           <p className="text-xs text-[#9ca3af]">Name on the tax receipt. This is the payer, not the wrestler (unless the same person).</p>
-          <fieldset className="space-y-2">
-            <legend className="text-sm text-[#ccc]">Payer is a</legend>
-            <div className="flex flex-wrap gap-3">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-[#ccc]">
-                <input
-                  type="radio"
-                  name="payerTypeD"
-                  checked={payerType === "person"}
-                  onChange={() => setPayerType("person")}
-                  className="h-4 w-4"
-                />
-                Person
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-[#ccc]">
-                <input
-                  type="radio"
-                  name="payerTypeD"
-                  checked={payerType === "org"}
-                  onChange={() => setPayerType("org")}
-                  className="h-4 w-4"
-                />
-                Company / organization
-              </label>
-            </div>
-          </fieldset>
           <div>
             <label htmlFor="spartan-donor-name-d" className="text-sm font-medium text-[#ccc]">
               Full name or organization
@@ -830,6 +816,18 @@ export function SpartanDonateFormWizard() {
               onChange={(e) => setDonorName(e.target.value)}
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#5a8ab0] focus:outline-none"
             />
+            <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 text-[12px] leading-snug text-[#8a8a8a]">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#555] bg-[#0A0A0A]"
+                checked={payerIsOrg}
+                onChange={(e) => setPayerIsOrg(e.target.checked)}
+              />
+              <span>
+                The name above is a <strong className="font-medium text-[#c5c5c5]">company, team, or organization</strong> on the
+                receipt (not an individual) — for bookkeeping
+              </span>
+            </label>
           </div>
           <div>
             <label htmlFor="spartan-donor-email-d" className="text-sm font-medium text-[#ccc]">
@@ -892,7 +890,7 @@ export function SpartanDonateFormWizard() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#888]">Review</p>
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
-              <span className="text-[#666]">Type:</span> {donateMode === "general" ? "Training fund" : "Wrestler credit"}
+              <span className="text-[#666]">Type:</span> {donateMode === "general" ? "NC United Training Fund" : "Wrestler credit"}
             </li>
             {donateMode === "athlete" && (
               <li>
@@ -903,7 +901,8 @@ export function SpartanDonateFormWizard() {
               <span className="text-[#666]">Amount:</span> {formatUsd(amountCents)}
             </li>
             <li>
-              <span className="text-[#666]">Receipt name:</span> {donorName || "—"} ({payerType === "org" ? "org" : "person"})
+              <span className="text-[#666]">Receipt name:</span> {donorName || "—"}
+              {payerIsOrg && <span className="text-[#888]"> (organization)</span>}
             </li>
             <li>
               <span className="text-[#666]">Email:</span> {email}
@@ -925,31 +924,6 @@ export function SpartanDonateFormWizard() {
         <div className="mt-5 space-y-3 rounded border border-[#CC0000]/30 bg-[#1a0a0a] p-3 sm:p-4">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Who is paying (receipt)?</p>
           <p className="text-xs text-[#9ca3af]">Name and email for the card / tax receipt. The wrestler you credit is in a later step.</p>
-          <fieldset className="space-y-2">
-            <legend className="text-sm text-[#ccc]">Payer is a</legend>
-            <div className="flex flex-wrap gap-3">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-[#ccc]">
-                <input
-                  type="radio"
-                  name="payerTypeR"
-                  checked={payerType === "person"}
-                  onChange={() => setPayerType("person")}
-                  className="h-4 w-4"
-                />
-                Person
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-[#ccc]">
-                <input
-                  type="radio"
-                  name="payerTypeR"
-                  checked={payerType === "org"}
-                  onChange={() => setPayerType("org")}
-                  className="h-4 w-4"
-                />
-                Company / organization
-              </label>
-            </div>
-          </fieldset>
           <div>
             <label htmlFor="spartan-race-donor-name" className="text-sm font-medium text-[#ccc]">
               Full name or organization
@@ -964,6 +938,18 @@ export function SpartanDonateFormWizard() {
               onChange={(e) => setDonorName(e.target.value)}
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
             />
+            <label className="mt-2.5 flex cursor-pointer items-start gap-2.5 text-[12px] leading-snug text-[#8a8a8a]">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#555] bg-[#0A0A0A]"
+                checked={payerIsOrg}
+                onChange={(e) => setPayerIsOrg(e.target.checked)}
+              />
+              <span>
+                The name above is a <strong className="font-medium text-[#c5c5c5]">company, team, or organization</strong> on the
+                receipt (not an individual) — for bookkeeping
+              </span>
+            </label>
           </div>
           <div>
             <label htmlFor="spartan-race-donor-email" className="text-sm font-medium text-[#ccc]">
@@ -1206,7 +1192,8 @@ export function SpartanDonateFormWizard() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#888]">Review</p>
           <ul className="mt-2 space-y-1.5 text-sm text-[#ccc]">
             <li>
-              <span className="text-[#666]">Payer:</span> {donorName} · {email}
+              <span className="text-[#666]">Payer:</span> {donorName}
+              {payerIsOrg && <span className="text-[#888]"> (organization)</span>} · {email}
             </li>
             <li>
               <span className="text-[#666]">Runner:</span> {resolvedRaceParticipantName() || "—"} · reg email:{" "}
@@ -1260,19 +1247,21 @@ export function SpartanDonateFormWizard() {
         </button>
       )}
 
-      {flow === "race" && raceStep > 1 && raceStep < RACE_STEPS && (
+      {flow === "race" && raceStep >= 1 && raceStep < RACE_STEPS && (
         <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={raceBack}
-            className="min-h-[44px] flex-1 rounded border border-[#444] bg-[#1a1a1a] text-sm text-[#ccc]"
-          >
-            Back
-          </button>
+          {raceStep > 1 && (
+            <button
+              type="button"
+              onClick={raceBack}
+              className="min-h-[44px] flex-1 rounded border border-[#444] bg-[#1a1a1a] text-sm text-[#ccc]"
+            >
+              Back
+            </button>
+          )}
           <button
             type="button"
             onClick={raceNext}
-            className="min-h-[44px] flex-1 rounded bg-[#CC0000] text-sm font-bold text-white hover:bg-[#990000]"
+            className={`min-h-[44px] rounded bg-[#CC0000] text-sm font-bold text-white hover:bg-[#990000] ${raceStep === 1 ? "w-full" : "flex-1"}`}
           >
             Next
           </button>

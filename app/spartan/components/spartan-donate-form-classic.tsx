@@ -290,7 +290,7 @@ export function SpartanDonateFormClassic() {
       return
     }
     if (flow === "donate" && donateMode === null) {
-      setError("Choose sponsoring (a wrestler) or donating (NC United training fund).")
+      setError("Choose sponsoring (a wrestler) or donating (NC United Training Fund).")
       return
     }
     if (needsAthleteCode && !hasAthleteCredit) {
@@ -425,8 +425,8 @@ export function SpartanDonateFormClassic() {
               Donating
             </button>
             <p className="text-[10px] leading-snug text-[#777] sm:min-h-[2.75rem]">
-              <strong className="text-[#999]">Donate to the training fund</strong> — not one wrestler ·{" "}
-              <strong className="text-[#8ab4d8]">$5 minimum</strong>
+              <strong className="text-[#999]">NC United Training Fund</strong> ·{" "}
+              <strong className="text-[#8ab4d8]">$5 min</strong>
             </p>
           </div>
         </div>
@@ -613,7 +613,7 @@ export function SpartanDonateFormClassic() {
                     <HardLink href="/athletes" className="text-[#C8A94A] hover:underline">
                       directory
                     </HardLink>
-                    . You can still sponsor or donate: use the box below or switch to the training fund.
+                    . You can still sponsor or use the box below, or switch to the NC United Training Fund.
                   </p>
                 )}
                 {athleteMenuOpen && athleteHits.length > 0 && (
@@ -665,15 +665,15 @@ export function SpartanDonateFormClassic() {
                     className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white placeholder:text-[#555] focus:border-[#C8A94A] focus:outline-none"
                   />
                   <p className="mt-2 text-[11px] text-[#666]">
-                    Or donate to{" "}
+                    Or the{" "}
                     <button
                       type="button"
                       className="font-medium text-[#C8A94A] underline underline-offset-2 hover:text-[#dfd08a]"
                       onClick={selectDonatingFund}
                     >
-                      NC United athlete training fund
+                      NC United Training Fund
                     </button>{" "}
-                    with no wrestler.
+                    (no named wrestler).
                   </p>
                 </div>
               </div>
@@ -681,8 +681,8 @@ export function SpartanDonateFormClassic() {
           )}
 
           {flow === "donate" && donateMode === "general" && (
-            <p className="mt-5 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-[11px] text-[#999]">
-              NC United athlete training fund — not tied to one wrestler.
+            <p className="mt-5 rounded border border-[#333] bg-[#0A0A0A] px-3 py-2 text-center text-sm font-semibold text-[#C8A94A]">
+              NC United Training Fund
             </p>
           )}
 
@@ -828,7 +828,7 @@ export function SpartanDonateFormClassic() {
         <div className="mt-5 rounded border border-[#2a2a2a] bg-[#0f0f0f] px-3 py-3 text-[12px] leading-snug text-[#9ca3af]">
           <p>
             {donateMode === "general"
-              ? "Tax-deductible gift to NC United's athlete training fund (not one wrestler)."
+              ? "Tax-deductible gift to the NC United Training Fund."
               : "Tax-deductible gift to NC United — support only, not a race registration."}
           </p>
           {donateMode === "athlete" && codeForCheckout && athleteQuery.trim() && (
@@ -857,7 +857,7 @@ export function SpartanDonateFormClassic() {
         <p className="mt-2 text-center text-[11px] text-[#666]">Pick Racing, Sponsoring, or Donating above.</p>
       )}
       {!stepUnlocked && flow === "donate" && donateMode === null && (
-        <p className="mt-2 text-center text-[11px] text-[#666]">Choose wrestler or NC United.</p>
+        <p className="mt-2 text-center text-[11px] text-[#666]">Choose a wrestler or the NC United Training Fund.</p>
       )}
     </form>
   )

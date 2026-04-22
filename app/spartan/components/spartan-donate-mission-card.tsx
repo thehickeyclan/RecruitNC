@@ -38,10 +38,10 @@ export function SpartanDonateMissionCard() {
         Sponsoring or donating
       </p>
       <h3 className="mt-2 font-[family-name:var(--font-barlow-spartan)] text-[22px] font-extrabold uppercase leading-tight tracking-tight text-white md:text-[26px]">
-        Sponsor a wrestler or donate to the training fund
+        Sponsor a wrestler or the NC United Training Fund
       </h3>
       <p className="mt-2 text-sm leading-relaxed text-[#bbb]">
-        501(c)(3). One wrestler or the general training fund — set it on the next screen.
+        501(c)(3). One wrestler or the NC United Training Fund — you choose on the next screen.
       </p>
       <p className="mt-3 font-[family-name:var(--font-barlow-spartan)] text-[11px] uppercase tracking-[0.14em] text-[#666]">
         Any amount from $5 — every gift counts
@@ -98,7 +98,7 @@ export function SpartanDonateMissionCard() {
           href={chipHrefFund}
           className="inline-flex min-h-[48px] w-full items-center justify-center border border-[#3a3a3a] bg-[#252525] px-2 font-[family-name:var(--font-barlow-spartan)] text-xs font-bold uppercase tracking-[0.12em] text-[#aaa] transition-colors hover:border-[#8ab4d8]/50 hover:text-white active:opacity-90"
         >
-          Continue — training fund only
+          Continue — NC United Training Fund
         </HardLink>
       </div>
 
@@ -108,7 +108,7 @@ export function SpartanDonateMissionCard() {
       >
         <p className="text-[#aaa]">
           At checkout: <strong className="text-[#ccc]">your name</strong> first, then <strong className="text-[#ccc]">search the wrestler</strong>{" "}
-          (unless you chose the training fund).
+          (unless you chose the NC United Training Fund).
         </p>
       </div>
     </article>
