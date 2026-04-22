@@ -1124,9 +1124,13 @@ export function SpartanDonateFormWizard() {
       {flow === "race" && raceStep === 5 && (
         <div className="mt-5 space-y-3 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Which distance?</p>
-          <p className="text-[12px] leading-relaxed text-[#aaa]">Suggested donation depends on the race you target — you can adjust on the next step.</p>
+          <p className="text-[12px] leading-relaxed text-[#aaa]">
+            Choose the Spartan distance you are signing up for. The menu shows a <span className="text-[#ccc]">typical</span>{" "}
+            fundraising level for that race — the next step is where you set your actual gift (you can go higher, lower, or
+            match the suggestion; $5 minimum).
+          </p>
           <label htmlFor="spartan-race-tier-w" className="text-[11px] text-[#888]">
-            Race
+            Your distance
           </label>
           <select
             id="spartan-race-tier-w"
@@ -1154,8 +1158,16 @@ export function SpartanDonateFormWizard() {
 
       {flow === "race" && raceStep === 6 && (
         <div className="mt-6">
-          <label className="text-xs text-[#888]" htmlFor="spartan-amount-usd-r">
-            Fundraising amount <span className="text-[#666]">($5 min · suggestion auto-filled from distance)</span>
+          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#C8A94A]">Your gift amount</p>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-[#aaa]">
+            We suggested a number based on{" "}
+            <strong className="font-medium text-[#e5e5e5]">
+              {SPARTAN_RACE_TIERS.find((t) => t.id === tierOrDefault)?.name ?? "the distance you picked"}
+            </strong>
+            . It is a starting point, not a second “race fee” line — change it to give more, less, or the same (minimum $5).
+          </p>
+          <label className="mt-3 block text-xs text-[#888]" htmlFor="spartan-amount-usd-r">
+            Amount in dollars
           </label>
           <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
             <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
