@@ -461,8 +461,9 @@ export function SpartanDonateFormClassic() {
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Come race with us</p>
             <p className="mt-2 text-[12px] leading-relaxed text-[#aaa]">
-              Pick <strong className="text-white">any Fayetteville Spartan distance</strong> below — Sprint through Ultra all
-              count. Amount is a <strong className="text-white">suggested</strong> donation; change it to what you need.
+              Pick <strong className="text-white">any Fayetteville Spartan distance</strong> below (no prices in the menu).
+              The amount field lower on this form fills in a <strong className="text-white">recommended</strong> NC United gift
+              for that race — donate more, less, or the same ($5 minimum).
             </p>
           </div>
           <div>
@@ -476,13 +477,17 @@ export function SpartanDonateFormClassic() {
             <select
               id="spartan-race-tier"
               value={tierPreference || DEFAULT_SPARTAN_RACE_TIER_ID}
-              onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
+              onChange={(e) => {
+                const id = e.target.value as SpartanRaceTierId
+                setTierPreference(id)
+                setAmountDollars(suggestedDollarsString(id))
+              }}
               className="mt-1.5 min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
             >
               {SPARTAN_RACE_TIERS.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.featured ? "★ " : ""}
-                  {t.name} · {t.priceLabel} suggested · {t.scheduleChip}
+                  {t.name} · {t.scheduleChip}
                 </option>
               ))}
             </select>
@@ -719,7 +724,16 @@ export function SpartanDonateFormClassic() {
               </div>
             )}
             <label className="text-xs text-[#888]" htmlFor="spartan-amount-usd">
-              Amount <span className="font-normal text-[#666]">($5 minimum — any amount)</span>
+              {flow === "race" ? (
+                <>
+                  Gift amount{" "}
+                  <span className="font-normal text-[#666]">($5 min · recommended for your distance is pre-filled — edit anytime)</span>
+                </>
+              ) : (
+                <>
+                  Amount <span className="font-normal text-[#666]">($5 minimum — any amount)</span>
+                </>
+              )}
             </label>
             <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
               <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>

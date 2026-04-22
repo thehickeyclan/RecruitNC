@@ -1229,9 +1229,9 @@ export function SpartanDonateFormWizard() {
         <div className="mt-5 space-y-3 rounded border border-[#CC0000]/35 bg-[#1a0a0a] px-3 py-3">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[#C8A94A]">Which distance?</p>
           <p className="text-[12px] leading-relaxed text-[#aaa]">
-            Choose the Spartan distance you are signing up for. The menu shows a <span className="text-[#ccc]">typical</span>{" "}
-            fundraising level for that race — the next step is where you set your actual gift (you can go higher, lower, or
-            match the suggestion; $5 minimum).
+            Choose the <span className="text-[#ccc]">Spartan distance</span> you are signing up for (name and weekend only here).
+            The next step suggests a <span className="text-[#ccc]">recommended</span> NC United gift for that track — you can
+            donate more or less ($5 minimum).
           </p>
           <label htmlFor="spartan-race-tier-w" className="text-[11px] text-[#888]">
             Your distance
@@ -1239,13 +1239,17 @@ export function SpartanDonateFormWizard() {
           <select
             id="spartan-race-tier-w"
             value={tierOrDefault}
-            onChange={(e) => setTierPreference(e.target.value as SpartanRaceTierId)}
+            onChange={(e) => {
+              const id = e.target.value as SpartanRaceTierId
+              setTierPreference(id)
+              setAmountDollars(suggestedDollarsString(id))
+            }}
             className="min-h-[48px] w-full border border-[#444] bg-[#0A0A0A] px-3 py-2.5 text-base text-white focus:border-[#CC0000] focus:outline-none"
           >
             {SPARTAN_RACE_TIERS.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.featured ? "★ " : ""}
-                {t.name} · {t.priceLabel} suggested · {t.scheduleChip}
+                {t.name} · {t.scheduleChip}
               </option>
             ))}
           </select>
@@ -1264,14 +1268,14 @@ export function SpartanDonateFormWizard() {
         <div className="mt-6">
           <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-[#C8A94A]">Your gift amount</p>
           <p className="mt-1.5 text-[12px] leading-relaxed text-[#aaa]">
-            We suggested a number based on{" "}
-            <strong className="font-medium text-[#e5e5e5]">
-              {SPARTAN_RACE_TIERS.find((t) => t.id === tierOrDefault)?.name ?? "the distance you picked"}
-            </strong>
-            . It is a starting point, not a second “race fee” line — change it to give more, less, or the same (minimum $5).
+            <strong className="font-medium text-[#e5e5e5]">Recommended</strong> team fundraising for{" "}
+            {SPARTAN_RACE_TIERS.find((t) => t.id === tierOrDefault)?.name ?? "this distance"}. It aligns with the usual
+            suggested gift for that race — not a second Spartan entry fee. This is your tax-deductible{" "}
+            <span className="text-[#ccc]">donation to NC United</span>; change the number to give more, less, or the same
+            (minimum $5).
           </p>
           <label className="mt-3 block text-xs text-[#888]" htmlFor="spartan-amount-usd-r">
-            Amount in dollars
+            Gift amount (dollars)
           </label>
           <div className="mt-1 flex overflow-hidden rounded border border-[#444] bg-[#0A0A0A] focus-within:border-[#CC0000]">
             <span className="flex items-center border-r border-[#444] bg-[#1a1a1a] px-2.5 text-[#888]">$</span>
