@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Upload, X, LayoutDashboard } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Upload, X, LayoutDashboard, Coins } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -69,6 +69,10 @@ export function ProfileClient() {
   const [headshotUploading, setHeadshotUploading] = useState(false)
   const [eventHubs, setEventHubs] = useState<{ id: string; slug: string; name: string; href: string }[]>([])
   const [eventHubsLoading, setEventHubsLoading] = useState(true)
+  const [spartanFundraising, setSpartanFundraising] = useState<{
+    athletes: { athleteId: string; name: string; fundraisingCode: string | null; totalCents: number; codeUnavailable?: boolean }[]
+  } | null>(null)
+  const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(true)
 
   useEffect(() => {
     console.log("[v0] ProfileClient useEffect:", { authLoading, isAuthenticated, user: !!user })
@@ -78,11 +82,13 @@ export function ProfileClient() {
       fetchBlueMemberships()
       fetchLinkedAthletes()
       fetchEventHubs()
+      void fetchSpartanFundraisingTotals()
     } else if (!authLoading && !isAuthenticated) {
       setIsLoading(false)
       setBlueLoading(false)
       setLinkedLoading(false)
       setEventHubsLoading(false)
+      setSpartanFundraisingLoading(false)
     }
   }, [authLoading, isAuthenticated])
 
@@ -96,6 +102,25 @@ export function ProfileClient() {
       setEventHubs([])
     } finally {
       setEventHubsLoading(false)
+    }
+  }
+
+  const fetchSpartanFundraisingTotals = async () => {
+    setSpartanFundraisingLoading(true)
+    try {
+      const res = await fetch("/api/profile/spartan-fundraising-totals", { credentials: "include" })
+      if (res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          athletes?: { athleteId: string; name: string; fundraisingCode: string | null; totalCents: number; codeUnavailable?: boolean }[]
+        }
+        setSpartanFundraising({ athletes: data.athletes ?? [] })
+      } else {
+        setSpartanFundraising({ athletes: [] })
+      }
+    } catch {
+      setSpartanFundraising({ athletes: [] })
+    } finally {
+      setSpartanFundraisingLoading(false)
     }
   }
 
@@ -141,6 +166,7 @@ export function ProfileClient() {
       setAthleteSearchResults([])
       setSuccess(data.message ?? "Athlete linked.")
       fetchLinkedAthletes()
+      void fetchSpartanFundraisingTotals()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not link athlete")
     } finally {
@@ -753,6 +779,47 @@ export function ProfileClient() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Spartan / Fayetteville — parent-visible donation totals by linked athlete (reporting) */}
+            {!spartanFundraisingLoading && spartanFundraising && spartanFundraising.athletes.length > 0 && (
+              <Card className="border-emerald-200/50 bg-gradient-to-b from-white to-emerald-50/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-[#0f5132]">
+                    <Coins className="h-5 w-5 shrink-0" />
+                    Fundraising (Fayetteville)
+                  </CardTitle>
+                  <CardDescription>
+                    Paid gifts credited to each wrestler&rsquo;s NCU code in the Fayetteville campaign (from our
+                    records). This is a running total for your family&rsquo;s reference — not a personal balance or
+                    guarantee of any payout.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {spartanFundraising.athletes.map((row) => (
+                    <div
+                      key={row.athleteId}
+                      className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-emerald-100 bg-white/80 px-3 py-2.5"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">{row.name}</p>
+                        {row.fundraisingCode ? (
+                          <p className="text-xs text-muted-foreground font-mono mt-0.5">{row.fundraisingCode}</p>
+                        ) : (
+                          <p className="text-xs text-amber-800 mt-0.5">
+                            No NCU code assigned from profile (needs name + graduation year in our system).
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-lg font-semibold tabular-nums text-[#0f5132]">
+                        {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+                          row.totalCents / 100,
+                        )}
+                      </p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Link your athlete — search and link as parent */}
             <Card>
