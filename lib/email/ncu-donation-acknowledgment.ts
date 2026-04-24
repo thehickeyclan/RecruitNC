@@ -65,7 +65,7 @@ Your contribution supports athlete training, travel, and competition opportuniti
 
 No goods or services were provided in exchange for this contribution.
 
-If you need a copy of this acknowledgment for your records, feel free to reply to this email.
+Please keep this email for your tax records — it is your written acknowledgment of this gift. If you have questions, reply to this message and we’ll help.
 
 We appreciate your support.
 
