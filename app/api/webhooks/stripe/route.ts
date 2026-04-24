@@ -10,6 +10,10 @@ import {
   processNcUnitedDropInCheckoutFailed,
   processNcUnitedDropInCheckoutSession,
 } from "@/lib/nc-united-calendar/process-drop-in-checkout"
+import {
+  sendFayettevilleDonationAutoAckIfEligible,
+  upsertSpartanDonationFromCheckoutSession,
+} from "@/lib/spartan-fayetteville-webhook-ack"
 
 export const dynamic = "force-dynamic"
 
@@ -571,6 +575,11 @@ export async function POST(request: NextRequest) {
   if (event.type === "checkout.session.async_payment_succeeded") {
     const session = event.data.object as Stripe.Checkout.Session
     const admin = createAdminClient()
+    if (session.metadata?.channel === "spartan" && session.payment_status === "paid") {
+      await upsertSpartanDonationFromCheckoutSession(admin, session)
+      await sendFayettevilleDonationAutoAckIfEligible(admin, session)
+      return NextResponse.json({ received: true })
+    }
     const handledCalendarDropIn = await processNcUnitedDropInCheckoutSession(
       admin,
       session,
@@ -772,38 +781,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    // Sync Spartan donations to spartan_donations table
+    // Sync Spartan donations to spartan_donations + optional auto 501(c)(3) email (Fayetteville campaign)
     if (session.metadata?.channel === "spartan") {
-      const meta = session.metadata
-      const piRaw = session.payment_intent
-      const stripePaymentIntentId =
-        typeof piRaw === "string" ? piRaw : piRaw && typeof piRaw === "object" && "id" in piRaw
-          ? String((piRaw as { id: string }).id)
-          : null
-      const rawMetadata: Record<string, string> = meta ? { ...meta } : {}
-      if (stripePaymentIntentId) rawMetadata.stripe_payment_intent_id = stripePaymentIntentId
-
-      const { error: spartanErr } = await admin.from("spartan_donations").upsert(
-        {
-          id: session.id,
-          created_at: new Date(session.created * 1000).toISOString(),
-          amount_cents: session.amount_total ?? 0,
-          currency: session.currency ?? "usd",
-          status: "paid",
-          athlete_code: meta.athlete_code || null,
-          athlete_display_name: meta.athlete_display_name || null,
-          fundraising_type: meta.fundraising_type || null,
-          spartan_campaign: meta.spartan_campaign || null,
-          donor_email: session.customer_details?.email || null,
-          donor_name: session.customer_details?.name || null,
-          stripe_charge_id: session.id,
-          raw_metadata: rawMetadata,
-        },
-        { onConflict: "id" },
-      )
-
-      if (spartanErr) {
-        console.error("[webhook] spartan_donations upsert:", spartanErr.message)
+      await upsertSpartanDonationFromCheckoutSession(admin, session)
+      if (session.payment_status === "paid") {
+        await sendFayettevilleDonationAutoAckIfEligible(admin, session)
       }
       return NextResponse.json({ received: true })
     }
