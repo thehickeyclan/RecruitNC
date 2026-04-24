@@ -780,18 +780,17 @@ export function ProfileClient() {
               </CardContent>
             </Card>
 
-            {/* Spartan / Fayetteville — parent-visible donation totals by linked athlete (reporting) */}
+            {/* Spartan / NCU-totals — parent-visible donation totals by linked athlete (reporting) */}
             {!spartanFundraisingLoading && spartanFundraising && spartanFundraising.athletes.length > 0 && (
               <Card className="border-emerald-200/50 bg-gradient-to-b from-white to-emerald-50/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[#0f5132]">
                     <Coins className="h-5 w-5 shrink-0" />
-                    Fundraising (Fayetteville)
+                    Fundraising
                   </CardTitle>
                   <CardDescription>
-                    Paid gifts credited to each wrestler&rsquo;s NCU code in the Fayetteville campaign (from our
-                    records). This is a running total for your family&rsquo;s reference — not a personal balance or
-                    guarantee of any payout.
+                    Paid gifts credited to each wrestler&rsquo;s NCU code in our records. Running total for your
+                    family&rsquo;s reference — not a personal balance or guarantee of any payout.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
