@@ -13,7 +13,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
 import { SpartanFundraisingVisuals } from "@/components/admin/spartan-fundraising-visuals"
-import { ArrowLeft, ClipboardCopy, Coins, Download, RefreshCw, Wrench } from "lucide-react"
+import { ArrowLeft, ClipboardCopy, Coins, Download, Mail, RefreshCw, Wrench } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { firstNameFromDonorName } from "@/lib/email/ncu-donation-acknowledgment"
 
 type SpartanDonationRow = {
   sessionId: string
@@ -31,6 +40,8 @@ type SpartanDonationRow = {
   manualCreditName: string | null
   attribution: "athlete" | "general_nc_united" | "manual_name"
   tierPreference: string
+  /** Set when `spartan_donation_receipt_emails` row exists (Supabase). */
+  receiptEmailSentAt?: string | null
 }
 
 type SpartanAthleteAggregate = {
@@ -54,6 +65,27 @@ function formatMoney(cents: number, currency: string) {
   }
 }
 
+function dateToInputValue(iso: string) {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ""
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+function localDateToNoonIso(yyyyMmDd: string) {
+  const [y, m, d] = yyyyMmDd.split("-").map(Number)
+  if (!y || !m || !d) return new Date().toISOString()
+  return new Date(y, m - 1, d, 12, 0, 0, 0).toISOString()
+}
+
+function parseDollarsToCents(raw: string): number | null {
+  const n = Number.parseFloat(raw.replace(/[$,]/g, "").trim())
+  if (!Number.isFinite(n) || n < 0) return null
+  return Math.round(n * 100)
+}
+
 export default function AdminFundraisingPage() {
   const [leaderboard, setLeaderboard] = useState("")
   const [notes, setNotes] = useState("")
@@ -75,6 +107,17 @@ export default function AdminFundraisingPage() {
 
   const [exportBusy, setExportBusy] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
+
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const [receiptRow, setReceiptRow] = useState<SpartanDonationRow | null>(null)
+  const [receiptFirstName, setReceiptFirstName] = useState("")
+  const [receiptTo, setReceiptTo] = useState("")
+  const [receiptAmountDollars, setReceiptAmountDollars] = useState("")
+  const [receiptDateStr, setReceiptDateStr] = useState("")
+  const [receiptPreviewHtml, setReceiptPreviewHtml] = useState<string | null>(null)
+  const [receiptPreviewBusy, setReceiptPreviewBusy] = useState(false)
+  const [receiptSendBusy, setReceiptSendBusy] = useState(false)
+  const [receiptMsg, setReceiptMsg] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -188,6 +231,112 @@ export default function AdminFundraisingPage() {
       setCreditFixMsg(e instanceof Error ? e.message : "Save failed")
     } finally {
       setCreditFixBusy(false)
+    }
+  }
+
+  const openReceiptDialog = (d: SpartanDonationRow) => {
+    setReceiptRow(d)
+    setReceiptFirstName(firstNameFromDonorName(d.donorName))
+    setReceiptTo((d.donorEmail ?? "").trim())
+    setReceiptAmountDollars((d.amountCents / 100).toFixed(2))
+    setReceiptDateStr(dateToInputValue(d.createdIso))
+    setReceiptPreviewHtml(null)
+    setReceiptMsg(null)
+    setReceiptOpen(true)
+  }
+
+  const runReceiptPreview = async () => {
+    setReceiptMsg(null)
+    const cents = parseDollarsToCents(receiptAmountDollars)
+    if (cents == null) {
+      setReceiptMsg("Enter a valid amount.")
+      return
+    }
+    if (!receiptDateStr) {
+      setReceiptMsg("Choose a donation date.")
+      return
+    }
+    if (!receiptTo.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(receiptTo)) {
+      setReceiptMsg("Enter a valid recipient email.")
+      return
+    }
+    setReceiptPreviewBusy(true)
+    setReceiptPreviewHtml(null)
+    try {
+      const res = await fetch("/api/admin/spartan-donation-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "preview",
+          firstName: receiptFirstName.trim(),
+          amountCents: cents,
+          currency: "usd",
+          donationDateIso: localDateToNoonIso(receiptDateStr),
+          recipientEmail: receiptTo.trim(),
+        }),
+        credentials: "include",
+      })
+      const j = (await res.json()) as {
+        error?: string
+        preview?: { html: string; subject: string; to: string; from: string }
+      }
+      if (!res.ok) throw new Error(j.error || "Preview failed")
+      setReceiptMsg(null)
+      if (j.preview?.html) setReceiptPreviewHtml(j.preview.html)
+      else setReceiptMsg("No preview returned.")
+    } catch (e) {
+      setReceiptMsg(e instanceof Error ? e.message : "Preview failed")
+    } finally {
+      setReceiptPreviewBusy(false)
+    }
+  }
+
+  const sendReceiptEmail = async () => {
+    if (!receiptRow) return
+    setReceiptMsg(null)
+    const cents = parseDollarsToCents(receiptAmountDollars)
+    if (cents == null) {
+      setReceiptMsg("Enter a valid amount.")
+      return
+    }
+    if (!receiptDateStr) {
+      setReceiptMsg("Choose a donation date.")
+      return
+    }
+    if (cents !== receiptRow.amountCents) {
+      setReceiptMsg("Amount must match this Stripe row — refresh the list or fix the value.")
+      return
+    }
+    if (!receiptTo.trim()) {
+      setReceiptMsg("Missing email.")
+      return
+    }
+    setReceiptSendBusy(true)
+    try {
+      const res = await fetch("/api/admin/spartan-donation-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send",
+          sessionId: receiptRow.sessionId,
+          firstName: receiptFirstName.trim(),
+          amountCents: cents,
+          currency: "usd",
+          donationDateIso: localDateToNoonIso(receiptDateStr),
+          recipientEmail: receiptTo.trim(),
+        }),
+        credentials: "include",
+      })
+      const j = (await res.json()) as { error?: string; warning?: string; ok?: boolean }
+      if (!res.ok) throw new Error(j.error || "Send failed")
+      setReceiptMsg(j.warning || "Sent.")
+      setReceiptOpen(false)
+      setReceiptRow(null)
+      if (donations !== null) await loadDonations()
+    } catch (e) {
+      setReceiptMsg(e instanceof Error ? e.message : "Send failed")
+    } finally {
+      setReceiptSendBusy(false)
     }
   }
 
@@ -433,7 +582,8 @@ export default function AdminFundraisingPage() {
                   <strong className="text-foreground"> Race path</strong> = race / entry flow;{" "}
                   <strong className="text-foreground">Give only</strong> = no race entry.{" "}
                   <strong className="text-foreground">Public list</strong> = donor opted in to show name on the public page.
-                  Use <strong className="text-foreground">By athlete</strong> for per–athlete totals.
+                  Use <strong className="text-foreground">Ack</strong> to preview/send the 501(c)(3) acknowledgment email
+                  (Resend). <strong className="text-foreground">By athlete</strong> for per–athlete totals.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -509,6 +659,7 @@ export default function AdminFundraisingPage() {
                           <TableHead>Type</TableHead>
                           <TableHead>Athlete</TableHead>
                           <TableHead>Fund</TableHead>
+                          <TableHead className="w-[120px]">Ack</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -571,6 +722,27 @@ export default function AdminFundraisingPage() {
                                 : d.attribution === "manual_name"
                                   ? "Manual name"
                                   : "NC United (general)"}
+                            </TableCell>
+                            <TableCell>
+                              {d.receiptEmailSentAt ? (
+                                <span className="text-muted-foreground text-[10px] leading-tight">
+                                  Sent
+                                  <br />
+                                  {new Date(d.receiptEmailSentAt).toLocaleDateString()}
+                                </span>
+                              ) : null}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="mt-1 h-7 text-[10px]"
+                                onClick={() => openReceiptDialog(d)}
+                                disabled={!d.donorEmail}
+                                title={!d.donorEmail ? "No email on this session" : "Charitable acknowledgment email"}
+                              >
+                                <Mail className="mr-1 h-3 w-3" />
+                                Email
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -653,6 +825,93 @@ export default function AdminFundraisingPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={receiptOpen} onOpenChange={setReceiptOpen}>
+          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle>501(c)(3) acknowledgment email</DialogTitle>
+              <DialogDescription>
+                Preview and send the official NC United acknowledgment. Amount and email must match Stripe for this session.
+                Create table <code className="text-xs">spartan_donation_receipt_emails</code> in Supabase to log sends (see
+                comment in <code className="text-xs">app/api/admin/spartan-donation-receipt/route.ts</code>).
+              </DialogDescription>
+            </DialogHeader>
+            {receiptRow && (
+              <div className="space-y-3 text-sm">
+                <p className="text-muted-foreground font-mono text-xs">{receiptRow.sessionId}</p>
+                <div className="grid gap-2">
+                  <Label htmlFor="rcpt-first">First name (greeting)</Label>
+                  <Input
+                    id="rcpt-first"
+                    value={receiptFirstName}
+                    onChange={(e) => setReceiptFirstName(e.target.value)}
+                    placeholder="Jane"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="rcpt-to">To (must match Stripe)</Label>
+                  <Input
+                    id="rcpt-to"
+                    type="email"
+                    value={receiptTo}
+                    onChange={(e) => setReceiptTo(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="rcpt-amt">Amount (USD, must match row)</Label>
+                  <Input
+                    id="rcpt-amt"
+                    inputMode="decimal"
+                    value={receiptAmountDollars}
+                    onChange={(e) => setReceiptAmountDollars(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="rcpt-date">Donation date (shown in letter)</Label>
+                  <Input
+                    id="rcpt-date"
+                    type="date"
+                    value={receiptDateStr}
+                    onChange={(e) => setReceiptDateStr(e.target.value)}
+                  />
+                </div>
+                {receiptPreviewHtml ? (
+                  <div className="rounded-md border bg-white p-3">
+                    <p className="text-muted-foreground mb-2 text-[10px] font-medium uppercase">Preview</p>
+                    <iframe
+                      title="Email preview"
+                      className="h-[min(280px,40vh)] w-full rounded border-0 bg-white text-black"
+                      srcDoc={receiptPreviewHtml}
+                    />
+                  </div>
+                ) : null}
+                {receiptMsg && (
+                  <p className="text-destructive text-sm" role="alert">
+                    {receiptMsg}
+                  </p>
+                )}
+              </div>
+            )}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void runReceiptPreview()}
+                disabled={receiptPreviewBusy || !receiptRow}
+              >
+                {receiptPreviewBusy ? "Preview…" : "Preview"}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void sendReceiptEmail()}
+                disabled={receiptSendBusy || !receiptRow || !receiptPreviewHtml}
+              >
+                {receiptSendBusy ? "Sending…" : "Send email"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

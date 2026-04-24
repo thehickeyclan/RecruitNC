@@ -15,7 +15,9 @@ import {
 
 export const dynamic = "force-dynamic"
 
-export type SpartanDonationRow = SpartanFayettevilleDonation
+export type SpartanDonationRow = SpartanFayettevilleDonation & {
+  receiptEmailSentAt?: string | null
+}
 
 async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 | 403; error: string }> {
   const supabase = await createClient()
@@ -53,9 +55,34 @@ export async function GET(request: NextRequest) {
     const raw = await listSpartanFayettevilleDonations(stripe, since)
     const admin = createAdminClient()
     const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
-    const donations = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
-    const byAthlete: SpartanAthleteAggregate[] = aggregateSpartanByAthlete(donations)
-    const generalTotalCents = donations
+    const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
+
+    let receiptMap = new Map<string, string>()
+    try {
+      const ids = donationsRaw.map((d) => d.sessionId)
+      if (ids.length > 0) {
+        const { data: receiptRows } = await admin
+          .from("spartan_donation_receipt_emails")
+          .select("checkout_session_id, sent_at")
+          .in("checkout_session_id", ids)
+        receiptMap = new Map(
+          (receiptRows ?? []).map((r: { checkout_session_id: string; sent_at: string }) => [
+            r.checkout_session_id,
+            r.sent_at,
+          ]),
+        )
+      }
+    } catch (e) {
+      console.warn("[admin/spartan-donations] receipt status (table may be missing):", e)
+    }
+
+    const donations = donationsRaw.map((d) => ({
+      ...d,
+      receiptEmailSentAt: receiptMap.get(d.sessionId) ?? null,
+    }))
+
+    const byAthlete: SpartanAthleteAggregate[] = aggregateSpartanByAthlete(donationsRaw)
+    const generalTotalCents = donationsRaw
       .filter((d) => !d.athleteCode?.trim())
       .reduce((s, d) => s + d.amountCents, 0)
 
