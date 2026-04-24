@@ -679,8 +679,8 @@ export default function AdminFundraisingPage() {
                     {adminView === "all" && (
                       <>
                         {" "}
-                        · Ack sent <strong className="text-emerald-700 dark:text-emerald-400">{ackStats.sent}</strong> / not
-                        sent <strong className="text-amber-800 dark:text-amber-200">{ackStats.unsent}</strong> (entire
+                        · Ack sent <strong className="text-green-700 dark:text-green-400">{ackStats.sent}</strong> / not
+                        sent <strong className="text-red-700 dark:text-red-400">{ackStats.unsent}</strong> (entire
                         list; filter narrows rows above)
                       </>
                     )}
@@ -766,7 +766,7 @@ export default function AdminFundraisingPage() {
                             <TableCell className="align-top">
                               {d.receiptEmailSentAt ? (
                                 <div className="space-y-1">
-                                  <Badge className="border-0 bg-emerald-100 text-[10px] text-emerald-900 hover:bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-100">
+                                  <Badge className="border-0 bg-green-600 text-[10px] font-semibold text-white hover:bg-green-600 dark:bg-green-600 dark:text-white">
                                     Sent
                                   </Badge>
                                   <p className="text-muted-foreground text-[10px] leading-tight">
@@ -777,7 +777,7 @@ export default function AdminFundraisingPage() {
                                 <div className="space-y-1">
                                   <Badge
                                     variant="outline"
-                                    className="border-amber-300 bg-amber-50 text-[10px] text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+                                    className="border-red-600 bg-red-600 text-[10px] font-semibold text-white dark:border-red-500 dark:bg-red-600 dark:text-white"
                                   >
                                     Not sent
                                   </Badge>
