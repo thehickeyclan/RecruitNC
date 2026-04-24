@@ -15,6 +15,33 @@ import {
 
 export const dynamic = "force-dynamic"
 
+/** PostgREST `.in()` with hundreds of long `cs_` ids can exceed URL limits; fetch in chunks. */
+const RECEIPT_SESSION_ID_CHUNK = 50
+
+async function fetchReceiptSentAtBySessionId(
+  admin: ReturnType<typeof createAdminClient>,
+  sessionIds: string[],
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  const unique = [...new Set(sessionIds)].filter(Boolean)
+  for (let i = 0; i < unique.length; i += RECEIPT_SESSION_ID_CHUNK) {
+    const chunk = unique.slice(i, i + RECEIPT_SESSION_ID_CHUNK)
+    const { data: receiptRows, error } = await admin
+      .from("spartan_donation_receipt_emails")
+      .select("checkout_session_id, sent_at")
+      .in("checkout_session_id", chunk)
+    if (error) {
+      console.error("[admin/spartan-donations] spartan_donation_receipt_emails select:", error.message, error)
+      continue
+    }
+    for (const r of receiptRows ?? []) {
+      const row = r as { checkout_session_id: string; sent_at: string }
+      map.set(row.checkout_session_id, row.sent_at)
+    }
+  }
+  return map
+}
+
 export type SpartanDonationRow = SpartanFayettevilleDonation & {
   receiptEmailSentAt?: string | null
 }
@@ -61,16 +88,7 @@ export async function GET(request: NextRequest) {
     try {
       const ids = donationsRaw.map((d) => d.sessionId)
       if (ids.length > 0) {
-        const { data: receiptRows } = await admin
-          .from("spartan_donation_receipt_emails")
-          .select("checkout_session_id, sent_at")
-          .in("checkout_session_id", ids)
-        receiptMap = new Map(
-          (receiptRows ?? []).map((r: { checkout_session_id: string; sent_at: string }) => [
-            r.checkout_session_id,
-            r.sent_at,
-          ]),
-        )
+        receiptMap = await fetchReceiptSentAtBySessionId(admin, ids)
       }
     } catch (e) {
       console.warn("[admin/spartan-donations] receipt status (table may be missing):", e)

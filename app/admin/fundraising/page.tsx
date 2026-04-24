@@ -14,6 +14,7 @@ import { HardLink } from "@/components/hard-link"
 import { publicAthleteCreditLabel } from "@/lib/spartan-fayetteville-stripe"
 import { SpartanFundraisingVisuals } from "@/components/admin/spartan-fundraising-visuals"
 import { ArrowLeft, ClipboardCopy, Coins, Download, Mail, RefreshCw, Wrench } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -330,7 +331,16 @@ export default function AdminFundraisingPage() {
       })
       const j = (await res.json()) as { error?: string; warning?: string; ok?: boolean }
       if (!res.ok) throw new Error(j.error || "Send failed")
-      setReceiptMsg(j.warning || "Sent.")
+      if (j.warning) {
+        toast({
+          title: "Email sent, database log failed",
+          description: j.warning,
+          variant: "destructive",
+        })
+        setReceiptMsg(j.warning)
+      } else {
+        setReceiptMsg("Sent.")
+      }
       setReceiptOpen(false)
       setReceiptRow(null)
       if (donations !== null) await loadDonations()
