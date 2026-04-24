@@ -98,6 +98,7 @@ export default function AdminFundraisingPage() {
   const [donationsError, setDonationsError] = useState<string | null>(null)
   const [athleteFilter, setAthleteFilter] = useState("")
   const [sortBy, setSortBy] = useState<"date-desc" | "date-asc" | "athlete" | "amount">("date-desc")
+  const [receiptAckFilter, setReceiptAckFilter] = useState<"all" | "sent" | "unsent">("all")
   const [adminView, setAdminView] = useState<"all" | "byAthlete">("all")
 
   const [creditFixSessionId, setCreditFixSessionId] = useState("")
@@ -340,10 +341,21 @@ export default function AdminFundraisingPage() {
     }
   }
 
+  const ackStats = useMemo(() => {
+    const list = donations ?? []
+    let sent = 0
+    let unsent = 0
+    for (const d of list) {
+      if (d.receiptEmailSentAt) sent += 1
+      else unsent += 1
+    }
+    return { sent, unsent, total: list.length }
+  }, [donations])
+
   const filteredDonations = useMemo(() => {
     const list = donations ?? []
     const q = athleteFilter.trim().toLowerCase()
-    const filtered = q
+    const afterAthlete = q
       ? list.filter(
           (d) =>
             (d.athleteCode ?? "").toLowerCase().includes(q) ||
@@ -351,7 +363,13 @@ export default function AdminFundraisingPage() {
             (d.athleteDisplayName ?? "").toLowerCase().includes(q),
         )
       : list
-    const sorted = [...filtered]
+    const byAck =
+      receiptAckFilter === "sent"
+        ? afterAthlete.filter((d) => Boolean(d.receiptEmailSentAt))
+        : receiptAckFilter === "unsent"
+          ? afterAthlete.filter((d) => !d.receiptEmailSentAt)
+          : afterAthlete
+    const sorted = [...byAck]
     if (sortBy === "date-desc") sorted.sort((a, b) => b.createdUnix - a.createdUnix)
     else if (sortBy === "date-asc") sorted.sort((a, b) => a.createdUnix - b.createdUnix)
     else if (sortBy === "athlete")
@@ -363,7 +381,7 @@ export default function AdminFundraisingPage() {
       })
     else sorted.sort((a, b) => b.amountCents - a.amountCents || b.createdUnix - a.createdUnix)
     return sorted
-  }, [donations, athleteFilter, sortBy])
+  }, [donations, athleteFilter, sortBy, receiptAckFilter])
 
   const filteredTotalCents = useMemo(
     () => filteredDonations.reduce((s, d) => s + d.amountCents, 0),
@@ -579,11 +597,11 @@ export default function AdminFundraisingPage() {
                 <CardTitle>Donations (Stripe)</CardTitle>
                 <CardDescription>
                   Paid Checkout sessions with <code className="rounded bg-muted px-1 text-xs">spartan_campaign=fayetteville_2026</code>.
-                  <strong className="text-foreground"> Race path</strong> = race / entry flow;{" "}
-                  <strong className="text-foreground">Give only</strong> = no race entry.{" "}
-                  <strong className="text-foreground">Public list</strong> = donor opted in to show name on the public page.
-                  Use <strong className="text-foreground">Ack</strong> to preview/send the 501(c)(3) acknowledgment email
-                  (Resend). <strong className="text-foreground">By athlete</strong> for per–athlete totals.
+                  <strong className="text-foreground"> New payments</strong> appear when you <strong className="text-foreground">Refresh</strong>{" "}
+                  (data comes from Stripe). <strong className="text-foreground">Race path</strong> = race / entry flow;{" "}
+                  <strong className="text-foreground">Give only</strong> = no race entry. <strong className="text-foreground">Ack</strong>{" "}
+                  = 501(c)(3) email sent and logged, or not — filter by sent / not sent. <strong className="text-foreground">By athlete</strong>{" "}
+                  for per–athlete totals.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -633,6 +651,20 @@ export default function AdminFundraisingPage() {
                       <option value="amount">Amount (high → low)</option>
                     </select>
                   </div>
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="ack-filter">Ack email</Label>
+                    <select
+                      id="ack-filter"
+                      className="border-input bg-background h-9 min-w-[9rem] rounded-md border px-3 text-sm shadow-xs"
+                      value={receiptAckFilter}
+                      onChange={(e) => setReceiptAckFilter(e.target.value as "all" | "sent" | "unsent")}
+                      disabled={donations === null || adminView === "byAthlete"}
+                    >
+                      <option value="all">All (ack status)</option>
+                      <option value="unsent">Not sent</option>
+                      <option value="sent">Sent</option>
+                    </select>
+                  </div>
                 </div>
                 {donationsError && (
                   <p className="text-destructive text-sm" role="alert">
@@ -642,8 +674,16 @@ export default function AdminFundraisingPage() {
                 {donations !== null && (
                   <p className="text-muted-foreground text-sm">
                     Showing <strong className="text-foreground">{filteredDonations.length}</strong> of{" "}
-                    <strong className="text-foreground">{donations.length}</strong> payments — filtered total{" "}
+                    <strong className="text-foreground">{donations.length}</strong> in window — total{" "}
                     <strong className="text-foreground">{formatMoney(filteredTotalCents, "usd")}</strong>
+                    {adminView === "all" && (
+                      <>
+                        {" "}
+                        · Ack sent <strong className="text-emerald-700 dark:text-emerald-400">{ackStats.sent}</strong> / not
+                        sent <strong className="text-amber-800 dark:text-amber-200">{ackStats.unsent}</strong> (entire
+                        list; filter narrows rows above)
+                      </>
+                    )}
                   </p>
                 )}
                 {donations !== null && adminView === "all" && filteredDonations.length > 0 && (
@@ -723,25 +763,40 @@ export default function AdminFundraisingPage() {
                                   ? "Manual name"
                                   : "NC United (general)"}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="align-top">
                               {d.receiptEmailSentAt ? (
-                                <span className="text-muted-foreground text-[10px] leading-tight">
-                                  Sent
-                                  <br />
-                                  {new Date(d.receiptEmailSentAt).toLocaleDateString()}
-                                </span>
-                              ) : null}
+                                <div className="space-y-1">
+                                  <Badge className="border-0 bg-emerald-100 text-[10px] text-emerald-900 hover:bg-emerald-100 dark:bg-emerald-900/50 dark:text-emerald-100">
+                                    Sent
+                                  </Badge>
+                                  <p className="text-muted-foreground text-[10px] leading-tight">
+                                    {new Date(d.receiptEmailSentAt).toLocaleString()}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="space-y-1">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-amber-300 bg-amber-50 text-[10px] text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+                                  >
+                                    Not sent
+                                  </Badge>
+                                  {!d.donorEmail ? (
+                                    <p className="text-muted-foreground max-w-[7rem] text-[9px] leading-tight">No email on file</p>
+                                  ) : null}
+                                </div>
+                              )}
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="mt-1 h-7 text-[10px]"
+                                className="mt-2 h-7 text-[10px]"
                                 onClick={() => openReceiptDialog(d)}
                                 disabled={!d.donorEmail}
                                 title={!d.donorEmail ? "No email on this session" : "Charitable acknowledgment email"}
                               >
                                 <Mail className="mr-1 h-3 w-3" />
-                                Email
+                                {d.receiptEmailSentAt ? "Resend" : "Email"}
                               </Button>
                             </TableCell>
                           </TableRow>
