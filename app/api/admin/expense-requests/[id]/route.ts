@@ -108,11 +108,14 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     admin_notes: string | null
   }
   const was = existing.status as string
-  const now = r.status
-  if (was !== now && (now === "approved" || now === "rejected" || now === "paid")) {
+  const updatedStatus = r.status
+  if (
+    was !== updatedStatus &&
+    (updatedStatus === "approved" || updatedStatus === "rejected" || updatedStatus === "paid")
+  ) {
     notifyReimbursementStatusChangeDegraded({
       previousStatus: was,
-      newStatus: now,
+      newStatus: updatedStatus,
       userId: r.user_id,
       athleteId: r.athlete_id,
       amountCents: r.amount_cents,
