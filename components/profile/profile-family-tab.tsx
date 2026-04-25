@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { HardLink } from "@/components/hard-link"
+import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { Loader2, Camera, CheckCircle, Coins, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -416,6 +417,8 @@ export function ProfileFamilyTab({
           </CardContent>
         </Card>
       )}
+
+      <ExpenseRequestSection linkedAthletes={linkedAthletes} />
     </div>
   )
 }
