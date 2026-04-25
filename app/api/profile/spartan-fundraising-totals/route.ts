@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+import {
+  FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
+  getFayettevilleTotalsCentsByAthleteCodeLowercase,
+} from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 export const dynamic = "force-dynamic"
@@ -16,8 +20,8 @@ export type SpartanFundraisingTotalRow = {
 }
 
 /**
- * GET: For the signed-in parent, show Fayetteville Spartan donation totals (from `spartan_donations`)
- * per linked athlete, keyed by the same NCU code rules as /spartan checkout.
+ * GET: For the signed-in parent, show Fayetteville Spartan donation totals per linked athlete.
+ * Same basis as Admin → Fundraising: Stripe paid sessions + `spartan_credit_corrections` (not `spartan_donations` alone).
  */
 export async function GET() {
   const supabase = await createClient()
@@ -77,44 +81,11 @@ export async function GET() {
     codeByAthleteId.set(e.id, e.code)
   }
 
-  const codes = athleteIds.map((id) => codeByAthleteId.get(id)).filter((c): c is string => Boolean(c && c.trim()))
-  const codeSetLower = new Set(codes.map((c) => c.toLowerCase()))
-
   let totalByCodeCents = new Map<string, number>()
-  if (codeSetLower.size > 0) {
-    const codeList = [...new Set(codes.map((c) => c.trim()))]
-    const { data: donRows, error: donError } = await admin
-      .from("spartan_donations")
-      .select("amount_cents, athlete_code, spartan_campaign")
-      .eq("status", "paid")
-      .in("athlete_code", codeList)
-
-    if (donError) {
-      if (donError.code === "42P01") {
-        return NextResponse.json({
-          campaign: SPARTAN_FAYETTEVILLE_CAMPAIGN,
-          athletes: athleteIds.map((id) => ({
-            athleteId: id,
-            name: nameById.get(id) ?? "—",
-            fundraisingCode: codeByAthleteId.get(id) ?? null,
-            totalCents: 0,
-            codeUnavailable: !codeByAthleteId.get(id),
-          })),
-        })
-      }
-      return NextResponse.json({ error: donError.message }, { status: 500 })
-    }
-
-    for (const row of donRows ?? []) {
-      const raw = (row as { amount_cents?: number; athlete_code?: string | null; spartan_campaign?: string | null })
-      const sc = raw.spartan_campaign
-      if (sc && sc !== SPARTAN_FAYETTEVILLE_CAMPAIGN) continue
-      const ac = typeof raw.athlete_code === "string" ? raw.athlete_code.trim() : ""
-      if (!ac || !codeSetLower.has(ac.toLowerCase())) continue
-      const key = ac.toLowerCase()
-      const cents = Number(raw.amount_cents) || 0
-      totalByCodeCents.set(key, (totalByCodeCents.get(key) ?? 0) + cents)
-    }
+  try {
+    totalByCodeCents = await getFayettevilleTotalsCentsByAthleteCodeLowercase()
+  } catch (e) {
+    console.error("[profile/spartan-fundraising-totals] Stripe totals", e)
   }
 
   const athletes: SpartanFundraisingTotalRow[] = athleteIds.map((id) => {
@@ -137,7 +108,8 @@ export async function GET() {
 
   return NextResponse.json({
     campaign: SPARTAN_FAYETTEVILLE_CAMPAIGN,
-    source: "spartan_donations",
+    source: "stripe_fayetteville_with_corrections",
+    lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
     athletes,
   })
 }
