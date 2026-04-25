@@ -10,14 +10,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { PublicImageUpload } from "@/components/public-image-upload"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, Camera, CreditCard, ExternalLink, Users, CheckCircle, ArrowRight, Sparkles, Search, Link2, Bell, MessageCircle, Upload, X, LayoutDashboard, Coins } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, CreditCard, Bell, MessageCircle, Upload, X, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NcUnitedBlueSection, type ParentBlueMembership } from "@/components/profile/nc-united-blue-section"
+import { ProfileFamilyTab } from "@/components/profile/profile-family-tab"
 import { HardLink } from "@/components/hard-link"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -460,38 +460,46 @@ export function ProfileClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-slate-50/80">
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="mb-8 border-b border-[#03154C]/10 pb-6">
-          <h1 className="text-3xl font-bold tracking-tight text-[#03154C] mb-1">My Profile</h1>
-          <p className="text-slate-600 text-sm sm:text-base">Account settings and NC United Blue membership</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#03154C]">My Profile</h1>
+          <p className="text-slate-600 text-sm sm:text-base mt-1.5">Account settings, family &amp; athletes, and NC United Blue.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="account" className="w-full">
-              <TabsList className="mb-6 grid w-full grid-cols-2 gap-1.5 rounded-xl border border-[#03154C]/12 bg-slate-100/90 p-1.5 h-auto shadow-inner sm:inline-flex sm:w-full sm:max-w-md">
-                <TabsTrigger
-                  value="account"
-                  className="rounded-lg py-2.5 text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
-                >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <User className="h-4 w-4 shrink-0 opacity-80" />
-                    Account
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="blue"
-                  className="rounded-lg py-2.5 text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
-                >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <CreditCard className="h-4 w-4 shrink-0 opacity-80" />
-                    NC United Blue
-                  </span>
-                </TabsTrigger>
-              </TabsList>
+        <Tabs defaultValue="account" className="w-full space-y-6">
+          <TabsList className="mb-0 grid w-full grid-cols-3 gap-1.5 rounded-xl border border-[#03154C]/12 bg-slate-100/90 p-1.5 h-auto shadow-sm">
+            <TabsTrigger
+              value="account"
+              className="rounded-lg py-2.5 px-1.5 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-w-0">
+                <User className="h-4 w-4 shrink-0 opacity-80" />
+                <span>Account</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="family"
+              className="rounded-lg py-2.5 px-1.5 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-w-0">
+                <Users className="h-4 w-4 shrink-0 opacity-80" />
+                <span className="truncate">Family &amp; athletes</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="blue"
+              className="rounded-lg py-2.5 px-1.5 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-w-0">
+                <CreditCard className="h-4 w-4 shrink-0 opacity-80" />
+                <span className="hidden sm:inline">NC United Blue</span>
+                <span className="sm:hidden">Blue</span>
+              </span>
+            </TabsTrigger>
+          </TabsList>
 
-              <TabsContent value="account" className="mt-0 space-y-6 focus-visible:outline-none">
+        <TabsContent value="account" className="mt-0 space-y-6 focus-visible:outline-none">
             <Card className="border-[#03154C]/10 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -671,9 +679,71 @@ export function ProfileClient() {
                 </div>
               </CardContent>
             </Card>
-              </TabsContent>
 
-              <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Account details
+                </CardTitle>
+                <CardDescription>Your sign-in and membership summary</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Role</p>
+                  <p className="capitalize">{profile.role || "User"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Member since</p>
+                  <p>{new Date(profile.created_at).toLocaleDateString()}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  Quick actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button asChild variant="outline" className="w-full justify-start sm:max-w-md">
+                  <a href="/submit-commitment">Submit new commitment</a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start sm:max-w-md">
+                  <a href="/request-edit">Request profile edit</a>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start sm:max-w-md">
+                  <a href="/athletes">Browse athletes</a>
+                </Button>
+              </CardContent>
+            </Card>
+        </TabsContent>
+
+        <TabsContent value="family" className="mt-0 space-y-0 focus-visible:outline-none">
+            <ProfileFamilyTab
+              profile={profile}
+              blueLoading={blueLoading}
+              blueMembershipsLength={blueMemberships.length}
+              linkedAthletes={linkedAthletes}
+              linkedLoading={linkedLoading}
+              athleteSearchQuery={athleteSearchQuery}
+              setAthleteSearchQuery={setAthleteSearchQuery}
+              athleteSearchResults={athleteSearchResults}
+              athleteSearchLoading={athleteSearchLoading}
+              linkAthleteLoading={linkAthleteLoading}
+              linkAthlete={linkAthlete}
+              athleteCompleteness={athleteCompleteness}
+              completenessLoading={completenessLoading}
+              spartanFundraising={spartanFundraising}
+              spartanFundraisingLoading={spartanFundraisingLoading}
+              eventHubs={eventHubs}
+              eventHubsLoading={eventHubsLoading}
+            />
+        </TabsContent>
+
+        <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
                 {blueLoading || blueMemberships.length > 0 ? (
                   <NcUnitedBlueSection
                     memberships={blueMemberships}
@@ -707,391 +777,8 @@ export function ProfileClient() {
                     </CardContent>
                   </Card>
                 )}
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* What to do next — recommendations */}
-            <Card className="border-amber-200/60 bg-amber-50/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-900">
-                  <Sparkles className="h-5 w-5" />
-                  What to do next
-                </CardTitle>
-                <CardDescription>Make your profile and athlete pages more engaging</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {!profile.cell_phone?.trim() && (
-                  <p className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
-                    <span>Add your cell phone above so coaches can reach you.</span>
-                  </p>
-                )}
-                {!profile.bio?.trim() && (
-                  <p className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
-                    <span>Add a short bio to introduce yourself.</span>
-                  </p>
-                )}
-                {!blueLoading && blueMemberships.length === 0 && (
-                  <p className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
-                    <a href="/blue" className="text-[#03154C] font-medium hover:underline">Interested in NC United Blue?</a> Learn more.
-                  </p>
-                )}
-                {!linkedLoading && linkedAthletes.length > 0 && linkedAthletes.some((a) => !a.profileVerified) && (
-                  <p className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
-                    <span>Get your athlete&apos;s profile public so coaches can find them — use Request Profile Edit or Edit profile below.</span>
-                  </p>
-                )}
-                {!linkedLoading && linkedAthletes.length > 0 && (
-                  <p className="flex items-center gap-2">
-                    <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
-                    <span>Keep achievements and stats up to date — edit athlete profile below.</span>
-                  </p>
-                )}
-                {profile.cell_phone?.trim() && profile.bio?.trim() && (linkedAthletes.length === 0 || linkedAthletes.every((a) => a.profileVerified)) && (blueMemberships.length > 0 || linkedAthletes.length > 0) && (
-                  <p className="text-gray-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Event hubs — National Team hubs this user belongs to (paid reg or workspace member) */}
-            <Card className="border-[#003366]/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#002147]">
-                  <LayoutDashboard className="h-5 w-5" />
-                  Event hubs
-                </CardTitle>
-                <CardDescription>Roster, gear sizes, and team chat for events you’re registered for</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {eventHubsLoading ? (
-                  <p className="text-sm text-gray-500 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading…
-                  </p>
-                ) : eventHubs.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    When you register for a National Team event (e.g. NHSCA Duals), the hub will appear here and in the nav under Workspace.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {eventHubs.map((hub) => (
-                      <li key={hub.id}>
-                        <a
-                          href={hub.href}
-                          className="inline-flex items-center gap-2 text-sm font-medium text-[#003366] hover:underline"
-                        >
-                          {hub.name}
-                          <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Spartan / NCU-totals — parent-visible donation totals by linked athlete (reporting) */}
-            {!spartanFundraisingLoading && spartanFundraising && spartanFundraising.athletes.length > 0 && (
-              <Card className="border-emerald-200/50 bg-gradient-to-b from-white to-emerald-50/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-[#0f5132]">
-                    <Coins className="h-5 w-5 shrink-0" />
-                    Fundraising
-                  </CardTitle>
-                  <CardDescription>
-                    Same 120-day totals as Admin → Fundraising (Stripe + credit fixes). For your family&rsquo;s reference
-                    only — not a personal balance or payout guarantee.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 gap-y-0.5 text-xs text-muted-foreground font-medium border-b border-emerald-100 pb-1.5 mb-1">
-                    <span>Athlete</span>
-                    <span className="text-right w-[4.5rem]">Raised</span>
-                    <span className="text-right w-10">Gifts</span>
-                    <span className="text-right w-16 pl-0.5 text-[10px] leading-tight sm:text-xs sm:leading-none">
-                      Race
-                      <br className="sm:hidden" />
-                      signups
-                    </span>
-                  </div>
-                  {spartanFundraising.athletes.map((row) => (
-                    <div
-                      key={row.athleteId}
-                      className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 items-baseline rounded-lg border border-emerald-100 bg-white/80 px-2 py-2 text-sm"
-                    >
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{row.name}</p>
-                        {row.fundraisingCode ? (
-                          <p className="text-xs text-muted-foreground font-mono mt-0.5 truncate">{row.fundraisingCode}</p>
-                        ) : (
-                          <p className="text-xs text-amber-800 mt-0.5">No NCU code (needs name + grad year in our system).</p>
-                        )}
-                      </div>
-                      <p className="text-right w-[4.5rem] font-semibold tabular-nums text-[#0f5132]">
-                        {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
-                          row.totalCents / 100,
-                        )}
-                      </p>
-                      <p className="text-right w-10 tabular-nums text-gray-800">{row.giftCount ?? 0}</p>
-                      <p className="text-right w-16 tabular-nums text-gray-800">{row.raceSignupCount ?? 0}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Link your athlete — search and link as parent */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Link2 className="h-5 w-5" />
-                  Link your athlete
-                </CardTitle>
-                <CardDescription>Search for your wrestler to link them to your account. They’ll appear under Your athletes.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <Input
-                    placeholder="Search by name (e.g. Liam Hickey)"
-                    value={athleteSearchQuery}
-                    onChange={(e) => setAthleteSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-                {athleteSearchLoading && <p className="text-xs text-gray-500">Searching…</p>}
-                {!athleteSearchLoading && athleteSearchQuery.trim().length >= 2 && athleteSearchResults.length === 0 && (
-                  <p className="text-xs text-gray-500">No athletes found. Try a different name.</p>
-                )}
-                {!athleteSearchLoading && athleteSearchResults.length > 0 && (
-                  <ul className="space-y-2 max-h-48 overflow-y-auto rounded border bg-gray-50/50 p-2">
-                    {athleteSearchResults.map((a) => (
-                      <li key={a.id} className="flex items-center justify-between gap-2 text-sm">
-                        <span>
-                          <span className="font-medium text-gray-900">{a.name}</span>
-                          {(a.highschool || a.graduationyear) && (
-                            <span className="text-gray-500 ml-1">
-                              {[a.highschool, a.graduationyear != null ? `’${String(a.graduationyear).slice(-2)}` : null].filter(Boolean).join(" · ")}
-                            </span>
-                          )}
-                        </span>
-                        {a.alreadyLinked ? (
-                          <span className="text-xs text-green-600 shrink-0">Linked</span>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={linkAthleteLoading === a.id}
-                            onClick={() => linkAthlete(a.id)}
-                          >
-                            {linkAthleteLoading === a.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Link"}
-                          </Button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Your athletes — linked kids with status and last edit */}
-            {!linkedLoading && linkedAthletes.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Your athletes
-                  </CardTitle>
-                  <CardDescription>Status and last update for linked profiles</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {linkedAthletes.map((a) => {
-                    const comp = athleteCompleteness[a.id]
-                    return (
-                      <div key={a.id} className="rounded-lg border bg-gray-50/50 p-3">
-                        <p className="font-medium text-gray-900">{a.name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Public profile: {a.profileVerified ? <span className="text-green-600 inline-flex items-center gap-1"><CheckCircle className="h-3 w-3 shrink-0" /> Live</span> : "Not yet public"}
-                        </p>
-                        {a.updatedAt && (
-                          <p className="text-xs text-gray-400">Last updated: {new Date(a.updatedAt).toLocaleDateString()}</p>
-                        )}
-                        {/* Profile completeness progress + what's missing / suggestions */}
-                        {completenessLoading && !comp ? (
-                          <p className="text-xs text-gray-400 mt-2">Loading profile completeness…</p>
-                        ) : comp ? (
-                          <div className="mt-2">
-                            <p className="text-xs font-medium text-gray-600 mb-1">Profile completeness: {comp.percent}%</p>
-                            <Progress value={comp.percent} className="h-2" />
-                            {comp.missing.length > 0 ? (
-                              <div className="mt-2">
-                                <p className="text-xs font-medium text-amber-800 mb-0.5">To reach 100%, add:</p>
-                                <ul className="text-xs text-gray-600 space-y-0.5 list-disc list-inside">
-                                  {comp.missing.map((m) => (
-                                    <li key={m}>{ATHLETE_COMPLETENESS_LABELS[m] ?? m}</li>
-                                  ))}
-                                </ul>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {comp.missing.includes("contact")
-                                    ? "Add contact info so coaches can reach you directly — "
-                                    : "Use "}
-                                  <a
-                                    href={`/athletes/${a.id}/edit`}
-                                    className="underline text-[#03154C] font-medium"
-                                  >
-                                    Edit profile
-                                  </a>
-                                  {comp.missing.includes("contact")
-                                    ? " to add phone, email, or Instagram."
-                                    : " to fill these in."}
-                                </p>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-green-600 mt-1">
-                                Profile complete — bio, achievements, academics, highlight video, photo, and contact info
-                                are filled.
-                              </p>
-                            )}
-                          </div>
-                        ) : null}
-                        {!a.claimedByUserId && (
-                          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 mt-2">
-                            <span className="text-amber-500 text-[13px] shrink-0 mt-px">!</span>
-                            <p className="text-[12px] text-amber-800 leading-snug">
-                              {(a.name?.split(" ")[0] || "This athlete")} hasn&apos;t claimed this profile yet.
-                              When they sign up and claim it, they can manage their own recruiting info.{" "}
-                              <a
-                                href={`/view-profile?id=${encodeURIComponent(a.id)}`}
-                                className="underline font-medium"
-                              >
-                                View profile
-                              </a>{" "}
-                              to share the link with them.
-                            </p>
-                          </div>
-                        )}
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <Button asChild variant="outline" size="sm">
-                            <a href={`/view-profile?id=${encodeURIComponent(a.id)}`}>View</a>
-                          </Button>
-                          <Button
-                            asChild
-                            size="sm"
-                            variant={comp && comp.percent === 0 ? "default" : "outline"}
-                            className={
-                              comp && comp.percent === 0
-                                ? "bg-[#03154C] hover:bg-[#0a2a6e] text-white"
-                                : ""
-                            }
-                          >
-                            <a href={`/athletes/${a.id}/edit`}>
-                              {comp && comp.percent === 0 ? "Complete profile" : "Edit profile"}
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Account Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Account Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Role</p>
-                  <p className="capitalize">{profile.role || "User"}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Member Since</p>
-                  <p>{new Date(profile.created_at).toLocaleDateString()}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Athlete Profile Upload - Only show if user has an associated athlete profile */}
-            {profile.athlete_id && profile.athlete_name && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Camera className="h-5 w-5" />
-                    Your Athlete Photo
-                  </CardTitle>
-                  <CardDescription>Upload your own photo for your athlete profile</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Profile completeness for own athlete */}
-                  {(() => {
-                    const comp = athleteCompleteness[profile.athlete_id!]
-                    return completenessLoading && !comp ? (
-                      <p className="text-xs text-gray-400">Loading profile completeness…</p>
-                    ) : comp ? (
-                      <div>
-                        <p className="text-xs font-medium text-gray-600 mb-1">Profile completeness: {comp.percent}%</p>
-                        <Progress value={comp.percent} className="h-2" />
-                        {comp.missing.length > 0 && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Full bar = Bio, Achievements, Academic info, Highlight video, Photo. Add: {comp.missing.map((m) => ATHLETE_COMPLETENESS_LABELS[m] ?? m).join(", ")}
-                          </p>
-                        )}
-                      </div>
-                    ) : null
-                  })()}
-                  <PublicImageUpload
-                    athleteId={profile.athlete_id}
-                    athleteName={profile.athlete_name}
-                    onUploadComplete={(url) => {
-                      console.log("Photo uploaded:", url)
-                      // Optionally refresh or show success message
-                    }}
-                  />
-                  <div className="flex flex-wrap gap-2 pt-2 border-t">
-                    <Button asChild variant="default" size="sm">
-                      <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id)}`}>View {profile.athlete_name}&apos;s profile</a>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <a href={`/athletes/${profile.athlete_id}/edit`}>Edit profile</a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button asChild variant="outline" className="w-full justify-start bg-transparent">
-                  <a href="/submit-commitment">Submit New Commitment</a>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start bg-transparent">
-                  <a href="/request-edit">Request Profile Edit</a>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start bg-transparent">
-                  <a href="/athletes">Browse Athletes</a>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
