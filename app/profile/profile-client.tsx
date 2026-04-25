@@ -79,6 +79,8 @@ export function ProfileClient() {
       giftCount: number
       raceSignupCount: number
       codeUnavailable?: boolean
+      reimbursementsPaidCents: number
+      netAfterReimbursementsCents: number
     }[]
   } | null>(null)
   const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(true)
@@ -790,6 +792,7 @@ export function ProfileClient() {
             spartanFundraisingLoading={spartanFundraisingLoading}
             linkedLoading={linkedLoading}
             linkedCount={linkedAthletes.length}
+            linkedAthletes={linkedAthletes}
           />
         </TabsContent>
 

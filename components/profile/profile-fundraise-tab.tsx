@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { Loader2, Coins, Sparkles } from "lucide-react"
 
 type SpartanRow = {
@@ -12,13 +13,18 @@ type SpartanRow = {
   giftCount?: number
   raceSignupCount?: number
   codeUnavailable?: boolean
+  reimbursementsPaidCents: number
+  netAfterReimbursementsCents: number
 }
+
+type LinkedAthlete = { id: string; name: string }
 
 type ProfileFundraiseTabProps = {
   spartanFundraising: { athletes: SpartanRow[] } | null
   spartanFundraisingLoading: boolean
   linkedLoading: boolean
   linkedCount: number
+  linkedAthletes: LinkedAthlete[]
 }
 
 function formatRaised(cents: number) {
@@ -53,6 +59,12 @@ export function ProfileFundraiseTab({
                 Totals match Admin → Fundraising (Stripe + credit fixes). This is a team snapshot for your family — not a
                 personal balance or payout guarantee. Link athletes on the <strong>Family &amp; athletes</strong> tab
                 to see per-wrestler rows.
+              </p>
+              <p className="mt-2 text-xs leading-snug text-slate-500">
+                <strong className="text-slate-600">Raised</strong> is donations in the same window as admin.{" "}
+                <strong className="text-slate-600">Net</strong> is raised minus reimbursements <strong>marked paid</strong> in
+                that window for that wrestler. You&apos;ll get an email (and a text if we have your cell) when a request is
+                approved, declined, or marked paid.
               </p>
             </div>
           </div>
@@ -93,6 +105,8 @@ export function ProfileFundraiseTab({
                   <TableRow className="hover:bg-transparent border-b border-[#003366]/10">
                     <TableHead className="min-w-[8rem] text-[#03154C] font-semibold">Athlete</TableHead>
                     <TableHead className="w-[5.5rem] text-right text-[#03154C] font-semibold">Raised</TableHead>
+                    <TableHead className="w-[5.5rem] text-right text-[#03154C] font-semibold">Reimb. paid</TableHead>
+                    <TableHead className="w-[5.5rem] text-right text-[#03154C] font-semibold">Net</TableHead>
                     <TableHead className="w-16 text-right text-[#03154C] font-semibold">Gifts</TableHead>
                     <TableHead className="w-28 text-right text-[#03154C] font-semibold">Race signups</TableHead>
                   </TableRow>
@@ -111,6 +125,16 @@ export function ProfileFundraiseTab({
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-bold tabular-nums text-[#003366]">{formatRaised(row.totalCents)}</TableCell>
+                      <TableCell className="text-right tabular-nums text-slate-700">
+                        {row.reimbursementsPaidCents > 0 ? formatRaised(row.reimbursementsPaidCents) : "—"}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right font-bold tabular-nums ${
+                          row.netAfterReimbursementsCents < 0 ? "text-[#B31B1B]" : "text-[#0f5132]"
+                        }`}
+                      >
+                        {formatRaised(row.netAfterReimbursementsCents)}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums text-slate-600">{row.giftCount ?? 0}</TableCell>
                       <TableCell className="text-right tabular-nums text-slate-600">{row.raceSignupCount ?? 0}</TableCell>
                     </TableRow>
@@ -121,6 +145,8 @@ export function ProfileFundraiseTab({
           )}
         </CardContent>
       </Card>
+
+      <ExpenseRequestSection linkedAthletes={linkedAthletes} />
     </div>
   )
 }

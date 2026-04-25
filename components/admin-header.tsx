@@ -51,7 +51,7 @@ const adminNavItems = [
     icon: "🪙",
   },
   {
-    title: "Expense requests",
+    title: "Reimbursement",
     href: "/admin/expense-requests",
     icon: "🧾",
   },

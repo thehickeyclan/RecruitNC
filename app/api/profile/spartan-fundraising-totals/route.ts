@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS, getFayettevilleStatsByAthleteCodeLowercase } from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
@@ -16,6 +17,10 @@ export type SpartanFundraisingTotalRow = {
   giftCount: number
   /** Race / entry path count (admin “Race signups”) */
   raceSignupCount: number
+  /** Reimbursements marked paid in the same lookback window as donations (matched to this athlete). */
+  reimbursementsPaidCents: number
+  /** Donations in window minus reimbursements paid in window for this athlete. */
+  netAfterReimbursementsCents: number
   /** True when the athlete is on the roster but we could not map a NCU code (e.g. missing grad year in profile). */
   codeUnavailable?: boolean
 }
@@ -89,9 +94,13 @@ export async function GET() {
     console.error("[profile/spartan-fundraising-totals] Stripe totals", e)
   }
 
+  const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
+  const reimbByAthleteId = await fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs)
+
   const athletes: SpartanFundraisingTotalRow[] = athleteIds.map((id) => {
     const code = codeByAthleteId.get(id) ?? null
     const name = nameById.get(id) ?? "—"
+    const paidOut = reimbByAthleteId.get(id) ?? 0
     if (!code) {
       return {
         athleteId: id,
@@ -100,6 +109,8 @@ export async function GET() {
         totalCents: 0,
         giftCount: 0,
         raceSignupCount: 0,
+        reimbursementsPaidCents: paidOut,
+        netAfterReimbursementsCents: 0 - paidOut,
         codeUnavailable: true,
       }
     }
@@ -112,6 +123,8 @@ export async function GET() {
       totalCents,
       giftCount: s?.giftCount ?? 0,
       raceSignupCount: s?.raceSignupCount ?? 0,
+      reimbursementsPaidCents: paidOut,
+      netAfterReimbursementsCents: totalCents - paidOut,
       codeUnavailable: false,
     }
   })

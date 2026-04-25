@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { notifyReimbursementStatusChangeDegraded } from "@/lib/reimbursement-notify"
 import type { ExpenseRequestStatus } from "@/lib/athlete-expense-requests"
 
 export const dynamic = "force-dynamic"
@@ -90,12 +91,34 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
     .from("athlete_expense_requests")
     .update(updates)
     .eq("id", id)
-    .select("id, status, admin_notes, amount_approved_cents, reviewed_at, paid_at, updated_at")
+    .select("id, user_id, athlete_id, amount_cents, amount_approved_cents, status, admin_notes, reviewed_at, paid_at, updated_at")
     .single()
 
   if (upErr) {
     console.error("[RecruitNC] admin expense-requests PATCH", upErr)
     return NextResponse.json({ error: upErr.message }, { status: 500 })
+  }
+
+  const r = row as {
+    user_id: string
+    athlete_id: string
+    amount_cents: number
+    amount_approved_cents: number | null
+    status: string
+    admin_notes: string | null
+  }
+  const was = existing.status as string
+  const now = r.status
+  if (was !== now && (now === "approved" || now === "rejected" || now === "paid")) {
+    notifyReimbursementStatusChangeDegraded({
+      previousStatus: was,
+      newStatus: now,
+      userId: r.user_id,
+      athleteId: r.athlete_id,
+      amountCents: r.amount_cents,
+      amountApprovedCents: r.amount_approved_cents,
+      adminNotes: r.admin_notes,
+    })
   }
 
   return NextResponse.json({ success: true, request: row })

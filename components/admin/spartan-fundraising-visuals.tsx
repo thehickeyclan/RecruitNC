@@ -45,6 +45,8 @@ type SpartanAthleteAggregate = {
   totalCents: number
   donationCount: number
   raceSignupCount: number
+  reimbursementsPaidCents?: number
+  netAfterReimbursementsCents?: number
 }
 
 const CHART_COLORS = ["#003366", "#C8102E", "#D3B574", "#0e7490", "#7c3aed", "#ea580c", "#15803d", "#be185d"]
@@ -111,9 +113,9 @@ function IgShareCard({
         <p className="mt-1 text-xs text-white/70">Fundraising snapshot</p>
 
         <div className="mt-6 rounded-xl border border-white/15 bg-black/25 px-4 py-5 backdrop-blur-sm">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#D3B574]">Raised</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#D3B574]">Net (after reimb.)</p>
           <p className="mt-1 text-4xl font-black tabular-nums tracking-tight text-white md:text-5xl">{formatMoney(totalCents)}</p>
-          <p className="mt-2 text-xs text-white/60">{giftCount} gifts in window</p>
+          <p className="mt-2 text-xs text-white/60">{giftCount} gifts in window · team snapshot</p>
         </div>
 
         <div className="mt-5 min-h-0 flex-1 overflow-hidden">
@@ -147,37 +149,57 @@ function IgShareCard({
   )
 }
 
+export type SpartanFundraisingVisualsProps = {
+  donations: SpartanDonationRow[] | null
+  byAthlete: SpartanAthleteAggregate[] | null
+  generalTotalCents: number
+  /** Sum of athlete reimbursements marked paid in the same lookback window as donations */
+  reimbursementsPaidTotalCents?: number
+  /** Same as sum of session amounts; defaults derived from donations if omitted */
+  grossSessionTotalCents?: number
+  /** grossSessionTotalCents - reimbursementsPaidTotalCents */
+  netAfterReimbursementsCents?: number
+  onPickAthlete: (code: string) => void
+  selectedAthleteFilter: string
+}
+
 export function SpartanFundraisingVisuals({
   donations,
   byAthlete,
   generalTotalCents,
+  reimbursementsPaidTotalCents = 0,
+  grossSessionTotalCents,
+  netAfterReimbursementsCents,
   onPickAthlete,
   selectedAthleteFilter,
-}: {
-  donations: SpartanDonationRow[] | null
-  byAthlete: SpartanAthleteAggregate[] | null
-  generalTotalCents: number
-  onPickAthlete: (code: string) => void
-  selectedAthleteFilter: string
-}) {
+}: SpartanFundraisingVisualsProps) {
   const [igFormat, setIgFormat] = useState<IgFormat>("feed")
 
   const codeToLabel = useMemo(() => (donations ? buildCodeToLabel(donations) : new Map<string, string>()), [donations])
 
   const topAthletesChart = useMemo(() => {
     if (!byAthlete?.length) return []
-    const sorted = [...byAthlete].sort((a, b) => b.totalCents - a.totalCents).slice(0, 12)
-    return sorted.map((a) => ({
+    const sorted = [...byAthlete]
+      .sort(
+        (a, b) =>
+          (b.netAfterReimbursementsCents ?? b.totalCents) - (a.netAfterReimbursementsCents ?? a.totalCents),
+      )
+      .slice(0, 12)
+    return sorted.map((a) => {
+      const netC = a.netAfterReimbursementsCents ?? a.totalCents - (a.reimbursementsPaidCents ?? 0)
+      return {
       name:
         (codeToLabel.get(a.athleteCode) ?? a.athleteCode).length > 22
           ? `${(codeToLabel.get(a.athleteCode) ?? a.athleteCode).slice(0, 20)}…`
           : codeToLabel.get(a.athleteCode) ?? a.athleteCode,
       fullName: codeToLabel.get(a.athleteCode) ?? a.athleteCode,
       code: a.athleteCode,
-      total: Math.round(a.totalCents / 100),
-      cents: a.totalCents,
+      total: Math.round(netC / 100),
+      cents: netC,
+      raised: a.totalCents,
+      reimb: a.reimbursementsPaidCents ?? 0,
       gifts: a.donationCount,
-    }))
+    }})
   }, [byAthlete, codeToLabel])
 
   const pieSlices = useMemo(() => {
@@ -220,15 +242,23 @@ export function SpartanFundraisingVisuals({
     return { totalCents, count, avgCents: count ? Math.round(totalCents / count) : 0 }
   }, [donations])
 
+  const grossCents = typeof grossSessionTotalCents === "number" ? grossSessionTotalCents : totals.totalCents
+  const netCents = typeof netAfterReimbursementsCents === "number" ? netAfterReimbursementsCents : grossCents - reimbursementsPaidTotalCents
+
   const leaderboardRows = useMemo(() => {
     if (!byAthlete?.length) return []
     return [...byAthlete]
-      .sort((a, b) => b.totalCents - a.totalCents)
+      .sort(
+        (a, b) =>
+          (b.netAfterReimbursementsCents ?? b.totalCents) - (a.netAfterReimbursementsCents ?? a.totalCents),
+      )
       .map((a, i) => ({
         rank: i + 1,
         code: a.athleteCode,
         label: codeToLabel.get(a.athleteCode) ?? a.athleteCode,
-        cents: a.totalCents,
+        cents: a.netAfterReimbursementsCents ?? a.totalCents - (a.reimbursementsPaidCents ?? 0),
+        raised: a.totalCents,
+        reimb: a.reimbursementsPaidCents ?? 0,
         gifts: a.donationCount,
         races: a.raceSignupCount,
       }))
@@ -260,11 +290,13 @@ export function SpartanFundraisingVisuals({
   return (
     <div className="space-y-6">
       {/* KPI strip */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
-          { label: "Total raised", value: formatMoney(totals.totalCents), sub: "Sum of paid checkouts", accent: "from-[#003366] to-[#0c4a6e]" },
+          { label: "Gross in window", value: formatMoney(grossCents), sub: "All paid checkouts (Stripe)", accent: "from-[#003366] to-[#0c4a6e]" },
+          { label: "Reimbursements paid", value: formatMoney(reimbursementsPaidTotalCents), sub: "Out; same lookback as gifts", accent: "from-[#9f1239] to-[#7f1d1d]" },
+          { label: "Net (after reimb.)", value: formatMoney(netCents), sub: "Gross − paid reimbursements", accent: "from-[#0f766e] to-[#115e59]" },
           { label: "Gifts", value: String(totals.count), sub: "Paid sessions", accent: "from-[#C8102E] to-[#9f0c24]" },
-          { label: "General fund (no code)", value: formatMoney(generalTotalCents), sub: "NC United bucket", accent: "from-[#0f766e] to-[#115e59]" },
+          { label: "General fund (no code)", value: formatMoney(generalTotalCents), sub: "NC United bucket", accent: "from-[#0e7490] to-[#0f5c73]" },
           { label: "Average gift", value: formatMoney(totals.avgCents), sub: "Per checkout", accent: "from-[#6d28d9] to-[#5b21b6]" },
         ].map((k) => (
           <div
@@ -288,7 +320,7 @@ export function SpartanFundraisingVisuals({
               <BarChart3 className="h-5 w-5" />
               Top athletes (click a bar to filter the table)
             </CardTitle>
-            <CardDescription>Horizontal bars — dollars raised per credited wrestler (top 12).</CardDescription>
+            <CardDescription>Horizontal bars — <strong>net</strong> per wrestler (raised minus reimb. paid in window), top 12.</CardDescription>
           </CardHeader>
           <CardContent className="h-[340px] pl-0">
             {topAthletesChart.length === 0 ? (
@@ -302,8 +334,11 @@ export function SpartanFundraisingVisuals({
                 <XAxis type="number" tickFormatter={(v) => `$${v}`} fontSize={11} />
                 <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
                 <Tooltip
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, "Raised"]}
-                  labelFormatter={(_, payload) => (payload?.[0]?.payload?.fullName as string) ?? ""}
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, "Net"]}
+                  labelFormatter={(_, payload) => {
+                    const p = payload?.[0]?.payload as { fullName?: string; raised?: number; reimb?: number } | undefined
+                    return p ? `${p.fullName ?? ""} · raised $${(p.raised / 100).toFixed(0)} · reimb $${(p.reimb / 100).toFixed(0)}` : ""
+                  }}
                   contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb" }}
                 />
                 <Bar
@@ -424,7 +459,9 @@ export function SpartanFundraisingVisuals({
                 <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <th className="px-3 py-2">#</th>
                   <th className="px-3 py-2">Athlete</th>
+                  <th className="px-3 py-2 text-right">Net</th>
                   <th className="px-3 py-2 text-right">Raised</th>
+                  <th className="px-3 py-2 text-right">Reimb</th>
                   <th className="px-3 py-2 text-right">Gifts</th>
                   <th className="px-3 py-2 text-right">Race path</th>
                 </tr>
@@ -444,7 +481,11 @@ export function SpartanFundraisingVisuals({
                       <div className="font-medium">{row.label}</div>
                       <div className="font-mono text-[10px] text-muted-foreground">{row.code}</div>
                     </td>
-                    <td className="px-3 py-2.5 text-right font-semibold tabular-nums">{formatMoney(row.cents)}</td>
+                    <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-green-800">{formatMoney(row.cents)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">{formatMoney(row.raised)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums text-muted-foreground">
+                      {row.reimb > 0 ? formatMoney(row.reimb) : "—"}
+                    </td>
                     <td className="px-3 py-2.5 text-right text-muted-foreground">{row.gifts}</td>
                     <td className="px-3 py-2.5 text-right text-muted-foreground">{row.races}</td>
                   </tr>
@@ -482,7 +523,7 @@ export function SpartanFundraisingVisuals({
                 <div className="flex flex-col items-center gap-4 md:flex-row md:items-start">
                   <IgShareCard
                     format={k}
-                    totalCents={totals.totalCents}
+                    totalCents={netCents}
                     giftCount={totals.count}
                     topRows={igTopRows.map((r) => ({ rank: r.rank, label: r.label, cents: r.cents }))}
                     campaignLabel={campaignLabel}
@@ -502,7 +543,7 @@ export function SpartanFundraisingVisuals({
                         <div className="flex justify-center py-4">
                           <IgShareCard
                             format={k}
-                            totalCents={totals.totalCents}
+                            totalCents={netCents}
                             giftCount={totals.count}
                             topRows={igTopRows.map((r) => ({ rank: r.rank, label: r.label, cents: r.cents }))}
                             campaignLabel={campaignLabel}

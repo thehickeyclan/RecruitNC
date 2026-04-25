@@ -50,6 +50,8 @@ type SpartanAthleteAggregate = {
   totalCents: number
   donationCount: number
   raceSignupCount: number
+  reimbursementsPaidCents?: number
+  netAfterReimbursementsCents?: number
 }
 
 const LS_LEADERBOARD = "recruitnc_admin_fundraising_spartan2026_leaderboard"
@@ -95,6 +97,9 @@ export default function AdminFundraisingPage() {
   const [donations, setDonations] = useState<SpartanDonationRow[] | null>(null)
   const [byAthlete, setByAthlete] = useState<SpartanAthleteAggregate[] | null>(null)
   const [generalTotalCents, setGeneralTotalCents] = useState(0)
+  const [reimbursementsPaidTotalCents, setReimbursementsPaidTotalCents] = useState(0)
+  const [grossSessionTotalCents, setGrossSessionTotalCents] = useState(0)
+  const [netAfterReimbursementsCents, setNetAfterReimbursementsCents] = useState(0)
   const [donationsLoading, setDonationsLoading] = useState(false)
   const [donationsError, setDonationsError] = useState<string | null>(null)
   const [athleteFilter, setAthleteFilter] = useState("")
@@ -167,16 +172,25 @@ export default function AdminFundraisingPage() {
         donations?: SpartanDonationRow[]
         byAthlete?: SpartanAthleteAggregate[]
         generalTotalCents?: number
+        reimbursementsPaidTotalCents?: number
+        grossSessionTotalCents?: number
+        netAfterReimbursementsCents?: number
       }
       if (!res.ok) throw new Error(j.error || "Could not load donations")
       setDonations(j.donations ?? [])
       setByAthlete(j.byAthlete ?? [])
       setGeneralTotalCents(typeof j.generalTotalCents === "number" ? j.generalTotalCents : 0)
+      setReimbursementsPaidTotalCents(typeof j.reimbursementsPaidTotalCents === "number" ? j.reimbursementsPaidTotalCents : 0)
+      setGrossSessionTotalCents(typeof j.grossSessionTotalCents === "number" ? j.grossSessionTotalCents : 0)
+      setNetAfterReimbursementsCents(typeof j.netAfterReimbursementsCents === "number" ? j.netAfterReimbursementsCents : 0)
     } catch (e) {
       setDonationsError(e instanceof Error ? e.message : "Load failed")
       setDonations(null)
       setByAthlete(null)
       setGeneralTotalCents(0)
+      setReimbursementsPaidTotalCents(0)
+      setGrossSessionTotalCents(0)
+      setNetAfterReimbursementsCents(0)
     } finally {
       setDonationsLoading(false)
     }
@@ -598,20 +612,24 @@ export default function AdminFundraisingPage() {
               donations={donations}
               byAthlete={byAthlete}
               generalTotalCents={generalTotalCents}
+              reimbursementsPaidTotalCents={reimbursementsPaidTotalCents}
+              grossSessionTotalCents={grossSessionTotalCents}
+              netAfterReimbursementsCents={netAfterReimbursementsCents}
               onPickAthlete={(code) => setAthleteFilter(code)}
               selectedAthleteFilter={athleteFilter}
             />
 
             <Card>
-              <CardHeader>
+                <CardHeader>
                 <CardTitle>Donations (Stripe)</CardTitle>
                 <CardDescription>
                   Paid Checkout sessions with <code className="rounded bg-muted px-1 text-xs">spartan_campaign=fayetteville_2026</code>.
                   <strong className="text-foreground"> New payments</strong> appear when you <strong className="text-foreground">Refresh</strong>{" "}
-                  (data comes from Stripe). <strong className="text-foreground">Race path</strong> = race / entry flow;{" "}
-                  <strong className="text-foreground">Give only</strong> = no race entry. <strong className="text-foreground">Ack</strong>{" "}
-                  = 501(c)(3) email sent and logged, or not — filter by sent / not sent. <strong className="text-foreground">By athlete</strong>{" "}
-                  for per–athlete totals.
+                  (data comes from Stripe). <strong className="text-foreground">Net</strong> = gifts in this window minus{" "}
+                  <strong>reimbursements marked paid</strong> in the same window (per athlete; see Reimbursement admin).{" "}
+                  <strong className="text-foreground">Race path</strong> = race / entry; <strong className="text-foreground">Give only</strong> = no
+                  race. <strong className="text-foreground">Ack</strong> = 501(c)(3) email. <strong className="text-foreground">By athlete</strong> for
+                  per–athlete raised, reimb. paid, and net.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -826,20 +844,32 @@ export default function AdminFundraisingPage() {
                         <TableHeader>
                           <TableRow>
                             <TableHead>Athlete code</TableHead>
-                            <TableHead>Total raised</TableHead>
+                            <TableHead>Raised (window)</TableHead>
+                            <TableHead>Reimb. paid</TableHead>
+                            <TableHead>Net</TableHead>
                             <TableHead>Gifts</TableHead>
                             <TableHead>Race signups</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredByAthlete.map((a) => (
+                          {filteredByAthlete.map((a) => {
+                            const r = a.reimbursementsPaidCents ?? 0
+                            const n = a.netAfterReimbursementsCents ?? a.totalCents - r
+                            return (
                             <TableRow key={a.athleteCode}>
                               <TableCell className="font-mono text-xs">{a.athleteCode}</TableCell>
                               <TableCell className="font-medium">{formatMoney(a.totalCents, "usd")}</TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {r > 0 ? formatMoney(r, "usd") : "—"}
+                              </TableCell>
+                              <TableCell className={n < 0 ? "text-destructive font-medium" : "font-medium text-green-800"}>
+                                {formatMoney(n, "usd")}
+                              </TableCell>
                               <TableCell>{a.donationCount}</TableCell>
                               <TableCell>{a.raceSignupCount}</TableCell>
                             </TableRow>
-                          ))}
+                            )
+                          })}
                         </TableBody>
                       </Table>
                     </div>

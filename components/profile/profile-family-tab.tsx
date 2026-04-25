@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { HardLink } from "@/components/hard-link"
-import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { Loader2, Camera, CheckCircle, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -128,7 +127,8 @@ export function ProfileFamilyTab({
       </Card>
 
       <p className="text-xs text-slate-500 -mt-2">
-        <strong className="text-[#003366] font-semibold">Fundraising</strong> totals and donate links are on the{" "}
+        <strong className="text-[#003366] font-semibold">Fundraising</strong> totals and{" "}
+        <strong className="text-[#003366] font-semibold">reimbursement requests</strong> are on the{" "}
         <span className="font-medium text-[#03154C]">Fundraise</span> tab.
       </p>
 
@@ -353,8 +353,6 @@ export function ProfileFamilyTab({
           </CardContent>
         </Card>
       )}
-
-      <ExpenseRequestSection linkedAthletes={linkedAthletes} />
     </div>
   )
 }

@@ -187,7 +187,7 @@ export default function AdminExpenseRequestsPage() {
                 Admin home
               </HardLink>
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Expense requests</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Reimbursement requests</h1>
           </div>
           <Button variant="outline" size="sm" onClick={() => void load()} disabled={tableLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${tableLoading ? "animate-spin" : ""}`} />
@@ -253,7 +253,7 @@ export default function AdminExpenseRequestsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>All requests</CardTitle>
+            <CardTitle>All reimbursement requests</CardTitle>
             <CardDescription>Update status, approved amount, and internal notes. Mark Paid when funds are sent.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -264,7 +264,7 @@ export default function AdminExpenseRequestsPage() {
                 Loading…
               </p>
             ) : (rows ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No expense requests yet.</p>
+              <p className="text-sm text-muted-foreground">No reimbursement requests yet.</p>
             ) : (
               <div className="overflow-x-auto rounded-md border">
                 <Table>
@@ -343,7 +343,7 @@ export default function AdminExpenseRequestsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Request</DialogTitle>
+            <DialogTitle>Reimbursement request</DialogTitle>
             <DialogDescription>
               {active ? (
                 <>

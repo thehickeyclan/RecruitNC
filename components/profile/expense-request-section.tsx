@@ -76,7 +76,7 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
     } catch (e) {
       console.error("[RecruitNC] expense list", e)
       toast({
-        title: "Could not load expense requests",
+        title: "Could not load reimbursement requests",
         description: e instanceof Error ? e.message : "Try again later.",
         variant: "destructive",
       })
@@ -122,7 +122,7 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
       if (!res.ok) {
         throw new Error(data.error || "Submit failed")
       }
-      toast({ title: "Request submitted" })
+      toast({ title: "Reimbursement request submitted" })
       setAmount("")
       setParentNotes("")
       setZelleInfo("")
@@ -148,18 +148,18 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
             <Receipt className="h-4 w-4" />
           </span>
-          Training expense requests
+          Reimbursement requests
         </CardTitle>
         <CardDescription className="text-slate-600">
-          Request reimbursement for approved team expenses. Submissions are reviewed by NC United staff. Payouts are
-          not guaranteed and depend on program policy and available funds. Provide Zelle or Venmo details for
-          reimbursement.
+          Request reimbursement for approved team (training) expenses. Submissions are reviewed by NC United staff. Payouts
+          are not guaranteed and depend on program policy and available funds. Provide Zelle or Venmo details for payout.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
         {linkedAthletes.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Link an athlete under <span className="font-medium">Your athletes</span> to submit an expense request.
+            Link an athlete on the <span className="font-medium">Family &amp; athletes</span> tab to submit a
+            reimbursement request.
           </p>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4 max-w-lg">
@@ -179,7 +179,7 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="exp-type">Expense type</Label>
+              <Label htmlFor="exp-type">Category</Label>
               <Select value={expenseType} onValueChange={setExpenseType} required>
                 <SelectTrigger id="exp-type">
                   <SelectValue placeholder="Select type" />
@@ -276,21 +276,21 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
                   Submitting…
                 </>
               ) : (
-                "Submit request"
+                "Submit reimbursement request"
               )}
             </Button>
           </form>
         )}
 
         <div>
-          <h3 className="text-sm font-medium mb-2">Your requests</h3>
+          <h3 className="text-sm font-medium mb-2 text-[#03154C]">Your reimbursement requests</h3>
           {loading ? (
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
               Loading…
             </p>
           ) : rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No requests yet.</p>
+            <p className="text-sm text-muted-foreground">No reimbursement requests yet.</p>
           ) : (
             <div className="rounded-md border overflow-x-auto">
               <Table>

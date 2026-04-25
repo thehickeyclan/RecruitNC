@@ -6,10 +6,10 @@ import {
   fetchSpartanCreditCorrectionsMap,
 } from "@/lib/spartan-credit-corrections"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { mergeSpartanAggregatesWithReimbursementNet } from "@/lib/athlete-reimbursement-net"
 import {
   aggregateSpartanByAthlete,
   listSpartanFayettevilleDonations,
-  type SpartanAthleteAggregate,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
 
@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
   if (days > 400) days = 400
 
   const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
+  const sinceMs = since * 1000
   const stripe = new Stripe(stripeSecret)
 
   try {
@@ -99,10 +100,17 @@ export async function GET(request: NextRequest) {
       receiptEmailSentAt: receiptMap.get(d.sessionId) ?? null,
     }))
 
-    const byAthlete: SpartanAthleteAggregate[] = aggregateSpartanByAthlete(donationsRaw)
+    const byAthleteRaw = aggregateSpartanByAthlete(donationsRaw)
+    const { rows: byAthlete, totalReimbursementsPaidCents } = await mergeSpartanAggregatesWithReimbursementNet(
+      admin,
+      byAthleteRaw,
+      sinceMs,
+    )
     const generalTotalCents = donationsRaw
       .filter((d) => !d.athleteCode?.trim())
       .reduce((s, d) => s + d.amountCents, 0)
+    const grossSessionTotalCents = donationsRaw.reduce((s, d) => s + d.amountCents, 0)
+    const netAfterReimbursementsCents = grossSessionTotalCents - totalReimbursementsPaidCents
 
     return NextResponse.json({
       campaign: "fayetteville_2026",
@@ -111,6 +119,9 @@ export async function GET(request: NextRequest) {
       donations,
       byAthlete,
       generalTotalCents,
+      reimbursementsPaidTotalCents: totalReimbursementsPaidCents,
+      grossSessionTotalCents,
+      netAfterReimbursementsCents,
     })
   } catch (e) {
     console.error("[admin/spartan-donations]", e)
