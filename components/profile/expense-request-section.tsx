@@ -141,13 +141,16 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
   }
 
   return (
-    <Card>
+    <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/5 overflow-hidden">
+      <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Receipt className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 text-[#03154C]">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
+            <Receipt className="h-4 w-4" />
+          </span>
           Training expense requests
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-slate-600">
           Request reimbursement for approved team expenses. Submissions are reviewed by NC United staff. Payouts are
           not guaranteed and depend on program policy and available funds. Provide Zelle or Venmo details for
           reimbursement.
@@ -262,7 +265,11 @@ export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Link
               />
               <p className="text-xs text-muted-foreground">PDF or image, up to 10MB.</p>
             </div>
-            <Button type="submit" disabled={submitting}>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="bg-[#03154C] hover:bg-[#0a2a6e] text-white shadow-md"
+            >
               {submitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

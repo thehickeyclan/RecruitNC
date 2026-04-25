@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { HardLink } from "@/components/hard-link"
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
-import { Loader2, Camera, CheckCircle, Coins, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight } from "lucide-react"
+import { Loader2, Camera, CheckCircle, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -25,16 +24,6 @@ type Linked = {
   profileVerified: boolean
   updatedAt: string | null
   claimedByUserId: string | null
-}
-
-type SpartanRow = {
-  athleteId: string
-  name: string
-  fundraisingCode: string | null
-  totalCents: number
-  giftCount?: number
-  raceSignupCount?: number
-  codeUnavailable?: boolean
 }
 
 export type UserProfileForFamily = {
@@ -59,8 +48,6 @@ type ProfileFamilyTabProps = {
   linkAthlete: (id: string) => void
   athleteCompleteness: Record<string, { percent: number; completed: string[]; missing: string[] }>
   completenessLoading: boolean
-  spartanFundraising: { athletes: SpartanRow[] } | null
-  spartanFundraisingLoading: boolean
   eventHubs: { id: string; slug: string; name: string; href: string }[]
   eventHubsLoading: boolean
   onProfilePhotoUploaded?: (url: string) => void
@@ -80,26 +67,27 @@ export function ProfileFamilyTab({
   linkAthlete,
   athleteCompleteness,
   completenessLoading,
-  spartanFundraising,
-  spartanFundraisingLoading,
   eventHubs,
   eventHubsLoading,
   onProfilePhotoUploaded,
 }: ProfileFamilyTabProps) {
   return (
     <div className="space-y-6">
-      <Card className="border-amber-200/60 bg-amber-50/30">
+      <Card className="border-[#CBAF5D]/35 bg-gradient-to-br from-[#CBAF5D]/[0.12] via-white to-[#003366]/5 shadow-sm overflow-hidden">
+        <div className="h-0.5 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-amber-900">
-            <Sparkles className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-[#03154C]">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
+              <Sparkles className="h-4 w-4" />
+            </span>
             What to do next
           </CardTitle>
-          <CardDescription>Make your profile and athlete pages more engaging</CardDescription>
+          <CardDescription className="text-slate-600">Make your profile and athlete pages more engaging</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+        <CardContent className="space-y-2 text-sm text-slate-700">
           {!profile.cell_phone?.trim() && (
             <p className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#B31B1B]" />
               <span>
                 Add your cell phone in the <strong>Account</strong> tab so coaches can reach you.
               </span>
@@ -107,14 +95,14 @@ export function ProfileFamilyTab({
           )}
           {!profile.bio?.trim() && (
             <p className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#B31B1B]" />
               <span>Add a short bio in the Account tab to introduce yourself.</span>
             </p>
           )}
           {!blueLoading && blueMembershipsLength === 0 && (
             <p className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
-              <HardLink href="/blue" className="text-[#03154C] font-medium hover:underline">
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#B31B1B]" />
+              <HardLink href="/blue" className="text-[#003366] font-semibold hover:text-[#B31B1B] underline-offset-2 hover:underline">
                 Interested in NC United Blue?
               </HardLink>{" "}
               Learn more.
@@ -122,83 +110,31 @@ export function ProfileFamilyTab({
           )}
           {!linkedLoading && linkedAthletes.length > 0 && linkedAthletes.some((a) => !a.profileVerified) && (
             <p className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#B31B1B]" />
               <span>Get your athlete&apos;s profile public so coaches can find them — use Request Profile Edit or Edit profile below.</span>
             </p>
           )}
           {!linkedLoading && linkedAthletes.length > 0 && (
             <p className="flex items-center gap-2">
-              <ArrowRight className="h-3 w-3 shrink-0 text-amber-600" />
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[#B31B1B]" />
               <span>Keep achievements and stats up to date — edit athlete profile below.</span>
             </p>
           )}
           {profile.cell_phone?.trim() &&
             profile.bio?.trim() &&
             (linkedAthletes.length === 0 || linkedAthletes.every((a) => a.profileVerified)) &&
-            (blueMembershipsLength > 0 || linkedAthletes.length > 0) && <p className="text-gray-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>}
+            (blueMembershipsLength > 0 || linkedAthletes.length > 0) && <p className="text-slate-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>}
         </CardContent>
       </Card>
 
-      <Card className="border-emerald-200/40 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#0f5132]">
-            <Coins className="h-5 w-5 shrink-0" />
-            Fundraising
-          </CardTitle>
-          <CardDescription>
-            Same 120-day totals as Admin → Fundraising (Stripe + credit fixes). For your family&apos;s reference only —
-            not a personal balance or payout guarantee.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {spartanFundraisingLoading ? (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading totals…
-            </p>
-          ) : !spartanFundraising || spartanFundraising.athletes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Link your athletes below to see per-wrestler fundraising in this list.</p>
-          ) : (
-            <div className="w-full overflow-x-auto rounded-md border border-emerald-100">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="min-w-[8rem]">Athlete</TableHead>
-                    <TableHead className="w-[5.5rem] text-right">Raised</TableHead>
-                    <TableHead className="w-16 text-right">Gifts</TableHead>
-                    <TableHead className="w-24 text-right">Race signups</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {spartanFundraising.athletes.map((row) => (
-                    <TableRow key={row.athleteId}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-foreground">{row.name}</p>
-                          {row.fundraisingCode ? (
-                            <p className="text-xs text-muted-foreground font-mono mt-0.5">{row.fundraisingCode}</p>
-                          ) : (
-                            <p className="text-xs text-amber-800 mt-0.5">No NCU code (needs name + grad year in our system).</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums text-[#0f5132]">
-                        {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(row.totalCents / 100)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">{row.giftCount ?? 0}</TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">{row.raceSignupCount ?? 0}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <p className="text-xs text-slate-500 -mt-2">
+        <strong className="text-[#003366] font-semibold">Fundraising</strong> totals and donate links are on the{" "}
+        <span className="font-medium text-[#03154C]">Fundraise</span> tab.
+      </p>
 
-      <Card>
+      <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/4">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#002147]">
+          <CardTitle className="flex items-center gap-2 text-[#03154C]">
             <LayoutDashboard className="h-5 w-5" />
             Event hubs
           </CardTitle>
@@ -230,10 +166,10 @@ export function ProfileFamilyTab({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-[#003366]/10 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Link2 className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-[#03154C]">
+            <Link2 className="h-5 w-5 text-[#003366]" />
             Link your athlete
           </CardTitle>
           <CardDescription>Search for your wrestler to link them. They show under &quot;Your athletes&quot; below.</CardDescription>
@@ -281,10 +217,10 @@ export function ProfileFamilyTab({
       </Card>
 
       {!linkedLoading && linkedAthletes.length > 0 && (
-        <Card>
+        <Card className="border-[#003366]/10 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-[#03154C]">
+              <Users className="h-5 w-5 text-[#003366]" />
               Your athletes
             </CardTitle>
             <CardDescription>Status and last update for linked profiles</CardDescription>
@@ -375,10 +311,10 @@ export function ProfileFamilyTab({
       )}
 
       {profile.athlete_id && profile.athlete_name && (
-        <Card>
+        <Card className="border-[#003366]/10 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-[#03154C]">
+              <Camera className="h-5 w-5 text-[#003366]" />
               Your Athlete Photo
             </CardTitle>
             <CardDescription>Upload your own photo for your athlete profile</CardDescription>

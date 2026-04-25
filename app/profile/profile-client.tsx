@@ -12,12 +12,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, CreditCard, Bell, MessageCircle, Upload, X, Users } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, CreditCard, Bell, MessageCircle, Upload, X, Users, Coins } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NcUnitedBlueSection, type ParentBlueMembership } from "@/components/profile/nc-united-blue-section"
 import { ProfileFamilyTab } from "@/components/profile/profile-family-tab"
+import { ProfileFundraiseTab } from "@/components/profile/profile-fundraise-tab"
 import { HardLink } from "@/components/hard-link"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
@@ -402,9 +403,9 @@ export function ProfileClient() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
+      <div className="min-h-screen bg-gradient-to-b from-slate-100/90 via-white to-[#003366]/[0.04] flex items-center justify-center">
+        <div className="flex items-center gap-2 text-[#03154C]">
+          <Loader2 className="h-6 w-6 animate-spin text-[#003366]" />
           <span>Loading your profile...</span>
         </div>
       </div>
@@ -460,39 +461,58 @@ export function ProfileClient() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100/90 via-white to-[#003366]/[0.04]">
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
-        <div className="mb-8 border-b border-[#03154C]/10 pb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#03154C]">My Profile</h1>
-          <p className="text-slate-600 text-sm sm:text-base mt-1.5">Account settings, family &amp; athletes, and NC United Blue.</p>
+        <div className="mb-8 rounded-2xl border border-[#003366]/10 bg-white/60 px-5 py-6 shadow-sm shadow-[#003366]/5 backdrop-blur-sm sm:px-7">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#B31B1B]">RecruitNC</p>
+              <h1 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#03154C]">My profile</h1>
+              <p className="text-slate-600 text-sm sm:text-base mt-1.5 max-w-2xl">
+                Account, family &amp; athletes, fundraising, and NC United Blue — all in one place.
+              </p>
+            </div>
+            <div className="hidden h-12 w-1 shrink-0 rounded-full bg-gradient-to-b from-[#03154C] via-[#B31B1B] to-[#CBAF5D] sm:block" aria-hidden />
+          </div>
         </div>
 
         <Tabs defaultValue="account" className="w-full space-y-6">
-          <TabsList className="mb-0 grid w-full grid-cols-3 gap-1.5 rounded-xl border border-[#03154C]/12 bg-slate-100/90 p-1.5 h-auto shadow-sm">
+          <TabsList className="mb-0 grid w-full grid-cols-2 sm:grid-cols-4 gap-2 rounded-2xl border border-[#003366]/12 bg-gradient-to-b from-white to-slate-50/90 p-2 h-auto shadow-md shadow-[#003366]/5">
             <TabsTrigger
               value="account"
-              className="rounded-lg py-2.5 px-1.5 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
             >
-              <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-w-0">
-                <User className="h-4 w-4 shrink-0 opacity-80" />
+              <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
+                <User className="h-4 w-4 shrink-0" />
                 <span>Account</span>
               </span>
             </TabsTrigger>
             <TabsTrigger
               value="family"
-              className="rounded-lg py-2.5 px-1.5 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+              title="Family and athletes"
+              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
             >
-              <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-w-0">
-                <Users className="h-4 w-4 shrink-0 opacity-80" />
-                <span className="truncate">Family &amp; athletes</span>
+              <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
+                <Users className="h-4 w-4 shrink-0" />
+                <span className="hidden sm:inline truncate">Family &amp; athletes</span>
+                <span className="sm:hidden">Family</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="fundraise"
+              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
+                <Coins className="h-4 w-4 shrink-0" />
+                <span>Fundraise</span>
               </span>
             </TabsTrigger>
             <TabsTrigger
               value="blue"
-              className="rounded-lg py-2.5 px-1.5 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-[#03154C]/10"
+              className="rounded-xl py-2.5 px-2 text-xs sm:text-sm font-semibold text-slate-600 transition-all data-[state=active]:bg-[#03154C] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:hover:bg-white/70"
             >
-              <span className="inline-flex items-center justify-center gap-1.5 sm:gap-2 min-w-0">
-                <CreditCard className="h-4 w-4 shrink-0 opacity-80" />
+              <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
+                <CreditCard className="h-4 w-4 shrink-0" />
                 <span className="hidden sm:inline">NC United Blue</span>
                 <span className="sm:hidden">Blue</span>
               </span>
@@ -500,13 +520,16 @@ export function ProfileClient() {
           </TabsList>
 
         <TabsContent value="account" className="mt-0 space-y-6 focus-visible:outline-none">
-            <Card className="border-[#03154C]/10 shadow-sm">
+            <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/5 overflow-hidden">
+              <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Profile Information
+                <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
+                    <User className="h-4 w-4" />
+                  </span>
+                  Profile information
                 </CardTitle>
-                <CardDescription>Update your personal information and contact details</CardDescription>
+                <CardDescription className="text-slate-600">Update your personal information and contact details</CardDescription>
               </CardHeader>
               <CardContent>
                 {error && (
@@ -558,7 +581,7 @@ export function ProfileClient() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSave} className="space-y-6">
+                <form onSubmit={handleSave} className="space-y-6 pt-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="name">Full Name</Label>
@@ -618,7 +641,11 @@ export function ProfileClient() {
                     />
                   </div>
 
-                  <Button type="submit" disabled={isSaving} className="w-full">
+                  <Button
+                    type="submit"
+                    disabled={isSaving}
+                    className="w-full bg-[#03154C] hover:bg-[#0a2a6e] text-white shadow-md"
+                  >
                     {isSaving ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -633,13 +660,17 @@ export function ProfileClient() {
             </Card>
 
             {/* Notification preferences — messaging (SMS & email) */}
-            <Card>
+            <Card className="border-[#003366]/10 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                  <span className="text-[#003366]">
+                    <Bell className="h-5 w-5" />
+                  </span>
                   Message notifications
                 </CardTitle>
-                <CardDescription>Get notified when someone messages you in RecruitNC Messages. Save your profile after changing these.</CardDescription>
+                <CardDescription className="text-slate-600">
+                  Get notified when someone messages you in RecruitNC Messages. Save your profile after changing these.
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between gap-4">
@@ -680,13 +711,13 @@ export function ProfileClient() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-[#003366]/10 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                  <Calendar className="h-5 w-5 text-[#003366]" />
                   Account details
                 </CardTitle>
-                <CardDescription>Your sign-in and membership summary</CardDescription>
+                <CardDescription className="text-slate-600">Your sign-in and membership summary</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
@@ -700,21 +731,33 @@ export function ProfileClient() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-[#003366]/10 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                  <Trophy className="h-5 w-5 text-[#CBAF5D]" />
                   Quick actions
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button asChild variant="outline" className="w-full justify-start sm:max-w-md">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full justify-start sm:max-w-md border-[#003366]/20 text-[#03154C] hover:bg-[#003366]/5"
+                >
                   <a href="/submit-commitment">Submit new commitment</a>
                 </Button>
-                <Button asChild variant="outline" className="w-full justify-start sm:max-w-md">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full justify-start sm:max-w-md border-[#003366]/20 text-[#03154C] hover:bg-[#003366]/5"
+                >
                   <a href="/request-edit">Request profile edit</a>
                 </Button>
-                <Button asChild variant="outline" className="w-full justify-start sm:max-w-md">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full justify-start sm:max-w-md border-[#003366]/20 text-[#03154C] hover:bg-[#003366]/5"
+                >
                   <a href="/athletes">Browse athletes</a>
                 </Button>
               </CardContent>
@@ -736,11 +779,18 @@ export function ProfileClient() {
               linkAthlete={linkAthlete}
               athleteCompleteness={athleteCompleteness}
               completenessLoading={completenessLoading}
-              spartanFundraising={spartanFundraising}
-              spartanFundraisingLoading={spartanFundraisingLoading}
               eventHubs={eventHubs}
               eventHubsLoading={eventHubsLoading}
             />
+        </TabsContent>
+
+        <TabsContent value="fundraise" className="mt-0 space-y-0 focus-visible:outline-none">
+          <ProfileFundraiseTab
+            spartanFundraising={spartanFundraising}
+            spartanFundraisingLoading={spartanFundraisingLoading}
+            linkedLoading={linkedLoading}
+            linkedCount={linkedAthletes.length}
+          />
         </TabsContent>
 
         <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
@@ -754,13 +804,14 @@ export function ProfileClient() {
                     billingPortalError={blueBillingPortalError || undefined}
                   />
                 ) : (
-                  <Card className="border-[#03154C]/15 border-dashed bg-white shadow-sm">
+                  <Card className="border-[#003366]/12 border-dashed bg-white/90 shadow-md overflow-hidden">
+                    <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                        <CreditCard className="h-5 w-5" />
+                        <CreditCard className="h-5 w-5 text-[#003366]" />
                         NC United Blue
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-slate-600">
                         Training, apparel, and member benefits — billed separately when you join.
                       </CardDescription>
                     </CardHeader>
@@ -770,7 +821,7 @@ export function ProfileClient() {
                       </p>
                       <HardLink
                         href="/blue"
-                        className="inline-flex h-10 items-center justify-center rounded-md border border-[#03154C]/30 bg-background px-4 text-sm font-medium text-[#03154C] shadow-sm transition-colors hover:bg-[#03154C]/5"
+                        className="inline-flex h-10 items-center justify-center rounded-lg border-2 border-[#03154C] bg-[#03154C] px-4 text-sm font-semibold text-white shadow-md transition-colors hover:bg-[#0a2a6e]"
                       >
                         Learn about NC United Blue
                       </HardLink>
