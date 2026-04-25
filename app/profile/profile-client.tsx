@@ -70,7 +70,15 @@ export function ProfileClient() {
   const [eventHubs, setEventHubs] = useState<{ id: string; slug: string; name: string; href: string }[]>([])
   const [eventHubsLoading, setEventHubsLoading] = useState(true)
   const [spartanFundraising, setSpartanFundraising] = useState<{
-    athletes: { athleteId: string; name: string; fundraisingCode: string | null; totalCents: number; codeUnavailable?: boolean }[]
+    athletes: {
+      athleteId: string
+      name: string
+      fundraisingCode: string | null
+      totalCents: number
+      giftCount: number
+      raceSignupCount: number
+      codeUnavailable?: boolean
+    }[]
   } | null>(null)
   const [spartanFundraisingLoading, setSpartanFundraisingLoading] = useState(true)
 
@@ -111,7 +119,15 @@ export function ProfileClient() {
       const res = await fetch("/api/profile/spartan-fundraising-totals", { credentials: "include" })
       if (res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
-          athletes?: { athleteId: string; name: string; fundraisingCode: string | null; totalCents: number; codeUnavailable?: boolean }[]
+          athletes?: {
+            athleteId: string
+            name: string
+            fundraisingCode: string | null
+            totalCents: number
+            giftCount?: number
+            raceSignupCount?: number
+            codeUnavailable?: boolean
+          }[]
         }
         setSpartanFundraising({ athletes: data.athletes ?? [] })
       } else {
@@ -789,31 +805,41 @@ export function ProfileClient() {
                     Fundraising
                   </CardTitle>
                   <CardDescription>
-                    Paid gifts credited to each wrestler&rsquo;s NCU code in our records. Running total for your
-                    family&rsquo;s reference — not a personal balance or guarantee of any payout.
+                    Same 120-day totals as Admin → Fundraising (Stripe + credit fixes). For your family&rsquo;s reference
+                    only — not a personal balance or payout guarantee.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 gap-y-0.5 text-xs text-muted-foreground font-medium border-b border-emerald-100 pb-1.5 mb-1">
+                    <span>Athlete</span>
+                    <span className="text-right w-[4.5rem]">Raised</span>
+                    <span className="text-right w-10">Gifts</span>
+                    <span className="text-right w-16 pl-0.5 text-[10px] leading-tight sm:text-xs sm:leading-none">
+                      Race
+                      <br className="sm:hidden" />
+                      signups
+                    </span>
+                  </div>
                   {spartanFundraising.athletes.map((row) => (
                     <div
                       key={row.athleteId}
-                      className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-emerald-100 bg-white/80 px-3 py-2.5"
+                      className="grid grid-cols-[1fr_auto_auto_auto] gap-x-2 items-baseline rounded-lg border border-emerald-100 bg-white/80 px-2 py-2 text-sm"
                     >
-                      <div>
-                        <p className="font-medium text-gray-900">{row.name}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{row.name}</p>
                         {row.fundraisingCode ? (
-                          <p className="text-xs text-muted-foreground font-mono mt-0.5">{row.fundraisingCode}</p>
+                          <p className="text-xs text-muted-foreground font-mono mt-0.5 truncate">{row.fundraisingCode}</p>
                         ) : (
-                          <p className="text-xs text-amber-800 mt-0.5">
-                            No NCU code assigned from profile (needs name + graduation year in our system).
-                          </p>
+                          <p className="text-xs text-amber-800 mt-0.5">No NCU code (needs name + grad year in our system).</p>
                         )}
                       </div>
-                      <p className="text-lg font-semibold tabular-nums text-[#0f5132]">
+                      <p className="text-right w-[4.5rem] font-semibold tabular-nums text-[#0f5132]">
                         {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
                           row.totalCents / 100,
                         )}
                       </p>
+                      <p className="text-right w-10 tabular-nums text-gray-800">{row.giftCount ?? 0}</p>
+                      <p className="text-right w-16 tabular-nums text-gray-800">{row.raceSignupCount ?? 0}</p>
                     </div>
                   ))}
                 </CardContent>

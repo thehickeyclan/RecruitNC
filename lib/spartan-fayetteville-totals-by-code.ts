@@ -12,16 +12,24 @@ import { aggregateSpartanByAthlete, listSpartanFayettevilleDonations } from "@/l
  */
 export const FAYETTEVILLE_STRIPE_LOOKBACK_DAYS = 120
 
-type CacheEntry = { expiresAt: number; map: Map<string, number> }
+export type FayettevilleCodeStats = {
+  totalCents: number
+  /** Same as admin “Gifts” = paid checkout count credited to this code */
+  giftCount: number
+  /** Same as admin “Race signups” */
+  raceSignupCount: number
+}
+
+type CacheEntry = { expiresAt: number; map: Map<string, FayettevilleCodeStats> }
 let stripeListCache: CacheEntry | null = null
 const STRIPE_LIST_CACHE_MS = 90_000
 
 /**
- * Paid Fayetteville campaign gifts from Stripe, after `spartan_credit_corrections`
- * — same basis as Admin → Fundraising (not `spartan_donations` alone).
- * Keys: `athlete_code` lowercased → total cents.
+ * Per–NCU-code stats for the Fayetteville campaign from Stripe, after `spartan_credit_corrections`
+ * — same basis as Admin → Fundraising “Totals by athlete”.
+ * Keys: `athlete_code` lowercased.
  */
-export async function getFayettevilleTotalsCentsByAthleteCodeLowercase(): Promise<Map<string, number>> {
+export async function getFayettevilleStatsByAthleteCodeLowercase(): Promise<Map<string, FayettevilleCodeStats>> {
   const now = Date.now()
   if (stripeListCache && stripeListCache.expiresAt > now) {
     return stripeListCache.map
@@ -39,10 +47,14 @@ export async function getFayettevilleTotalsCentsByAthleteCodeLowercase(): Promis
   const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
   const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
   const agg = aggregateSpartanByAthlete(donationsRaw)
-  const map = new Map<string, number>()
+  const map = new Map<string, FayettevilleCodeStats>()
   for (const a of agg) {
     const k = a.athleteCode.trim().toLowerCase()
-    map.set(k, a.totalCents)
+    map.set(k, {
+      totalCents: a.totalCents,
+      giftCount: a.donationCount,
+      raceSignupCount: a.raceSignupCount,
+    })
   }
 
   stripeListCache = { expiresAt: now + STRIPE_LIST_CACHE_MS, map }

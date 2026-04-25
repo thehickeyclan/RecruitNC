@@ -2,10 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
-import {
-  FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
-  getFayettevilleTotalsCentsByAthleteCodeLowercase,
-} from "@/lib/spartan-fayetteville-totals-by-code"
+import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS, getFayettevilleStatsByAthleteCodeLowercase } from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
 
 export const dynamic = "force-dynamic"
@@ -15,6 +12,10 @@ export type SpartanFundraisingTotalRow = {
   name: string
   fundraisingCode: string | null
   totalCents: number
+  /** Paid gifts credited to this code (admin “Gifts” column) */
+  giftCount: number
+  /** Race / entry path count (admin “Race signups”) */
+  raceSignupCount: number
   /** True when the athlete is on the roster but we could not map a NCU code (e.g. missing grad year in profile). */
   codeUnavailable?: boolean
 }
@@ -81,9 +82,9 @@ export async function GET() {
     codeByAthleteId.set(e.id, e.code)
   }
 
-  let totalByCodeCents = new Map<string, number>()
+  let statsByCode = new Map<string, { totalCents: number; giftCount: number; raceSignupCount: number }>()
   try {
-    totalByCodeCents = await getFayettevilleTotalsCentsByAthleteCodeLowercase()
+    statsByCode = await getFayettevilleStatsByAthleteCodeLowercase()
   } catch (e) {
     console.error("[profile/spartan-fundraising-totals] Stripe totals", e)
   }
@@ -97,11 +98,22 @@ export async function GET() {
         name,
         fundraisingCode: null,
         totalCents: 0,
+        giftCount: 0,
+        raceSignupCount: 0,
         codeUnavailable: true,
       }
     }
-    const totalCents = totalByCodeCents.get(code.toLowerCase()) ?? 0
-    return { athleteId: id, name, fundraisingCode: code, totalCents, codeUnavailable: false }
+    const s = statsByCode.get(code.toLowerCase())
+    const totalCents = s?.totalCents ?? 0
+    return {
+      athleteId: id,
+      name,
+      fundraisingCode: code,
+      totalCents,
+      giftCount: s?.giftCount ?? 0,
+      raceSignupCount: s?.raceSignupCount ?? 0,
+      codeUnavailable: false,
+    }
   })
 
   athletes.sort((a, b) => a.name.localeCompare(b.name))
