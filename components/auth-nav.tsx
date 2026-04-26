@@ -39,27 +39,12 @@ export function AuthNav() {
             <img src="/images/nc-united-logo-white.png" alt="NC United" className="h-9 w-auto mix-blend-screen" />
             <span className="text-lg font-semibold">NC United Wrestling</span>
           </a>
-          <div className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              )
-            })}
-          </div>
-
-          <div className="mt-auto pt-4 border-t px-4 pb-4">
-            {user ? (
+          {user && (
+            <div className="border-b px-4 pb-4">
+              <div className="px-3 py-2 text-sm text-gray-600 truncate" title={user.email ?? ""}>
+                Signed in as {user.email}
+              </div>
               <div className="flex flex-col gap-2">
-                <div className="px-3 py-2 text-sm text-gray-600">Signed in as {user.email}</div>
                 <Link
                   href="/profile"
                   className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 transition-colors"
@@ -89,14 +74,38 @@ export function AuthNav() {
                   </Link>
                 )}
                 <button
-                  onClick={signOut}
+                  type="button"
+                  onClick={() => {
+                    void signOut()
+                    setIsOpen(false)
+                  }}
                   className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 transition-colors text-left"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </button>
               </div>
-            ) : (
+            </div>
+          )}
+          <div className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </div>
+
+          {!user && (
+            <div className="mt-auto border-t pt-4 px-4 pb-4">
               <div className="flex flex-col gap-2">
                 <Link href="/auth/signin" target="_top" rel="noopener" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" className="w-full bg-transparent">
@@ -107,8 +116,8 @@ export function AuthNav() {
                   <Button className="w-full bg-red-600 hover:bg-red-700">Sign Up</Button>
                 </Link>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </nav>
       </SheetContent>
     </Sheet>

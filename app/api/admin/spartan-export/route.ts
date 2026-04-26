@@ -35,7 +35,7 @@ function csvCell(v: string | number | null | undefined): string {
 }
 
 /**
- * GET ?kind=runners|receipts|credits&days=120
+ * GET ?kind=runners|receipts|credits|tees&days=120
  * CSV downloads for Spartan ops: who’s on course (Spartan), payers (receipts), fundraising credit alignment.
  */
 export async function GET(request: NextRequest) {
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const kind = (request.nextUrl.searchParams.get("kind") ?? "").toLowerCase()
-  if (!["runners", "receipts", "credits"].includes(kind)) {
-    return NextResponse.json({ error: "Query kind must be runners, receipts, or credits." }, { status: 400 })
+  if (!["runners", "receipts", "credits", "tees"].includes(kind)) {
+    return NextResponse.json({ error: "Query kind must be runners, receipts, credits, or tees." }, { status: 400 })
   }
 
   let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
@@ -74,6 +74,59 @@ export async function GET(request: NextRequest) {
     }
 
     const dateStamp = new Date().toISOString().slice(0, 10)
+
+    if (kind === "tees") {
+      const teeRows = rows.filter((r) => Boolean(r.teeShirtSize?.trim()))
+      const headers = [
+        "paid_at_utc",
+        "amount_usd",
+        "shirt_size",
+        "tee_100_eligible_meta",
+        "payer_name",
+        "payer_email",
+        "ship_line1",
+        "ship_line2",
+        "ship_city",
+        "ship_state",
+        "ship_postal",
+        "ship_country",
+        "checkout_session_id",
+        "payment_intent_id",
+        "race_entry",
+        "fundraising_type",
+      ]
+      const lines = [
+        headers.join(","),
+        ...teeRows.map((r) =>
+          [
+            csvCell(r.createdIso),
+            csvCell((r.amountCents / 100).toFixed(2)),
+            csvCell(r.teeShirtSize ?? ""),
+            csvCell(r.tee100Eligible ? "yes" : "no"),
+            csvCell(publicSupporterDisplayName(r)),
+            csvCell(r.donorEmail ?? ""),
+            csvCell(r.teeShipLine1 ?? ""),
+            csvCell(r.teeShipLine2 ?? ""),
+            csvCell(r.teeShipCity ?? ""),
+            csvCell(r.teeShipState ?? ""),
+            csvCell(r.teeShipPostal ?? ""),
+            csvCell(r.teeShipCountry ?? ""),
+            csvCell(r.sessionId),
+            csvCell(r.paymentIntentId ?? ""),
+            csvCell(r.raceParticipant ? "yes" : "no"),
+            csvCell(r.fundraisingType),
+          ].join(","),
+        ),
+      ]
+      const csv = "\uFEFF" + lines.join("\n") + "\n"
+      return new NextResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="spartan-tee-fulfillment-${dateStamp}.csv"`,
+          "Cache-Control": "no-store",
+        },
+      })
+    }
 
     if (kind === "runners") {
       const raceRows = rows.filter((r) => r.raceParticipant)

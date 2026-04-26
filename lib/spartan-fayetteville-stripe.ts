@@ -26,6 +26,18 @@ export type SpartanFayettevilleDonation = {
   raceParticipantName: string | null
   attribution: "athlete" | "general_nc_united" | "manual_name"
   tierPreference: string
+  /**
+   * NC United team tee (Stripe metadata `tee_sz` / `tee_100_eligible`) when checkout required size+ship
+   * ($100+ single gift, or race path). Omitted in API until re-sync from Stripe; not stored in Supabase.
+   */
+  tee100Eligible: boolean
+  teeShirtSize: string | null
+  teeShipLine1: string | null
+  teeShipLine2: string | null
+  teeShipCity: string | null
+  teeShipState: string | null
+  teeShipPostal: string | null
+  teeShipCountry: string | null
 }
 
 export type SpartanAthleteAggregate = {
@@ -95,6 +107,17 @@ export async function listSpartanFayettevilleDonations(
           ? m.race_participant_name.trim().slice(0, 120)
           : null
 
+      const tee100Eligible = m.tee_100_eligible === "yes"
+      const teeShirtSize =
+        typeof m.tee_sz === "string" && m.tee_sz.trim() ? m.tee_sz.trim().toUpperCase().slice(0, 8) : null
+      const teeShipLine1 = typeof m.ship_1 === "string" && m.ship_1.trim() ? m.ship_1.trim().slice(0, 120) : null
+      const teeShipLine2 = typeof m.ship_2 === "string" && m.ship_2.trim() ? m.ship_2.trim().slice(0, 120) : null
+      const teeShipCity = typeof m.ship_city === "string" && m.ship_city.trim() ? m.ship_city.trim().slice(0, 80) : null
+      const teeShipState = typeof m.ship_st === "string" && m.ship_st.trim() ? m.ship_st.trim().slice(0, 32) : null
+      const teeShipPostal = typeof m.ship_zip === "string" && m.ship_zip.trim() ? m.ship_zip.trim().slice(0, 20) : null
+      const teeShipCountry =
+        typeof m.ship_ctry === "string" && m.ship_ctry.trim() ? m.ship_ctry.trim().slice(0, 2).toUpperCase() : null
+
       let attr: SpartanFayettevilleDonation["attribution"]
       if (m.fundraising_attribution === "manual_name") {
         attr = "manual_name"
@@ -126,6 +149,14 @@ export async function listSpartanFayettevilleDonations(
         raceParticipantName,
         attribution: attr,
         tierPreference: typeof m.tier_preference === "string" ? m.tier_preference : "",
+        tee100Eligible,
+        teeShirtSize,
+        teeShipLine1,
+        teeShipLine2,
+        teeShipCity,
+        teeShipState,
+        teeShipPostal,
+        teeShipCountry,
       })
     }
 

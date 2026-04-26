@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { AdminHeader } from "@/components/admin-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -119,6 +119,11 @@ export default function AdminFundraisingPage() {
 
   const [exportBusy, setExportBusy] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
+  const [teeRollup, setTeeRollup] = useState<{
+    totalTeeOrders: number
+    bySize: { size: string; count: number }[]
+  } | null>(null)
+  const [teeRollupError, setTeeRollupError] = useState<string | null>(null)
 
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [receiptRow, setReceiptRow] = useState<SpartanDonationRow | null>(null)
@@ -130,6 +135,31 @@ export default function AdminFundraisingPage() {
   const [receiptPreviewBusy, setReceiptPreviewBusy] = useState(false)
   const [receiptSendBusy, setReceiptSendBusy] = useState(false)
   const [receiptMsg, setReceiptMsg] = useState<string | null>(null)
+
+  const fetchTeeRollup = useCallback(() => {
+    setTeeRollupError(null)
+    return fetch("/api/admin/spartan-tee-fulfillment?days=120", { credentials: "include" })
+      .then((r) => r.json())
+      .then((j: { error?: string; totalTeeOrders?: number; bySize?: { size: string; count: number }[] }) => {
+        if (typeof j.error === "string") {
+          setTeeRollupError(j.error)
+          setTeeRollup(null)
+          return
+        }
+        setTeeRollup({
+          totalTeeOrders: typeof j.totalTeeOrders === "number" ? j.totalTeeOrders : 0,
+          bySize: Array.isArray(j.bySize) ? j.bySize : [],
+        })
+      })
+      .catch((e) => {
+        setTeeRollupError(e instanceof Error ? e.message : "Tee rollup failed")
+        setTeeRollup(null)
+      })
+  }, [])
+
+  useEffect(() => {
+    void fetchTeeRollup()
+  }, [fetchTeeRollup])
 
   useEffect(() => {
     setMounted(true)
@@ -188,6 +218,7 @@ export default function AdminFundraisingPage() {
       setReimbursementsPaidTotalCents(typeof j.reimbursementsPaidTotalCents === "number" ? j.reimbursementsPaidTotalCents : 0)
       setGrossSessionTotalCents(typeof j.grossSessionTotalCents === "number" ? j.grossSessionTotalCents : 0)
       setNetAfterReimbursementsCents(typeof j.netAfterReimbursementsCents === "number" ? j.netAfterReimbursementsCents : 0)
+      void fetchTeeRollup()
     } catch (e) {
       setDonationsError(e instanceof Error ? e.message : "Load failed")
       setDonations(null)
@@ -201,7 +232,7 @@ export default function AdminFundraisingPage() {
     }
   }
 
-  const downloadSpartanCsv = async (kind: "runners" | "receipts" | "credits") => {
+  const downloadSpartanCsv = async (kind: "runners" | "receipts" | "credits" | "tees") => {
     setExportError(null)
     setExportBusy(kind)
     try {
@@ -597,11 +628,59 @@ export default function AdminFundraisingPage() {
 
             <Card>
               <CardHeader>
+                <CardTitle className="text-base">NC United team tees ($100+ or race checkout)</CardTitle>
+                <CardDescription>
+                  Shirt size and shipping live on each paid{" "}
+                  <strong className="text-foreground">Stripe Checkout</strong> session as{" "}
+                  <code className="rounded bg-muted px-1 text-xs">tee_sz</code> and{" "}
+                  <code className="rounded bg-muted px-1 text-xs">ship_*</code> — not a separate database list. Eligibility is{" "}
+                  <strong className="text-foreground">per charge</strong>: one payment of $100+ (or a race entry) includes a tee;
+                  three separate $50 gifts do not combine to $100 for a tee.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                {teeRollupError ? (
+                  <p className="text-destructive text-sm" role="alert">
+                    {teeRollupError}
+                  </p>
+                ) : teeRollup ? (
+                  <p className="text-sm text-muted-foreground">
+                    <strong className="text-foreground">{teeRollup.totalTeeOrders}</strong> tee order
+                    {teeRollup.totalTeeOrders === 1 ? "" : "s"} (last 120 days, paid sessions with a size).{" "}
+                    {teeRollup.bySize.length > 0 ? (
+                      <span className="text-foreground">
+                        Counts:{" "}
+                        {teeRollup.bySize.map((r) => `${r.size}: ${r.count}`).join(" · ")}
+                      </span>
+                    ) : (
+                      <span>None in window yet.</span>
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground text-sm">Loading tee counts…</p>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-fit"
+                  disabled={exportBusy !== null}
+                  onClick={() => void downloadSpartanCsv("tees")}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {exportBusy === "tees" ? "Preparing…" : "Download tee list (CSV)"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle className="text-base">CSV exports (last 120 days)</CardTitle>
                 <CardDescription>
                   Three lanes: <strong className="text-foreground">Runners</strong> (race entry path + who is on course in
                   metadata), <strong className="text-foreground">Receipts</strong> (payer-focused for records),{" "}
-                  <strong className="text-foreground">Credits</strong> (fundraising attribution aligned with corrections).
+                  <strong className="text-foreground">Credits</strong> (fundraising attribution aligned with corrections). Use the
+                  card above for <strong className="text-foreground">tee sizes + ship addresses</strong>.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">

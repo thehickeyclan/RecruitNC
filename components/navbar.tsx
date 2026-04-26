@@ -719,6 +719,53 @@ export function Navbar() {
                 }}
               >
                 <div className="flex flex-col space-y-4 mt-8 pb-8">
+                  {user && (
+                    <div className="border-b border-gray-200 -mt-2 pb-4 space-y-2">
+                      <p className="px-1 text-xs text-gray-500 truncate" title={user.email ?? ""}>
+                        Signed in as {user.email}
+                      </p>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                      >
+                        <a href="/profile" onClick={() => setIsOpen(false)}>
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </a>
+                      </Button>
+                      {showMyRecruits && (
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                        >
+                          <a href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
+                            <Star className="h-4 w-4 mr-2" />
+                            My Recruits
+                          </a>
+                        </Button>
+                      )}
+                      <Button
+                        onClick={() => {
+                          handleSignOut()
+                          setIsOpen(false)
+                        }}
+                        variant="outline"
+                        className="w-full text-red-600 border-red-600 hover:bg-red-600 hover:text-white mobile-optimized min-h-[44px]"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  )}
+                  {!user && isLoading && (
+                    <div className="border-b border-gray-200 -mt-2 pb-4 space-y-2">
+                      <div className="h-4 w-48 max-w-full bg-gray-200 animate-pulse rounded" />
+                      <div className="h-9 w-full bg-gray-200 animate-pulse rounded-md" />
+                      <div className="h-9 w-full bg-gray-200 animate-pulse rounded-md" />
+                    </div>
+                  )}
                   <a href="/" className={mobileLinkClass("/")} onClick={() => setIsOpen(false)}>Home</a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(athletesItems))}>Athletes</div>
@@ -814,8 +861,8 @@ export function Navbar() {
                       {item.label}
                     </a>
                   ))}
-                  <div className="border-t pt-4 mt-4">
-                    {!user && !isLoading ? (
+                  {!user && !isLoading && (
+                    <div className="border-t pt-4 mt-4">
                       <div className="space-y-2">
                         <a
                           href="/auth/signin"
@@ -832,49 +879,8 @@ export function Navbar() {
                           Sign Up
                         </a>
                       </div>
-                    ) : user ? (
-                      <div className="space-y-2">
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
-                        >
-                          <a href="/profile" onClick={() => setIsOpen(false)}>
-                            <User className="h-4 w-4 mr-2" />
-                            Profile
-                          </a>
-                        </Button>
-                        {showMyRecruits && (
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="w-full bg-transparent mobile-optimized min-h-[44px]"
-                          >
-                            <a href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
-                              <Star className="h-4 w-4 mr-2" />
-                              My Recruits
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          onClick={() => {
-                            handleSignOut()
-                            setIsOpen(false)
-                          }}
-                          variant="outline"
-                          className="w-full text-red-600 border-red-600 hover:bg-red-600 hover:text-white mobile-optimized min-h-[44px]"
-                        >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Sign Out
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="w-full h-9 bg-gray-200 animate-pulse rounded-md"></div>
-                        <div className="w-full h-9 bg-gray-200 animate-pulse rounded-md"></div>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
