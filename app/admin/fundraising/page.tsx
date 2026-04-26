@@ -112,6 +112,11 @@ export default function AdminFundraisingPage() {
   const [creditFixBusy, setCreditFixBusy] = useState(false)
   const [creditFixMsg, setCreditFixMsg] = useState<string | null>(null)
 
+  const [reassignOpen, setReassignOpen] = useState(false)
+  const [reassignRow, setReassignRow] = useState<SpartanDonationRow | null>(null)
+  const [reassignCode, setReassignCode] = useState("")
+  const [reassignBusy, setReassignBusy] = useState(false)
+
   const [exportBusy, setExportBusy] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
 
@@ -225,21 +230,27 @@ export default function AdminFundraisingPage() {
     }
   }
 
+  async function postSpartanCreditCorrection(sessionId: string, athleteCode: string): Promise<string> {
+    const res = await fetch("/api/admin/spartan-credit-corrections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        session_id: sessionId.trim(),
+        athlete_code: athleteCode.trim(),
+      }),
+    })
+    const j = (await res.json()) as { error?: string; message?: string }
+    if (!res.ok) throw new Error(j.error || "Save failed")
+    return j.message ?? "Saved."
+  }
+
   const applySpartanCreditFix = async () => {
     setCreditFixMsg(null)
     setCreditFixBusy(true)
     try {
-      const res = await fetch("/api/admin/spartan-credit-corrections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: creditFixSessionId.trim(),
-          athlete_code: creditFixCode.trim(),
-        }),
-      })
-      const j = (await res.json()) as { error?: string; message?: string }
-      if (!res.ok) throw new Error(j.error || "Save failed")
-      setCreditFixMsg(j.message ?? "Saved.")
+      const msg = await postSpartanCreditCorrection(creditFixSessionId, creditFixCode)
+      setCreditFixMsg(msg)
       setCreditFixSessionId("")
       setCreditFixCode("")
       if (donations !== null) await loadDonations()
@@ -247,6 +258,32 @@ export default function AdminFundraisingPage() {
       setCreditFixMsg(e instanceof Error ? e.message : "Save failed")
     } finally {
       setCreditFixBusy(false)
+    }
+  }
+
+  const openReassignDialog = (d: SpartanDonationRow) => {
+    setReassignRow(d)
+    setReassignCode((d.athleteCode ?? "").trim())
+    setReassignOpen(true)
+  }
+
+  const applyReassignFromRow = async () => {
+    if (!reassignRow) return
+    setReassignBusy(true)
+    try {
+      const msg = await postSpartanCreditCorrection(reassignRow.sessionId, reassignCode)
+      toast({ title: "Fundraising credit updated", description: msg })
+      setReassignOpen(false)
+      setReassignRow(null)
+      await loadDonations()
+    } catch (e) {
+      toast({
+        title: "Could not save",
+        description: e instanceof Error ? e.message : "Save failed",
+        variant: "destructive",
+      })
+    } finally {
+      setReassignBusy(false)
     }
   }
 
@@ -783,6 +820,17 @@ export default function AdminFundraisingPage() {
                                   {d.athleteCode}
                                 </span>
                               )}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 h-7 w-full max-w-[11rem] text-[10px]"
+                                onClick={() => openReassignDialog(d)}
+                                title="Wrong athlete at checkout? Set who gets credit — no SQL."
+                              >
+                                <Wrench className="mr-1 h-3 w-3" />
+                                Reassign credit
+                              </Button>
                             </TableCell>
                             <TableCell className="text-xs">
                               {d.attribution === "athlete"
@@ -920,6 +968,65 @@ export default function AdminFundraisingPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog
+          open={reassignOpen}
+          onOpenChange={(o) => {
+            setReassignOpen(o)
+            if (!o) setReassignRow(null)
+          }}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Reassign fundraising credit</DialogTitle>
+              <DialogDescription>
+                Checkout picked the wrong athlete. Enter the correct{" "}
+                <span className="font-mono text-xs">NCU-…-YY</span> code — the Stripe id below is from this row (you do
+                not need to copy it from Stripe).
+              </DialogDescription>
+            </DialogHeader>
+            {reassignRow ? (
+              <div className="space-y-3 text-sm">
+                <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs">
+                  <p>
+                    <span className="text-muted-foreground">Donor: </span>
+                    {reassignRow.donorName ?? "—"}{" "}
+                    <span className="text-muted-foreground">· {formatMoney(reassignRow.amountCents, reassignRow.currency)}</span>
+                  </p>
+                  <p className="text-muted-foreground mt-1 font-mono text-[10px] break-all">{reassignRow.sessionId}</p>
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="reassign-code">Credit this gift to (NCU code)</Label>
+                  <Input
+                    id="reassign-code"
+                    className="font-mono text-xs"
+                    value={reassignCode}
+                    onChange={(e) => setReassignCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. NCU-SHUSTER-28"
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            ) : null}
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setReassignOpen(false)}
+                disabled={reassignBusy}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => void applyReassignFromRow()}
+                disabled={reassignBusy || !reassignCode.trim() || !reassignRow}
+              >
+                {reassignBusy ? "Saving…" : "Save"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={receiptOpen} onOpenChange={setReceiptOpen}>
           <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">

@@ -7,8 +7,8 @@ import {
   RealCostTwoLeversGraphic,
 } from "@/components/news/real-cost-article-graphics"
 
-/** Campaign headline graphic (aligned to NC United social): annual + career totals. Also listed in `lib/news.ts` for cards. */
-const HERO_SRC = "/images/real-cost-campaign-headline-nc-united.png"
+/** Hero banner for article + `lib/news.ts` (cards/carousel). Social/tall version: `real-cost-campaign-headline-nc-united.png` inline where needed. */
+const HERO_SRC = "/images/real-cost-elite-wrestling-nc-hero.png"
 
 /**
  * What Elite Wrestling Really Costs — NC United analysis, 529, 501(c)(3), Spartan.
@@ -24,13 +24,13 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
         <em>Raleigh, NC — April 2026</em>
       </p>
 
-      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-[#0a1628] shadow-sm">
-        <div className="relative aspect-[4/5] w-full min-h-[220px] sm:aspect-[16/11] sm:min-h-[280px]">
+      <figure className="my-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+        <div className="relative aspect-[16/10] w-full min-h-[180px] sm:min-h-[220px]">
           <Image
             src={HERO_SRC}
             alt="NC United: $15,000–$25,000 per year; $70,000–$100,000 or more over a career — most families never see it as one number"
             fill
-            className="object-contain object-center"
+            className="object-cover object-center"
             sizes="(max-width: 768px) 100vw, 48rem"
             priority
           />
