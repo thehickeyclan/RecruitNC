@@ -116,7 +116,7 @@ export default function ClassOf2026RankingsPage() {
                         <img
                           src={athletePhotos[index] || athlete.photourl || "/placeholder.svg"}
                           alt={athlete.name}
-                          className={`w-full h-full object-cover ${index === 2 ? "object-[center_25%]" : ""}`}
+                          className="w-full h-full object-cover [object-position:center_18%]"
                         />
                         {athlete.has_ranked_win && (
                           <div className="absolute bottom-2 left-2">

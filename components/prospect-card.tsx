@@ -218,7 +218,7 @@ export function ProspectCard({ athlete }: ProspectCardProps) {
               src={athletePhoto || "/placeholder.svg"}
               alt={athlete.name || "Athlete"}
               fill
-              className="object-cover object-center"
+              className="object-cover [object-position:center_18%]"
               onError={() => setImageError(true)}
               priority
             />

@@ -17,6 +17,10 @@ export interface NewsItem {
   category?: string
   categoryBadgeClass?: string
   readTime?: string
+  /** Optional deck line on /news/[slug] under the title */
+  subtitle?: string
+  /** Optional byline, e.g. "Jim Bernthal" */
+  author?: string
   image?: string
   imagePosition?: "top" | "center"
   /** Use "contain" to show full image (e.g. product shots); default "cover" fills the card. */
@@ -36,6 +40,27 @@ export interface NewsItem {
 
 /** All news items, newest first. Add new items here; they appear on /news and in home carousel by order. */
 const ALL_NEWS: NewsItem[] = [
+  {
+    id: "finding-flow-on-the-mat",
+    slug: "finding-flow-on-the-mat",
+    title: "Finding Flow on the Mat",
+    subtitle: 'How Wrestlers Experience "The Zone"',
+    summary:
+      "Elite NC United wrestlers describe trust, instinct, and full immersion — and how flow theory from Mihaly Csikszentmihalyi maps to what they feel in big matches, plus what breaks the zone and what helps get there before competition.",
+    href: "/news/finding-flow-on-the-mat",
+    date: "2026-04-16",
+    image: "/images/finding-flow-on-the-mat-hero.png",
+    imagePosition: "center",
+    imageFit: "cover",
+    /** Dark landscape art — use black frame on /news/[slug] hero */
+    imageBannerBgClass: "bg-black",
+    newsListBanner: true,
+    category: "MINDSET",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "14 min read",
+    author: "Jim Bernthal",
+    isAnnouncement: true,
+  },
   {
     id: "real-cost-elite-wrestling-nc-smarter-build",
     slug: "real-cost-elite-wrestling-nc-smarter-build",

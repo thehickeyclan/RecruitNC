@@ -205,7 +205,7 @@ export default function CollegeMyRecruitsPage() {
                         src={r.photourl}
                         alt=""
                         fill
-                        className="object-cover"
+                        className="object-cover object-top"
                       />
                     ) : (
                       <span className="text-2xl font-bold text-gray-600 flex items-center justify-center w-full h-full">

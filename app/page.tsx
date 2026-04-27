@@ -480,7 +480,7 @@ export default function HomePage() {
                                     src={athlete.photourl}
                                     alt={athlete.name}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover object-top"
                                   />
                                 </div>
                               )}
@@ -544,7 +544,7 @@ export default function HomePage() {
                                     src={athlete.photourl}
                                     alt={athlete.name}
                                     fill
-                                    className="object-cover"
+                                    className="object-cover object-top"
                                   />
                                 </div>
                               )}

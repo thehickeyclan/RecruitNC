@@ -382,12 +382,13 @@ export function ProfessionalCommitmentCard({ athlete }: ProfessionalCommitmentCa
   /** Shown below header on card back only when ranked (header already shows Class of). */
   const backCardNcRank = ncRankPositive != null && ncRankPositive <= 30 ? ncRankPositive : null
 
+  /** Bias above center so foreheads/headgear stay in frame; ~18% is a good default for full-body and mat shots. */
   const getImagePositionClass = () => {
     const athleteName = athlete.name?.toLowerCase() || ""
     if (athleteName.includes("lorenzo alston")) {
-      return "object-cover object-[center_30%]"
+      return "object-cover [object-position:center_30%]"
     }
-    return "object-cover object-top"
+    return "object-cover [object-position:center_18%]"
   }
 
   const hasValidClub = () => {

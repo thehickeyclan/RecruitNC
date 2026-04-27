@@ -1890,7 +1890,7 @@ const activityTrendData = useMemo(() => {
                               <img
                                 src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
                                 alt={action.athlete_name}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-10 h-10 rounded-full object-cover object-top"
                               />
                             )}
                             <div className="flex-1 min-w-0">
@@ -1978,7 +1978,7 @@ const activityTrendData = useMemo(() => {
                               <img
                                 src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
                                 alt={action.athlete_name}
-                                className="w-10 h-10 rounded-full object-cover"
+                                className="w-10 h-10 rounded-full object-cover object-top"
                               />
                             )}
                             <div className="flex-1 min-w-0">
@@ -2055,7 +2055,7 @@ const activityTrendData = useMemo(() => {
                           <img
                             src={action.athlete_photo || "/placeholder.svg?height=40&width=40"}
                             alt={action.athlete_name}
-                            className="w-10 h-10 rounded-full object-cover"
+                            className="w-10 h-10 rounded-full object-cover object-top"
                           />
                           <div className="flex-1 min-w-0">
                             <p className={`font-medium text-sm ${isCompleted(action) ? 'text-muted-foreground/70 line-through' : 'text-foreground'}`}>
@@ -2885,7 +2885,7 @@ const activityTrendData = useMemo(() => {
                         <img
                           src={activity.athlete_photo || "/placeholder.svg?height=48&width=48"}
                           alt={activity.athlete_name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover object-top"
                         />
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">

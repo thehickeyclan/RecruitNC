@@ -9,10 +9,12 @@ import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap
 import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior-sendoff"
 import { LynchburgBuildingAProgramWithIntentionContent } from "../content/lynchburg-building-a-program-with-intention"
 import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cost-elite-wrestling-nc-smarter-build"
+import { FindingFlowOnTheMatTheZoneContent } from "../content/finding-flow-on-the-mat-the-zone"
 import { NchsaaArticleComments } from "@/components/nchsaa-article-comments"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "finding-flow-on-the-mat": () => <FindingFlowOnTheMatTheZoneContent />,
   "real-cost-elite-wrestling-nc-smarter-build": () => <RealCostEliteWrestlingNcSmarterBuildContent />,
   "lynchburg-building-a-program-with-intention": () => <LynchburgBuildingAProgramWithIntentionContent />,
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
@@ -59,17 +61,23 @@ export default async function NewsAnnouncementPage({
           <h1 className="mt-2 text-2xl md:text-3xl font-bold text-[#003366]">
             {item.title}
           </h1>
+          {item.subtitle ? (
+            <p className="mt-2 text-lg md:text-xl font-medium leading-snug text-slate-600">{item.subtitle}</p>
+          ) : null}
           <p className="mt-2 text-slate-500 text-sm">
             {new Date(item.date).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
+            {item.author ? <span className="text-slate-600"> · By {item.author}</span> : null}
           </p>
         </header>
         {/* Class of 2026 sendoff & real-cost financial piece: hero lives inside article body to avoid showing the same banner twice. */}
         {item.image && slug !== "class-of-2026-senior-sendoff" && slug !== "real-cost-elite-wrestling-nc-smarter-build" ? (
-          <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
+          <div
+            className={`mb-6 overflow-hidden rounded-xl border border-slate-200 shadow-sm ${item.imageBannerBgClass ?? "bg-slate-100"}`}
+          >
             <div
               className={`relative w-full overflow-hidden ${
                 item.imageFit === "contain"

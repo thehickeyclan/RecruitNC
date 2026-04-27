@@ -40,8 +40,8 @@ export default function NewsPage() {
                       className={`relative w-full overflow-hidden border-b border-slate-100 ${
                         item.imageFit === "contain"
                           ? `h-64 sm:h-72 md:h-96 ${item.imageBannerBgClass ?? "bg-slate-100"}`
-                          : // Match home main story: aspect frame for cover (no h-* strip/skyscraper fights).
-                              "aspect-[16/10] bg-slate-100 md:aspect-[2.15/1]"
+                          : // Match home main story: aspect frame; optional dark bg from item
+                              `aspect-[16/10] md:aspect-[2.15/1] ${item.imageBannerBgClass ?? "bg-slate-100"}`
                       }`}
                     >
                       <Image

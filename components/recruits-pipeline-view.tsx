@@ -296,7 +296,7 @@ export function RecruitsPipelineView({
                                   <img
                                     src={prospect.photourl || "/placeholder.svg?height=56&width=56&query=wrestler"}
                                     alt={prospect.name}
-                                    className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover border border-border flex-shrink-0 ${
+                                    className={`w-12 h-12 md:w-14 md:h-14 rounded-lg object-cover object-top border border-border flex-shrink-0 ${
                                       committedElsewhere ? "grayscale" : ""
                                     }`}
                                   />
@@ -498,7 +498,7 @@ export function RecruitsPipelineView({
                             <img
                               src={prospect.photourl || "/placeholder.svg"}
                               alt={prospect.name}
-                              className="w-10 h-10 rounded-lg object-cover border border-border"
+                              className="w-10 h-10 rounded-lg object-cover object-top border border-border"
                             />
                           )}
                           <div className="flex-1 min-w-0">

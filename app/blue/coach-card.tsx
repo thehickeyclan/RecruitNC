@@ -24,7 +24,7 @@ export function CoachCard({ imageSrc, imageAlt, name, shortBio, longBio }: Props
           src={imageSrc}
           alt={imageAlt}
           fill
-          className="object-cover"
+          className="object-cover [object-position:center_18%]"
           unoptimized
           sizes="(max-width: 768px) 100vw, 33vw"
         />
