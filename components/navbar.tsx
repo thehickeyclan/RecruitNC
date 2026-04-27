@@ -600,10 +600,23 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button and auth buttons */}
-          <div className="md:hidden flex items-center gap-2">
+          {/* Mobile menu button and auth buttons — Profile first (no Account dropdown on small screens) */}
+          <div className="md:hidden flex items-center gap-1 sm:gap-2 flex-nowrap min-w-0">
+            {user && (
+              <a
+                href="/profile"
+                className={`flex items-center gap-1.5 shrink-0 rounded-md px-2 py-2 text-white hover:bg-white/10 min-h-[44px] font-semibold text-sm ${
+                  pathname.startsWith("/profile") ? "bg-white/15 ring-1 ring-white/30" : ""
+                }`}
+                aria-label="My Profile"
+                aria-current={pathname.startsWith("/profile") ? "page" : undefined}
+              >
+                <User className="h-5 w-5 shrink-0" />
+                <span className="max-[380px]:sr-only">Profile</span>
+              </a>
+            )}
             {user && !pathname.startsWith("/forum") && (
-              <a href="/forum" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px]" aria-label="Community">
+              <a href="/forum" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px] shrink-0" aria-label="Community">
                 <Users2 className="h-5 w-5" />
               </a>
             )}
@@ -718,22 +731,21 @@ export function Navbar() {
                   zIndex: 100,
                 }}
               >
-                <div className="flex flex-col space-y-4 mt-8 pb-8">
+                <div className="flex flex-col space-y-4 mt-2 pb-8">
                   {user && (
-                    <div className="border-b border-gray-200 -mt-2 pb-4 space-y-2">
-                      <p className="px-1 text-xs text-gray-500 truncate" title={user.email ?? ""}>
-                        Signed in as {user.email}
-                      </p>
+                    <div className="border-b border-gray-200 pb-4 space-y-2">
                       <Button
                         asChild
-                        variant="outline"
-                        className="w-full bg-transparent mobile-optimized min-h-[44px]"
+                        className="w-full mobile-optimized min-h-[48px] bg-[#003366] text-white hover:bg-[#0a2a6e] font-semibold"
                       >
                         <a href="/profile" onClick={() => setIsOpen(false)}>
                           <User className="h-4 w-4 mr-2" />
-                          Profile
+                          My Profile
                         </a>
                       </Button>
+                      <p className="px-1 text-xs text-gray-500 truncate" title={user.email ?? ""}>
+                        Signed in as {user.email}
+                      </p>
                       {showMyRecruits && (
                         <Button
                           asChild

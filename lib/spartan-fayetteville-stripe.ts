@@ -173,9 +173,10 @@ export function aggregateSpartanByAthlete(rows: SpartanFayettevilleDonation[]): 
   const map = new Map<string, SpartanAthleteAggregate>()
   for (const r of rows) {
     if (!r.athleteCode?.trim()) continue
-    const k = r.athleteCode.trim()
+    /** Merge on lowercase so NCU-hickey-29 and NCU-HICKEY-29 add together (matches profile lookup by lowercased code). */
+    const k = r.athleteCode.trim().toLowerCase()
     const cur = map.get(k) ?? {
-      athleteCode: k,
+      athleteCode: r.athleteCode.trim(),
       totalCents: 0,
       donationCount: 0,
       raceSignupCount: 0,

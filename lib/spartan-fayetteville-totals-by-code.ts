@@ -22,7 +22,8 @@ export type FayettevilleCodeStats = {
 
 type CacheEntry = { expiresAt: number; map: Map<string, FayettevilleCodeStats> }
 let stripeListCache: CacheEntry | null = null
-const STRIPE_LIST_CACHE_MS = 90_000
+/** Keep short: profile + admin must match public /spartan (which lists Stripe every request) for the same 120d window. */
+const STRIPE_LIST_CACHE_MS = 0
 
 /**
  * Per–NCU-code stats for the Fayetteville campaign from Stripe, after `spartan_credit_corrections`
