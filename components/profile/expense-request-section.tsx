@@ -49,7 +49,7 @@ function statusVariant(s: ExpenseRequestStatus): "default" | "secondary" | "dest
   return "outline"
 }
 
-export function ExpenseRequestSection({ linkedAthletes }: { linkedAthletes: Linked[] }) {
+export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?: Linked[] }) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)

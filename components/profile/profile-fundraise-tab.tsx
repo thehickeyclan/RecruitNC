@@ -36,6 +36,7 @@ export function ProfileFundraiseTab({
   spartanFundraisingLoading,
   linkedLoading,
   linkedCount,
+  linkedAthletes,
 }: ProfileFundraiseTabProps) {
   return (
     <div className="space-y-6">
