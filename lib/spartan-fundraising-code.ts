@@ -1,6 +1,8 @@
 /**
- * Spartan fundraising codes: NCU-{LAST}-{YY} with first-initial + numeric suffix when needed.
- * Logic matches scripts/generate-spartan-fundraising-sql.mjs (deterministic order: athlete id).
+ * Spartan fundraising codes: NCU-{LAST}-{YY}, with collision handling when multiple athletes
+ * share last name + grad year: append a minimal unique prefix of the first name (letters only),
+ * e.g. Aidan vs Addison Gore → NCU-GOREAI-YY and NCU-GOREAD-YY (not NCU-GOREA-YY vs NCU-GOREA2-YY).
+ * Keep scripts/generate-spartan-fundraising-sql.mjs in sync when changing rules.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -62,6 +64,45 @@ function coalesceGradYear(raw: unknown): number | null {
 }
 
 /**
+ * First-name letters only (A–Z), then take the first `len` characters (for code base disambiguation).
+ */
+export function sanitizeFirstPrefixForCode(firstName: string, len: number): string {
+  const letters = (firstName ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z]/g, "")
+    .toUpperCase()
+  if (!letters.length) return "X"
+  return letters.slice(0, Math.max(1, len))
+}
+
+const MAX_PREFIX_LEN = 20
+
+type CollisionMember = { id: string; firstName: string }
+
+/**
+ * For same (last name + grad year), build a unique base = lastSan + first-name prefix
+ * with minimal length L so all bases in the group differ (e.g. GORE + AI vs GORE + AD).
+ * Members sorted by `id` for deterministic tie-breaks only in the rare fallback case.
+ */
+export function buildCollisionBasesByAthleteId(lastSan: string, members: CollisionMember[]): Map<string, string> {
+  const sorted = [...members].sort((a, b) => a.id.localeCompare(b.id))
+  const firstNames = sorted.map((m) => m.firstName || "")
+  const m = new Map<string, string>()
+
+  for (let L = 1; L <= MAX_PREFIX_LEN; L++) {
+    const bases = firstNames.map((fn) => lastSan + sanitizeFirstPrefixForCode(fn, L))
+    if (new Set(bases).size === sorted.length) {
+      sorted.forEach((row, i) => m.set(row.id, bases[i]))
+      return m
+    }
+  }
+  // Extremely rare: fall back to lastSan + V1, V2, …
+  sorted.forEach((row, i) => m.set(row.id, `${lastSan}V${i + 1}`))
+  return m
+}
+
+/**
  * Assign fundraising codes to every athlete row (same rules as CSV generator).
  * Rows must be the full roster so collision groups are correct.
  */
@@ -96,20 +137,32 @@ export function buildFundraisingEntries(sources: AthleteFundraisingSource[]): Fu
 
   rows.sort((a, b) => a.id.localeCompare(b.id))
 
-  const keyCounts = new Map<string, number>()
+  const groupKey = (r: Row) => `${r.lastSan}|${r.gradYear}`
+  const byKey = new Map<string, Row[]>()
   for (const r of rows) {
-    const k = `${r.lastSan}|${r.gradYear}`
-    keyCounts.set(k, (keyCounts.get(k) ?? 0) + 1)
+    const k = groupKey(r)
+    if (!byKey.has(k)) byKey.set(k, [])
+    byKey.get(k)!.push(r)
+  }
+
+  const baseByAthleteId = new Map<string, string>()
+  for (const [, group] of byKey) {
+    if (group.length === 1) {
+      baseByAthleteId.set(group[0].id, group[0].lastSan)
+    } else {
+      const subMap = buildCollisionBasesByAthleteId(
+        group[0].lastSan,
+        group.map((g) => ({ id: g.id, firstName: g.firstName })),
+      )
+      for (const [id, b] of subMap) baseByAthleteId.set(id, b)
+    }
   }
 
   const codes = new Set<string>()
   const out: FundraisingAthleteEntry[] = []
 
   for (const r of rows) {
-    const k = `${r.lastSan}|${r.gradYear}`
-    const collision = (keyCounts.get(k) ?? 0) > 1
-    const fi = (r.firstName || "?")[0]?.toUpperCase() || "X"
-    const base = collision ? `${r.lastSan}${fi}` : r.lastSan
+    const base = baseByAthleteId.get(r.id) ?? r.lastSan
     const yy = String(r.gradYear).slice(-2)
     let code = `NCU-${base}-${yy}`
     let n = 2

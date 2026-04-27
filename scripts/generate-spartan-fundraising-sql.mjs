@@ -25,6 +25,35 @@ function sanitizeLast(s) {
     .slice(0, 24)
 }
 
+/** First-name letters only, then first `len` chars — must match lib/spartan-fundraising-code.ts */
+function sanitizeFirstPrefixForCode(firstName, len) {
+  const letters = (firstName ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z]/g, "")
+    .toUpperCase()
+  if (!letters.length) return "X"
+  return letters.slice(0, Math.max(1, len))
+}
+
+const MAX_PREFIX_LEN = 20
+
+/** Must match `buildCollisionBasesByAthleteId` in lib/spartan-fundraising-code.ts */
+function buildCollisionBasesByAthleteId(lastSan, members) {
+  const sorted = [...members].sort((a, b) => String(a.id).localeCompare(String(b.id)))
+  const firstNames = sorted.map((m) => m.firstName || "")
+  const m = new Map()
+  for (let L = 1; L <= MAX_PREFIX_LEN; L++) {
+    const bases = firstNames.map((fn) => lastSan + sanitizeFirstPrefixForCode(fn, L))
+    if (new Set(bases).size === sorted.length) {
+      sorted.forEach((row, i) => m.set(row.id, bases[i]))
+      return m
+    }
+  }
+  sorted.forEach((row, i) => m.set(row.id, `${lastSan}V${i + 1}`))
+  return m
+}
+
 function escapeSql(s) {
   if (s == null) return ""
   return String(s).replace(/'/g, "''")
@@ -63,6 +92,7 @@ for (let i = 1; i < lines.length; i++) {
     continue
   }
   rows.push({
+    id: `row-${i}`,
     lastName,
     firstName,
     gradYear,
@@ -72,21 +102,33 @@ for (let i = 1; i < lines.length; i++) {
   })
 }
 
-// Collision groups: same lastSan + gradYear → disambiguate with first initial
-const keyCounts = new Map()
+// Collision groups: same lastSan + gradYear — minimal first-name letter prefix (match lib)
+const groupKey = (r) => `${r.lastSan}|${r.gradYear}`
+const byKey = new Map()
 for (const r of rows) {
-  const k = `${r.lastSan}|${r.gradYear}`
-  keyCounts.set(k, (keyCounts.get(k) || 0) + 1)
+  const k = groupKey(r)
+  if (!byKey.has(k)) byKey.set(k, [])
+  byKey.get(k).push(r)
+}
+
+const baseByRowId = new Map()
+for (const [, group] of byKey) {
+  if (group.length === 1) {
+    baseByRowId.set(group[0].id, group[0].lastSan)
+  } else {
+    const sub = buildCollisionBasesByAthleteId(
+      group[0].lastSan,
+      group.map((g) => ({ id: g.id, firstName: g.firstName })),
+    )
+    for (const [id, b] of sub) baseByRowId.set(id, b)
+  }
 }
 
 const codes = new Set()
 const inserts = []
 
 for (const r of rows) {
-  const k = `${r.lastSan}|${r.gradYear}`
-  const collision = keyCounts.get(k) > 1
-  const fi = (r.firstName || "?")[0]?.toUpperCase() || "X"
-  let base = collision ? `${r.lastSan}${fi}` : r.lastSan
+  const base = baseByRowId.get(r.id) ?? r.lastSan
   let code = `NCU-${base}-${r.yy}`
   let n = 2
   while (codes.has(code)) {

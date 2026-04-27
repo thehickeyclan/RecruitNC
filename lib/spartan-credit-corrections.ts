@@ -52,7 +52,10 @@ export function applySpartanCreditCorrectionsToDonations(
       ...r,
       athleteCode: code.trim(),
       manualCreditName: null,
-      athleteDisplayName: null,
+      /** Keep checkout metadata `athlete_display_name` so public tables can show "Aidan Gore" when
+       *  the fundraising directory map misses the new code (e.g. cache) — clearing it produced
+       *  fake labels like "Goreai · '27" from the code middle segment. */
+      athleteDisplayName: r.athleteDisplayName,
       attribution: "athlete",
     }
   })

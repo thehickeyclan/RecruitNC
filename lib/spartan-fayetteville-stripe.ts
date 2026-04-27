@@ -238,12 +238,21 @@ export function resolvePublicRunnerDisplay(
   return null
 }
 
-/** Readable label from NCU-LASTNAME-YY when we have no directory name (legacy / bookmark-only checkout). */
+/**
+ * When the directory has no full name for this code, derive a short label.
+ * `NCU-SMITH-29` → "Smith · '29". Collision bases like `NCU-GOREAI-27` (long middle segment) are
+ * not a single surname — if we title-case "GOREAI" we get the bogus "Goreai · '27", so for long
+ * segments we show the code string instead.
+ */
 export function fallbackAthleteLabelFromCode(code: string): string | null {
-  const m = /^NCU-([A-Za-z]+)-(\d{2})$/i.exec(code.trim())
+  const t = code.trim()
+  const m = /^NCU-([A-Za-z]+)-(\d{2})$/i.exec(t)
   if (!m) return null
   const last = m[1]
   const yy = m[2]
+  if (last.length > 5) {
+    return t
+  }
   const pretty = last.charAt(0).toUpperCase() + last.slice(1).toLowerCase()
   return `${pretty} · '${yy}`
 }
