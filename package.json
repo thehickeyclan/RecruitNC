@@ -9,6 +9,7 @@
     "start": "next start",
     "validate-auth": "node scripts/validate-auth-config.js",
     "validate:spartan-credit": "node scripts/validate-spartan-credit-correction.js",
+    "spartan:list-by-code": "tsx scripts/list-spartan-payments-for-ncu-code.ts",
     "prebuild": "npm run validate-auth",
     "generate-icons": "node scripts/generate-pwa-icons.js",
     "nhsca:import": "node scripts/import-nhsca-placements.mjs",
