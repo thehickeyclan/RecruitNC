@@ -63,6 +63,24 @@ export async function GET(request: NextRequest) {
     r.linked_account_email = uid ? linkedEmailByUserId.get(uid) ?? null : null
   }
 
+  const regIds = registrations.map((r) => (r as { id: string }).id).filter(Boolean)
+  const receiptSentAtByReg = new Map<string, string>()
+  if (regIds.length > 0) {
+    const { data: receiptRows, error: receiptErr } = await admin
+      .from("national_team_fee_receipt_emails")
+      .select("registration_id, sent_at")
+      .in("registration_id", regIds)
+    if (!receiptErr && receiptRows) {
+      for (const rr of receiptRows as { registration_id: string; sent_at: string }[]) {
+        receiptSentAtByReg.set(rr.registration_id, rr.sent_at)
+      }
+    }
+  }
+  for (const r of registrations) {
+    const id = (r as { id: string }).id
+    ;(r as { fee_receipt_email_sent_at?: string | null }).fee_receipt_email_sent_at = receiptSentAtByReg.get(id) ?? null
+  }
+
   const paid = registrations.filter((r) => r.status === "paid" || r.order_id)
   const pending = registrations.filter((r) => r.status !== "paid" && !r.order_id)
 
