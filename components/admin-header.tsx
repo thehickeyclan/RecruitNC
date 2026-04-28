@@ -56,6 +56,11 @@ const adminNavItems = [
     icon: "🧾",
   },
   {
+    title: "Guild credits",
+    href: "/admin/guild-credit-allocations",
+    icon: "🏛️",
+  },
+  {
     title: "Blue Program",
     href: "/admin/blue",
     icon: "💳",

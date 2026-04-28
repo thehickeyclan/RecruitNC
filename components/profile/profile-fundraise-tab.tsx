@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
+import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-allocation-section"
 import { Loader2, Coins } from "lucide-react"
 
 /** Fayetteville 2026 parent-facing reporting cutoff (aligned with ops). */
@@ -131,6 +132,8 @@ export function ProfileFundraiseTab({
           )}
         </CardContent>
       </Card>
+
+      <GuildCreditAllocationSection />
 
       <ExpenseRequestSection linkedAthletes={linkedAthletes} />
     </div>
