@@ -289,30 +289,62 @@ async function loadSpartanFundraisingExtras(admin: SupabaseClient): Promise<Fund
   }
 }
 
+/**
+ * Prefer fuller public names when the same NCU code exists on both `athletes` and `spartan_fundraising_athletes`.
+ * Exported for Vitest — changing this without updating `lib/spartan-fundraising-display.test.ts` should fail CI.
+ */
+export function mergeFundraisingAthleteEntries(
+  fromAthletes: FundraisingAthleteEntry[],
+  extras: FundraisingAthleteEntry[],
+): FundraisingAthleteEntry[] {
+  const norm = (c: string) => c.trim().toLowerCase()
+  const richness = (full: string): number => {
+    const t = full.trim()
+    if (!t) return -1e9
+    const words = t.split(/\s+/).filter(Boolean)
+    let score = t.length + words.length * 8
+    const first = words[0] ?? ""
+    if (/^[A-Za-z]\.$/.test(first)) score -= 28
+    if (first.length === 1) score -= 18
+    if (first.length >= 3) score += 38
+    if (/\s+'\d{2}\s*$/.test(t)) score -= 22
+    return score
+  }
+  type Best = { entry: FundraisingAthleteEntry; score: number }
+  const byNorm = new Map<string, Best>()
+  const consider = (e: FundraisingAthleteEntry) => {
+    const k = norm(e.code)
+    if (!k) return
+    const q = richness(e.fullName)
+    const cur = byNorm.get(k)
+    if (!cur || q > cur.score) byNorm.set(k, { entry: e, score: q })
+  }
+  for (const e of fromAthletes) consider(e)
+  for (const e of extras) consider(e)
+  return [...byNorm.values()].map((b) => b.entry)
+}
+
 async function loadEntries(admin: SupabaseClient): Promise<FundraisingAthleteEntry[]> {
   const rows = await fetchAllAthleteRows(admin)
   const fromAthletes = buildFundraisingEntries(rows)
   const extras = await loadSpartanFundraisingExtras(admin)
-  const seen = new Set(fromAthletes.map((e) => e.code))
-  const merged = [...fromAthletes]
-  for (const e of extras) {
-    if (!seen.has(e.code)) {
-      seen.add(e.code)
-      merged.push(e)
-    }
-  }
-  return merged
+  return mergeFundraisingAthleteEntries(fromAthletes, extras)
 }
 
 /** Cached full roster → fundraising entries (refreshed every ~5 min). */
-/** Map NCU fundraising code → directory full name for public labels (keys: exact + UPPERCASE). */
+/**
+ * Map NCU fundraising code → directory full name for public labels.
+ * Keys: exact code, UPPERCASE, and lowercase — so lookups never miss on casing drift.
+ */
 export function fundraisingCodeToFullNameMap(entries: FundraisingAthleteEntry[]): Map<string, string> {
   const m = new Map<string, string>()
   for (const e of entries) {
     const n = e.fullName.trim()
     if (!n) continue
-    m.set(e.code, n)
-    m.set(e.code.toUpperCase(), n)
+    const code = e.code.trim()
+    m.set(code, n)
+    m.set(code.toUpperCase(), n)
+    m.set(code.toLowerCase(), n)
   }
   return m
 }

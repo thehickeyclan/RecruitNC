@@ -27,6 +27,12 @@ When the user says "push update" (or similar): stage and commit all relevant cha
 - **Postgres column names:** `athletes.super32_results` exists; **`athletes.super_32_results` does not** — a wrong `SELECT` breaks `/api/public-rankings` with `42703`. Verify column names against Supabase before assuming snake_case.
 - **Server debug:** `RECRUITNC_DEBUG=1` or `RECRUITNC_DEBUG_NHSCA=1` — see `lib/recruitnc-debug.ts`. Client: `?debug=1` on profile URLs — see `lib/recruitnc-debug-client.ts`.
 
+# Spartan / Fayetteville public athlete names (REGRESSION GUARD)
+- **Public tables** (`/spartan`, `/api/spartan/supporters`, admin CSV exports) must show **roster `fullName`** from `fundraisingCodeToFullNameMap` when the NCU code matches; otherwise deterministic `fallbackAthleteLabelFromCode` — **not** Stripe checkout `athlete_display_name` (abbreviations like `M. Adams '27`).
+- **Do not** reintroduce **Stripe hint** or session `athlete_display_name` paths in `resolvePublicAthleteCreditLabel` / `resolveFundraisingAthleteRowName` for those surfaces — that overrides merged roster names with checkout copy.
+- **Do not** restore naive `seen.has(e.code)` merge for extras: use **`mergeFundraisingAthleteEntries`** in `lib/spartan-fundraising-code.ts` (case-normalized code, **prefer richer `fullName`**).
+- **Before merging** changes to those modules: run `npm run test -- lib/spartan-fundraising-display.test.ts`. If you remove tested behavior, **update tests in the same PR**; dropping tests to green is not OK.
+
 # Debugging (F12)
 - Errors are logged with the **[RecruitNC]** prefix so they’re easy to find in the browser console. When something breaks, copy the F12 console output (especially lines starting with [RecruitNC]) and paste it; the agent will fix from the actual error instead of guessing.
 

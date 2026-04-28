@@ -189,30 +189,6 @@ export function aggregateSpartanByAthlete(rows: SpartanFayettevilleDonation[]): 
   return [...map.values()].sort((a, b) => b.totalCents - a.totalCents)
 }
 
-/**
- * Best display label from Stripe metadata per NCU code (keys lowercased), when the RecruitNC directory
- * misses that code (roster/code drift). Picks the hint from the **newest** paid session that has
- * `athlete_display_name`, so leaderboards keep "Jack Aponte" even if directory cache lags.
- */
-export function buildStripeAthleteDisplayHintsByCode(rows: SpartanFayettevilleDonation[]): Map<string, string> {
-  const best = new Map<string, { unix: number; text: string }>()
-  for (const r of rows) {
-    if (!r.athleteCode?.trim()) continue
-    const k = r.athleteCode.trim().toLowerCase()
-    const raw =
-      shortDirectoryDisplayName(r.athleteDisplayName)?.trim() || r.athleteDisplayName?.trim() || ""
-    if (!raw) continue
-    const text = raw.slice(0, 120)
-    const prev = best.get(k)
-    if (!prev || r.createdUnix >= prev.unix) {
-      best.set(k, { unix: r.createdUnix, text })
-    }
-  }
-  const out = new Map<string, string>()
-  for (const [k, v] of best) out.set(k, v.text)
-  return out
-}
-
 /** Public-safe display name (no email). */
 export function publicSupporterDisplayName(d: Pick<SpartanFayettevilleDonation, "donorListPublic" | "donorName">): string {
   if (!d.donorListPublic) return "Anonymous"
@@ -306,15 +282,72 @@ export function publicAthleteCreditLabel(
 function lookupFundraisingDirectoryName(code: string, codeToFullName: Map<string, string>): string | undefined {
   const c = code.trim()
   if (!c) return undefined
-  return codeToFullName.get(c) ?? codeToFullName.get(c.toUpperCase())
+  return (
+    codeToFullName.get(c) ??
+    codeToFullName.get(c.toUpperCase()) ??
+    codeToFullName.get(c.toLowerCase())
+  )
+}
+
+/** Prefer fuller names over checkout abbreviations like "M. Adams '27" (same scoring as roster merge). */
+function scoreAthletePickerDisplayName(s: string): number {
+  const t = s.trim()
+  if (!t) return -1e9
+  const words = t.split(/\s+/).filter(Boolean)
+  let score = t.length + words.length * 8
+  const first = words[0] ?? ""
+  if (/^[A-Za-z]\.$/.test(first)) score -= 28
+  if (first.length === 1) score -= 18
+  if (first.length >= 3) score += 38
+  if (/\s+'\d{2}\s*$/.test(t)) score -= 22
+  return score
+}
+
+function pickRichestAthletePickerLabel(candidates: string[]): string | null {
+  let best: string | null = null
+  let bestScore = -1e9
+  for (const raw of candidates) {
+    const t = raw.trim()
+    if (!t) continue
+    const sc = scoreAthletePickerDisplayName(t)
+    if (sc > bestScore || (sc === bestScore && best !== null && t.length > best.length)) {
+      best = t
+      bestScore = sc
+    }
+  }
+  return best
+}
+
+function stripSpartanCheckoutGradSuffix(label: string): string {
+  return label.replace(/\s+'\d{2}\s*$/, "").trim()
 }
 
 /**
- * Public supporter tables: prefer RecruitNC directory full name (from fundraising code) over
- * Stripe metadata abbreviations like "Hickey '29" or code-only fallbacks.
- * `stripeDisplayHints` (per lowered NCU code, from any checkout in the window) covers rows whose
- * session metadata is empty after credit corrections or legacy sessions — same logic as leaderboard.
+ * For each NCU code, keep the richest `athlete_display_name` seen on any checkout in the window
+ * (full names beat "M. Last 'YY" when both appear).
  */
+export function buildStripeAthleteDisplayHintsByCode(
+  rows: Pick<SpartanFayettevilleDonation, "athleteCode" | "athleteDisplayName">[],
+): Map<string, string> {
+  const byCode = new Map<string, string[]>()
+  for (const r of rows) {
+    const code = r.athleteCode?.trim()
+    const name = r.athleteDisplayName?.trim()
+    if (!code || !name) continue
+    const k = code.toLowerCase()
+    const arr = byCode.get(k) ?? []
+    arr.push(name)
+    byCode.set(k, arr)
+  }
+  const out = new Map<string, string>()
+  for (const [k, names] of byCode) {
+    const best = pickRichestAthletePickerLabel(names)
+    if (best) out.set(k, best)
+  }
+  return out
+}
+
+/** Public Spartan athlete label: roster full name first, then richest Stripe picker string, then code. */
 export function resolvePublicAthleteCreditLabel(
   d: Pick<SpartanFayettevilleDonation, "athleteDisplayName" | "manualCreditName" | "athleteCode" | "attribution">,
   codeToFullName: Map<string, string>,
@@ -335,12 +368,13 @@ export function resolvePublicAthleteCreditLabel(
     if (fromDir) return fromDir
   }
 
-  const stripe = d.athleteDisplayName?.trim()
-  if (stripe) return stripe
-
-  if (code) {
-    const fromHint = stripeDisplayHints?.get(code.toLowerCase())?.trim()
-    if (fromHint) return fromHint
+  const k = code?.toLowerCase() ?? ""
+  const fromPicker = pickRichestAthletePickerLabel(
+    [k && stripeDisplayHints?.get(k), d.athleteDisplayName?.trim()].filter((x): x is string => Boolean(x && x.length)),
+  )
+  if (fromPicker) {
+    const cleaned = stripSpartanCheckoutGradSuffix(fromPicker)
+    return cleaned || fromPicker
   }
 
   const manual = d.manualCreditName?.trim()
@@ -359,6 +393,9 @@ export function resolveFundraisingAthleteRowName(
   if (fromDir) return fromDir
   const k = athleteCode.trim().toLowerCase()
   const fromStripe = stripeDisplayHints?.get(k)?.trim()
-  if (fromStripe) return fromStripe
+  if (fromStripe) {
+    const cleaned = stripSpartanCheckoutGradSuffix(fromStripe)
+    return cleaned || fromStripe
+  }
   return fallbackAthleteLabelFromCode(athleteCode) ?? athleteCode
 }

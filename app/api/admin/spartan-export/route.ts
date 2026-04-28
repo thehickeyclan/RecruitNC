@@ -75,7 +75,6 @@ export async function GET(request: NextRequest) {
     }
 
     const stripeAthleteHints = buildStripeAthleteDisplayHintsByCode(rows)
-
     const dateStamp = new Date().toISOString().slice(0, 10)
 
     if (kind === "tees") {
