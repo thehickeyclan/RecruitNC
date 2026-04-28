@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendOrderConfirmationEmail } from "@/lib/email"
 import { shippingNameFromCustomerName, flatShippingFromAddress, flatBillingFromAddress } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
+import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
 export type CreatePaymentIntentParams = {
   customerEmail: string
@@ -160,15 +161,25 @@ async function createFreeOrderInternal(
     return { ok: false, error: orderError.message }
   }
 
-  const orderItems = params.items.map((i) => ({
-    order_id: orderId,
-    product_id: String(i.id),
-    product_name: i.name,
-    variant: i.variant,
-    quantity: i.quantity,
-    price: i.price,
-    image_url: i.image ?? null,
-  }))
+  const orderItems = params.items.map((i, idx) => {
+    const idStr = String(i.id)
+    const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+    return {
+      order_id: orderId,
+      product_id: idStr,
+      product_name: i.name,
+      sku: syntheticOrderItemSku({
+        productId: uuidProduct,
+        sourceId: i.id,
+        label: i.name,
+        dedupeKey: `${orderId}:${idx}`,
+      }),
+      variant: i.variant,
+      quantity: i.quantity,
+      price: i.price,
+      image_url: i.image ?? null,
+    }
+  })
 
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
   if (itemsError) {
@@ -293,15 +304,27 @@ async function createOrderFromPaymentIntentMetadata(
     return null
   }
 
-  const orderItems = payload.items.map((i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }) => ({
-    order_id: orderId,
-    product_id: String(i.id),
-    product_name: i.name,
-    variant: i.variant,
-    quantity: i.quantity,
-    price: i.price,
-    image_url: i.image ?? null,
-  }))
+  const orderItems = payload.items.map(
+    (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
+      const idStr = String(i.id)
+      const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+      return {
+        order_id: orderId,
+        product_id: idStr,
+        product_name: i.name,
+        sku: syntheticOrderItemSku({
+          productId: uuidProduct,
+          sourceId: i.id,
+          label: i.name,
+          dedupeKey: `${paymentIntentId}:${idx}`,
+        }),
+        variant: i.variant,
+        quantity: i.quantity,
+        price: i.price,
+        image_url: i.image ?? null,
+      }
+    },
+  )
 
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
   if (itemsError) {
@@ -411,6 +434,11 @@ async function createOrderFromCharge(
       order_id: orderId,
       product_id: null,
       product_name: "Recovered item",
+      sku: syntheticOrderItemSku({
+        productId: null,
+        label: "Recovered item",
+        dedupeKey: paymentIntentId,
+      }),
       variant: { color: "N/A", size: "N/A" },
       quantity: 1,
       price: amount,
@@ -656,10 +684,17 @@ export async function createOrderFromSession(
         stripe_session_id: sessionId,
         stripe_payment_intent_id: piId,
       })
-      for (const li of lineItems) {
+      for (let idx = 0; idx < lineItems.length; idx++) {
+        const li = lineItems[idx] as { id?: string; description?: string; quantity?: number; amount_subtotal?: number }
         await supabase.from("order_items").insert({
           order_id: orderId,
           product_name: li.description ?? "Item",
+          sku: syntheticOrderItemSku({
+            productId: null,
+            sourceId: li.id ?? null,
+            label: li.description ?? "Item",
+            dedupeKey: `${orderId}:${li.id ?? idx}`,
+          }),
           variant: { color: "N/A", size: "N/A" },
           quantity: li.quantity ?? 1,
           price: (li.amount_subtotal ?? 0) / 100 / (li.quantity ?? 1),
@@ -726,15 +761,27 @@ export async function createOrderFromSession(
       console.error("[store] createOrderFromSession insert order:", orderErr)
       return { success: false, error: orderErr.message }
     }
-    const orderItems = payload.items.map((i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }) => ({
-      order_id: orderId,
-      product_id: String(i.id),
-      product_name: i.name,
-      variant: i.variant,
-      quantity: i.quantity,
-      price: i.price,
-      image_url: i.image ?? null,
-    }))
+    const orderItems = payload.items.map(
+      (i: { id: number; name: string; price: number; quantity: number; variant: { color: string; size: string }; image?: string }, idx: number) => {
+        const idStr = String(i.id)
+        const uuidProduct = /^[0-9a-f-]{36}$/i.test(idStr) ? idStr : null
+        return {
+          order_id: orderId,
+          product_id: idStr,
+          product_name: i.name,
+          sku: syntheticOrderItemSku({
+            productId: uuidProduct,
+            sourceId: i.id,
+            label: i.name,
+            dedupeKey: `${piId ?? sessionId}:${idx}`,
+          }),
+          variant: i.variant,
+          quantity: i.quantity,
+          price: i.price,
+          image_url: i.image ?? null,
+        }
+      },
+    )
     const { error: itemsErr } = await supabase.from("order_items").insert(orderItems)
     if (itemsErr) {
       console.error("[store] createOrderFromSession insert order_items:", itemsErr)

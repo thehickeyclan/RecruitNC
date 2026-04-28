@@ -14,6 +14,7 @@ import {
   sendFayettevilleDonationAutoAckIfEligible,
   upsertSpartanDonationFromCheckoutSession,
 } from "@/lib/spartan-fayetteville-webhook-ack"
+import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
 export const dynamic = "force-dynamic"
 
@@ -317,10 +318,16 @@ export async function POST(request: NextRequest) {
               const { data: existingOrder } = await admin.from("orders").select("id").eq("stripe_payment_intent_id", paymentIntent.id).maybeSingle()
               orderIdToUse = (existingOrder as { id?: string } | null)?.id ?? orderId
             } else if (!orderErr && totalCents > 0) {
+              const bp = bundleProduct as { id?: string; name?: string } | null
               await admin.from("order_items").insert({
                 order_id: orderId,
-                product_id: (bundleProduct as { id?: string } | null)?.id ?? null,
-                product_name: (bundleProduct as { name?: string } | null)?.name ?? "NHSCA 2026 – Registration + Apparel",
+                product_id: bp?.id ?? null,
+                product_name: bp?.name ?? "NHSCA 2026 – Registration + Apparel",
+                sku: syntheticOrderItemSku({
+                  productId: bp?.id ?? null,
+                  label: bp?.name ?? "NHSCA 2026 – Registration + Apparel",
+                  dedupeKey: paymentIntent.id,
+                }),
                 variant: { color: "N/A", size: "N/A" },
                 quantity: 1,
                 price: totalCents / 100,
@@ -496,12 +503,20 @@ export async function POST(request: NextRequest) {
     }
     const { data: productCache } = await admin.from("products").select("id, name, image_url").limit(5000)
     const productsList = productCache ?? []
-    const orderItems = payload.items.map((i) => {
+    const orderItems = payload.items.map((i, idx) => {
       const product = i.id && i.id !== "drop-in" ? findProductByIdOrPrefix(productsList, String(i.id)) : null
+      const resolvedProductId = product?.id ?? (typeof i.id === "string" && /^[0-9a-f-]{36}$/i.test(i.id) ? i.id : null)
+      const name = product?.name || i.name
       return {
         order_id: orderId,
-        product_id: product?.id ?? (typeof i.id === "string" && /^[0-9a-f-]{36}$/i.test(i.id) ? i.id : null),
-        product_name: product?.name || i.name,
+        product_id: resolvedProductId,
+        product_name: name,
+        sku: syntheticOrderItemSku({
+          productId: resolvedProductId,
+          sourceId: i.id,
+          label: name,
+          dedupeKey: `${paymentIntent.id}:${idx}`,
+        }),
         variant: i.variant,
         quantity: i.quantity,
         price: i.price,
@@ -716,6 +731,11 @@ export async function POST(request: NextRequest) {
             order_id: orderId,
             product_id: bundleProduct?.id ?? null,
             product_name: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
+            sku: syntheticOrderItemSku({
+              productId: bundleProduct?.id ?? null,
+              label: bundleProduct?.name ?? "NHSCA 2026 – Registration + Apparel",
+              dedupeKey: paymentIntentId,
+            }),
             variant: { color: "N/A", size: "N/A" },
             quantity: 1,
             price: totalCents / 100,
@@ -869,6 +889,11 @@ export async function POST(request: NextRequest) {
           order_id: orderId,
           product_id: null,
           product_name: dropInName,
+          sku: syntheticOrderItemSku({
+            productId: null,
+            label: dropInName,
+            dedupeKey: `drop-in:${paymentIntentId}`,
+          }),
           variant: { color: "N/A", size: "N/A" },
           quantity: 1,
           price: amountTotal,

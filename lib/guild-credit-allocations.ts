@@ -82,3 +82,25 @@ export async function fetchGuildReservedCentsByAthleteId(
   }
   return map
 }
+
+/** All parents: sum pending + guild_applied per athlete (admin Spartan rollup). */
+export async function fetchGuildReservedCentsByAthleteIdGlobal(admin: SupabaseClient): Promise<Map<string, number>> {
+  const { data, error } = await admin
+    .from("guild_credit_allocations")
+    .select("athlete_id, amount_cents")
+    .in("status", ["pending", "guild_applied"])
+
+  if (error) {
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return new Map()
+    }
+    throw new Error(error.message)
+  }
+  const map = new Map<string, number>()
+  for (const r of data ?? []) {
+    const row = r as { athlete_id: string; amount_cents: number }
+    const id = String(row.athlete_id)
+    map.set(id, (map.get(id) ?? 0) + Number(row.amount_cents))
+  }
+  return map
+}

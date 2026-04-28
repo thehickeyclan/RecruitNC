@@ -6,6 +6,7 @@ import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { athleteEnrichmentFromSignup } from "@/lib/blue-signup-enrich-athlete"
 import { orderShippingFields } from "@/lib/order-shipping"
+import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
 export const dynamic = "force-dynamic"
 
@@ -276,6 +277,11 @@ export async function POST() {
           order_id: orderId,
           product_id: null,
           product_name: "NC United Blue – Monthly",
+          sku: syntheticOrderItemSku({
+            productId: null,
+            label: "NC United Blue – Monthly",
+            dedupeKey: piForOrder ?? session.id,
+          }),
           variant: { color: "N/A", size: "N/A" },
           quantity: 1,
           price: amountTotal,
@@ -481,6 +487,11 @@ export async function POST() {
           order_id: orderId,
           product_id: null,
           product_name: "NC United Blue – Monthly",
+          sku: syntheticOrderItemSku({
+            productId: null,
+            label: "NC United Blue – Monthly",
+            dedupeKey: piForOrder ?? session.id,
+          }),
           variant: { color: "N/A", size: "N/A" },
           quantity: 1,
           price: amountTotal,

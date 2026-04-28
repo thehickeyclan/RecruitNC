@@ -15,6 +15,7 @@ export type SpartanFundraisingTotalRow = {
   raceSignupCount: number
   reimbursementsPaidCents: number
   netAfterReimbursementsCents: number
+  guildAllocationsCents: number
   codeUnavailable?: boolean
 }
 

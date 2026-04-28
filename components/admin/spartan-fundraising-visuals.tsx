@@ -47,6 +47,12 @@ type SpartanAthleteAggregate = {
   raceSignupCount: number
   reimbursementsPaidCents?: number
   netAfterReimbursementsCents?: number
+  guildAllocationsCents?: number
+}
+
+function notionalAfterGuildCents(a: SpartanAthleteAggregate): number {
+  const net = a.netAfterReimbursementsCents ?? a.totalCents - (a.reimbursementsPaidCents ?? 0)
+  return net - (a.guildAllocationsCents ?? 0)
 }
 
 const CHART_COLORS = ["#003366", "#C8102E", "#D3B574", "#0e7490", "#7c3aed", "#ea580c", "#15803d", "#be185d"]
@@ -180,13 +186,10 @@ export function SpartanFundraisingVisuals({
   const topAthletesChart = useMemo(() => {
     if (!byAthlete?.length) return []
     const sorted = [...byAthlete]
-      .sort(
-        (a, b) =>
-          (b.netAfterReimbursementsCents ?? b.totalCents) - (a.netAfterReimbursementsCents ?? a.totalCents),
-      )
+      .sort((a, b) => notionalAfterGuildCents(b) - notionalAfterGuildCents(a))
       .slice(0, 12)
     return sorted.map((a) => {
-      const netC = a.netAfterReimbursementsCents ?? a.totalCents - (a.reimbursementsPaidCents ?? 0)
+      const netC = notionalAfterGuildCents(a)
       return {
       name:
         (codeToLabel.get(a.athleteCode) ?? a.athleteCode).length > 22
@@ -248,15 +251,12 @@ export function SpartanFundraisingVisuals({
   const leaderboardRows = useMemo(() => {
     if (!byAthlete?.length) return []
     return [...byAthlete]
-      .sort(
-        (a, b) =>
-          (b.netAfterReimbursementsCents ?? b.totalCents) - (a.netAfterReimbursementsCents ?? a.totalCents),
-      )
+      .sort((a, b) => notionalAfterGuildCents(b) - notionalAfterGuildCents(a))
       .map((a, i) => ({
         rank: i + 1,
         code: a.athleteCode,
         label: codeToLabel.get(a.athleteCode) ?? a.athleteCode,
-        cents: a.netAfterReimbursementsCents ?? a.totalCents - (a.reimbursementsPaidCents ?? 0),
+        cents: notionalAfterGuildCents(a),
         raised: a.totalCents,
         reimb: a.reimbursementsPaidCents ?? 0,
         gifts: a.donationCount,

@@ -135,6 +135,7 @@ export function ProfileClient() {
             codeUnavailable?: boolean
             reimbursementsPaidCents?: number
             netAfterReimbursementsCents?: number
+            guildAllocationsCents?: number
           }[]
         }
         setSpartanFundraising({ athletes: data.athletes ?? [] })

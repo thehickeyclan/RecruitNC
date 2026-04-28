@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
+import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
 export const dynamic = "force-dynamic"
 
@@ -94,12 +95,20 @@ export async function POST() {
           failed++
           continue
         }
-        const orderItems = items.map((i) => {
+        const orderItems = items.map((i, idx) => {
           const product = i.id && i.id !== "drop-in" ? findProductByIdOrPrefix(productsList, String(i.id)) : null
+          const resolvedProductId = product?.id ?? (typeof i.id === "string" && /^[0-9a-f-]{36}$/i.test(i.id) ? i.id : null)
+          const name = product?.name || i.name
           return {
             order_id: order.id,
-            product_id: product?.id ?? (typeof i.id === "string" && /^[0-9a-f-]{36}$/i.test(i.id) ? i.id : null),
-            product_name: product?.name || i.name,
+            product_id: resolvedProductId,
+            product_name: name,
+            sku: syntheticOrderItemSku({
+              productId: resolvedProductId,
+              sourceId: i.id,
+              label: name,
+              dedupeKey: `${piId}:${idx}`,
+            }),
             variant: i.variant,
             quantity: i.quantity,
             price: i.price,

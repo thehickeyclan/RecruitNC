@@ -7,6 +7,8 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mergeSpartanAggregatesWithReimbursementNet } from "@/lib/athlete-reimbursement-net"
+import { fetchGuildReservedCentsByAthleteIdGlobal } from "@/lib/guild-credit-allocations"
+import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { getSpartanFundraisingParentCoverage } from "@/lib/spartan-fundraising-parent-coverage"
 import {
   aggregateSpartanByAthlete,
@@ -103,11 +105,31 @@ export async function GET(request: NextRequest) {
     }))
 
     const byAthleteRaw = aggregateSpartanByAthlete(donationsRaw)
-    const { rows: byAthlete, totalReimbursementsPaidCents } = await mergeSpartanAggregatesWithReimbursementNet(
+    const { rows: byAthleteMerged, totalReimbursementsPaidCents } = await mergeSpartanAggregatesWithReimbursementNet(
       admin,
       byAthleteRaw,
       sinceMs,
     )
+
+    let guildByCodeLower = new Map<string, number>()
+    try {
+      const [guildByAthleteId, entries] = await Promise.all([
+        fetchGuildReservedCentsByAthleteIdGlobal(admin),
+        getFundraisingAthleteEntries(admin),
+      ])
+      for (const e of entries) {
+        if (e.id.startsWith("spartan-fundraising:")) continue
+        const g = guildByAthleteId.get(e.id) ?? 0
+        if (g > 0) guildByCodeLower.set(e.code.toLowerCase(), g)
+      }
+    } catch (e) {
+      console.warn("[admin/spartan-donations] guild allocations (table may be missing):", e)
+    }
+
+    const byAthlete = byAthleteMerged.map((a) => ({
+      ...a,
+      guildAllocationsCents: guildByCodeLower.get(a.athleteCode.trim().toLowerCase()) ?? 0,
+    }))
     const includeParentCoverage = request.nextUrl.searchParams.get("includeParentCoverage") === "1"
     const parentCoverage = includeParentCoverage ? await getSpartanFundraisingParentCoverage(admin, byAthlete) : undefined
     const generalTotalCents = donationsRaw

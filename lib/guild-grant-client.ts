@@ -20,6 +20,25 @@ export type GuildGrantResult =
   | { ok: true; creditIds: string[]; balanceCentsAfter: number | null; raw: unknown }
   | { ok: false; status: number; message: string; raw?: unknown }
 
+/** Guild may use 404 for "wrong account type" with a JSON body; surface that instead of a generic HTTP line. */
+function guildGrantErrorMessage(json: Record<string, unknown>, status: number, bodyText: string): string {
+  const err = json.error
+  if (typeof err === "string" && err.trim()) return err.trim()
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message
+    if (typeof m === "string" && m.trim()) return m.trim()
+  }
+  if (typeof json.message === "string" && json.message.trim()) return json.message.trim()
+  if (typeof json.detail === "string" && json.detail.trim()) return json.detail.trim()
+  if (Array.isArray(json.detail) && json.detail.length > 0 && typeof json.detail[0] === "string") {
+    return String(json.detail[0]).trim()
+  }
+  if (typeof json.description === "string" && json.description.trim()) return json.description.trim()
+  const t = bodyText.trim()
+  if (t && t.length > 0 && t.length < 500 && !t.startsWith("<")) return t
+  return `Guild grant HTTP ${status}`
+}
+
 function grantPath(): string {
   return process.env.GUILD_CREDIT_GRANT_PATH || "/api/internal/recruitnc/credit-grant"
 }
@@ -88,10 +107,7 @@ export async function postGuildCreditGrant(body: GuildGrantRequest): Promise<Gui
   }
 
   if (!res.ok) {
-    const msg =
-      (typeof json.error === "string" && json.error) ||
-      (typeof json.message === "string" && json.message) ||
-      `Guild grant HTTP ${res.status}`
+    const msg = guildGrantErrorMessage(json, res.status, text)
     return { ok: false, status: res.status, message: msg, raw: json }
   }
 

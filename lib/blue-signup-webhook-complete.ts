@@ -4,6 +4,7 @@
  */
 import type Stripe from "stripe"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { orderShippingFields } from "@/lib/order-shipping"
@@ -262,6 +263,11 @@ export async function completeBlueSignupAfterStripePayment(
         order_id: orderId,
         product_id: null,
         product_name: "NC United Blue – Monthly",
+        sku: syntheticOrderItemSku({
+          productId: null,
+          label: "NC United Blue – Monthly",
+          dedupeKey: piForOrder ?? checkoutSessionId ?? signupId,
+        }),
         variant: { color: "N/A", size: "N/A" },
         quantity: 1,
         price: amountTotalDollars,

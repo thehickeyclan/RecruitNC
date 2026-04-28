@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
+import { fetchGuildReservedCentsByAthleteId } from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS, getFayettevilleStatsByAthleteCodeLowercase } from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
@@ -12,7 +13,10 @@ export type ParentSpartanFundraisingAthleteRow = {
   giftCount: number
   raceSignupCount: number
   reimbursementsPaidCents: number
+  /** Gifts in window minus reimbursements paid in window (before Guild allocations). */
   netAfterReimbursementsCents: number
+  /** Sum of guild_credit_allocations pending + guild_applied for this athlete (parent ledger). */
+  guildAllocationsCents: number
   codeUnavailable?: boolean
 }
 
@@ -71,10 +75,18 @@ export async function computeParentSpartanFundraisingTotalsForUser(
   const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
   const reimbByAthleteId = await fetchReimbursementPaidCentsByAthleteIdInWindow(admin, sinceMs)
 
+  let guildReservedByAthlete = new Map<string, number>()
+  try {
+    guildReservedByAthlete = await fetchGuildReservedCentsByAthleteId(admin, userId)
+  } catch (e) {
+    console.warn("[parent-spartan-fundraising-totals] guild reservations", e)
+  }
+
   const athletes: ParentSpartanFundraisingAthleteRow[] = athleteIds.map((id) => {
     const code = codeByAthleteId.get(id) ?? null
     const name = nameById.get(id) ?? "—"
     const paidOut = reimbByAthleteId.get(id) ?? 0
+    const guildAlloc = guildReservedByAthlete.get(id) ?? 0
     if (!code) {
       return {
         athleteId: id,
@@ -85,6 +97,7 @@ export async function computeParentSpartanFundraisingTotalsForUser(
         raceSignupCount: 0,
         reimbursementsPaidCents: paidOut,
         netAfterReimbursementsCents: 0 - paidOut,
+        guildAllocationsCents: guildAlloc,
         codeUnavailable: true,
       }
     }
@@ -99,6 +112,7 @@ export async function computeParentSpartanFundraisingTotalsForUser(
       raceSignupCount: s?.raceSignupCount ?? 0,
       reimbursementsPaidCents: paidOut,
       netAfterReimbursementsCents: totalCents - paidOut,
+      guildAllocationsCents: guildAlloc,
       codeUnavailable: false,
     }
   })

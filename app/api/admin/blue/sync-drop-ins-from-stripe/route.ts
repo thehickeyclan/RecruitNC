@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer } from "@/lib/enrich-athlete-profile"
+import { syntheticOrderItemSku } from "@/lib/order-item-sku"
 
 export const dynamic = "force-dynamic"
 
@@ -178,6 +179,11 @@ export async function POST() {
       order_id: orderId,
       product_id: null,
       product_name: dropInName,
+      sku: syntheticOrderItemSku({
+        productId: null,
+        label: dropInName,
+        dedupeKey: `drop-in:${paymentIntentId}`,
+      }),
       variant: { color: "N/A", size: "N/A" },
       quantity: 1,
       price: amountTotal,

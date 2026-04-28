@@ -52,6 +52,8 @@ type SpartanAthleteAggregate = {
   raceSignupCount: number
   reimbursementsPaidCents?: number
   netAfterReimbursementsCents?: number
+  /** Pending + applied Guild credit allocations (notional drawdown). */
+  guildAllocationsCents?: number
 }
 
 type SpartanParentCoverageRow = {
@@ -1057,6 +1059,8 @@ export default function AdminFundraisingPage() {
                     <p className="text-muted-foreground text-sm">
                       General fund (no athlete code) in window:{" "}
                       <strong className="text-foreground">{formatMoney(generalTotalCents, "usd")}</strong>
+                      . <strong className="text-foreground">Notional remaining</strong> matches the parent Fundraise tab:
+                      net after reimbursements minus Guild credit allocations (ledger).
                     </p>
                     <div className="rounded-md border">
                       <Table>
@@ -1065,7 +1069,9 @@ export default function AdminFundraisingPage() {
                             <TableHead>Athlete code</TableHead>
                             <TableHead>Raised (window)</TableHead>
                             <TableHead>Reimb. paid</TableHead>
-                            <TableHead>Net</TableHead>
+                            <TableHead>Net (after reimb.)</TableHead>
+                            <TableHead>Guild alloc.</TableHead>
+                            <TableHead>Notional remaining</TableHead>
                             <TableHead>Gifts</TableHead>
                             <TableHead>Race signups</TableHead>
                           </TableRow>
@@ -1074,6 +1080,8 @@ export default function AdminFundraisingPage() {
                           {filteredByAthlete.map((a) => {
                             const r = a.reimbursementsPaidCents ?? 0
                             const n = a.netAfterReimbursementsCents ?? a.totalCents - r
+                            const g = a.guildAllocationsCents ?? 0
+                            const remaining = n - g
                             return (
                             <TableRow key={a.athleteCode}>
                               <TableCell className="font-mono text-xs">{a.athleteCode}</TableCell>
@@ -1083,6 +1091,16 @@ export default function AdminFundraisingPage() {
                               </TableCell>
                               <TableCell className={n < 0 ? "text-destructive font-medium" : "font-medium text-green-800"}>
                                 {formatMoney(n, "usd")}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {g > 0 ? formatMoney(g, "usd") : "—"}
+                              </TableCell>
+                              <TableCell
+                                className={
+                                  remaining < 0 ? "text-destructive font-medium" : "font-medium text-green-800"
+                                }
+                              >
+                                {formatMoney(remaining, "usd")}
                               </TableCell>
                               <TableCell>{a.donationCount}</TableCell>
                               <TableCell>{a.raceSignupCount}</TableCell>
