@@ -1,7 +1,7 @@
 /**
  * Admin: preview / send National Team (NHSCA) fee receipt email (Resend), verified against Stripe Checkout.
  *
- * Optional log table (Supabase SQL Editor):
+ * Log table (Supabase SQL Editor) — required for “Receipt sent” badges; use PRIMARY KEY on registration_id:
  *
  * create table if not exists public.national_team_fee_receipt_emails (
  *   registration_id uuid primary key references public.national_team_event_registrations (id) on delete cascade,
@@ -9,6 +9,8 @@
  *   recipient_email text not null,
  *   sent_at timestamptz not null default now()
  * );
+ * create index if not exists national_team_fee_receipt_emails_sent_at_idx
+ *   on public.national_team_fee_receipt_emails (sent_at desc);
  * alter table public.national_team_fee_receipt_emails enable row level security;
  */
 
@@ -255,28 +257,59 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: send.error }, { status: 500 })
   }
 
-  const { error: logErr } = await admin.from("national_team_fee_receipt_emails").upsert(
-    {
-      registration_id: row.id,
-      stripe_checkout_session_id: session.id,
-      recipient_email: recipientEmail,
-      sent_at: new Date().toISOString(),
-    },
-    { onConflict: "registration_id" },
-  )
+  const payload = {
+    registration_id: row.id,
+    stripe_checkout_session_id: session.id,
+    recipient_email: recipientEmail,
+    sent_at: new Date().toISOString(),
+  }
+
+  let logErr = (
+    await admin.from("national_team_fee_receipt_emails").upsert(payload, { onConflict: "registration_id" })
+  ).error
+
+  const msgUpsert = logErr?.message ?? ""
+  const codeUpsert = logErr?.code ?? ""
+  const upsertConflictBroken =
+    codeUpsert === "42P10" || /no unique|exclusion constraint matching|ON CONFLICT/i.test(msgUpsert)
+
+  // If ON CONFLICT is misconfigured but row can still be inserted after delete, replace the row.
+  if (logErr && upsertConflictBroken) {
+    await admin.from("national_team_fee_receipt_emails").delete().eq("registration_id", row.id)
+    logErr = (await admin.from("national_team_fee_receipt_emails").insert(payload)).error
+  }
 
   if (logErr) {
-    if (logErr.code === "42P01" || logErr.message?.includes("does not exist")) {
+    const msg = logErr.message ?? ""
+    const code = logErr.code ?? ""
+    console.error("[national-team-fee-receipt] log failed:", code, msg)
+
+    const missingTable =
+      code === "42P01" ||
+      code === "PGRST205" ||
+      /does not exist|schema cache|could not find the table|relation.*does not exist/i.test(msg)
+
+    const badConstraint =
+      code === "42P10" ||
+      /no unique|exclusion constraint matching|ON CONFLICT/i.test(msg)
+
+    if (missingTable) {
       return NextResponse.json({
         ok: true,
         warning:
-          "Email sent. Create table national_team_fee_receipt_emails (see comment in app/api/admin/national-team-fee-receipt/route.ts) to log sends.",
+          "Email sent. Create the log table: run scripts/national-team-fee-receipt-emails.sql in Supabase SQL Editor, then send again (optional) to record it.",
       })
     }
-    console.error("[national-team-fee-receipt] log upsert:", logErr.message)
+    if (badConstraint) {
+      return NextResponse.json({
+        ok: true,
+        warning:
+          "Email sent. Log table exists but registration_id must be PRIMARY KEY (or UNIQUE). Re-run scripts/national-team-fee-receipt-emails.sql to fix the table.",
+      })
+    }
     return NextResponse.json({
       ok: true,
-      warning: "Email sent but failed to log in database.",
+      warning: `Email sent. Could not save log (${code || "error"}): ${msg.slice(0, 180)}${msg.length > 180 ? "…" : ""}`,
     })
   }
 

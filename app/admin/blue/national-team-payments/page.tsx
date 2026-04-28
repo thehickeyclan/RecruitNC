@@ -275,7 +275,7 @@ export default function AdminBlueNationalTeamPaymentsPage() {
       const j = (await res.json()) as { error?: string; warning?: string; ok?: boolean }
       if (!res.ok) throw new Error(j.error || "Send failed")
       if (j.warning) {
-        toast({ title: "Receipt sent", description: j.warning, variant: "destructive" })
+        toast({ title: "Receipt sent (log issue)", description: j.warning })
         setReceiptMsg(j.warning)
       } else {
         toast({ title: "Receipt sent" })
