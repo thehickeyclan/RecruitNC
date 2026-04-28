@@ -7,6 +7,8 @@ export const EXPENSE_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "travel", label: "Travel (lodging, transport)" },
   { value: "equipment", label: "Equipment" },
   { value: "camp_clinic", label: "Camp or clinic" },
+  { value: "the_guild", label: "The Guild" },
+  { value: "private_instruction", label: "Private Instruction" },
   { value: "membership_dues", label: "Membership / dues" },
   { value: "other", label: "Other (describe in notes)" },
 ]

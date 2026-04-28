@@ -1,9 +1,11 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { Loader2, Coins } from "lucide-react"
+
+/** Fayetteville 2026 parent-facing reporting cutoff (aligned with ops). */
+const SPARTAN_FUNDRAISE_THROUGH_LABEL = "September 1, 2026"
 
 type SpartanRow = {
   athleteId: string
@@ -27,7 +29,7 @@ type ProfileFundraiseTabProps = {
   linkedAthletes: LinkedAthlete[]
 }
 
-function formatRaised(cents: number) {
+function formatUsd(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
 }
 
@@ -49,10 +51,15 @@ export function ProfileFundraiseTab({
             </div>
             Spartan 2026 fundraising
           </CardTitle>
-          <CardDescription className="text-slate-600 text-sm leading-relaxed">
-            Per linked wrestler, last 120 days — for your information, not a bank balance. Link kids on{" "}
-            <span className="font-medium text-slate-700">Family &amp; athletes</span> if someone’s missing. We email you
-            (and may text) when a reimbursement is updated.
+          <CardDescription className="text-slate-600 text-sm leading-snug space-y-1">
+            <p>
+              Paid gifts in the last 120 days. Reporting through{" "}
+              <strong className="text-slate-800">{SPARTAN_FUNDRAISE_THROUGH_LABEL}</strong>.
+            </p>
+            <p className="text-slate-500 text-xs">
+              Estimates only — not a bank balance. Update linked wrestlers under{" "}
+              <span className="font-medium text-slate-600">Family &amp; athletes</span>.
+            </p>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -65,53 +72,61 @@ export function ProfileFundraiseTab({
             <div className="rounded-xl border border-dashed border-[#CBAF5D]/40 bg-[#CBAF5D]/5 px-4 py-6 text-center">
               <p className="text-sm text-slate-700">
                 {!linkedLoading && linkedCount === 0
-                  ? "Link your athletes on the Family tab to see totals here."
-                  : "Nothing to show yet, or a wrestler needs a graduation year on their profile for us to list a code."}
+                  ? "Link athletes under Family & athletes to see their totals here."
+                  : "No totals yet. If a wrestler is linked but shows zero, add their graduation year on their profile so we can match their fundraising code."}
               </p>
             </div>
           ) : (
-            <div className="w-full overflow-x-auto rounded-xl border border-[#003366]/10 bg-slate-50/50">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent border-b border-[#003366]/10">
-                    <TableHead className="min-w-[8rem] text-[#03154C] font-semibold">Athlete</TableHead>
-                    <TableHead className="w-[5.5rem] text-right text-[#03154C] font-semibold">Raised</TableHead>
-                    <TableHead className="w-[5.5rem] text-right text-[#03154C] font-semibold">Reimb. paid</TableHead>
-                    <TableHead className="w-[5.5rem] text-right text-[#03154C] font-semibold">Net</TableHead>
-                    <TableHead className="w-16 text-right text-[#03154C] font-semibold">Gifts</TableHead>
-                    <TableHead className="w-28 text-right text-[#03154C] font-semibold">Race signups</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {spartanFundraising.athletes.map((row) => (
-                    <TableRow key={row.athleteId} className="border-[#003366]/5 hover:bg-white/80">
-                      <TableCell>
-                        <div>
-                          <p className="font-semibold text-[#03154C]">{row.name}</p>
-                          {row.fundraisingCode ? (
-                            <p className="text-xs text-slate-500 font-mono mt-0.5">{row.fundraisingCode}</p>
-                          ) : (
-                            <p className="text-xs text-[#B31B1B] mt-0.5">Add graduation year on the athlete profile to show a code.</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-bold tabular-nums text-[#003366]">{formatRaised(row.totalCents)}</TableCell>
-                      <TableCell className="text-right tabular-nums text-slate-700">
-                        {row.reimbursementsPaidCents > 0 ? formatRaised(row.reimbursementsPaidCents) : "—"}
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-bold tabular-nums ${
-                          row.netAfterReimbursementsCents < 0 ? "text-[#B31B1B]" : "text-[#0f5132]"
-                        }`}
-                      >
-                        {formatRaised(row.netAfterReimbursementsCents)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-slate-600">{row.giftCount ?? 0}</TableCell>
-                      <TableCell className="text-right tabular-nums text-slate-600">{row.raceSignupCount ?? 0}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-3">
+              {spartanFundraising.athletes.map((row) => (
+                <div
+                  key={row.athleteId}
+                  className="rounded-xl border border-[#003366]/10 bg-slate-50/80 px-3 py-3 sm:px-4 sm:py-4"
+                >
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-[#03154C] leading-tight">{row.name}</p>
+                      {row.fundraisingCode ? (
+                        <p className="text-[11px] text-slate-500 font-mono mt-1 truncate" title={row.fundraisingCode}>
+                          {row.fundraisingCode}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-600 mt-1">
+                          Add their graduation year under Family &amp; athletes so we can match gifts to this wrestler.
+                        </p>
+                      )}
+                    </div>
+                    <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-x-5 lg:shrink-0 lg:text-right w-full lg:w-auto">
+                      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5">
+                        <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:order-2">Starting</dt>
+                        <dd className="text-sm font-bold tabular-nums text-[#003366] sm:order-1">{formatUsd(row.totalCents)}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5">
+                        <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:order-2">Spent</dt>
+                        <dd className="text-sm tabular-nums text-slate-800 sm:order-1">
+                          {row.reimbursementsPaidCents > 0 ? formatUsd(row.reimbursementsPaidCents) : "—"}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5">
+                        <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:order-2">Remaining</dt>
+                        <dd
+                          className={`text-sm font-bold tabular-nums sm:order-1 ${
+                            row.netAfterReimbursementsCents < 0 ? "text-[#B31B1B]" : "text-[#0f5132]"
+                          }`}
+                        >
+                          {formatUsd(row.netAfterReimbursementsCents)}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5 border-t border-[#003366]/10 pt-2 sm:border-0 sm:pt-0">
+                        <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:order-2">Ends</dt>
+                        <dd className="text-xs font-semibold text-slate-800 tabular-nums sm:order-1 sm:max-w-[9rem] sm:text-right leading-snug">
+                          {SPARTAN_FUNDRAISE_THROUGH_LABEL}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

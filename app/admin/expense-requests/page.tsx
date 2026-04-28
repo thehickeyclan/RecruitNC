@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,7 @@ import {
   type ExpenseRequestStatus,
 } from "@/lib/athlete-expense-requests"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, ExternalLink, Loader2, RefreshCw } from "lucide-react"
+import { AlertTriangle, ArrowLeft, Download, ExternalLink, FileText, Loader2, RefreshCw } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -46,6 +46,7 @@ type RequestRow = {
   status: ExpenseRequestStatus
   admin_notes: string | null
   created_at: string
+  updated_at: string
   reviewed_at: string | null
   paid_at: string | null
 }
@@ -84,6 +85,8 @@ export default function AdminExpenseRequestsPage() {
   const [editApproved, setEditApproved] = useState("")
   const [editNotes, setEditNotes] = useState("")
   const [saving, setSaving] = useState(false)
+  const [tableFilter, setTableFilter] = useState<"all" | "paid" | "missing_receipt">("all")
+  const [exportLoading, setExportLoading] = useState(false)
 
   const load = useCallback(async () => {
     setTableLoading(true)
@@ -115,6 +118,69 @@ export default function AdminExpenseRequestsPage() {
     }
     void load()
   }, [user, isAdmin, authLoading, load])
+
+  const auditStats = useMemo(() => {
+    if (!rows?.length) {
+      return {
+        total: 0,
+        paidCount: 0,
+        paidCents: 0,
+        paidMissingReceipt: 0,
+        anyMissingReceipt: 0,
+      }
+    }
+    const paid = rows.filter((r) => r.status === "paid")
+    const paidCents = paid.reduce((s, r) => s + (r.amount_approved_cents ?? r.amount_cents), 0)
+    return {
+      total: rows.length,
+      paidCount: paid.length,
+      paidCents,
+      paidMissingReceipt: paid.filter((r) => !r.document_url).length,
+      anyMissingReceipt: rows.filter((r) => !r.document_url).length,
+    }
+  }, [rows])
+
+  const filteredRows = useMemo(() => {
+    if (!rows) return []
+    if (tableFilter === "paid") return rows.filter((r) => r.status === "paid")
+    if (tableFilter === "missing_receipt") return rows.filter((r) => !r.document_url)
+    return rows
+  }, [rows, tableFilter])
+
+  async function downloadAuditCsv() {
+    setExportLoading(true)
+    try {
+      const res = await fetch("/api/admin/expense-requests/audit-export", {
+        cache: "no-store",
+        credentials: "include",
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error((j as { error?: string }).error || "Export failed")
+      }
+      const blob = await res.blob()
+      const cd = res.headers.get("Content-Disposition")
+      const m = cd?.match(/filename="([^"]+)"/)
+      const filename = m?.[1] ?? `nc-united-reimbursement-audit-${new Date().toISOString().slice(0, 10)}.csv`
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      toast({ title: "Audit export downloaded" })
+    } catch (e) {
+      toast({
+        title: "Could not export",
+        description: e instanceof Error ? e.message : "Try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setExportLoading(false)
+    }
+  }
 
   function openRow(r: RequestRow) {
     setActive(r)
@@ -195,6 +261,60 @@ export default function AdminExpenseRequestsPage() {
           </Button>
         </div>
 
+        <Card className="border-amber-200/90 bg-gradient-to-br from-amber-50/90 to-white shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-amber-950 flex flex-wrap items-center gap-2">
+              Reimbursement audit package
+              <Badge variant="outline" className="font-normal border-amber-300 text-amber-900">
+                Admin export
+              </Badge>
+            </CardTitle>
+            <CardDescription className="text-amber-950/80 text-sm leading-relaxed max-w-3xl">
+              Download a single CSV with every request: timestamps (submitted, updated, reviewed, paid), parent and athlete
+              IDs, expense category, requested and approved amounts, Zelle/Venmo payout details, parent and staff notes, and{" "}
+              <strong>direct URLs to uploaded receipts or invoices</strong>. Store this file with your books; retrieve
+              attachments from the links (or archive them separately) for examiner review.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-amber-950/85 space-y-1">
+              {rows && rows.length > 0 ? (
+                <>
+                  <p>
+                    <span className="font-medium text-amber-950">{auditStats.total}</span> total requests ·{" "}
+                    <span className="font-medium text-amber-950">{auditStats.paidCount}</span> marked paid (
+                    {formatMoney(auditStats.paidCents)}) ·{" "}
+                    <span className="font-medium text-amber-950">{auditStats.paidMissingReceipt}</span> paid without an
+                    uploaded attachment
+                  </p>
+                  {auditStats.paidMissingReceipt > 0 ? (
+                    <p className="flex items-start gap-1.5 text-amber-900">
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                      Follow up for receipts on paid rows before filing — examiner-ready documentation usually requires
+                      substantiation.
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="text-muted-foreground">No requests in the system yet. You can still download a header-only CSV.</p>
+              )}
+            </div>
+            <Button
+              type="button"
+              className="shrink-0 bg-amber-950 hover:bg-amber-900 text-white"
+              disabled={exportLoading}
+              onClick={() => void downloadAuditCsv()}
+            >
+              {exportLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              Download full CSV
+            </Button>
+          </CardContent>
+        </Card>
+
         {summary && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card>
@@ -252,9 +372,29 @@ export default function AdminExpenseRequestsPage() {
         )}
 
         <Card>
-          <CardHeader>
-            <CardTitle>All reimbursement requests</CardTitle>
-            <CardDescription>Update status, approved amount, and internal notes. Mark Paid when funds are sent.</CardDescription>
+          <CardHeader className="space-y-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle>All reimbursement requests</CardTitle>
+                <CardDescription>
+                  Update status, approved amount, and notes. Mark Paid when funds are sent. Use filters to find gaps in
+                  documentation.
+                </CardDescription>
+              </div>
+              <div className="flex flex-col gap-1.5 sm:items-end">
+                <Label className="text-xs text-muted-foreground">Table filter</Label>
+                <Select value={tableFilter} onValueChange={(v) => setTableFilter(v as typeof tableFilter)}>
+                  <SelectTrigger className="w-full sm:w-[220px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All requests</SelectItem>
+                    <SelectItem value="paid">Paid only (audit focus)</SelectItem>
+                    <SelectItem value="missing_receipt">Missing attachment</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loadErr && <p className="text-sm text-destructive mb-4">{loadErr}</p>}
@@ -265,40 +405,46 @@ export default function AdminExpenseRequestsPage() {
               </p>
             ) : (rows ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">No reimbursement requests yet.</p>
+            ) : filteredRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No rows match this filter.</p>
             ) : (
               <div className="overflow-x-auto rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
+                      <TableHead>Submitted</TableHead>
                       <TableHead>Parent</TableHead>
                       <TableHead>Athlete</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Requested</TableHead>
                       <TableHead>Payout</TableHead>
+                      <TableHead>Receipt</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(rows ?? []).map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell className="whitespace-nowrap text-xs">
+                    {filteredRows.map((r) => (
+                      <TableRow
+                        key={r.id}
+                        className={!r.document_url && r.status === "paid" ? "bg-amber-50/60" : undefined}
+                      >
+                        <TableCell className="whitespace-nowrap text-xs align-top">
                           {new Date(r.created_at).toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-sm max-w-[160px]">
+                        <TableCell className="text-sm max-w-[160px] align-top">
                           <div className="font-medium truncate">{r.user_display_name}</div>
                           <div className="text-xs text-muted-foreground truncate">{r.user_email ?? "—"}</div>
                         </TableCell>
-                        <TableCell className="text-sm">{r.athlete_name}</TableCell>
-                        <TableCell className="text-sm max-w-[140px]">{displayExpenseType(r.expense_type)}</TableCell>
-                        <TableCell className="text-sm whitespace-nowrap">
+                        <TableCell className="text-sm align-top">{r.athlete_name}</TableCell>
+                        <TableCell className="text-sm max-w-[140px] align-top">{displayExpenseType(r.expense_type)}</TableCell>
+                        <TableCell className="text-sm whitespace-nowrap align-top">
                           {formatMoney(r.amount_cents)}
                           {r.amount_approved_cents != null && (
                             <div className="text-xs text-muted-foreground">Appr: {formatMoney(r.amount_approved_cents)}</div>
                           )}
                         </TableCell>
-                        <TableCell className="text-xs max-w-[180px]">
+                        <TableCell className="text-xs max-w-[180px] align-top">
                           {r.payment_method === "zelle" && r.zelle_info ? (
                             <span>Zelle: {r.zelle_info}</span>
                           ) : r.payment_method === "venmo" && r.venmo_info ? (
@@ -307,28 +453,33 @@ export default function AdminExpenseRequestsPage() {
                             "—"
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="align-top">
+                          {r.document_url ? (
+                            <a
+                              href={r.document_url}
+                              className="inline-flex items-center gap-1 text-sm text-primary font-medium underline-offset-2 hover:underline"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <FileText className="h-3.5 w-3.5 shrink-0" />
+                              Open
+                            </a>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs text-amber-800">
+                              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                              None
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="align-top">
                           <Badge variant={badgeFor(r.status)} className="font-normal">
                             {EXPENSE_STATUS_LABELS[r.status]}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <Button size="sm" variant="outline" onClick={() => openRow(r)}>
-                              Manage
-                            </Button>
-                            {r.document_url && (
-                              <a
-                                href={r.document_url}
-                                className="text-xs text-primary flex items-center gap-1"
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                                Document
-                              </a>
-                            )}
-                          </div>
+                        <TableCell className="align-top">
+                          <Button size="sm" variant="outline" onClick={() => openRow(r)}>
+                            Manage
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -341,7 +492,7 @@ export default function AdminExpenseRequestsPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Reimbursement request</DialogTitle>
             <DialogDescription>
@@ -354,6 +505,51 @@ export default function AdminExpenseRequestsPage() {
           </DialogHeader>
           {active && (
             <div className="space-y-3 text-sm">
+              <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs space-y-1 font-mono text-muted-foreground">
+                <div>
+                  <span className="font-semibold text-foreground">Request ID:</span> {active.id}
+                </div>
+                <div>
+                  <span className="font-semibold text-foreground">Submitted:</span>{" "}
+                  {new Date(active.created_at).toLocaleString()}
+                </div>
+                {active.updated_at ? (
+                  <div>
+                    <span className="font-semibold text-foreground">Last updated:</span>{" "}
+                    {new Date(active.updated_at).toLocaleString()}
+                  </div>
+                ) : null}
+                {active.reviewed_at ? (
+                  <div>
+                    <span className="font-semibold text-foreground">Reviewed:</span>{" "}
+                    {new Date(active.reviewed_at).toLocaleString()}
+                  </div>
+                ) : null}
+                {active.paid_at ? (
+                  <div>
+                    <span className="font-semibold text-foreground">Paid:</span>{" "}
+                    {new Date(active.paid_at).toLocaleString()}
+                  </div>
+                ) : null}
+              </div>
+              {active.document_url ? (
+                <a
+                  href={active.document_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-lg border-2 border-primary/30 bg-primary/5 px-3 py-3 text-sm font-semibold text-primary hover:bg-primary/10"
+                >
+                  <FileText className="h-4 w-4" />
+                  Open receipt / attachment
+                  <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+                </a>
+              ) : (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950 flex gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  No file uploaded with this request. For audit purposes, collect and retain substantiation outside the
+                  app if needed.
+                </div>
+              )}
               {active.parent_notes && (
                 <div>
                   <span className="text-muted-foreground">Parent notes: </span>

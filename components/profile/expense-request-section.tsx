@@ -6,16 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   EXPENSE_STATUS_LABELS,
   EXPENSE_TYPE_OPTIONS,
   displayExpenseType,
   type ExpenseRequestStatus,
 } from "@/lib/athlete-expense-requests"
-import { Receipt, Loader2, ExternalLink } from "lucide-react"
+import { Receipt, Loader2, ExternalLink, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 type Linked = { id: string; name: string }
@@ -36,6 +36,8 @@ type ExpenseRow = {
   admin_notes: string | null
   created_at: string
   paid_at: string | null
+  reviewed_at?: string | null
+  updated_at?: string | null
 }
 
 function formatMoney(cents: number) {
@@ -51,6 +53,7 @@ function statusVariant(s: ExpenseRequestStatus): "default" | "secondary" | "dest
 
 export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?: Linked[] }) {
   const { toast } = useToast()
+  const [tab, setTab] = useState("request")
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [rows, setRows] = useState<ExpenseRow[]>([])
@@ -128,7 +131,8 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
       setZelleInfo("")
       setVenmoInfo("")
       setFile(null)
-      void load()
+      await load()
+      setTab("status")
     } catch (err) {
       toast({
         title: "Could not submit",
@@ -143,213 +147,273 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
   return (
     <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/5 overflow-hidden">
       <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-[#03154C]">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-[#03154C] text-lg">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
             <Receipt className="h-4 w-4" />
           </span>
-          Reimbursement requests
+          Reimbursements
         </CardTitle>
-        <CardDescription className="text-slate-600">
-          Request reimbursement for approved team (training) expenses. Submissions are reviewed by NC United staff. Payouts
-          are not guaranteed and depend on program policy and available funds. Provide Zelle or Venmo details for payout.
+        <CardDescription className="text-slate-600 text-sm leading-snug">
+          Staff reviews each request. Add Zelle or Venmo for payout if approved. We&apos;ll email you when the status
+          changes.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
-        {linkedAthletes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Link an athlete on the <span className="font-medium">Family &amp; athletes</span> tab to submit a
-            reimbursement request.
-          </p>
-        ) : (
-          <form onSubmit={onSubmit} className="space-y-4 max-w-lg">
-            <div className="space-y-2">
-              <Label htmlFor="exp-athlete">Athlete</Label>
-              <Select value={athleteId} onValueChange={setAthleteId} required>
-                <SelectTrigger id="exp-athlete">
-                  <SelectValue placeholder="Select athlete" />
-                </SelectTrigger>
-                <SelectContent>
-                  {linkedAthletes.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exp-type">Category</Label>
-              <Select value={expenseType} onValueChange={setExpenseType} required>
-                <SelectTrigger id="exp-type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPENSE_TYPE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exp-amt">Amount requested (USD)</Label>
-              <Input
-                id="exp-amt"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Payout method</Label>
-              <Select
-                value={paymentMethod || undefined}
-                onValueChange={(v) => setPaymentMethod(v as "zelle" | "venmo")}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Zelle or Venmo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="zelle">Zelle</SelectItem>
-                  <SelectItem value="venmo">Venmo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {paymentMethod === "zelle" && (
-              <div className="space-y-2">
-                <Label htmlFor="zelle">Zelle email or phone</Label>
-                <Input
-                  id="zelle"
-                  autoComplete="off"
-                  value={zelleInfo}
-                  onChange={(e) => setZelleInfo(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            {paymentMethod === "venmo" && (
-              <div className="space-y-2">
-                <Label htmlFor="venmo">Venmo @username</Label>
-                <Input
-                  id="venmo"
-                  autoComplete="off"
-                  placeholder="@yourname"
-                  value={venmoInfo}
-                  onChange={(e) => setVenmoInfo(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="exp-notes">Notes (optional)</Label>
-              <Textarea
-                id="exp-notes"
-                value={parentNotes}
-                onChange={(e) => setParentNotes(e.target.value)}
-                rows={3}
-                placeholder="Tournament name, date, or other context"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exp-file">Receipt or invoice (optional)</Label>
-              <Input
-                id="exp-file"
-                type="file"
-                accept=".pdf,image/*"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-              <p className="text-xs text-muted-foreground">PDF or image, up to 10MB.</p>
-            </div>
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="bg-[#03154C] hover:bg-[#0a2a6e] text-white shadow-md"
+      <CardContent>
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            setTab(v)
+            if (v === "status") void load()
+          }}
+          className="w-full"
+        >
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/90 p-1 text-slate-600">
+            <TabsTrigger
+              value="request"
+              className="rounded-lg px-2 py-2.5 text-center text-[11px] font-semibold leading-tight shadow-none data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm sm:text-sm sm:py-2"
             >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Submitting…
-                </>
-              ) : (
-                "Submit reimbursement request"
-              )}
-            </Button>
-          </form>
-        )}
+              Reimbursement request
+            </TabsTrigger>
+            <TabsTrigger
+              value="status"
+              className="rounded-lg px-2 py-2.5 text-center text-[11px] font-semibold leading-tight shadow-none data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm sm:text-sm sm:py-2"
+            >
+              Reimbursement status
+              {rows.length > 0 ? (
+                <span className="ml-0.5 tabular-nums text-slate-500 data-[state=active]:text-[#003366]">
+                  ({rows.length})
+                </span>
+              ) : null}
+            </TabsTrigger>
+          </TabsList>
 
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-[#03154C]">Your reimbursement requests</h3>
-          {loading ? (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading…
-            </p>
-          ) : rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No reimbursement requests yet.</p>
-          ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Athlete</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Requested</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Doc</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="whitespace-nowrap text-xs">
-                        {new Date(r.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-sm">{r.athlete_name}</TableCell>
-                      <TableCell className="text-sm max-w-[140px]">{displayExpenseType(r.expense_type)}</TableCell>
-                      <TableCell className="text-sm">
-                        {formatMoney(r.amount_cents)}
-                        {r.amount_approved_cents != null && r.amount_approved_cents !== r.amount_cents ? (
-                          <span className="text-muted-foreground text-xs block">
-                            Approved: {formatMoney(r.amount_approved_cents)}
-                          </span>
-                        ) : null}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusVariant(r.status)} className="text-xs font-normal">
-                          {EXPENSE_STATUS_LABELS[r.status]}
-                        </Badge>
-                        {r.admin_notes ? (
-                          <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">{r.admin_notes}</p>
-                        ) : null}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {r.document_url ? (
-                          <a
-                            href={r.document_url}
-                            className="inline-flex items-center gap-1 text-sm text-primary underline"
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            View
-                          </a>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <TabsContent value="request" className="mt-4 space-y-4 focus-visible:outline-none">
+            {linkedAthletes.length === 0 ? (
+              <p className="text-sm text-slate-600">
+                Link an athlete on the <span className="font-medium text-[#03154C]">Family &amp; athletes</span> tab to
+                submit a request.
+              </p>
+            ) : (
+              <form onSubmit={onSubmit} className="mx-auto w-full max-w-lg space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="exp-athlete">Athlete</Label>
+                  <Select value={athleteId} onValueChange={setAthleteId} required>
+                    <SelectTrigger id="exp-athlete">
+                      <SelectValue placeholder="Select athlete" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {linkedAthletes.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-type">Category</Label>
+                  <Select value={expenseType} onValueChange={setExpenseType} required>
+                    <SelectTrigger id="exp-type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EXPENSE_TYPE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-amt">Amount requested (USD)</Label>
+                  <Input
+                    id="exp-amt"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Payout method</Label>
+                  <Select
+                    value={paymentMethod || undefined}
+                    onValueChange={(v) => setPaymentMethod(v as "zelle" | "venmo")}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Zelle or Venmo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zelle">Zelle</SelectItem>
+                      <SelectItem value="venmo">Venmo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {paymentMethod === "zelle" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="zelle">Zelle email or phone</Label>
+                    <Input
+                      id="zelle"
+                      autoComplete="off"
+                      value={zelleInfo}
+                      onChange={(e) => setZelleInfo(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+                {paymentMethod === "venmo" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="venmo">Venmo @username</Label>
+                    <Input
+                      id="venmo"
+                      autoComplete="off"
+                      placeholder="@yourname"
+                      value={venmoInfo}
+                      onChange={(e) => setVenmoInfo(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="exp-notes">Notes (optional)</Label>
+                  <Textarea
+                    id="exp-notes"
+                    value={parentNotes}
+                    onChange={(e) => setParentNotes(e.target.value)}
+                    rows={3}
+                    placeholder="Tournament name, date, or other context"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exp-file">Receipt or invoice (optional)</Label>
+                  <Input
+                    id="exp-file"
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  />
+                  <p className="text-xs text-muted-foreground">PDF or image, up to 10MB.</p>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2a6e] text-white shadow-md"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting…
+                    </>
+                  ) : (
+                    "Submit reimbursement request"
+                  )}
+                </Button>
+              </form>
+            )}
+          </TabsContent>
+
+          <TabsContent value="status" className="mt-4 space-y-3 focus-visible:outline-none">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600">
+                All requests tied to your account, newest first.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 border-[#003366]/20 text-[#03154C]"
+                disabled={loading}
+                onClick={() => void load()}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                    Refresh
+                  </>
+                )}
+              </Button>
             </div>
-          )}
-        </div>
+            {loading ? (
+              <p className="text-sm text-muted-foreground flex items-center gap-2 py-8 justify-center">
+                <Loader2 className="h-4 w-4 animate-spin text-[#003366]" />
+                Loading requests…
+              </p>
+            ) : rows.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#003366]/15 bg-slate-50/80 px-4 py-8 text-center">
+                <p className="text-sm text-slate-600">No reimbursement requests yet.</p>
+                <p className="text-xs text-slate-500 mt-1">Submit one from the other tab.</p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {rows.map((r) => (
+                  <li
+                    key={r.id}
+                    className="rounded-xl border border-[#003366]/10 bg-slate-50/80 px-3 py-3 sm:px-4 sm:py-4"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-[#03154C] leading-tight">{r.athlete_name || "Athlete"}</p>
+                          <Badge variant={statusVariant(r.status)} className="text-[10px] font-normal leading-snug sm:text-xs max-w-[min(100%,14rem)] whitespace-normal text-center sm:text-left">
+                            {EXPENSE_STATUS_LABELS[r.status]}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          Submitted {new Date(r.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                        </p>
+                        <p className="text-sm text-slate-700">{displayExpenseType(r.expense_type)}</p>
+                        {r.parent_notes ? (
+                          <p className="text-xs text-slate-600 border-l-2 border-[#CBAF5D]/60 pl-2 mt-1">{r.parent_notes}</p>
+                        ) : null}
+                      </div>
+                      <div className="shrink-0 space-y-1 sm:text-right">
+                        <p className="text-sm font-bold tabular-nums text-[#003366]">{formatMoney(r.amount_cents)}</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Requested</p>
+                        {r.amount_approved_cents != null && r.amount_approved_cents !== r.amount_cents ? (
+                          <p className="text-xs text-slate-700 tabular-nums pt-1">
+                            Approved: <span className="font-semibold">{formatMoney(r.amount_approved_cents)}</span>
+                          </p>
+                        ) : null}
+                        {r.status === "paid" && r.paid_at ? (
+                          <p className="text-xs text-slate-600 pt-1">
+                            Paid {new Date(r.paid_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                    {r.admin_notes ? (
+                      <p className="text-xs text-slate-600 mt-3 pt-3 border-t border-[#003366]/8">
+                        <span className="font-medium text-slate-700">Staff note: </span>
+                        {r.admin_notes}
+                      </p>
+                    ) : null}
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      {r.document_url ? (
+                        <a
+                          href={r.document_url}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-[#003366] underline underline-offset-2"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Receipt / document
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400">No document uploaded</span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   )
