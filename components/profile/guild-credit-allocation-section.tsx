@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import { Building2, Loader2, RefreshCw } from "lucide-react"
 import type { GuildCreditAllocationRow } from "@/lib/guild-credit-allocations"
+import { allocatableToGuildFromNet } from "@/lib/guild-credit-allocations"
+
+export type GuildSectionSpartanAthlete = {
+  athleteId: string
+  name: string
+  netAfterReimbursementsCents: number
+  codeUnavailable?: boolean
+}
 
 type AllocatableRow = {
   athleteId: string
@@ -30,13 +38,19 @@ function statusBadge(status: GuildCreditAllocationRow["status"]) {
   return <Badge variant="outline">Pending</Badge>
 }
 
-export function GuildCreditAllocationSection() {
+type Props = {
+  /** Same athletes + nets as the Spartan card (single source of truth). */
+  spartanAthletes: GuildSectionSpartanAthlete[]
+  spartanLoading: boolean
+}
+
+export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [guildParentUserId, setGuildParentUserId] = useState<string | null>(null)
   const [grantConfigured, setGrantConfigured] = useState(false)
-  const [allocatable, setAllocatable] = useState<AllocatableRow[]>([])
+  const [reservedByAthlete, setReservedByAthlete] = useState<Record<string, number>>({})
   const [allocations, setAllocations] = useState<GuildCreditAllocationRow[]>([])
   const [athleteId, setAthleteId] = useState("")
   const [amount, setAmount] = useState("")
@@ -51,7 +65,7 @@ export function GuildCreditAllocationSection() {
       }
       setGuildParentUserId((data as { guildParentUserId?: string | null }).guildParentUserId ?? null)
       setGrantConfigured(Boolean((data as { guildGrantConfigured?: boolean }).guildGrantConfigured))
-      setAllocatable((data as { allocatable?: AllocatableRow[] }).allocatable ?? [])
+      setReservedByAthlete((data as { reservedByAthlete?: Record<string, number> }).reservedByAthlete ?? {})
       setAllocations((data as { allocations?: GuildCreditAllocationRow[] }).allocations ?? [])
     } catch (e) {
       console.error("[RecruitNC] guild credits load", e)
@@ -68,6 +82,24 @@ export function GuildCreditAllocationSection() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const allocatable = useMemo((): AllocatableRow[] => {
+    return spartanAthletes.map((row) => {
+      const reserved = reservedByAthlete[row.athleteId] ?? 0
+      return {
+        athleteId: row.athleteId,
+        name: row.name,
+        netAfterReimbursementsCents: row.netAfterReimbursementsCents,
+        reservedToGuildCents: reserved,
+        allocatableToGuildCents: allocatableToGuildFromNet(
+          row.netAfterReimbursementsCents,
+          reserved,
+          row.codeUnavailable,
+        ),
+        codeUnavailable: row.codeUnavailable,
+      }
+    })
+  }, [spartanAthletes, reservedByAthlete])
 
   useEffect(() => {
     if (allocatable.length === 1 && !athleteId) {
@@ -108,6 +140,7 @@ export function GuildCreditAllocationSection() {
   }
 
   const selected = allocatable.find((a) => a.athleteId === athleteId)
+  const busy = loading || spartanLoading
 
   return (
     <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/5 overflow-hidden">
@@ -123,7 +156,8 @@ export function GuildCreditAllocationSection() {
           Move part of your athlete&apos;s <strong className="font-medium text-slate-800">net fundraising balance</strong>{" "}
           into the Guild wallet for private lessons and small groups. This is an internal allocation—the bank balance
           doesn&apos;t move—but your RecruitNC notional balance goes down and Guild credits go up. Staff must link your
-          Guild account first.
+          Guild account first. Amounts below use the <strong className="font-medium text-slate-800">same numbers</strong>{" "}
+          as the Spartan card above, minus anything already reserved for Guild.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -134,7 +168,7 @@ export function GuildCreditAllocationSection() {
           </Button>
         </div>
 
-        {loading ? (
+        {busy ? (
           <p className="text-sm text-slate-500 flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin text-[#003366]" />
             Loading…
@@ -151,7 +185,7 @@ export function GuildCreditAllocationSection() {
             <span className="font-mono text-xs">GUILD_API_SECRET</span>, or{" "}
             <span className="font-mono text-xs">GUILD_CREDIT_GRANT_STUB=1</span> for testing.)
           </div>
-        ) : allocatable.length === 0 ? (
+        ) : spartanAthletes.length === 0 ? (
           <p className="text-sm text-slate-600">Link athletes under Family &amp; athletes to see balances.</p>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4 max-w-lg">

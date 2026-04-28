@@ -44,7 +44,41 @@ export function computeGuildAllocatableCents(
   athlete: ParentSpartanFundraisingAthleteRow,
   reservedCents: number,
 ): number {
-  const net = athlete.netAfterReimbursementsCents
-  if (athlete.codeUnavailable || net <= 0) return 0
-  return Math.max(0, net - reservedCents)
+  return allocatableToGuildFromNet(athlete.netAfterReimbursementsCents, reservedCents, athlete.codeUnavailable)
+}
+
+/** Client + server: same math as computeGuildAllocatableCents without full athlete row. */
+export function allocatableToGuildFromNet(
+  netAfterReimbursementsCents: number,
+  reservedCents: number,
+  codeUnavailable?: boolean,
+): number {
+  if (codeUnavailable || netAfterReimbursementsCents <= 0) return 0
+  return Math.max(0, netAfterReimbursementsCents - reservedCents)
+}
+
+/** One query: reserved cents per athlete for Guild cap math. */
+export async function fetchGuildReservedCentsByAthleteId(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<Map<string, number>> {
+  const { data, error } = await admin
+    .from("guild_credit_allocations")
+    .select("athlete_id, amount_cents")
+    .eq("user_id", userId)
+    .in("status", ["pending", "guild_applied"])
+
+  if (error) {
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return new Map()
+    }
+    throw new Error(error.message)
+  }
+  const map = new Map<string, number>()
+  for (const r of data ?? []) {
+    const row = r as { athlete_id: string; amount_cents: number }
+    const id = String(row.athlete_id)
+    map.set(id, (map.get(id) ?? 0) + Number(row.amount_cents))
+  }
+  return map
 }

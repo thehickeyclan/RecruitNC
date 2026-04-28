@@ -16,8 +16,9 @@ type SpartanRow = {
   giftCount?: number
   raceSignupCount?: number
   codeUnavailable?: boolean
-  reimbursementsPaidCents: number
-  netAfterReimbursementsCents: number
+  reimbursementsPaidCents?: number
+  /** Net after reimbursements; omit only on stale clients—Guild UI falls back to totalCents. */
+  netAfterReimbursementsCents?: number
 }
 
 type LinkedAthlete = { id: string; name: string }
@@ -105,17 +106,19 @@ export function ProfileFundraiseTab({
                       <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5">
                         <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:order-2">Spent</dt>
                         <dd className="text-sm tabular-nums text-slate-800 sm:order-1">
-                          {row.reimbursementsPaidCents > 0 ? formatUsd(row.reimbursementsPaidCents) : "—"}
+                          {(row.reimbursementsPaidCents ?? 0) > 0 ? formatUsd(row.reimbursementsPaidCents ?? 0) : "—"}
                         </dd>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5">
                         <dt className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:order-2">Remaining</dt>
                         <dd
                           className={`text-sm font-bold tabular-nums sm:order-1 ${
-                            row.netAfterReimbursementsCents < 0 ? "text-[#B31B1B]" : "text-[#0f5132]"
+                            (row.netAfterReimbursementsCents ?? row.totalCents) < 0
+                              ? "text-[#B31B1B]"
+                              : "text-[#0f5132]"
                           }`}
                         >
-                          {formatUsd(row.netAfterReimbursementsCents)}
+                          {formatUsd(row.netAfterReimbursementsCents ?? row.totalCents)}
                         </dd>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-0.5 border-t border-[#003366]/10 pt-2 sm:border-0 sm:pt-0">
@@ -133,7 +136,17 @@ export function ProfileFundraiseTab({
         </CardContent>
       </Card>
 
-      <GuildCreditAllocationSection />
+      <GuildCreditAllocationSection
+        spartanLoading={spartanFundraisingLoading}
+        spartanAthletes={
+          spartanFundraising?.athletes?.map((a) => ({
+            athleteId: a.athleteId,
+            name: a.name,
+            netAfterReimbursementsCents: a.netAfterReimbursementsCents ?? a.totalCents,
+            codeUnavailable: a.codeUnavailable,
+          })) ?? []
+        }
+      />
 
       <ExpenseRequestSection linkedAthletes={linkedAthletes} />
     </div>

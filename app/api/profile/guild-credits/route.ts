@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { computeParentSpartanFundraisingTotalsForUser } from "@/lib/parent-spartan-fundraising-totals"
-import {
-  computeGuildAllocatableCents,
-  sumReservedGuildAllocationCentsByAthlete,
-  type GuildCreditAllocationRow,
-} from "@/lib/guild-credit-allocations"
+import { fetchGuildReservedCentsByAthleteId, type GuildCreditAllocationRow } from "@/lib/guild-credit-allocations"
 import { isGuildGrantConfigured } from "@/lib/guild-grant-client"
 import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS } from "@/lib/spartan-fayetteville-totals-by-code"
 
 export const dynamic = "force-dynamic"
 
+/**
+ * Guild wallet linkage + reservation totals + history only.
+ * Parent UI merges `reservedByAthlete` with Spartan totals from GET /api/profile/spartan-fundraising-totals
+ * so "Remaining" and "Available to allocate" never drift from a second Stripe/reimbursement pass.
+ */
 export async function GET() {
   const supabase = await createClient()
   const {
@@ -40,39 +40,13 @@ export async function GET() {
       ? null
       : ((profile as { guild_parent_user_id?: string | null } | null)?.guild_parent_user_id ?? null)
 
-  let athletes: Awaited<ReturnType<typeof computeParentSpartanFundraisingTotalsForUser>>["athletes"] = []
+  let reservedByAthlete: Record<string, number> = {}
   try {
-    const bundle = await computeParentSpartanFundraisingTotalsForUser(admin, user.id)
-    athletes = bundle.athletes
+    const reservedMap = await fetchGuildReservedCentsByAthleteId(admin, user.id)
+    reservedByAthlete = Object.fromEntries(reservedMap.entries())
   } catch (e) {
-    console.error("[profile/guild-credits] totals", e)
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Could not load totals" }, { status: 500 })
-  }
-
-  const allocatable: {
-    athleteId: string
-    name: string
-    netAfterReimbursementsCents: number
-    reservedToGuildCents: number
-    allocatableToGuildCents: number
-    codeUnavailable?: boolean
-  }[] = []
-
-  for (const a of athletes) {
-    let reserved = 0
-    try {
-      reserved = await sumReservedGuildAllocationCentsByAthlete(admin, user.id, a.athleteId)
-    } catch (e) {
-      console.error("[profile/guild-credits] reserved sum", e)
-    }
-    allocatable.push({
-      athleteId: a.athleteId,
-      name: a.name,
-      netAfterReimbursementsCents: a.netAfterReimbursementsCents,
-      reservedToGuildCents: reserved,
-      allocatableToGuildCents: computeGuildAllocatableCents(a, reserved),
-      codeUnavailable: a.codeUnavailable,
-    })
+    console.error("[profile/guild-credits] reserved map", e)
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Could not load reservations" }, { status: 500 })
   }
 
   let allocations: GuildCreditAllocationRow[] = []
@@ -117,7 +91,7 @@ export async function GET() {
     guildParentUserId,
     guildGrantConfigured: isGuildGrantConfigured(),
     lookbackDays: FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
-    allocatable,
+    reservedByAthlete,
     allocations,
   })
 }

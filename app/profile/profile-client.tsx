@@ -119,7 +119,10 @@ export function ProfileClient() {
   const fetchSpartanFundraisingTotals = async () => {
     setSpartanFundraisingLoading(true)
     try {
-      const res = await fetch("/api/profile/spartan-fundraising-totals", { credentials: "include" })
+      const res = await fetch("/api/profile/spartan-fundraising-totals", {
+        credentials: "include",
+        cache: "no-store",
+      })
       if (res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
           athletes?: {
@@ -130,6 +133,8 @@ export function ProfileClient() {
             giftCount?: number
             raceSignupCount?: number
             codeUnavailable?: boolean
+            reimbursementsPaidCents?: number
+            netAfterReimbursementsCents?: number
           }[]
         }
         setSpartanFundraising({ athletes: data.athletes ?? [] })
