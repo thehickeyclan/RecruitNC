@@ -166,10 +166,6 @@ export default function AdminGuildParentLinkPage() {
               </p>
             )}
 
-            {guildLookupError && (
-              <p className="text-sm text-destructive">Guild query error: {guildLookupError}</p>
-            )}
-
             {profiles && (
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">RecruitNC</h3>
@@ -196,10 +192,19 @@ export default function AdminGuildParentLinkPage() {
               </div>
             )}
 
-            {profiles && guildParents && (
+            {profiles && guildParents !== null && (
               <div className="space-y-2">
                 <h3 className="text-sm font-semibold text-gray-900">Guild (parent role only)</h3>
-                {guildParents.length === 0 ? (
+                {guildConfigured === false ? (
+                  <p className="text-sm text-muted-foreground">
+                    Wrestling Guild was not queried. After you add{" "}
+                    <code className="text-xs">GUILD_SUPABASE_URL</code> and{" "}
+                    <code className="text-xs">GUILD_SUPABASE_SERVICE_ROLE_KEY</code> on this Vercel project and redeploy,
+                    run <strong>Lookup</strong> again to load matching parent rows.
+                  </p>
+                ) : guildLookupError ? (
+                  <p className="text-sm text-destructive">Could not query Guild: {guildLookupError}</p>
+                ) : guildParents.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No Guild user with <code className="text-xs">role = parent</code> for that email. If they only have
                     admin/coach, use a Guild parent account or adjust roles in Guild.

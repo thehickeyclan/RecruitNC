@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-auth"
+import { fetchAdminParentAthleteFundraisingRollup } from "@/lib/admin-parent-athlete-fundraising-rollup"
 import { fetchAdminExpenseRequestBundle } from "@/lib/admin-expense-requests-data"
 
 export const dynamic = "force-dynamic"
@@ -10,9 +11,16 @@ export async function GET() {
     return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
-  const bundle = await fetchAdminExpenseRequestBundle()
+  const [bundle, rollup] = await Promise.all([
+    fetchAdminExpenseRequestBundle(),
+    fetchAdminParentAthleteFundraisingRollup(),
+  ])
+
   if (!bundle.ok) {
     return NextResponse.json({ error: bundle.error }, { status: 500 })
+  }
+  if (!rollup.ok) {
+    return NextResponse.json({ error: rollup.error }, { status: 500 })
   }
 
   const { requests, summary } = bundle.data
@@ -65,5 +73,6 @@ export async function GET() {
   return NextResponse.json({
     requests: requestsJson,
     summary,
+    parentAthleteRollup: rollup.data,
   })
 }

@@ -8,11 +8,17 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mergeSpartanAggregatesWithReimbursementNet } from "@/lib/athlete-reimbursement-net"
 import { fetchGuildReservedCentsByAthleteIdGlobal } from "@/lib/guild-credit-allocations"
-import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
+import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import { getSpartanFundraisingParentCoverage } from "@/lib/spartan-fundraising-parent-coverage"
 import {
+  attachPublicSupporterFields,
+  buildSpartanPublicSupporterSummary,
+} from "@/lib/spartan-public-supporter-feed"
+import {
   aggregateSpartanByAthlete,
+  buildStripeAthleteDisplayHintsByCode,
   listSpartanFayettevilleDonations,
+  resolveFundraisingAthleteRowName,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
 
@@ -47,6 +53,10 @@ async function fetchReceiptSentAtBySessionId(
 
 export type SpartanDonationRow = SpartanFayettevilleDonation & {
   receiptEmailSentAt?: string | null
+  /** Same as `/spartan` supporter table (directory + Stripe hints). */
+  creditLabel: string | null
+  publicDisplayName: string
+  publicRaceParticipantName: string | null
 }
 
 async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 | 403; error: string }> {
@@ -89,9 +99,15 @@ export async function GET(request: NextRequest) {
     const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
     const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
 
+    const fundraisingEntries = await getFundraisingAthleteEntries(admin)
+    const codeToFullName = fundraisingCodeToFullNameMap(fundraisingEntries)
+    const donationsWithPublic = attachPublicSupporterFields(donationsRaw, codeToFullName)
+    const publicSummary = buildSpartanPublicSupporterSummary(donationsRaw)
+    const stripeAthleteHints = buildStripeAthleteDisplayHintsByCode(donationsRaw)
+
     let receiptMap = new Map<string, string>()
     try {
-      const ids = donationsRaw.map((d) => d.sessionId)
+      const ids = donationsWithPublic.map((d) => d.sessionId)
       if (ids.length > 0) {
         receiptMap = await fetchReceiptSentAtBySessionId(admin, ids)
       }
@@ -99,7 +115,7 @@ export async function GET(request: NextRequest) {
       console.warn("[admin/spartan-donations] receipt status (table may be missing):", e)
     }
 
-    const donations = donationsRaw.map((d) => ({
+    const donations: SpartanDonationRow[] = donationsWithPublic.map((d) => ({
       ...d,
       receiptEmailSentAt: receiptMap.get(d.sessionId) ?? null,
     }))
@@ -113,11 +129,8 @@ export async function GET(request: NextRequest) {
 
     let guildByCodeLower = new Map<string, number>()
     try {
-      const [guildByAthleteId, entries] = await Promise.all([
-        fetchGuildReservedCentsByAthleteIdGlobal(admin),
-        getFundraisingAthleteEntries(admin),
-      ])
-      for (const e of entries) {
+      const guildByAthleteId = await fetchGuildReservedCentsByAthleteIdGlobal(admin)
+      for (const e of fundraisingEntries) {
         if (e.id.startsWith("spartan-fundraising:")) continue
         const g = guildByAthleteId.get(e.id) ?? 0
         if (g > 0) guildByCodeLower.set(e.code.toLowerCase(), g)
@@ -129,12 +142,12 @@ export async function GET(request: NextRequest) {
     const byAthlete = byAthleteMerged.map((a) => ({
       ...a,
       guildAllocationsCents: guildByCodeLower.get(a.athleteCode.trim().toLowerCase()) ?? 0,
+      athleteDisplayName: resolveFundraisingAthleteRowName(a.athleteCode, codeToFullName, stripeAthleteHints),
     }))
     const includeParentCoverage = request.nextUrl.searchParams.get("includeParentCoverage") === "1"
     const parentCoverage = includeParentCoverage ? await getSpartanFundraisingParentCoverage(admin, byAthlete) : undefined
-    const generalTotalCents = donationsRaw
-      .filter((d) => !d.athleteCode?.trim())
-      .reduce((s, d) => s + d.amountCents, 0)
+    /** Matches `/spartan` “NC United fund” row (community, no wrestler credit). */
+    const generalTotalCents = publicSummary.ncUnitedCommunityFundCents
     const grossSessionTotalCents = donationsRaw.reduce((s, d) => s + d.amountCents, 0)
     const netAfterReimbursementsCents = grossSessionTotalCents - totalReimbursementsPaidCents
 
@@ -144,7 +157,9 @@ export async function GET(request: NextRequest) {
       count: donations.length,
       donations,
       byAthlete,
+      /** @deprecated Use publicSummary — kept for older admin clients; now equals ncUnitedCommunityFundCents. */
       generalTotalCents,
+      publicSummary,
       reimbursementsPaidTotalCents: totalReimbursementsPaidCents,
       grossSessionTotalCents,
       netAfterReimbursementsCents,

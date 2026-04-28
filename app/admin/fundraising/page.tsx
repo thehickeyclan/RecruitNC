@@ -43,6 +43,10 @@ type SpartanDonationRow = {
   tierPreference: string
   /** Set when `spartan_donation_receipt_emails` row exists (Supabase). */
   receiptEmailSentAt?: string | null
+  /** Aligned with GET /api/spartan/supporters (same pipeline). */
+  creditLabel?: string | null
+  publicDisplayName?: string
+  publicRaceParticipantName?: string | null
 }
 
 type SpartanAthleteAggregate = {
@@ -54,6 +58,8 @@ type SpartanAthleteAggregate = {
   netAfterReimbursementsCents?: number
   /** Pending + applied Guild credit allocations (notional drawdown). */
   guildAllocationsCents?: number
+  /** Same naming as public `/spartan` totals-by-athlete table. */
+  athleteDisplayName?: string
 }
 
 type SpartanParentCoverageRow = {
@@ -252,7 +258,7 @@ export default function AdminFundraisingPage() {
     }
   }
 
-  const downloadSpartanCsv = async (kind: "runners" | "receipts" | "credits" | "tees") => {
+  const downloadSpartanCsv = async (kind: "runners" | "receipts" | "credits" | "tees" | "ledger") => {
     setExportError(null)
     setExportBusy(kind)
     try {
@@ -472,7 +478,9 @@ export default function AdminFundraisingPage() {
           (d) =>
             (d.athleteCode ?? "").toLowerCase().includes(q) ||
             (d.manualCreditName ?? "").toLowerCase().includes(q) ||
-            (d.athleteDisplayName ?? "").toLowerCase().includes(q),
+            (d.athleteDisplayName ?? "").toLowerCase().includes(q) ||
+            (d.creditLabel ?? "").toLowerCase().includes(q) ||
+            (d.publicDisplayName ?? "").toLowerCase().includes(q),
         )
       : list
     const byAck =
@@ -504,7 +512,11 @@ export default function AdminFundraisingPage() {
     const list = byAthlete ?? []
     const q = athleteFilter.trim().toLowerCase()
     if (!q) return list
-    return list.filter((a) => a.athleteCode.toLowerCase().includes(q))
+    return list.filter(
+      (a) =>
+        a.athleteCode.toLowerCase().includes(q) ||
+        (a.athleteDisplayName ?? "").toLowerCase().includes(q),
+    )
   }, [byAthlete, athleteFilter])
 
   return (
@@ -522,7 +534,9 @@ export default function AdminFundraisingPage() {
               Fundraising
             </h1>
             <p className="text-muted-foreground mt-1">
-              Live Stripe donation list (admin), export hints, and scratchpads (saved in this browser only).
+              Live Stripe donation list — <strong className="text-foreground">donor, runner, race/support, and athlete</strong>{" "}
+              columns match the public <HardLink href="/spartan">/spartan</HardLink> supporter feed (same API pipeline).
+              Exports and scratchpads are admin-only.
             </p>
           </div>
         </div>
@@ -699,7 +713,9 @@ export default function AdminFundraisingPage() {
                 <CardDescription>
                   Three lanes: <strong className="text-foreground">Runners</strong> (race entry path + who is on course in
                   metadata), <strong className="text-foreground">Receipts</strong> (payer-focused for records),{" "}
-                  <strong className="text-foreground">Credits</strong> (fundraising attribution aligned with corrections). Use the
+                  <strong className="text-foreground">Credits</strong> (fundraising attribution aligned with corrections).{" "}
+                  <strong className="text-foreground">Donation ledger</strong> matches the book-style columns: date (US/Eastern),
+                  amount, donor (public list rules), runner, Race vs Support, credited athlete — plus session id for audit. Use the
                   card above for <strong className="text-foreground">tee sizes + ship addresses</strong>.
                 </CardDescription>
               </CardHeader>
@@ -734,6 +750,16 @@ export default function AdminFundraisingPage() {
                   >
                     <Download className="mr-2 h-4 w-4" />
                     {exportBusy === "credits" ? "Preparing…" : "Fundraising credits"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={exportBusy !== null}
+                    onClick={() => void downloadSpartanCsv("ledger")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportBusy === "ledger" ? "Preparing…" : "Donation ledger"}
                   </Button>
                 </div>
                 {exportError ? (
@@ -932,11 +958,11 @@ export default function AdminFundraisingPage() {
                           <TableHead>Date</TableHead>
                           <TableHead>Amount</TableHead>
                           <TableHead>Donor</TableHead>
-                          <TableHead>Public list</TableHead>
-                          <TableHead>Race path</TableHead>
-                          <TableHead>Type</TableHead>
+                          <TableHead>Runner</TableHead>
+                          <TableHead>Race / support</TableHead>
                           <TableHead>Athlete</TableHead>
-                          <TableHead>Fund</TableHead>
+                          <TableHead>Public list</TableHead>
+                          <TableHead>Attribution</TableHead>
                           <TableHead className="w-[120px]">Ack</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -949,45 +975,30 @@ export default function AdminFundraisingPage() {
                             <TableCell className="font-medium">{formatMoney(d.amountCents, d.currency)}</TableCell>
                             <TableCell>
                               <div className="max-w-[200px]">
-                                <div className="truncate text-sm">{d.donorName ?? "—"}</div>
+                                <div className="truncate text-sm font-medium">
+                                  {d.publicDisplayName ?? d.donorName ?? "—"}
+                                </div>
                                 <div className="text-muted-foreground truncate text-xs">{d.donorEmail ?? "—"}</div>
                               </div>
                             </TableCell>
-                            <TableCell>
-                              {d.donorListPublic !== false ? (
-                                <Badge variant="outline" className="text-[10px]">
-                                  Public
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="text-[10px]">
-                                  Anonymous
-                                </Badge>
-                              )}
+                            <TableCell className="max-w-[140px] truncate text-sm text-muted-foreground">
+                              {d.publicRaceParticipantName?.trim() ? d.publicRaceParticipantName : "—"}
                             </TableCell>
                             <TableCell>
                               {d.raceParticipant ? (
                                 <Badge variant="default" className="text-[10px]">
-                                  Race / entry
+                                  Race
                                 </Badge>
                               ) : (
                                 <Badge variant="secondary" className="text-[10px]">
-                                  Not race path
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {d.fundraisingType === "race_donation" ? (
-                                <Badge variant="outline" className="text-[10px]">
-                                  Race donation
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-[10px]">
-                                  Give only
+                                  Support
                                 </Badge>
                               )}
                             </TableCell>
                             <TableCell className="max-w-[240px] text-sm">
-                              <span className="text-foreground">{publicAthleteCreditLabel(d) ?? "—"}</span>
+                              <span className="text-foreground">
+                                {d.creditLabel ?? publicAthleteCreditLabel(d) ?? "—"}
+                              </span>
                               {d.athleteCode && (
                                 <span className="text-muted-foreground mt-0.5 block font-mono text-[10px]">
                                   {d.athleteCode}
@@ -1004,6 +1015,17 @@ export default function AdminFundraisingPage() {
                                 <Wrench className="mr-1 h-3 w-3" />
                                 Reassign credit
                               </Button>
+                            </TableCell>
+                            <TableCell>
+                              {d.donorListPublic !== false ? (
+                                <Badge variant="outline" className="text-[10px]">
+                                  Public
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  Anonymous
+                                </Badge>
+                              )}
                             </TableCell>
                             <TableCell className="text-xs">
                               {d.attribution === "athlete"
@@ -1057,7 +1079,7 @@ export default function AdminFundraisingPage() {
                 {donations !== null && adminView === "byAthlete" && byAthlete && filteredByAthlete.length > 0 && (
                   <div className="space-y-3">
                     <p className="text-muted-foreground text-sm">
-                      General fund (no athlete code) in window:{" "}
+                      NC United fund (community — same definition as public /spartan, not “any row missing a code”):{" "}
                       <strong className="text-foreground">{formatMoney(generalTotalCents, "usd")}</strong>
                       . <strong className="text-foreground">Notional remaining</strong> matches the parent Fundraise tab:
                       net after reimbursements minus Guild credit allocations (ledger).
@@ -1066,7 +1088,7 @@ export default function AdminFundraisingPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Athlete code</TableHead>
+                            <TableHead>Athlete</TableHead>
                             <TableHead>Raised (window)</TableHead>
                             <TableHead>Reimb. paid</TableHead>
                             <TableHead>Net (after reimb.)</TableHead>
@@ -1084,7 +1106,10 @@ export default function AdminFundraisingPage() {
                             const remaining = n - g
                             return (
                             <TableRow key={a.athleteCode}>
-                              <TableCell className="font-mono text-xs">{a.athleteCode}</TableCell>
+                              <TableCell className="text-sm">
+                                <div className="font-medium text-foreground">{a.athleteDisplayName ?? "—"}</div>
+                                <div className="font-mono text-[10px] text-muted-foreground">{a.athleteCode}</div>
+                              </TableCell>
                               <TableCell className="font-medium">{formatMoney(a.totalCents, "usd")}</TableCell>
                               <TableCell className="text-muted-foreground">
                                 {r > 0 ? formatMoney(r, "usd") : "—"}

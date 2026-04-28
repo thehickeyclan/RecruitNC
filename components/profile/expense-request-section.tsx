@@ -12,11 +12,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   EXPENSE_STATUS_LABELS,
+  EXPENSE_STATUS_PARENT_DESCRIPTIONS,
   EXPENSE_TYPE_OPTIONS,
   displayExpenseType,
   type ExpenseRequestStatus,
 } from "@/lib/athlete-expense-requests"
-import { Receipt, Loader2, ExternalLink, RefreshCw, ChevronDown, CircleHelp } from "lucide-react"
+import { Receipt, Loader2, ExternalLink, RefreshCw, ChevronDown, CircleHelp, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 type Linked = { id: string; name: string }
@@ -67,6 +68,8 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
   const [venmoInfo, setVenmoInfo] = useState("")
   const [parentNotes, setParentNotes] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  /** After successful submit, show acknowledgment before returning to the form. */
+  const [submissionAck, setSubmissionAck] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -126,14 +129,14 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
       if (!res.ok) {
         throw new Error(data.error || "Submit failed")
       }
-      toast({ title: "Reimbursement request submitted" })
       setAmount("")
       setParentNotes("")
       setZelleInfo("")
       setVenmoInfo("")
       setFile(null)
       await load()
-      setTab("status")
+      setSubmissionAck(true)
+      toast({ title: "Request received", description: "See confirmation below." })
     } catch (err) {
       toast({
         title: "Could not submit",
@@ -232,6 +235,47 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                 Link an athlete on the <span className="font-medium text-[#03154C]">Family &amp; athletes</span> tab to
                 submit a request.
               </p>
+            ) : submissionAck ? (
+              <div
+                className="mx-auto w-full max-w-lg rounded-xl border border-[#0f5132]/30 bg-gradient-to-b from-[#0f5132]/6 to-white px-4 py-6 sm:px-6 sm:py-8 shadow-sm"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0f5132]/15 text-[#0f5132]">
+                    <CheckCircle2 className="h-8 w-8" aria-hidden />
+                  </span>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-[#03154C]">We received your reimbursement request</h3>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      Thank you. NC United staff will review it shortly and may follow up if we need anything else.
+                    </p>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      You&apos;ll get an <strong className="font-medium text-slate-800">email notification</strong> when
+                      the status changes (approved, not approved, or paid).
+                    </p>
+                    <p className="text-sm text-slate-700 leading-relaxed">
+                      You can always confirm details on the{" "}
+                      <strong className="font-medium text-[#03154C]">Reimbursement status</strong> tab.
+                    </p>
+                  </div>
+                  <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center pt-2">
+                    <Button
+                      type="button"
+                      className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2a6e] text-white"
+                      onClick={() => {
+                        setSubmissionAck(false)
+                        setTab("status")
+                      }}
+                    >
+                      View reimbursement status
+                    </Button>
+                    <Button type="button" variant="outline" className="w-full sm:w-auto border-[#003366]/25" onClick={() => setSubmissionAck(false)}>
+                      Submit another request
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <form onSubmit={onSubmit} className="mx-auto w-full max-w-lg space-y-4">
                 <div className="space-y-2">
@@ -355,6 +399,17 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
           </TabsContent>
 
           <TabsContent value="status" className="mt-4 space-y-3 focus-visible:outline-none">
+            <div className="rounded-lg border border-[#003366]/10 bg-slate-50/90 px-3 py-3 text-xs text-slate-600 space-y-2">
+              <p className="font-semibold text-slate-800">Status guide</p>
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {(Object.keys(EXPENSE_STATUS_LABELS) as ExpenseRequestStatus[]).map((k) => (
+                  <li key={k} className="leading-snug">
+                    <span className="font-medium text-[#03154C]">{EXPENSE_STATUS_LABELS[k]}:</span>{" "}
+                    {EXPENSE_STATUS_PARENT_DESCRIPTIONS[k]}
+                  </li>
+                ))}
+              </ul>
+            </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-slate-600">
                 All requests tied to your account, newest first.

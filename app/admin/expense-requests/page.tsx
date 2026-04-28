@@ -58,6 +58,33 @@ type Summary = {
   byUser: { user_id: string; email: string; display_name: string; open_cents: number }[]
 }
 
+type ParentAthleteRollup = {
+  campaign: string
+  lookbackDays: number
+  athletes: {
+    athleteId: string
+    name: string
+    fundraisingCode: string | null
+    raisedCents: number
+    giftCount: number
+    raceSignupCount: number
+    reimbursementsPaidWindowCents: number
+    reimbursementsPaidAllTimeCents: number
+    guildAllocationsCents: number
+    netAfterReimbursementsWindowCents: number
+    remainingNotionalCents: number
+    codeUnavailable?: boolean
+  }[]
+  totalsForLinkedAthletes: {
+    raisedCents: number
+    reimbursementsPaidWindowCents: number
+    reimbursementsPaidAllTimeCents: number
+    guildAllocationsCents: number
+    remainingNotionalCents: number
+  }
+  globalReimbursementsPaidAllTimeCents: number
+}
+
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
 }
@@ -76,6 +103,7 @@ export default function AdminExpenseRequestsPage() {
   const { toast } = useToast()
   const [rows, setRows] = useState<RequestRow[] | null>(null)
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [parentAthleteRollup, setParentAthleteRollup] = useState<ParentAthleteRollup | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [tableLoading, setTableLoading] = useState(true)
 
@@ -99,6 +127,7 @@ export default function AdminExpenseRequestsPage() {
       }
       setRows(data.requests ?? [])
       setSummary(data.summary ?? null)
+      setParentAthleteRollup(data.parentAthleteRollup ?? null)
     } catch (e) {
       setLoadErr(e instanceof Error ? e.message : "Error")
     } finally {
@@ -260,6 +289,122 @@ export default function AdminExpenseRequestsPage() {
             Refresh
           </Button>
         </div>
+
+        {parentAthleteRollup && (
+          <div className="space-y-4">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Spartan &amp; payouts — parent-linked athletes</CardTitle>
+                <CardDescription className="text-sm max-w-3xl">
+                  Each row is an athlete with a parent link or a parent profile{" "}
+                  <code className="text-xs bg-muted px-1 rounded">athlete_id</code>.{" "}
+                  <strong>Raised</strong> and <strong>reimb. paid ({parentAthleteRollup.lookbackDays}d)</strong> use the same
+                  Stripe window as the parent Spartan card and admin fundraising. <strong>Remaining</strong> is notional
+                  (raised minus that window&apos;s reimbursements, minus Guild ledger). <strong>Reimb. paid (all-time)</strong>{" "}
+                  is per athlete across every paid request.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card className="bg-emerald-50/80 border-emerald-200/80">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-emerald-950/80">Total paid out (all reimbursements)</CardDescription>
+                      <CardTitle className="text-2xl text-emerald-950 tabular-nums">
+                        {formatMoney(parentAthleteRollup.globalReimbursementsPaidAllTimeCents)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-xs text-emerald-900/85">
+                      Sum of every request marked <span className="font-medium">Paid</span> (all athletes).
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Spartan raised ({parentAthleteRollup.lookbackDays}d, linked athletes)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Guild reserved (linked athletes)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.guildAllocationsCents)}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Notional remaining (linked athletes)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.remainingNotionalCents)}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                </div>
+
+                {parentAthleteRollup.athletes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No athletes are linked to parent accounts yet. Totals above still include global paid-out if any
+                    reimbursements exist.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Athlete</TableHead>
+                          <TableHead>Code</TableHead>
+                          <TableHead className="text-right">Raised ({parentAthleteRollup.lookbackDays}d)</TableHead>
+                          <TableHead className="text-right">Reimb paid ({parentAthleteRollup.lookbackDays}d)</TableHead>
+                          <TableHead className="text-right">Guild</TableHead>
+                          <TableHead className="text-right">Spent (reimb+Guild)</TableHead>
+                          <TableHead className="text-right">Net ({parentAthleteRollup.lookbackDays}d)</TableHead>
+                          <TableHead className="text-right">Remaining</TableHead>
+                          <TableHead className="text-right">Reimb paid (all-time)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {parentAthleteRollup.athletes.map((a) => {
+                          const spentWindowPlusGuild =
+                            a.reimbursementsPaidWindowCents + a.guildAllocationsCents
+                          return (
+                            <TableRow key={a.athleteId}>
+                              <TableCell className="text-sm font-medium">{a.name}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {a.fundraisingCode ?? "—"}
+                                {a.codeUnavailable ? (
+                                  <span className="block text-xs text-amber-700">No directory code</span>
+                                ) : null}
+                              </TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">{formatMoney(a.raisedCents)}</TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">
+                                {formatMoney(a.reimbursementsPaidWindowCents)}
+                              </TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">
+                                {formatMoney(a.guildAllocationsCents)}
+                              </TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">{formatMoney(spentWindowPlusGuild)}</TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">
+                                {formatMoney(a.netAfterReimbursementsWindowCents)}
+                              </TableCell>
+                              <TableCell className="text-sm text-right tabular-nums font-medium">
+                                {formatMoney(a.remainingNotionalCents)}
+                              </TableCell>
+                              <TableCell className="text-sm text-right tabular-nums">
+                                {formatMoney(a.reimbursementsPaidAllTimeCents)}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <Card className="border-amber-200/90 bg-gradient-to-br from-amber-50/90 to-white shadow-sm">
           <CardHeader className="pb-2">

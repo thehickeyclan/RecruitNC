@@ -296,7 +296,12 @@ export function SpartanFundraisingVisuals({
           { label: "Reimbursements paid", value: formatMoney(reimbursementsPaidTotalCents), sub: "Out; same lookback as gifts", accent: "from-[#9f1239] to-[#7f1d1d]" },
           { label: "Net (after reimb.)", value: formatMoney(netCents), sub: "Gross − paid reimbursements", accent: "from-[#0f766e] to-[#115e59]" },
           { label: "Gifts", value: String(totals.count), sub: "Paid sessions", accent: "from-[#C8102E] to-[#9f0c24]" },
-          { label: "General fund (no code)", value: formatMoney(generalTotalCents), sub: "NC United bucket", accent: "from-[#0e7490] to-[#0f5c73]" },
+          {
+            label: "NC United fund",
+            value: formatMoney(generalTotalCents),
+            sub: "Community (same roll-up as /spartan)",
+            accent: "from-[#0e7490] to-[#0f5c73]",
+          },
           { label: "Average gift", value: formatMoney(totals.avgCents), sub: "Per checkout", accent: "from-[#6d28d9] to-[#5b21b6]" },
         ].map((k) => (
           <div

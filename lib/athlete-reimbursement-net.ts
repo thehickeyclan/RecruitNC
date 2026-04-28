@@ -51,6 +51,57 @@ export async function fetchReimbursementPaidCentsByAthleteIdInWindow(
 }
 
 /**
+ * Per-athlete cents paid out (status = paid), all time. Uses approved amount when set.
+ */
+export async function fetchReimbursementPaidCentsByAthleteIdAllTime(
+  admin: SupabaseClient,
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>()
+  const { data, error } = await admin
+    .from("athlete_expense_requests")
+    .select("athlete_id, amount_cents, amount_approved_cents")
+    .eq("status", "paid")
+
+  if (error) {
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      console.warn("[reimbursement-net] athlete_expense_requests not available")
+      return map
+    }
+    console.error("[reimbursement-net] select all-time paid reimbursements", error.message)
+    return map
+  }
+
+  for (const raw of (data ?? []) as Pick<ExpensePaidRow, "athlete_id" | "amount_cents" | "amount_approved_cents">[]) {
+    const line = raw.amount_approved_cents ?? raw.amount_cents
+    const id = raw.athlete_id
+    map.set(id, (map.get(id) ?? 0) + line)
+  }
+  return map
+}
+
+/** Sum of all completed reimbursement payouts (every athlete). */
+export async function fetchTotalReimbursementPaidCentsAllTime(admin: SupabaseClient): Promise<number> {
+  const { data, error } = await admin
+    .from("athlete_expense_requests")
+    .select("amount_cents, amount_approved_cents")
+    .eq("status", "paid")
+
+  if (error) {
+    if (error.code === "42P01" || error.message?.includes("does not exist")) {
+      return 0
+    }
+    console.error("[reimbursement-net] total paid sum", error.message)
+    return 0
+  }
+
+  let total = 0
+  for (const raw of (data ?? []) as Pick<ExpensePaidRow, "amount_cents" | "amount_approved_cents">[]) {
+    total += raw.amount_approved_cents ?? raw.amount_cents
+  }
+  return total
+}
+
+/**
  * Map RecruitNC athlete UUID → NCU fundraising code (only athletes with a generated code in directory).
  */
 function athleteIdToFundraisingCode(entries: Awaited<ReturnType<typeof getFundraisingAthleteEntries>>): Map<string, string> {

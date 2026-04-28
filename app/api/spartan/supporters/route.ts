@@ -7,15 +7,11 @@ import {
   fetchSpartanCreditCorrectionsMap,
 } from "@/lib/spartan-credit-corrections"
 import {
-  aggregateSpartanByAthlete,
-  buildStripeAthleteDisplayHintsByCode,
-  listSpartanFayettevilleDonations,
-  publicSupporterDisplayName,
-  resolveFundraisingAthleteRowName,
-  resolvePublicAthleteCreditLabel,
-  resolvePublicRunnerDisplay,
-  type SpartanFayettevilleDonation,
-} from "@/lib/spartan-fayetteville-stripe"
+  attachPublicSupporterFields,
+  buildSpartanPublicByAthlete,
+  buildSpartanPublicSupporterSummary,
+} from "@/lib/spartan-public-supporter-feed"
+import { listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
 
 export const dynamic = "force-dynamic"
 
@@ -50,41 +46,36 @@ export async function GET(request: NextRequest) {
       console.error("[spartan/supporters] directory / credit corrections", dirErr)
     }
 
-    const stripeAthleteHints = buildStripeAthleteDisplayHintsByCode(rows)
-    const entries = rows.map((r) => toPublicEntry(r, codeToFullName, stripeAthleteHints))
-    const byAthleteRaw = aggregateSpartanByAthlete(rows)
-    const byAthlete = byAthleteRaw.map((a) => ({
-      athleteCode: a.athleteCode,
-      athleteName: resolveFundraisingAthleteRowName(a.athleteCode, codeToFullName, stripeAthleteHints),
-      totalCents: a.totalCents,
-      donationCount: a.donationCount,
-      raceSignupCount: a.raceSignupCount,
+    const enriched = attachPublicSupporterFields(rows, codeToFullName)
+    const entries = enriched.map((r) => ({
+      id: r.sessionId,
+      createdIso: r.createdIso,
+      amountCents: r.amountCents,
+      currency: r.currency,
+      displayName: r.publicDisplayName,
+      raceSignup: r.raceParticipant,
+      giftType: r.fundraisingType,
+      athleteCode: r.athleteCode,
+      manualCreditName: r.manualCreditName,
+      creditLabel: r.creditLabel,
+      attribution: r.attribution,
+      raceParticipantName: r.publicRaceParticipantName,
     }))
 
-    const totalRaisedCents = rows.reduce((s, r) => s + r.amountCents, 0)
-    const raceEntryCount = rows.filter((r) => r.raceParticipant).length
-
-    const ncUnitedCommunityRows = rows.filter(
-      (r) =>
-        r.attribution === "general_nc_united" &&
-        !r.athleteCode?.trim() &&
-        !r.manualCreditName?.trim(),
-    )
-    const ncUnitedCommunityFundCents = ncUnitedCommunityRows.reduce((s, r) => s + r.amountCents, 0)
-    const ncUnitedCommunityGiftCount = ncUnitedCommunityRows.length
-    const ncUnitedCommunityRaceSignupCount = ncUnitedCommunityRows.filter((r) => r.raceParticipant).length
+    const byAthlete = buildSpartanPublicByAthlete(rows, codeToFullName)
+    const summary = buildSpartanPublicSupporterSummary(rows)
 
     const res = NextResponse.json({
       campaign: "fayetteville_2026",
       days,
       count: entries.length,
       summary: {
-        totalRaisedCents,
-        giftCount: rows.length,
-        raceEntryCount,
-        ncUnitedCommunityFundCents,
-        ncUnitedCommunityGiftCount,
-        ncUnitedCommunityRaceSignupCount,
+        totalRaisedCents: summary.totalRaisedCents,
+        giftCount: summary.giftCount,
+        raceEntryCount: summary.raceEntryCount,
+        ncUnitedCommunityFundCents: summary.ncUnitedCommunityFundCents,
+        ncUnitedCommunityGiftCount: summary.ncUnitedCommunityGiftCount,
+        ncUnitedCommunityRaceSignupCount: summary.ncUnitedCommunityRaceSignupCount,
       },
       entries,
       byAthlete,
@@ -97,27 +88,5 @@ export async function GET(request: NextRequest) {
       { error: e instanceof Error ? e.message : "Failed to load" },
       { status: 500 },
     )
-  }
-}
-
-function toPublicEntry(
-  r: SpartanFayettevilleDonation,
-  codeToFullName: Map<string, string>,
-  stripeDisplayHints?: Map<string, string>,
-) {
-  const creditLabel = resolvePublicAthleteCreditLabel(r, codeToFullName, stripeDisplayHints)
-  return {
-    id: r.sessionId,
-    createdIso: r.createdIso,
-    amountCents: r.amountCents,
-    currency: r.currency,
-    displayName: publicSupporterDisplayName(r),
-    raceSignup: r.raceParticipant,
-    giftType: r.fundraisingType,
-    athleteCode: r.athleteCode,
-    manualCreditName: r.manualCreditName,
-    creditLabel,
-    attribution: r.attribution,
-    raceParticipantName: resolvePublicRunnerDisplay(r),
   }
 }

@@ -36,16 +36,20 @@ function csvCell(v: string | number | null | undefined): string {
 }
 
 /**
- * GET ?kind=runners|receipts|credits|tees&days=120
- * CSV downloads for Spartan ops: who’s on course (Spartan), payers (receipts), fundraising credit alignment.
+ * GET ?kind=runners|receipts|credits|tees|ledger&days=120
+ * CSV downloads for Spartan ops: who’s on course (Spartan), payers (receipts), fundraising credit alignment,
+ * or a readable donation ledger (Date / Amount / Donor / Runner / Race|Support / Athlete).
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const kind = (request.nextUrl.searchParams.get("kind") ?? "").toLowerCase()
-  if (!["runners", "receipts", "credits", "tees"].includes(kind)) {
-    return NextResponse.json({ error: "Query kind must be runners, receipts, credits, or tees." }, { status: 400 })
+  if (!["runners", "receipts", "credits", "tees", "ledger"].includes(kind)) {
+    return NextResponse.json(
+      { error: "Query kind must be runners, receipts, credits, tees, or ledger." },
+      { status: 400 },
+    )
   }
 
   let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
@@ -76,6 +80,46 @@ export async function GET(request: NextRequest) {
 
     const stripeAthleteHints = buildStripeAthleteDisplayHintsByCode(rows)
     const dateStamp = new Date().toISOString().slice(0, 10)
+
+    if (kind === "ledger") {
+      const ledgerRows = [...rows].sort((a, b) => b.createdUnix - a.createdUnix)
+      const headers = [
+        "date_et",
+        "amount_usd",
+        "donor",
+        "runner",
+        "race_or_support",
+        "athlete",
+        "checkout_session_id",
+      ]
+      const lines = [
+        headers.join(","),
+        ...ledgerRows.map((r) => {
+          const dateEt = new Date(r.createdIso).toLocaleString("en-US", { timeZone: "America/New_York" })
+          const donor = publicSupporterDisplayName(r)
+          const runner = resolvePublicRunnerDisplay(r, { anonymousDonorFallback: true })?.trim() || "—"
+          const raceOrSupport = r.raceParticipant ? "Race" : "Support"
+          const athlete = resolvePublicAthleteCreditLabel(r, codeToFullName, stripeAthleteHints) ?? ""
+          return [
+            csvCell(dateEt),
+            csvCell((r.amountCents / 100).toFixed(2)),
+            csvCell(donor),
+            csvCell(runner),
+            csvCell(raceOrSupport),
+            csvCell(athlete),
+            csvCell(r.sessionId),
+          ].join(",")
+        }),
+      ]
+      const csv = "\uFEFF" + lines.join("\n") + "\n"
+      return new NextResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="spartan-donation-ledger-${dateStamp}.csv"`,
+          "Cache-Control": "no-store",
+        },
+      })
+    }
 
     if (kind === "tees") {
       const teeRows = rows.filter((r) => Boolean(r.teeShirtSize?.trim()))
