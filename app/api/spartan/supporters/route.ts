@@ -8,6 +8,7 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import {
   aggregateSpartanByAthlete,
+  buildStripeAthleteDisplayHintsByCode,
   listSpartanFayettevilleDonations,
   publicSupporterDisplayName,
   resolveFundraisingAthleteRowName,
@@ -49,11 +50,12 @@ export async function GET(request: NextRequest) {
       console.error("[spartan/supporters] directory / credit corrections", dirErr)
     }
 
-    const entries = rows.map((r) => toPublicEntry(r, codeToFullName))
+    const stripeAthleteHints = buildStripeAthleteDisplayHintsByCode(rows)
+    const entries = rows.map((r) => toPublicEntry(r, codeToFullName, stripeAthleteHints))
     const byAthleteRaw = aggregateSpartanByAthlete(rows)
     const byAthlete = byAthleteRaw.map((a) => ({
       athleteCode: a.athleteCode,
-      athleteName: resolveFundraisingAthleteRowName(a.athleteCode, codeToFullName),
+      athleteName: resolveFundraisingAthleteRowName(a.athleteCode, codeToFullName, stripeAthleteHints),
       totalCents: a.totalCents,
       donationCount: a.donationCount,
       raceSignupCount: a.raceSignupCount,
@@ -98,8 +100,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function toPublicEntry(r: SpartanFayettevilleDonation, codeToFullName: Map<string, string>) {
-  const creditLabel = resolvePublicAthleteCreditLabel(r, codeToFullName)
+function toPublicEntry(
+  r: SpartanFayettevilleDonation,
+  codeToFullName: Map<string, string>,
+  stripeDisplayHints?: Map<string, string>,
+) {
+  const creditLabel = resolvePublicAthleteCreditLabel(r, codeToFullName, stripeDisplayHints)
   return {
     id: r.sessionId,
     createdIso: r.createdIso,

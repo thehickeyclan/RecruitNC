@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
-import { Loader2, Coins, Sparkles } from "lucide-react"
+import { Loader2, Coins } from "lucide-react"
 
 type SpartanRow = {
   athleteId: string
@@ -40,38 +40,6 @@ export function ProfileFundraiseTab({
 }: ProfileFundraiseTabProps) {
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-[#003366]/12 bg-gradient-to-br from-white via-slate-50/80 to-[#B31B1B]/[0.06] p-1 shadow-sm">
-        <div
-          className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#CBAF5D]/20 blur-2xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -left-4 bottom-0 h-24 w-24 rounded-full bg-[#003366]/10 blur-2xl"
-          aria-hidden
-        />
-        <div className="relative rounded-[0.9rem] bg-white/90 px-4 py-4 sm:px-5 sm:py-5 backdrop-blur-sm">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#03154C] to-[#003366] text-[#CBAF5D] shadow-md">
-              <Sparkles className="h-5 w-5" strokeWidth={1.75} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold tracking-tight text-[#03154C] sm:text-lg">Spartan 2026 fundraising</h2>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                Totals match Admin → Fundraising (Stripe + credit fixes). This is a team snapshot for your family — not a
-                personal balance or payout guarantee. Link athletes on the <strong>Family &amp; athletes</strong> tab
-                to see per-wrestler rows.
-              </p>
-              <p className="mt-2 text-xs leading-snug text-slate-500">
-                <strong className="text-slate-600">Raised</strong> is donations in the same window as admin.{" "}
-                <strong className="text-slate-600">Net</strong> is raised minus reimbursements <strong>marked paid</strong> in
-                that window for that wrestler. You&apos;ll get an email (and a text if we have your cell) when a request is
-                approved, declined, or marked paid.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <Card className="border-[#003366]/12 shadow-md shadow-[#003366]/5 overflow-hidden">
         <div className="h-1.5 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
         <CardHeader className="pb-2">
@@ -79,10 +47,12 @@ export function ProfileFundraiseTab({
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
               <Coins className="h-4 w-4" strokeWidth={2} />
             </div>
-            Your family&apos;s raised totals
+            Spartan 2026 fundraising
           </CardTitle>
-          <CardDescription className="text-slate-600">
-            120-day window consistent with the admin leaderboard.
+          <CardDescription className="text-slate-600 text-sm leading-relaxed">
+            Per linked wrestler, last 120 days — for your information, not a bank balance. Link kids on{" "}
+            <span className="font-medium text-slate-700">Family &amp; athletes</span> if someone’s missing. We email you
+            (and may text) when a reimbursement is updated.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -95,8 +65,8 @@ export function ProfileFundraiseTab({
             <div className="rounded-xl border border-dashed border-[#CBAF5D]/40 bg-[#CBAF5D]/5 px-4 py-6 text-center">
               <p className="text-sm text-slate-700">
                 {!linkedLoading && linkedCount === 0
-                  ? "Link your athletes on the Family tab to see fundraising totals per wrestler here."
-                  : "No fundraising rows yet for your linked athletes, or codes need name + grad year in our system."}
+                  ? "Link your athletes on the Family tab to see totals here."
+                  : "Nothing to show yet, or a wrestler needs a graduation year on their profile for us to list a code."}
               </p>
             </div>
           ) : (
@@ -121,7 +91,7 @@ export function ProfileFundraiseTab({
                           {row.fundraisingCode ? (
                             <p className="text-xs text-slate-500 font-mono mt-0.5">{row.fundraisingCode}</p>
                           ) : (
-                            <p className="text-xs text-[#B31B1B] mt-0.5">No NCU code (needs name + grad year in our system).</p>
+                            <p className="text-xs text-[#B31B1B] mt-0.5">Add graduation year on the athlete profile to show a code.</p>
                           )}
                         </div>
                       </TableCell>

@@ -8,6 +8,7 @@ import {
   fetchSpartanCreditCorrectionsMap,
 } from "@/lib/spartan-credit-corrections"
 import {
+  buildStripeAthleteDisplayHintsByCode,
   listSpartanFayettevilleDonations,
   resolvePublicAthleteCreditLabel,
   publicSupporterDisplayName,
@@ -72,6 +73,8 @@ export async function GET(request: NextRequest) {
     } catch {
       /* optional */
     }
+
+    const stripeAthleteHints = buildStripeAthleteDisplayHintsByCode(rows)
 
     const dateStamp = new Date().toISOString().slice(0, 10)
 
@@ -155,7 +158,7 @@ export async function GET(request: NextRequest) {
             csvCell(r.donorEmail ?? ""),
             csvCell(r.tierPreference),
             csvCell(r.athleteCode ?? ""),
-            csvCell(resolvePublicAthleteCreditLabel(r, codeToFullName) ?? ""),
+            csvCell(resolvePublicAthleteCreditLabel(r, codeToFullName, stripeAthleteHints) ?? ""),
             csvCell(resolvePublicRunnerDisplay(r, { anonymousDonorFallback: true }) ?? ""),
             csvCell(r.fundraisingType),
           ].join(","),
@@ -229,7 +232,7 @@ export async function GET(request: NextRequest) {
           csvCell(r.sessionId),
           csvCell(r.paymentIntentId ?? ""),
           csvCell(r.athleteCode ?? ""),
-          csvCell(resolvePublicAthleteCreditLabel(r, codeToFullName) ?? ""),
+          csvCell(resolvePublicAthleteCreditLabel(r, codeToFullName, stripeAthleteHints) ?? ""),
           csvCell(r.attribution),
           csvCell(r.fundraisingType),
           csvCell(r.raceParticipant ? "yes" : "no"),

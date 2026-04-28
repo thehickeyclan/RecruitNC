@@ -189,6 +189,30 @@ export function aggregateSpartanByAthlete(rows: SpartanFayettevilleDonation[]): 
   return [...map.values()].sort((a, b) => b.totalCents - a.totalCents)
 }
 
+/**
+ * Best display label from Stripe metadata per NCU code (keys lowercased), when the RecruitNC directory
+ * misses that code (roster/code drift). Picks the hint from the **newest** paid session that has
+ * `athlete_display_name`, so leaderboards keep "Jack Aponte" even if directory cache lags.
+ */
+export function buildStripeAthleteDisplayHintsByCode(rows: SpartanFayettevilleDonation[]): Map<string, string> {
+  const best = new Map<string, { unix: number; text: string }>()
+  for (const r of rows) {
+    if (!r.athleteCode?.trim()) continue
+    const k = r.athleteCode.trim().toLowerCase()
+    const raw =
+      shortDirectoryDisplayName(r.athleteDisplayName)?.trim() || r.athleteDisplayName?.trim() || ""
+    if (!raw) continue
+    const text = raw.slice(0, 120)
+    const prev = best.get(k)
+    if (!prev || r.createdUnix >= prev.unix) {
+      best.set(k, { unix: r.createdUnix, text })
+    }
+  }
+  const out = new Map<string, string>()
+  for (const [k, v] of best) out.set(k, v.text)
+  return out
+}
+
 /** Public-safe display name (no email). */
 export function publicSupporterDisplayName(d: Pick<SpartanFayettevilleDonation, "donorListPublic" | "donorName">): string {
   if (!d.donorListPublic) return "Anonymous"
@@ -288,10 +312,13 @@ function lookupFundraisingDirectoryName(code: string, codeToFullName: Map<string
 /**
  * Public supporter tables: prefer RecruitNC directory full name (from fundraising code) over
  * Stripe metadata abbreviations like "Hickey '29" or code-only fallbacks.
+ * `stripeDisplayHints` (per lowered NCU code, from any checkout in the window) covers rows whose
+ * session metadata is empty after credit corrections or legacy sessions — same logic as leaderboard.
  */
 export function resolvePublicAthleteCreditLabel(
   d: Pick<SpartanFayettevilleDonation, "athleteDisplayName" | "manualCreditName" | "athleteCode" | "attribution">,
   codeToFullName: Map<string, string>,
+  stripeDisplayHints?: Map<string, string>,
 ): string | null {
   if (d.attribution === "general_nc_united" && !d.athleteCode?.trim() && !d.manualCreditName?.trim()) {
     return SPARTAN_NC_UNITED_FUND_CREDIT_LABEL
@@ -311,6 +338,11 @@ export function resolvePublicAthleteCreditLabel(
   const stripe = d.athleteDisplayName?.trim()
   if (stripe) return stripe
 
+  if (code) {
+    const fromHint = stripeDisplayHints?.get(code.toLowerCase())?.trim()
+    if (fromHint) return fromHint
+  }
+
   const manual = d.manualCreditName?.trim()
   if (manual) return manual
 
@@ -321,8 +353,12 @@ export function resolvePublicAthleteCreditLabel(
 export function resolveFundraisingAthleteRowName(
   athleteCode: string,
   codeToFullName: Map<string, string>,
+  stripeDisplayHints?: Map<string, string>,
 ): string {
   const fromDir = lookupFundraisingDirectoryName(athleteCode, codeToFullName)
   if (fromDir) return fromDir
+  const k = athleteCode.trim().toLowerCase()
+  const fromStripe = stripeDisplayHints?.get(k)?.trim()
+  if (fromStripe) return fromStripe
   return fallbackAthleteLabelFromCode(athleteCode) ?? athleteCode
 }
