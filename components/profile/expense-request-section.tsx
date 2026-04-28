@@ -149,21 +149,22 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
   }
 
   return (
-    <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/5 overflow-hidden">
-      <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-[#03154C] text-lg">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
-            <Receipt className="h-4 w-4" />
+    <Card className="rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] overflow-hidden">
+      <div className="border-b border-slate-100 bg-gradient-to-br from-slate-50 via-white to-[#fef2f2]/30 px-4 py-5 sm:px-6">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#03154C] text-[#e8d5a3] shadow-sm">
+            <Receipt className="h-5 w-5" aria-hidden />
           </span>
-          Reimbursements
-        </CardTitle>
-        <CardDescription className="text-slate-600 text-sm leading-snug">
-          Staff reviews each request. Add Zelle or Venmo for payout if approved. We&apos;ll email you when the status
-          changes.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+          <div className="min-w-0 space-y-1">
+            <CardTitle className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">Reimbursements</CardTitle>
+            <CardDescription className="text-sm text-slate-600 leading-relaxed max-w-prose">
+              Staff reviews each request. Add Zelle or Venmo for payout if approved. We&apos;ll email you when the status
+              changes.
+            </CardDescription>
+          </div>
+        </div>
+      </div>
+      <CardContent className="px-4 py-5 sm:px-6 sm:py-6">
         <Tabs
           value={tab}
           onValueChange={(v) => {
