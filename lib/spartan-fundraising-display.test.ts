@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest"
 import {
+  buildFundraisingEntries,
+  enrichRosterOnlyEntriesWithCanonicalAthleteNames,
   fundraisingCodeToFullNameMap,
   mergeFundraisingAthleteEntries,
   normalizeSpartanPublicAthleteDisplay,
+  type AthleteFundraisingSource,
   type FundraisingAthleteEntry,
 } from "@/lib/spartan-fundraising-code"
 import {
@@ -22,6 +25,26 @@ function entry(
     searchBlob: partial.searchBlob ?? "",
   }
 }
+
+describe("enrichRosterOnlyEntriesWithCanonicalAthleteNames", () => {
+  it("pulls full name from athletes profile when Stripe/manual NCU code differs (e.g. ADAMSM vs ADAMS)", () => {
+    const sources: AthleteFundraisingSource[] = [
+      { id: "pid-1", name: "Madison Adams", graduationyear: 2027, highschool: "Leesville" },
+    ]
+    const fromAthletes = buildFundraisingEntries(sources)
+    const manual: FundraisingAthleteEntry = {
+      id: "spartan-fundraising:NCU-ADAMSM-27",
+      code: "NCU-ADAMSM-27",
+      fullName: "M Adams",
+      label: "M. Adams '27 · Leesville Road",
+      searchBlob: "x",
+    }
+    const merged = mergeFundraisingAthleteEntries(fromAthletes, [manual])
+    const enriched = enrichRosterOnlyEntriesWithCanonicalAthleteNames(merged, fromAthletes, sources)
+    expect(enriched.find((x) => x.code === "NCU-ADAMSM-27")?.fullName).toBe("Madison Adams")
+    expect(fundraisingCodeToFullNameMap(enriched).get("NCU-ADAMSM-27")).toBe("Madison Adams")
+  })
+})
 
 describe("mergeFundraisingAthleteEntries", () => {
   it("prefers full first+last when main roster and extras share the same NCU code (case-insensitive)", () => {

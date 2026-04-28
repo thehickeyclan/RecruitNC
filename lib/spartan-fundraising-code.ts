@@ -328,7 +328,8 @@ async function loadEntries(admin: SupabaseClient): Promise<FundraisingAthleteEnt
   const rows = await fetchAllAthleteRows(admin)
   const fromAthletes = buildFundraisingEntries(rows)
   const extras = await loadSpartanFundraisingExtras(admin)
-  return mergeFundraisingAthleteEntries(fromAthletes, extras)
+  const merged = mergeFundraisingAthleteEntries(fromAthletes, extras)
+  return enrichRosterOnlyEntriesWithCanonicalAthleteNames(merged, fromAthletes, rows)
 }
 
 /**
@@ -341,6 +342,89 @@ export function normalizeSpartanPublicAthleteDisplay(raw: string | null | undefi
   if (idx > 0) s = s.slice(0, idx).trim()
   s = s.replace(/\s+'\d{2}\s*$/, "").trim()
   return s
+}
+
+/** Two-digit year in code/label → calendar grad year (HS cohorts: 00–49 → 2000s, 50–99 → 1900s). */
+function inferGradYearFromTwoDigit(yy: number): number | null {
+  if (!Number.isFinite(yy) || yy < 0 || yy > 99) return null
+  return yy >= 50 ? 1900 + yy : 2000 + yy
+}
+
+function inferGradYearFromFundraisingCode(code: string): number | null {
+  const m = /^NCU-[A-Za-z0-9]+-(\d{2})$/i.exec(code.trim())
+  if (!m) return null
+  return inferGradYearFromTwoDigit(Number.parseInt(m[1], 10))
+}
+
+/** Prefer grad year from label (`'27 · …`) so `NCU-*-31` matches class of 2031, not 1931. */
+function inferGradYearFromFundraisingEntry(e: FundraisingAthleteEntry): number | null {
+  const fromLabel = /'(\d{2})(?:\s*·|\s*$)/.exec(e.label)
+  if (fromLabel) return inferGradYearFromTwoDigit(Number.parseInt(fromLabel[1], 10))
+  return inferGradYearFromFundraisingCode(e.code)
+}
+
+function firstLetterFromName(name: string): string {
+  const m = /[a-zA-Z]/.exec(name ?? "")
+  return m ? m[0].toUpperCase() : ""
+}
+
+function parsedNameFromRosterOnlyEntry(e: FundraisingAthleteEntry): { firstName: string; lastName: string } | null {
+  const fromFull = parseNameFromAthleteName(e.fullName)
+  if (fromFull?.lastName) return fromFull
+  return parseNameFromAthleteName(normalizeSpartanPublicAthleteDisplay(e.label))
+}
+
+/**
+ * Stripe often credits `spartan_fundraising_athletes.code` (e.g. NCU-ADAMSM-27) while the same kid has a full
+ * `athletes` profile whose computed code is NCU-ADAMS-27. Merge keeps the manual row — patch `fullName` from the
+ * matching profile when grad year + last name (+ first initial) uniquely identify one athlete.
+ */
+export function enrichRosterOnlyEntriesWithCanonicalAthleteNames(
+  entries: FundraisingAthleteEntry[],
+  fromAthletes: FundraisingAthleteEntry[],
+  sources: AthleteFundraisingSource[],
+): FundraisingAthleteEntry[] {
+  const feById = new Map(fromAthletes.map((x) => [x.id, x]))
+  return entries.map((e) => {
+    if (!e.id.startsWith("spartan-fundraising:")) return e
+    const inferredGy = inferGradYearFromFundraisingEntry(e)
+    const extraParsed = parsedNameFromRosterOnlyEntry(e)
+    if (inferredGy == null || !extraParsed?.lastName) return e
+
+    const lastSanExtra = sanitizeLast(extraParsed.lastName)
+    if (!lastSanExtra) return e
+
+    const candidates = sources.filter((s) => {
+      const gy = coalesceGradYear(s.graduationyear)
+      if (gy !== inferredGy) return false
+      const p = parseNameFromAthleteName(s.name ?? null)
+      if (!p?.lastName) return false
+      return sanitizeLast(p.lastName) === lastSanExtra
+    })
+
+    let pick: AthleteFundraisingSource | null = null
+    if (candidates.length === 1) pick = candidates[0]!
+    else if (candidates.length > 1) {
+      const want = firstLetterFromName(extraParsed.firstName)
+      const refined = candidates.filter((s) => {
+        const p = parseNameFromAthleteName(s.name ?? null)
+        return p && firstLetterFromName(p.firstName) === want && want !== ""
+      })
+      if (refined.length === 1) pick = refined[0]!
+    }
+
+    if (!pick) return e
+
+    const fe = feById.get(pick.id)
+    if (fe?.fullName.trim()) {
+      return { ...e, fullName: fe.fullName.trim() }
+    }
+
+    const p = parseNameFromAthleteName(pick.name ?? null)
+    if (!p?.lastName) return e
+    const display = toDisplayFullName([p.firstName, p.lastName].filter(Boolean).join(" "))
+    return display.trim() ? { ...e, fullName: display.trim() } : e
+  })
 }
 
 /** Prefer fuller names over `M. Last` / checkout abbreviations (shared with Stripe hint scoring). */
