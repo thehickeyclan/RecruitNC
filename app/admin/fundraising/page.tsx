@@ -54,6 +54,16 @@ type SpartanAthleteAggregate = {
   netAfterReimbursementsCents?: number
 }
 
+type SpartanParentCoverageRow = {
+  athleteCode: string
+  displayName: string
+  athleteId: string | null
+  totalCents: number
+  donationCount: number
+  managingUserCount: number
+  status: "ok" | "no_managing_user" | "roster_only_no_athlete_row" | "code_not_in_directory"
+}
+
 const LS_LEADERBOARD = "recruitnc_admin_fundraising_spartan2026_leaderboard"
 const LS_NOTES = "recruitnc_admin_fundraising_spartan2026_notes"
 
@@ -136,6 +146,11 @@ export default function AdminFundraisingPage() {
   const [receiptSendBusy, setReceiptSendBusy] = useState(false)
   const [receiptMsg, setReceiptMsg] = useState<string | null>(null)
 
+  const [parentCoverage, setParentCoverage] = useState<{
+    rows: SpartanParentCoverageRow[]
+    summary: { withFunds: number; needsAttention: number; ok: number }
+  } | null>(null)
+
   const fetchTeeRollup = useCallback(() => {
     setTeeRollupError(null)
     return fetch("/api/admin/spartan-tee-fulfillment?days=120", { credentials: "include" })
@@ -201,7 +216,7 @@ export default function AdminFundraisingPage() {
     setDonationsLoading(true)
     setDonationsError(null)
     try {
-      const res = await fetch("/api/admin/spartan-donations?days=120")
+      const res = await fetch("/api/admin/spartan-donations?days=120&includeParentCoverage=1")
       const j = (await res.json()) as {
         error?: string
         donations?: SpartanDonationRow[]
@@ -210,6 +225,7 @@ export default function AdminFundraisingPage() {
         reimbursementsPaidTotalCents?: number
         grossSessionTotalCents?: number
         netAfterReimbursementsCents?: number
+        parentCoverage?: { rows: SpartanParentCoverageRow[]; summary: { withFunds: number; needsAttention: number; ok: number } }
       }
       if (!res.ok) throw new Error(j.error || "Could not load donations")
       setDonations(j.donations ?? [])
@@ -218,11 +234,13 @@ export default function AdminFundraisingPage() {
       setReimbursementsPaidTotalCents(typeof j.reimbursementsPaidTotalCents === "number" ? j.reimbursementsPaidTotalCents : 0)
       setGrossSessionTotalCents(typeof j.grossSessionTotalCents === "number" ? j.grossSessionTotalCents : 0)
       setNetAfterReimbursementsCents(typeof j.netAfterReimbursementsCents === "number" ? j.netAfterReimbursementsCents : 0)
+      setParentCoverage(j.parentCoverage ?? null)
       void fetchTeeRollup()
     } catch (e) {
       setDonationsError(e instanceof Error ? e.message : "Load failed")
       setDonations(null)
       setByAthlete(null)
+      setParentCoverage(null)
       setGeneralTotalCents(0)
       setReimbursementsPaidTotalCents(0)
       setGrossSessionTotalCents(0)
@@ -734,6 +752,80 @@ export default function AdminFundraisingPage() {
               onPickAthlete={(code) => setAthleteFilter(code)}
               selectedAthleteFilter={athleteFilter}
             />
+
+            {parentCoverage && parentCoverage.summary.withFunds > 0 ? (
+              <Card className={parentCoverage.summary.needsAttention > 0 ? "border-amber-500/50" : "border-emerald-600/40"}>
+                <CardHeader>
+                  <CardTitle className="text-base">Profile / parent link coverage (Fundraise tab)</CardTitle>
+                  <CardDescription>
+                    Every athlete with credited dollars should have at least one account that can see them on{" "}
+                    <strong className="text-foreground">Profile → Fundraise</strong> (via{" "}
+                    <code className="rounded bg-muted px-1 text-xs">parent_athlete_links</code> or{" "}
+                    <code className="rounded bg-muted px-1 text-xs">user_profiles.athlete_id</code>).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {parentCoverage.summary.needsAttention === 0 ? (
+                    <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                      All {parentCoverage.summary.withFunds} athlete code{parentCoverage.summary.withFunds === 1 ? "" : "s"} with
+                      dollars have a managing user.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-amber-800 dark:text-amber-200">
+                        {parentCoverage.summary.needsAttention} of {parentCoverage.summary.withFunds} codes with dollars need a
+                        parent/self link.
+                      </p>
+                      <div className="overflow-x-auto rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Athlete</TableHead>
+                              <TableHead>Code</TableHead>
+                              <TableHead className="text-right">Raised</TableHead>
+                              <TableHead>Issue</TableHead>
+                              <TableHead>Managers</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {parentCoverage.rows
+                              .filter((r) => r.status !== "ok")
+                              .map((r) => (
+                                <TableRow key={r.athleteCode}>
+                                  <TableCell className="font-medium">
+                                    {r.athleteId ? (
+                                      <HardLink
+                                        href={`/view-profile?id=${encodeURIComponent(r.athleteId)}`}
+                                        className="text-primary underline-offset-4 hover:underline"
+                                      >
+                                        {r.displayName}
+                                      </HardLink>
+                                    ) : (
+                                      r.displayName
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <code className="text-xs">{r.athleteCode}</code>
+                                  </TableCell>
+                                  <TableCell className="text-right tabular-nums">{formatMoney(r.totalCents, "usd")}</TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">
+                                    {r.status === "no_managing_user"
+                                      ? "No parent linked — Family tab cannot show Fundraise totals."
+                                      : r.status === "roster_only_no_athlete_row"
+                                        ? "Roster-only (no athletes row) — create profile / link before parent can manage."
+                                        : "NCU code not in fundraising directory — fix data or corrections."}
+                                  </TableCell>
+                                  <TableCell className="tabular-nums">{r.managingUserCount}</TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            ) : null}
 
             <Card>
                 <CardHeader>

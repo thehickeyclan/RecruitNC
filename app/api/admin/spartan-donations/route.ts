@@ -7,6 +7,7 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mergeSpartanAggregatesWithReimbursementNet } from "@/lib/athlete-reimbursement-net"
+import { getSpartanFundraisingParentCoverage } from "@/lib/spartan-fundraising-parent-coverage"
 import {
   aggregateSpartanByAthlete,
   listSpartanFayettevilleDonations,
@@ -61,6 +62,7 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 /**
  * GET: List paid Spartan Fayetteville Checkout Sessions + aggregates by athlete.
  * Query: days= lookback (default 120, max 400).
+ * Optional: includeParentCoverage=1 adds Fundraise-tab parent link coverage (Supabase).
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
@@ -106,6 +108,8 @@ export async function GET(request: NextRequest) {
       byAthleteRaw,
       sinceMs,
     )
+    const includeParentCoverage = request.nextUrl.searchParams.get("includeParentCoverage") === "1"
+    const parentCoverage = includeParentCoverage ? await getSpartanFundraisingParentCoverage(admin, byAthlete) : undefined
     const generalTotalCents = donationsRaw
       .filter((d) => !d.athleteCode?.trim())
       .reduce((s, d) => s + d.amountCents, 0)
@@ -122,6 +126,7 @@ export async function GET(request: NextRequest) {
       reimbursementsPaidTotalCents: totalReimbursementsPaidCents,
       grossSessionTotalCents,
       netAfterReimbursementsCents,
+      ...(parentCoverage ? { parentCoverage } : {}),
     })
   } catch (e) {
     console.error("[admin/spartan-donations]", e)
