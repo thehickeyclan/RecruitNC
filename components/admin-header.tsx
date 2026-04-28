@@ -61,6 +61,11 @@ const adminNavItems = [
     icon: "🏛️",
   },
   {
+    title: "Guild parent link",
+    href: "/admin/guild-parent-link",
+    icon: "🔗",
+  },
+  {
     title: "Blue Program",
     href: "/admin/blue",
     icon: "💳",

@@ -799,6 +799,7 @@ export function ProfileClient() {
             linkedLoading={linkedLoading}
             linkedCount={linkedAthletes.length}
             linkedAthletes={linkedAthletes}
+            onSpartanTotalsRefresh={fetchSpartanFundraisingTotals}
           />
         </TabsContent>
 

@@ -91,8 +91,11 @@ export default function AdminGuildCreditAllocationsPage() {
           <CardHeader>
             <CardTitle>RecruitNC → Guild ledger</CardTitle>
             <CardDescription>
-              Parent allocations from Spartan fundraising notional balance. Set <code className="text-xs">guild_parent_user_id</code> on{" "}
-              <code className="text-xs">user_profiles</code> for each family that should use the parent flow.
+              Parent allocations from Spartan fundraising notional balance. Link parents by email on{" "}
+              <HardLink href="/admin/guild-parent-link" className="underline font-medium">
+                Guild parent link
+              </HardLink>{" "}
+              (sets <code className="text-xs">guild_parent_user_id</code> on <code className="text-xs">user_profiles</code>).
             </CardDescription>
           </CardHeader>
           <CardContent>

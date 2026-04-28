@@ -10,7 +10,7 @@ import {
   Users, Trophy, Target, UserCheck, Clock, Calendar,
   School, Pencil, BarChart3, Settings, FileText,
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
-  ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign
+  ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2,
 } from "lucide-react"
 
 interface AdminStats {
@@ -246,6 +246,12 @@ export default function AdminDashboard() {
               <span className="w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
                 <Coins className="h-6 w-6" />
                 <span className="text-sm font-semibold">Fundraising</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/guild-parent-link" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#0f5132] to-[#14532d] hover:from-[#14532d] hover:to-[#0f5132] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <Link2 className="h-6 w-6" />
+                <span className="text-sm font-semibold">Guild parent link</span>
               </span>
             </HardLink>
             <Link href="/admin/blue">

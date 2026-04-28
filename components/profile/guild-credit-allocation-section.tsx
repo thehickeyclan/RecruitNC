@@ -42,9 +42,11 @@ type Props = {
   /** Same athletes + nets as the Spartan card (single source of truth). */
   spartanAthletes: GuildSectionSpartanAthlete[]
   spartanLoading: boolean
+  /** After allocate or Guild refresh, refetch Spartan totals so Remaining/Spent match reserved amounts. */
+  onSpartanTotalsRefresh?: () => void | Promise<void>
 }
 
-export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading }: Props) {
+export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, onSpartanTotalsRefresh }: Props) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -127,7 +129,8 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading }
       }
       toast({ title: "Credits sent to Guild", description: "Your Guild wallet balance should update shortly." })
       setAmount("")
-      void load()
+      await load()
+      await onSpartanTotalsRefresh?.()
     } catch (err) {
       toast({
         title: "Could not allocate",
@@ -162,7 +165,18 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading }
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex justify-end">
-          <Button type="button" variant="outline" size="sm" disabled={loading} onClick={() => void load()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            onClick={() =>
+              void (async () => {
+                await load()
+                await onSpartanTotalsRefresh?.()
+              })()
+            }
+          >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             <span className="ml-2">Refresh</span>
           </Button>

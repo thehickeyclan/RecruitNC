@@ -31,6 +31,8 @@ type ProfileFundraiseTabProps = {
   linkedLoading: boolean
   linkedCount: number
   linkedAthletes: LinkedAthlete[]
+  /** Refetch GET /api/profile/spartan-fundraising-totals after Guild allocate/refresh. */
+  onSpartanTotalsRefresh?: () => void | Promise<void>
 }
 
 function formatUsd(cents: number) {
@@ -43,6 +45,7 @@ export function ProfileFundraiseTab({
   linkedLoading,
   linkedCount,
   linkedAthletes,
+  onSpartanTotalsRefresh,
 }: ProfileFundraiseTabProps) {
   return (
     <div className="space-y-6">
@@ -152,6 +155,7 @@ export function ProfileFundraiseTab({
       </Card>
 
       <GuildCreditAllocationSection
+        onSpartanTotalsRefresh={onSpartanTotalsRefresh}
         spartanLoading={spartanFundraisingLoading}
         spartanAthletes={
           spartanFundraising?.athletes?.map((a) => ({
