@@ -9,13 +9,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   EXPENSE_STATUS_LABELS,
   EXPENSE_TYPE_OPTIONS,
   displayExpenseType,
   type ExpenseRequestStatus,
 } from "@/lib/athlete-expense-requests"
-import { Receipt, Loader2, ExternalLink, RefreshCw } from "lucide-react"
+import { Receipt, Loader2, ExternalLink, RefreshCw, ChevronDown, CircleHelp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 type Linked = { id: string; name: string }
@@ -189,6 +190,43 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
           </TabsList>
 
           <TabsContent value="request" className="mt-4 space-y-4 focus-visible:outline-none">
+            <Collapsible className="rounded-xl border border-[#003366]/12 bg-white/90 shadow-sm">
+              <CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-3 text-left text-sm font-semibold text-[#03154C] hover:bg-slate-50/80 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#003366]/30 data-[state=open]:rounded-b-none data-[state=open]:border-b data-[state=open]:border-[#003366]/10">
+                <CircleHelp className="h-4 w-4 shrink-0 text-[#003366]" aria-hidden />
+                <span className="min-w-0 flex-1">What can be reimbursed?</span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="overflow-hidden px-3 pb-3 pt-0 text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                <div className="rounded-b-lg border-t border-[#003366]/8 bg-slate-50/60 px-1 py-3 sm:px-2">
+                  <p className="text-xs text-slate-700 leading-relaxed mb-3">
+                    NC United operates as a <strong className="font-semibold text-slate-900">501(c)(3)</strong> nonprofit.
+                    Reimbursements are only for expenses that{" "}
+                    <strong className="font-semibold text-slate-900">support our exempt mission</strong>—for example
+                    athlete training, competition, and team programs—and that we can document consistent with{" "}
+                    <strong className="font-semibold text-slate-900">IRS expectations</strong> for how tax-exempt
+                    organizations spend and record funds. Personal, unrelated, or non-program costs are not eligible.
+                  </p>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-3">
+                    Use the categories below when you submit a request. Staff reviews each submission; approval and payout
+                    depend on program policy, available funds, and whether the expense clearly fits that nonprofit purpose—not
+                    every submission will qualify.
+                  </p>
+                  <ul className="list-disc pl-5 text-sm text-slate-800 space-y-1.5 marker:text-[#003366]">
+                    {EXPENSE_TYPE_OPTIONS.map((o) => (
+                      <li key={o.value}>{o.label}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">
+                    For <strong className="font-medium text-slate-700">Other</strong>, describe the expense in the notes so
+                    we can see the nonprofit connection.{" "}
+                    <strong className="font-medium text-slate-700">Upload receipts or invoices whenever you have them</strong>
+                    —clear documentation helps us run reimbursements responsibly and keep records straight. (General
+                    information only; not legal or tax advice for your family.)
+                  </p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             {linkedAthletes.length === 0 ? (
               <p className="text-sm text-slate-600">
                 Link an athlete on the <span className="font-medium text-[#03154C]">Family &amp; athletes</span> tab to
