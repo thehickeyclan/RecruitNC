@@ -331,20 +331,61 @@ async function loadEntries(admin: SupabaseClient): Promise<FundraisingAthleteEnt
   return mergeFundraisingAthleteEntries(fromAthletes, extras)
 }
 
+/**
+ * Public /spartan: strip directory suffix (` · School…`) and trailing ` 'YY` from picker / label strings.
+ */
+export function normalizeSpartanPublicAthleteDisplay(raw: string | null | undefined): string {
+  let s = raw?.trim() ?? ""
+  if (!s) return ""
+  const idx = s.indexOf(" · ")
+  if (idx > 0) s = s.slice(0, idx).trim()
+  s = s.replace(/\s+'\d{2}\s*$/, "").trim()
+  return s
+}
+
+/** Prefer fuller names over `M. Last` / checkout abbreviations (shared with Stripe hint scoring). */
+export function scoreSpartanPublicDisplayRichness(s: string): number {
+  const t = s.trim()
+  if (!t) return -1e9
+  const words = t.split(/\s+/).filter(Boolean)
+  let score = t.length + words.length * 8
+  const first = words[0] ?? ""
+  if (/^[A-Za-z]\.$/.test(first)) score -= 28
+  if (first.length === 1) score -= 18
+  if (first.length >= 3) score += 38
+  if (/\s+'\d{2}\s*$/.test(t)) score -= 22
+  if (t.includes(" · ")) score -= 35
+  return score
+}
+
+function pickRicherSpartanPublicDisplay(a: string, b: string): string {
+  const sa = scoreSpartanPublicDisplayRichness(a)
+  const sb = scoreSpartanPublicDisplayRichness(b)
+  if (sb > sa) return b
+  if (sa > sb) return a
+  return a.length >= b.length ? a : b
+}
+
 /** Cached full roster → fundraising entries (refreshed every ~5 min). */
 /**
- * Map NCU fundraising code → directory full name for public labels.
- * Keys: exact code, UPPERCASE, and lowercase — so lookups never miss on casing drift.
+ * Map NCU fundraising code → best public display name.
+ * Uses richer of `fullName` vs normalized `label`; never drops a code solely because `fullName` was blank.
  */
 export function fundraisingCodeToFullNameMap(entries: FundraisingAthleteEntry[]): Map<string, string> {
   const m = new Map<string, string>()
   for (const e of entries) {
-    const n = e.fullName.trim()
-    if (!n) continue
     const code = e.code.trim()
-    m.set(code, n)
-    m.set(code.toUpperCase(), n)
-    m.set(code.toLowerCase(), n)
+    if (!code) continue
+    const full = e.fullName.trim()
+    const fromLabel = normalizeSpartanPublicAthleteDisplay(e.label)
+    let best = ""
+    if (full && fromLabel) best = pickRicherSpartanPublicDisplay(full, fromLabel)
+    else best = full || fromLabel
+    if (!best) continue
+    best = normalizeSpartanPublicAthleteDisplay(best) || best
+    m.set(code, best)
+    m.set(code.toUpperCase(), best)
+    m.set(code.toLowerCase(), best)
   }
   return m
 }

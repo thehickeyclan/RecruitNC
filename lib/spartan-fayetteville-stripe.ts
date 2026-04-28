@@ -1,4 +1,5 @@
 import Stripe from "stripe"
+import { normalizeSpartanPublicAthleteDisplay, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 
 export const SPARTAN_FAYETTEVILLE_CAMPAIGN = "fayetteville_2026"
 export const SPARTAN_STRIPE_LIST_MAX_PAGES = 80
@@ -289,37 +290,20 @@ function lookupFundraisingDirectoryName(code: string, codeToFullName: Map<string
   )
 }
 
-/** Prefer fuller names over checkout abbreviations like "M. Adams '27" (same scoring as roster merge). */
-function scoreAthletePickerDisplayName(s: string): number {
-  const t = s.trim()
-  if (!t) return -1e9
-  const words = t.split(/\s+/).filter(Boolean)
-  let score = t.length + words.length * 8
-  const first = words[0] ?? ""
-  if (/^[A-Za-z]\.$/.test(first)) score -= 28
-  if (first.length === 1) score -= 18
-  if (first.length >= 3) score += 38
-  if (/\s+'\d{2}\s*$/.test(t)) score -= 22
-  return score
-}
-
 function pickRichestAthletePickerLabel(candidates: string[]): string | null {
   let best: string | null = null
   let bestScore = -1e9
   for (const raw of candidates) {
     const t = raw.trim()
     if (!t) continue
-    const sc = scoreAthletePickerDisplayName(t)
-    if (sc > bestScore || (sc === bestScore && best !== null && t.length > best.length)) {
-      best = t
+    const norm = normalizeSpartanPublicAthleteDisplay(t) || t
+    const sc = scoreSpartanPublicDisplayRichness(norm)
+    if (sc > bestScore || (sc === bestScore && best !== null && norm.length > best.length)) {
+      best = norm
       bestScore = sc
     }
   }
   return best
-}
-
-function stripSpartanCheckoutGradSuffix(label: string): string {
-  return label.replace(/\s+'\d{2}\s*$/, "").trim()
 }
 
 /**
@@ -373,8 +357,7 @@ export function resolvePublicAthleteCreditLabel(
     [k && stripeDisplayHints?.get(k), d.athleteDisplayName?.trim()].filter((x): x is string => Boolean(x && x.length)),
   )
   if (fromPicker) {
-    const cleaned = stripSpartanCheckoutGradSuffix(fromPicker)
-    return cleaned || fromPicker
+    return normalizeSpartanPublicAthleteDisplay(fromPicker) || fromPicker
   }
 
   const manual = d.manualCreditName?.trim()
@@ -390,12 +373,11 @@ export function resolveFundraisingAthleteRowName(
   stripeDisplayHints?: Map<string, string>,
 ): string {
   const fromDir = lookupFundraisingDirectoryName(athleteCode, codeToFullName)
-  if (fromDir) return fromDir
+  if (fromDir) return normalizeSpartanPublicAthleteDisplay(fromDir) || fromDir
   const k = athleteCode.trim().toLowerCase()
   const fromStripe = stripeDisplayHints?.get(k)?.trim()
   if (fromStripe) {
-    const cleaned = stripSpartanCheckoutGradSuffix(fromStripe)
-    return cleaned || fromStripe
+    return normalizeSpartanPublicAthleteDisplay(fromStripe) || fromStripe
   }
   return fallbackAthleteLabelFromCode(athleteCode) ?? athleteCode
 }

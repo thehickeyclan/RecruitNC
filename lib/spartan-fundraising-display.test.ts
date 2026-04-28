@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   fundraisingCodeToFullNameMap,
   mergeFundraisingAthleteEntries,
+  normalizeSpartanPublicAthleteDisplay,
   type FundraisingAthleteEntry,
 } from "@/lib/spartan-fundraising-code"
 import {
@@ -49,6 +50,13 @@ describe("fundraisingCodeToFullNameMap (public /spartan names)", () => {
   })
 })
 
+describe("normalizeSpartanPublicAthleteDisplay", () => {
+  it("strips school suffix and grad year from checkout labels", () => {
+    expect(normalizeSpartanPublicAthleteDisplay("M. Adams '27 · Leesville Road")).toBe("M. Adams")
+    expect(normalizeSpartanPublicAthleteDisplay("J. Aponte '31 · Cardinal Gibbons")).toBe("J. Aponte")
+  })
+})
+
 describe("buildStripeAthleteDisplayHintsByCode", () => {
   it("prefers a full name over M. Last 'YY when both appear for the same code", () => {
     const rows = [
@@ -57,6 +65,16 @@ describe("buildStripeAthleteDisplayHintsByCode", () => {
     ]
     const hints = buildStripeAthleteDisplayHintsByCode(rows)
     expect(hints.get("ncu-x-27")).toBe("Madison Example")
+  })
+
+  it("normalizes a single long picker string (school + grad)", () => {
+    const rows = [
+      {
+        athleteCode: "NCU-X-27",
+        athleteDisplayName: "M. Adams '27 · Leesville Road",
+      },
+    ]
+    expect(buildStripeAthleteDisplayHintsByCode(rows).get("ncu-x-27")).toBe("M. Adams")
   })
 })
 
