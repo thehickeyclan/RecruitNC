@@ -83,6 +83,12 @@ type ParentAthleteRollup = {
     remainingNotionalCents: number
   }
   globalReimbursementsPaidAllTimeCents: number
+  /** Full Fayetteville Stripe window gross — ties to Admin → Fundraising. */
+  fayettevilleGross120dCents: number
+  raisedOutsideLinkedAthleteRows120dCents: number
+  reimbursementsPaidAllTimeOutsideLinkedRowsCents: number
+  ncUnitedCommunityFund120dCents: number
+  raisedAthleteAttributedOutsideParentLinks120dCents: number
 }
 
 function formatMoney(cents: number) {
@@ -297,15 +303,19 @@ export default function AdminExpenseRequestsPage() {
                 <CardTitle className="text-lg">Spartan &amp; payouts — parent-linked athletes</CardTitle>
                 <CardDescription className="text-sm max-w-3xl">
                   Each row is an athlete with a parent link or a parent profile{" "}
-                  <code className="text-xs bg-muted px-1 rounded">athlete_id</code>.{" "}
-                  <strong>Raised</strong> and <strong>reimb. paid ({parentAthleteRollup.lookbackDays}d)</strong> use the same
-                  Stripe window as the parent Spartan card and admin fundraising. <strong>Remaining</strong> is notional
-                  (raised minus that window&apos;s reimbursements, minus Guild ledger). <strong>Reimb. paid (all-time)</strong>{" "}
-                  is per athlete across every paid request.
+                  <code className="text-xs bg-muted px-1 rounded">athlete_id</code>. Goal: wrestler dollars appear on a row OR are
+                  classified as NC United pool — use{" "}
+                  <HardLink href="/admin/fundraising" className="text-primary underline-offset-4 hover:underline">
+                    Admin → Fundraising
+                  </HardLink>{" "}
+                  <strong className="font-normal">Profile / parent link coverage</strong> until athlete-coded gaps hit $0.
+                  <strong className="font-normal"> Fayetteville gross</strong> matches Admin session sum;{" "}
+                  <strong className="font-normal">NC United fund</strong> is pooled checkouts only (no wrestler credit).
+                  <strong className="font-normal"> Athlete $ outside parent links</strong> should trend to $0 after links + directory fixes.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                   <Card className="bg-emerald-50/80 border-emerald-200/80">
                     <CardHeader className="pb-2">
                       <CardDescription className="text-emerald-950/80">Total paid out (all reimbursements)</CardDescription>
@@ -319,7 +329,60 @@ export default function AdminExpenseRequestsPage() {
                   </Card>
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardDescription>Spartan raised ({parentAthleteRollup.lookbackDays}d, linked athletes)</CardDescription>
+                      <CardDescription>Fayetteville gross ({parentAthleteRollup.lookbackDays}d, all sessions)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.fayettevilleGross120dCents)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-xs text-muted-foreground">
+                      Same total as Admin → Fundraising session sum (paid checkouts).
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>NC United fund ({parentAthleteRollup.lookbackDays}d)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.ncUnitedCommunityFund120dCents ?? 0)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-xs text-muted-foreground">
+                      Pooled gifts (Stripe attribution — no wrestler credit); expected without parent-athlete rows.
+                    </CardContent>
+                  </Card>
+                  <Card
+                    className={
+                      (parentAthleteRollup.raisedAthleteAttributedOutsideParentLinks120dCents ?? 0) > 0
+                        ? "border-amber-400/70 bg-amber-50/50"
+                        : ""
+                    }
+                  >
+                    <CardHeader className="pb-2">
+                      <CardDescription>Athlete $ outside parent links ({parentAthleteRollup.lookbackDays}d)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinks120dCents ?? 0)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-xs text-muted-foreground">
+                      Gross minus linked rows minus NC United pool — drive this to $0 via Admin → Fundraising parent coverage.
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Reimb. paid outside this table (all-time)</CardDescription>
+                      <CardTitle className="text-2xl tabular-nums">
+                        {formatMoney(parentAthleteRollup.reimbursementsPaidAllTimeOutsideLinkedRowsCents)}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-xs text-muted-foreground">
+                      Global paid total minus sum of reimb. on rows above (if athletes lack parent links).
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Spartan raised ({parentAthleteRollup.lookbackDays}d, linked rows only)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
                         {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)}
                       </CardTitle>
@@ -338,6 +401,17 @@ export default function AdminExpenseRequestsPage() {
                       <CardDescription>Notional remaining (linked athletes)</CardDescription>
                       <CardTitle className="text-2xl tabular-nums">
                         {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.remainingNotionalCents)}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                  <Card className="border-dashed border-slate-200 bg-slate-50/50">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-slate-600">Check: gross ≈ linked + NC United + athlete gap</CardDescription>
+                      <CardTitle className="text-base font-normal text-slate-700 tabular-nums leading-snug">
+                        {formatMoney(parentAthleteRollup.fayettevilleGross120dCents)} ≈{" "}
+                        {formatMoney(parentAthleteRollup.totalsForLinkedAthletes.raisedCents)} +{" "}
+                        {formatMoney(parentAthleteRollup.ncUnitedCommunityFund120dCents ?? 0)} +{" "}
+                        {formatMoney(parentAthleteRollup.raisedAthleteAttributedOutsideParentLinks120dCents ?? 0)}
                       </CardTitle>
                     </CardHeader>
                   </Card>
