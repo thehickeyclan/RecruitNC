@@ -13,6 +13,8 @@ export type SpartanFayettevilleDonation = {
   amountCents: number
   currency: string
   donorEmail: string | null
+  /** Stripe metadata `spartan_notification_email` — where Spartan sends race codes (may differ from payer; parent is common). */
+  spartanNotificationEmail: string | null
   donorName: string | null
   /** From metadata donor_list_public — false = show as Anonymous on public lists */
   donorListPublic: boolean
@@ -107,6 +109,10 @@ export async function listSpartanFayettevilleDonations(
         typeof m.race_participant_name === "string" && m.race_participant_name.trim()
           ? m.race_participant_name.trim().slice(0, 120)
           : null
+      const spartanNotificationEmail =
+        typeof m.spartan_notification_email === "string" && m.spartan_notification_email.trim()
+          ? m.spartan_notification_email.trim().slice(0, 320)
+          : null
 
       const tee100Eligible = m.tee_100_eligible === "yes"
       const teeShirtSize =
@@ -140,6 +146,7 @@ export async function listSpartanFayettevilleDonations(
         amountCents: s.amount_total ?? 0,
         currency: s.currency ?? "usd",
         donorEmail: s.customer_details?.email ?? s.customer_email ?? null,
+        spartanNotificationEmail,
         donorName: typeof m.donor_name === "string" && m.donor_name.trim() ? m.donor_name.trim() : null,
         donorListPublic: parseDonorListPublic(m),
         raceParticipant: raceRequested,
@@ -196,6 +203,15 @@ export function publicSupporterDisplayName(d: Pick<SpartanFayettevilleDonation, 
   const n = d.donorName?.trim()
   if (n) return n
   return "Supporter"
+}
+
+/** Spartan race codes / registration inbox — metadata when parent differs from payer; else payer email. */
+export function resolveRaceRegistrationInboxEmail(
+  r: Pick<SpartanFayettevilleDonation, "spartanNotificationEmail" | "donorEmail">,
+): string {
+  const reg = r.spartanNotificationEmail?.trim()
+  if (reg) return reg
+  return r.donorEmail?.trim() ?? ""
 }
 
 /** Strip ` · …` suffix from directory-style labels (e.g. "Liam Hickey · …" → "Liam Hickey"). */

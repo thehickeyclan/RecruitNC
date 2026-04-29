@@ -116,7 +116,7 @@ function IgShareCard({
         <h2 className="mt-2 font-[family-name:var(--font-barlow-spartan,system-ui)] text-2xl font-black uppercase leading-tight tracking-tight md:text-3xl">
           {campaignLabel}
         </h2>
-        <p className="mt-1 text-xs text-white/70">Fundraising snapshot</p>
+        <p className="mt-1 text-xs text-white/70">Campaign snapshot</p>
 
         <div className="mt-6 rounded-xl border border-white/15 bg-black/25 px-4 py-5 backdrop-blur-sm">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[#D3B574]">Net (after reimb.)</p>
@@ -167,6 +167,8 @@ export type SpartanFundraisingVisualsProps = {
   netAfterReimbursementsCents?: number
   onPickAthlete: (code: string) => void
   selectedAthleteFilter: string
+  /** When wrapped by Admin Fundraising outer card — lighter nested chrome and shorter titles. */
+  embedded?: boolean
 }
 
 export function SpartanFundraisingVisuals({
@@ -178,6 +180,7 @@ export function SpartanFundraisingVisuals({
   netAfterReimbursementsCents,
   onPickAthlete,
   selectedAthleteFilter,
+  embedded = false,
 }: SpartanFundraisingVisualsProps) {
   const [igFormat, setIgFormat] = useState<IgFormat>("feed")
 
@@ -268,27 +271,41 @@ export function SpartanFundraisingVisuals({
 
   if (!donations) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="py-10 text-center text-muted-foreground">
-          <BarChart3 className="mx-auto mb-2 h-10 w-10 opacity-40" />
-          <p>Load donations to unlock charts, leaderboard, and Instagram export panels.</p>
-        </CardContent>
-      </Card>
+      <div
+        className={
+          embedded
+            ? "rounded-lg border border-dashed py-10 text-center text-muted-foreground"
+            : "rounded-xl border border-dashed py-10 text-center text-muted-foreground"
+        }
+      >
+        <BarChart3 className="mx-auto mb-2 h-10 w-10 opacity-40" />
+        <p className="text-sm">Load donations to show KPIs, charts, leaderboard, and social export.</p>
+      </div>
     )
   }
 
   if (donations.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">No paid sessions in this window — nothing to chart yet.</CardContent>
-      </Card>
+      <div className={embedded ? "rounded-lg border py-8 text-center text-sm text-muted-foreground" : ""}>
+        {embedded ? (
+          <p>No paid sessions in this window.</p>
+        ) : (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              No paid sessions in this window — nothing to chart yet.
+            </CardContent>
+          </Card>
+        )}
+      </div>
     )
   }
 
   const campaignLabel = "Spartan Fayetteville 2026"
 
+  const nestCard = embedded ? "border-muted/60 shadow-none" : ""
+
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", embedded && "space-y-5")}>
       {/* KPI strip */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {[
@@ -319,13 +336,21 @@ export function SpartanFundraisingVisuals({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#003366]">
-              <BarChart3 className="h-5 w-5" />
-              Top athletes (click a bar to filter the table)
+        <Card className={nestCard}>
+          <CardHeader className={embedded ? "py-3" : undefined}>
+            <CardTitle className={cn("flex items-center gap-2 text-[#003366]", embedded && "text-base")}>
+              <BarChart3 className="h-5 w-5 shrink-0" />
+              {embedded ? "Top athletes by net" : "Top athletes (click a bar to filter the table)"}
             </CardTitle>
-            <CardDescription>Horizontal bars — <strong>net</strong> per wrestler (raised minus reimb. paid in window), top 12.</CardDescription>
+            <CardDescription className={embedded ? "text-xs" : undefined}>
+              {embedded
+                ? "Click a bar to filter the donation list — net per wrestler after reimb. (window)."
+                : (
+                  <>
+                    Horizontal bars — <strong>net</strong> per wrestler (raised minus reimb. paid in window), top 12.
+                  </>
+                )}
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[340px] pl-0">
             {topAthletesChart.length === 0 ? (
@@ -378,13 +403,15 @@ export function SpartanFundraisingVisuals({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#003366]">
-              <PieChartIcon className="h-5 w-5" />
+        <Card className={nestCard}>
+          <CardHeader className={embedded ? "py-3" : undefined}>
+            <CardTitle className={cn("flex items-center gap-2 text-[#003366]", embedded && "text-base")}>
+              <PieChartIcon className="h-5 w-5 shrink-0" />
               Where gifts go
             </CardTitle>
-            <CardDescription>Wrestler-attributed vs general fund (by payment metadata).</CardDescription>
+            <CardDescription className={embedded ? "text-xs" : undefined}>
+              Wrestler-attributed vs NC United general pool (metadata).
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[340px]">
             {pieSlices.length > 0 ? (
@@ -416,10 +443,10 @@ export function SpartanFundraisingVisuals({
       </div>
 
       {dailySeries.length > 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[#003366]">Gifts by day</CardTitle>
-            <CardDescription>Total dollars per calendar day (this loaded window).</CardDescription>
+        <Card className={nestCard}>
+          <CardHeader className={embedded ? "py-3" : undefined}>
+            <CardTitle className={cn("text-[#003366]", embedded && "text-base")}>Gifts by day</CardTitle>
+            <CardDescription className={embedded ? "text-xs" : undefined}>Running total dollars per calendar day.</CardDescription>
           </CardHeader>
           <CardContent className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -435,14 +462,14 @@ export function SpartanFundraisingVisuals({
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#003366]">
-            <Trophy className="h-6 w-6 text-[#D3B574]" />
-            Full leaderboard
+      <Card className={nestCard}>
+        <CardHeader className={embedded ? "py-3" : undefined}>
+          <CardTitle className={cn("flex items-center gap-2 text-[#003366]", embedded && "text-base")}>
+            <Trophy className={cn("h-6 w-6 text-[#D3B574]", embedded && "h-5 w-5")} />
+            {embedded ? "Rankings (click → filter)" : "Full leaderboard"}
           </CardTitle>
-          <CardDescription>
-            Click a row to set the athlete filter above the table.{" "}
+          <CardDescription className={embedded ? "text-xs" : undefined}>
+            Same net logic as Totals by athlete.{" "}
             {selectedAthleteFilter ? (
               <button
                 type="button"
@@ -502,15 +529,19 @@ export function SpartanFundraisingVisuals({
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-2 border-[#003366]/20 bg-gradient-to-b from-slate-50 to-white">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#003366]">
-            <Camera className="h-5 w-5" />
-            Instagram graphics
+      <Card
+        className={cn(
+          nestCard,
+          "overflow-hidden border-2 border-[#003366]/20 bg-gradient-to-b from-slate-50 to-white",
+        )}
+      >
+        <CardHeader className={embedded ? "py-3" : undefined}>
+          <CardTitle className={cn("flex items-center gap-2 text-[#003366]", embedded && "text-base")}>
+            <Camera className="h-5 w-5 shrink-0" />
+            {embedded ? "Social layouts (screenshot)" : "Instagram graphics"}
           </CardTitle>
-          <CardDescription>
-            Pick an aspect ratio, then open fullscreen and screenshot (or use your OS capture). Designed for bold
-            social posts — navy / crimson / gold NC United palette.
+          <CardDescription className={embedded ? "text-xs" : undefined}>
+            Aspect presets — fullscreen dialog for a clean capture.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

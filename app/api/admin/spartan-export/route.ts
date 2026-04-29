@@ -13,6 +13,7 @@ import {
   resolvePublicAthleteCreditLabel,
   publicSupporterDisplayName,
   resolvePublicRunnerDisplay,
+  resolveRaceRegistrationInboxEmail,
 } from "@/lib/spartan-fayetteville-stripe"
 
 export const dynamic = "force-dynamic"
@@ -39,6 +40,7 @@ function csvCell(v: string | number | null | undefined): string {
  * GET ?kind=runners|receipts|credits|tees|ledger&days=120
  * CSV downloads for Spartan ops: who’s on course (Spartan), payers (receipts), fundraising credit alignment,
  * or a readable donation ledger (Date / Amount / Donor / Runner / Race|Support / Athlete).
+ * Runners CSV includes payer_email (Stripe checkout) and spartan_registration_email (codes inbox — often parent).
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
@@ -183,6 +185,7 @@ export async function GET(request: NextRequest) {
         "payment_intent_id",
         "payer_name_for_display",
         "payer_email",
+        "spartan_registration_email",
         "tier_preference",
         "credited_athlete_code",
         "credited_athlete_label",
@@ -199,6 +202,7 @@ export async function GET(request: NextRequest) {
             csvCell(r.paymentIntentId ?? ""),
             csvCell(publicSupporterDisplayName(r)),
             csvCell(r.donorEmail ?? ""),
+            csvCell(resolveRaceRegistrationInboxEmail(r)),
             csvCell(r.tierPreference),
             csvCell(r.athleteCode ?? ""),
             csvCell(resolvePublicAthleteCreditLabel(r, codeToFullName, stripeAthleteHints) ?? ""),

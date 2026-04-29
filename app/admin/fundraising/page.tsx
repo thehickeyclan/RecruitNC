@@ -107,6 +107,30 @@ function parseDollarsToCents(raw: string): number | null {
   return Math.round(n * 100)
 }
 
+function parentCoverageStatusShort(status: SpartanParentCoverageRow["status"]): string {
+  switch (status) {
+    case "ok":
+      return "Parent linked"
+    case "no_managing_user":
+      return "Needs parent link"
+    case "roster_only_no_athlete_row":
+      return "Roster only"
+    case "code_not_in_directory":
+      return "Code not in directory"
+    default:
+      return status
+  }
+}
+
+function sortParentCoverageRows(rows: SpartanParentCoverageRow[]): SpartanParentCoverageRow[] {
+  return [...rows].sort((a, b) => {
+    const pa = a.status !== "ok" ? 0 : 1
+    const pb = b.status !== "ok" ? 0 : 1
+    if (pa !== pb) return pa - pb
+    return b.totalCents - a.totalCents
+  })
+}
+
 export default function AdminFundraisingPage() {
   const [leaderboard, setLeaderboard] = useState("")
   const [notes, setNotes] = useState("")
@@ -158,6 +182,17 @@ export default function AdminFundraisingPage() {
     rows: SpartanParentCoverageRow[]
     summary: { withFunds: number; needsAttention: number; ok: number }
   } | null>(null)
+  /** attention = rows that need work (default). all = everyone with Stripe dollars so linked vs not is visible. */
+  const [parentCoverageView, setParentCoverageView] = useState<"attention" | "all">("attention")
+
+  const parentCoverageDisplayRows = useMemo(() => {
+    if (!parentCoverage) return []
+    const raw =
+      parentCoverageView === "attention"
+        ? parentCoverage.rows.filter((r) => r.status !== "ok")
+        : parentCoverage.rows
+    return sortParentCoverageRows(raw)
+  }, [parentCoverage, parentCoverageView])
 
   const fetchTeeRollup = useCallback(() => {
     setTeeRollupError(null)
@@ -531,12 +566,13 @@ export default function AdminFundraisingPage() {
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold text-[#003366] md:text-3xl">
               <Coins className="h-8 w-8 text-[#C8102E]" />
-              Fundraising
+              Fundraising — Spartan Fayetteville
             </h1>
-            <p className="text-muted-foreground mt-1">
-              Live Stripe donation list — <strong className="text-foreground">donor, runner, race/support, and athlete</strong>{" "}
-              columns match the public <HardLink href="/spartan">/spartan</HardLink> supporter feed (same API pipeline).
-              Exports and scratchpads are admin-only.
+            <p className="text-muted-foreground mt-1 max-w-3xl">
+              Goal: <strong className="text-foreground">every gift</strong> credits the{" "}
+              <strong className="text-foreground">right wrestler</strong>, and that wrestler has a{" "}
+              <strong className="text-foreground">parent (or self) account linked</strong> so Fundraise totals match reality.
+              Below: (1) parent links → (2) every Stripe row → (3) rollup by athlete → tools & exports.
             </p>
           </div>
         </div>
@@ -551,321 +587,223 @@ export default function AdminFundraisingPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="spartan-2026" className="mt-4 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>How dollars attach to a kid</CardTitle>
+          <TabsContent value="spartan-2026" className="mt-4 space-y-8">
+            <Card className="border-[#003366]/20 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">This page in order</CardTitle>
                 <CardDescription>
-                  Donors credit an athlete by <strong>searching and selecting their name</strong> on the Spartan checkout
-                  form (not by &quot;using a link&quot; alone). Optional bookmark URL{" "}
-                  <code className="rounded bg-muted px-1">?athlete=NCU-LASTNAME-YY</code> can open the page ready to give.
-                  Stripe stores <code className="rounded bg-muted px-1">athlete_code</code> /{" "}
-                  <code className="rounded bg-muted px-1">fundraising_code</code> on each payment.
+                  Work top to bottom after you click <strong className="text-foreground">Load donations</strong> (loads Stripe +
+                  parent coverage together).
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <ul className="list-inside list-disc space-y-2">
+              <CardContent>
+                <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
                   <li>
-                    <strong className="text-foreground">Race donation:</strong> donor picks a distance → metadata{" "}
-                    <code className="text-xs">race_entry_requested=true</code>,{" "}
-                    <code className="text-xs">fundraising_type=race_donation</code>.
+                    <strong className="text-foreground">Parent ↔ athlete links</strong> — For each NCU code that has raised
+                    money, is there a parent (or self) account that can open <strong className="text-foreground">Profile → Fundraise</strong>?
+                    Fix gaps before you trust family-facing totals.
                   </li>
                   <li>
-                    <strong className="text-foreground">Fundraising-only (no race):</strong> donor leaves distance as
-                    &quot;general support&quot; → <code className="text-xs">race_entry_requested=false</code>,{" "}
-                    <code className="text-xs">fundraising_type=gift_only</code> — still counts toward a kid if{" "}
-                    <code className="text-xs">athlete_code</code> is set.
+                    <strong className="text-foreground">Every donation row</strong> — One row = one paid Stripe checkout. Confirm
+                    the <strong className="text-foreground">Athlete</strong> column is the kid you intend; use{" "}
+                    <strong className="text-foreground">Reassign credit</strong> if checkout metadata picked the wrong wrestler.
                   </li>
                   <li>
-                    Roll up totals in Stripe: Payments → filter metadata{" "}
-                    <code className="text-xs">spartan_campaign=fayetteville_2026</code> → export CSV → pivot on{" "}
-                    <code className="text-xs">athlete_code</code>. (Automated leaderboard DB is a follow-up.)
+                    <strong className="text-foreground">Totals by athlete</strong> — Same window, aggregated by code, with
+                    reimbursements and Guild allocations. Not a second source of truth — it rolls up the detail view.
                   </li>
                   <li>
-                    <strong className="text-foreground">Who is &quot;running&quot; vs donation-only:</strong>{" "}
-                    <code className="text-xs">race_entry_requested=true</code> + <code className="text-xs">tier_preference</code>{" "}
-                    means they went through the <em>entry-code</em> path (intend to race).{" "}
-                    <code className="text-xs">race_entry_requested=false</code> /{" "}
-                    <code className="text-xs">fundraising_type=gift_only</code> means support only. RecruitNC does not know
-                    who physically starts on race day — that lives with Spartan after they issue codes.
+                    <strong className="text-foreground">Charts &amp; exports</strong> — Optional graphics and CSVs for Spartan ops
+                    / books; see labels on those cards.
                   </li>
-                </ul>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Button type="button" variant="outline" size="sm" onClick={copyTemplate}>
-                    <ClipboardCopy className="mr-2 h-4 w-4" />
-                    Copy bookmark template
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <a href="/spartan" target="_blank" rel="noopener noreferrer">
-                      Open public /spartan
-                    </a>
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <a
-                      href="https://dashboard.stripe.com/payments"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Open Stripe Payments
-                    </a>
-                  </Button>
-                </div>
+                </ol>
               </CardContent>
             </Card>
 
-            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Wrench className="h-4 w-4 text-amber-700 dark:text-amber-500" />
-                  Fix athlete credit (after a bad checkout)
-                </CardTitle>
+                <CardTitle className="text-base">How checkout credits the kid</CardTitle>
                 <CardDescription>
-                  If the public list shows the right name but <strong className="text-foreground">totals by athlete</strong> are
-                  wrong, Stripe metadata probably missed <code className="rounded bg-muted px-1 text-xs">athlete_code</code>.
-                  Paste the <strong className="text-foreground">PaymentIntent id</strong> (<code className="text-xs">pi_…</code>)
-                  or <strong className="text-foreground">Checkout Session id</strong> (<code className="text-xs">cs_…</code>) from
-                  Stripe, and the correct NCU code. No SQL — saves to{" "}
-                  <code className="rounded bg-muted px-1 text-xs">spartan_credit_corrections</code> and merges everywhere.
+                  Donors pick a wrestler on the Spartan form; Stripe stores{" "}
+                  <code className="rounded bg-muted px-1 text-xs">athlete_code</code>.{" "}
+                  <strong className="text-foreground">Race</strong> vs <strong className="text-foreground">Support</strong> only
+                  describes entry path — both can credit an athlete. Public list uses the same pipeline as{" "}
+                  <HardLink href="/spartan" className="text-primary underline-offset-4 hover:underline">
+                    /spartan
+                  </HardLink>
+                  .
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-                <div className="grid min-w-[200px] flex-1 gap-1.5">
-                  <Label htmlFor="credit-fix-session">Session or PI id</Label>
-                  <Input
-                    id="credit-fix-session"
-                    placeholder="pi_… or cs_live_…"
-                    value={creditFixSessionId}
-                    onChange={(e) => setCreditFixSessionId(e.target.value)}
-                    autoComplete="off"
-                    className="font-mono text-xs"
-                  />
-                </div>
-                <div className="grid min-w-[180px] flex-1 gap-1.5">
-                  <Label htmlFor="credit-fix-code">Athlete code</Label>
-                  <Input
-                    id="credit-fix-code"
-                    placeholder="NCU-APONTEJ-31"
-                    value={creditFixCode}
-                    onChange={(e) => setCreditFixCode(e.target.value)}
-                    autoComplete="off"
-                    className="font-mono text-xs"
-                  />
-                </div>
-                <Button type="button" onClick={() => void applySpartanCreditFix()} disabled={creditFixBusy}>
-                  {creditFixBusy ? "Saving…" : "Apply fix"}
+              <CardContent className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={copyTemplate}>
+                  <ClipboardCopy className="mr-2 h-4 w-4" />
+                  Copy bookmark template
                 </Button>
-                {creditFixMsg ? (
-                  <p className="w-full text-sm text-muted-foreground sm:basis-full">{creditFixMsg}</p>
-                ) : null}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">NC United team tees ($100+ or race checkout)</CardTitle>
-                <CardDescription>
-                  Shirt size and shipping live on each paid{" "}
-                  <strong className="text-foreground">Stripe Checkout</strong> session as{" "}
-                  <code className="rounded bg-muted px-1 text-xs">tee_sz</code> and{" "}
-                  <code className="rounded bg-muted px-1 text-xs">ship_*</code> — not a separate database list. Eligibility is{" "}
-                  <strong className="text-foreground">per charge</strong>: one payment of $100+ (or a race entry) includes a tee;
-                  three separate $50 gifts do not combine to $100 for a tee.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                {teeRollupError ? (
-                  <p className="text-destructive text-sm" role="alert">
-                    {teeRollupError}
-                  </p>
-                ) : teeRollup ? (
-                  <p className="text-sm text-muted-foreground">
-                    <strong className="text-foreground">{teeRollup.totalTeeOrders}</strong> tee order
-                    {teeRollup.totalTeeOrders === 1 ? "" : "s"} (last 120 days, paid sessions with a size).{" "}
-                    {teeRollup.bySize.length > 0 ? (
-                      <span className="text-foreground">
-                        Counts:{" "}
-                        {teeRollup.bySize.map((r) => `${r.size}: ${r.count}`).join(" · ")}
-                      </span>
-                    ) : (
-                      <span>None in window yet.</span>
-                    )}
-                  </p>
-                ) : (
-                  <p className="text-muted-foreground text-sm">Loading tee counts…</p>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-fit"
-                  disabled={exportBusy !== null}
-                  onClick={() => void downloadSpartanCsv("tees")}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  {exportBusy === "tees" ? "Preparing…" : "Download tee list (CSV)"}
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <HardLink href="/spartan">Open public /spartan</HardLink>
+                </Button>
+                <Button type="button" variant="outline" size="sm" asChild>
+                  <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener noreferrer">
+                    Open Stripe Payments
+                  </a>
                 </Button>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">CSV exports (last 120 days)</CardTitle>
-                <CardDescription>
-                  Three lanes: <strong className="text-foreground">Runners</strong> (race entry path + who is on course in
-                  metadata), <strong className="text-foreground">Receipts</strong> (payer-focused for records),{" "}
-                  <strong className="text-foreground">Credits</strong> (fundraising attribution aligned with corrections).{" "}
-                  <strong className="text-foreground">Donation ledger</strong> matches the book-style columns: date (US/Eastern),
-                  amount, donor (public list rules), runner, Race vs Support, credited athlete — plus session id for audit. Use the
-                  card above for <strong className="text-foreground">tee sizes + ship addresses</strong>.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={exportBusy !== null}
-                    onClick={() => void downloadSpartanCsv("runners")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    {exportBusy === "runners" ? "Preparing…" : "Runners (Spartan)"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={exportBusy !== null}
-                    onClick={() => void downloadSpartanCsv("receipts")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    {exportBusy === "receipts" ? "Preparing…" : "Receipts (payers)"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={exportBusy !== null}
-                    onClick={() => void downloadSpartanCsv("credits")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    {exportBusy === "credits" ? "Preparing…" : "Fundraising credits"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={exportBusy !== null}
-                    onClick={() => void downloadSpartanCsv("ledger")}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    {exportBusy === "ledger" ? "Preparing…" : "Donation ledger"}
-                  </Button>
-                </div>
-                {exportError ? (
-                  <p className="text-destructive text-sm" role="alert">
-                    {exportError}
-                  </p>
-                ) : null}
-              </CardContent>
-            </Card>
-
-            <SpartanFundraisingVisuals
-              donations={donations}
-              byAthlete={byAthlete}
-              generalTotalCents={generalTotalCents}
-              reimbursementsPaidTotalCents={reimbursementsPaidTotalCents}
-              grossSessionTotalCents={grossSessionTotalCents}
-              netAfterReimbursementsCents={netAfterReimbursementsCents}
-              onPickAthlete={(code) => setAthleteFilter(code)}
-              selectedAthleteFilter={athleteFilter}
-            />
 
             {parentCoverage && parentCoverage.summary.withFunds > 0 ? (
               <Card className={parentCoverage.summary.needsAttention > 0 ? "border-amber-500/50" : "border-emerald-600/40"}>
                 <CardHeader>
-                  <CardTitle className="text-base">Profile / parent link coverage (Fundraise tab)</CardTitle>
-                  <CardDescription>
-                    Every athlete with credited dollars should have at least one account that can see them on{" "}
-                    <strong className="text-foreground">Profile → Fundraise</strong> (via{" "}
-                    <code className="rounded bg-muted px-1 text-xs">parent_athlete_links</code> or{" "}
-                    <code className="rounded bg-muted px-1 text-xs">user_profiles.athlete_id</code>).
+                  <CardTitle className="text-lg">1. Parent ↔ athlete coverage</CardTitle>
+                  <CardDescription className="space-y-2">
+                    <span className="block">
+                      <strong className="text-foreground">Purpose:</strong> each code with Stripe dollars should have at least
+                      one managing account for <strong className="text-foreground">Profile → Fundraise</strong> (
+                      <code className="rounded bg-muted px-1 text-xs">parent_athlete_links</code>
+                      {`, `}
+                      <code className="rounded bg-muted px-1 text-xs">user_profiles.athlete_id</code> if used).
+                    </span>
+                    <span className="block text-muted-foreground">
+                      Parents link kids under <strong className="text-foreground">Profile → Family &amp; athletes</strong>. Staff
+                      can insert links in Supabase or use <strong className="text-foreground">Edit athlete</strong> for roster/directory fixes.
+                      This grid does not create links — it only reports status.
+                    </span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {parentCoverage.summary.ok} linked · {parentCoverage.summary.needsAttention} need attention ·{" "}
+                      {parentCoverage.summary.withFunds} codes with dollars
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={parentCoverageView === "attention" ? "default" : "outline"}
+                      onClick={() => setParentCoverageView("attention")}
+                    >
+                      Needs attention ({parentCoverage.summary.needsAttention})
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={parentCoverageView === "all" ? "default" : "outline"}
+                      onClick={() => setParentCoverageView("all")}
+                    >
+                      All codes ({parentCoverage.summary.withFunds})
+                    </Button>
+                  </div>
                   {parentCoverage.summary.needsAttention === 0 ? (
                     <p className="text-sm text-emerald-700 dark:text-emerald-400">
                       All {parentCoverage.summary.withFunds} athlete code{parentCoverage.summary.withFunds === 1 ? "" : "s"} with
-                      dollars have a managing user.
+                      dollars have a managing user. Use &quot;All codes&quot; below to review each row.
+                    </p>
+                  ) : parentCoverageView === "attention" ? (
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      {parentCoverage.summary.needsAttention} of {parentCoverage.summary.withFunds} codes with dollars need a
+                      parent/self link. Switch to &quot;All codes&quot; to see who is already linked.
                     </p>
                   ) : (
-                    <>
-                      <p className="text-sm text-amber-800 dark:text-amber-200">
-                        {parentCoverage.summary.needsAttention} of {parentCoverage.summary.withFunds} codes with dollars need a
-                        parent/self link.
-                      </p>
-                      <div className="overflow-x-auto rounded-md border">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Athlete</TableHead>
-                              <TableHead>Code</TableHead>
-                              <TableHead className="text-right">Raised</TableHead>
-                              <TableHead>Issue</TableHead>
-                              <TableHead>Managers</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {parentCoverage.rows
-                              .filter((r) => r.status !== "ok")
-                              .map((r) => (
-                                <TableRow key={r.athleteCode}>
-                                  <TableCell className="font-medium">
-                                    {r.athleteId ? (
-                                      <HardLink
-                                        href={`/view-profile?id=${encodeURIComponent(r.athleteId)}`}
-                                        className="text-primary underline-offset-4 hover:underline"
-                                      >
-                                        {r.displayName}
-                                      </HardLink>
-                                    ) : (
-                                      r.displayName
-                                    )}
-                                  </TableCell>
-                                  <TableCell>
-                                    <code className="text-xs">{r.athleteCode}</code>
-                                  </TableCell>
-                                  <TableCell className="text-right tabular-nums">{formatMoney(r.totalCents, "usd")}</TableCell>
-                                  <TableCell className="text-sm text-muted-foreground">
-                                    {r.status === "no_managing_user"
-                                      ? "No parent linked — Family tab cannot show Fundraise totals."
-                                      : r.status === "roster_only_no_athlete_row"
-                                        ? "Roster-only (no athletes row) — create profile / link before parent can manage."
-                                        : "NCU code not in fundraising directory — fix data or corrections."}
-                                  </TableCell>
-                                  <TableCell className="tabular-nums">{r.managingUserCount}</TableCell>
-                                </TableRow>
-                              ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </>
+                    <p className="text-sm text-muted-foreground">
+                      Green rows already have a parent or self profile tied to this athlete. Amber rows still need work.
+                    </p>
                   )}
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Athlete</TableHead>
+                          <TableHead>Code</TableHead>
+                          <TableHead className="text-right">Raised</TableHead>
+                          <TableHead>Managers</TableHead>
+                          <TableHead>Details</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {parentCoverageDisplayRows.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-8">
+                              No rows in this view — switch to &quot;All codes&quot; or everything is already linked.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          parentCoverageDisplayRows.map((r) => (
+                            <TableRow
+                              key={r.athleteCode}
+                              className={r.status === "ok" ? "bg-emerald-50/40 dark:bg-emerald-950/15" : undefined}
+                            >
+                              <TableCell>
+                                <Badge
+                                  variant={r.status === "ok" ? "outline" : "secondary"}
+                                  className={
+                                    r.status === "ok"
+                                      ? "border-emerald-600/60 text-emerald-900 dark:text-emerald-100"
+                                      : "bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-50"
+                                  }
+                                >
+                                  {parentCoverageStatusShort(r.status)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {r.athleteId ? (
+                                  <HardLink
+                                    href={`/view-profile?id=${encodeURIComponent(r.athleteId)}`}
+                                    className="text-primary underline-offset-4 hover:underline"
+                                  >
+                                    {r.displayName}
+                                  </HardLink>
+                                ) : (
+                                  r.displayName
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <code className="text-xs">{r.athleteCode}</code>
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">{formatMoney(r.totalCents, "usd")}</TableCell>
+                              <TableCell className="tabular-nums">{r.managingUserCount}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground max-w-[min(28rem,55vw)]">
+                                {r.status === "no_managing_user"
+                                  ? "No row in parent_athlete_links for this athlete — parent must add them under Family & athletes."
+                                  : r.status === "roster_only_no_athlete_row"
+                                    ? "Fundraising roster entry without athletes table row — create athlete profile first."
+                                    : r.status === "code_not_in_directory"
+                                      ? "Stripe used this code but it is not tied to directory fundraising entries."
+                                      : "At least one parent or self profile can manage Fundraise for this athlete."}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {r.athleteId ? (
+                                  <HardLink
+                                    href={`/admin/athletes/edit?id=${encodeURIComponent(r.athleteId)}`}
+                                    className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                                  >
+                                    Edit athlete
+                                  </HardLink>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             ) : null}
 
             <Card>
                 <CardHeader>
-                <CardTitle>Donations (Stripe)</CardTitle>
+                <CardTitle className="text-lg">2. Every donation (Stripe)</CardTitle>
                 <CardDescription>
-                  Paid Checkout sessions with <code className="rounded bg-muted px-1 text-xs">spartan_campaign=fayetteville_2026</code>.
-                  <strong className="text-foreground"> New payments</strong> appear when you <strong className="text-foreground">Refresh</strong>{" "}
-                  (data comes from Stripe). <strong className="text-foreground">Net</strong> = gifts in this window minus{" "}
-                  <strong>reimbursements marked paid</strong> in the same window (per athlete; see Reimbursement admin).{" "}
-                  <strong className="text-foreground">Race path</strong> = race / entry; <strong className="text-foreground">Give only</strong> = no
-                  race. <strong className="text-foreground">Ack</strong> = 501(c)(3) email. <strong className="text-foreground">By athlete</strong> for
-                  per–athlete raised, reimb. paid, and net.
+                  <strong className="text-foreground">Purpose:</strong> audit <strong className="text-foreground">each paid checkout</strong>{" "}
+                  (<code className="rounded bg-muted px-1 text-xs">spartan_campaign=fayetteville_2026</code>). The Athlete column is who
+                  receives credit in RecruitNC — use <strong className="text-foreground">Reassign credit</strong> if Stripe metadata picked the wrong kid.
+                  <strong className="text-foreground"> Ack</strong> = charitable acknowledgment email status. Switch view to{" "}
+                  <strong className="text-foreground">Totals by athlete</strong> for aggregated raised, reimbursements, Guild, net (same window).
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -883,7 +821,7 @@ export default function AdminFundraisingPage() {
                       onChange={(e) => setAdminView(e.target.value as "all" | "byAthlete")}
                       disabled={donations === null}
                     >
-                      <option value="all">All gifts (detail)</option>
+                      <option value="all">Every gift (detail)</option>
                       <option value="byAthlete">Totals by athlete</option>
                     </select>
                   </div>
@@ -1079,10 +1017,9 @@ export default function AdminFundraisingPage() {
                 {donations !== null && adminView === "byAthlete" && byAthlete && filteredByAthlete.length > 0 && (
                   <div className="space-y-3">
                     <p className="text-muted-foreground text-sm">
-                      NC United fund (community — same definition as public /spartan, not “any row missing a code”):{" "}
-                      <strong className="text-foreground">{formatMoney(generalTotalCents, "usd")}</strong>
-                      . <strong className="text-foreground">Notional remaining</strong> matches the parent Fundraise tab:
-                      net after reimbursements minus Guild credit allocations (ledger).
+                      <strong className="text-foreground">Totals by athlete</strong> — sum of Stripe gifts per NCU code in this window,
+                      minus reimbursements paid and Guild allocations (matches parent Profile → Fundraise logic). NC United pooled fund (no wrestler credit):{" "}
+                      <strong className="text-foreground">{formatMoney(generalTotalCents, "usd")}</strong>.
                     </p>
                     <div className="rounded-md border">
                       <Table>
@@ -1149,6 +1086,174 @@ export default function AdminFundraisingPage() {
               </CardContent>
             </Card>
 
+            <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Wrench className="h-4 w-4 text-amber-700 dark:text-amber-500" />
+                  Fix Stripe metadata (wrong NCU code on a session)
+                </CardTitle>
+                <CardDescription>
+                  Use when <strong className="text-foreground">Reassign credit</strong> on a row isn&apos;t enough or you only have ids from Stripe.
+                  Saves to <code className="rounded bg-muted px-1 text-xs">spartan_credit_corrections</code>; totals and exports pick it up after refresh.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <div className="grid min-w-[200px] flex-1 gap-1.5">
+                  <Label htmlFor="credit-fix-session">Session or PI id</Label>
+                  <Input
+                    id="credit-fix-session"
+                    placeholder="pi_… or cs_live_…"
+                    value={creditFixSessionId}
+                    onChange={(e) => setCreditFixSessionId(e.target.value)}
+                    autoComplete="off"
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div className="grid min-w-[180px] flex-1 gap-1.5">
+                  <Label htmlFor="credit-fix-code">Athlete code</Label>
+                  <Input
+                    id="credit-fix-code"
+                    placeholder="NCU-APONTEJ-31"
+                    value={creditFixCode}
+                    onChange={(e) => setCreditFixCode(e.target.value)}
+                    autoComplete="off"
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <Button type="button" onClick={() => void applySpartanCreditFix()} disabled={creditFixBusy}>
+                  {creditFixBusy ? "Saving…" : "Apply fix"}
+                </Button>
+                {creditFixMsg ? (
+                  <p className="w-full text-sm text-muted-foreground sm:basis-full">{creditFixMsg}</p>
+                ) : null}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="text-base">Downloads — tees & fulfillment</CardTitle>
+                  <CardDescription>
+                    Shirt sizes and shipping addresses come from Stripe session metadata (<code className="text-xs">tee_sz</code>,{" "}
+                    <code className="text-xs">ship_*</code>). Eligibility is per charge ($100+ single gift or race path).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  {teeRollupError ? (
+                    <p className="text-destructive text-sm" role="alert">
+                      {teeRollupError}
+                    </p>
+                  ) : teeRollup ? (
+                    <p className="text-sm text-muted-foreground">
+                      <strong className="text-foreground">{teeRollup.totalTeeOrders}</strong> tee order
+                      {teeRollup.totalTeeOrders === 1 ? "" : "s"} (last 120 days).{" "}
+                      {teeRollup.bySize.length > 0 ? (
+                        <span className="text-foreground">{teeRollup.bySize.map((r) => `${r.size}: ${r.count}`).join(" · ")}</span>
+                      ) : (
+                        <span>None in window yet.</span>
+                      )}
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">Loading tee counts…</p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    disabled={exportBusy !== null}
+                    onClick={() => void downloadSpartanCsv("tees")}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    {exportBusy === "tees" ? "Preparing…" : "Tee list (CSV)"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="text-base">Downloads — operations & books</CardTitle>
+                  <CardDescription>
+                    <strong className="text-foreground">Runners</strong> race metadata, <strong className="text-foreground">Receipts</strong> payers,{" "}
+                    <strong className="text-foreground">Credits</strong> attribution, <strong className="text-foreground">Ledger</strong> audit-style
+                    columns with session ids.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={exportBusy !== null}
+                      onClick={() => void downloadSpartanCsv("runners")}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      {exportBusy === "runners" ? "…" : "Runners"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={exportBusy !== null}
+                      onClick={() => void downloadSpartanCsv("receipts")}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      {exportBusy === "receipts" ? "…" : "Receipts"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={exportBusy !== null}
+                      onClick={() => void downloadSpartanCsv("credits")}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      {exportBusy === "credits" ? "…" : "Credits"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={exportBusy !== null}
+                      onClick={() => void downloadSpartanCsv("ledger")}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      {exportBusy === "ledger" ? "…" : "Ledger"}
+                    </Button>
+                  </div>
+                  {exportError ? (
+                    <p className="text-destructive text-sm" role="alert">
+                      {exportError}
+                    </p>
+                  ) : null}
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Charts &amp; social graphics</CardTitle>
+                <CardDescription>
+                  Optional visuals for announcements — same underlying numbers as the tables above. Click a bar to filter the donation list by code.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <SpartanFundraisingVisuals
+                  embedded
+                  donations={donations}
+                  byAthlete={byAthlete}
+                  generalTotalCents={generalTotalCents}
+                  reimbursementsPaidTotalCents={reimbursementsPaidTotalCents}
+                  grossSessionTotalCents={grossSessionTotalCents}
+                  netAfterReimbursementsCents={netAfterReimbursementsCents}
+                  onPickAthlete={(code) => setAthleteFilter(code)}
+                  selectedAthleteFilter={athleteFilter}
+                />
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Leaderboard scratchpad</CardTitle>
@@ -1180,6 +1285,7 @@ export default function AdminFundraisingPage() {
                 />
               </CardContent>
             </Card>
+            </div>
           </TabsContent>
         </Tabs>
 
