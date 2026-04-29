@@ -157,18 +157,25 @@ export async function POST(request: NextRequest) {
   })
 
   if (!grant.ok) {
+    let detail = `${grant.message} (HTTP ${grant.status})`
+    if (/credits_source_check/i.test(grant.message)) {
+      detail +=
+        " Usually: Guild production missing credits migrations (recruitnc_transfer / recruitnc alias). Rarely: set RecruitNC GUILD_CREDIT_GRANT_SOURCE only if Guild documents a required HTTP literal."
+    }
     await admin
       .from("guild_credit_allocations")
       .update({
         status: "failed",
-        error_message: `${grant.message} (HTTP ${grant.status})`,
+        error_message: detail,
         updated_at: new Date().toISOString(),
       })
       .eq("id", allocationId)
 
     return NextResponse.json(
       {
-        error: grant.message,
+        error: /credits_source_check/i.test(grant.message)
+          ? `${grant.message} Staff: apply Guild credits migrations on production (recruitnc_transfer + recruitnc alias). Override GUILD_CREDIT_GRANT_SOURCE only if Guild requires it for HTTP.`
+          : grant.message,
         allocationId,
         status: "failed",
       },

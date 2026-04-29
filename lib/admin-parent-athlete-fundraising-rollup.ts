@@ -63,19 +63,24 @@ async function collectAthleteIdsWithParentAssociation(admin: SupabaseClient): Pr
     .select("athlete_id")
     .not("athlete_id", "is", null)
 
-  if (profError && profError.code !== "42P01") {
-    throw new Error(profError.message)
-  }
-  for (const r of profRows ?? []) {
-    const id = (r as { athlete_id?: string | null }).athlete_id
-    if (id) ids.add(id)
+  if (profError) {
+    // 42P01 = missing table; 42703 = missing column (prod may not have user_profiles.athlete_id yet).
+    if (profError.code !== "42P01" && profError.code !== "42703") {
+      throw new Error(profError.message)
+    }
+  } else {
+    for (const r of profRows ?? []) {
+      const id = (r as { athlete_id?: string | null }).athlete_id
+      if (id) ids.add(id)
+    }
   }
 
   return [...ids]
 }
 
 /**
- * Spartan + reimbursement + Guild rollups for every athlete tied to a parent (links or profile athlete_id),
+ * Spartan + reimbursement + Guild rollups for every athlete tied to a parent (`parent_athlete_links`, plus
+ * `user_profiles.athlete_id` when that column exists),
  * plus a global “all reimbursements paid” total. Same 120d Stripe window and Guild global ledger as admin fundraising.
  */
 export async function fetchAdminParentAthleteFundraisingRollup(): Promise<

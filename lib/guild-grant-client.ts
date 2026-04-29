@@ -1,6 +1,20 @@
 /**
  * Server-only: call Guild trusted grant endpoint (when implemented).
- * @see GUILD_API_BASE_URL, GUILD_API_SECRET, GUILD_CREDIT_GRANT_PATH, GUILD_CREDIT_GRANT_STUB
+ *
+ * Guild `public.credits.source` is constrained (`credits_source_check`). Allowed values include
+ * `recruitnc_transfer` (canonical RecruitNC → Guild wallet row), `recruitnc` (short alias), plus
+ * cancellation / admin_grant / promotion / reward / etc. — see Guild migrations (e.g.
+ * 20260431110100 and the recruitnc alias migration).
+ *
+ * RecruitNC sends `source: recruitnc` by default (`GUILD_CREDIT_GRANT_SOURCE` optional override).
+ * Guild’s trusted handler maps grants through `grantCredit(..., sourceType: 'recruitnc')` → DB row
+ * `recruitnc_transfer`; HTTP body `source` is contract/Zod only — not necessarily inserted verbatim.
+ *
+ * If Guild returns `credits_source_check`, production often has **pending migrations** (constraint
+ * missing `recruitnc_transfer` / `recruitnc`) or another integration is inserting invalid literals.
+ *
+ * @see GUILD_API_BASE_URL, GUILD_API_SECRET, GUILD_CREDIT_GRANT_PATH, GUILD_CREDIT_GRANT_STUB,
+ *     GUILD_CREDIT_GRANT_SOURCE, GUILD_CREDIT_GRANT_DESCRIPTION
  */
 
 export type GuildGrantRequest = {
@@ -69,10 +83,14 @@ export async function postGuildCreditGrant(body: GuildGrantRequest): Promise<Gui
   }
 
   const url = `${base.replace(/\/$/, "")}${grantPath().startsWith("/") ? "" : "/"}${grantPath()}`
+  const grantSource =
+    (process.env.GUILD_CREDIT_GRANT_SOURCE ?? "").trim() || "recruitnc"
+
   const payload = {
     guild_parent_id: body.guildParentId,
     amount_cents: body.amountCents,
-    source: process.env.GUILD_CREDIT_GRANT_SOURCE || "promotion",
+    /** Guild HTTP contract; DB row uses recruitnc_transfer via Guild handler — default recruitnc */
+    source: grantSource,
     description:
       process.env.GUILD_CREDIT_GRANT_DESCRIPTION || "RECRUITNC: Fundraising balance allocated to Guild credits",
     metadata: body.metadata,
