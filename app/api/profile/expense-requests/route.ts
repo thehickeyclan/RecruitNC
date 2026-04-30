@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { EXPENSE_TYPE_OPTIONS, type ExpensePaymentMethod } from "@/lib/athlete-expense-requests"
+import { notifyStaffNewReimbursementRequestDegraded } from "@/lib/reimbursement-notify"
 import { nanoid } from "nanoid"
 
 export const runtime = "nodejs"
@@ -169,6 +170,15 @@ export async function POST(request: NextRequest) {
     console.error("[RecruitNC] expense-requests POST", insErr)
     return NextResponse.json({ error: insErr.message }, { status: 500 })
   }
+
+  notifyStaffNewReimbursementRequestDegraded({
+    requestId: inserted.id,
+    submitterUserId: user.id,
+    submitterEmail: user.email ?? null,
+    athleteId,
+    expenseTypeValue: expenseType,
+    amountCents,
+  })
 
   return NextResponse.json({ success: true, id: inserted.id, created_at: inserted.created_at, status: inserted.status })
 }

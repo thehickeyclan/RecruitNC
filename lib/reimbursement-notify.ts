@@ -1,6 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { displayExpenseType } from "@/lib/athlete-expense-requests"
 import { sendReimbursementRequestStatusEmail, type ReimbursementStatusEmailKind } from "@/lib/email/reimbursement-request-status-email"
 import { sendSms, toE164 } from "@/lib/sms"
+
+/**
+ * Comma-separated US numbers or E.164 (e.g. `6316625409,+15551234567`).
+ * When unset, no staff SMS is sent for new requests.
+ */
+const NEW_REQUEST_STAFF_SMS_ENV = "RECRUITNC_REIMBURSEMENT_NEW_REQUEST_SMS_TO"
 
 const BASE = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com").replace(
   /\/$/,
@@ -20,6 +27,93 @@ function displayNameFromProfile(p: {
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
+}
+
+function staffAlertE164Recipients(): string[] {
+  const raw = process.env[NEW_REQUEST_STAFF_SMS_ENV]?.trim()
+  if (!raw) return []
+  const out: string[] = []
+  for (const part of raw.split(",")) {
+    const e = toE164(part.trim())
+    if (e) out.push(e)
+  }
+  return out
+}
+
+/**
+ * Text staff when a parent submits a new reimbursement request (Profile → Fundraise).
+ * Uses Twilio (`lib/sms.ts`); does not throw.
+ */
+export function notifyStaffNewReimbursementRequestDegraded(params: {
+  requestId: string
+  submitterUserId: string
+  /** Auth email — used when user_profiles row is missing or slow to sync */
+  submitterEmail?: string | null
+  athleteId: string
+  expenseTypeValue: string
+  amountCents: number
+}): void {
+  void (async () => {
+    const recipients = staffAlertE164Recipients()
+    if (recipients.length === 0) {
+      return
+    }
+
+    const { requestId, submitterUserId, submitterEmail, athleteId, expenseTypeValue, amountCents } = params
+    const admin = createAdminClient()
+    const [{ data: profile, error: pe }, { data: ath, error: ae }] = await Promise.all([
+      admin
+        .from("user_profiles")
+        .select("email, first_name, last_name, full_name")
+        .eq("user_id", submitterUserId)
+        .maybeSingle(),
+      admin.from("athletes").select("name").eq("id", athleteId).maybeSingle(),
+    ])
+    if (pe) {
+      console.error("[RecruitNC] reimbursement staff SMS: profile", pe.message)
+      return
+    }
+    if (ae) {
+      console.error("[RecruitNC] reimbursement staff SMS: athlete", ae.message)
+      return
+    }
+
+    const prof = profile as {
+      email?: string | null
+      full_name?: string | null
+      first_name?: string | null
+      last_name?: string | null
+    } | null
+    let parentLabel =
+      submitterEmail?.trim() || prof?.email?.trim() || ""
+    if (!parentLabel && prof) {
+      parentLabel = displayNameFromProfile({
+        full_name: prof.full_name ?? null,
+        first_name: prof.first_name ?? null,
+        last_name: prof.last_name ?? null,
+        email: prof.email ?? null,
+      })
+    }
+    if (!parentLabel) parentLabel = `${submitterUserId.slice(0, 8)}…`
+
+    const athleteName = (ath as { name?: string | null } | null)?.name?.trim() || "Athlete"
+    const cat = displayExpenseType(expenseTypeValue)
+    const adminUrl = `${BASE}/admin/expense-requests`
+    const body = `RecruitNC: New reimbursement ${formatMoney(amountCents)} — ${athleteName} (${cat}). Parent: ${parentLabel}. Open: ${adminUrl}`
+
+    let sent = 0
+    for (const e164 of recipients) {
+      const ok = await sendSms(e164, body)
+      if (ok) sent++
+    }
+    if (sent > 0) {
+      console.log("[RecruitNC] reimbursement staff SMS: new request", requestId.slice(0, 8), "sent", sent)
+    } else {
+      console.warn("[RecruitNC] reimbursement staff SMS: new request not sent (Twilio or invalid numbers)")
+    }
+  })().catch((e) => {
+    console.error("[RecruitNC] reimbursement staff SMS: unhandled", e)
+  })
 }
 
 /**
