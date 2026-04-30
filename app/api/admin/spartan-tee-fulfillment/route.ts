@@ -7,6 +7,7 @@ import {
 } from "@/lib/spartan-credit-corrections"
 import { listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
 
 export const dynamic = "force-dynamic"
 
@@ -25,15 +26,21 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 }
 
 /**
- * JSON rollup for admin: how many of each shirt size to order (paid checkouts with `tee_sz` in Stripe metadata).
- * GET ?days=120
+ * JSON rollup for admin: shirt sizes from paid checkouts (`tee_sz` in Stripe metadata).
+ * GET ?days=120&campaign=
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
-  let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
-  if (!Number.isFinite(days) || days < 1) days = 120
+  const campaignResult = resolveFundraisingCampaignQueryParam(request.nextUrl.searchParams.get("campaign"))
+  if (!campaignResult.ok) {
+    return NextResponse.json({ error: campaignResult.error }, { status: 400 })
+  }
+  const { campaign } = campaignResult
+
+  let days = Number(request.nextUrl.searchParams.get("days") ?? String(campaign.defaultLookbackDays))
+  if (!Number.isFinite(days) || days < 1) days = campaign.defaultLookbackDays
   if (days > 400) days = 400
 
   const stripeSecret = process.env.STRIPE_SECRET_KEY
@@ -45,7 +52,7 @@ export async function GET(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const raw = await listSpartanFayettevilleDonations(stripe, since)
+    const raw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     const admin = createAdminClient()
     const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
     const rows = applySpartanCreditCorrectionsToDonations(raw, correctionMap)

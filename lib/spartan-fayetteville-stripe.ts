@@ -1,7 +1,9 @@
 import Stripe from "stripe"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import { normalizeSpartanPublicAthleteDisplay, scoreSpartanPublicDisplayRichness } from "@/lib/spartan-fundraising-code"
 
-export const SPARTAN_FAYETTEVILLE_CAMPAIGN = "fayetteville_2026"
+/** @deprecated Prefer `DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug` or pass `campaignSlug` into list helpers. */
+export const SPARTAN_FAYETTEVILLE_CAMPAIGN = DEFAULT_FUNDRAISING_CAMPAIGN.stripeCampaignSlug
 export const SPARTAN_STRIPE_LIST_MAX_PAGES = 80
 
 export type SpartanFayettevilleDonation = {
@@ -66,11 +68,13 @@ function parseDonorListPublic(m: Record<string, string> | null | undefined): boo
 }
 
 /**
- * Paid Checkout sessions for Spartan Fayetteville campaign (Stripe metadata).
+ * Paid Checkout sessions where metadata `spartan_campaign` matches `campaignSlug`
+ * (see `lib/fundraising/campaign-registry.ts`).
  */
 export async function listSpartanFayettevilleDonations(
   stripe: Stripe,
   createdGteUnix: number,
+  campaignSlug: string = SPARTAN_FAYETTEVILLE_CAMPAIGN,
 ): Promise<SpartanFayettevilleDonation[]> {
   const rows: SpartanFayettevilleDonation[] = []
   let startingAfter: string | undefined
@@ -87,7 +91,7 @@ export async function listSpartanFayettevilleDonations(
     for (const s of res.data) {
       if (s.payment_status !== "paid") continue
       const m = s.metadata || {}
-      if (m.spartan_campaign !== SPARTAN_FAYETTEVILLE_CAMPAIGN) continue
+      if (m.spartan_campaign !== campaignSlug) continue
 
       const raceRequested = m.race_entry_requested === "true"
       const ft = m.fundraising_type === "race_donation" ? "race_donation" : "gift_only"

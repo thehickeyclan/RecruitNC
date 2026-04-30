@@ -15,6 +15,7 @@ import {
   resolvePublicRunnerDisplay,
   resolveRaceRegistrationInboxEmail,
 } from "@/lib/spartan-fayetteville-stripe"
+import { resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
 
 export const dynamic = "force-dynamic"
 
@@ -37,14 +38,18 @@ function csvCell(v: string | number | null | undefined): string {
 }
 
 /**
- * GET ?kind=runners|receipts|credits|tees|ledger&days=120
- * CSV downloads for Spartan ops: who’s on course (Spartan), payers (receipts), fundraising credit alignment,
- * or a readable donation ledger (Date / Amount / Donor / Runner / Race|Support / Athlete).
- * Runners CSV includes payer_email (Stripe checkout) and spartan_registration_email (codes inbox — often parent).
+ * GET ?kind=runners|receipts|credits|tees|ledger&days=120&campaign=
+ * CSV downloads for fundraising ops (campaign-filtered Stripe sessions).
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const campaignResult = resolveFundraisingCampaignQueryParam(request.nextUrl.searchParams.get("campaign"))
+  if (!campaignResult.ok) {
+    return NextResponse.json({ error: campaignResult.error }, { status: 400 })
+  }
+  const { campaign } = campaignResult
 
   const kind = (request.nextUrl.searchParams.get("kind") ?? "").toLowerCase()
   if (!["runners", "receipts", "credits", "tees", "ledger"].includes(kind)) {
@@ -54,8 +59,8 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
-  if (!Number.isFinite(days) || days < 1) days = 120
+  let days = Number(request.nextUrl.searchParams.get("days") ?? String(campaign.defaultLookbackDays))
+  if (!Number.isFinite(days) || days < 1) days = campaign.defaultLookbackDays
   if (days > 400) days = 400
 
   const stripeSecret = process.env.STRIPE_SECRET_KEY
@@ -67,7 +72,7 @@ export async function GET(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const raw = await listSpartanFayettevilleDonations(stripe, since)
+    const raw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     const admin = createAdminClient()
     const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
     const rows = applySpartanCreditCorrectionsToDonations(raw, correctionMap)

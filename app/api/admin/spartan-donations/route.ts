@@ -21,6 +21,7 @@ import {
   resolveFundraisingAthleteRowName,
   type SpartanFayettevilleDonation,
 } from "@/lib/spartan-fayetteville-stripe"
+import { resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
 
 export const dynamic = "force-dynamic"
 
@@ -72,21 +73,27 @@ async function requireAdmin(): Promise<{ ok: true } | { ok: false; status: 401 |
 }
 
 /**
- * GET: List paid Spartan Fayetteville Checkout Sessions + aggregates by athlete.
- * Query: days= lookback (default 120, max 400).
+ * GET: List paid Checkout Sessions for a fundraising campaign (`spartan_campaign` metadata).
+ * Query: days= lookback (default 120, max 400); campaign= Stripe slug (default: registry default).
  * Optional: includeParentCoverage=1 adds Fundraise-tab parent link coverage (Supabase).
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
+  const campaignResult = resolveFundraisingCampaignQueryParam(request.nextUrl.searchParams.get("campaign"))
+  if (!campaignResult.ok) {
+    return NextResponse.json({ error: campaignResult.error }, { status: 400 })
+  }
+  const { campaign } = campaignResult
+
   const stripeSecret = process.env.STRIPE_SECRET_KEY
   if (!stripeSecret?.trim()) {
     return NextResponse.json({ error: "STRIPE_SECRET_KEY not set" }, { status: 500 })
   }
 
-  let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
-  if (!Number.isFinite(days) || days < 1) days = 120
+  let days = Number(request.nextUrl.searchParams.get("days") ?? String(campaign.defaultLookbackDays))
+  if (!Number.isFinite(days) || days < 1) days = campaign.defaultLookbackDays
   if (days > 400) days = 400
 
   const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
@@ -94,7 +101,7 @@ export async function GET(request: NextRequest) {
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const raw = await listSpartanFayettevilleDonations(stripe, since)
+    const raw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     const admin = createAdminClient()
     const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
     const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
@@ -152,7 +159,8 @@ export async function GET(request: NextRequest) {
     const netAfterReimbursementsCents = grossSessionTotalCents - totalReimbursementsPaidCents
 
     return NextResponse.json({
-      campaign: "fayetteville_2026",
+      campaign: campaign.stripeCampaignSlug,
+      campaignContextKey: campaign.adminContextKey,
       days,
       count: donations.length,
       donations,
