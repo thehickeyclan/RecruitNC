@@ -201,11 +201,14 @@ type CachedIndex = {
 
 let cache: CachedIndex | null = null
 let inflight: Promise<FundraisingAthleteEntry[]> | null = null
+/** Bumped on invalidate so stale in-flight loads cannot overwrite cache after a pin/admin change. */
+let cacheInvalidationGeneration = 0
 
 /** Call after changing `spartan_fundraising_athletes` so admin/playbook picks up pins immediately. */
 export function invalidateFundraisingAthleteEntriesCache(): void {
   cache = null
   inflight = null
+  cacheInvalidationGeneration++
 }
 
 function rowToSource(row: Record<string, unknown>): AthleteFundraisingSource {
@@ -347,9 +350,19 @@ export function mergeFundraisingAthleteEntries(
 async function loadEntries(admin: SupabaseClient): Promise<FundraisingAthleteEntry[]> {
   const rows = await fetchAllAthleteRows(admin)
   const fromAthletes = buildFundraisingEntries(rows)
-  const extras = await loadSpartanFundraisingExtras(admin)
-  const merged = mergeFundraisingAthleteEntries(fromAthletes, extras)
-  return enrichRosterOnlyEntriesWithCanonicalAthleteNames(merged, fromAthletes, rows)
+  let extras: FundraisingAthleteEntry[] = []
+  try {
+    extras = await loadSpartanFundraisingExtras(admin)
+  } catch (e) {
+    console.error("[spartan-fundraising] loadSpartanFundraisingExtras failed", e)
+  }
+  try {
+    const merged = mergeFundraisingAthleteEntries(fromAthletes, extras)
+    return enrichRosterOnlyEntriesWithCanonicalAthleteNames(merged, fromAthletes, rows)
+  } catch (e) {
+    console.error("[spartan-fundraising] merge/enrich failed — athlete directory only", e)
+    return enrichRosterOnlyEntriesWithCanonicalAthleteNames(fromAthletes, fromAthletes, rows)
+  }
 }
 
 /**
@@ -502,15 +515,20 @@ export async function getFundraisingAthleteEntries(admin: SupabaseClient): Promi
   if (inflight) {
     return inflight
   }
-  inflight = loadEntries(admin)
+  const generationAtStart = cacheInvalidationGeneration
+  const rosterPromise = loadEntries(admin)
+  const tracked = rosterPromise
     .then((entries) => {
-      cache = { entries, builtAt: Date.now() }
+      if (generationAtStart === cacheInvalidationGeneration) {
+        cache = { entries, builtAt: Date.now() }
+      }
       return entries
     })
     .finally(() => {
-      inflight = null
+      if (inflight === tracked) inflight = null
     })
-  return inflight
+  inflight = tracked
+  return tracked
 }
 
 export function filterFundraisingEntriesByQuery(
