@@ -1106,11 +1106,64 @@ export default function AllProspectsPage() {
   )
 }
 
+/** State field values we treat as clearly not NC (exact match after trim + lowerCase). */
+const KNOWN_NON_NC_STATES = new Set([
+  "sc",
+  "south carolina",
+  "ga",
+  "georgia",
+  "va",
+  "virginia",
+  "tn",
+  "tennessee",
+  "fl",
+  "florida",
+  "oh",
+  "ohio",
+  "pa",
+  "pennsylvania",
+  "ny",
+  "new york",
+  "tx",
+  "texas",
+  "ca",
+  "california",
+  "al",
+  "alabama",
+])
+
+const NON_NC_LOCATION_SUBSTRINGS = [
+  "south carolina",
+  "georgia",
+  "virginia",
+  "tennessee",
+  "florida",
+  "ohio",
+  "pennsylvania",
+  "new york",
+  "texas",
+  "california",
+  "alabama",
+  "sc",
+  "ga",
+  "va",
+  "tn",
+  "fl",
+  "oh",
+  "pa",
+  "ny",
+  "tx",
+  "ca",
+  "al",
+] as const
+
 function isNorthCarolinaProspect(prospect: Prospect) {
   const state = (prospect.state || "").trim().toLowerCase()
   if (state) {
     if (state === "nc" || state === "north carolina") return true
-    return false
+    if (KNOWN_NON_NC_STATES.has(state)) return false
+    // Unknown state text (typo, "USA", bad import): do not hide the whole directory.
+    return true
   }
 
   const location = (prospect.location || "").trim().toLowerCase()
@@ -1119,32 +1172,7 @@ function isNorthCarolinaProspect(prospect: Prospect) {
       return true
     }
 
-    const nonNcStates = [
-      "sc",
-      "south carolina",
-      "ga",
-      "georgia",
-      "va",
-      "virginia",
-      "tn",
-      "tennessee",
-      "fl",
-      "florida",
-      "oh",
-      "ohio",
-      "pa",
-      "pennsylvania",
-      "ny",
-      "new york",
-      "tx",
-      "texas",
-      "ca",
-      "california",
-      "al",
-      "alabama",
-    ]
-
-    if (nonNcStates.some((stateToken) => location.includes(stateToken))) {
+    if (NON_NC_LOCATION_SUBSTRINGS.some((stateToken) => location.includes(stateToken))) {
       return false
     }
   }
