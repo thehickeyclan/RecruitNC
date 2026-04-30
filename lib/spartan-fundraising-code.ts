@@ -202,6 +202,12 @@ type CachedIndex = {
 let cache: CachedIndex | null = null
 let inflight: Promise<FundraisingAthleteEntry[]> | null = null
 
+/** Call after changing `spartan_fundraising_athletes` so admin/playbook picks up pins immediately. */
+export function invalidateFundraisingAthleteEntriesCache(): void {
+  cache = null
+  inflight = null
+}
+
 function rowToSource(row: Record<string, unknown>): AthleteFundraisingSource {
   const gy = row.graduationyear ?? row.graduation_year
   const hs = row.highschool ?? row.high_school
@@ -237,6 +243,9 @@ async function fetchAllAthleteRows(admin: SupabaseClient): Promise<AthleteFundra
   return all
 }
 
+const ATHLETE_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 type SpartanFundraisingAthleteRow = {
   code?: string | null
   first_name?: string | null
@@ -244,6 +253,8 @@ type SpartanFundraisingAthleteRow = {
   grad_year?: number | null
   school?: string | null
   active?: boolean | null
+  /** When set, fundraising playbook treats this NCU row as that RecruitNC profile (parent links work). */
+  athlete_id?: string | null
 }
 
 function spartanFundraisingRowToEntry(r: SpartanFundraisingAthleteRow): FundraisingAthleteEntry | null {
@@ -263,16 +274,25 @@ function spartanFundraisingRowToEntry(r: SpartanFundraisingAthleteRow): Fundrais
     : `${initial}${ln} '${yy}`
   const fullName = toDisplayFullName([fn, ln].filter(Boolean).join(" "))
   const searchBlob = [code, fn, ln, school, String(gy), label, fullName].join(" ").toLowerCase()
-  return { id: `spartan-fundraising:${code}`, code, label, fullName, searchBlob }
+  const aid = typeof r.athlete_id === "string" ? r.athlete_id.trim() : ""
+  const id = ATHLETE_UUID_RE.test(aid) ? aid : `spartan-fundraising:${code}`
+  return { id, code, label, fullName, searchBlob }
 }
 
 /** Roster-only racers from `spartan_fundraising_athletes` (not every athlete has a RecruitNC profile). */
 async function loadSpartanFundraisingExtras(admin: SupabaseClient): Promise<FundraisingAthleteEntry[]> {
   try {
-    const { data, error } = await admin
+    let res = await admin
       .from("spartan_fundraising_athletes")
-      .select("code, first_name, last_name, grad_year, school, active")
+      .select("code, first_name, last_name, grad_year, school, active, athlete_id")
       .eq("active", true)
+    if (res.error && /athlete_id|schema cache/i.test(res.error.message)) {
+      res = await admin
+        .from("spartan_fundraising_athletes")
+        .select("code, first_name, last_name, grad_year, school, active")
+        .eq("active", true)
+    }
+    const { data, error } = res
     if (error) {
       console.error("[spartan-fundraising] spartan_fundraising_athletes:", error.message)
       return []

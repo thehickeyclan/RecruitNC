@@ -1,0 +1,10 @@
+-- Pin NCU Stripe codes to RecruitNC athlete rows (admin fundraising playbook "Pin profile").
+-- Run once in Supabase SQL Editor if POST /api/admin/spartan-fundraising-pin-code returns
+-- "missing athlete_id column".
+
+ALTER TABLE public.spartan_fundraising_athletes
+  ADD COLUMN IF NOT EXISTS athlete_id uuid REFERENCES public.athletes(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS spartan_fundraising_athletes_athlete_id_idx
+  ON public.spartan_fundraising_athletes(athlete_id)
+  WHERE athlete_id IS NOT NULL;

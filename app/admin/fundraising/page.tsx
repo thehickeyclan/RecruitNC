@@ -159,6 +159,9 @@ function scrollToFundraisingSection(elementId: string) {
   })
 }
 
+const ATHLETE_UUID_PIN_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 export default function AdminFundraisingPage() {
   const [activeCampaignKey, setActiveCampaignKey] = useState(DEFAULT_FUNDRAISING_CAMPAIGN.adminContextKey)
   const campaign = fundraisingCampaignByContextKey(activeCampaignKey) ?? DEFAULT_FUNDRAISING_CAMPAIGN
@@ -167,6 +170,10 @@ export default function AdminFundraisingPage() {
   const [leaderboard, setLeaderboard] = useState("")
   const [notes, setNotes] = useState("")
   const [mounted, setMounted] = useState(false)
+
+  /** Paste athlete UUID per gap row → POST pin API */
+  const [gapPinAthleteId, setGapPinAthleteId] = useState<Record<string, string>>({})
+  const [gapPinBusy, setGapPinBusy] = useState<string | null>(null)
 
   const [donations, setDonations] = useState<SpartanDonationRow[] | null>(null)
   const [byAthlete, setByAthlete] = useState<SpartanAthleteAggregate[] | null>(null)
@@ -504,6 +511,40 @@ export default function AdminFundraisingPage() {
       setNetAfterReimbursementsCents(0)
     } finally {
       setDonationsLoading(false)
+    }
+  }
+
+  const pinGapToAthleteProfile = async (ncuCode: string) => {
+    const key = ncuCode.trim().toUpperCase()
+    const athleteId = (gapPinAthleteId[key] ?? "").trim()
+    if (!ATHLETE_UUID_PIN_RE.test(athleteId)) {
+      toast({
+        title: "Paste athlete UUID",
+        description: "Copy id from view-profile (?id=…) or athletes admin.",
+        variant: "destructive",
+      })
+      return
+    }
+    setGapPinBusy(key)
+    try {
+      const res = await fetch("/api/admin/spartan-fundraising-pin-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId, ncuCode: key }),
+      })
+      const j = (await res.json()) as { error?: string; message?: string }
+      if (!res.ok) throw new Error(j.error || "Pin failed")
+      toast({ title: "Pinned", description: j.message ?? `${key} linked.` })
+      await loadDonations()
+    } catch (e) {
+      toast({
+        title: "Pin failed",
+        description: e instanceof Error ? e.message : "Unknown error",
+        variant: "destructive",
+      })
+    } finally {
+      setGapPinBusy(null)
     }
   }
 
@@ -1040,8 +1081,15 @@ export default function AdminFundraisingPage() {
                     <div className="min-w-0 flex-1 space-y-2">
                       <CardTitle className="text-lg leading-snug">1. Directory gaps</CardTitle>
                       <p className="text-muted-foreground text-sm leading-snug">
-                        Money landed on these <strong className="text-foreground">NCU codes</strong>, but nothing in the fundraising directory matches yet — fix the
-                        athlete/profile so the code resolves, then <strong className="text-foreground">Refresh</strong>. Wrong code on the session → Reassign credit or metadata fix below.
+                        Stripe credited these NCU codes but the playbook couldn&apos;t match them yet. Paste the{" "}
+                        <strong className="text-foreground">athlete UUID</strong> for the correct profile (from{" "}
+                        <HardLink href="/admin/athletes" className="text-primary underline-offset-4 hover:underline">
+                          athletes admin
+                        </HardLink>{" "}
+                        or <span className="font-mono text-[11px]">view-profile?id=…</span>) → <strong className="text-foreground">Pin</strong>.
+                        First-time setup: run the SQL in{" "}
+                        <span className="font-mono text-[11px]">docs/sql/spartan-fundraising-athlete-id-column.sql.txt</span> in Supabase if pinning errors mention{" "}
+                        <span className="font-mono text-[11px]">athlete_id</span>.
                       </p>
                     </div>
                   </div>
@@ -1087,6 +1135,30 @@ export default function AdminFundraisingPage() {
                                   </TableCell>
                                   <TableCell className="align-top">
                                     <div className="flex flex-col gap-2">
+                                      <Label className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wide">
+                                        Athlete ID → Pin to this NCU code
+                                      </Label>
+                                      <Input
+                                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                        value={gapPinAthleteId[r.athleteCode.trim().toUpperCase()] ?? ""}
+                                        onChange={(e) =>
+                                          setGapPinAthleteId((prev) => ({
+                                            ...prev,
+                                            [r.athleteCode.trim().toUpperCase()]: e.target.value,
+                                          }))
+                                        }
+                                        className="font-mono text-[11px] h-8"
+                                        autoComplete="off"
+                                      />
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        className="h-8 w-full max-w-[14rem] bg-[#003366] text-white hover:bg-[#002952]"
+                                        disabled={gapPinBusy === r.athleteCode.trim().toUpperCase() || donationsLoading}
+                                        onClick={() => void pinGapToAthleteProfile(r.athleteCode)}
+                                      >
+                                        {gapPinBusy === r.athleteCode.trim().toUpperCase() ? "Pinning…" : "Pin profile"}
+                                      </Button>
                                       <Button
                                         type="button"
                                         variant="outline"
@@ -1107,18 +1179,15 @@ export default function AdminFundraisingPage() {
                                         <ClipboardCopy className="h-3.5 w-3.5" />
                                         Copy code
                                       </Button>
-                                      <HardLink
-                                        href="/admin/athletes/add"
-                                        className="text-primary inline-flex items-center text-sm font-medium underline-offset-4 hover:underline"
-                                      >
-                                        Add athlete
-                                      </HardLink>
-                                      <HardLink
-                                        href="/admin/athletes"
-                                        className="text-muted-foreground inline-flex items-center text-sm underline-offset-4 hover:underline"
-                                      >
-                                        Browse athletes
-                                      </HardLink>
+                                      <p className="text-muted-foreground text-[10px] leading-snug">
+                                        <HardLink href="/admin/athletes" className="text-primary underline-offset-4 hover:underline">
+                                          Browse athletes
+                                        </HardLink>
+                                        {" · "}
+                                        <HardLink href="/admin/athletes/add" className="text-primary underline-offset-4 hover:underline">
+                                          Add athlete
+                                        </HardLink>
+                                      </p>
                                     </div>
                                   </TableCell>
                                 </TableRow>
