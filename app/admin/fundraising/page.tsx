@@ -480,6 +480,7 @@ export default function AdminFundraisingPage() {
       const slug = encodeURIComponent(campaign.stripeCampaignSlug)
       const res = await fetch(
         `/api/admin/spartan-donations?days=${days}&includeParentCoverage=1&campaign=${slug}`,
+        { cache: "no-store" },
       )
       const j = (await res.json()) as {
         error?: string
@@ -661,9 +662,37 @@ export default function AdminFundraisingPage() {
       })
       const j = (await res.json()) as { error?: string; message?: string }
       if (!res.ok) throw new Error(j.error || "Could not create link")
+
+      const linkedAthleteId = linkParentRow.athleteId
+      const linkedCodeKey = linkParentRow.athleteCode.trim().toUpperCase()
+      setParentCoverage((prev) => {
+        if (!prev) return prev
+        const rows = prev.rows.map((r) => {
+          const sameRow =
+            r.athleteId === linkedAthleteId && r.athleteCode.trim().toUpperCase() === linkedCodeKey
+          if (sameRow && r.status === "no_managing_user") {
+            return {
+              ...r,
+              status: "ok" as const,
+              managingUserCount: Math.max(r.managingUserCount, 1),
+            }
+          }
+          return r
+        })
+        const ok = rows.filter((x) => x.status === "ok").length
+        const needsAttention = rows.filter((x) => x.status !== "ok").length
+        return {
+          rows,
+          summary: { ...prev.summary, ok, needsAttention },
+        }
+      })
+
       toast({ title: "Parent linked", description: j.message ?? "Saved." })
       setLinkParentOpen(false)
       setLinkParentRow(null)
+      setParentSearchQuery("")
+      setParentSearchResults([])
+      setSelectedParent(null)
       await loadDonations()
     } catch (e) {
       toast({
