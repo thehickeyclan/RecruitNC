@@ -2,10 +2,14 @@
 
 import { ExpenseRequestSection } from "@/components/profile/expense-request-section"
 import { GuildCreditAllocationSection } from "@/components/profile/guild-credit-allocation-section"
+import { DEFAULT_FUNDRAISING_CAMPAIGN } from "@/lib/fundraising/campaign-registry"
 import { Loader2, Coins } from "lucide-react"
 
-/** Fayetteville 2026 parent-facing reporting cutoff (aligned with ops). */
-const SPARTAN_FUNDRAISE_THROUGH_LABEL = "September 1, 2026"
+/** Parent-facing reporting cutoff for displayed totals (ops-aligned). */
+const FUNDRAISE_TOTALS_THROUGH_LABEL = "September 1, 2026"
+
+const FUNDRAISE_LOOKBACK_DAYS = DEFAULT_FUNDRAISING_CAMPAIGN.defaultLookbackDays
+const FUNDRAISE_SECTION_TITLE = DEFAULT_FUNDRAISING_CAMPAIGN.campaignDisplayName
 
 type SpartanRow = {
   athleteId: string
@@ -62,10 +66,11 @@ export function ProfileFundraiseTab({
               <Coins className="h-5 w-5" strokeWidth={2} />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
-              <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">Spartan fundraising</h2>
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-xl">{FUNDRAISE_SECTION_TITLE}</h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Gifts from the last <span className="font-medium text-slate-800">120 days</span>. Totals are estimates
-                through <span className="font-medium text-slate-800">{SPARTAN_FUNDRAISE_THROUGH_LABEL}</span> — not a bank
+                Gifts from the last{" "}
+                <span className="font-medium text-slate-800">{FUNDRAISE_LOOKBACK_DAYS} days</span>. Totals are estimates
+                through <span className="font-medium text-slate-800">{FUNDRAISE_TOTALS_THROUGH_LABEL}</span> — not a bank
                 balance.
               </p>
               <p className="text-xs text-slate-500 leading-relaxed pt-0.5">
@@ -134,7 +139,9 @@ export function ProfileFundraiseTab({
 
                         <div className="mt-4 grid grid-cols-1 gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2 sm:gap-4">
                           <div>
-                            <span className="text-xs font-medium text-slate-500">Raised (this window)</span>
+                            <span className="text-xs font-medium text-slate-500">
+                              Raised (last {FUNDRAISE_LOOKBACK_DAYS} days)
+                            </span>
                             <p className="mt-0.5 text-base font-medium tabular-nums text-slate-900">
                               {formatUsd(row.totalCents)}
                             </p>

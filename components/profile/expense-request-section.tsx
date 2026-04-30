@@ -84,7 +84,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
       console.error("[RecruitNC] expense list", e)
       toast({
         title: "Could not load reimbursement requests",
-        description: e instanceof Error ? e.message : "Try again later.",
+        description: "Try again in a moment or contact NC United staff.",
         variant: "destructive",
       })
     } finally {
@@ -137,10 +137,11 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
       await load()
       setSubmissionAck(true)
       toast({ title: "Request received", description: "See confirmation below." })
-    } catch (err) {
+    } catch (e) {
+      console.error("[RecruitNC] expense submit", e)
       toast({
         title: "Could not submit",
-        description: err instanceof Error ? err.message : "Try again.",
+        description: "We couldn&apos;t send your request. Try again or contact NC United staff.",
         variant: "destructive",
       })
     } finally {

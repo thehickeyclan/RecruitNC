@@ -1,45 +1,66 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
+import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    console.log("[v0] Profile API: Starting request")
-
     const supabase = await createClient()
 
-    // Get the current user
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser()
 
-    console.log("[v0] Profile API: User check", { hasUser: !!user, error: userError?.message })
-
     if (userError || !user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: rows, error: listError } = await supabase
       .from("user_profiles")
       .select("*")
       .eq("user_id", user.id)
-      .single()
+      .order("created_at", { ascending: true })
 
-    console.log("[v0] Profile API: Profile fetch", { hasProfile: !!profile, error: profileError?.message })
-
-    if (profileError) {
-      console.error("[v0] Profile API: Error fetching profile:", profileError)
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+    if (listError) {
+      console.error("[api/profile] list user_profiles:", listError.code, listError.message)
+      return NextResponse.json({ error: "Could not load profile" }, { status: 500 })
     }
 
-    const row = profile as Record<string, unknown>
+    let profileRow: Record<string, unknown> | null = rows?.[0] ?? null
+
+    if (rows && rows.length > 1) {
+      console.warn("[api/profile] multiple user_profiles rows for user_id", user.id, "count=", rows.length)
+    }
+
+    if (!profileRow) {
+      console.warn("[api/profile] missing user_profiles row; upserting for user_id", user.id)
+      try {
+        const admin = createAdminClientFresh()
+        const payload = buildUserProfileUpsertPayload(user)
+        const { data: upserted, error: upsertError } = await admin
+          .from("user_profiles")
+          .upsert(payload, { onConflict: "user_id" })
+          .select("*")
+          .single()
+
+        if (upsertError || !upserted) {
+          console.error("[api/profile] ensure profile upsert failed:", upsertError?.code, upsertError?.message)
+          return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+        }
+        profileRow = upserted as Record<string, unknown>
+      } catch (adminErr) {
+        console.error("[api/profile] admin client unavailable for profile repair:", adminErr)
+        return NextResponse.json({ error: "Profile not found" }, { status: 404 })
+      }
+    }
+
     return NextResponse.json({
-      ...row,
-      name: row.full_name ?? row.name ?? "",
+      ...profileRow,
+      name: profileRow.full_name ?? profileRow.name ?? "",
     })
-  } catch (error: any) {
-    console.error("[v0] Profile API: Unexpected error:", error)
+  } catch (error: unknown) {
+    console.error("[api/profile] unexpected:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

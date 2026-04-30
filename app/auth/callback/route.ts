@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import type { User } from "@supabase/supabase-js"
+import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -116,36 +118,13 @@ export async function GET(req: NextRequest) {
 
     if (!profile) {
       console.log("[v0] Creating user profile...")
-
-      const profileType = session.user.user_metadata?.profile_type || session.user.user_metadata?.profileType || ""
-      let role: "user" | "coach" | "admin" = "user"
-      let verifiedCoach = false
-
-      const isCollegeCoach =
-        profileType === "college" || profileType === "coach" || profileType === "college-coach"
-      const isCoachProfile = isCollegeCoach || profileType === "hs-club-coach"
-      if (isCoachProfile) {
-        role = "coach"
-        verifiedCoach = isCollegeCoach // Only college coaches get contact/GPA access; admin assigns school later. HS/club coaches stay unverified.
-      }
-
-      const { error: insertError } = await supabase.from("user_profiles").insert({
-        user_id: session.user.id,
-        email: session.user.email!,
-        full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.fullName || "",
-        first_name: session.user.user_metadata?.first_name || session.user.user_metadata?.firstName || "",
-        last_name: session.user.user_metadata?.last_name || session.user.user_metadata?.lastName || "",
-        cell_phone: session.user.user_metadata?.cell_phone || session.user.user_metadata?.cellPhone || "",
-        profile_type: profileType,
-        role,
-        verified_coach: verifiedCoach,
-        is_admin: false,
-      })
+      const payload = buildUserProfileUpsertPayload(session.user as User)
+      const { error: insertError } = await supabase.from("user_profiles").insert(payload)
 
       if (insertError) {
         console.error("[v0] Profile creation error:", insertError)
       } else {
-        console.log("[v0] User profile created with role:", role)
+        console.log("[v0] User profile created with role:", payload.role)
       }
     }
 

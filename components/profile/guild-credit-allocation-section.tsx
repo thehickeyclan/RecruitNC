@@ -81,7 +81,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
       console.error("[RecruitNC] guild credits load", e)
       toast({
         title: "Could not load Guild credits",
-        description: e instanceof Error ? e.message : "Try again later.",
+        description: "Try again in a moment or contact NC United staff.",
         variant: "destructive",
       })
     } finally {
@@ -139,10 +139,11 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
       setAmount("")
       await load()
       await onSpartanTotalsRefresh?.()
-    } catch (err) {
+    } catch (e) {
+      console.error("[RecruitNC] guild credits allocate", e)
       toast({
         title: "Could not allocate",
-        description: err instanceof Error ? err.message : "Try again.",
+        description: "We couldn&apos;t complete that transfer. Try again or contact NC United staff.",
         variant: "destructive",
       })
     } finally {
@@ -205,8 +206,8 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
           </div>
         ) : !grantConfigured ? (
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 text-sm text-slate-700 leading-relaxed">
-            Transfers to Guild aren&apos;t available in this app build yet. If you expected to see this, contact NC United
-            staff — they can confirm when it&apos;s turned on.
+            Moving credits to Guild isn&apos;t turned on for your account yet. Contact NC United staff if you expected to do
+            that here — they can confirm timing or next steps.
           </div>
         ) : spartanAthletes.length === 0 ? (
           <p className="text-sm text-slate-600">Link athletes under Family &amp; athletes to see balances.</p>
