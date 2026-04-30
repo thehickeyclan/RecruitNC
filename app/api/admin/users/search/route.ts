@@ -1,8 +1,21 @@
 import type { User } from "@supabase/supabase-js"
-import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+/** Supabase Auth returns one page by default (~50 users); fundraising parent search must scan the full roster. */
+const LIST_USERS_PAGE_SIZE = 1000
+const LIST_USERS_MAX_PAGES = 50
+
+async function listAllAuthUsers(admin: ReturnType<typeof createAdminClient>): Promise<User[]> {
+  const all: User[] = []
+  for (let page = 1; page <= LIST_USERS_MAX_PAGES; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: LIST_USERS_PAGE_SIZE })
+    if (error) throw error
+    all.push(...data.users)
+    if (data.users.length < LIST_USERS_PAGE_SIZE) break
+  }
+  return all
+}
 
 type ProfileRow = {
   id?: string
@@ -26,6 +39,7 @@ function userMatchesSearch(authUser: User, profile: ProfileRow | undefined, disp
   const pl = profile?.last_name?.trim() || ""
   const haystack = [
     authUser.email,
+    profile?.email,
     displayFullName,
     profile?.full_name,
     pf,
@@ -45,16 +59,18 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q") || ""
-    const queryLower = query.trim().toLowerCase()
+    const queryTrim = query.trim()
+    const queryLower = queryTrim.toLowerCase()
 
     console.log("[v0] Searching users with query:", query)
 
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
-
-    if (authError) {
-      console.error("[v0] Error fetching auth users:", authError)
-      return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+    if (!queryTrim) {
+      return NextResponse.json({ users: [] })
     }
+
+    const supabase = createAdminClient()
+
+    const authUserList = await listAllAuthUsers(supabase)
 
     const { data: profiles, error: profilesError } = await supabase
       .from("user_profiles")
@@ -67,7 +83,7 @@ export async function GET(request: Request) {
 
     const profileList = (profiles ?? []) as ProfileRow[]
 
-    const users = authUsers.users.map((authUser) => {
+    const users = authUserList.map((authUser) => {
       const profile = profileList.find((p) => p.user_id === authUser.id)
 
       const fullName =
@@ -88,17 +104,16 @@ export async function GET(request: Request) {
       }
     })
 
-    const filteredUsers = queryLower
-      ? users.filter((user, idx) => {
-          const authUser = authUsers.users[idx]!
-          const profile = profileList.find((p) => p.user_id === authUser.id)
-          return userMatchesSearch(authUser, profile, user.full_name, queryLower)
-        })
-      : users
+    const filteredUsers = users.filter((user, idx) => {
+      const authUser = authUserList[idx]!
+      const profile = profileList.find((p) => p.user_id === authUser.id)
+      return userMatchesSearch(authUser, profile, user.full_name, queryLower)
+    })
 
-    console.log("[v0] Found users:", filteredUsers.length)
+    const capped = filteredUsers.slice(0, 40)
+    console.log("[v0] Found users:", capped.length, filteredUsers.length > 40 ? `(trimmed from ${filteredUsers.length})` : "")
 
-    return NextResponse.json({ users: filteredUsers })
+    return NextResponse.json({ users: capped })
   } catch (error: unknown) {
     console.error("[v0] Error in user search:", error)
     const message = error instanceof Error ? error.message : "Unknown error"
