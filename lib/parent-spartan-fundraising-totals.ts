@@ -2,8 +2,48 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchReimbursementPaidCentsByAthleteIdInWindow } from "@/lib/athlete-reimbursement-net"
 import { fetchGuildReservedCentsByAthleteId } from "@/lib/guild-credit-allocations"
 import { getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
-import { FAYETTEVILLE_STRIPE_LOOKBACK_DAYS, getFayettevilleStatsByAthleteCodeLowercase } from "@/lib/spartan-fayetteville-totals-by-code"
+import {
+  type FayettevilleCodeStats,
+  FAYETTEVILLE_STRIPE_LOOKBACK_DAYS,
+  getFayettevilleStatsByAthleteCodeLowercase,
+} from "@/lib/spartan-fayetteville-totals-by-code"
 import { SPARTAN_FAYETTEVILLE_CAMPAIGN } from "@/lib/spartan-fayetteville-stripe"
+
+/**
+ * Same athlete UUID can appear twice in fundraising entries (directory-computed NCU vs playbook row with
+ * `athlete_id` + collision suffix, e.g. NCU-APONTE-31 vs NCU-APONTEJ-31). Stripe credits the checkout code —
+ * pick the candidate that matches paid totals; tie-break favors gift count then longer code (pinned suffix).
+ */
+function pickBestFundraisingCodeForAthlete(
+  candidates: Set<string>,
+  statsByCode: Map<string, FayettevilleCodeStats>,
+): string | null {
+  const list = [...candidates].map((c) => c.trim()).filter(Boolean)
+  if (list.length === 0) return null
+  if (list.length === 1) return list[0]!
+
+  let best = list[0]!
+  let bestS = statsByCode.get(best.toLowerCase())
+  let bestTotal = bestS?.totalCents ?? 0
+  let bestGifts = bestS?.giftCount ?? 0
+
+  for (let i = 1; i < list.length; i++) {
+    const c = list[i]!
+    const s = statsByCode.get(c.toLowerCase())
+    const total = s?.totalCents ?? 0
+    const gifts = s?.giftCount ?? 0
+    if (
+      total > bestTotal ||
+      (total === bestTotal && gifts > bestGifts) ||
+      (total === bestTotal && gifts === bestGifts && c.length > best.length)
+    ) {
+      best = c
+      bestTotal = total
+      bestGifts = gifts
+    }
+  }
+  return best
+}
 
 export type ParentSpartanFundraisingAthleteRow = {
   athleteId: string
@@ -59,17 +99,30 @@ export async function computeParentSpartanFundraisingTotalsForUser(
   )
 
   const entries = await getFundraisingAthleteEntries(admin)
-  const codeByAthleteId = new Map<string, string>()
+
+  /** Same UUID may map to multiple NCU codes — never overwrite arbitrarily (last loop iteration wins). */
+  const codesByAthleteId = new Map<string, Set<string>>()
   for (const e of entries) {
     if (e.id.startsWith("spartan-fundraising:")) continue
-    codeByAthleteId.set(e.id, e.code)
+    const code = typeof e.code === "string" ? e.code.trim() : ""
+    if (!code) continue
+    const set = codesByAthleteId.get(e.id) ?? new Set<string>()
+    set.add(code)
+    codesByAthleteId.set(e.id, set)
   }
 
-  let statsByCode = new Map<string, { totalCents: number; giftCount: number; raceSignupCount: number }>()
+  let statsByCode = new Map<string, FayettevilleCodeStats>()
   try {
     statsByCode = await getFayettevilleStatsByAthleteCodeLowercase()
   } catch (e) {
     console.error("[parent-spartan-fundraising-totals] Stripe totals", e)
+  }
+
+  const codeByAthleteId = new Map<string, string>()
+  for (const id of athleteIds) {
+    const candidates = codesByAthleteId.get(id)
+    const picked = candidates?.size ? pickBestFundraisingCodeForAthlete(candidates, statsByCode) : null
+    if (picked) codeByAthleteId.set(id, picked)
   }
 
   const sinceMs = Date.now() - FAYETTEVILLE_STRIPE_LOOKBACK_DAYS * 24 * 60 * 60 * 1000
