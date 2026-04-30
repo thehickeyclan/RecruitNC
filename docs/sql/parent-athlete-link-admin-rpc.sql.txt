@@ -1,0 +1,23 @@
+-- Optional fallback for POST /api/admin/parent-athlete-link when plain INSERT hits RLS
+-- (e.g. preview env using anon key as service role, or unusual FORCE RLS setup).
+-- Run once in Supabase SQL Editor.
+
+CREATE OR REPLACE FUNCTION public.insert_parent_athlete_link_admin(p_parent_user_id uuid, p_athlete_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.parent_athlete_links (user_id, athlete_id)
+  VALUES (p_parent_user_id, p_athlete_id);
+EXCEPTION
+  WHEN unique_violation THEN
+    RETURN;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.insert_parent_athlete_link_admin(uuid, uuid) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.insert_parent_athlete_link_admin(uuid, uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.insert_parent_athlete_link_admin(uuid, uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.insert_parent_athlete_link_admin(uuid, uuid) TO service_role;

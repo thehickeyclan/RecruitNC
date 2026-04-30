@@ -53,6 +53,28 @@ export function createAdminClient(): SupabaseClient {
 }
 
 /**
+ * New Supabase client per call (no singleton). Use for sensitive writes when you must guarantee the current process env service-role key is used.
+ */
+export function createAdminClientFresh(): SupabaseClient {
+  const url = getSupabaseUrl()
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY_OVERRIDE
+  if (!key) {
+    throw new Error(
+      "Supabase service role key is not configured. Set SUPABASE_SERVICE_ROLE_KEY in Vercel (Supabase Dashboard → Settings → API → service_role key, not anon). Then redeploy.",
+    )
+  }
+  return createClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: { "x-application-name": "nc-wrestling-portal-admin-fresh" },
+    },
+  })
+}
+
+/**
  * Backwards-compatible alias used elsewhere in the app.
  */
 export function createServiceRoleClient(): SupabaseClient {
