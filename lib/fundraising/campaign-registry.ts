@@ -51,6 +51,22 @@ export function fundraisingCampaignByStripeSlug(slug: string): FundraisingCampai
   return FUNDRAISING_CAMPAIGNS.find((c) => c.stripeCampaignSlug === slug)
 }
 
+/**
+ * Resolve `/fundraising/[campaignSlug]` — matches `adminContextKey` or `stripeCampaignSlug` (case-insensitive).
+ */
+export function fundraisingCampaignByPortalSlug(raw: string): FundraisingCampaignDefinition | undefined {
+  const s = raw.trim().toLowerCase()
+  if (!s) return undefined
+  return FUNDRAISING_CAMPAIGNS.find(
+    (c) => c.adminContextKey.toLowerCase() === s || c.stripeCampaignSlug.toLowerCase() === s,
+  )
+}
+
+/** Stable portal path for marketing links (prefer `adminContextKey` in URLs). */
+export function fundraisingCampaignPortalPath(campaign: FundraisingCampaignDefinition): string {
+  return `/fundraising/${campaign.adminContextKey}`
+}
+
 export type CampaignQueryResolution =
   | { ok: true; campaign: FundraisingCampaignDefinition }
   | { ok: false; error: string }

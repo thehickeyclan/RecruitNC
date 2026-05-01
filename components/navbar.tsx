@@ -418,6 +418,9 @@ export function Navbar() {
               </DropdownMenu>
               <HardLink href="/calendar" className={navLinkClass("")}>Calendar</HardLink>
               <a href="/blue" className={navLinkClass("/blue")}>Blue</a>
+              <HardLink href="/fundraising" className={navLinkClass("/fundraising")}>
+                Fundraising
+              </HardLink>
               <a href="/national-team" className={navLinkClass("/national-team")}>National Team</a>
               <a href="/recruiting/tournaments" className={navLinkClass("/recruiting/tournaments")}>Recruiting</a>
               <a href="/news" className={navLinkClass("/news")}>News</a>
@@ -839,6 +842,9 @@ export function Navbar() {
                   </div>
                   <HardLink href="/calendar" className={mobileLinkClass("")} onNavigate={() => setIsOpen(false)}>Calendar</HardLink>
                   <a href="/blue" className={mobileLinkClass("/blue")} onClick={() => setIsOpen(false)}>Blue</a>
+                  <HardLink href="/fundraising" className={mobileLinkClass("/fundraising")} onNavigate={() => setIsOpen(false)}>
+                    Fundraising
+                  </HardLink>
                   <a href="/national-team" className={mobileLinkClass("/national-team")} onClick={() => setIsOpen(false)}>National Team</a>
                   <a href="/recruiting/tournaments" className={mobileLinkClass("/recruiting/tournaments")} onClick={() => setIsOpen(false)}>Recruiting</a>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>

@@ -47,6 +47,11 @@ export function Footer() {
                 </a>
               </li>
               <li>
+                <HardLink href="/fundraising" className="text-xs text-gray-300 hover:text-white sm:text-sm">
+                  Fundraising
+                </HardLink>
+              </li>
+              <li>
                 <a href="/national-team" className="text-xs text-gray-300 hover:text-white sm:text-sm">
                   National Team
                 </a>
