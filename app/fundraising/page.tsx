@@ -69,6 +69,20 @@ export default function FundraisingPortalHomePage() {
               </li>
             ))}
           </ul>
+
+          <div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-5 py-4">
+            <p className="text-sm font-semibold text-slate-800">Transparency</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">
+              See credited totals by athlete for each campaign window (anonymous donor preferences apply on supporter feeds).
+            </p>
+            <HardLink
+              href="/fundraising/leaderboard"
+              className="mt-3 inline-flex font-semibold underline-offset-4 hover:underline"
+              style={{ color: NAVY }}
+            >
+              Open fundraising leaderboard →
+            </HardLink>
+          </div>
         </div>
 
         <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-slate-600 sm:text-left">

@@ -60,6 +60,20 @@ export function FundraisingPlaybookHeader({
                 {campaign.publicPagePath}
               </HardLink>
             </span>
+            <span className="text-muted-foreground/60">·</span>
+            <HardLink
+              href="/admin/fundraising/rankings"
+              className="text-primary font-medium underline-offset-4 hover:underline"
+            >
+              Rankings
+            </HardLink>
+            <span className="text-muted-foreground/60">·</span>
+            <HardLink
+              href={`/fundraising/leaderboard?campaign=${encodeURIComponent(campaign.stripeCampaignSlug)}`}
+              className="text-primary font-medium underline-offset-4 hover:underline"
+            >
+              Public leaderboard
+            </HardLink>
           </p>
         </div>
       </div>

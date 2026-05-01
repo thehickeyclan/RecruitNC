@@ -12,11 +12,13 @@ import {
   buildSpartanPublicSupporterSummary,
 } from "@/lib/spartan-public-supporter-feed"
 import { listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
+import { resolveFundraisingCampaignQueryParam } from "@/lib/fundraising/campaign-registry"
 
 export const dynamic = "force-dynamic"
 
 /**
  * Public supporter activity: paid Spartan gifts with names redacted per donor_list_public.
+ * Query: days (default per campaign registry), campaign= Stripe slug (default: registry default).
  * No auth. Does not expose email addresses.
  */
 export async function GET(request: NextRequest) {
@@ -25,15 +27,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Not configured" }, { status: 503 })
   }
 
-  let days = Number(request.nextUrl.searchParams.get("days") ?? "120")
-  if (!Number.isFinite(days) || days < 1) days = 120
+  const campaignResult = resolveFundraisingCampaignQueryParam(request.nextUrl.searchParams.get("campaign"))
+  if (!campaignResult.ok) {
+    return NextResponse.json({ error: campaignResult.error }, { status: 400 })
+  }
+  const { campaign } = campaignResult
+
+  let days = Number(request.nextUrl.searchParams.get("days") ?? String(campaign.defaultLookbackDays))
+  if (!Number.isFinite(days) || days < 1) days = campaign.defaultLookbackDays
   if (days > 400) days = 400
 
   const since = Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000)
   const stripe = new Stripe(stripeSecret)
 
   try {
-    const rowsRaw = await listSpartanFayettevilleDonations(stripe, since)
+    const rowsRaw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     let rows = rowsRaw
     let codeToFullName = new Map<string, string>()
     try {
@@ -66,7 +74,8 @@ export async function GET(request: NextRequest) {
     const summary = buildSpartanPublicSupporterSummary(rows)
 
     const res = NextResponse.json({
-      campaign: "fayetteville_2026",
+      campaign: campaign.stripeCampaignSlug,
+      campaignDisplayName: campaign.campaignDisplayName,
       days,
       count: entries.length,
       summary: {

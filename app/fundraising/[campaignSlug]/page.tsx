@@ -83,6 +83,13 @@ export default async function FundraisingCampaignLandingPage({
           </HardLink>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-slate-100 pt-6 text-sm text-slate-600 sm:justify-between">
+            <HardLink
+              href={`/fundraising/leaderboard?campaign=${encodeURIComponent(c.stripeCampaignSlug)}`}
+              className="font-medium underline-offset-4 hover:underline"
+              style={{ color: NAVY }}
+            >
+              Campaign leaderboard
+            </HardLink>
             <HardLink href="/fundraising" className="font-medium underline-offset-4 hover:underline" style={{ color: NAVY }}>
               ← All fundraising campaigns
             </HardLink>
