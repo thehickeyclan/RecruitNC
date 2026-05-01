@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { HardLink } from "@/components/hard-link"
 
 function displayFont(c: string) {
   return `font-[family-name:var(--font-fundraising-display)] ${c}`
@@ -30,6 +31,14 @@ export function FundraisingFooter() {
             >
               info@ncwrestlingunited.com
             </a>
+          </p>
+          <p className="pt-2 border-t border-white/10">
+            <HardLink
+              href="/fundraising/playbook"
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
+            >
+              NC United staff → Fundraising playbook (RecruitNC sign-in)
+            </HardLink>
           </p>
         </div>
       </div>
