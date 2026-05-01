@@ -1,11 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
-import {
-  fundraisingCampaignByStripeSlug,
-  fundraisingCampaignPortalPath,
-  fundraisingCodeToFullNameMap,
-  getFundraisingAthleteEntries,
-} from "@/lib/spartan-fundraising-code"
+import { fundraisingCampaignByStripeSlug, fundraisingCampaignPortalPath } from "@/lib/fundraising/campaign-registry"
+import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 
 /** Paid Spartan rows mirrored from Stripe (`spartan_donations`). Not the generic `donations` table. */
 export type HubDonationRow = {
