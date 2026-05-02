@@ -4,7 +4,7 @@ import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/li
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsMap,
+  fetchSpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
 import {
   attachPublicSupporterFields,
@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
     let codeToFullName = new Map<string, string>()
     try {
       const admin = createAdminClient()
-      const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
-      rows = applySpartanCreditCorrectionsToDonations(rowsRaw, correctionMap)
+      const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
+      rows = applySpartanCreditCorrectionsToDonations(rowsRaw, correctionIndex)
       const directory = await getFundraisingAthleteEntries(admin)
       codeToFullName = fundraisingCodeToFullNameMap(directory)
     } catch (dirErr) {

@@ -15,7 +15,7 @@ import Stripe from "stripe"
 import { listSpartanFayettevilleDonations } from "../lib/spartan-fayetteville-stripe"
 import {
   applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsMap,
+  fetchSpartanCreditCorrectionsIndex,
 } from "../lib/spartan-credit-corrections"
 import { createAdminClient } from "../lib/supabase/admin"
 
@@ -60,8 +60,8 @@ async function main() {
   const stripe = new Stripe(stripeKey)
   const admin = createAdminClient()
   const raw = await listSpartanFayettevilleDonations(stripe, since)
-  const map = await fetchSpartanCreditCorrectionsMap(admin)
-  const rows = applySpartanCreditCorrectionsToDonations(raw, map)
+  const index = await fetchSpartanCreditCorrectionsIndex(admin)
+  const rows = applySpartanCreditCorrectionsToDonations(raw, index)
   const match = rows.filter((r) => (r.athleteCode ?? "").trim().toUpperCase() === codeArg)
 
   console.log(

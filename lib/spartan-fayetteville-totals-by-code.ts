@@ -2,7 +2,7 @@ import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsMap,
+  fetchSpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
 import { buildSpartanPublicSupporterSummary } from "@/lib/spartan-public-supporter-feed"
 import { aggregateSpartanByAthlete, listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
@@ -69,8 +69,8 @@ export async function getFayettevilleStripeWindowSnapshot(): Promise<Fayettevill
   const stripe = new Stripe(stripeSecret)
   const raw = await listSpartanFayettevilleDonations(stripe, since)
   const admin = createAdminClient()
-  const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
-  const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
+  const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
+  const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionIndex)
   const grossSessionTotalCents = donationsRaw.reduce((s, d) => s + d.amountCents, 0)
   const ncUnitedCommunityFund120dCents = buildSpartanPublicSupporterSummary(donationsRaw).ncUnitedCommunityFundCents
 

@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import {
   applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsMap,
+  fetchSpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
 import { listSpartanFayettevilleDonations } from "@/lib/spartan-fayetteville-stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
   try {
     const raw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     const admin = createAdminClient()
-    const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
-    const rows = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
+    const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
+    const rows = applySpartanCreditCorrectionsToDonations(raw, correctionIndex)
     const withTee = rows.filter((r) => Boolean(r.teeShirtSize?.trim()))
 
     const bySize: Record<string, number> = {}

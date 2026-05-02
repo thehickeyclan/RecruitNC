@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import {
   applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsMap,
+  fetchSpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { mergeSpartanAggregatesWithReimbursementNet } from "@/lib/athlete-reimbursement-net"
@@ -103,8 +103,8 @@ export async function GET(request: NextRequest) {
   try {
     const raw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     const admin = createAdminClient()
-    const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
-    const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
+    const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
+    const donationsRaw = applySpartanCreditCorrectionsToDonations(raw, correctionIndex)
 
     const fundraisingEntries = await getFundraisingAthleteEntries(admin)
     const codeToFullName = fundraisingCodeToFullNameMap(fundraisingEntries)

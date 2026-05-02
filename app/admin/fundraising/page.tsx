@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { HardLink } from "@/components/hard-link"
@@ -190,12 +191,14 @@ export default function AdminFundraisingPage() {
 
   const [creditFixSessionId, setCreditFixSessionId] = useState("")
   const [creditFixCode, setCreditFixCode] = useState("")
+  const [creditFixToNcUnitedFund, setCreditFixToNcUnitedFund] = useState(false)
   const [creditFixBusy, setCreditFixBusy] = useState(false)
   const [creditFixMsg, setCreditFixMsg] = useState<string | null>(null)
 
   const [reassignOpen, setReassignOpen] = useState(false)
   const [reassignRow, setReassignRow] = useState<SpartanDonationRow | null>(null)
   const [reassignCode, setReassignCode] = useState("")
+  const [reassignToNcUnitedFund, setReassignToNcUnitedFund] = useState(false)
   const [reassignBusy, setReassignBusy] = useState(false)
 
   const [exportBusy, setExportBusy] = useState<string | null>(null)
@@ -582,15 +585,19 @@ export default function AdminFundraisingPage() {
     }
   }
 
-  async function postSpartanCreditCorrection(sessionId: string, athleteCode: string): Promise<string> {
+  async function saveSpartanCreditCorrection(
+    sessionId: string,
+    payload: { athleteCode: string } | { generalFund: true },
+  ): Promise<string> {
+    const body =
+      "athleteCode" in payload
+        ? { session_id: sessionId.trim(), athlete_code: payload.athleteCode.trim() }
+        : { session_id: sessionId.trim(), general_fund: true }
     const res = await fetch("/api/admin/spartan-credit-corrections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({
-        session_id: sessionId.trim(),
-        athlete_code: athleteCode.trim(),
-      }),
+      body: JSON.stringify(body),
     })
     const j = (await res.json()) as { error?: string; message?: string }
     if (!res.ok) throw new Error(j.error || "Save failed")
@@ -601,10 +608,13 @@ export default function AdminFundraisingPage() {
     setCreditFixMsg(null)
     setCreditFixBusy(true)
     try {
-      const msg = await postSpartanCreditCorrection(creditFixSessionId, creditFixCode)
+      const msg = creditFixToNcUnitedFund
+        ? await saveSpartanCreditCorrection(creditFixSessionId, { generalFund: true })
+        : await saveSpartanCreditCorrection(creditFixSessionId, { athleteCode: creditFixCode })
       setCreditFixMsg(msg)
       setCreditFixSessionId("")
       setCreditFixCode("")
+      setCreditFixToNcUnitedFund(false)
       if (donations !== null) await loadDonations()
     } catch (e) {
       setCreditFixMsg(e instanceof Error ? e.message : "Save failed")
@@ -616,6 +626,7 @@ export default function AdminFundraisingPage() {
   const openReassignDialog = (d: SpartanDonationRow) => {
     setReassignRow(d)
     setReassignCode((d.athleteCode ?? "").trim())
+    setReassignToNcUnitedFund(false)
     setReassignOpen(true)
   }
 
@@ -623,10 +634,13 @@ export default function AdminFundraisingPage() {
     if (!reassignRow) return
     setReassignBusy(true)
     try {
-      const msg = await postSpartanCreditCorrection(reassignRow.sessionId, reassignCode)
+      const msg = reassignToNcUnitedFund
+        ? await saveSpartanCreditCorrection(reassignRow.sessionId, { generalFund: true })
+        : await saveSpartanCreditCorrection(reassignRow.sessionId, { athleteCode: reassignCode })
       toast({ title: "Fundraising credit updated", description: msg })
       setReassignOpen(false)
       setReassignRow(null)
+      setReassignToNcUnitedFund(false)
       await loadDonations()
     } catch (e) {
       toast({
@@ -1740,7 +1754,10 @@ export default function AdminFundraisingPage() {
                   Fix Stripe metadata
                 </CardTitle>
                 <CardDescription>
-                  When you have a session / PI id from Stripe and need to force the NCU code. Overrides roll into totals after refresh.
+                  Wrong credit at checkout. Force an <span className="font-mono text-xs">NCU-…-YY</span> athlete code, or
+                  credit to the NC United community fund (pooled, no wrestler). Overrides roll into totals after refresh.
+                  Run <span className="font-mono text-xs">add-spartan-credit-corrections-general-fund.sql</span> once in
+                  Supabase if fund saves fail.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
@@ -1764,9 +1781,28 @@ export default function AdminFundraisingPage() {
                     onChange={(e) => setCreditFixCode(e.target.value)}
                     autoComplete="off"
                     className="font-mono text-xs"
+                    disabled={creditFixToNcUnitedFund}
                   />
                 </div>
-                <Button type="button" onClick={() => void applySpartanCreditFix()} disabled={creditFixBusy}>
+                <div className="flex w-full min-w-[200px] flex-1 items-center gap-2 pt-2 sm:pt-0">
+                  <Checkbox
+                    id="credit-fix-fund"
+                    checked={creditFixToNcUnitedFund}
+                    onCheckedChange={(c) => setCreditFixToNcUnitedFund(c === true)}
+                  />
+                  <Label htmlFor="credit-fix-fund" className="cursor-pointer text-sm font-normal leading-snug">
+                    NC United fund only (no individual wrestler)
+                  </Label>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => void applySpartanCreditFix()}
+                  disabled={
+                    creditFixBusy ||
+                    !creditFixSessionId.trim() ||
+                    (!creditFixToNcUnitedFund && !creditFixCode.trim())
+                  }
+                >
                   {creditFixBusy ? "Saving…" : "Apply fix"}
                 </Button>
                 {creditFixMsg ? (
@@ -2024,14 +2060,18 @@ export default function AdminFundraisingPage() {
           open={reassignOpen}
           onOpenChange={(o) => {
             setReassignOpen(o)
-            if (!o) setReassignRow(null)
+            if (!o) {
+              setReassignRow(null)
+              setReassignToNcUnitedFund(false)
+            }
           }}
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Reassign fundraising credit</DialogTitle>
               <DialogDescription>
-                Wrong athlete at checkout. Enter the correct <span className="font-mono text-xs">NCU-…-YY</span> code — session id below is pre-filled from this row.
+                Wrong credit at checkout. Choose another <span className="font-mono text-xs">NCU-…-YY</span> or credit to
+                the NC United community fund. Session id below is from this row.
               </DialogDescription>
             </DialogHeader>
             {reassignRow ? (
@@ -2044,8 +2084,19 @@ export default function AdminFundraisingPage() {
                   </p>
                   <p className="text-muted-foreground mt-1 font-mono text-[10px] break-all">{reassignRow.sessionId}</p>
                 </div>
+                <div className="flex items-start gap-2 rounded-md border border-amber-200/50 bg-amber-50/40 px-3 py-2 dark:border-amber-900/40 dark:bg-amber-950/20">
+                  <Checkbox
+                    id="reassign-nc-united-fund"
+                    checked={reassignToNcUnitedFund}
+                    onCheckedChange={(c) => setReassignToNcUnitedFund(c === true)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="reassign-nc-united-fund" className="cursor-pointer text-sm font-normal leading-snug">
+                    Credit to <strong>NC United fund</strong> (community — no wrestler)
+                  </Label>
+                </div>
                 <div className="grid gap-1.5">
-                  <Label htmlFor="reassign-code">Credit this gift to (NCU code)</Label>
+                  <Label htmlFor="reassign-code">Athlete NCU code (if not fund)</Label>
                   <Input
                     id="reassign-code"
                     className="font-mono text-xs"
@@ -2053,6 +2104,7 @@ export default function AdminFundraisingPage() {
                     onChange={(e) => setReassignCode(e.target.value.toUpperCase())}
                     placeholder="e.g. NCU-SHUSTER-28"
                     autoComplete="off"
+                    disabled={reassignToNcUnitedFund}
                   />
                 </div>
               </div>
@@ -2069,7 +2121,11 @@ export default function AdminFundraisingPage() {
               <Button
                 type="button"
                 onClick={() => void applyReassignFromRow()}
-                disabled={reassignBusy || !reassignCode.trim() || !reassignRow}
+                disabled={
+                  reassignBusy ||
+                  !reassignRow ||
+                  (!reassignToNcUnitedFund && !reassignCode.trim())
+                }
               >
                 {reassignBusy ? "Saving…" : "Save"}
               </Button>

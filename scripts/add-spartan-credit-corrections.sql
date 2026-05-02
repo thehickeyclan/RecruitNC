@@ -16,3 +16,5 @@ comment on table public.spartan_credit_corrections is
 
 -- Only service_role (server) needs access; block accidental anon API use.
 alter table public.spartan_credit_corrections enable row level security;
+
+-- For NC United fund credit corrections, also run: scripts/add-spartan-credit-corrections-general-fund.sql

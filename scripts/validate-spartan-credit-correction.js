@@ -5,6 +5,7 @@
  * Requires .env.local (or .env) with NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY.
  *
  *   node scripts/validate-spartan-credit-correction.js <pi_...|cs_...> <expected_NCU_code>
+ *   node scripts/validate-spartan-credit-correction.js cs_abc… FUND   # NC United fund row (general_fund true)
  *   npm run validate:spartan-credit -- pi_3Abc... NCU-SHUSTER-28
  *
  * Exit 0 = row exists and athlete_code matches (case-insensitive). Exit 1 = missing, wrong, or error.
@@ -41,13 +42,14 @@ loadEnvFile(".env")
 const args = process.argv.slice(2)
 if (args.length < 2) {
   console.error(
-    "Usage: node scripts/validate-spartan-credit-correction.js <pi_...|cs_...> <expected athlete_code e.g. NCU-SHUSTER-28>",
+    "Usage: node scripts/validate-spartan-credit-correction.js <pi_...|cs_...> <NCU-CODE|FUND>",
   )
   process.exit(1)
 }
 
 const sessionId = args[0].trim()
-const expectCode = args[1].trim().toUpperCase()
+const expectArg = args[1].trim().toUpperCase()
+const expectGeneralFund = expectArg === "FUND" || expectArg === "NC_UNITED_FUND" || expectArg === "GENERAL"
 
 if (!sessionId || (!sessionId.startsWith("pi_") && !sessionId.startsWith("cs_"))) {
   console.error("First arg must be a Stripe PaymentIntent (pi_…) or Checkout Session (cs_…).")
@@ -67,7 +69,7 @@ const supabase = createClient(url, key)
 async function main() {
   const { data, error } = await supabase
     .from("spartan_credit_corrections")
-    .select("session_id, athlete_code, note, created_at")
+    .select("session_id, athlete_code, general_fund, note, created_at")
     .eq("session_id", sessionId)
     .maybeSingle()
 
@@ -89,16 +91,24 @@ async function main() {
     process.exit(1)
   }
 
-  const got = String(data.athlete_code || "").trim().toUpperCase()
-  if (got !== expectCode) {
-    console.error("FAIL: athlete_code mismatch.")
-    console.error(`  expected: ${expectCode}`)
-    console.error(`  got:      ${got || "(empty)"}`)
-    console.error("Row:", JSON.stringify(data, null, 2))
-    process.exit(1)
+  if (expectGeneralFund) {
+    if (data.general_fund !== true) {
+      console.error("FAIL: expected general_fund row (NC United fund).")
+      console.error("Row:", JSON.stringify(data, null, 2))
+      process.exit(1)
+    }
+    console.log("OK: correction row is NC United fund (general_fund).")
+  } else {
+    const got = String(data.athlete_code || "").trim().toUpperCase()
+    if (got !== expectArg) {
+      console.error("FAIL: athlete_code mismatch.")
+      console.error(`  expected: ${expectArg}`)
+      console.error(`  got:      ${got || "(empty)"}`)
+      console.error("Row:", JSON.stringify(data, null, 2))
+      process.exit(1)
+    }
+    console.log("OK: correction row matches expected athlete code.")
   }
-
-  console.log("OK: correction row matches expected athlete code.")
   console.log(JSON.stringify(data, null, 2))
   process.exit(0)
 }

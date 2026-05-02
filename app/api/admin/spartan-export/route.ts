@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { fundraisingCodeToFullNameMap, getFundraisingAthleteEntries } from "@/lib/spartan-fundraising-code"
 import {
   applySpartanCreditCorrectionsToDonations,
-  fetchSpartanCreditCorrectionsMap,
+  fetchSpartanCreditCorrectionsIndex,
 } from "@/lib/spartan-credit-corrections"
 import {
   buildStripeAthleteDisplayHintsByCode,
@@ -74,8 +74,8 @@ export async function GET(request: NextRequest) {
   try {
     const raw = await listSpartanFayettevilleDonations(stripe, since, campaign.stripeCampaignSlug)
     const admin = createAdminClient()
-    const correctionMap = await fetchSpartanCreditCorrectionsMap(admin)
-    const rows = applySpartanCreditCorrectionsToDonations(raw, correctionMap)
+    const correctionIndex = await fetchSpartanCreditCorrectionsIndex(admin)
+    const rows = applySpartanCreditCorrectionsToDonations(raw, correctionIndex)
 
     let codeToFullName = new Map<string, string>()
     try {
