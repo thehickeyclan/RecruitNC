@@ -32,7 +32,13 @@ export function FundraisingFooter() {
               info@ncwrestlingunited.com
             </a>
           </p>
-          <p className="pt-2 border-t border-white/10">
+          <p className="flex flex-col gap-2 pt-2 border-t border-white/10 sm:flex-row sm:flex-wrap sm:gap-x-6">
+            <HardLink
+              href="/fundraising/athletes"
+              className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}
+            >
+              Athlete pages →
+            </HardLink>
             <HardLink
               href="/fundraising/playbook"
               className={`${displayFont("text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/70 hover:text-[#C8A94A]")}`}

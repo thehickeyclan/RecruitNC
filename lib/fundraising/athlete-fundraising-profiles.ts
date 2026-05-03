@@ -1,0 +1,161 @@
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { FundraisingAthleteEntry } from "@/lib/spartan-fundraising-code"
+import { fundraisingCodeFromSlug } from "@/lib/fundraising/athlete-fundraising-slug"
+
+const NCU_CODE_RE = /^NCU-[A-Za-z0-9]+-\d{2}$/i
+
+export type AthleteFundraisingProfileRow = {
+  id: string
+  created_at: string
+  updated_at: string
+  athlete_id: string
+  slug: string
+  bio: string | null
+  photo_url: string | null
+  is_active: boolean
+  campaign_goal_cents: number | null
+  total_raised_cents: number | null
+  primary_fundraising_code: string | null
+}
+
+export type ResolvedFundraisingAthletePublic = {
+  profile: AthleteFundraisingProfileRow | null
+  code: string | null
+  entry: FundraisingAthleteEntry | null
+  /** When the athlete is not on the computed fundraising roster but has a profile row. */
+  fallbackDisplayName: string | null
+}
+
+export function normalizeFundraisingProfileSlug(raw: string): string {
+  return raw.trim().toLowerCase()
+}
+
+function coerceNcuCode(raw: string | null | undefined): string | null {
+  const c = (raw ?? "").trim().toUpperCase()
+  if (!NCU_CODE_RE.test(c)) return null
+  return c
+}
+
+/**
+ * Map URL slug → profile (if any) + NCU code for Stripe-linked stats / checkout.
+ * Legacy URLs without a profile row still work when slug is the lowercase NCU code.
+ */
+export async function resolveFundraisingAthletePublic(
+  admin: SupabaseClient,
+  slugInput: string,
+  entries: FundraisingAthleteEntry[],
+): Promise<ResolvedFundraisingAthletePublic | null> {
+  const slug = normalizeFundraisingProfileSlug(slugInput)
+  if (slug.length < 2) return null
+
+  const { data: profile, error } = await admin
+    .from("athlete_fundraising_profiles")
+    .select(
+      "id, created_at, updated_at, athlete_id, slug, bio, photo_url, is_active, campaign_goal_cents, total_raised_cents, primary_fundraising_code",
+    )
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle()
+
+  if (error) {
+    console.warn("[athlete-fundraising-profiles] load by slug", error.message)
+  }
+
+  const legacyCode = coerceNcuCode(fundraisingCodeFromSlug(slug))
+
+  if (profile) {
+    const row = profile as AthleteFundraisingProfileRow
+    const fromPrimary = coerceNcuCode(row.primary_fundraising_code)
+    const entry = entries.find((e) => e.id === row.athlete_id) ?? null
+    const code = fromPrimary ?? entry?.code?.toUpperCase() ?? legacyCode ?? null
+    let fallbackDisplayName: string | null = null
+    if (!entry) {
+      const { data: ath } = await admin.from("athletes").select("name").eq("id", row.athlete_id).maybeSingle()
+      const nm = typeof ath?.name === "string" ? ath.name.trim() : ""
+      fallbackDisplayName = nm || null
+    }
+    return { profile: row, code, entry, fallbackDisplayName }
+  }
+
+  if (!legacyCode) return null
+  const entry = entries.find((e) => e.code.toUpperCase() === legacyCode) ?? null
+  return { profile: null, code: legacyCode, entry, fallbackDisplayName: null }
+}
+
+export type FundraisingAthleteIndexRow = {
+  athleteId: string
+  code: string
+  displayName: string
+  sublabel: string | null
+  hrefSlug: string
+  photoUrl: string | null
+}
+
+/**
+ * Directory list for /fundraising/athletes — prefers custom profile slug when present.
+ */
+export async function getFundraisingAthletesIndexRows(
+  admin: SupabaseClient,
+  entries: FundraisingAthleteEntry[],
+): Promise<FundraisingAthleteIndexRow[]> {
+  const { data: profiles, error } = await admin
+    .from("athlete_fundraising_profiles")
+    .select(
+      "athlete_id, slug, photo_url, is_active, id, created_at, updated_at, bio, campaign_goal_cents, total_raised_cents, primary_fundraising_code",
+    )
+    .eq("is_active", true)
+
+  if (error) {
+    console.warn("[athlete-fundraising-profiles] list active", error.message)
+  }
+
+  const byAthlete = new Map<string, AthleteFundraisingProfileRow>()
+  for (const p of (profiles ?? []) as AthleteFundraisingProfileRow[]) {
+    byAthlete.set(p.athlete_id, p)
+  }
+
+  const fromRoster: FundraisingAthleteIndexRow[] = entries.map((e) => {
+    const p = byAthlete.get(e.id)
+    const hrefSlug = p?.slug ?? e.code.trim().toLowerCase()
+    return {
+      athleteId: e.id,
+      code: e.code,
+      displayName: e.fullName || e.label,
+      sublabel: e.label.includes("·") ? e.label.split("·").slice(1).join("·").trim() : null,
+      hrefSlug,
+      photoUrl: p?.photo_url ?? null,
+    }
+  })
+
+  const rosterIds = new Set(entries.map((e) => e.id))
+  const orphanProfiles = [...byAthlete.values()].filter((p) => !rosterIds.has(p.athlete_id))
+  const nameById = new Map<string, string>()
+  if (orphanProfiles.length > 0) {
+    const ids = [...new Set(orphanProfiles.map((p) => p.athlete_id))]
+    const { data: athRows, error: ae } = await admin.from("athletes").select("id, name").in("id", ids)
+    if (ae) console.warn("[athlete-fundraising-profiles] orphan athlete names", ae.message)
+    for (const row of athRows ?? []) {
+      const id = typeof row.id === "string" ? row.id : ""
+      const nm = typeof row.name === "string" && row.name.trim() ? row.name.trim() : ""
+      if (id) nameById.set(id, nm || "NC United athlete")
+    }
+  }
+
+  const orphans: FundraisingAthleteIndexRow[] = orphanProfiles.map((p) => {
+    const code = coerceNcuCode(p.primary_fundraising_code) ?? ""
+    return {
+      athleteId: p.athlete_id,
+      code: code || "—",
+      displayName: nameById.get(p.athlete_id) ?? "NC United athlete",
+      sublabel: null,
+      hrefSlug: p.slug,
+      photoUrl: p.photo_url,
+    }
+  })
+
+  const combined = [...fromRoster, ...orphans]
+  combined.sort((a, b) =>
+    a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+  )
+  return combined
+}

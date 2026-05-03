@@ -33,6 +33,7 @@ import {
   Mail,
   RefreshCw,
   UserRoundX,
+  UserCircle,
   Users,
   Wrench,
 } from "lucide-react"
@@ -69,6 +70,22 @@ type SpartanDonationRow = {
   creditLabel?: string | null
   publicDisplayName?: string
   publicRaceParticipantName?: string | null
+}
+
+type AdminAthleteFundraisingProfileRow = {
+  id: string
+  created_at: string
+  updated_at: string
+  athlete_id: string
+  slug: string
+  bio: string | null
+  photo_url: string | null
+  is_active: boolean
+  campaign_goal_cents: number | null
+  total_raised_cents: number | null
+  primary_fundraising_code: string | null
+  athlete_name: string | null
+  roster_ncu_code: string | null
 }
 
 type SpartanAthleteAggregate = {
@@ -243,6 +260,20 @@ export default function AdminFundraisingPage() {
 
   /** Narrow section 3 donation table to checkouts credited to NCU codes missing from fundraising directory. */
   const [donationTableMode, setDonationTableMode] = useState<"all" | "orphaned_codes">("all")
+
+  const [fundraisingProfiles, setFundraisingProfiles] = useState<AdminAthleteFundraisingProfileRow[] | null>(null)
+  const [fundraisingProfilesLoading, setFundraisingProfilesLoading] = useState(false)
+  const [fundraisingProfilesError, setFundraisingProfilesError] = useState<string | null>(null)
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false)
+  const [profileEditingId, setProfileEditingId] = useState<string | null>(null)
+  const [profileAthleteId, setProfileAthleteId] = useState("")
+  const [profileSlug, setProfileSlug] = useState("")
+  const [profileBio, setProfileBio] = useState("")
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState("")
+  const [profileGoalDollars, setProfileGoalDollars] = useState("")
+  const [profilePrimaryCode, setProfilePrimaryCode] = useState("")
+  const [profileActive, setProfileActive] = useState(true)
+  const [profileSaveBusy, setProfileSaveBusy] = useState(false)
 
   const parentCoverageDisplayRows = useMemo(() => {
     if (!parentCoverage) return []
@@ -934,6 +965,144 @@ export default function AdminFundraisingPage() {
     scrollToFundraisingSection("admin-fundraising-stripe-donations")
   }
 
+  const loadFundraisingProfiles = useCallback(async () => {
+    setFundraisingProfilesLoading(true)
+    setFundraisingProfilesError(null)
+    try {
+      const res = await fetch("/api/admin/athlete-fundraising-profiles", { credentials: "include" })
+      const j = (await res.json()) as { error?: string; profiles?: AdminAthleteFundraisingProfileRow[] }
+      if (!res.ok) {
+        setFundraisingProfilesError(typeof j.error === "string" ? j.error : "Failed to load profiles")
+        setFundraisingProfiles([])
+        return
+      }
+      setFundraisingProfiles(Array.isArray(j.profiles) ? j.profiles : [])
+    } catch {
+      setFundraisingProfilesError("Failed to load profiles")
+      setFundraisingProfiles([])
+    } finally {
+      setFundraisingProfilesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadFundraisingProfiles()
+  }, [loadFundraisingProfiles])
+
+  const openNewFundraisingProfileDialog = () => {
+    setProfileEditingId(null)
+    setProfileAthleteId("")
+    setProfileSlug("")
+    setProfileBio("")
+    setProfilePhotoUrl("")
+    setProfileGoalDollars("")
+    setProfilePrimaryCode("")
+    setProfileActive(true)
+    setProfileDialogOpen(true)
+  }
+
+  const openEditFundraisingProfileDialog = (row: AdminAthleteFundraisingProfileRow) => {
+    setProfileEditingId(row.id)
+    setProfileAthleteId(row.athlete_id)
+    setProfileSlug(row.slug)
+    setProfileBio(row.bio ?? "")
+    setProfilePhotoUrl(row.photo_url ?? "")
+    setProfileGoalDollars(
+      row.campaign_goal_cents != null && row.campaign_goal_cents > 0
+        ? (row.campaign_goal_cents / 100).toFixed(2)
+        : "",
+    )
+    setProfilePrimaryCode(row.primary_fundraising_code ?? "")
+    setProfileActive(row.is_active)
+    setProfileDialogOpen(true)
+  }
+
+  const saveFundraisingProfile = async () => {
+    const goalCents =
+      profileGoalDollars.trim() === "" ? null : parseDollarsToCents(profileGoalDollars)
+    if (profileGoalDollars.trim() !== "" && goalCents === null) {
+      toast({
+        title: "Invalid goal",
+        description: "Enter a valid dollar amount or leave goal blank.",
+        variant: "destructive",
+      })
+      return
+    }
+    const slugTrim = profileSlug.trim().toLowerCase()
+    if (!slugTrim) {
+      toast({ title: "Slug required", variant: "destructive" })
+      return
+    }
+    setProfileSaveBusy(true)
+    try {
+      if (profileEditingId) {
+        const res = await fetch("/api/admin/athlete-fundraising-profiles", {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: profileEditingId,
+            slug: slugTrim,
+            bio: profileBio.trim() || null,
+            photo_url: profilePhotoUrl.trim() || null,
+            is_active: profileActive,
+            campaign_goal_cents: goalCents,
+            primary_fundraising_code: profilePrimaryCode.trim() ? profilePrimaryCode.trim().toUpperCase() : null,
+          }),
+        })
+        const j = (await res.json()) as { error?: string }
+        if (!res.ok) {
+          toast({
+            title: "Save failed",
+            description: j.error ?? res.statusText,
+            variant: "destructive",
+          })
+          return
+        }
+      } else {
+        const aid = profileAthleteId.trim()
+        if (!aid) {
+          toast({ title: "Athlete id required", description: "Paste the RecruitNC athletes.id UUID.", variant: "destructive" })
+          setProfileSaveBusy(false)
+          return
+        }
+        if (!ATHLETE_UUID_PIN_RE.test(aid)) {
+          toast({ title: "Invalid athlete id", description: "Must be a UUID from the athletes table.", variant: "destructive" })
+          setProfileSaveBusy(false)
+          return
+        }
+        const res = await fetch("/api/admin/athlete-fundraising-profiles", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            athlete_id: aid,
+            slug: slugTrim,
+            bio: profileBio.trim() || null,
+            photo_url: profilePhotoUrl.trim() || null,
+            is_active: profileActive,
+            campaign_goal_cents: goalCents,
+            primary_fundraising_code: profilePrimaryCode.trim() ? profilePrimaryCode.trim().toUpperCase() : null,
+          }),
+        })
+        const j = (await res.json()) as { error?: string }
+        if (!res.ok) {
+          toast({
+            title: "Create failed",
+            description: j.error ?? res.statusText,
+            variant: "destructive",
+          })
+          return
+        }
+      }
+      toast({ title: profileEditingId ? "Profile updated" : "Profile created" })
+      setProfileDialogOpen(false)
+      await loadFundraisingProfiles()
+    } finally {
+      setProfileSaveBusy(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-100/80 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
@@ -1106,6 +1275,123 @@ export default function AdminFundraisingPage() {
                     Stripe Payments
                   </a>
                 </Button>
+              </CardContent>
+            </Card>
+
+            <Card id="admin-fundraising-athlete-profiles" className="border-[#003366]/15 bg-white">
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <UserCircle className="h-4 w-4 text-[#003366]" />
+                      Donor-facing athlete profiles
+                    </CardTitle>
+                    <CardDescription className="mt-1 max-w-2xl">
+                      Public pages at{" "}
+                      <HardLink href="/fundraising/athletes" className="text-primary underline-offset-4 hover:underline">
+                        /fundraising/athletes
+                      </HardLink>{" "}
+                      — bio, photo, goal, optional NCU override. Requires{" "}
+                      <code className="rounded bg-muted px-1 text-[11px]">athlete_fundraising_profiles</code> in Supabase (
+                      <code className="rounded bg-muted px-1 text-[11px]">database/create-athlete-fundraising-profiles.sql</code>
+                      ).
+                    </CardDescription>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void loadFundraisingProfiles()}
+                      disabled={fundraisingProfilesLoading}
+                    >
+                      <RefreshCw className={`mr-2 h-4 w-4 ${fundraisingProfilesLoading ? "animate-spin" : ""}`} />
+                      Refresh
+                    </Button>
+                    <Button type="button" size="sm" className="bg-[#003366] text-white hover:bg-[#002952]" onClick={openNewFundraisingProfileDialog}>
+                      New profile
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-0">
+                {fundraisingProfilesError ? (
+                  <p className="text-destructive text-sm" role="alert">
+                    {fundraisingProfilesError}
+                  </p>
+                ) : null}
+                {fundraisingProfilesLoading && fundraisingProfiles === null ? (
+                  <p className="text-muted-foreground text-sm">Loading profiles…</p>
+                ) : null}
+                {fundraisingProfiles && fundraisingProfiles.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    No profiles yet — create one with the athlete&apos;s{" "}
+                    <span className="font-mono text-xs">athletes.id</span> and a URL slug (e.g. lowercase{" "}
+                    <span className="font-mono text-xs">ncu-gore-27</span>).
+                  </p>
+                ) : null}
+                {fundraisingProfiles && fundraisingProfiles.length > 0 ? (
+                  <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Slug / URL</TableHead>
+                          <TableHead>Athlete</TableHead>
+                          <TableHead>NCU (roster / override)</TableHead>
+                          <TableHead>Goal</TableHead>
+                          <TableHead>Active</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {fundraisingProfiles.map((p) => {
+                          const ncu =
+                            p.primary_fundraising_code ??
+                            p.roster_ncu_code ??
+                            "—"
+                          return (
+                            <TableRow key={p.id}>
+                              <TableCell className="font-mono text-xs">
+                                <HardLink
+                                  href={`/fundraising/athletes/${p.slug}`}
+                                  className="text-primary underline-offset-4 hover:underline"
+                                >
+                                  {p.slug}
+                                </HardLink>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                <div className="font-medium">{p.athlete_name ?? "—"}</div>
+                                <div className="text-muted-foreground font-mono text-[10px]">{p.athlete_id.slice(0, 8)}…</div>
+                              </TableCell>
+                              <TableCell className="font-mono text-[11px]">{ncu}</TableCell>
+                              <TableCell className="text-sm tabular-nums">
+                                {p.campaign_goal_cents != null && p.campaign_goal_cents > 0
+                                  ? formatMoney(p.campaign_goal_cents, "usd")
+                                  : "—"}
+                              </TableCell>
+                              <TableCell>
+                                {p.is_active ? (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Yes
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                                    No
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button type="button" variant="outline" size="sm" onClick={() => openEditFundraisingProfileDialog(p)}>
+                                  Edit
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
 
@@ -2051,6 +2337,105 @@ export default function AdminFundraisingPage() {
                 disabled={linkParentBusy || !linkParentRow?.athleteId || !selectedParent}
               >
                 {linkParentBusy ? "Saving…" : "Create link"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={profileDialogOpen}
+          onOpenChange={(o) => {
+            setProfileDialogOpen(o)
+            if (!o) setProfileSaveBusy(false)
+          }}
+        >
+          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{profileEditingId ? "Edit fundraising profile" : "New fundraising profile"}</DialogTitle>
+              <DialogDescription className="leading-snug">
+                {profileEditingId
+                  ? "Update slug, story, photo URL, goal, or NCU override. Athlete id cannot move between profiles."
+                  : "Paste the RecruitNC athletes.id (UUID), choose a unique URL slug, then save."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-3 text-sm">
+              <div className="grid gap-1.5">
+                <Label htmlFor="fp-athlete-id">Athlete id (UUID)</Label>
+                <Input
+                  id="fp-athlete-id"
+                  className="font-mono text-xs"
+                  value={profileAthleteId}
+                  onChange={(e) => setProfileAthleteId(e.target.value)}
+                  disabled={!!profileEditingId}
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="fp-slug">URL slug</Label>
+                <Input
+                  id="fp-slug"
+                  className="font-mono text-xs lowercase"
+                  value={profileSlug}
+                  onChange={(e) => setProfileSlug(e.target.value.toLowerCase())}
+                  placeholder="e.g. ncu-gore-27"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="fp-bio">Bio (donor-facing)</Label>
+                <Textarea
+                  id="fp-bio"
+                  value={profileBio}
+                  onChange={(e) => setProfileBio(e.target.value)}
+                  placeholder="2–3 sentences for donors…"
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="fp-photo">Photo URL</Label>
+                <Input
+                  id="fp-photo"
+                  value={profilePhotoUrl}
+                  onChange={(e) => setProfilePhotoUrl(e.target.value)}
+                  placeholder="https://…"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="fp-goal">Campaign goal (USD, optional)</Label>
+                <Input
+                  id="fp-goal"
+                  value={profileGoalDollars}
+                  onChange={(e) => setProfileGoalDollars(e.target.value)}
+                  placeholder="e.g. 5000"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="fp-primary-ncu">NCU code override (optional)</Label>
+                <Input
+                  id="fp-primary-ncu"
+                  className="font-mono text-xs uppercase"
+                  value={profilePrimaryCode}
+                  onChange={(e) => setProfilePrimaryCode(e.target.value.toUpperCase())}
+                  placeholder="NCU-LAST-YY — if roster code is wrong or missing"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox id="fp-active" checked={profileActive} onCheckedChange={(c) => setProfileActive(c === true)} />
+                <Label htmlFor="fp-active" className="cursor-pointer font-normal">
+                  Active (public directory lists active profiles only)
+                </Label>
+              </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button type="button" variant="secondary" onClick={() => setProfileDialogOpen(false)} disabled={profileSaveBusy}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={() => void saveFundraisingProfile()} disabled={profileSaveBusy}>
+                {profileSaveBusy ? "Saving…" : profileEditingId ? "Save changes" : "Create profile"}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -64,7 +64,7 @@ export function FundraisingHero({ hero }: { hero: FundraisingHubHeroStats }) {
         </h1>
 
         <p className="mt-6 max-w-2xl text-lg font-medium leading-relaxed text-white/88 sm:text-xl">
-          Every dollar is tax-deductible. Every gift credited to a specific athlete.
+          Every gift is tax-deductible and goes directly to NC wrestler development — pool or athlete credit at checkout.
         </p>
 
         <dl className="mt-14 grid gap-4 sm:grid-cols-3">
